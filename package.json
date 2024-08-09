@@ -1,0 +1,17 @@
+{
+  "name": "hello",
+  "version": "1.0.0",
+  "description": "```bash\r git clone https://github.com/zxecsm/hello.git /home/node/hello\r ```\r ```bash\r vim /home/node/hello/server/data/config.js\r ```\r ```javascript\r const filepath = '/home/webData';   // 网站数据存放目录\r const rootP = '/';                  // 文件管理根目录\r const configObj = {\r   port: 3000,\r   filepath,\r   rootP,\r   userFileP: `${filepath}/userFile`,\r };\r module.exports = configObj;\r ```\r ```bash\r cd /home/node/hello/server\r npm i\r cd ../web\r npm i\r npm run build\r cd ../server\r node app\r ```",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0"
+  }
+}

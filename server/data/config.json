@@ -1,0 +1,29 @@
+{
+  "registerState": "y",
+  "trashState": "y",
+  "tokenKey": "xxxxxxxxxxxxxxxxxx",
+  "uploadSaveDay": 0,
+  "tipsFlag": 0,
+  "songList": [
+    {
+      "name": "播放历史",
+      "des": "音乐足迹👣"
+    },
+    {
+      "name": "收藏❤️",
+      "des": "当前喜欢的"
+    },
+    {
+      "name": "New✨",
+      "des": "最新上传的歌曲"
+    }
+  ],
+  "email": {
+    "user": "",
+    "pass": "",
+    "host": "smtp.qq.com",
+    "secure": true,
+    "port": 465,
+    "state": false
+  }
+}

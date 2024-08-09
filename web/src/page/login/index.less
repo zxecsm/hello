@@ -1,0 +1,607 @@
+body,
+html {
+  width: 100%;
+  height: 100%;
+}
+#app {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .bg {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-image: url('../../images/img/bg.svg');
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.6;
+  }
+
+  .loading {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    background-image: url('../../images/img/loading.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100px 100px;
+    background-color: var(--bg-color-o4);
+  }
+  .linebox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+    pointer-events: none;
+    overflow: hidden;
+    opacity: 0.8;
+    .line {
+      position: absolute;
+    }
+
+    .line:nth-child(1) {
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 5px;
+      background: linear-gradient(90deg, transparent, orange);
+      animation: animate1 8s linear infinite;
+    }
+
+    @keyframes animate1 {
+      0% {
+        left: -100%;
+      }
+
+      50%,
+      100% {
+        left: 100%;
+      }
+    }
+
+    .line:nth-child(2) {
+      top: -100%;
+      right: 0;
+      width: 5px;
+      height: 100%;
+      background: linear-gradient(180deg, transparent, red);
+      animation: animate2 8s linear infinite;
+      animation-delay: 2s;
+    }
+
+    @keyframes animate2 {
+      0% {
+        top: -100%;
+      }
+
+      50%,
+      100% {
+        top: 100%;
+      }
+    }
+
+    .line:nth-child(3) {
+      bottom: 0;
+      right: 0;
+      width: 100%;
+      background: linear-gradient(270deg, transparent, green);
+      animation: animate3 8s linear infinite;
+      animation-delay: 4s;
+    }
+
+    @keyframes animate3 {
+      0% {
+        right: -100%;
+        height: 5px;
+      }
+
+      50%,
+      100% {
+        height: 2px;
+        right: 100%;
+      }
+    }
+
+    .line:nth-child(4) {
+      bottom: -100%;
+      left: 0;
+      width: 5px;
+      height: 100%;
+      background: linear-gradient(360deg, transparent, #3a86ff);
+      animation: animate4 8s linear infinite;
+      animation-delay: 6s;
+    }
+
+    @keyframes animate4 {
+      0% {
+        bottom: -100%;
+      }
+
+      50%,
+      100% {
+        bottom: 100%;
+      }
+    }
+  }
+  .box {
+    position: relative;
+    background-color: var(--bg-color-o2);
+    width: 90%;
+    max-width: 450px;
+    padding: 30px;
+    box-sizing: border-box;
+    margin: auto;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 5px;
+    transform: translateY(-50px);
+    opacity: 0;
+    box-shadow: 0 0 5px var(--color5);
+    &:hover {
+      z-index: 11;
+    }
+    &.open {
+      transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
+      transform: none;
+      opacity: 1;
+    }
+    .title {
+      font-size: 30px;
+      text-align: center;
+      margin-bottom: 20px;
+      display: flex;
+      flex-flow: row wrap;
+      align-items: center;
+      span {
+        padding: 0 5px;
+        &:nth-child(1) {
+          color: var(--text-hover-color);
+          font-size: 50px;
+          opacity: 0.8;
+        }
+        &:nth-child(3) {
+          color: var(--icon-color);
+        }
+      }
+    }
+    p {
+      height: 30px;
+      line-height: 30px;
+      color: var(--btn-danger-color);
+      font-size: 15px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .inp_box {
+      display: flex;
+      height: 50px;
+      line-height: 50px;
+      border: 1px solid var(--btn-primary-border-color);
+      border-radius: 2px;
+      align-items: center;
+      &.focus {
+        border: 1px solid var(--btn-primary-color);
+      }
+
+      input {
+        flex: auto;
+        width: 0;
+        font-size: 16px;
+        outline: none;
+        border: none;
+        background-color: transparent;
+      }
+
+      i {
+        display: none;
+        flex: none;
+      }
+    }
+
+    button {
+      width: 70%;
+      height: 40px;
+      line-height: 40px;
+      font-size: 16px;
+      border: none;
+      outline: none;
+      padding: 0;
+      border: 1px solid;
+      margin: 0;
+      color: var(--btn-primary-color);
+      background-color: var(--btn-primary-bg-color);
+      border-color: var(--btn-primary-border-color);
+      border-radius: 4px;
+      user-select: none;
+      opacity: 0.9;
+
+      &:hover {
+        color: #fff;
+        background-color: var(--btn-primary-color);
+        border-color: var(--btn-primary-color);
+      }
+    }
+
+    .register {
+      display: none;
+      font-size: 18px;
+      height: 25px;
+      line-height: 25px;
+      user-select: none;
+      &:hover {
+        color: var(--text-hover-color);
+      }
+    }
+    .setting,
+    .pd_config {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .nopd {
+      .resetpd:hover,
+      .nopd_login:hover {
+        color: var(--text-hover-color);
+      }
+    }
+    .dark_state {
+      font-size: 25px;
+      height: 25px;
+
+      &:hover {
+        color: var(--text-hover-color);
+      }
+    }
+    .about {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      font-size: 26px;
+      color: var(--icon-color);
+      &:hover {
+        color: var(--text-hover-color);
+      }
+    }
+  }
+  #ratify {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    justify-content: center;
+    align-items: center;
+    line-height: 1.5;
+    z-index: 11;
+    .code_box {
+      display: none;
+      background-color: var(--bg-color-o2);
+      margin: auto;
+      width: 90%;
+      max-width: 500px;
+      padding: 30px;
+      box-sizing: border-box;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: 5px;
+      box-shadow: 0 0 5px var(--color5);
+      p {
+        text-align: center;
+        font-size: 18px;
+      }
+      .code {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-flow: row wrap;
+        span {
+          font-size: 40px;
+          color: var(--text-hover-color);
+          i {
+            margin-right: 10px;
+          }
+        }
+      }
+    }
+  }
+  @keyframes rotatingY {
+    100% {
+      -webkit-transform: rotateY(-360deg);
+      -moz-transform: rotateY(-360deg);
+      -ms-transform: rotateY(-360deg);
+      -o-transform: rotateY(-360deg);
+      transform: rotateY(-360deg);
+    }
+  }
+  @keyframes fluttering {
+    0%,
+    25%,
+    50%,
+    75%,
+    100% {
+      -webkit-transform: translate3d(0, 0, 0);
+      -moz-transform: translate3d(0, 0, 0);
+      -ms-transform: translate3d(0, 0, 0);
+      -o-transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0);
+    }
+
+    10%,
+    60% {
+      -webkit-transform: translate3d(0, 150px, 0);
+      -moz-transform: translate3d(0, 150px, 0);
+      -ms-transform: translate3d(0, 150px, 0);
+      -o-transform: translate3d(0, 150px, 0);
+      transform: translate3d(0, 150px, 0);
+    }
+
+    30%,
+    80% {
+      -webkit-transform: translate3d(0, 50px, 0);
+      -moz-transform: translate3d(0, 50px, 0);
+      -ms-transform: translate3d(0, 50px, 0);
+      -o-transform: translate3d(0, 50px, 0);
+      transform: translate3d(0, 50px, 0);
+    }
+  }
+  @keyframes left-wing-flap {
+    0% {
+      -webkit-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
+      -moz-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
+      -ms-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
+      -o-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
+      transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
+    }
+
+    50% {
+      -webkit-transform: translate3d(0, 0, 0) scaleX(1)
+        rotate3d(0, 1, 0, -70deg);
+      -moz-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, -70deg);
+      -ms-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, -70deg);
+      -o-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, -70deg);
+      transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, -70deg);
+    }
+
+    100% {
+      -webkit-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
+      -moz-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
+      -ms-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
+      -o-transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
+      transform: translate3d(0, 0, 0) scaleX(1) rotate3d(0, 1, 0, 60deg);
+    }
+  }
+  @keyframes right-wing-flap {
+    0% {
+      -webkit-transform: translate3d(0, 0, 0) scaleX(-1)
+        rotate3d(0, 1, 0, 60deg);
+      -moz-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 60deg);
+      -ms-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 60deg);
+      -o-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 60deg);
+      transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 60deg);
+    }
+
+    50% {
+      -webkit-transform: translate3d(0, 0, 0) scaleX(-1)
+        rotate3d(0, 1, 0, -70deg);
+      -moz-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, -70deg);
+      -ms-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, -70deg);
+      -o-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, -70deg);
+      transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, -70deg);
+    }
+
+    100% {
+      -webkit-transform: translate3d(0, 0, 0) scaleX(-1)
+        rotate3d(0, 1, 0, 60deg);
+      -moz-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 60deg);
+      -ms-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 60deg);
+      -o-transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 60deg);
+      transform: translate3d(0, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 60deg);
+    }
+  }
+  .scene3d {
+    pointer-events: none;
+    -webkit-perspective: 1000px;
+    -moz-perspective: 1000px;
+    -ms-perspective: 1000px;
+    -o-perspective: 1000px;
+    perspective: 1000px;
+    -webkit-perspective-origin: 50% 50%;
+    -moz-perspective-origin: 50% 50%;
+    -ms-perspective-origin: 50% 50%;
+    -o-perspective-origin: 50% 50%;
+    perspective-origin: 50% 50%;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    -webkit-transform-style: preserve-3d;
+    -moz-transform-style: preserve-3d;
+    -ms-transform-style: preserve-3d;
+    -o-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+  }
+  .butterfly_container {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 100px;
+    height: 100px;
+    margin-left: -50px;
+    margin-top: -50px;
+    -webkit-transform-origin: 50% 50%;
+    -moz-transform-origin: 50% 50%;
+    -ms-transform-origin: 50% 50%;
+    -o-transform-origin: 50% 50%;
+    transform-origin: 50% 50%;
+    -webkit-transform-style: preserve-3d;
+    -moz-transform-style: preserve-3d;
+    -ms-transform-style: preserve-3d;
+    -o-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+    -webkit-animation: rotatingY 10s linear infinite;
+    -moz-animation: rotatingY 10s linear infinite;
+    -ms-animation: rotatingY 10s linear infinite;
+    -o-animation: rotatingY 10s linear infinite;
+    animation: rotatingY 10s linear infinite;
+  }
+  .butterfly_container var {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 100px;
+    height: 100px;
+    margin-left: -50px;
+    margin-top: -50px;
+    -webkit-transform-style: preserve-3d;
+    -moz-transform-style: preserve-3d;
+    -ms-transform-style: preserve-3d;
+    -o-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+  }
+  .butterfly_container var.rotate3d {
+    -webkit-transform: rotate3d(1, 0.5, 0, 70deg);
+    -moz-transform: rotate3d(1, 0.5, 0, 70deg);
+    -ms-transform: rotate3d(1, 0.5, 0, 70deg);
+    -o-transform: rotate3d(1, 0.5, 0, 70deg);
+    transform: rotate3d(1, 0.5, 0, 70deg);
+  }
+  .butterfly_container var.translate3d {
+    -webkit-transform: translate3d(-300px, 0px, 0px);
+    -moz-transform: translate3d(-300px, 0px, 0px);
+    -ms-transform: translate3d(-300px, 0px, 0px);
+    -o-transform: translate3d(-300px, 0px, 0px);
+    transform: translate3d(-300px, 0px, 0px);
+  }
+  .butterfly_container var.translate3d-1 {
+    -webkit-animation: fluttering 10s ease-in-out infinite;
+    -moz-animation: fluttering 10s ease-in-out infinite;
+    -ms-animation: fluttering 10s ease-in-out infinite;
+    -o-animation: fluttering 10s ease-in-out infinite;
+    animation: fluttering 10s ease-in-out infinite;
+  }
+  .butterfly_container.scale_half var.scale {
+    -webkit-transform: scale3d(0.5, 0.5, 0.5);
+    -moz-transform: scale3d(0.5, 0.5, 0.5);
+    -ms-transform: scale3d(0.5, 0.5, 0.5);
+    -o-transform: scale3d(0.5, 0.5, 0.5);
+    transform: scale3d(0.5, 0.5, 0.5);
+  }
+  .butterfly_container.scale_third var.scale {
+    -webkit-transform: scale3d(0.333, 0.333, 0.333);
+    -moz-transform: scale3d(0.333, 0.333, 0.333);
+    -ms-transform: scale3d(0.333, 0.333, 0.333);
+    -o-transform: scale3d(0.333, 0.333, 0.333);
+    transform: scale3d(0.333, 0.333, 0.333);
+  }
+  .butterfly_container.scale_quarter var.scale {
+    -webkit-transform: scale3d(0.25, 0.25, 0.25);
+    -moz-transform: scale3d(0.25, 0.25, 0.25);
+    -ms-transform: scale3d(0.25, 0.25, 0.25);
+    -o-transform: scale3d(0.25, 0.25, 0.25);
+    transform: scale3d(0.25, 0.25, 0.25);
+  }
+  .butterfly_container figure.butterfly {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 100px;
+    height: 100px;
+    margin-left: -50px;
+    margin-top: -50px;
+    -webkit-transform-style: preserve-3d;
+    -moz-transform-style: preserve-3d;
+    -ms-transform-style: preserve-3d;
+    -o-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+    -webkit-transform-origin: 50% 50%;
+    -moz-transform-origin: 50% 50%;
+    -ms-transform-origin: 50% 50%;
+    -o-transform-origin: 50% 50%;
+    transform-origin: 50% 50%;
+  }
+  .butterfly_container figure.butterfly .wing {
+    position: absolute;
+    width: 50px;
+    height: 100px;
+    -webkit-transform-style: preserve-3d;
+    -moz-transform-style: preserve-3d;
+    -ms-transform-style: preserve-3d;
+    -o-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+    -webkit-transform-origin: 50% 50%;
+    -moz-transform-origin: 50% 50%;
+    -ms-transform-origin: 50% 50%;
+    -o-transform-origin: 50% 50%;
+    transform-origin: 50% 50%;
+    -webkit-transform: translate3d(0, 0, 0) rotate3d(1, 0.5, 0, 45deg);
+    -moz-transform: translate3d(0, 0, 0) rotate3d(1, 0.5, 0, 45deg);
+    -ms-transform: translate3d(0, 0, 0) rotate3d(1, 0.5, 0, 45deg);
+    -o-transform: translate3d(0, 0, 0) rotate3d(1, 0.5, 0, 45deg);
+    transform: translate3d(0, 0, 0) rotate3d(1, 0.5, 0, 45deg);
+  }
+  .butterfly_container figure.butterfly .wing.right {
+    -webkit-transform-origin: 50px 50px;
+    -moz-transform-origin: 50px 50px;
+    -ms-transform-origin: 50px 50px;
+    -o-transform-origin: 50px 50px;
+    transform-origin: 50px 50px;
+    -webkit-transform: translate3d(0px, 0, 0) scaleX(-1)
+      rotate3d(0, 1, 0, 45deg);
+    -moz-transform: translate3d(0px, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 45deg);
+    -ms-transform: translate3d(0px, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 45deg);
+    -o-transform: translate3d(0px, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 45deg);
+    transform: translate3d(0px, 0, 0) scaleX(-1) rotate3d(0, 1, 0, 45deg);
+    -webkit-animation: right-wing-flap 0.5s ease-in-out infinite;
+    -moz-animation: right-wing-flap 0.5s ease-in-out infinite;
+    -ms-animation: right-wing-flap 0.5s ease-in-out infinite;
+    -o-animation: right-wing-flap 0.5s ease-in-out infinite;
+    animation: right-wing-flap 0.5s ease-in-out infinite;
+    filter: FlipH;
+    -ms-filter: 'FlipH';
+  }
+  .butterfly_container figure.butterfly .wing.left {
+    -webkit-transform-origin: 50px 50px;
+    -moz-transform-origin: 50px 50px;
+    -ms-transform-origin: 50px 50px;
+    -o-transform-origin: 50px 50px;
+    transform-origin: 50px 50px;
+    -webkit-animation: left-wing-flap 0.5s ease-in-out infinite;
+    -moz-animation: left-wing-flap 0.5s ease-in-out infinite;
+    -ms-animation: left-wing-flap 0.5s ease-in-out infinite;
+    -o-animation: left-wing-flap 0.5s ease-in-out infinite;
+    animation: left-wing-flap 0.5s ease-in-out infinite;
+  }
+  .butterfly_container figure.butterfly .wing use {
+    display: block;
+    -webkit-transform-style: preserve-3d;
+    -moz-transform-style: preserve-3d;
+    -ms-transform-style: preserve-3d;
+    -o-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+    fill: url(#image);
+    stroke: white;
+  }
+  .svg-defs {
+    position: absolute;
+    height: 0;
+    width: 0;
+  }
+}
