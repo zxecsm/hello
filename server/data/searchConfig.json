@@ -1,0 +1,26 @@
+{
+  "searchEngineData": [
+    {
+      "name": "Bing",
+      "icon": "/api/pub/searchlogo/bing-xs.png",
+      "logo": "/api/pub/searchlogo/bing.png",
+      "searchlink": "https://bing.com/search?q={{}}",
+      "color": "#1B8473"
+    },
+    {
+      "name": "Google",
+      "icon": "/api/pub/searchlogo/google-xs.png",
+      "logo": "/api/pub/searchlogo/google.png",
+      "searchlink": "https://www.google.com/search?q={{}}",
+      "color": "#4285F4"
+    },
+    {
+      "name": "Baidu",
+      "icon": "/api/pub/searchlogo/baidu-xs.png",
+      "logo": "/api/pub/searchlogo/baidu.png",
+      "searchlink": "https://www.baidu.com/s?wd={{}}",
+      "color": "#2932E1"
+    }
+  ],
+  "translator": "https://bing.com/translator?text={{}}"
+}
