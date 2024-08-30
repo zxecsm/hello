@@ -7,6 +7,7 @@ import '../../js/common/common';
 import {
   LazyLoad,
   _getData,
+  _getTarget,
   _myOpen,
   _setData,
   computeSize,
@@ -481,22 +482,83 @@ $contentWrap
   .on('mouseleave', '.file_item', function () {
     toolTip.hide();
   })
-  .on('contextmenu', '.file_item', function (e) {
+  .on('contextmenu', function (e) {
     e.preventDefault();
     if (isMobile()) return;
-    rightList(
-      e,
-      getFileItem(this.dataset.id),
-      this.querySelector('.check_state')
-    );
+    const fileItem = _getTarget(this, e, '.content_wrap .file_item');
+    if (fileItem) {
+      rightList(
+        e,
+        getFileItem(fileItem.dataset.id),
+        fileItem.querySelector('.check_state')
+      );
+    } else {
+      hdContextMenu(e);
+    }
   });
-longPress($contentWrap[0], '.file_item', function (e) {
+function hdContextMenu(e) {
+  const data = [
+    { id: 'select', text: '选中', beforeIcon: 'iconfont icon-duoxuan' },
+    {
+      id: 'createfile',
+      text: '新建文件',
+      beforeIcon: 'iconfont icon-24gl-fileText',
+    },
+    {
+      id: 'createdir',
+      text: '新建文件夹',
+      beforeIcon: 'iconfont icon-24gl-folder',
+    },
+    {
+      id: 'upfile',
+      text: '上传文件',
+      beforeIcon: 'iconfont icon-24gl-fileText',
+    },
+    {
+      id: 'updir',
+      text: '上传文件夹',
+      beforeIcon: 'iconfont icon-24gl-folder',
+    },
+  ];
+  rMenu.selectMenu(e, data, async ({ e, close, id }) => {
+    if (id === 'select') {
+      close();
+      if (!isChecking) {
+        startCheck();
+      }
+    } else if (id === 'createfile') {
+      createFile(e);
+    } else if (id === 'createdir') {
+      createDir(e);
+    } else if (id === 'upfile') {
+      const files = await getFiles({
+        multiple: true,
+      });
+      if (files.length == 0) return;
+      hdUp(files);
+      close(1);
+    } else if (id === 'updir') {
+      const files = await getFiles({
+        webkitdirectory: true,
+      });
+      if (files.length == 0) return;
+      hdUp(files);
+      close(1);
+    }
+  });
+}
+longPress($contentWrap[0], function (e) {
   const ev = e.changedTouches[0];
-  rightList(
-    ev,
-    getFileItem(this.dataset.id),
-    this.querySelector('.check_state')
-  );
+  const fileItem = _getTarget(this, ev, '.content_wrap .file_item');
+  if (fileItem) {
+    rightList(
+      ev,
+      getFileItem(fileItem.dataset.id),
+      fileItem.querySelector('.check_state')
+    );
+  } else {
+    hdContextMenu(ev);
+  }
 });
 // 操作菜单
 function rightList(e, obj, el) {
