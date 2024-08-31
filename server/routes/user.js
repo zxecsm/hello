@@ -70,20 +70,6 @@ route.get('/player-config', async (req, res) => {
     _err(res)(req, error);
   }
 });
-// 获取文件key
-route.get('/file-key', async (req, res) => {
-  try {
-    const { p } = req.query;
-    if (!validaString(p, 1, 1000)) {
-      paramErr(res, req);
-      return;
-    }
-    const key = fileKey.add(req._hello.userinfo.account, p);
-    _success(res, '获取fileKey成功', key)(req, key, 1);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
 // 获取自定义code
 route.get('/custom-code', async (req, res) => {
   try {
@@ -438,6 +424,20 @@ route.use((req, res, next) => {
     next();
   } else {
     _nologin(res);
+  }
+});
+// 获取文件key
+route.get('/file-key', async (req, res) => {
+  try {
+    const { p } = req.query;
+    if (!validaString(p, 1, 1000)) {
+      paramErr(res, req);
+      return;
+    }
+    const key = fileKey.add(req._hello.userinfo.account, p);
+    _success(res, '获取fileKey成功', key)(req, key, 1);
+  } catch (error) {
+    _err(res)(req, error);
   }
 });
 // 清除文件key

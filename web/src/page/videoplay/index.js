@@ -10,6 +10,7 @@ import {
   darkMode,
   debounce,
   getFileKey,
+  isLogin,
   myOpen,
   queryURLParams,
   readableTime,
@@ -35,9 +36,13 @@ reqUserPlayerConfig()
   })
   .catch(() => {});
 playIn.addEventListener('click', async function (e) {
-  const sign = await getFileKey(queryURLParams(url).p);
-  const fPath = url + `&sign=${sign}`;
-  selectPlayIn(e, fPath, sign);
+  if (isLogin()) {
+    const sign = await getFileKey(queryURLParams(url).p);
+    const fPath = url + `&sign=${sign}`;
+    selectPlayIn(e, fPath, sign);
+  } else {
+    selectPlayIn(e, url);
+  }
 });
 playIn.addEventListener('mouseenter', () => {
   toolTip.setTip('使用其他应用播放').show();
@@ -57,12 +62,15 @@ function showPlayIn() {
 document.addEventListener('mousemove', showPlayIn);
 document.addEventListener('touchstart', showPlayIn);
 function selectPlayIn(e, url, sign) {
-  const expTime = readableTime(
-    +sign.split('-')[1] + 5 * 60 * 60 * 1000 - Date.now()
-  );
+  let expTime = '';
+  if (sign) {
+    expTime = readableTime(
+      +sign.split('-')[1] + 5 * 60 * 60 * 1000 - Date.now()
+    );
+  }
   const html = _tpl(
     `
-    <div cursor="y" class="item" data-xi="refresh">
+    <div v-if="expTime" cursor="y" class="item" data-xi="refresh">
       <img style="width: 40px;height: 40px;border-radius: 4px;" :data-src="refreshLogo"/>
       <span style="margin-left:10px;">更新链接（{{expTime}} 后过期）</span>
     </div>
@@ -120,9 +128,13 @@ vd.play();
 vd.onerror = function () {
   _pop({ e: false, text: '播放失败，使用其他应用打开？' }, async (type) => {
     if (type === 'confirm') {
-      const sign = await getFileKey();
-      const fPath = url + `&sign=${sign}`;
-      selectPlayIn(false, fPath, sign);
+      if (isLogin()) {
+        const sign = await getFileKey(queryURLParams(url).p);
+        const fPath = url + `&sign=${sign}`;
+        selectPlayIn(false, fPath, sign);
+      } else {
+        selectPlayIn(false, url);
+      }
     }
   });
 };
