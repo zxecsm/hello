@@ -308,7 +308,9 @@ route.get('/log', async (req, res) => {
 // 日志文件列表
 route.get('/log-list', async (req, res) => {
   try {
-    const list = await readMenu(`${configObj.filepath}/log`);
+    const list = (await readMenu(`${configObj.filepath}/log`)).filter(
+      (f) => f.type === 'file'
+    );
     list.sort((a, b) => b.time - a.time);
     _success(res, 'ok', list);
   } catch (error) {

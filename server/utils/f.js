@@ -17,7 +17,7 @@ async function deldir(folderPath) {
       if (entry.isDirectory()) {
         await deldir(fullPath);
       } else {
-        await delFile(fullPath);
+        await fsp.unlink(fullPath);
       }
     });
     await Promise.all(promises);
@@ -26,20 +26,13 @@ async function deldir(folderPath) {
     throw error;
   }
 }
-async function delFile(path) {
-  try {
-    await fsp.writeFile(path, '');
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {}
-  await fsp.unlink(path);
-}
 async function del(path) {
   try {
     const s = await fsp.stat(path);
     if (s.isDirectory()) {
       await deldir(path);
     } else {
-      await delFile(path);
+      await fsp.unlink(path);
     }
   } catch (error) {
     throw error;

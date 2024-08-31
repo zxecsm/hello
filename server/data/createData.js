@@ -422,6 +422,6 @@ END;
         },
       ]);
     } catch (error) {
-      await writelog(false, `[ ${error} ]`, 'error');
+      await writelog(false, `[ createData ] - ${error}`, 'error');
     }
   });

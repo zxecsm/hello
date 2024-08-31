@@ -491,32 +491,36 @@ async function readMenu(path) {
     const list = await _f.p.readdir(path);
     const arr = [];
     for (let i = 0; i < list.length; i++) {
-      const name = list[i];
-      const f = `${path}/${name}`;
-      const s = await _f.p.stat(f);
-      if (s.isDirectory()) {
-        arr.push({
-          path,
-          type: 'dir',
-          name,
-          time: s.ctime.getTime(),
-          size: 0,
-          mode: getPermissions(s),
-        });
-      } else {
-        arr.push({
-          path,
-          type: 'file',
-          name,
-          time: s.ctime.getTime(),
-          size: s.size,
-          mode: getPermissions(s),
-        });
+      try {
+        const name = list[i];
+        const f = `${path}/${name}`;
+        const s = await _f.p.stat(f);
+        if (s.isDirectory()) {
+          arr.push({
+            path,
+            type: 'dir',
+            name,
+            time: s.ctime.getTime(),
+            size: 0,
+            mode: getPermissions(s),
+          });
+        } else {
+          arr.push({
+            path,
+            type: 'file',
+            name,
+            time: s.ctime.getTime(),
+            size: s.size,
+            mode: getPermissions(s),
+          });
+        }
+      } catch (error) {
+        await writelog(false, `[ readMenu ] - ${error}`, 'error');
       }
     }
     return arr;
-    // eslint-disable-next-line no-unused-vars
   } catch (error) {
+    await writelog(false, `[ readMenu ] - ${error}`, 'error');
     return [];
   }
 }
@@ -939,27 +943,32 @@ async function getAllFile(path) {
   try {
     const arr = [];
     async function getFile(path) {
-      const s = await _f.p.stat(path);
-      if (s.isDirectory()) {
-        const list = await _f.p.readdir(path);
-        for (let i = 0; i < list.length; i++) {
-          await getFile(`${path}/${list[i]}`);
+      try {
+        const s = await _f.p.stat(path);
+        if (s.isDirectory()) {
+          const list = await _f.p.readdir(path);
+          for (let i = 0; i < list.length; i++) {
+            await getFile(`${path}/${list[i]}`);
+          }
+        } else {
+          arr.push({
+            name: getPathFilename(path)[0],
+            path: getFileDir(path),
+            size: s.size,
+            atime: s.atimeMs, //最近一次访问文件的时间戳
+            ctime: s.ctimeMs, //最近一次文件状态的修改的时间戳
+            birthtime: s.birthtimeMs, //文件创建时间的时间戳
+          });
         }
-      } else {
-        arr.push({
-          name: getPathFilename(path)[0],
-          path: getFileDir(path),
-          size: s.size,
-          atime: s.atimeMs, //最近一次访问文件的时间戳
-          ctime: s.ctimeMs, //最近一次文件状态的修改的时间戳
-          birthtime: s.birthtimeMs, //文件创建时间的时间戳
-        });
+      } catch (error) {
+        await writelog(false, `[ getAllFile ] - ${error}`, 'error');
       }
     }
     await getFile(path);
     return arr;
   } catch (error) {
-    throw error;
+    await writelog(false, `[ getAllFile ] - ${error}`, 'error');
+    return [];
   }
 }
 async function getDirSize(path) {

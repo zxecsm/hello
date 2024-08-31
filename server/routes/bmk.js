@@ -173,10 +173,12 @@ timedTask.add(async (flag) => {
     const sList = await readMenu(`${configObj.filepath}/siteinfo`);
     let num = 0;
     for (let i = 0; i < sList.length; i++) {
-      const { name, path, time } = sList[i];
-      if (now - time > 7 * 24 * 60 * 60 * 1000) {
-        await _delDir(`${path}/${name}`);
-        num++;
+      const { name, path, time, type } = sList[i];
+      if (type === 'file') {
+        if (now - time > 7 * 24 * 60 * 60 * 1000) {
+          await _delDir(`${path}/${name}`);
+          num++;
+        }
       }
     }
     if (num) {

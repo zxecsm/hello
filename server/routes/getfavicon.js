@@ -19,10 +19,12 @@ timedTask.add(async (flag) => {
     const fList = await readMenu(`${configObj.filepath}/favicon`);
     let num = 0;
     for (let i = 0; i < fList.length; i++) {
-      const { name, path, time } = fList[i];
-      if (now - time > 7 * 24 * 60 * 60 * 1000) {
-        await _delDir(`${path}/${name}`);
-        num++;
+      const { name, path, time, type } = fList[i];
+      if (type === 'file') {
+        if (now - time > 7 * 24 * 60 * 60 * 1000) {
+          await _delDir(`${path}/${name}`);
+          num++;
+        }
       }
     }
     if (num) {
