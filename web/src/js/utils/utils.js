@@ -3073,6 +3073,38 @@ export function wave(idx = 1) {
       'querySelector'
     ]('svg');
   document['body']['appendChild'](_0x4d9451);
+
+  function createBubble() {
+    const bubble = document.createElement('div');
+    bubble.style.cssText = `
+    position: fixed;
+    bottom: -60px;
+    background-color: rgb(153 205 239 / 30%);
+    border-radius: 50%;
+    animation: rise 5s infinite ease-in-out;
+    pointer-events: none;
+    z-index: ${idx};
+    `;
+
+    // 随机大小和位置
+    const size = Math.random() * 50 + 10 + 'px';
+    bubble.style.width = size;
+    bubble.style.height = size;
+    bubble.style.left = Math.random() * 100 + '%';
+
+    // 随机动画持续时间
+    bubble.style.animationDuration = Math.random() * 10 + 30 + 's';
+
+    document.body.appendChild(bubble);
+
+    // 在动画结束后删除泡泡
+    _setTimeout(() => {
+      bubble.remove();
+    }, parseFloat(bubble.style.animationDuration) * 1000);
+  }
+  createBubble();
+  // 定时生成泡泡
+  setInterval(createBubble, 3000);
 }
 export async function getFileKey(p) {
   const exp = 4 * 60 * 60 * 1000;
