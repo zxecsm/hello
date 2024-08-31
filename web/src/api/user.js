@@ -147,6 +147,10 @@ export function reqUserCustomCode() {
 export function reqUserFileKey(data) {
   return _getAjax('/user/file-key', data);
 }
+// 清除文件key
+export function reqUserClearFileKey() {
+  return _getAjax('/user/clear-file-key');
+}
 // 获取playInConfig
 export function reqUserPlayerConfig() {
   return _getAjax('/user/player-config');

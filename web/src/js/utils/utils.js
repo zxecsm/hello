@@ -3107,7 +3107,7 @@ export function wave(idx = 1) {
   setInterval(createBubble, 3000);
 }
 export async function getFileKey(p) {
-  const exp = 4 * 60 * 60 * 1000;
+  const exp = 5 * 60 * 60 * 1000;
   const t = Date.now();
   try {
     const fileKeys = _getData('fileKeys').filter(

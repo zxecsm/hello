@@ -13,13 +13,22 @@ const fileKey = {
     this.clear();
     return this.keys[key];
   },
-  clear() {
-    const t = Date.now();
-    Object.keys(this.keys).forEach((key) => {
-      if (t - key.split('-')[1] >= exp) {
-        delete this.keys[key];
-      }
-    });
+  clear(account) {
+    if (account) {
+      Object.keys(this.keys).forEach((key) => {
+        const value = this.keys[key];
+        if (value.account === account) {
+          delete this.keys[key];
+        }
+      });
+    } else {
+      const t = Date.now();
+      Object.keys(this.keys).forEach((key) => {
+        if (t - key.split('-')[1] >= exp) {
+          delete this.keys[key];
+        }
+      });
+    }
   },
 };
 module.exports = fileKey;

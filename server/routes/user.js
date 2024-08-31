@@ -440,6 +440,15 @@ route.use((req, res, next) => {
     _nologin(res);
   }
 });
+// 清除文件key
+route.get('/clear-file-key', async (req, res) => {
+  try {
+    fileKey.clear(req._hello.userinfo.account);
+    _success(res, '清除fileKey成功')(req);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
 // 获取字体列表
 route.get('/font-list', async (req, res) => {
   try {
