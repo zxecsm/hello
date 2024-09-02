@@ -49,6 +49,9 @@ route.all('/:chat_id/sendMessage', async (req, res) => {
       text = req.query.text;
     } else if (method === 'post') {
       text = req.body.text;
+      if (!text) {
+        text = req.query.text;
+      }
     }
     const { chat_id } = req.params;
     if (!validaString(chat_id, 1, 50, 1) || !validaString(text, 1, 2500)) {
