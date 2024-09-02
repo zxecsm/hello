@@ -73,5 +73,5 @@ export function reqFileGetShare(data) {
 }
 // 读取目录大小
 export function reqFileReadDirSize(data) {
-  return _getAjax('/file/read-dir-size', data);
+  return _getAjax('/file/read-dir-size', data, { timeout: 10000 });
 }

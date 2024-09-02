@@ -453,7 +453,11 @@ $contentWrap
           this.innerText = computeSize(res.data.size);
         }
       })
-      .catch(() => {});
+      .catch((error) => {
+        if (error.statusText == 'timeout') {
+          _msg.success(`文件夹文件较多后台计算中`);
+        }
+      });
   })
   .on('click', '.name', function (e) {
     const id = this.parentNode.dataset.id;

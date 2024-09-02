@@ -92,6 +92,27 @@ route.get('/share', async (req, res) => {
     _err(res)(req, error);
   }
 });
+const fileSize = {
+  keys: {},
+  add(p, size) {
+    const key = `h_${p}`;
+    this.keys[key] = { size, t: Date.now() };
+  },
+  get(p) {
+    this.clear();
+    const key = `h_${p}`;
+    const value = this.keys[key];
+    return value ? this.keys[key].size : 0;
+  },
+  clear() {
+    const t = Date.now();
+    Object.keys(this.keys).forEach((key) => {
+      if (t - this.keys[key].t >= 60 * 60 * 1000) {
+        delete this.keys[key];
+      }
+    });
+  },
+};
 //读取目录
 route.get('/read-dir', async (req, res) => {
   try {
@@ -131,10 +152,14 @@ route.get('/read-dir', async (req, res) => {
     if (_f.c.existsSync(p)) {
       const arr = (await readMenu(p)).map((item) => {
         const path = hdPath('/' + item.path.slice(rootP.length));
-        return {
+        const obj = {
           ...item,
           path,
         };
+        if (item.type === 'dir') {
+          obj.size = fileSize.get(hdPath(`${item.path}/${item.name}`));
+        }
+        return obj;
       });
       _success(res, 'ok', arr);
     } else {
@@ -183,6 +208,7 @@ route.get('/read-dir-size', async (req, res) => {
     let size = 0;
     if (_f.c.existsSync(p)) {
       size = await getDirSize(p);
+      fileSize.add(p, size);
     }
     _success(res, '读取文件夹大小成功', { size })(req, p, 1);
   } catch (error) {
