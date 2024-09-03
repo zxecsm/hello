@@ -85,6 +85,7 @@ const _d = {
     username: '', // 用户名
     showpd: false, // 显示密码
     dark: 's', // 黑暗模式 s：随系统 y：开启 n：关闭
+    headBtnToRight: true, // 窗口头部按钮排序
     clickLove: false, // 点击♥
     pmsound: true, // 提示音
     pageGrayscale: 0, // 页面灰度

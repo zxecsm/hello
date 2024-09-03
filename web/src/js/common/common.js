@@ -6,6 +6,7 @@ import {
   darkMode,
   isIframe,
   addCustomCode,
+  changeHeadBtnSort,
 } from '../utils/utils';
 import _d from './config';
 import _msg from '../plugins/message';
@@ -175,6 +176,7 @@ window.onerror = function (message, url, line, column) {
 handleFontType();
 
 darkMode(_getData('dark'));
+changeHeadBtnSort(_getData('headBtnToRight'));
 // 图标处理
 ~(function () {
   const icon = document.querySelector("link[rel*='icon']");

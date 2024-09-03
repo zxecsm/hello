@@ -26,10 +26,8 @@
       width: 100%;
       height: 41px;
       display: flex;
-      flex-flow: row-reverse;
       box-sizing: border-box;
       border-bottom: 1px solid var(--color8);
-      padding-left: 10px;
       .close {
         font-size: 20px;
         flex: none;
@@ -300,5 +298,11 @@
         }
       }
     }
+  }
+}
+html.head_btn_to_right {
+  .right_box .head {
+    flex-flow: row-reverse;
+    padding-left: 10px;
   }
 }

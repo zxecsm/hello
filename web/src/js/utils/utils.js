@@ -1383,11 +1383,14 @@ export function imgPreview(arr, idx = 0) {
   const close = document.createElement('div');
   close.style.cssText = `
   position: absolute;
-  right: 0;
+  ${
+    _getData('headBtnToRight')
+      ? 'right: 0;border-radius: 0 0 0 50%;'
+      : 'left: 0;border-radius: 0 0 50% 0;'
+  }
   top: 0;
   padding: 10px;
   font-size: 40px;
-  border-radius: 0 0 0 50%;
   background-color: rgb(0 0 0 / 40%);
   /*cursor: pointer;*/
   `;
@@ -1777,6 +1780,14 @@ export function darkMode(flag) {
     document.documentElement.classList.add('dark');
   } else {
     document.documentElement.classList.remove('dark');
+  }
+}
+// 改变窗口头部排列
+export function changeHeadBtnSort(flag) {
+  if (flag) {
+    document.documentElement.classList.add('head_btn_to_right');
+  } else {
+    document.documentElement.classList.remove('head_btn_to_right');
   }
 }
 // 滚动文本

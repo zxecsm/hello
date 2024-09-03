@@ -568,7 +568,6 @@ html {
     .m_head_btns {
       flex: none;
       display: flex;
-      flex-flow: row-reverse;
       align-items: center;
       width: 100%;
       height: 41px;
@@ -613,6 +612,13 @@ html {
         width: 100%;
         height: 100%;
       }
+    }
+  }
+}
+html.head_btn_to_right {
+  .music_mv_wrap {
+    .m_head_btns {
+      flex-flow: row-reverse;
     }
   }
 }

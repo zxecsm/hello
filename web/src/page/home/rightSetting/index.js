@@ -38,6 +38,7 @@ import {
   isEmail,
   isurl,
   parseObjectJson,
+  changeHeadBtnSort,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -89,6 +90,7 @@ import { _tpl } from '../../../js/utils/template.js';
 // local数据
 let dark = _getData('dark'),
   pageGrayscale = _getData('pageGrayscale'),
+  headBtnToRight = _getData('headBtnToRight'),
   tipsFlag = 0;
 const $rightMenuMask = $('.right_menu_mask'),
   $rightBox = $rightMenuMask.find('.right_box'),
@@ -717,6 +719,19 @@ function hdIframeDarkMode(dark) {
     } catch (error) {}
   });
 }
+function hdIframeCloseBtnSortMode(flag) {
+  [...document.querySelectorAll('iframe')].forEach((item) => {
+    try {
+      const html = item.contentWindow.document.documentElement;
+      if (flag) {
+        html.classList.add('head_btn_to_right');
+      } else {
+        html.classList.remove('head_btn_to_right');
+      }
+      // eslint-disable-next-line no-unused-vars
+    } catch (error) {}
+  });
+}
 // 设置
 export function settingMenu(e, isMain) {
   let icon = 'icon-xianshiqi';
@@ -747,22 +762,31 @@ export function settingMenu(e, isMain) {
       beforeIcon: `iconfont ${icon}`,
       param: { value: dark },
     },
+    {
+      id: '5',
+      text: '叉叉靠右',
+      beforeIcon: `iconfont icon-guanbi`,
+      afterIcon:
+        'iconfont ' +
+        (headBtnToRight ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+      param: { value: headBtnToRight },
+    },
   ];
   if (isMain) {
     data = [
       ...data,
       {
-        id: '7',
+        id: '6',
         text: '新建笔记',
         beforeIcon: 'iconfont icon-jilu',
       },
       {
-        id: '5',
+        id: '7',
         text: '隐藏所有窗口',
         beforeIcon: 'iconfont icon-jianhao',
       },
       {
-        id: '6',
+        id: '8',
         text: '关闭所有窗口',
         beforeIcon: 'iconfont icon-guanbi1',
       },
@@ -918,15 +942,34 @@ export function settingMenu(e, isMain) {
         darkMode(dark);
         resetMenu(data);
         hdIframeDarkMode(dark);
-      } else if (id == '5') {
+      } else if (id === '5') {
+        if (param.value) {
+          data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
+          data[id - 1].param.value = false;
+          changeHeadBtnSort();
+          hdIframeCloseBtnSortMode();
+          _msg.success('关闭成功');
+          headBtnToRight = false;
+          _setData('headBtnToRight', false);
+        } else {
+          data[id - 1].afterIcon = 'iconfont icon-kaiguan-kai1';
+          data[id - 1].param.value = true;
+          changeHeadBtnSort(1);
+          hdIframeCloseBtnSortMode(1);
+          _msg.success('开启成功');
+          headBtnToRight = true;
+          _setData('headBtnToRight', true);
+        }
+        resetMenu(data);
+      } else if (id == '7') {
         close();
         // 隐藏所有窗口
         hideAllwindow(1);
-      } else if (id == '6') {
+      } else if (id == '8') {
         close();
         // 关闭所有窗口
         closeAllwindow(1);
-      } else if (id == '7') {
+      } else if (id == '6') {
         close();
         openInIframe('/edit/#new', '新笔记');
       }
