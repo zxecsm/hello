@@ -1,3 +1,11 @@
+## Docker
+
+```bash
+docker run -d -p 55555:55555 -v /opt/hello/data:/opt/hello/data -v /:/home --name hello zxecsm/hello:latest
+```
+
+## 手动
+
 ```bash
 git clone https://github.com/zxecsm/hello.git /opt/hello/hello
 ```
@@ -8,7 +16,7 @@ vim /opt/hello/hello/server/data/config.js
 
 ```javascript
 const filepath = '/opt/hello/data'; // 网站数据存放目录
-const rootP = '/'; // 文件管理根目录
+const rootP = '/home'; // 文件管理根目录
 const configObj = {
   port: 55555,
   filepath,

@@ -815,6 +815,7 @@ async function hdDeCompress(e, obj, cb) {
             _msg.success(`文件后台处理中`);
           }
           openDir();
+          cb && cb();
         }
       }
     }
@@ -841,6 +842,7 @@ async function hdCompress(e, obj, cb) {
             _msg.success(`文件后台处理中`);
           }
           openDir();
+          cb && cb();
         }
       }
     }
@@ -1228,6 +1230,7 @@ async function hdCopy(data, cb) {
       _msg.success(`文件后台处理中`);
     }
     openDir();
+    cb && cb();
   }
 }
 // 移动
@@ -1261,6 +1264,7 @@ async function hdCut(data, cb) {
     waitObj = {};
     realtime.send({ type: 'pastefiledata', data: waitObj });
     hidePaste();
+    cb && cb();
   }
 }
 // 获取选中
@@ -1431,8 +1435,13 @@ function hdDel(e, arr, cb, force = 'n') {
             openDir();
             cb && cb();
           }
-          // eslint-disable-next-line no-unused-vars
-        } catch (error) {}
+        } catch (error) {
+          if (error.statusText == 'timeout') {
+            _msg.success(`文件后台处理中`);
+          }
+          openDir();
+          cb && cb();
+        }
       }
     }
   );

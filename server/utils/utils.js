@@ -207,9 +207,15 @@ async function _delDir(path) {
       if (_f.c.existsSync(`${trashDir}/${fname}`)) {
         fname = getRandomName(fname);
       }
-      return _f.p.rename(path, `${trashDir}/${fname}`);
+      try {
+        await _f.p.rename(path, `${trashDir}/${fname}`);
+        // eslint-disable-next-line no-unused-vars
+      } catch (error) {
+        await _f.cp(path, `${trashDir}/${fname}`);
+        await _f.del(path);
+      }
     } else {
-      return _f.del(path);
+      await _f.del(path);
     }
   } catch (error) {
     throw error;
@@ -400,7 +406,13 @@ async function mergefile(count, from, to) {
       await _f.del(u);
     }
     await _f.del(from);
-    await _f.p.rename(temFile, to);
+    try {
+      await _f.p.rename(temFile, to);
+      // eslint-disable-next-line no-unused-vars
+    } catch (error) {
+      await _f.cp(temFile, to);
+      await _f.del(temFile);
+    }
   } catch (error) {
     throw error;
   }

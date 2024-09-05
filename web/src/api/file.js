@@ -61,7 +61,7 @@ export function reqFileMove(data) {
 }
 // 删除
 export function reqFileDelete(data) {
-  return _postAjax('/file/delete', data);
+  return _postAjax('/file/delete', data, { timeout: 10000 });
 }
 // 重命名
 export function reqFileRename(data) {

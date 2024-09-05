@@ -460,7 +460,13 @@ route.post('/move', async (req, res) => {
       if (_f.c.existsSync(t)) {
         t = hdPath(`${p}/${getRandomName(name)}`);
       }
-      await _f.p.rename(f, t);
+      try {
+        await _f.p.rename(f, t);
+        // eslint-disable-next-line no-unused-vars
+      } catch (error) {
+        await _f.cp(f, t);
+        await _f.del(f);
+      }
       await uLog(req, `移动${type == 'dir' ? '文件夹' : '文件'}(${f}=>${t})`);
     }
     syncUpdateData(req, 'file');
