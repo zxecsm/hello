@@ -13,7 +13,6 @@ const {
   getFileDir,
   receiveFiles,
   mergefile,
-  _delDir,
   validationValue,
   _type,
   getSuffix,
@@ -32,6 +31,8 @@ const {
   uLog,
   isRoot,
   getDirSize,
+  getTrashDir,
+  getPathFilename,
 } = require('../utils/utils');
 const configObj = require('../data/config');
 const { insertData, queryData } = require('../utils/sqlite');
@@ -123,6 +124,7 @@ route.get('/read-dir', async (req, res) => {
     }
     let p = '';
     let rootP = '';
+    const { account } = req._hello.userinfo;
     if (flag) {
       const [id, pass] = flag.split('/');
       const share = (
@@ -141,7 +143,6 @@ route.get('/read-dir', async (req, res) => {
         p = hdPath(`${rootP}/${path}`);
       }
     } else {
-      const { account } = req._hello.userinfo;
       if (!account) {
         _nologin(res);
         return;
@@ -150,16 +151,20 @@ route.get('/read-dir', async (req, res) => {
       rootP = getRootDir(account);
     }
     if (_f.c.existsSync(p)) {
-      const arr = (await readMenu(p)).map((item) => {
+      const arr = [];
+      (await readMenu(p)).forEach((item) => {
+        const fullPath = hdPath(`${item.path}/${item.name}`);
+        if (account && item.type === 'dir' && getTrashDir(account) === fullPath)
+          return;
         const path = hdPath('/' + item.path.slice(rootP.length));
         const obj = {
           ...item,
           path,
         };
         if (item.type === 'dir') {
-          obj.size = fileSize.get(hdPath(`${item.path}/${item.name}`));
+          obj.size = fileSize.get(fullPath);
         }
-        return obj;
+        arr.push(obj);
       });
       _success(res, 'ok', arr);
     } else {
@@ -296,13 +301,14 @@ route.post('/create-file', async (req, res) => {
       paramErr(res, req);
       return;
     }
+    const { account } = req._hello.userinfo;
     if (!isFilename(name)) {
       _err(res, '名称包含了不允许的特殊字符')(req, name, 1);
       return;
     }
     const dir = _hdPath(req._hello.userinfo.account, path);
     const fpath = hdPath(`${dir}/${name}`);
-    if (_f.c.existsSync(fpath)) {
+    if (_f.c.existsSync(fpath) || getTrashDir(account) === fpath) {
       _err(res, '已存在重名文件')(req, fpath, 1);
       return;
     }
@@ -328,6 +334,7 @@ route.post('/share', async (req, res) => {
       (!_type.isObject(data) &&
         !validaString(data.name, 1) &&
         !validaString(data.path, 1) &&
+        hdPath(data.path) !== '/' &&
         !validationValue(data.type, ['dir', 'file']))
     ) {
       paramErr(res, req);
@@ -367,8 +374,9 @@ route.post('/save-file', async (req, res) => {
       paramErr(res, req);
       return;
     }
-    const fpath = _hdPath(req._hello.userinfo.account, path);
-    if (!_f.c.existsSync(fpath)) {
+    const { account } = req._hello.userinfo;
+    const fpath = _hdPath(account, path);
+    if (!_f.c.existsSync(fpath) || getTrashDir(account) === fpath) {
       _err(res, '文件不存在')(req, fpath, 1);
       return;
     }
@@ -399,20 +407,22 @@ route.post('/copy', async (req, res) => {
       paramErr(res, req);
       return;
     }
-    const p = _hdPath(req._hello.userinfo.account, path);
+    const { account } = req._hello.userinfo;
+    const p = _hdPath(account, path);
     if (!_f.c.existsSync(p)) {
       _err(res, '目标文件夹不存在')(req, p, 1);
       return;
     }
+    const trashDir = getTrashDir(account);
     for (let i = 0; i < data.length; i++) {
       let { name, path, type } = data[i];
       name = hdFilename(name);
-      const f = _hdPath(req._hello.userinfo.account, `${path}/${name}`);
+      const f = _hdPath(account, `${path}/${name}`);
       let to = hdPath(`${p}/${name}`);
       if (isParentDir(f, to) || !name) {
         continue;
       }
-      if (_f.c.existsSync(to)) {
+      if (_f.c.existsSync(to) || to === trashDir) {
         to = hdPath(`${p}/${getRandomName(name)}`);
       }
       await _f.cp(f, to);
@@ -444,20 +454,22 @@ route.post('/move', async (req, res) => {
       paramErr(res, req);
       return;
     }
-    const p = _hdPath(req._hello.userinfo.account, path);
+    const { account } = req._hello.userinfo;
+    const p = _hdPath(account, path);
     if (!_f.c.existsSync(p)) {
       _err(res, '目标文件夹不存在')(req, p, 1);
       return;
     }
+    const trashDir = getTrashDir(account);
     for (let i = 0; i < data.length; i++) {
       let { name, path, type } = data[i];
       name = hdFilename(name);
-      const f = _hdPath(req._hello.userinfo.account, `${path}/${name}`);
+      const f = _hdPath(account, `${path}/${name}`);
       let t = hdPath(`${p}/${name}`);
       if (f === t || isParentDir(f, t) || !name) {
         continue;
       }
-      if (_f.c.existsSync(t)) {
+      if (_f.c.existsSync(t) || t === trashDir) {
         t = hdPath(`${p}/${getRandomName(name)}`);
       }
       try {
@@ -494,11 +506,12 @@ route.post('/zip', async (req, res) => {
       paramErr(res, req);
       return;
     }
-    const p = _hdPath(req._hello.userinfo.account, path);
+    const { account } = req._hello.userinfo;
+    const p = _hdPath(account, path);
     const f = hdPath(`${p}/${name}`);
     const fname = getSuffix(name)[0] + '.zip';
     let t = hdPath(`${p}/${fname}`);
-    if (_f.c.existsSync(t)) {
+    if (_f.c.existsSync(t) || t === getTrashDir(account)) {
       t = hdPath(`${p}/${getRandomName(fname)}`);
     }
     if (type === 'dir') {
@@ -533,11 +546,12 @@ route.post('/unzip', async (req, res) => {
       paramErr(res, req);
       return;
     }
-    const p = _hdPath(req._hello.userinfo.account, path);
+    const { account } = req._hello.userinfo;
+    const p = _hdPath(account, path);
     const f = hdPath(`${p}/${name}`);
     const fname = getSuffix(name)[0];
     let t = hdPath(`${p}/${fname}`);
-    if (_f.c.existsSync(t)) {
+    if (_f.c.existsSync(t) || t === getTrashDir(account)) {
       t = hdPath(`${p}/${getRandomName(fname)}`);
       await uncompress(f, t);
       await uLog(req, `解压文件(${f}=>${t})`);
@@ -572,13 +586,29 @@ route.post('/delete', async (req, res) => {
       return;
     }
     const { account } = req._hello.userinfo;
+    const trashDir = getTrashDir(account);
     for (let i = 0; i < data.length; i++) {
-      const { path, name, type } = data[i];
+      let { path, name, type } = data[i];
       const p = _hdPath(account, `${path}/${name}`);
-      if (isRoot(req) && force === 'y') {
+      if (
+        force === 'y' ||
+        p === trashDir ||
+        isParentDir(p, trashDir) ||
+        isParentDir(trashDir, p)
+      ) {
         await _f.del(p);
       } else {
-        await _delDir(p);
+        await _f.mkdir(trashDir);
+        if (_f.c.existsSync(`${trashDir}/${name}`)) {
+          name = getRandomName(name);
+        }
+        try {
+          await _f.p.rename(p, `${trashDir}/${name}`);
+          // eslint-disable-next-line no-unused-vars
+        } catch (error) {
+          await _f.cp(p, `${trashDir}/${name}`);
+          await _f.del(p);
+        }
       }
       await uLog(req, `删除${type == 'dir' ? '文件夹' : '文件'}(${p})`);
     }
@@ -630,10 +660,11 @@ route.post('/rename', async (req, res) => {
       _err(res, '名称包含了不允许的特殊字符')(req, name, 1);
       return;
     }
-    const dir = _hdPath(req._hello.userinfo.account, data.path);
+    const { account } = req._hello.userinfo;
+    const dir = _hdPath(account, data.path);
     const p = hdPath(`${dir}/${data.name}`),
       t = hdPath(`${dir}/${name}`);
-    if (_f.c.existsSync(t)) {
+    if (_f.c.existsSync(t) || getTrashDir(account) === t) {
       _err(res, '已存在重名文件')(req, t, 1);
       return;
     }
@@ -717,8 +748,14 @@ route.post('/merge', async (req, res) => {
       return;
     }
     const { account } = req._hello.userinfo;
-    const fpath = _hdPath(req._hello.userinfo.account, path);
-    await _f.mkdir(getFileDir(fpath));
+    let fpath = _hdPath(account, path);
+    const dir = getFileDir(fpath);
+    let name = getPathFilename(fpath)[0];
+    if (fpath === getTrashDir(account)) {
+      name = getRandomName(name);
+      fpath = hdPath(`${dir}/${name}`);
+    }
+    await _f.mkdir(dir);
     await mergefile(
       count,
       `${configObj.filepath}/tem/${account}_${HASH}`,

@@ -221,15 +221,6 @@ route.get('/clean-pic-file', async (req, res) => {
     _err(res)(req, error);
   }
 });
-// 清理回收站文件
-route.get('/clean-trash-file', async (req, res) => {
-  try {
-    await _f.del(`${configObj.filepath}/trash`).catch(() => {});
-    _success(res, '清空回收站文件成功')(req);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
 // 清理缩略图文件
 route.get('/clean-thumb-file', async (req, res) => {
   try {

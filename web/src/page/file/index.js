@@ -629,11 +629,6 @@ function rightList(e, obj, el) {
       text: '权限',
       beforeIcon: 'iconfont icon-user_root',
     });
-    data.push({
-      id: 'fdel',
-      text: '强制删除',
-      beforeIcon: 'iconfont icon-shanchu',
-    });
   }
   data.push({
     id: 'del',
@@ -666,15 +661,6 @@ function rightList(e, obj, el) {
         hdDel(e, [obj], () => {
           close();
         });
-      } else if (id == 'fdel') {
-        hdDel(
-          e,
-          [obj],
-          () => {
-            close();
-          },
-          'y'
-        );
       } else if (id == 'cut') {
         waitObj = {
           type: 'cut',
@@ -1050,6 +1036,9 @@ $header
       closeSearch();
     }
   })
+  .on('click', '.h_trash_btn', function () {
+    openDir('/.trash', 1);
+  })
   .on('click', '.h_go_home', function () {
     myOpen('/');
   })
@@ -1319,7 +1308,6 @@ function renderFoot() {
         <button v-else cursor="y" class="f_compress btn btn_primary">压缩</button>
       </template>
       <button v-if="checkIsFile()" cursor="y" class="f_download btn btn_primary">下载</button>
-      <button v-if="isRoot()" cursor="y" class="f_fdelete btn btn_danger">强制删除</button>
       <button cursor="y" class="f_delete btn btn_danger">删除</button>
     </template>
     <button cursor="y" class="f_close btn btn_info">取消</button>
@@ -1402,9 +1390,6 @@ $footer
   .on('click', '.f_delete', function (e) {
     hdDel(e, getCheckDatas());
   })
-  .on('click', '.f_fdelete', function (e) {
-    hdDel(e, getCheckDatas(), null, 'y');
-  })
   .on('click', '.f_compress', function (e) {
     hdCompress(e, getCheckDatas()[0]);
   })
@@ -1415,36 +1400,39 @@ $footer
     hdShare(e, getCheckDatas()[0]);
   });
 // 删除
-function hdDel(e, arr, cb, force = 'n') {
-  let text = '';
+function hdDel(e, arr, cb) {
+  let text = '确认删除？';
   if (arr.length == 1) {
-    text = arr[0].name;
+    text = `确认删除：${arr[0].name}？`;
   }
-  _pop(
-    {
-      e,
-      text: `确认${force === 'n' ? '' : '强制'}删除：${text || '选中的文件'}？`,
-      confirm: { type: 'danger', text: '删除' },
-    },
-    async (type) => {
-      if (type == 'confirm') {
-        try {
-          const res = await reqFileDelete({ data: arr, force });
-          if (res.code == 0) {
-            _msg.success(res.codeText);
-            openDir();
-            cb && cb();
-          }
-        } catch (error) {
-          if (error.statusText == 'timeout') {
-            _msg.success(`文件后台处理中`);
-          }
+  const opt = {
+    e,
+    text,
+    confirm: { type: 'danger', text: '删除' },
+  };
+  if (fileUrl !== '/.trash') {
+    opt.cancel = { text: '放入回收站', type: 'primary' };
+    opt.confirm.text = '直接删除';
+  }
+  _pop(opt, async (type) => {
+    if (type == 'confirm' || type == 'cancel') {
+      try {
+        const force = type == 'confirm' ? 'y' : 'n';
+        const res = await reqFileDelete({ data: arr, force });
+        if (res.code == 0) {
+          _msg.success(res.codeText);
           openDir();
           cb && cb();
         }
+      } catch (error) {
+        if (error.statusText == 'timeout') {
+          _msg.success(`文件后台处理中`);
+        }
+        openDir();
+        cb && cb();
       }
     }
-  );
+  });
 }
 // 重命名
 function hdRename(e, obj, cb) {

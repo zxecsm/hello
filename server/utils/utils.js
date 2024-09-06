@@ -187,14 +187,17 @@ function extractIP(text) {
 // 文件随机后缀
 function getRandomName(str) {
   const r = '_' + Math.random().toString().slice(-6),
-    arr = getSuffix(str);
-  return arr[0] + r + `${arr[1] === '' ? '' : `.${arr[1]}`}`;
+    [a, b] = getSuffix(str);
+  if (a) {
+    return a + r + (b === '' ? '' : `.${b}`);
+  }
+  return (b === '' ? '' : `.${b}`) + r;
 }
-// 删除文件
+// 删除站点文件
 async function _delDir(path) {
   try {
     if (_d.trashState) {
-      const trashDir = `${configObj.filepath}/trash`;
+      const trashDir = getTrashDir('root');
       if (
         path === trashDir ||
         isParentDir(path, trashDir) ||
@@ -1002,6 +1005,9 @@ function getRootDir(acc) {
   }
   return hdPath(path);
 }
+function getTrashDir(account) {
+  return hdPath(`${getRootDir(account)}/.trash`);
+}
 // 处理路径
 function _hdPath(acc, p) {
   return hdPath(getRootDir(acc) + '/' + p);
@@ -1529,5 +1535,6 @@ module.exports = {
   saveChatMsg,
   helloHelperMsg,
   tplReplace,
+  getTrashDir,
   heperMsgAndForward,
 };

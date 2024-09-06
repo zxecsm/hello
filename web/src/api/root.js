@@ -39,10 +39,6 @@ export function reqRootCleanLogoFile() {
 export function reqRootCleanPicFile() {
   return _getAjax('/root/clean-pic-file');
 }
-// 清空回收站
-export function reqRootCleanTrashFile() {
-  return _getAjax('/root/clean-trash-file');
-}
 // 清空缩略图
 export function reqRootCleanThumbFile(data) {
   return _getAjax('/root/clean-thumb-file', data);

@@ -20,6 +20,7 @@ import {
   wave,
   darkMode,
   getPreUrl,
+  _myOpen,
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
@@ -35,7 +36,6 @@ import {
   reqRootCleanMusicFile,
   reqRootCleanPicFile,
   reqRootCleanThumbFile,
-  reqRootCleanTrashFile,
   reqRootCustomCode,
   reqRootDeleteAccount,
   reqRootEmail,
@@ -323,27 +323,6 @@ function cleanPicFile(e) {
     }
   );
 }
-// 清空回收站
-function cleanTrashFile(e) {
-  _pop(
-    {
-      e,
-      text: `确认清空：回收站？`,
-    },
-    (type) => {
-      if (type == 'confirm') {
-        reqRootCleanTrashFile()
-          .then((result) => {
-            if (parseInt(result.code) === 0) {
-              _msg.success(result.codeText);
-              return;
-            }
-          })
-          .catch(() => {});
-      }
-    }
-  );
-}
 // 清理缩略图
 function cleanThumbFile(e) {
   const data = [
@@ -424,9 +403,9 @@ function changeRegisterState() {
 function changeTrashState(e) {
   const data = [
     {
-      id: 'clean',
-      text: '清空回收站',
-      beforeIcon: 'iconfont icon-15qingkong-1',
+      id: 'toTrash',
+      text: '查看回收站',
+      beforeIcon: 'iconfont icon-link1',
     },
     {
       id: 'state',
@@ -438,9 +417,11 @@ function changeTrashState(e) {
   rMenu.selectMenu(
     e,
     data,
-    ({ id, resetMenu, e }) => {
-      if (id === 'clean') {
-        cleanTrashFile(e);
+    ({ id, resetMenu, close }) => {
+      if (id === 'toTrash') {
+        _setData('fileUrl', '/.trash');
+        _myOpen(`/file/`, '文件管理');
+        close();
       } else if (id === 'state') {
         reqRootTrashState()
           .then((res) => {
@@ -454,7 +435,7 @@ function changeTrashState(e) {
           .catch(() => {});
       }
     },
-    '文件回收站'
+    '站点文件回收站（删除的壁纸音乐..）'
   );
 }
 // 修改聊天文件保存时间
