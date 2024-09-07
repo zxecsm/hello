@@ -755,7 +755,11 @@ route.post('/merge', async (req, res) => {
       name = getRandomName(name);
       fpath = hdPath(`${dir}/${name}`);
     }
-    await _f.mkdir(dir);
+    if (_f.c.existsSync(fpath)) {
+      await _f.del(fpath);
+    } else {
+      await _f.mkdir(dir);
+    }
     await mergefile(
       count,
       `${configObj.filepath}/tem/${account}_${HASH}`,

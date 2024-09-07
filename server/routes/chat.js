@@ -368,6 +368,12 @@ async function hdHelloMsg(req, data, type) {
   }
 }
 // 接收信息
+const chatType = {
+  text: '文字',
+  image: '图片',
+  file: '文件',
+  voice: '语音',
+};
 route.post('/send-msg', async (req, res) => {
   try {
     const { account } = req._hello.userinfo;
@@ -409,7 +415,7 @@ route.post('/send-msg', async (req, res) => {
     forwardMsg(req, msg).catch((err) => {
       errLog(req, `转发信息失败(${err})`);
     });
-    _success(res, '发送文字消息成功')(req, `${msg.id}=>${_to}`, 1);
+    _success(res, `发送${chatType[type]}消息成功`)(req, `${msg.id}=>${_to}`, 1);
   } catch (error) {
     _err(res)(req, error);
   }
@@ -671,7 +677,12 @@ route.post('/up-voice', async (req, res) => {
       url: `${timePath}/${tName}`,
       time,
     };
-    const change = await updateData('upload', { time }, `WHERE id=?`, [HASH]);
+    const change = await updateData(
+      'upload',
+      { time, url: fobj.url },
+      `WHERE id=?`,
+      [HASH]
+    );
     if (change.changes == 0) {
       await insertData('upload', [fobj]);
     }
@@ -741,7 +752,12 @@ route.post('/merge', async (req, res) => {
       url: `${timePath}/${tName}`,
       time,
     };
-    const change = await updateData('upload', { time }, `WHERE id=?`, [HASH]);
+    const change = await updateData(
+      'upload',
+      { time, url: fobj.url },
+      `WHERE id=?`,
+      [HASH]
+    );
     if (change.changes == 0) {
       await insertData('upload', [fobj]);
     }
@@ -752,7 +768,7 @@ route.post('/merge', async (req, res) => {
       hash: HASH,
       type,
     };
-    const msg = await saveChatMsg(req._hello.userinfo.account, obj);
+    const msg = await saveChatMsg(account, obj);
     await hdChatSendMsg(req, obj._to, 'addmsg', obj);
     if (_to === 'hello') {
       await hdHelloMsg(req, obj.data, type);
@@ -760,7 +776,11 @@ route.post('/merge', async (req, res) => {
     forwardMsg(req, msg).catch((err) => {
       errLog(req, `转发信息失败(${err})`);
     });
-    _success(res, '发送文件消息成功')(req, `${msg.id}=>${obj._to}`, 1);
+    _success(res, `发送${chatType[type]}消息成功`)(
+      req,
+      `${msg.id}=>${obj._to}`,
+      1
+    );
   } catch (error) {
     _err(res)(req, error);
   }
@@ -795,6 +815,7 @@ route.post('/repeat', async (req, res) => {
     const upload = (await queryData('upload', '*', `WHERE id=?`, [HASH]))[0];
     if (upload) {
       if (_f.c.existsSync(`${configObj.filepath}/upload/${upload.url}`)) {
+        await updateData('upload', { time: Date.now() }, `WHERE id=?`, [HASH]);
         _success(res, 'ok', upload);
         return;
       }
