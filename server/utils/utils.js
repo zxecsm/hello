@@ -1443,8 +1443,25 @@ function parseObjectJson(str) {
     return '';
   }
 }
+function debounce(callback, wait, immedia) {
+  let timer = null,
+    res = null;
+  return function (...args) {
+    if (timer) {
+      clearTimeout(timer);
+    } else {
+      if (immedia) res = callback.call(this, ...args);
+    }
+    timer = setTimeout(() => {
+      timer = null;
+      if (!immedia) res = callback.call(this, ...args);
+    }, wait);
+    return res;
+  };
+}
 module.exports = {
   replaceObjectValue,
+  debounce,
   parseObjectJson,
   parseForwardMsgLink,
   myShuffle,

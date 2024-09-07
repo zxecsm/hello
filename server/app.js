@@ -14,6 +14,8 @@ const {
   getIn,
   _err,
   setCookie,
+  debounce,
+  heperMsgAndForward,
 } = require('./utils/utils');
 const { resolve } = require('path');
 const configObj = require('./data/config.js');
@@ -25,6 +27,17 @@ app.use(express.json({ limit: '20000kb' }));
 app.use(express.urlencoded({ extended: true, limit: '20000kb' }));
 app.use(express.static(resolve(__dirname, 'static')));
 const reqLimit = verifyLimit({ space: 10, count: 500 }, false);
+const informReqLimit = debounce(
+  async (req) => {
+    try {
+      const { os, ip } = req._hello;
+      await heperMsgAndForward(req, 'root', `[${os}(${ip})] 请求频率超过限制`);
+      // eslint-disable-next-line no-unused-vars
+    } catch (error) {}
+  },
+  5000,
+  1
+);
 app.use(async (req, res, next) => {
   try {
     const _clientConfig = new UAParser(req.headers['user-agent']).getResult(); //获取访问设备信息
@@ -46,6 +59,7 @@ app.use(async (req, res, next) => {
       await writelog(req, `${method}(${path})`);
       next();
     } else {
+      informReqLimit(req);
       _err(res, '请求频率超过限制')(req);
     }
   } catch (error) {

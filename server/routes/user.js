@@ -153,6 +153,12 @@ route.post('/register', async (req, res) => {
     registerCount++;
     await becomeFriends(account, 'chang');
     await becomeFriends(account, 'hello');
+    const { os, ip } = req._hello;
+    await heperMsgAndForward(
+      req,
+      'root',
+      `${username}(${account})，在 [${os}(${ip})] 注册账号成功`
+    );
     _success(res, '注册账号成功', { account, username })(
       req,
       `${username}-${account}`,
@@ -762,7 +768,7 @@ route.post('/account-state', async (req, res) => {
       paramErr(res, req);
       return;
     }
-    const { account, password: pd } = req._hello.userinfo;
+    const { account, username, password: pd } = req._hello.userinfo;
     if (pd && pd !== encryption(password)) {
       _err(res, '密码错误')(req);
       return;
@@ -773,6 +779,12 @@ route.post('/account-state', async (req, res) => {
       await deleteData('user', `WHERE account=?`, [account]);
       await _delDir(`${configObj.filepath}/logo/${account}`).catch(() => {});
       res.clearCookie('token');
+      const { os, ip } = req._hello;
+      await heperMsgAndForward(
+        req,
+        'root',
+        `${username}(${account})，在 [${os}(${ip})] 注销账号成功`
+      );
       _success(res, '注销账号成功')(req);
     }
   } catch (error) {
