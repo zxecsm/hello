@@ -850,18 +850,28 @@ if (isIframe()) {
 }
 // 上传
 async function hdUp(files) {
-  let rep = true;
-  const type = await _pop.p({
-    top: true,
-    text: '如何处理同名文件？',
-    cancel: { text: '略过' },
-    confirm: { text: '覆盖' },
-  });
-  if (type === 'close') return;
-  if (type == 'confirm') {
-    rep = true;
-  } else {
-    rep = false;
+  let hasSameName = false;
+  for (let i = 0; i < files.length; i++) {
+    const { name } = files[i];
+    if ($contentWrap.originList.some((item) => item.name === name)) {
+      hasSameName = true;
+      break;
+    }
+  }
+  let rep = false;
+  if (hasSameName) {
+    const type = await _pop.p({
+      top: true,
+      text: '如何处理同名文件？',
+      cancel: { text: '略过' },
+      confirm: { text: '覆盖' },
+    });
+    if (type === 'close') return;
+    if (type == 'confirm') {
+      rep = true;
+    } else {
+      rep = false;
+    }
   }
   maskLoading.start();
   await concurrencyTasks(files, 5, async (file) => {
@@ -879,11 +889,14 @@ async function hdUp(files) {
       _msg.error(`不能上传空文件`);
       return;
     }
-    const res = await reqFileRepeat({ path });
-    if (!rep && res.code == 0) {
-      pro.close('略过同名文件');
-      return;
+    if (!rep) {
+      const res = await reqFileRepeat({ path });
+      if (res.code == 0) {
+        pro.close('略过同名文件');
+        return;
+      }
     }
+
     try {
       //文件切片
       const { chunks, count, HASH } = await fileSlice(file, (percent) => {
