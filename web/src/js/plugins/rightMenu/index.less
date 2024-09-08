@@ -179,8 +179,20 @@
           border-radius: 2px;
           padding-left: 10px;
           font-size: 18px;
+          box-sizing: border-box;
           &:hover {
             border: 1px solid var(--btn-primary-color);
+            i {
+              color: var(--text-hover-color);
+            }
+          }
+          span {
+            flex: auto;
+          }
+          i {
+            flex: none;
+            font-size: 16px;
+            padding: 0 5px;
           }
         }
       }

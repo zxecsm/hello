@@ -1,7 +1,22 @@
 ## Docker
 
 ```bash
-docker run -d -p 55555:55555 -v /opt/hello/data:/opt/hello/data -v /:/home --name hello zxecsm/hello:latest
+docker run -d --restart=always -p 55555:55555 -v /opt/hello/data:/opt/hello/data -v /:/home -v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime:ro --name hello zxecsm/hello:latest
+```
+
+```yml
+services:
+  hello:
+    image: 'zxecsm/hello:latest'
+    container_name: hello
+    restart: always
+    volumes:
+      - /:/home # 文件管理根目录
+      - /opt/hello/data:/opt/hello/data # 网站数据存放目录
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - '55555:55555'
 ```
 
 ## 手动

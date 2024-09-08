@@ -320,7 +320,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       </div>
       <div v-else-if="type == 'select'" class='select_item'>
         <div v-if="beforeText" class="title">{{beforeText}}</div>
-        <div cursor="y" class='select_box' :data-flag="key">{{selectInitValue(selectItem,value)}}</div>
+        <div cursor="y" class='select_box' :data-flag="key"><span>{{selectInitValue(selectItem,value)}}</span><i class="iconfont icon-Down"></i></div>
         <p class='err'></p>
       </div>
     </template>
