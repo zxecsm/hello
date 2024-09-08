@@ -78,7 +78,7 @@ export function reqPlayerUp(data, file, cb) {
 }
 // 重复
 export function reqPlayerRepeat(data) {
-  return _postAjax('/player/repeat', data);
+  return _postAjax('/player/repeat', data, { parallel: true });
 }
 // 移动歌曲
 export function reqPlayerMoveSong(data) {

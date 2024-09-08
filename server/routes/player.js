@@ -42,6 +42,7 @@ const {
   uLog,
   isRoot,
   myShuffle,
+  concurrencyTasks,
 } = require('../utils/utils');
 const { _d } = require('../data/data');
 const configObj = require('../data/config');
@@ -843,12 +844,12 @@ route.post('/delete-song', async (req, res) => {
         `WHERE id IN (${createFillString(ids.length)})`,
         [...ids]
       );
-      for (let i = 0; i < dels.length; i++) {
-        const { url } = dels[i];
+      await concurrencyTasks(dels, 5, async (del) => {
+        const { url } = del;
         await _delDir(`${configObj.filepath}/music/${getFileDir(url)}`).catch(
           () => {}
         );
-      }
+      });
       await deleteData(
         'musics',
         `WHERE id IN (${createFillString(ids.length)})`,

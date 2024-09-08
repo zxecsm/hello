@@ -26,6 +26,7 @@ import {
   isLogin,
   wave,
   darkMode,
+  concurrencyTasks,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -53,19 +54,18 @@ const $contentWrap = $('.content_wrap'),
 // 上传
 async function hdUpFile(files) {
   const fData = [];
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
+  await concurrencyTasks(files, 5, async (file) => {
     const { name, size } = file;
     const pro = new UpProgress(name);
     if (!isImgFile(name)) {
       pro.fail();
       _msg.error(`图片格式错误`);
-      continue;
+      return;
     }
     if (size <= 0 || size >= 5 * 1024 * 1024) {
       pro.fail();
       _msg.error(`图片大小必须0~5M范围`);
-      continue;
+      return;
     }
     try {
       //文件切片
@@ -84,7 +84,7 @@ async function hdUpFile(files) {
           url: getPreUrl() + hdPath(`/api/pub/picture/${url}`),
         });
         //文件已经存在操作
-        continue;
+        return;
       }
       const result = await reqPicUp(
         {
@@ -110,7 +110,7 @@ async function hdUpFile(files) {
     } catch (error) {
       pro.fail();
     }
-  }
+  });
   picPageNo = 1;
   renderImgList(true);
   showLink(fData);

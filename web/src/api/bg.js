@@ -14,7 +14,7 @@ export function reqBgUp(data, file, cb) {
 }
 // 重复
 export function reqBgRepeat(data) {
-  return _postAjax('/bg/repeat', data);
+  return _postAjax('/bg/repeat', data, { parallel: true });
 }
 // 删除壁纸
 export function reqBgDelete(data) {

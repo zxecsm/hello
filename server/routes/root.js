@@ -31,6 +31,7 @@ const {
   nanoid,
   isEmail,
   isRoot,
+  concurrencyTasks,
 } = require('../utils/utils');
 //拦截器
 route.use((req, res, next) => {
@@ -165,13 +166,13 @@ route.get('/clean-music-file', async (req, res) => {
     if (_f.c.existsSync(musicDir)) {
       const musics = await queryData('musics', '*');
       const allMusicFile = await getAllFile(musicDir);
-      for (let i = 0; i < allMusicFile.length; i++) {
-        const { path, name } = allMusicFile[i];
+      await concurrencyTasks(allMusicFile, 5, async (item) => {
+        const { path, name } = item;
         const url = `${path.slice(musicDir.length + 1)}/${getSuffix(name)[0]}`;
         if (!musics.some((item) => getSuffix(item.url)[0] == url)) {
           await _delDir(`${path}/${name}`).catch(() => {});
         }
-      }
+      });
       await delEmptyFolder(musicDir).catch(() => {});
     }
     _success(res, '清理歌曲文件成功')(req);
@@ -186,13 +187,13 @@ route.get('/clean-bg-file', async (req, res) => {
     if (_f.c.existsSync(bgDir)) {
       const bgs = await queryData('bg', '*');
       const allBgFile = await getAllFile(bgDir);
-      for (let i = 0; i < allBgFile.length; i++) {
-        const { path, name } = allBgFile[i];
+      await concurrencyTasks(allBgFile, 5, async (item) => {
+        const { path, name } = item;
         const url = `${path.slice(bgDir.length + 1)}/${name}`;
         if (!bgs.some((item) => item.url == url)) {
           await _delDir(`${path}/${name}`).catch(() => {});
         }
-      }
+      });
       await delEmptyFolder(bgDir).catch(() => {});
     }
     _success(res, '清理壁纸文件成功')(req);
@@ -207,13 +208,13 @@ route.get('/clean-pic-file', async (req, res) => {
     if (_f.c.existsSync(picDir)) {
       const pics = await queryData('pic', '*');
       const allPicFile = await getAllFile(picDir);
-      for (let i = 0; i < allPicFile.length; i++) {
-        const { path, name } = allPicFile[i];
+      await concurrencyTasks(allPicFile, 5, async (item) => {
+        const { path, name } = item;
         const url = `${path.slice(picDir.length + 1)}/${name}`;
         if (!pics.some((item) => item.url == url)) {
           await _delDir(`${path}/${name}`).catch(() => {});
         }
-      }
+      });
       await delEmptyFolder(picDir).catch(() => {});
     }
     _success(res, '清理图床文件成功')(req);
@@ -375,13 +376,13 @@ route.get('/clean-logo-file', async (req, res) => {
     user = user.map((item) => getPathFilename(item.logo)[0]);
     const logos = [...bmk, ...user];
     const logoFiles = await getAllFile(`${configObj.filepath}/logo`);
-    for (let i = 0; i < logoFiles.length; i++) {
-      const { name, path } = logoFiles[i];
+    await concurrencyTasks(logoFiles, 5, async (item) => {
+      const { name, path } = item;
       const p = `${path}/${name}`;
       if (!logos.some((item) => item == name)) {
         await _delDir(p).catch(() => {});
       }
-    }
+    });
     await delEmptyFolder(`${configObj.filepath}/logo`).catch(() => {});
     _success(res, '清理LOGO文件成功')(req);
   } catch (error) {

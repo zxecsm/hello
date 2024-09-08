@@ -31,6 +31,7 @@ const {
   readMenu,
   _delDir,
   writelog,
+  concurrencyTasks,
 } = require('../utils/utils');
 const cheerio = require('cheerio');
 const shareVerify = require('../utils/shareVerify');
@@ -170,17 +171,18 @@ route.use((req, res, next) => {
 timedTask.add(async (flag) => {
   if (flag.slice(-6) === '003000') {
     const now = Date.now();
+    const threshold = now - 7 * 24 * 60 * 60 * 1000;
     const sList = await readMenu(`${configObj.filepath}/siteinfo`);
     let num = 0;
-    for (let i = 0; i < sList.length; i++) {
-      const { name, path, time, type } = sList[i];
+    await concurrencyTasks(sList, 5, async (item) => {
+      const { name, path, time, type } = item;
       if (type === 'file') {
-        if (now - time > 7 * 24 * 60 * 60 * 1000) {
+        if (time < threshold) {
           await _delDir(`${path}/${name}`);
           num++;
         }
       }
-    }
+    });
     if (num) {
       await writelog(false, `删除过期网站信息：${num}`, 'user');
     }

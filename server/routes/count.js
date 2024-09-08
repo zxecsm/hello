@@ -24,6 +24,7 @@ const {
   helloHelperMsg,
   forwardMsg,
   writelog,
+  concurrencyTasks,
 } = require('../utils/utils');
 
 //拦截器
@@ -72,8 +73,7 @@ timedTask.add(async () => {
       }
     });
     const keys = Object.keys(obj);
-    for (let i = 0; i < keys.length; i++) {
-      const key = keys[i];
+    await concurrencyTasks(keys, 5, async (key) => {
       const { count_down, todo } = obj[key];
       let text = '';
       if (count_down > 0 && todo > 0) {
@@ -96,7 +96,7 @@ timedTask.add(async () => {
       ).catch((err) => {
         writelog(false, `转发信息失败(${err})`, 'error');
       });
-    }
+    });
     writelog(false, `通知倒计时和代办事项成功`, 'user');
   }
 });

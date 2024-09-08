@@ -33,6 +33,7 @@ const {
   getDirSize,
   getTrashDir,
   getPathFilename,
+  concurrencyTasks,
 } = require('../utils/utils');
 const configObj = require('../data/config');
 const { insertData, queryData } = require('../utils/sqlite');
@@ -414,20 +415,18 @@ route.post('/copy', async (req, res) => {
       return;
     }
     const trashDir = getTrashDir(account);
-    for (let i = 0; i < data.length; i++) {
-      let { name, path, type } = data[i];
+    await concurrencyTasks(data, 5, async (task) => {
+      let { name, path, type } = task;
       name = hdFilename(name);
       const f = _hdPath(account, `${path}/${name}`);
       let to = hdPath(`${p}/${name}`);
-      if (isParentDir(f, to) || !name) {
-        continue;
-      }
+      if (isParentDir(f, to) || !name) return;
       if (_f.c.existsSync(to) || to === trashDir) {
         to = hdPath(`${p}/${getRandomName(name)}`);
       }
       await _f.cp(f, to);
       await uLog(req, `复制${type == 'dir' ? '文件夹' : '文件'}(${f}=>${to})`);
-    }
+    });
     syncUpdateData(req, 'file');
     _success(res);
   } catch (error) {
@@ -461,14 +460,12 @@ route.post('/move', async (req, res) => {
       return;
     }
     const trashDir = getTrashDir(account);
-    for (let i = 0; i < data.length; i++) {
-      let { name, path, type } = data[i];
+    await concurrencyTasks(data, 5, async (task) => {
+      let { name, path, type } = task;
       name = hdFilename(name);
       const f = _hdPath(account, `${path}/${name}`);
       let t = hdPath(`${p}/${name}`);
-      if (f === t || isParentDir(f, t) || !name) {
-        continue;
-      }
+      if (f === t || isParentDir(f, t) || !name) return;
       if (_f.c.existsSync(t) || t === trashDir) {
         t = hdPath(`${p}/${getRandomName(name)}`);
       }
@@ -480,7 +477,7 @@ route.post('/move', async (req, res) => {
         await _f.del(f);
       }
       await uLog(req, `移动${type == 'dir' ? '文件夹' : '文件'}(${f}=>${t})`);
-    }
+    });
     syncUpdateData(req, 'file');
     _success(res);
   } catch (error) {
@@ -587,8 +584,8 @@ route.post('/delete', async (req, res) => {
     }
     const { account } = req._hello.userinfo;
     const trashDir = getTrashDir(account);
-    for (let i = 0; i < data.length; i++) {
-      let { path, name, type } = data[i];
+    await concurrencyTasks(data, 5, async (task) => {
+      let { path, name, type } = task;
       const p = _hdPath(account, `${path}/${name}`);
       if (
         force === 'y' ||
@@ -611,7 +608,7 @@ route.post('/delete', async (req, res) => {
         }
       }
       await uLog(req, `删除${type == 'dir' ? '文件夹' : '文件'}(${p})`);
-    }
+    });
     syncUpdateData(req, 'file');
     _success(res);
   } catch (error) {

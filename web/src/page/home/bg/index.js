@@ -19,6 +19,7 @@ import {
   getFilePath,
   LazyLoad,
   isRoot,
+  concurrencyTasks,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import pagination from '../../../js/plugins/pagination';
@@ -44,23 +45,22 @@ const $allBgWrap = $('.all_bg_wrap'),
 let bgList = [];
 // 上传壁纸
 async function hdUpBg(files) {
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
+  await concurrencyTasks(files, 5, async (file) => {
     const { name, size } = file;
     const pro = new UpProgress(name);
     if (!isImgFile(name)) {
       pro.fail();
       _msg.error(`图片格式错误`);
-      continue;
+      return;
     }
     if (size <= 0 || size >= 20 * 1024 * 1024) {
       pro.fail();
       _msg.error(`图片大小必须0~20M范围`);
-      continue;
+      return;
     }
     try {
       //文件切片
-      const { HASH } = await fileSlice(files[i], (percent) => {
+      const { HASH } = await fileSlice(file, (percent) => {
         pro.loading(percent);
       });
       const isrepeat = await reqBgRepeat({
@@ -70,7 +70,7 @@ async function hdUpBg(files) {
       if (parseInt(isrepeat.code) === 0) {
         pro.close('壁纸已存在');
         //文件已经存在操作
-        continue;
+        return;
       }
       const result = await reqBgUp({ name, HASH }, file, (percent) => {
         pro.update(percent);
@@ -84,7 +84,7 @@ async function hdUpBg(files) {
     } catch (error) {
       pro.fail();
     }
-  }
+  });
   realtime.send({ type: 'updatedata', data: { flag: 'bg' } });
   bgpage = 1;
   renderBgList(true);

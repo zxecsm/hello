@@ -3180,3 +3180,19 @@ export function parseObjectJson(str) {
     return '';
   }
 }
+// 限制并行任务
+export async function concurrencyTasks(tasks, concurrency, taskCallback) {
+  let index = 0;
+  async function handleTask() {
+    if (index >= tasks.length) return;
+    const currentIndex = index;
+    index++;
+    taskCallback && (await taskCallback(tasks[currentIndex], currentIndex));
+    await handleTask();
+  }
+  const activeUps = [];
+  for (let i = 0; i < concurrency; i++) {
+    activeUps.push(handleTask());
+  }
+  await Promise.all(activeUps);
+}

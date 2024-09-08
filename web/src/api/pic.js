@@ -5,7 +5,7 @@ export function reqPicUp(data, file, cb) {
 }
 // 重复
 export function reqPicRepeat(data) {
-  return _postAjax('/pic/repeat', data);
+  return _postAjax('/pic/repeat', data, { parallel: true });
 }
 // 列表
 export function reqPicList(data) {

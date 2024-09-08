@@ -45,6 +45,7 @@ import {
   isRoot,
   formatNum,
   isFullScreen,
+  concurrencyTasks,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -1399,19 +1400,18 @@ async function upSong() {
     accept: '.mp3',
   });
   if (files.length == 0) return;
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
+  await concurrencyTasks(files, 5, async (file) => {
     const { name, size } = file;
     const pro = new UpProgress(name);
     if (!isMusicFile(name)) {
       pro.fail();
       _msg.error(`歌曲格式错误`);
-      continue;
+      return;
     }
     if (size <= 0 || size >= 20 * 1024 * 1024) {
       pro.fail();
       _msg.error(`歌曲大小必须0~20M范围`);
-      continue;
+      return;
     }
     try {
       //文件切片
@@ -1423,7 +1423,7 @@ async function upSong() {
       if (parseInt(isrepeat.code) === 0) {
         //文件已经存在操作
         pro.close('歌曲已存在');
-        continue;
+        return;
       }
       const result = await reqPlayerUp(
         {
@@ -1445,7 +1445,7 @@ async function upSong() {
     } catch (error) {
       pro.fail();
     }
-  }
+  });
   realtime.send({ type: 'updatedata', data: { flag: 'music' } });
   getSongList();
 }

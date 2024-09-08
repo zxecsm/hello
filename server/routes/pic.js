@@ -21,6 +21,7 @@ const {
   createPagingData,
   getImgInfo,
   isRoot,
+  concurrencyTasks,
 } = require('../utils/utils');
 
 //拦截器
@@ -139,10 +140,10 @@ route.post('/delete', async (req, res) => {
       `WHERE id IN (${createFillString(ids.length)})`,
       [...ids]
     );
-    for (let i = 0; i < dels.length; i++) {
-      const { url } = dels[i];
+    await concurrencyTasks(dels, 5, async (del) => {
+      const { url } = del;
       await _delDir(`${configObj.filepath}/pic/${url}`).catch(() => {});
-    }
+    });
     await deleteData('pic', `WHERE id IN (${createFillString(ids.length)})`, [
       ...ids,
     ]);

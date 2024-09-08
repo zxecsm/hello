@@ -11,6 +11,7 @@ import {
   _myOpen,
   _setData,
   computeSize,
+  concurrencyTasks,
   createShare,
   debounce,
   downloadFile,
@@ -899,15 +900,13 @@ async function hdUp(files) {
       }
       let index = breakpointarr.length;
       compale(index);
-      for (let j = 0; j < chunks.length; j++) {
-        let { filename, file } = chunks[j];
-        if (breakpointarr.includes(filename)) {
-          continue;
-        }
+      await concurrencyTasks(chunks, 5, async (chunk) => {
+        const { filename, file } = chunk;
+        if (breakpointarr.includes(filename)) return;
         await reqFileUp({ name: filename, HASH }, file);
         index++;
         compale(index);
-      }
+      });
       try {
         const mergeRes = await reqFileMerge({
           HASH,

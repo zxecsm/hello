@@ -505,9 +505,8 @@ async function readMenu(path) {
   try {
     const list = await _f.p.readdir(path);
     const arr = [];
-    for (let i = 0; i < list.length; i++) {
+    await concurrencyTasks(list, 5, async (name) => {
       try {
-        const name = list[i];
         const f = `${path}/${name}`;
         const s = await _f.p.stat(f);
         if (s.isDirectory()) {
@@ -532,7 +531,7 @@ async function readMenu(path) {
       } catch (error) {
         await writelog(false, `[ readMenu ] - ${error}`, 'error');
       }
-    }
+    });
     return arr;
   } catch (error) {
     await writelog(false, `[ readMenu ] - ${error}`, 'error');
@@ -941,9 +940,9 @@ async function delEmptyFolder(path) {
     const s = await _f.p.stat(path);
     if (s.isDirectory()) {
       const list = await _f.p.readdir(path);
-      for (let i = 0; i < list.length; i++) {
-        await delEmptyFolder(`${path}/${list[i]}`);
-      }
+      await concurrencyTasks(list, 5, async (item) => {
+        await delEmptyFolder(`${path}/${item}`);
+      });
       // 清除空文件夹
       if ((await _f.p.readdir(path)).length == 0) {
         await _delDir(path);
@@ -962,9 +961,9 @@ async function getAllFile(path) {
         const s = await _f.p.stat(path);
         if (s.isDirectory()) {
           const list = await _f.p.readdir(path);
-          for (let i = 0; i < list.length; i++) {
-            await getFile(`${path}/${list[i]}`);
-          }
+          await concurrencyTasks(list, 5, async (item) => {
+            await getFile(`${path}/${item}`);
+          });
         } else {
           arr.push({
             name: getPathFilename(path)[0],
@@ -1068,20 +1067,27 @@ async function cleanUpload() {
           list.push(url);
         }
       }
-      await deleteData(
-        'upload',
-        `WHERE id IN (${createFillString(del.length)})`,
-        [...del]
-      );
+      const arr = [];
+      const size = Math.ceil(del.length / 200);
+      for (let i = 0; i < size; i++) {
+        arr.push(del.slice(i * 200, (i + 1) * 200));
+      }
+      await concurrencyTasks(arr, 5, async (item) => {
+        await deleteData(
+          'upload',
+          `WHERE id IN (${createFillString(item.length)})`,
+          [...item]
+        );
+      });
       if (_f.c.existsSync(uploadDir)) {
         const allUploadFile = await getAllFile(uploadDir);
-        for (let i = 0; i < allUploadFile.length; i++) {
-          const { path, name } = allUploadFile[i];
+        await concurrencyTasks(allUploadFile, 5, async (item) => {
+          const { path, name } = item;
           const url = `${path.slice(uploadDir.length + 1)}/${name}`;
           if (!list.some((item) => item == url)) {
             await _delDir(`${path}/${name}`).catch(() => {});
           }
-        }
+        });
         await delEmptyFolder(uploadDir).catch(() => {});
       }
     }
@@ -1200,20 +1206,18 @@ async function forwardMsg(req, obj) {
       );
     }
     if (uList.length > 0) {
-      const promises = uList.map((item) => {
+      await concurrencyTasks(uList, 5, async (item) => {
         let { forward_msg_link, account } = item;
         let { link, type, header, body } =
           parseForwardMsgLink(forward_msg_link);
-        if (!isurl(link)) {
-          return Promise.resolve();
-        }
+        if (!isurl(link)) return;
         const f = meIsWhoFriend.find((y) => y.account == account);
         let des = f ? f.des : '';
         const msg = `来自Hello-${des || username}：${obj.data}`;
         link = tplReplace(link, { msg: encodeURIComponent(msg) });
         body = replaceObjectValue(body, msg);
         if (type === 'get') {
-          return axios({
+          await axios({
             method: type,
             url: link,
             headers: header,
@@ -1221,7 +1225,7 @@ async function forwardMsg(req, obj) {
             timeout: 5000,
           });
         } else if (type === 'post') {
-          return axios({
+          await axios({
             method: type,
             url: link,
             headers: header,
@@ -1230,7 +1234,6 @@ async function forwardMsg(req, obj) {
           });
         }
       });
-      await Promise.all(promises);
     }
   } catch (error) {
     throw error;
@@ -1459,7 +1462,23 @@ function debounce(callback, wait, immedia) {
     return res;
   };
 }
+async function concurrencyTasks(tasks, concurrency, taskCallback) {
+  let index = 0;
+  async function handleTask() {
+    if (index >= tasks.length) return;
+    const currentIndex = index;
+    index++;
+    taskCallback && (await taskCallback(tasks[currentIndex], currentIndex));
+    await handleTask();
+  }
+  const activeUps = [];
+  for (let i = 0; i < concurrency; i++) {
+    activeUps.push(handleTask());
+  }
+  await Promise.all(activeUps);
+}
 module.exports = {
+  concurrencyTasks,
   replaceObjectValue,
   debounce,
   parseObjectJson,

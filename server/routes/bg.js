@@ -33,6 +33,7 @@ const {
   createPagingData,
   isRoot,
   hdPath,
+  concurrencyTasks,
 } = require('../utils/utils');
 // 随机壁纸
 route.get('/r', async (req, res) => {
@@ -167,10 +168,10 @@ route.post('/delete', async (req, res) => {
       `WHERE id IN (${createFillString(ids.length)})`,
       [...ids]
     );
-    for (let i = 0; i < dels.length; i++) {
-      const { url } = dels[i];
+    await concurrencyTasks(dels, 5, async (del) => {
+      const { url } = del;
       await _delDir(`${configObj.filepath}/bg/${url}`).catch(() => {});
-    }
+    });
     await deleteData('bg', `WHERE id IN (${createFillString(ids.length)})`, [
       ...ids,
     ]);

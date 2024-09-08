@@ -9,6 +9,7 @@ const {
   readMenu,
   _delDir,
   writelog,
+  concurrencyTasks,
 } = require('../utils/utils');
 const configObj = require('../data/config');
 const _f = require('../utils/f');
@@ -16,17 +17,18 @@ const timedTask = require('../utils/timedTask');
 timedTask.add(async (flag) => {
   if (flag.slice(-6) === '001000') {
     const now = Date.now();
+    const threshold = now - 7 * 24 * 60 * 60 * 1000;
     const fList = await readMenu(`${configObj.filepath}/favicon`);
     let num = 0;
-    for (let i = 0; i < fList.length; i++) {
-      const { name, path, time, type } = fList[i];
+    await concurrencyTasks(fList, 5, async (item) => {
+      const { name, path, time, type } = item;
       if (type === 'file') {
-        if (now - time > 7 * 24 * 60 * 60 * 1000) {
+        if (time < threshold) {
           await _delDir(`${path}/${name}`);
           num++;
         }
       }
-    }
+    });
     if (num) {
       await writelog(false, `删除过期图标：${num}`, 'user');
     }

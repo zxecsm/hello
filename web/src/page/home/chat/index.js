@@ -44,6 +44,7 @@ import {
   _getData,
   isFullScreen,
   isVideoFile,
+  concurrencyTasks,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -1240,11 +1241,9 @@ async function sendfile(files, chatAcc) {
 
       let index = breakpointarr.length;
       compale(index);
-      for (let j = 0; j < chunks.length; j++) {
-        let { filename, file } = chunks[j];
-        if (breakpointarr.includes(filename)) {
-          continue;
-        }
+      await concurrencyTasks(chunks, 5, async (chunk) => {
+        const { filename, file } = chunk;
+        if (breakpointarr.includes(filename)) return;
         await reqChatUp(
           {
             name: filename,
@@ -1254,7 +1253,7 @@ async function sendfile(files, chatAcc) {
         );
         index++;
         compale(index);
-      }
+      });
       try {
         const mergeRes = await reqChatMerge({
           HASH,

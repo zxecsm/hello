@@ -447,6 +447,7 @@ function changeChatFileSaveTime(e) {
       items: {
         text: {
           value: dataObj.uploadSaveDay,
+          placeholder: '0: 无限制',
           inputType: 'number',
           verify(val) {
             val = parseFloat(val);
