@@ -42,15 +42,15 @@ export function reqChatUpVoice(data, file, cb) {
 }
 // 合并文件
 export function reqChatMerge(data) {
-  return _postAjax('/chat/merge', data, { timeout: 5000 });
+  return _postAjax('/chat/merge', data, { timeout: 5000, parallel: true });
 }
 // 断点
 export function reqChatBreakpoint(data) {
-  return _postAjax('/chat/breakpoint', data);
+  return _postAjax('/chat/breakpoint', data, { parallel: true });
 }
 // 重复
 export function reqChatRepeat(data) {
-  return _postAjax('/chat/repeat', data);
+  return _postAjax('/chat/repeat', data, { parallel: true });
 }
 // 转发信息
 export function reqChatforward(data) {

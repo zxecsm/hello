@@ -850,11 +850,22 @@ if (isIframe()) {
 }
 // 上传
 async function hdUp(files) {
-  maskLoading.start();
   let rep = true;
-  let state = true;
-  for (let i = 0; i < files.length; i++) {
-    const { name, size, webkitRelativePath } = files[i];
+  const type = await _pop.p({
+    top: true,
+    text: '如何处理同名文件？',
+    cancel: { text: '略过' },
+    confirm: { text: '覆盖' },
+  });
+  if (type === 'close') return;
+  if (type == 'confirm') {
+    rep = true;
+  } else {
+    rep = false;
+  }
+  maskLoading.start();
+  await concurrencyTasks(files, 5, async (file) => {
+    const { name, size, webkitRelativePath } = file;
     let path = fileUrl;
     if (webkitRelativePath) {
       path = `${path}/${webkitRelativePath}`;
@@ -866,31 +877,16 @@ async function hdUp(files) {
     if (size == 0) {
       pro.fail();
       _msg.error(`不能上传空文件`);
-      continue;
+      return;
     }
     const res = await reqFileRepeat({ path });
-    if (state) {
-      if (res.code == 0) {
-        state = false;
-        const type = await _pop.p({
-          top: true,
-          text: '覆盖重名文件？',
-          cancel: { text: '跳过' },
-        });
-        if (type == 'confirm') {
-          rep = true;
-        } else {
-          rep = false;
-        }
-      }
-    }
     if (!rep && res.code == 0) {
-      pro.close('跳过重名文件');
-      continue;
+      pro.close('略过同名文件');
+      return;
     }
     try {
       //文件切片
-      const { chunks, count, HASH } = await fileSlice(files[i], (percent) => {
+      const { chunks, count, HASH } = await fileSlice(file, (percent) => {
         pro.loading(percent);
       });
       const breakpointarr = (await reqFileBreakpoint({ HASH })).data; //断点续传
@@ -929,7 +925,7 @@ async function hdUp(files) {
     } catch (error) {
       pro.fail();
     }
-  }
+  });
   maskLoading.end();
   realtime.send({ type: 'updatedata', data: { flag: 'file' } });
   openDir();

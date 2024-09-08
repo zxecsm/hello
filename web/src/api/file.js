@@ -29,11 +29,11 @@ export function reqFileZip(data) {
 }
 // 重复
 export function reqFileRepeat(data) {
-  return _postAjax('/file/repeat', data);
+  return _postAjax('/file/repeat', data, { parallel: true });
 }
 // 断点
 export function reqFileBreakpoint(data) {
-  return _postAjax('/file/breakpoint', data);
+  return _postAjax('/file/breakpoint', data, { parallel: true });
 }
 // 上传
 export function reqFileUp(data, file, cb) {
@@ -41,7 +41,7 @@ export function reqFileUp(data, file, cb) {
 }
 // 合并
 export function reqFileMerge(data) {
-  return _postAjax('/file/merge', data, { timeout: 10000 });
+  return _postAjax('/file/merge', data, { timeout: 10000, parallel: true });
 }
 // 创建文件
 export function reqFileCreateFile(data) {

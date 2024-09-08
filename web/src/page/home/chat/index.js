@@ -1204,16 +1204,16 @@ $chatFootBox
 })();
 // 发送文件
 async function sendfile(files, chatAcc) {
-  for (let i = 0; i < files.length; i++) {
-    const { name, size } = files[i];
+  await concurrencyTasks(files, 5, async (file) => {
+    const { name, size } = file;
     const pro = new UpProgress(name);
     if (size == 0) {
       pro.fail('发送失败');
       _msg.error(`不能发送空文件`);
-      continue;
+      return;
     }
     try {
-      const { chunks, count, HASH } = await fileSlice(files[i], (percent) => {
+      const { chunks, count, HASH } = await fileSlice(file, (percent) => {
         pro.loading(percent);
       });
       const breakpointarr = (await reqChatBreakpoint({ HASH })).data, //断点续传
@@ -1236,7 +1236,7 @@ async function sendfile(files, chatAcc) {
         const { id } = isrepeat.data;
         obj.hash = id;
         sendChatMsg(obj, chatAcc);
-        continue;
+        return;
       }
 
       let index = breakpointarr.length;
@@ -1279,7 +1279,7 @@ async function sendfile(files, chatAcc) {
     } catch (error) {
       pro.close('发送失败');
     }
-  }
+  });
 }
 // 语音发送
 function upVoice(blob, duration) {
