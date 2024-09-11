@@ -20,7 +20,6 @@ import {
   myOpen,
   pageErr,
   setPageScrollTop,
-  splitWord,
   toLogin,
   wave,
   wrapInput,
@@ -32,7 +31,7 @@ import _d from '../../js/common/config';
 import { reqRootDeleteLog, reqRootLog, reqRootLogList } from '../../api/root';
 import rMenu from '../../js/plugins/rightMenu';
 import changeDark from '../../js/utils/changeDark';
-import { _tpl, deepClone } from '../../js/utils/template';
+import { _tpl } from '../../js/utils/template';
 let curName = null;
 const $head = $('.header'),
   $main = $('.main'),
@@ -111,7 +110,7 @@ function getLogData(name) {
   reqRootLog({ name })
     .then((res) => {
       if (res.code == 0) {
-        $main.list = res.data.map((item) => ({ data: item }));
+        $main.list = res.data;
         $main.pageNo = 1;
         curName = name;
         hdRender();
@@ -231,27 +230,22 @@ const pgnt = pagination($foot[0], {
 const _hdRender = debounce(hdRender, 1000);
 // 生成日志列表
 async function hdRender() {
-  const word = await splitWord(wInput.getValue());
-  let arr = deepClone($main.list);
+  const word = wInput.getValue().trim();
+  let arr = $main.list;
   if (word) {
-    arr = arr.map((item) => {
-      item.num = getWordCount(word, item.data);
-      return item;
-    });
-    arr.sort((a, b) => b.num - a.num);
-    arr = arr.filter((item) => item.num > 0);
+    arr = $main.list.filter((item) => getWordCount([word], item) > 0);
   }
   const pageTotal = Math.ceil(arr.length / lPageSize);
   $main.pageNo < 1
     ? ($main.pageNo = pageTotal)
     : $main.pageNo > pageTotal
-    ? ($main.pageNo = 1)
-    : null;
+      ? ($main.pageNo = 1)
+      : null;
   const html = _tpl(
     `
       <p v-if="arr.length == 0" style='text-align: center;'>{{_d.emptyList}}</p>
       <template v-else>
-        <p v-for="{data} in list" v-html="hdTitleHighlight(word, data)"></p>
+        <p v-for="data in list" v-html="hdTitleHighlight([word], data)"></p>
         <div v-html="getPaging()"></div>
       </template>
       `,

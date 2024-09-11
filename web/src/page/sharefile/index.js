@@ -37,7 +37,6 @@ import {
   pageErr,
   queryURLParams,
   setPageScrollTop,
-  splitWord,
   userLogoMenu,
   wrapInput,
 } from '../../js/utils/utils';
@@ -347,9 +346,8 @@ async function hdSort(list) {
   const { type, isDes } = fileSort;
   const val = wInput.getValue().trim();
   if (val) {
-    const word = await splitWord(val);
     list = list.filter((item) => {
-      return getWordCount(word, item.name) > 0;
+      return getWordCount([val], item.name) > 0;
     });
   }
   list.sort((a, b) => {

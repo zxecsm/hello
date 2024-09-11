@@ -18,11 +18,11 @@ const {
   paramErr,
   getWordContent,
   getWordCount,
-  splitWord,
   createFillString,
   syncUpdateData,
   createPagingData,
   isValidDate,
+  getSplitWord,
 } = require('../utils/utils');
 // 读取笔记
 route.get('/read', async (req, res) => {
@@ -148,8 +148,9 @@ route.get('/search', async (req, res) => {
     }
     list.sort((a, b) => b.time - a.time);
     list.sort((a, b) => b.weight - a.weight);
+    let splitWord = [];
     if (word) {
-      word = splitWord(word);
+      splitWord = getSplitWord(word);
       const arr = [];
       list.forEach((item) => {
         let {
@@ -164,10 +165,27 @@ route.get('/search', async (req, res) => {
           category,
         } = item;
         data = data.replace(/[\n\r]/g, '');
-        const sNum = getWordCount(word, data);
-        const tNum = getWordCount(word, name);
-        if (sNum > 0 || tNum > 0) {
-          const con = getWordContent(word, data).slice(0, 30);
+        const sNum =
+          getWordCount(splitWord, data) + getWordCount(splitWord, name);
+        if (sNum > 0) {
+          let con = [];
+          const wc = getWordContent(splitWord, data);
+          let idx = wc.findIndex(
+            (item) => item.value.toLowerCase() == splitWord[0].toLowerCase()
+          );
+          let start = 0,
+            end = 0;
+          if (idx >= 0) {
+            if (idx > 15) {
+              start = idx - 15;
+              end = idx + 15;
+            } else {
+              end = 30;
+            }
+          } else {
+            end = 30;
+          }
+          con = wc.slice(start, end);
           arr.push({
             id,
             share,
@@ -175,7 +193,6 @@ route.get('/search', async (req, res) => {
             visit_count,
             con,
             weight,
-            tNum,
             sNum,
             category,
             time,
@@ -187,15 +204,12 @@ route.get('/search', async (req, res) => {
         arr.sort((a, b) => {
           return b.sNum - a.sNum;
         });
-        arr.sort((a, b) => {
-          return b.tNum - a.tNum;
-        });
       }
       list = arr;
     }
     _success(res, 'ok', {
       ...createPagingData(list, pageSize, pageNo),
-      splitWord: word,
+      splitWord,
     });
   } catch (error) {
     _err(res)(req, error);

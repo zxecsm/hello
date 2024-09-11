@@ -23,7 +23,6 @@ const {
   validationValue,
   paramErr,
   getWordCount,
-  splitWord,
   getTimePath,
   getSuffix,
   hdChatSendMsg,
@@ -39,6 +38,7 @@ const {
   isurl,
   _type,
   heperMsgAndForward,
+  getSplitWord,
 } = require('../utils/utils');
 // 收信接口
 route.all('/:chat_id/sendMessage', async (req, res) => {
@@ -236,12 +236,13 @@ route.get('/read-msg', async (req, res) => {
         `${acc}-${account}`,
       ]);
     }
+    let splitWord = [];
     if (word) {
-      word = splitWord(word);
+      splitWord = getSplitWord(word);
       msgs = msgs.filter((item) => {
         const { name, data, date } = item;
         const str = name + data + date;
-        return getWordCount(word, str) > 0;
+        return getWordCount(splitWord, str) > 0;
       });
     }
     let flagStr = '';

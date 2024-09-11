@@ -17,7 +17,6 @@ let {
     paramErr,
     setCookie,
     getWordCount,
-    splitWord,
     receiveFiles,
     getTimePath,
     getSuffix,
@@ -34,6 +33,7 @@ let {
     becomeFriends,
     parseForwardMsgLink,
     heperMsgAndForward,
+    getSplitWord,
   } = require('../utils/utils'),
   {
     insertData,
@@ -1266,8 +1266,9 @@ route.get('/trash-list', async (req, res) => {
       list = list.map((item) => ({ ...item, group: bookListObj[item.listid] }));
     }
     list.reverse();
+    let splitWord = [];
     if (word) {
-      word = splitWord(word);
+      splitWord = getSplitWord(word);
       list = list.map((item) => {
         let content = '';
         if (type === 'bookmk') {
@@ -1278,7 +1279,7 @@ route.get('/trash-list', async (req, res) => {
         } else {
           content = item.name;
         }
-        item.sNum = getWordCount(word, content);
+        item.sNum = getWordCount(splitWord, content);
         return item;
       });
       list.sort((a, b) => b.sNum - a.sNum);
@@ -1286,7 +1287,7 @@ route.get('/trash-list', async (req, res) => {
     }
     _success(res, 'ok', {
       ...createPagingData(list, pageSize, pageNo),
-      splitWord: word,
+      splitWord,
     });
   } catch (error) {
     _err(res)(req, error);

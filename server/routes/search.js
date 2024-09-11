@@ -15,7 +15,7 @@ const {
   _type,
   paramErr,
   getWordCount,
-  splitWord,
+  getSplitWord,
   createFillString,
   syncUpdateData,
   createPagingData,
@@ -41,13 +41,12 @@ route.get('/config', async (req, res) => {
 // 分词
 route.get('/split-word', async (req, res) => {
   try {
-    let { word } = req.query;
+    const { word } = req.query;
     if (!validaString(word, 1, 100)) {
       paramErr(res, req);
       return;
     }
-    word = splitWord(word);
-    _success(res, '获取分词成功', word)(req);
+    _success(res, '获取分词成功', getSplitWord(word))(req);
   } catch (error) {
     _err(res)(req, error);
   }
@@ -75,12 +74,13 @@ route.get('/history-list', async (req, res) => {
       account,
     ]);
     list.reverse();
+    let splitWord = [];
     if (word) {
-      word = splitWord(word);
+      splitWord = getSplitWord(word);
       const sArr = [];
       list.forEach((v) => {
         const { data } = v;
-        const flag = getWordCount(word, data);
+        const flag = getWordCount(splitWord, data);
         if (flag > 0) {
           sArr.push({
             ...v,
@@ -102,7 +102,7 @@ route.get('/history-list', async (req, res) => {
     });
     _success(res, 'ok', {
       ...createPagingData(list, pageSize, pageNo),
-      splitWord: word,
+      splitWord,
     });
   } catch (error) {
     _err(res)(req, error);
@@ -144,7 +144,7 @@ function sortSliceRes(list) {
 route.get('/list', async (req, res) => {
   try {
     const { account } = req._hello.userinfo;
-    let { word = '' } = req.query;
+    const { word = '' } = req.query;
     if (!validaString(word, 0, 100)) {
       paramErr(res, req);
       return;
@@ -164,11 +164,11 @@ route.get('/list', async (req, res) => {
             type: 'ss',
           };
         }),
-        splitWord: '',
+        splitWord: [],
       });
       return;
     }
-    word = splitWord(word);
+    const splitWord = getSplitWord(word);
     const list = [],
       noteList = await queryData(
         'note',
@@ -202,7 +202,7 @@ route.get('/list', async (req, res) => {
     hList.forEach((v) => {
       //包含搜索词的历史记录
       const { data } = v;
-      const sNum = getWordCount(word, data);
+      const sNum = getWordCount(splitWord, data);
       if (sNum > 0) {
         temList.push({ ...v, type: 'ss', sNum });
       }
@@ -216,7 +216,7 @@ route.get('/list', async (req, res) => {
       if (f) {
         des = f.des;
       }
-      const sNum = getWordCount(word, username + (des || ''));
+      const sNum = getWordCount(splitWord, username + (des || ''));
       if (sNum > 0) {
         temList.push({
           ...v,
@@ -232,7 +232,7 @@ route.get('/list', async (req, res) => {
     noteList.forEach((item) => {
       //笔记名包含搜索词的笔记
       const { name } = item;
-      const sNum = getWordCount(word, name);
+      const sNum = getWordCount(splitWord, name);
       if (sNum > 0) {
         temList.push({ ...item, type: 'note', sNum });
       }
@@ -248,7 +248,7 @@ route.get('/list', async (req, res) => {
       const { name, link, des, listid } = item,
         n = `${name}${link}${des || ''}`;
       const group = bookListObj[listid];
-      const sNum = getWordCount(word, n);
+      const sNum = getWordCount(splitWord, n);
       if (sNum > 0) {
         temList.push({
           ...item,
@@ -263,7 +263,7 @@ route.get('/list', async (req, res) => {
     musicList.forEach((item) => {
       const { title, artist } = item,
         n = `${artist}${title}`;
-      const sNum = getWordCount(word, n);
+      const sNum = getWordCount(splitWord, n);
       if (sNum > 0) {
         temList.push({
           ...item,
@@ -276,7 +276,7 @@ route.get('/list', async (req, res) => {
     list.sort((a, b) => {
       return b.sNum - a.sNum;
     });
-    _success(res, 'ok', { list, splitWord: word });
+    _success(res, 'ok', { list, splitWord });
   } catch (error) {
     _err(res)(req, error);
   }

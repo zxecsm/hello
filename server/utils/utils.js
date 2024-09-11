@@ -589,26 +589,17 @@ function encodeStr(keyword) {
   );
 }
 // 搜索词所在索引
-function getWordIdx(searchVal, content) {
-  searchVal = searchVal.trim();
-  if (!searchVal) return [];
-  const idx = searchVal.lastIndexOf('-');
-  let searchArr = [];
-  if (idx < 0) {
-    searchArr = searchVal.split(' ');
-  } else {
-    searchArr = searchVal.slice(0, idx).split(' ');
-  }
-  searchArr = unique(searchArr);
+function getWordIdx(splitWord, content) {
+  if (splitWord.length === 0) return [];
   let regStr = '(';
-  searchArr.forEach((item, idx) => {
+  splitWord.forEach((item, idx) => {
     if (idx > 0) {
       regStr += '|';
     }
     regStr += encodeStr(item);
   });
   regStr += ')';
-  let reg = new RegExp(regStr, 'ig');
+  const reg = new RegExp(regStr, 'ig');
   const res = [];
   content.replace(reg, (...[, $1, $2]) => {
     res.push({
@@ -620,8 +611,8 @@ function getWordIdx(searchVal, content) {
   return res;
 }
 // 提取包含搜索词的内容
-function getWordContent(searchVal, content) {
-  const arr = getWordIdx(searchVal, content);
+function getWordContent(splitWord, content) {
+  const arr = getWordIdx(splitWord, content);
   if (arr.length < 1) return [];
   const spacing = 200,
     res = [],
@@ -672,24 +663,17 @@ function getWordContent(searchVal, content) {
   return res;
 }
 // 包含搜索词数
-function getWordCount(searchVal, content) {
-  searchVal = searchVal.trim();
-  if (!searchVal) return 0;
-  let lowerContent = content.toLowerCase(),
-    searchArr = [];
-  const idx = searchVal.lastIndexOf('-');
-  if (idx < 0) {
-    searchArr = searchVal.split(' ');
-  } else {
-    const o = searchVal.slice(idx + 1);
-    searchArr = searchVal.slice(0, idx).split(' ');
-    searchArr.push(o);
-  }
-  searchArr = unique(searchArr);
-  return searchArr.reduce((pre, item) => {
-    let lowerItem = item.toLowerCase();
+function getWordCount(splitWord, content) {
+  if (splitWord.length === 0) return 0;
+  const lowerContent = content.toLowerCase();
+  return splitWord.reduce((pre, item, idx) => {
+    const lowerItem = item.toLowerCase();
     if (lowerContent.includes(lowerItem)) {
-      pre++;
+      if (idx === 0) {
+        pre += 10;
+      } else {
+        pre++;
+      }
     }
     return pre;
   }, 0);
@@ -709,28 +693,26 @@ function unique(arr, keys) {
   });
 }
 // 分词
-function splitWord(str) {
+function getSplitWord(str) {
+  let words = [];
   str = str.trim();
-  if (!str) return '';
+  if (!str) return words;
   try {
     const intl = new Intl.Segmenter('cn', { granularity: 'word' });
-    const obj = {};
-    return (
-      [...intl.segment(str)]
-        .reduce((pre, item) => {
-          const word = item.segment.trim();
-          if (word && !obj.hasOwnProperty(typeof word + word)) {
-            obj[typeof word + word] = true;
-            pre.push(word);
-          }
-          return pre;
-        }, [])
-        .join(' ') + `-${str}`
-    );
+    words = [...intl.segment(str)].map((item) => item.segment.trim());
     // eslint-disable-next-line no-unused-vars
   } catch (error) {
-    return str.split(' ') + `-${str}`;
+    words = str.split(' ');
   }
+  words.unshift(str);
+  const obj = {};
+  return words.reduce((pre, item) => {
+    if (item && !obj.hasOwnProperty(typeof item + item)) {
+      obj[typeof item + item] = true;
+      pre.push(item);
+    }
+    return pre;
+  }, []);
 }
 // 策略化歌曲数据
 function getMusicObj(arr) {
@@ -1557,7 +1539,7 @@ module.exports = {
   jwten,
   jwtde,
   getWordContent,
-  splitWord,
+  getSplitWord,
   receiveFiles,
   mergefile,
   nanoid,

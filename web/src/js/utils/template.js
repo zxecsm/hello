@@ -1,126 +1,174 @@
-// id="app" id='app' id=app
+// 匹配属性的正则表达式，支持以下格式： [name]="value" 或 [name]='value' 或 [name]=value
 const attribute =
   /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/;
-// <my-header></my-header>
+
+// 匹配简单 HTML 标签的正则表达式，例如 <my-header></my-header>
 const ncname = `[a-zA-Z_][\\-\\.0-9_a-zA-Z]*`;
-// <my:header></my:header>
+
+// 匹配带命名空间的标签名，例如 <my:header></my:header>
 const qnameCapture = `((?:${ncname}\\:)?${ncname})`;
-// <div
+
+// 匹配开始标签，例如 <div>
 const startTagOpen = new RegExp(`^<${qnameCapture}`);
-// > />
+
+// 匹配开始标签的结束部分，例如 > 或 />
 const startTagClose = /^\s*(\/?)>/;
-// </div>
+
+// 匹配结束标签，例如 </div>
 const endTag = new RegExp(`^<\\/${qnameCapture}[^>]*>`);
-// 解析HTML
-function parseHtmlToAst(html) {
+
+// 匹配注释标签 <!-- 注释内容 -->
+const commentTag = /^<!--([\s\S]*?)-->/;
+
+// 解析 HTML 字符串为 AST (抽象语法树) 的函数
+export default function parseHtmlToAst(html) {
+  // 如果输入不是字符串，则直接返回
   if (typeof html !== 'string') {
     return html;
   }
+
+  // 为了确保根元素有效，给输入的 HTML 包裹一个 <div> 标签
   html = `<div>${html}</div>`;
+
   let root,
     currentParent,
     stack = [];
-  // 一直到html为''结束
+
+  // 当 HTML 还有剩余字符时，继续解析
   while (html) {
-    // 判断是否<开头
+    // 找到下一个 '<'
     const index = html.indexOf('<');
+
+    // 如果没有找到 '<'，则退出循环
     if (index < 0) break;
+
+    // 如果当前位置以 '<' 开头
     if (index === 0) {
-      // 解析标签和属性信息 <div id="app"> {tagName: 'div', attrs: [{name: 'id', value: 'app'}]}
+      // 解析注释标签 <!-- 注释内容 -->
+      const commentMatch = html.match(commentTag);
+      if (commentMatch) {
+        advance(commentMatch[0].length); // 前进到注释的结尾
+        handleComment(commentMatch[1]); // 处理注释内容
+        continue;
+      }
+
+      // 解析开始标签 (例如 <div id="app">)
       if (parseStartTag()) continue;
-      // 匹配 </div>
+
+      // 尝试匹配结束标签 (例如 </div>)
       const endTagMatch = html.match(endTag);
       if (endTagMatch) {
+        // 如果找到结束标签，向前推进解析器并处理结束
         advance(endTagMatch[0].length);
         end();
         continue;
       }
     } else if (index > 0) {
+      // 处理下一个标签之前的文本
       const text = html.slice(0, index);
       advance(text.length);
       chars(text);
     }
   }
 
-  // <div id="app">
+  // 解析开始标签并返回标签信息
   function parseStartTag() {
-    // <div
+    // 匹配开始标签 (例如 <div>)
     const tagOpenMatch = html.match(startTagOpen);
     if (!tagOpenMatch) return null;
 
     const startTagInfo = {
-      tagName: tagOpenMatch[1],
-      attrs: [],
+      tagName: tagOpenMatch[1], // 标签名 (例如 'div')
+      attrs: [], // 存储属性的数组
     };
-    // 删除<div
+
+    // 删除已经匹配的开始标签
     advance(tagOpenMatch[0].length);
+
     let endTagMatch, attrMatch;
-    // 剩下的字符不是> />,匹配开始匹配属性"id"="app"
+
+    // 处理标签内的属性 (例如 id="app")
     while (
-      !(endTagMatch = html.match(startTagClose)) &&
-      (attrMatch = html.match(attribute))
+      !(endTagMatch = html.match(startTagClose)) && // 当未匹配到 '>' 或 '/>' 时继续
+      (attrMatch = html.match(attribute)) // 匹配属性
     ) {
+      // 将属性添加到标签信息中
       startTagInfo.attrs.push({
-        name: attrMatch[1],
-        // 属性值可能是双引号可能是单引号可能没有引号三种情况
-        value: attrMatch[3] || attrMatch[4] || attrMatch[5] || '',
+        name: attrMatch[1], // 属性名 (例如 'id')
+        value: attrMatch[3] || attrMatch[4] || attrMatch[5] || '', // 属性值
       });
       // 删除已经匹配的属性
       advance(attrMatch[0].length);
     }
-    // 匹配到结束 > />
+
+    // 如果找到了开始标签的结束部分 (例如 '>' 或 '/>')
     if (endTagMatch) {
-      advance(endTagMatch[0].length);
-      start(startTagInfo.tagName, startTagInfo.attrs);
+      advance(endTagMatch[0].length); // 向前推进 HTML 字符串
+      start(startTagInfo.tagName, startTagInfo.attrs); // 处理标签
       if (endTagMatch[0].trim() === '/>') {
-        end();
+        end(); // 如果是自闭合标签，立即结束
       }
     }
+
     return startTagInfo;
   }
 
-  // 删除已经处理的字符
+  // 向前推进解析器 n 个字符
   function advance(n) {
     html = html.substring(n);
   }
-  // 创建元素信息
+
+  // 处理新标签的开始并构建 AST 元素
   function start(tagName, attrs) {
     const element = {
-      tag: tagName,
-      type: 1,
-      children: [],
-      attrs,
-      parent,
+      tag: tagName, // 标签名 (例如 'div')
+      type: 1, // 类型 1 表示标签节点
+      children: [], // 用于存储子节点
+      attrs, // 属性列表
+      parent, // 父元素引用
     };
+
+    // 如果是第一个元素，则设置为根元素
     if (!root) {
       root = element;
     }
-    currentParent = element;
-    stack.push(element);
+
+    currentParent = element; // 将当前元素设为父元素，供下一个子节点使用
+    stack.push(element); // 将元素推入堆栈，跟踪打开的标签
   }
 
-  // stack['div'] 每结束一个标签后确立父子关系
+  // 处理标签的结束，并建立父子关系
   function end() {
-    const element = stack.pop();
-    currentParent = stack[stack.length - 1];
+    const element = stack.pop(); // 弹出最近打开的元素
+    currentParent = stack[stack.length - 1]; // 将当前父元素设为前一个元素
     if (currentParent) {
-      element.parent = currentParent;
-      currentParent.children.push(element);
+      element.parent = currentParent; // 建立父子关系
+      currentParent.children.push(element); // 将当前元素添加到父元素的子元素中
     }
   }
-  // 创建文本节点
+
+  // 处理标签内的文本节点
   function chars(text) {
-    text = text.trim();
+    text = text.trim(); // 删除不必要的空白字符
     if (text.length > 0) {
       currentParent.children.push({
-        type: 3,
-        text,
-        parent: currentParent,
+        type: 3, // 类型 3 表示文本节点
+        text, // 文本内容
+        parent: currentParent, // 设置父元素
       });
     }
   }
 
-  return root;
+  // 处理注释节点
+  function handleComment(comment) {
+    currentParent.children.push({
+      type: 8, // 类型 8 表示注释节点
+      text: comment, // 注释内容
+      parent: currentParent, // 设置父元素
+    });
+  }
+
+  return root; // 返回 AST 的根节点
 }
 // 插值
 function tplReplace(tpl, data) {
@@ -204,7 +252,7 @@ function generate(ast) {
   if (ast.type === 1) {
     hdel(ast);
     hdAttrs(ast);
-  } else if (ast.type === 3) {
+  } else if (ast.type === 3 || ast.type === 8) {
     ast.text = tplReplace(ast.text, ast.data);
   }
 }
@@ -234,7 +282,7 @@ function hdchilds(ast) {
           data: ast.data,
         });
       }
-    } else if (child.type === 3) {
+    } else if (child.type === 3 || child.type === 8) {
       childs.push({ ...child, data: ast.data });
     }
   });
@@ -360,6 +408,9 @@ function createEl(tag) {
 function createText(text) {
   return document.createTextNode(text);
 }
+function createCom(text) {
+  return document.createComment(text);
+}
 // 创建文档片段
 function createFrag() {
   return document.createDocumentFragment();
@@ -403,6 +454,8 @@ function createNode(ast, pEl) {
     pEl.appendChild(el);
   } else if (type === 3) {
     pEl.appendChild(createText(text));
+  } else if (type === 8) {
+    pEl.appendChild(createCom(text));
   }
 }
 // 拆解template标签
@@ -462,7 +515,7 @@ function hdVif(childs) {
         inConditionChain = false;
         result.push(child);
       }
-    } else if (type === 3) {
+    } else if (type === 3 || child.type === 8) {
       result.push(child);
     }
   });

@@ -19,7 +19,6 @@ const {
   paramErr,
   validationValue,
   getWordCount,
-  splitWord,
   createFillString,
   _nothing,
   isValid,
@@ -32,6 +31,7 @@ const {
   _delDir,
   writelog,
   concurrencyTasks,
+  getSplitWord,
 } = require('../utils/utils');
 const cheerio = require('cheerio');
 const shareVerify = require('../utils/shareVerify');
@@ -119,18 +119,21 @@ route.get('/search', async (req, res) => {
     );
     if (acc && acc !== account) {
       booklist = booklist.filter((item) => item.share === 'y');
-      list = await queryData('bookmk', '*', `WHERE state=? AND account=?`, [
-        '0',
-        acc,
-      ]);
-      list = list.filter((item) => booklist.some((y) => y.id == item.listid));
+      list = (
+        await queryData('bookmk', '*', `WHERE state=? AND account=?`, [
+          '0',
+          acc,
+        ])
+      ).filter((item) => booklist.some((y) => y.id == item.listid));
     } else {
       if (account) {
         booklist.push({ id: 'home' });
-        list = await queryData('bookmk', '*', `WHERE state=? AND account=?`, [
-          '0',
-          account,
-        ]);
+        list = (
+          await queryData('bookmk', '*', `WHERE state=? AND account=?`, [
+            '0',
+            account,
+          ])
+        ).filter((item) => booklist.some((y) => y.id == item.listid));
       } else {
         _nologin(res);
         return;
@@ -142,11 +145,12 @@ route.get('/search', async (req, res) => {
     });
     list = list.map((item) => ({ ...item, group: bookListObj[item.listid] }));
     list.reverse();
+    let splitWord = [];
     if (word) {
-      word = splitWord(word);
+      splitWord = getSplitWord(word);
       list = list.map((item) => {
         const { name, link, des } = item;
-        item.snum = getWordCount(word, '' + name + link + des);
+        item.snum = getWordCount(splitWord, '' + name + link + des);
         return item;
       });
       list.sort((a, b) => b.snum - a.snum);
@@ -154,7 +158,7 @@ route.get('/search', async (req, res) => {
     }
     _success(res, 'ok', {
       ...createPagingData(list, pageSize, pageNo),
-      splitWord: word,
+      splitWord,
     });
   } catch (error) {
     _err(res)(req, error);

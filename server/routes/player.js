@@ -29,7 +29,6 @@ const {
   parseLrc,
   getWordCount,
   unique,
-  splitWord,
   createFillString,
   getTimePath,
   getFileDir,
@@ -43,6 +42,7 @@ const {
   isRoot,
   myShuffle,
   concurrencyTasks,
+  getSplitWord,
 } = require('../utils/utils');
 const { _d } = require('../data/data');
 const configObj = require('../data/config');
@@ -207,19 +207,19 @@ route.use((req, res, next) => {
 // 搜索
 route.get('/search', async (req, res) => {
   try {
-    let { word } = req.query;
+    const { word } = req.query;
     if (!validaString(word, 1, 100)) {
       paramErr(res, req);
       return;
     }
-    word = splitWord(word);
-    let list = await queryData('musics', '*');
+    const splitWord = getSplitWord(word);
+    const list = await queryData('musics', '*');
     list.reverse();
     const sArr = [];
     list.forEach((item) => {
       const { title, artist } = item;
       const str = `${title}${artist}`;
-      const sNum = getWordCount(word, str);
+      const sNum = getWordCount(splitWord, str);
       if (sNum > 0) {
         sArr.push({
           ...item,
@@ -232,7 +232,7 @@ route.get('/search', async (req, res) => {
     });
     _success(res, 'ok', {
       list: sArr.slice(0, maxSonglistCount),
-      splitWord: word,
+      splitWord,
     });
   } catch (error) {
     _err(res)(req, error);

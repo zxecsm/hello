@@ -1819,9 +1819,12 @@ export class ContentScroll {
         this.el.style.transition = `transform ${duration}s linear`;
         this.el.style.transform = `translateX(${-(cW + interSpace)}px)`;
       }
-      this.timer = setTimeout(() => {
-        this.start.call(this);
-      }, duration * 1000 + 2000);
+      this.timer = setTimeout(
+        () => {
+          this.start.call(this);
+        },
+        duration * 1000 + 2000
+      );
     }, 2000);
   }
   close() {
@@ -2405,19 +2408,10 @@ export function encodeStr(keyword) {
   );
 }
 // 搜索词所在索引
-export function getWordIdx(searchVal, content) {
-  searchVal = searchVal.trim();
-  if (!searchVal) return [];
-  const idx = searchVal.lastIndexOf('-');
-  let searchArr = [];
-  if (idx < 0) {
-    searchArr = searchVal.split(' ');
-  } else {
-    searchArr = searchVal.slice(0, idx).split(' ');
-  }
-  searchArr = unique(searchArr);
+export function getWordIdx(splitWord, content) {
+  if (splitWord.length === 0) return [];
   let regStr = '(';
-  searchArr.forEach((item, idx) => {
+  splitWord.forEach((item, idx) => {
     if (idx > 0) {
       regStr += '|';
     }
@@ -2436,8 +2430,8 @@ export function getWordIdx(searchVal, content) {
   return res;
 }
 // 提取包含搜索词的内容
-export function getWordContent(searchVal, content) {
-  const arr = getWordIdx(searchVal, content);
+export function getWordContent(splitWord, content) {
+  const arr = getWordIdx(splitWord, content);
   if (arr.length < 1) return [];
   const res = [],
     oneS = arr[0].start,
@@ -2474,38 +2468,31 @@ export function getWordContent(searchVal, content) {
   return res;
 }
 // 包含搜索词数
-export function getWordCount(searchVal, content) {
-  searchVal = searchVal.trim();
-  if (!searchVal) return 0;
-  let lowerContent = content.toLowerCase(),
-    searchArr = [];
-  const idx = searchVal.lastIndexOf('-');
-  if (idx < 0) {
-    searchArr = searchVal.split(' ');
-  } else {
-    const o = searchVal.slice(idx + 1);
-    searchArr = searchVal.slice(0, idx).split(' ');
-    searchArr.push(o);
-  }
-  searchArr = unique(searchArr);
-  return searchArr.reduce((pre, item) => {
+export function getWordCount(splitWord, content) {
+  if (splitWord.length === 0) return 0;
+  const lowerContent = content.toLowerCase();
+  return splitWord.reduce((pre, item, idx) => {
     const lowerItem = item.toLowerCase();
     if (lowerContent.includes(lowerItem)) {
-      pre++;
+      if (idx === 0) {
+        pre += 10;
+      } else {
+        pre++;
+      }
     }
     return pre;
   }, 0);
 }
 // 高亮搜索
 export function hdTitleHighlight(
-  val,
+  splitWord,
   content,
   color = 'var(--btn-danger-color)'
 ) {
-  const con = getWordContent(val, content);
+  const con = getWordContent(splitWord, content);
   return _tpl(
     `
-    <template v-if="!val || con.length === 0">{{content}}</template>
+    <template v-if="splitWord.length === 0 || con.length === 0">{{content}}</template>
     <template v-else>
       <template  v-for="{type,value} in con">
         <template v-if="type == 'text'">{{value}}</template>
@@ -2514,30 +2501,17 @@ export function hdTitleHighlight(
       </template>
     </template>
     `,
-    { con, color, content, val }
+    { con, color, content, splitWord }
   );
 }
 // 分词
-export async function splitWord(str) {
+export async function getSplitWord(str) {
+  let words = [];
   str = str.trim();
-  if (!str) {
-    return '';
-  }
+  if (!str) return words;
   try {
     const intl = new Intl.Segmenter('cn', { granularity: 'word' });
-    const obj = {};
-    const res =
-      [...intl.segment(str)]
-        .reduce((pre, item) => {
-          const word = item.segment.trim();
-          if (word && !obj.hasOwnProperty(typeof word + word)) {
-            obj[typeof word + word] = true;
-            pre.push(word);
-          }
-          return pre;
-        }, [])
-        .join(' ') + `-${str}`;
-    return res;
+    words = [...intl.segment(str)].map((item) => item.segment.trim());
     // eslint-disable-next-line no-unused-vars
   } catch (error) {
     try {
@@ -2547,9 +2521,18 @@ export async function splitWord(str) {
       }
       // eslint-disable-next-line no-unused-vars
     } catch (error) {
-      return str + `-${str}`;
+      words = str.split(' ');
     }
   }
+  words.unshift(str);
+  const obj = {};
+  return words.reduce((pre, item) => {
+    if (item && !obj.hasOwnProperty(typeof item + item)) {
+      obj[typeof item + item] = true;
+      pre.push(item);
+    }
+    return pre;
+  }, []);
 }
 // 去重
 export function unique(arr, keys) {
@@ -3109,9 +3092,12 @@ export function wave(idx = 1) {
     document.body.appendChild(bubble);
 
     // 在动画结束后删除泡泡
-    _setTimeout(() => {
-      bubble.remove();
-    }, parseFloat(bubble.style.animationDuration) * 1000);
+    _setTimeout(
+      () => {
+        bubble.remove();
+      },
+      parseFloat(bubble.style.animationDuration) * 1000
+    );
   }
   createBubble();
   // 定时生成泡泡

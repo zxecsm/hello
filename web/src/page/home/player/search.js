@@ -74,7 +74,7 @@ const searchListLazyImg = new LazyLoad();
 function getSearchSongItemData(id) {
   return searchMusicList.find((item) => item.id == id);
 }
-$searchMusicWrap.splitWord = '';
+$searchMusicWrap.splitWord = [];
 // 获取搜索列表
 export const _getSearchSongs = debounce(getSearchSongs, 1000);
 export function getSearchSongs(update) {
