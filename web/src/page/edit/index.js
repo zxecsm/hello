@@ -30,6 +30,7 @@ import {
   wave,
   darkMode,
   concurrencyTasks,
+  copyText,
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
@@ -43,6 +44,7 @@ import rMenu from '../../js/plugins/rightMenu';
 import MdWorker from '../../js/utils/md.worker.js';
 import fileSlice from '../../js/utils/fileSlice.js';
 import changeDark from '../../js/utils/changeDark.js';
+import _d from '../../js/common/config.js';
 const mdWorker = new MdWorker();
 const $contentWrap = $('.content_wrap'),
   $headBtns = $contentWrap.find('.head_btns'),
@@ -121,7 +123,42 @@ editor.commands.addCommand({
     hdUpFile(files);
   },
 });
-const $aceScroll = $editBox.find('.ace_scrollbar-v');
+// 同步滚动逻辑，基于编辑器当前可见行
+function syncScroll() {
+  // 获取编辑器中可见的第一个行号
+  const firstVisibleRow = editor.getFirstVisibleRow();
+  // 获取预览区域中对应的第一个元素
+  let firstElement = $previewBox[0].querySelector(
+    `[data-line="${firstVisibleRow}"]`
+  );
+
+  if (firstElement) {
+    if (firstElement.tagName && firstElement.tagName.toLowerCase() === 'tr') {
+      firstElement = firstElement.parentNode.parentNode;
+    }
+    // 将预览区滚动到编辑器当前显示的区域
+    $previewBox.find('.content').stop().animate(
+      {
+        scrollTop: firstElement.offsetTop,
+      },
+      _d.speed
+    );
+  }
+}
+// 监听 Ace 编辑器的滚动事件
+editor.session.on('changeScrollTop', function () {
+  syncScroll();
+});
+// // 滚动同步
+// function syncScroll() {
+//   if ($previewBox.is(':hidden')) return;
+//   let CT = $aceScroll.scrollTop(),
+//     CBH = $editBox.outerHeight(),
+//     CH = $aceScroll[0].scrollHeight - CBH,
+//     SH = $previewBox.find('.content')[0].scrollHeight - CBH,
+//     ST = (CT / CH) * SH;
+//   $previewBox.find('.content').scrollTop(ST);
+// }
 // 标题
 const wInput = wrapInput($headBtns.find('.note_title input')[0], {
   change(val) {
@@ -237,7 +274,7 @@ mdWorker.addEventListener('message', (event) => {
       );
     }
   );
-  hdScroll();
+  syncScroll();
 });
 const imgLazy = new LazyLoad();
 // 处理保存按钮
@@ -252,20 +289,42 @@ function handleSave() {
   $headBtns.find('.save_btn').addClass('active');
 }
 // 查看图片
-$previewBox.on('click', 'img', function () {
-  const imgs = $previewBox.find('img');
-  let idx = 0;
-  const arr = [];
-  imgs.each((i, item) => {
-    if (item == this) {
-      idx = i;
-    }
-    arr.push({
-      u1: item.getAttribute('data-src'),
+$previewBox
+  .on('click', 'img', function () {
+    const imgs = $previewBox.find('img');
+    let idx = 0;
+    const arr = [];
+    imgs.each((i, item) => {
+      if (item == this) {
+        idx = i;
+      }
+      arr.push({
+        u1: item.getAttribute('data-src'),
+      });
     });
+    imgPreview(arr, idx);
+  })
+  .on('click', '.codeCopy', function () {
+    const str = $(this).parent().find('code').text();
+    copyText(str);
+  })
+  .on('click', '.shrink', function () {
+    const $this = $(this);
+    const flag = $this.attr('data-flag');
+    if (flag === 'y') {
+      $this.attr({
+        'data-flag': 'n',
+        class: 'shrink iconfont icon-up',
+      });
+      $this.parent().find('code').removeClass('hide');
+    } else {
+      $this.attr({
+        'data-flag': 'y',
+        class: 'shrink iconfont icon-Down',
+      });
+      $this.parent().find('code').addClass('hide');
+    }
   });
-  imgPreview(arr, idx);
-});
 $editBox
   .on('keydown', function (e) {
     const key = e.key,
@@ -340,17 +399,6 @@ function pasteImg(e) {
   $resize[0].addEventListener('mousedown', hdDown);
   $resize[0].addEventListener('touchstart', hdDown);
 })();
-$aceScroll.on('scroll', hdScroll);
-// 滚动同步
-function hdScroll() {
-  if ($previewBox.is(':hidden')) return;
-  let CT = $aceScroll.scrollTop(),
-    CBH = $editBox.outerHeight(),
-    CH = $aceScroll[0].scrollHeight - CBH,
-    SH = $previewBox.find('.content')[0].scrollHeight - CBH,
-    ST = (CT / CH) * SH;
-  $previewBox.find('.content').scrollTop(ST);
-}
 // 删除图片
 async function hdUpFile(files) {
   if (!isLogin()) {

@@ -291,18 +291,6 @@ mdWorker.addEventListener('message', (event) => {
   mdWorker.terminate();
   noteObj.html = event.data;
   $noteBox.html(event.data);
-  const $pre = $noteBox.find('pre');
-  $pre.each((_, item) => {
-    const $item = $(item);
-    $item.append(`<div cursor="y" class="codeCopy iconfont icon-fuzhi"><div>`);
-    const $code = $item.find('code');
-    if ($code.height() > 400) {
-      $code.addClass('hide');
-      $item.append(
-        '<div data-flag="y" cursor="y" class="shrink iconfont icon-Down"><div>'
-      );
-    }
-  });
   hdNoteDirPosition = createNoteDir($noteBox);
   if (!hdNoteDirPosition) {
     $setBtnsWrap.find('.show_navigation_btn').remove();
@@ -457,8 +445,8 @@ function nextPrevSearch(isNext) {
   highlightnum >= _length
     ? (highlightnum = 0)
     : highlightnum < 0
-    ? (highlightnum = _length - 1)
-    : null;
+      ? (highlightnum = _length - 1)
+      : null;
   $pageSearchWrap.find('.res_total_num').text(`${highlightnum + 1}/${_length}`);
   highlightPosition(highlightnum);
 }
