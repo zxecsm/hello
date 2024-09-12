@@ -124,10 +124,18 @@ editor.commands.addCommand({
   },
 });
 // 同步滚动逻辑，基于编辑器当前可见行
-function syncScroll() {
+let isSyncingEditorScroll = false;
+let isSyncingPreviewScroll = false;
+const initState = debounce(() => {
+  isSyncingEditorScroll = false;
+  isSyncingPreviewScroll = false;
+}, 1000);
+// 编辑器滚动同步到预览区
+function syncScrollFromEditor() {
+  if (isSyncingPreviewScroll) return;
+  isSyncingEditorScroll = true;
   // 获取编辑器中可见的第一个行号
   const firstVisibleRow = editor.getFirstVisibleRow();
-  // 获取预览区域中对应的第一个元素
   let firstElement = $previewBox[0].querySelector(
     `[data-line="${firstVisibleRow}"]`
   );
@@ -136,7 +144,7 @@ function syncScroll() {
     if (firstElement.tagName && firstElement.tagName.toLowerCase() === 'tr') {
       firstElement = firstElement.parentNode.parentNode;
     }
-    // 将预览区滚动到编辑器当前显示的区域
+    // 滚动预览区域到对应的行
     $previewBox.find('.content').stop().animate(
       {
         scrollTop: firstElement.offsetTop,
@@ -144,21 +152,27 @@ function syncScroll() {
       _d.speed
     );
   }
+  initState();
 }
 // 监听 Ace 编辑器的滚动事件
-editor.session.on('changeScrollTop', function () {
-  syncScroll();
-});
-// // 滚动同步
-// function syncScroll() {
-//   if ($previewBox.is(':hidden')) return;
-//   let CT = $aceScroll.scrollTop(),
-//     CBH = $editBox.outerHeight(),
-//     CH = $aceScroll[0].scrollHeight - CBH,
-//     SH = $previewBox.find('.content')[0].scrollHeight - CBH,
-//     ST = (CT / CH) * SH;
-//   $previewBox.find('.content').scrollTop(ST);
-// }
+editor.session.on('changeScrollTop', syncScrollFromEditor);
+// 预览区滚动同步到编辑器
+function syncScrollFromPreview() {
+  if (isSyncingEditorScroll) return;
+  isSyncingPreviewScroll = true;
+
+  const scrollTop = $previewBox.find('.content').scrollTop();
+  let elements = Array.from($previewBox[0].querySelectorAll('[data-line]'));
+
+  let firstVisibleElement = elements.find((el) => el.offsetTop >= scrollTop);
+
+  if (firstVisibleElement) {
+    const line = parseInt(firstVisibleElement.getAttribute('data-line'), 10);
+    editor.scrollToLine(line);
+  }
+  initState();
+}
+$previewBox.find('.content').on('scroll', syncScrollFromPreview);
 // 标题
 const wInput = wrapInput($headBtns.find('.note_title input')[0], {
   change(val) {
@@ -274,7 +288,7 @@ mdWorker.addEventListener('message', (event) => {
       );
     }
   );
-  syncScroll();
+  syncScrollFromEditor();
 });
 const imgLazy = new LazyLoad();
 // 处理保存按钮
