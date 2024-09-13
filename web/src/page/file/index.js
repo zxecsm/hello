@@ -1110,12 +1110,12 @@ $header
     );
   })
   .on('click', '.h_sort_btn', hdFileSort)
-  .on('click', '.paste_btn .text', function () {
+  .on('click', '.paste_btn .text', function (e) {
     const { type, data } = waitObj;
     if (type == 'copy') {
-      hdCopy(data);
+      hdCopy(e, data);
     } else if (type == 'cut') {
-      hdCut(data);
+      hdCut(e, data);
     }
   })
   .on('click', '.paste_btn .close', () => {
@@ -1201,65 +1201,71 @@ function hdFileSort(e) {
   );
 }
 // 复制
-async function hdCopy(data, cb) {
-  try {
-    if (
-      !data.every((item) => {
-        const { path, name } = item;
-        const f = hdPath(`${path}/${name}`);
-        const t = hdPath(`${fileUrl}/${name}`);
-        return !isParentDir(f, t);
-      })
-    ) {
-      _msg.error('无效操作');
-      return;
-    }
-    const res = await reqFileCopy({ data, path: fileUrl });
-    if (res.code == 0) {
-      _msg.success(res.codeText);
+async function hdCopy(e, data, cb) {
+  const type = await _pop.p({ e, text: '确认粘贴？' });
+  if (type === 'confirm') {
+    try {
+      if (
+        !data.every((item) => {
+          const { path, name } = item;
+          const f = hdPath(`${path}/${name}`);
+          const t = hdPath(`${fileUrl}/${name}`);
+          return !isParentDir(f, t);
+        })
+      ) {
+        _msg.error('无效操作');
+        return;
+      }
+      const res = await reqFileCopy({ data, path: fileUrl });
+      if (res.code == 0) {
+        _msg.success(res.codeText);
+        openDir();
+        cb && cb();
+      }
+    } catch (error) {
+      if (error.statusText == 'timeout') {
+        _msg.success(`文件后台处理中`);
+      }
       openDir();
       cb && cb();
     }
-  } catch (error) {
-    if (error.statusText == 'timeout') {
-      _msg.success(`文件后台处理中`);
-    }
-    openDir();
-    cb && cb();
   }
 }
 // 移动
-async function hdCut(data, cb) {
-  try {
-    if (
-      !data.every((item) => {
-        const { path, name } = item;
-        const f = hdPath(`${path}/${name}`);
-        const t = hdPath(`${fileUrl}/${name}`);
-        return f !== t && !isParentDir(f, t);
-      })
-    ) {
-      _msg.error('无效操作');
-      return;
-    }
-    const res = await reqFileMove({ data, path: fileUrl });
-    if (res.code == 0) {
-      _msg.success(res.codeText);
+async function hdCut(e, data, cb) {
+  const type = await _pop.p({ e, text: '确认粘贴？' });
+  if (type === 'confirm') {
+    try {
+      if (
+        !data.every((item) => {
+          const { path, name } = item;
+          const f = hdPath(`${path}/${name}`);
+          const t = hdPath(`${fileUrl}/${name}`);
+          return f !== t && !isParentDir(f, t);
+        })
+      ) {
+        _msg.error('无效操作');
+        return;
+      }
+      const res = await reqFileMove({ data, path: fileUrl });
+      if (res.code == 0) {
+        _msg.success(res.codeText);
+        openDir();
+        waitObj = {};
+        realtime.send({ type: 'pastefiledata', data: waitObj });
+        hidePaste();
+        cb && cb();
+      }
+    } catch (error) {
+      if (error.statusText == 'timeout') {
+        _msg.success(`文件后台处理中`);
+      }
       openDir();
       waitObj = {};
       realtime.send({ type: 'pastefiledata', data: waitObj });
       hidePaste();
       cb && cb();
     }
-  } catch (error) {
-    if (error.statusText == 'timeout') {
-      _msg.success(`文件后台处理中`);
-    }
-    openDir();
-    waitObj = {};
-    realtime.send({ type: 'pastefiledata', data: waitObj });
-    hidePaste();
-    cb && cb();
   }
 }
 // 获取选中
@@ -1512,9 +1518,9 @@ document.addEventListener('keydown', function (e) {
   } else if (ctrl && key === 'v') {
     const { type, data } = waitObj;
     if (type == 'copy') {
-      hdCopy(data);
+      hdCopy(false, data);
     } else if (type == 'cut') {
-      hdCut(data);
+      hdCut(false, data);
     }
   }
   const data = getCheckDatas();
