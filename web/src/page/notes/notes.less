@@ -1,37 +1,4 @@
 #app {
-  .note_category {
-    transform: translateY(100px);
-    opacity: 0;
-    &.open {
-      transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
-      opacity: 1;
-      transform: none;
-    }
-    .title {
-      line-height: 1.5;
-      padding: 0 5px;
-      display: flex;
-      border-bottom: 1px solid var(--color9);
-      span {
-        flex: none;
-      }
-      .clean_category {
-        display: none;
-        &:hover {
-          color: var(--text-hover-color);
-        }
-      }
-      .fill {
-        flex: auto;
-      }
-      .setting_category {
-        color: var(--icon-color);
-        &:hover {
-          color: var(--text-hover-color);
-        }
-      }
-    }
-  }
   .category_box {
     display: none;
     width: 100%;

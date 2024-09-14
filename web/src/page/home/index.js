@@ -147,7 +147,6 @@ import {
 import { reqCountList } from '../../api/count.js';
 import { deepClone } from '../../js/utils/template.js';
 const $pageBg = $('.page_bg'),
-  $mainid = $('#main'),
   $document = $(document),
   $userLogoBtn = $('.user_logo_btn'),
   $rightMenuMask = $('.right_menu_mask'),
@@ -207,17 +206,6 @@ export function resizeBgFilter(e) {
       bgFilter(parseInt(per * 100));
     }, 500)
   );
-}
-export function setMainTransform(val) {
-  if (val) {
-    $mainid.css({
-      transform: `translateX(${val}px)`,
-    });
-    return;
-  }
-  $mainid.css({
-    transform: 'none',
-  });
 }
 // 风车
 const windmill = {
@@ -795,8 +783,8 @@ function hdChatType(resData) {
           to === 'chang'
             ? 'chang'
             : from.account === userInfo.account && chatAccount === to
-            ? to
-            : from.account;
+              ? to
+              : from.account;
         const flag = $chatListBox.find('.chat_item').last().attr('data-id');
         const word = $chatHeadBtns.find('.search_msg_inp input').val().trim();
         if (word.length > 100) {

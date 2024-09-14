@@ -144,8 +144,7 @@ $head
   })
   .on('click', '.select_btn', getLogList)
   .on('click', '.inp_box i', function () {
-    wInput.setValue('');
-    wInput.target.focus();
+    wInput.setValue('').focus();
   });
 $stat.list = [];
 $stat.pageNo = 1;

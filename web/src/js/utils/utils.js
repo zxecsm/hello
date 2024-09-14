@@ -2557,11 +2557,6 @@ export function wrapInput(target, opt) {
   target.addEventListener('input', hdInput);
   target.addEventListener('focus', hdFocus);
   target.addEventListener('blur', hdBlur);
-  function unBind() {
-    target.removeEventListener('input', hdInput);
-    target.removeEventListener('focus', hdFocus);
-    target.removeEventListener('blur', hdBlur);
-  }
   function hdInput() {
     change && change(target.value);
   }
@@ -2571,18 +2566,29 @@ export function wrapInput(target, opt) {
   function hdBlur() {
     blur && blur(target);
   }
-  function getValue() {
-    return target.value;
-  }
-  function setValue(val) {
-    target.value = val;
-    hdInput();
-  }
   return {
-    setValue,
-    getValue,
-    unBind,
+    setValue(val) {
+      target.value = val;
+      hdInput();
+      return this;
+    },
+    getValue() {
+      return target.value;
+    },
+    unBind() {
+      target.removeEventListener('input', hdInput);
+      target.removeEventListener('focus', hdFocus);
+      target.removeEventListener('blur', hdBlur);
+    },
     target,
+    focus() {
+      target.focus();
+      return this;
+    },
+    select() {
+      target.select();
+      return this;
+    },
   };
 }
 // 解析书签
@@ -2920,7 +2926,7 @@ export function userLogoMenu(e, account, username, email) {
           myOpen(url);
         }
       } else if (id == 3) {
-        url = `/bmk/#${encodeURIComponent(account)}`;
+        url = `/bmk?acc=${encodeURIComponent(account)}`;
         if (isIframe()) {
           _myOpen(url, username + '的书签夹');
         } else {

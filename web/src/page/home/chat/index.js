@@ -140,9 +140,15 @@ const chatSearchInput = wrapInput(
     },
     focus(target) {
       $(target).parent().addClass('focus');
+      $chatHeadBtns.find('.search_btn').css('display', 'none');
     },
     blur(target) {
-      $(target).parent().removeClass('focus');
+      const $inpBox = $(target).parent();
+      $inpBox.removeClass('focus');
+      if (chatSearchInput.getValue().trim() === '') {
+        $inpBox.css('display', 'none');
+        $chatHeadBtns.find('.search_btn').css('display', 'block');
+      }
     },
   }
 );
@@ -304,7 +310,7 @@ export function closeChatRoom() {
     backWindow.remove('chat');
     chatTitleScroll.close();
     $chatListBox.find('.chat_list').html('');
-    chatSearchInput.setValue('');
+    chatSearchInput.setValue('').focus();
     cImgLoad.unBind();
     cUserListLoad.unBind();
     cUserLogoLoad.unBind();
@@ -363,6 +369,10 @@ $chatHeadBtns
   .on('click', '.c_close_btn', closeChatRoom)
   .on('click', '.clear_msg_btn', clearMsg)
   .on('click', '.top', switchChatTop)
+  .on('click', '.search_btn', () => {
+    chatSearchInput.target.parentNode.style.display = 'flex';
+    chatSearchInput.focus();
+  })
   .on(
     'click',
     '.chat_home_btn',
@@ -378,8 +388,7 @@ $chatHeadBtns
     hdChatSearchInput();
   })
   .on('click', '.search_msg_inp i', function () {
-    chatSearchInput.setValue('');
-    chatSearchInput.target.focus();
+    chatSearchInput.setValue('').focus();
     hdChatSearchInput();
   })
   .on(
@@ -552,7 +561,7 @@ export function chatMessageNotification(name, data, from, to, logo) {
     (type) => {
       if (type == 'click') {
         curChatAccount = to == 'chang' ? to : from;
-        chatSearchInput.setValue('');
+        chatSearchInput.setValue('').focus();
         showChatRoom();
       }
     },
@@ -572,7 +581,7 @@ export function chatMessageNotification(name, data, from, to, logo) {
       },
       () => {
         curChatAccount = to == 'chang' ? to : from;
-        chatSearchInput.setValue('');
+        chatSearchInput.setValue('').focus();
         showChatRoom();
       }
     );
@@ -746,7 +755,7 @@ function userMenu(e, msgObj, isUserList) {
         );
       } else if (id == '4') {
         close();
-        openInIframe(`/bmk/#${_from}`, (des || name) + '的书签夹');
+        openInIframe(`/bmk?acc=${_from}`, (des || name) + '的书签夹');
       } else if (id == '5') {
         imgPreview([{ u1: hdPath(`/api/pub/logo/${_from}/${logo}`) }]);
         close();
@@ -967,8 +976,7 @@ function chatMsgMenu(e, cobj) {
         copyText(z);
         close();
       } else if (id == '2') {
-        chatMsgInp.setValue(z);
-        chatMsgInp.target.focus();
+        chatMsgInp.setValue(z).focus();
         close();
       } else if (id == '3') {
         let flag = null;
@@ -1047,7 +1055,7 @@ function sendTextMsg() {
     .attr('x', 1)
     .children('i')
     .attr('class', 'iconfont icon-jiahao');
-  chatMsgInp.setValue('');
+  chatMsgInp.setValue('').focus();
   if (data === '') return;
   const obj = {
     data,
@@ -1128,8 +1136,7 @@ $chatFootBox
     }
   })
   .on('click', '.clean', function () {
-    chatMsgInp.setValue('');
-    chatMsgInp.target.focus();
+    chatMsgInp.setValue('').focus();
   })
   .on(
     'click',
@@ -1504,7 +1511,7 @@ export function openFriend(acc, noHideUserList, cb) {
   } else {
     $chatHeadBtns.find('.clear_msg_btn').stop().fadeIn(_d.speed);
   }
-  chatSearchInput.setValue('');
+  chatSearchInput.setValue('').focus();
   chatMsgInp.setValue(temChatMsg[acc] || '');
   if (!noHideUserList) {
     $userListBox.css('display', 'none');

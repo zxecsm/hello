@@ -94,7 +94,13 @@ route.get('/share', async (req, res) => {
 // 搜索书签
 route.get('/search', async (req, res) => {
   try {
-    let { word = '', pageNo = 1, pageSize = 20, acc = '' } = req.query;
+    let {
+      word = '',
+      pageNo = 1,
+      pageSize = 20,
+      acc = '',
+      category = [],
+    } = req.query;
     pageNo = parseInt(pageNo);
     pageSize = parseInt(pageSize);
     if (
@@ -104,13 +110,18 @@ route.get('/search', async (req, res) => {
       isNaN(pageSize) ||
       pageNo < 1 ||
       pageSize < 1 ||
-      pageSize > 200
+      pageSize > 200 ||
+      !_type.isArray(category) ||
+      !category.every((item) => validaString(item, 1, 50, 1))
     ) {
       paramErr(res, req);
       return;
     }
     const { account } = req._hello.userinfo;
-    let list = [];
+    if (!acc && !account) {
+      _nologin(res);
+      return;
+    }
     let booklist = await queryData(
       'booklist',
       '*',
@@ -119,25 +130,17 @@ route.get('/search', async (req, res) => {
     );
     if (acc && acc !== account) {
       booklist = booklist.filter((item) => item.share === 'y');
-      list = (
-        await queryData('bookmk', '*', `WHERE state=? AND account=?`, [
-          '0',
-          acc,
-        ])
-      ).filter((item) => booklist.some((y) => y.id == item.listid));
     } else {
-      if (account) {
-        booklist.push({ id: 'home' });
-        list = (
-          await queryData('bookmk', '*', `WHERE state=? AND account=?`, [
-            '0',
-            account,
-          ])
-        ).filter((item) => booklist.some((y) => y.id == item.listid));
-      } else {
-        _nologin(res);
-        return;
-      }
+      booklist.push({ id: 'home' });
+    }
+    let list = (
+      await queryData('bookmk', '*', `WHERE state=? AND account=?`, [
+        '0',
+        acc || account,
+      ])
+    ).filter((item) => booklist.some((y) => y.id == item.listid));
+    if (category.length > 0) {
+      list = list.filter((item) => category.some((c) => item.listid === c));
     }
     const bookListObj = {};
     booklist.forEach((item) => {
@@ -160,6 +163,58 @@ route.get('/search', async (req, res) => {
       ...createPagingData(list, pageSize, pageNo),
       splitWord,
     });
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+// 获取列表
+route.get('/list', async (req, res) => {
+  try {
+    const { id = '', acc = '' } = req.query;
+    if (!validaString(id, 0, 50, 1) || !validaString(acc, 0, 50, 1)) {
+      paramErr(res, req);
+      return;
+    }
+    const { account } = req._hello.userinfo;
+    if (!acc && !account) {
+      _nologin(res);
+      return;
+    }
+    let home = [];
+    let list = bookSort(
+      await queryData('booklist', '*', `WHERE state=? AND account=?`, [
+        '0',
+        acc || account,
+      ])
+    );
+    if (acc && acc !== account) {
+      list = list.filter((item) => item.share === 'y');
+    }
+    if (!id || !account) {
+      _success(res, 'ok', { list, home });
+      return;
+    }
+    let bms = bookSort(
+      await queryData(
+        'bookmk',
+        '*',
+        `WHERE listid=? AND state=? AND account=?`,
+        [id, '0', account]
+      )
+    );
+    bms = bms.map((item, idx) => ({ ...item, num: idx }));
+    list = list.map((item, idx) => ({ ...item, num: idx }));
+    if (id == 'home') {
+      home = bms;
+    } else {
+      list = list.map((item) => {
+        if (item.id === id) {
+          item.item = bms;
+        }
+        return item;
+      });
+    }
+    _success(res, 'ok', { list, home });
   } catch (error) {
     _err(res)(req, error);
   }
@@ -235,51 +290,6 @@ route.get('/parse-site-info', async (req, res) => {
     }
     await errLog(req, error);
     _success(res, 'ok', obj);
-  }
-});
-// 获取列表
-route.get('/list', async (req, res) => {
-  try {
-    const { account } = req._hello.userinfo;
-    const { id = '' } = req.query;
-    if (!validaString(id, 0, 50, 1)) {
-      paramErr(res, req);
-      return;
-    }
-    let home = [];
-    let list = bookSort(
-      await queryData('booklist', '*', `WHERE state=? AND account=?`, [
-        '0',
-        account,
-      ])
-    );
-    if (!id) {
-      _success(res, 'ok', { list, home });
-      return;
-    }
-    let bms = bookSort(
-      await queryData(
-        'bookmk',
-        '*',
-        `WHERE listid=? AND state=? AND account=?`,
-        [id, '0', account]
-      )
-    );
-    bms = bms.map((item, idx) => ({ ...item, num: idx }));
-    list = list.map((item, idx) => ({ ...item, num: idx }));
-    if (id == 'home') {
-      home = bms;
-    } else {
-      list = list.map((item) => {
-        if (item.id === id) {
-          item.item = bms;
-        }
-        return item;
-      });
-    }
-    _success(res, 'ok', { list, home });
-  } catch (error) {
-    _err(res)(req, error);
   }
 });
 async function bookListMoveLocation(account, fromId, toId) {

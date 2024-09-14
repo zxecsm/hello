@@ -312,16 +312,13 @@ $box.on('keyup', function (e) {
 });
 
 $account.next().on('click', function () {
-  accInp.setValue('');
-  accInp.target.focus();
+  accInp.setValue('').focus();
 });
 $repassword.next().on('click', function () {
-  rePdInp.setValue('');
-  rePdInp.target.focus();
+  rePdInp.setValue('').focus();
 });
 $password.next().on('click', function () {
-  pdInp.setValue('');
-  pdInp.target.focus();
+  pdInp.setValue('').focus();
 });
 // 登录
 function hdLogin(obj) {

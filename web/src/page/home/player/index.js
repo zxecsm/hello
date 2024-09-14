@@ -320,7 +320,7 @@ export function setCurOpenSongListId(val) {
 // 返回按钮
 function musicBackBtn() {
   if (!searchWrapIsHide()) {
-    musicSearchInput.setValue('');
+    musicSearchInput.setValue('').focus();
   } else if (!lrcWrapIsHide()) {
     hideLrcBox();
   } else if (
@@ -368,9 +368,15 @@ const musicSearchInput = wrapInput(
   {
     focus(target) {
       $(target).parent().addClass('focus');
+      $musicHeadWrap.find('.search_btn').css('display', 'none');
     },
     blur(target) {
-      $(target).parent().removeClass('focus');
+      const $inpBox = $(target).parent();
+      $inpBox.removeClass('focus');
+      if (musicSearchInput.getValue().trim() === '') {
+        $inpBox.css('display', 'none');
+        $musicHeadWrap.find('.search_btn').css('display', 'block');
+      }
     },
     change(val) {
       if (val.trim() == '') {
@@ -388,16 +394,19 @@ export function setSearchMusicInputValue(val) {
   if (val === undefined) {
     return musicSearchInput.getValue('').trim();
   }
-  musicSearchInput.setValue(val);
+  musicSearchInput.setValue(val).focus();
 }
 $musicHeadWrap
   .on('click', '.back', musicBackBtn)
   .on('click', '.close', closeMusicPlayer)
   .on('click', '.hide', hideMusicPlayBox)
   .on('click', '.top', switchPlayerTop)
+  .on('click', '.search_btn', () => {
+    musicSearchInput.target.parentNode.style.display = 'flex';
+    musicSearchInput.focus();
+  })
   .on('click', '.search_music_inp i', function () {
-    musicSearchInput.setValue('');
-    musicSearchInput.target.focus();
+    musicSearchInput.setValue('').focus();
   })
   .on('click', '.volume', adjustVolume);
 // 获取收藏歌曲
@@ -940,8 +949,8 @@ function renderSongs(gao) {
     songPageNo < 1
       ? (songPageNo = pageTotal)
       : songPageNo > pageTotal
-      ? (songPageNo = 1)
-      : null;
+        ? (songPageNo = 1)
+        : null;
     slist = songListInfo.item.slice(
       (songPageNo - 1) * musicPageSize,
       songPageNo * musicPageSize
@@ -1923,7 +1932,7 @@ $msuicContentBox
   })
   .on('click', '.artist_name_text', function (e) {
     e.stopPropagation();
-    musicSearchInput.setValue(this.innerText);
+    musicSearchInput.setValue(this.innerText).focus();
   })
   .on('click', '.song_logo_box', function () {
     const $this = $(this).parent();

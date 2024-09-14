@@ -103,7 +103,7 @@ const _renderList = debounce(renderList, 1000);
 function renderList(y) {
   let pagenum = $contentWrap.pagenum,
     a = wInput.getValue().trim(),
-    slogo = 'icon-shoucang';
+    slogo = 'icon-liebiao1';
   if (a.length > 100) {
     _msg.error('搜索内容过长');
     return;
@@ -233,7 +233,7 @@ $headWrap
       },
       {
         text: '书签分组',
-        beforeIcon: 'iconfont icon-31liebiao',
+        beforeIcon: 'iconfont icon-liebiao1',
         param: { value: 'booklist' },
       },
       {
@@ -270,8 +270,7 @@ $headWrap
     );
   })
   .on('click', '.inp_box i', function () {
-    wInput.setValue('');
-    wInput.target.focus();
+    wInput.setValue('').focus();
   });
 function hdRecover(e, ids, t, cb, isCheck) {
   const text = getTypeText(t);

@@ -45,7 +45,7 @@ import {
   getHomeBmList,
   showHomeFootMenu,
 } from '../searchBox/index.js';
-import { setMainTransform, setUserInfo } from '../index.js';
+import { setUserInfo } from '../index.js';
 import { backWindow } from '../backWindow.js';
 import pagination from '../../../js/plugins/pagination/index.js';
 import toolTip from '../../../js/plugins/tooltip/index.js';
@@ -203,8 +203,8 @@ function renderAsideList(p) {
         asidePageNo < 1
           ? (asidePageNo = pageTotal)
           : asidePageNo > pageTotal
-          ? (asidePageNo = 1)
-          : null;
+            ? (asidePageNo = 1)
+            : null;
         return item.item.slice(
           (asidePageNo - 1) * asidePageSize,
           asidePageNo * asidePageSize
@@ -215,8 +215,8 @@ function renderAsideList(p) {
         asidePageNo < 1
           ? (asidePageNo = pageTotal)
           : asidePageNo > pageTotal
-          ? (asidePageNo = 1)
-          : null;
+            ? (asidePageNo = 1)
+            : null;
         return asidePgnt.getHTML({
           pageNo: asidePageNo,
           pageSize: asidePageSize,
@@ -613,7 +613,7 @@ export function moveBookMark(e, pid, arr) {
     {
       id: 'home',
       text: '主页',
-      beforeIcon: 'iconfont icon-shoucang',
+      beforeIcon: 'iconfont icon-liebiao1',
       param: { id: 'home', name: '主页' },
     },
   ];
@@ -625,7 +625,7 @@ export function moveBookMark(e, pid, arr) {
       data.push({
         id: item.id,
         text: item.name,
-        beforeIcon: 'iconfont icon-shoucang',
+        beforeIcon: 'iconfont icon-liebiao1',
         param: { id: item.id, name: item.name },
       });
     }
@@ -1293,27 +1293,16 @@ $asideBtn.on('click', toggleAside);
 export function showAside() {
   backWindow.add('aside', hideAside);
   $asideWrap.css('display', 'block');
-  const menuw = $aside.outerWidth();
   loadingImg($aside.find('.list')[0]);
-  setMainTransform(menuw);
-  $aside.css({
-    transform: 'translateX(0px)',
-  });
-  $asideBtn.find('.boxtop').addClass('active');
-  $asideBtn.find('.boxdow').addClass('active');
-  $asideBtn.find('.boxcon').css('opacity', '0');
+  $aside.outerWidth();
+  $aside.addClass('open');
+  $asideBtn.fadeOut(_d.speed);
   getBookMarkList(1);
 }
 function hideAside() {
   backWindow.remove('aside');
-  const menuw = $aside.outerWidth();
-  setMainTransform();
-  $aside.css({
-    transform: `translateX(-${menuw}px)`,
-  });
-  $asideBtn.find('.boxtop').removeClass('active');
-  $asideBtn.find('.boxdow').removeClass('active');
-  $asideBtn.find('.boxcon').css('opacity', '1');
+  $aside.removeClass('open');
+  $asideBtn.fadeIn(_d.speed);
   $asideWrap.stop().fadeOut(_d.speed, () => {
     asideLoadImg.unBind();
     $aside.find('.list').html('');

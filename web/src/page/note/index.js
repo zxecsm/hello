@@ -89,8 +89,8 @@ $setBtnsWrap
   .on('click', '.show_search_wrap', () => {
     showSearchBox();
     hdSearchWord();
-    searchInp.target.focus();
-    searchInp.target.select();
+    searchInp.focus();
+    searchInp.select();
   })
   .on('click', '.change_theme_btn', function () {
     // 切换黑暗模式
@@ -421,8 +421,7 @@ $pageSearchWrap
     }
   })
   .on('click', '.inp_box .clear', function () {
-    searchInp.setValue('');
-    searchInp.target.focus();
+    searchInp.setValue('').focus();
   })
   .on('mouseenter', '.search_inp', function () {
     this.focus();

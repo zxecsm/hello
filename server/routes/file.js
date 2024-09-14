@@ -123,9 +123,13 @@ route.get('/read-dir', async (req, res) => {
       paramErr(res, req);
       return;
     }
+    const { account } = req._hello.userinfo;
+    if (!flag && !account) {
+      _nologin(res);
+      return;
+    }
     let p = '';
     let rootP = '';
-    const { account } = req._hello.userinfo;
     if (flag) {
       const [id, pass] = flag.split('/');
       const share = (
@@ -144,10 +148,6 @@ route.get('/read-dir', async (req, res) => {
         p = hdPath(`${rootP}/${path}`);
       }
     } else {
-      if (!account) {
-        _nologin(res);
-        return;
-      }
       p = _hdPath(account, path);
       rootP = getRootDir(account);
     }
@@ -183,6 +183,11 @@ route.get('/read-dir-size', async (req, res) => {
       paramErr(res, req);
       return;
     }
+    const { account } = req._hello.userinfo;
+    if (!flag && !account) {
+      _nologin(res);
+      return;
+    }
     let p = '';
     if (flag) {
       const [id, pass] = flag.split('/');
@@ -204,11 +209,6 @@ route.get('/read-dir-size', async (req, res) => {
         p = hdPath(`${rootP}/${path}`);
       }
     } else {
-      const { account } = req._hello.userinfo;
-      if (!account) {
-        _nologin(res);
-        return;
-      }
       p = _hdPath(account, path);
     }
     let size = 0;
@@ -227,6 +227,11 @@ route.get('/read-file', async (req, res) => {
     const { path = '', flag = '' } = req.query;
     if (!validaString(path) || !validaString(flag, 0, 70)) {
       paramErr(res, req);
+      return;
+    }
+    const { account } = req._hello.userinfo;
+    if (!flag && !account) {
+      _nologin(res);
       return;
     }
     let p = '';
@@ -255,11 +260,6 @@ route.get('/read-file', async (req, res) => {
         }
       }
     } else {
-      const { account } = req._hello.userinfo;
-      if (!account) {
-        _nologin(res);
-        return;
-      }
       p = _hdPath(account, path);
     }
     if (!_f.c.existsSync(p)) {

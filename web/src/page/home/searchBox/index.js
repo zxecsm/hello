@@ -594,8 +594,7 @@ $searchInpWrap
     _hdSearchBoxInput(val);
   })
   .on('click', '.inp_box i', function () {
-    searchInput.setValue('');
-    searchInput.target.focus();
+    searchInput.setValue('').focus();
   })
   .find('.search_list_box')
   .on('click', '.text', hdClickSearchItem)
@@ -608,8 +607,7 @@ $searchInpWrap
     e.preventDefault();
     if (isMobile()) return;
     const xx = $(this).text().trim();
-    searchInput.setValue(xx);
-    searchInput.target.focus();
+    searchInput.setValue(xx).focus();
   });
 // 保存搜索历史
 function saveSearchText(str) {
@@ -743,8 +741,7 @@ function hdSearchWord(res) {
 }
 longPress($searchInpWrap.find('.search_list_box')[0], 'li', function () {
   const text = $(this).text().trim();
-  searchInput.setValue(text);
-  searchInput.target.focus();
+  searchInput.setValue(text).focus();
 });
 // 切换搜索提示词服务
 function switchSearchCallWord(e) {

@@ -215,12 +215,11 @@ const wInput = wrapInput($search.find('.inp_box input')[0], {
   },
 });
 $search.on('click', '.inp_box i', function () {
-  wInput.setValue('');
-  wInput.target.focus();
+  wInput.setValue('').focus();
 });
 function openSearch() {
   $search.stop().slideDown(_d.speed, () => {
-    wInput.target.focus();
+    wInput.focus();
   });
 }
 function closeSearch() {

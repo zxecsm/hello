@@ -59,7 +59,7 @@ import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 const $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
-  $noteCategory = $('.note_category'),
+  $categoryTag = $('.category_tag'),
   $footer = $('.footer');
 let runState = 'own';
 let noteCategoryList = [];
@@ -69,7 +69,7 @@ if (urlParams.acc && urlParams.acc !== _getData('account')) {
   runState = 'other';
   $headWrap.find('.h_add_item_btn').remove();
   $headWrap.find('.h_check_item_btn').remove();
-  $noteCategory.find('.setting_category').remove();
+  $categoryTag.find('.setting_category').remove();
 } else {
   if (isLogin()) {
     realtime.init().add((res) => {
@@ -127,7 +127,7 @@ function updataCategory() {
       if (res.code == 0) {
         noteCategoryList = res.data;
         tabsObj.list = categoryToArr(HASH || '');
-        $noteCategory.addClass('open');
+        $categoryTag.addClass('open');
       }
     })
     .catch(() => {});
@@ -160,7 +160,7 @@ function hdCategoryAdd(e, cb) {
     '选择分类'
   );
 }
-$noteCategory
+$categoryTag
   .on('click', '.setting_category', showCategoryBox)
   .on('click', '.clean_category', function () {
     tabsObj.list = [];
@@ -252,7 +252,7 @@ function renderList(y) {
     .catch(() => {});
 }
 function switchCleanBtnState() {
-  const $clean = $noteCategory.find('.clean_category');
+  const $clean = $categoryTag.find('.clean_category');
   if (tabsObj.list.length > 0) {
     $clean.css('display', 'block');
   } else {
@@ -261,7 +261,7 @@ function switchCleanBtnState() {
 }
 // 分类标签
 const tabsObj = new CreateTabs({
-  el: $noteCategory.find('.list')[0],
+  el: $categoryTag.find('.list')[0],
   change(data) {
     switchCleanBtnState();
     HASH = data.map((item) => item.id).join('-');
@@ -704,8 +704,7 @@ $headWrap
   })
   .on('click', '.h_check_item_btn', hdCheckItemBtn)
   .on('click', '.inp_box i', function () {
-    wInput.setValue('');
-    wInput.target.focus();
+    wInput.setValue('').focus();
   });
 // 获取选中项
 function getCheckItems() {

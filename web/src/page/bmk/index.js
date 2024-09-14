@@ -43,13 +43,15 @@ import { showBmkInfo } from '../../js/utils/showinfo';
 import rMenu from '../../js/plugins/rightMenu';
 import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
+import { CreateTabs } from '../notes/tabs';
 const $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
+  $categoryTag = $('.category_tag'),
   $footer = $('.footer');
 let runState = 'own'; // 运行状态
 const urlParams = queryURLParams(myOpen());
-const { HASH } = urlParams;
-if (HASH && HASH !== _getData('account')) {
+let { HASH } = urlParams;
+if (urlParams.acc && urlParams.acc !== _getData('account')) {
   runState = 'other';
   $footer.find('.f_move_to').text('添加到');
   $footer.find('.f_delete').remove();
@@ -63,7 +65,7 @@ if (HASH && HASH !== _getData('account')) {
           data: { flag },
         } = item;
         if (type === 'updatedata' && flag === 'bookmark') {
-          renderList();
+          updataCategory();
         }
       });
     });
@@ -90,6 +92,87 @@ const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
     $(target).parent().removeClass('focus');
   },
 });
+function updataCategory() {
+  reqBmkList({ acc: urlParams.acc || '' })
+    .then((res) => {
+      if (res.code == 0) {
+        $contentWrap.booklist = res.data.list;
+        if (isLogin()) {
+          $contentWrap.booklist.unshift({ id: 'home', name: '主页' });
+        }
+        tabsObj.list = categoryToArr(HASH || '');
+        $categoryTag.addClass('open');
+      }
+    })
+    .catch(() => {});
+}
+function categoryToArr(category) {
+  const c = category.split('-').filter((item) => item);
+  const res = [];
+  c.forEach((id) => {
+    const cInfo = $contentWrap.booklist.find((item) => item.id === id);
+    if (cInfo) {
+      res.push({ ...cInfo, title: cInfo.name });
+    }
+  });
+  return res;
+}
+updataCategory();
+// 添加分组条件
+function hdCategoryAdd(e, cb) {
+  const data = [];
+  if ($contentWrap.booklist.length === 0) {
+    _msg.error('没有可选分组');
+    return;
+  }
+  $contentWrap.booklist.forEach((item) => {
+    const { id, name } = item;
+    data.push({
+      id,
+      text: name,
+      param: item,
+      beforeIcon: 'iconfont icon-liebiao1',
+    });
+  });
+  rMenu.selectMenu(
+    e,
+    data,
+    ({ id, param, close }) => {
+      if (id) {
+        cb && cb({ param, close });
+      }
+    },
+    '选择分组'
+  );
+}
+$categoryTag.on('click', '.clean_category', function () {
+  tabsObj.list = [];
+});
+function switchCleanBtnState() {
+  const $clean = $categoryTag.find('.clean_category');
+  if (tabsObj.list.length > 0) {
+    $clean.css('display', 'block');
+  } else {
+    $clean.css('display', 'none');
+  }
+}
+// 分类标签
+const tabsObj = new CreateTabs({
+  el: $categoryTag.find('.list')[0],
+  change(data) {
+    switchCleanBtnState();
+    HASH = data.map((item) => item.id).join('-');
+    myOpen(`#${HASH}`);
+    bmksPageNo = 1;
+    renderList(1);
+  },
+  add({ e, add }) {
+    hdCategoryAdd(e, ({ param, close }) => {
+      close();
+      add({ ...param, title: param.name });
+    });
+  },
+});
 // 列表加载
 function listLoading() {
   let str = '';
@@ -103,6 +186,7 @@ let bmksPageNo = 1;
 let bmPageSize = _getData('bmPageSize');
 const _renderList = debounce(renderList, 1000);
 $contentWrap.list = [];
+$contentWrap.booklist = [];
 function getItemObj(id) {
   return $contentWrap.list.find((item) => item.id == id);
 }
@@ -128,7 +212,6 @@ const pgnt = pagination($contentWrap[0], {
   },
 });
 // 生成列表
-renderList(true);
 function renderList(y) {
   let pagenum = bmksPageNo,
     word = wInput.getValue().trim();
@@ -140,11 +223,13 @@ function renderList(y) {
     listLoading();
   }
   let showpage = bmPageSize;
+  const category = tabsObj.list.map((item) => item.id);
   reqBmkSearch({
     word,
     pageNo: pagenum,
     pageSize: showpage,
-    acc: HASH,
+    acc: urlParams.acc,
+    category,
   })
     .then((result) => {
       if (parseInt(result.code) === 0) {
@@ -196,7 +281,7 @@ function movebmk(e, arr) {
         {
           id: 'home',
           text: '主页',
-          beforeIcon: 'iconfont icon-shoucang',
+          beforeIcon: 'iconfont icon-liebiao1',
           param: { name: '主页' },
         },
       ];
@@ -205,7 +290,7 @@ function movebmk(e, arr) {
         data.push({
           id: item.id,
           text: item.name,
-          beforeIcon: 'iconfont icon-shoucang',
+          beforeIcon: 'iconfont icon-liebiao1',
           param: { name: item.name },
         });
       });
@@ -485,8 +570,7 @@ function hdGoHome() {
 }
 // 清空搜索框
 function hdClearSearch() {
-  wInput.setValue('');
-  wInput.target.focus();
+  wInput.setValue('').focus();
 }
 $headWrap
   .on('click', '.h_check_item_btn', checkedItemBtn)

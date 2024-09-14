@@ -27,12 +27,12 @@ const {
 // 读取笔记
 route.get('/read', async (req, res) => {
   try {
-    const { account } = req._hello.userinfo;
     const { v: id } = req.query;
     if (!validaString(id, 1, 50, 1)) {
       paramErr(res, req);
       return;
     }
+    const { account } = req._hello.userinfo;
     const note = (await queryData('getnote', '*', `WHERE id=?`, [id]))[0];
     if (note) {
       let {
@@ -116,30 +116,18 @@ route.get('/search', async (req, res) => {
       return;
     }
     const { account } = req._hello.userinfo;
-    let list = [];
+    if (!acc && !account) {
+      _nologin(res);
+      return;
+    }
+    let list = await queryData(
+      'note',
+      `${word ? '*' : 'name,time,utime,id,share,visit_count,weight,category'}`,
+      `WHERE state=? AND account = ?`,
+      ['0', acc || account]
+    );
     if (acc && acc !== account) {
-      list = await queryData(
-        'note',
-        `${
-          word ? '*' : 'name,time,utime,id,share,visit_count,weight,category'
-        }`,
-        `WHERE state=? AND account = ? AND share=?`,
-        ['0', acc, 'y']
-      );
-    } else {
-      if (account) {
-        list = await queryData(
-          'note',
-          `${
-            word ? '*' : 'name,time,utime,id,share,visit_count,weight,category'
-          }`,
-          `WHERE state=? AND account = ?`,
-          ['0', account]
-        );
-      } else {
-        _nologin(res);
-        return;
-      }
+      list = list.filter((item) => item.share === 'y');
     }
     if (category.length > 0) {
       list = list.filter((item) =>

@@ -607,8 +607,7 @@ $headBtns
     hdUpFile(files);
   })
   .on('click', '.note_title i', function () {
-    wInput.setValue('');
-    wInput.target.focus();
+    wInput.setValue('').focus();
   })
   .on('click', '.preview_state', previewState)
   .on('click', '.to_max_btn', function () {

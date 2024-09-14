@@ -339,8 +339,7 @@ $headWrap
   })
   .on('click', '.h_add_item_btn', addHistory)
   .on('click', '.inp_box i', function () {
-    wInput.setValue('');
-    wInput.target.focus();
+    wInput.setValue('').focus();
   });
 
 $footer

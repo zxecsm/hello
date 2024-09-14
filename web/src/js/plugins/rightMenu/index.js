@@ -28,6 +28,7 @@ class RightM {
       html: '',
       click: null,
       keyup: null,
+      searchCallback: null,
       afterRender: null,
       beforeClose: null,
       hideCloseBtn: false,
@@ -51,6 +52,20 @@ class RightM {
       this.hClose.setAttribute('cursor', '');
       this.head.appendChild(this.hClose);
     }
+    this.searchBtn = document.createElement('div');
+    this.searchBtn.className = 'search_btn iconfont icon-search';
+    this.head.appendChild(this.searchBtn);
+    this.searchBox = document.createElement('div');
+    this.searchBox.className = 'search_box';
+    this.searchInp = document.createElement('input');
+    this.searchInp.setAttribute('placeholder', '搜索');
+    this.searchInp.setAttribute('autocomplete', 'off');
+    this.searchBox.appendChild(this.searchInp);
+    this.clearSearchText = document.createElement('i');
+    this.clearSearchText.className = 'iconfont icon-guanbi';
+    this.clearSearchText.setAttribute('cursor', 'y');
+    this.searchBox.appendChild(this.clearSearchText);
+    this.head.appendChild(this.searchBox);
     this.title = document.createElement('div');
     this.title.className = 'title';
     this.title.innerHTML = '<div class="scroll_text jzxz"></div>';
@@ -61,6 +76,33 @@ class RightM {
     this.rightBox.appendChild(this.content);
     this.rightMask.appendChild(this.rightBox);
     document.body.appendChild(this.rightMask);
+    if (!this.opt.searchCallback) {
+      this.searchBtn.remove();
+    }
+    this.searchInpWrap = wrapInput(this.searchInp, {
+      change: (val) => {
+        val = val.trim();
+        if (val == '') {
+          this.clearSearchText.style.display = 'none';
+        } else {
+          this.clearSearchText.style.display = 'block';
+        }
+        this.opt.searchCallback && this.opt.searchCallback('change', val);
+      },
+      focus: (target) => {
+        target.parentNode.classList.add('focus');
+        this.searchBtn.style.display = 'none';
+        this.opt.searchCallback && this.opt.searchCallback('focus', target);
+      },
+      blur: (target) => {
+        target.parentNode.classList.remove('focus');
+        if (this.searchInpWrap.getValue().trim() === '') {
+          this.searchBox.style.display = 'none';
+          this.searchBtn.style.display = 'block';
+        }
+        this.opt.searchCallback && this.opt.searchCallback('blur', target);
+      },
+    });
     // 标题滚动
     this.titleScroll = new ContentScroll(
       this.title.querySelector('.scroll_text')
@@ -155,6 +197,11 @@ class RightM {
       }
     } else if (e.target == this.hClose) {
       this.close();
+    } else if (e.target == this.searchBtn) {
+      this.searchBox.style.display = 'flex';
+      this.searchInpWrap.focus();
+    } else if (e.target == this.clearSearchText) {
+      this.searchInpWrap.setValue('').focus();
     } else {
       this.opt.click && this.opt.click.call(this, { e, close });
     }
@@ -190,6 +237,7 @@ class RightM {
     this.dragClose();
     this.resizeClose();
     this.titleScroll.close();
+    this.searchInpWrap.unBind();
     this.rightMask.removeEventListener('click', this.hdClick);
     this.rightMask.removeEventListener('keyup', this.hdKeyup);
     this.rightMask.remove();
@@ -550,12 +598,21 @@ function render(data) {
 }
 function selectMenu(e, data, callback, title = '') {
   function resetMenu(da) {
-    const html = render(da);
+    data = da;
+    let val = r.searchInpWrap.getValue().trim();
+    let arr = [];
+    if (val) {
+      val = val.toLowerCase();
+      arr = data.filter((item) => item.text.toLowerCase().includes(val));
+    } else {
+      arr = data;
+    }
+    const html = render(arr);
     r.renderList(html);
   }
   const html = render(data);
   let isOnce = false;
-  const r = rightM({
+  const rOpt = {
     e,
     html,
     title,
@@ -574,6 +631,11 @@ function selectMenu(e, data, callback, title = '') {
         });
       }
     },
+    searchCallback(type) {
+      if (type === 'change') {
+        resetMenu(data);
+      }
+    },
     click({ e, close }) {
       const item = _getTarget(this.content, e, '.item');
       if (item) {
@@ -582,7 +644,11 @@ function selectMenu(e, data, callback, title = '') {
         callback && callback({ e, close, resetMenu, id, param: d.param || {} });
       }
     },
-  });
+  };
+  if (data.length < 20) {
+    delete rOpt.searchCallback;
+  }
+  const r = rightM(rOpt);
 }
 function rightMenu(e, html, callback, title = '') {
   let isOnce = false;
