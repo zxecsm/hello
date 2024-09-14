@@ -214,7 +214,7 @@ function renderList(y) {
                 <li v-html="hdTitleHighlight(splitWord,name)" cursor="y" class="item_title"></li>
                 <li v-if="weight != 0 && !word && category.length === 0" class="top_btn iconfont icon-zhiding" style="color: var(--color5);"></li>
                 <li v-if="runState == 'own'" cursor="y" class="lock_state iconfont {{share === 'n'? 'icon-24gl-unlock2 open': 'icon-24gl-unlock4'}}"></li>
-                <li cursor="y" class="set_btn iconfont icon-icon"></li>
+                <li v-if="runState == 'own'" cursor="y" class="set_btn iconfont icon-icon"></li>
               </ul>
               <p v-if="con && con.length > 0" v-html="hdHighlight(con)"></p>
             </template>
