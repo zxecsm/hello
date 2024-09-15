@@ -151,6 +151,7 @@ export function createNoteDir($box) {
   window.addEventListener('scroll', debounce(hdNoteDirPosition, 100));
   if (getScreenSize().w > getContentW() + 400) {
     showNoteDir();
+    hdNoteDirPosition();
   }
   window.addEventListener(
     'resize',

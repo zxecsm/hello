@@ -494,7 +494,10 @@ const showLink = (function () {
   }
   $tabMask.on('click', function (e) {
     if (e.target == this) {
-      $tabMask.stop().fadeOut(_d.speed);
+      $tabMask.stop().fadeOut(_d.speed, () => {
+        $content.html('');
+        $head.html('');
+      });
     }
   });
   $content.on('click', 'i', function () {

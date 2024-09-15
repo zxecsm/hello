@@ -965,7 +965,7 @@ function renderSongs(gao) {
       </div>
       <div class="song_list_info">
         <div class="song_list_name" :title="name">{{songListInfo.name}}</div>
-        <div v-if="des" class="song_list_des">{{songListInfo.des}}</div>
+        <div v-if="songListInfo.des" class="song_list_des">{{songListInfo.des}}</div>
       </div>
     </div>
     <div class="items_list_top_menu">

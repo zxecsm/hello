@@ -318,3 +318,6 @@ textarea:-ms-input-placeholder {
 .shake {
   animation: tada 0.5s ease-in-out infinite;
 }
+.notScroll {
+  overflow: hidden !important;
+}

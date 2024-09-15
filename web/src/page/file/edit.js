@@ -60,6 +60,7 @@ export function openFile(text, path) {
   hideContainer();
   filePath = path;
   $editFile.css('display', 'flex');
+  document.documentElement.classList.add('notScroll');
   renderTitle(path);
   currentCodeType = setTextType(getSuffix(path)[1]);
   originText = oText = text;
@@ -286,6 +287,7 @@ function hdClose() {
       scale: 'small',
     },
     () => {
+      document.documentElement.classList.remove('notScroll');
       init();
     }
   );

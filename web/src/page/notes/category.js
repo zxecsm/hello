@@ -49,6 +49,7 @@ function getCategoryInfo(id) {
 }
 // 显示分类设置
 export function showCategoryBox() {
+  document.documentElement.classList.add('notScroll');
   $categoryBox.stop().fadeIn(_d.speed, renderCategoryList);
 }
 function hideCategoryBox() {
@@ -60,6 +61,7 @@ function hideCategoryBox() {
     },
     () => {
       $categoryBox.find('.list').html('');
+      document.documentElement.classList.remove('notScroll');
     }
   );
 }

@@ -123,23 +123,27 @@ body {
 
     .fill_box {
       display: none;
-      height: 50px;
+      height: 80px;
       width: 100%;
     }
 
     .author_info {
-      height: 50px;
+      height: 80px;
       text-align: center;
       &.active {
         position: fixed;
         top: 10px;
         left: 10px;
         z-index: 4;
+        .logo {
+          width: 50px;
+          height: 50px;
+        }
       }
 
       .logo {
-        width: 50px;
-        height: 50px;
+        width: 80px;
+        height: 80px;
         border-radius: 50%;
         display: inline-block;
         background-repeat: no-repeat;
@@ -289,6 +293,8 @@ body {
       height: 100%;
       overflow-y: auto;
       box-sizing: border-box;
+      overscroll-behavior: contain;
+      -ms-scroll-chaining: contain;
       padding: 20px 4px;
       margin: 0;
 
