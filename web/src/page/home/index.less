@@ -1408,10 +1408,15 @@ body {
     width: 100%;
     height: 100%;
     position: fixed;
+    transform-origin: left bottom;
+    transform: rotate(-90deg);
+    transition: transform 0.5s ease-in-out;
     top: 0;
     left: 0;
     z-index: 3;
-
+    &.open {
+      transform: none;
+    }
     .aside {
       display: flex;
       flex-flow: column;
@@ -1419,15 +1424,10 @@ body {
       width: 90%;
       max-width: 800px;
       height: 100%;
-      transform: translateX(-100%);
-      transition: transform 0.5s ease-in-out;
       background-color: var(--bg-color-o2);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       overflow: hidden;
-      &.open {
-        transform: none;
-      }
       .list {
         flex: auto;
         width: 100%;

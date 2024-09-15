@@ -1292,21 +1292,22 @@ $asideBtn.on('click', toggleAside);
 // 显示和隐藏侧栏
 export function showAside() {
   backWindow.add('aside', hideAside);
-  $asideWrap.css('display', 'block');
   loadingImg($aside.find('.list')[0]);
-  $aside.outerWidth();
-  $aside.addClass('open');
+  $asideWrap.outerWidth();
+  $asideWrap.css('display', 'block').addClass('open');
   $asideBtn.fadeOut(_d.speed);
   getBookMarkList(1);
 }
 function hideAside() {
   backWindow.remove('aside');
-  $aside.removeClass('open');
   $asideBtn.fadeIn(_d.speed);
-  $asideWrap.stop().fadeOut(_d.speed, () => {
-    asideLoadImg.unBind();
-    $aside.find('.list').html('');
-  });
+  $asideWrap
+    .removeClass('open')
+    .stop()
+    .fadeOut(_d.speed, () => {
+      asideLoadImg.unBind();
+      $aside.find('.list').html('');
+    });
 }
 // 手势
 _mySlide({
