@@ -42,7 +42,7 @@ import HighlightWord from './highlightWord';
 import realtime from '../../js/plugins/realtime';
 import gqImg from '../../images/img/gqimg.png';
 import { reqNoteCategory, reqNoteRead } from '../../api/note';
-import { createNoteDir, showNoteDir } from './noteDir';
+import { createNoteDir, toggleNoteDir } from './noteDir';
 import rMenu from '../../js/plugins/rightMenu';
 import MdWorker from '../../js/utils/md.worker.js';
 import loadingPage from '../../js/plugins/loading/index.js';
@@ -71,6 +71,17 @@ let noteFontSize = _getData('noteFontSize'),
 if (noteWiden) {
   $contentWrap.addClass('big');
 }
+export function getContentW() {
+  return $contentWrap.outerWidth();
+}
+export function contentWrapCenterState(toCenter) {
+  if (toCenter) {
+    $contentWrap.addClass('center');
+  } else {
+    $contentWrap.removeClass('center');
+  }
+}
+contentWrapCenterState(1);
 // 显示搜索
 function showSearchBox() {
   $pageSearchWrap.css('display', 'flex');
@@ -127,9 +138,8 @@ $setBtnsWrap
       _setData('noteFontSize', noteFontSize);
     });
   })
-  .on('click', '.show_navigation_btn', (e) => {
-    e.stopPropagation();
-    showNoteDir();
+  .on('click', '.show_navigation_btn', () => {
+    toggleNoteDir();
     hdNoteDirPosition && hdNoteDirPosition();
   })
   .on('click', '.show_erweima_btn', (e) => {

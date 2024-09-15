@@ -97,7 +97,6 @@ body {
 
   // 内容
   .content_wrap {
-    margin: 0 auto;
     width: 100%;
     max-width: 800px;
     padding: 20px;
@@ -108,13 +107,16 @@ body {
     z-index: 2;
     border-radius: 4px;
     line-height: 1.5;
-
     &.big {
       max-width: 1200px;
     }
-
+    &.center {
+      margin: 0 auto;
+    }
     &.open {
-      transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
+      transition:
+        transform 0.8s ease-in-out,
+        opacity 0.8s ease-in-out;
       transform: none;
       opacity: 1;
     }
@@ -127,11 +129,11 @@ body {
 
     .author_info {
       height: 50px;
-
+      text-align: center;
       &.active {
         position: fixed;
         top: 10px;
-        right: 20px;
+        left: 10px;
         z-index: 4;
       }
 
@@ -139,7 +141,7 @@ body {
         width: 50px;
         height: 50px;
         border-radius: 50%;
-        float: right;
+        display: inline-block;
         background-repeat: no-repeat;
         background-size: cover;
         background-position: center;
@@ -205,8 +207,10 @@ body {
     right: -50px;
     opacity: 0;
     overflow: hidden;
-    z-index: 7;
-    transition: right 0.8s ease-in-out, opacity 0.8s ease-in-out;
+    z-index: 5;
+    transition:
+      right 0.8s ease-in-out,
+      opacity 0.8s ease-in-out;
 
     &.open {
       right: 10px;
@@ -262,17 +266,19 @@ body {
     position: fixed;
     top: 0;
     right: 0;
-    z-index: 8;
     transform: translateX(100%);
     width: 80%;
-    max-width: 500px;
+    max-width: 400px;
     height: 100%;
     background-color: var(--bg-color-o2);
     border-left: 1px solid var(--color9);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    z-index: 3;
     opacity: 0;
-    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+    transition:
+      opacity 0.5s ease-in-out,
+      transform 0.5s ease-in-out;
 
     &.open {
       transform: translateX(0);
@@ -295,10 +301,8 @@ body {
 
       li {
         margin-bottom: 10px;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        line-height: 20px;
         overflow: hidden;
+        line-height: 20px;
         box-sizing: border-box;
         font-size: 16px;
         border-left: 4px solid transparent;
@@ -317,6 +321,9 @@ body {
         }
         .text {
           flex: auto;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          overflow: hidden;
         }
         &[h='1'] {
           padding-left: 1em;

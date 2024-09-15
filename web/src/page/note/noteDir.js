@@ -1,13 +1,14 @@
 import $ from 'jquery';
 import {
-  _getTarget,
   _mySlide,
   _position,
   debounce,
   getPageScrollTop,
+  getScreenSize,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import { _tpl } from '../../js/utils/template';
+import { contentWrapCenterState, getContentW } from '.';
 const $noteDirWrap = $('.note_dir_wrap'),
   $listBox = $noteDirWrap.find('.list_box');
 
@@ -32,8 +33,20 @@ function toTree(box) {
   });
   return root.children;
 }
-export function showNoteDir() {
+export function toggleNoteDir() {
+  if ($noteDirWrap.hasClass('open')) {
+    hideNoteDir();
+  } else {
+    showNoteDir();
+  }
+}
+function showNoteDir() {
+  contentWrapCenterState(getScreenSize().w > getContentW() + 800);
   $noteDirWrap.addClass('open');
+}
+function hideNoteDir() {
+  contentWrapCenterState(1);
+  $noteDirWrap.removeClass('open');
 }
 export function createNoteDir($box) {
   const treeData = toTree($box[0]);
@@ -71,11 +84,6 @@ export function createNoteDir($box) {
   $listBox.html(fra);
 
   const $allLi = $noteDirWrap.find('li');
-  document.addEventListener('click', function (e) {
-    if (!_getTarget(this, e, '.note_dir_wrap')) {
-      $noteDirWrap.removeClass('open');
-    }
-  });
   $noteDirWrap.on('click', 'li', function () {
     const $this = $(this);
     $allLi.removeClass('active');
@@ -104,7 +112,7 @@ export function createNoteDir($box) {
   _mySlide({
     el: '.note_dir_wrap',
     right() {
-      $noteDirWrap.removeClass('open');
+      hideNoteDir();
     },
   });
   // 目录同步页面滚动
@@ -141,5 +149,16 @@ export function createNoteDir($box) {
     }
   }
   window.addEventListener('scroll', debounce(hdNoteDirPosition, 100));
+  if (getScreenSize().w > getContentW() + 400) {
+    showNoteDir();
+  }
+  window.addEventListener(
+    'resize',
+    debounce(() => {
+      if ($noteDirWrap.hasClass('open')) {
+        showNoteDir();
+      }
+    }, 200)
+  );
   return hdNoteDirPosition;
 }
