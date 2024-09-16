@@ -769,6 +769,9 @@ route.post('/merge', async (req, res) => {
       hash: HASH,
       type,
     };
+    if (type === 'image') {
+      obj.data = tName;
+    }
     const msg = await saveChatMsg(account, obj);
     await hdChatSendMsg(req, obj._to, 'addmsg', obj);
     if (_to === 'hello') {

@@ -22,7 +22,7 @@
     "sharp": "^0.33.3",
     "speakeasy": "^2.0.0",
     "sqlite3": "^5.1.7",
-    "ua-parser-js": "^1.0.37"
+    "ua-parser-js": "^1.0.39"
   },
   "description": "This is a favorite",
   "devDependencies": {

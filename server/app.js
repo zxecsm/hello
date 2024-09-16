@@ -41,15 +41,21 @@ const informReqLimit = debounce(
 app.use(async (req, res, next) => {
   try {
     const _clientConfig = new UAParser(req.headers['user-agent']).getResult(); //获取访问设备信息
-    const osName = getIn(_clientConfig, ['os', 'name']) || 'other';
-    const osVendor = getIn(_clientConfig, ['device', 'vendor']) || '';
-    const osModel = getIn(_clientConfig, ['device', 'model']) || '';
+    const osName = `${getIn(_clientConfig, ['os', 'name']) || 'other'}${
+      getIn(_clientConfig, ['os', 'version']) || ''
+    }`;
+    const browser = getIn(_clientConfig, ['browser', 'name']);
+    const osVendor = getIn(_clientConfig, ['device', 'vendor']);
+    const osModel = getIn(_clientConfig, ['device', 'model']);
+    const cpu = getIn(_clientConfig, ['cpu', 'architecture']);
     req._hello = {
       path: req.path,
       temid: req.headers['temid'],
       jwt: jwtde(req.cookies.token),
       ip: getClientIp(req),
-      os: osName + (osVendor ? `(${osVendor} ${osModel})` : ''),
+      os: `${osName} (${browser || ''}${cpu ? ' ' + cpu : ''}${
+        osVendor ? ' ' + osVendor + ' ' + osModel : ''
+      })`,
       method: req.method.toLocaleLowerCase(),
     };
     const { jwt, ip, method, path } = req._hello;

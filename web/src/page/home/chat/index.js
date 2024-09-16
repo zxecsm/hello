@@ -431,7 +431,7 @@ export function renderMsgList(carr, isAdd) {
           <span class="c_user_name" style="text-align: {{!isRight(_from) ? 'left' : 'right'}};">
             {{getUsername(name,des,_to)}} <span>{{getDate(time)[1]}}</span>
           </span>
-          <div v-if="type == 'image'" cursor="y" title="data" class="c_img_msg_box" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
+          <div v-if="type == 'image'" cursor="y" class="c_img_msg_box" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
             <div class="c_img"><span>{{size}}</span></div>
           </div>
           <div v-else-if="type == 'voice'" cursor="y" 

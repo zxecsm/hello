@@ -48,8 +48,8 @@ importers:
         specifier: ^5.1.7
         version: 5.1.7
       ua-parser-js:
-        specifier: ^1.0.37
-        version: 1.0.37
+        specifier: ^1.0.39
+        version: 1.0.39
     devDependencies:
       nodemon:
         specifier: ^3.1.4
@@ -1189,8 +1189,9 @@ packages:
     resolution: {integrity: sha512-TkRKr9sUTxEH8MdfuCSP7VizJyzRNMjj2J2do2Jr3Kym598JVdEksuzPQCnlFPW4ky9Q+iA+ma9BGm06XQBy8g==}
     engines: {node: '>= 0.6'}
 
-  ua-parser-js@1.0.37:
-    resolution: {integrity: sha512-bhTyI94tZofjo+Dn8SN6Zv8nBDvyXTymAdM3LDI/0IboIUwTu1rEhW7v2TfiVsoYWgkQ4kOVqnI8APUFbIQIFQ==}
+  ua-parser-js@1.0.39:
+    resolution: {integrity: sha512-k24RCVWlEcjkdOxYmVJgeD/0a1TiSpqLg+ZalVGV9lsnr4yqu0w7tX/x2xX6G4zpkgQnRf89lxuZ1wsbjXM8lw==}
+    hasBin: true
 
   undefsafe@2.0.5:
     resolution: {integrity: sha512-WxONCrssBM8TSPRqN5EmsjVrsv4A8X12J4ArBiiayv3DyyG3ZlIg6yysuuSYdZsVz3TKcTg2fd//Ujd4CHV1iA==}
@@ -2578,7 +2579,7 @@ snapshots:
       media-typer: 0.3.0
       mime-types: 2.1.35
 
-  ua-parser-js@1.0.37: {}
+  ua-parser-js@1.0.39: {}
 
   undefsafe@2.0.5: {}
 
