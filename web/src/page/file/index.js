@@ -12,6 +12,7 @@ import {
   _setData,
   computeSize,
   concurrencyTasks,
+  copyText,
   createShare,
   debounce,
   downloadFile,
@@ -566,6 +567,11 @@ longPress($contentWrap[0], function (e) {
 function rightList(e, obj, el) {
   let data = [
     {
+      id: 'copyPath',
+      text: '复制路径',
+      beforeIcon: 'iconfont icon-fuzhi',
+    },
+    {
       id: 'share',
       text: '分享',
       beforeIcon: 'iconfont icon-fenxiang_2',
@@ -685,6 +691,9 @@ function rightList(e, obj, el) {
         }
       } else if (id == 'mode') {
         editFileMode(e, obj);
+      } else if (id == 'copyPath') {
+        copyText(hdPath(`/${obj.path}/${obj.name}`));
+        close();
       }
     },
     obj.name
