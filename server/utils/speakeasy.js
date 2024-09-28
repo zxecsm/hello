@@ -1,5 +1,6 @@
 const speakeasy = require('speakeasy');
 const temObj = {};
+
 function create(acc) {
   clean();
   if (temObj.hasOwnProperty(acc)) {
@@ -10,12 +11,14 @@ function create(acc) {
     return verify;
   }
 }
+
 function getToken(verify) {
   return speakeasy.totp({
     secret: verify,
     encoding: 'base32',
   });
 }
+
 function verify(verify, token) {
   return speakeasy.totp.verify({
     secret: verify,
@@ -23,6 +26,7 @@ function verify(verify, token) {
     token,
   });
 }
+
 function clean() {
   const now = Date.now();
   Object.keys(temObj).forEach((item) => {
@@ -32,8 +36,11 @@ function clean() {
     }
   });
 }
+
 function del(acc) {
   delete temObj[acc];
 }
+
 const _2fa = { create, getToken, verify, del };
+
 module.exports = _2fa;

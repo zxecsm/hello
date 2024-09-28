@@ -1,32 +1,41 @@
 const { formatDate, writelog } = require('./utils');
 
-let cbs = [];
+const cbs = new Set();
 
 function add(cb) {
-  cbs.push(cb);
+  cbs.add(cb);
 }
+
 function remove(cb) {
-  cbs = cbs.filter((item) => item && item !== cb);
+  cbs.delete(cb);
 }
+
+function stop() {
+  clearInterval(timer);
+  timer = null;
+}
+
 let timer = setInterval(() => {
   try {
     const flag = formatDate({ template: '{0}{1}{2}{3}{4}{5}' });
     cbs.forEach((cb) => {
       try {
-        typeof cb === 'function' && cb(flag);
+        cb(flag);
       } catch (error) {
         remove(cb);
         writelog(false, `[ timedTask ] - ${error}`, 'error');
       }
     });
   } catch (error) {
-    clearInterval(timer);
-    timer = null;
+    stop();
     writelog(false, `[ timedTask ] - ${error}`, 'error');
   }
 }, 1000);
+
 const timedTask = {
   add,
   remove,
+  stop,
 };
+
 module.exports = timedTask;

@@ -54,13 +54,13 @@ let editNoteCodeNum = _getData('editNoteCodeNum');
 let editNoteFontSize = _getData('editNoteFontSize');
 // 黑暗模式
 function changeTheme(dark) {
-  if (dark == 'y') {
+  if (dark === 'y') {
     $themeCss.attr('href', '/css/notethem/notecode1.css');
     editor.setTheme('ace/theme/github_dark');
-  } else if (dark == 'n') {
+  } else if (dark === 'n') {
     $themeCss.attr('href', '/css/notethem/notecode.css');
     editor.setTheme('ace/theme/chrome');
-  } else if (dark == 's') {
+  } else if (dark === 's') {
     if (isDarkMode()) {
       $themeCss.attr('href', '/css/notethem/notecode1.css');
       editor.setTheme('ace/theme/github_dark');
@@ -115,7 +115,7 @@ editor.commands.addCommand({
       multiple: true,
       accept: '.jpg,.jpeg,.png,.ico,.svg,.webp,.gif',
     });
-    if (files.length == 0) return;
+    if (files.length === 0) return;
     hdUpFile(files);
   },
 });
@@ -191,7 +191,7 @@ if (!k || !/^[\w]+$/.test(k)) {
           beforeText: '便条Key：',
           verify(val) {
             val = val.trim();
-            if (val == '') {
+            if (val === '') {
               return '请输入便条Key';
             } else if (val.length > 20) {
               return '便条key过长';
@@ -212,7 +212,7 @@ if (!k || !/^[\w]+$/.test(k)) {
 } else {
   reqGetNotePad({ k })
     .then((res) => {
-      if (res.code == 0) {
+      if (res.code === 1) {
         document.title = k;
         initValue({ data: res.data });
         $headBtns.addClass('open');
@@ -236,7 +236,7 @@ function upData() {
 function rende() {
   const text = editor.getValue();
   if ($previewBox.is(':hidden')) return;
-  if (text.trim() == '') {
+  if (text.trim() === '') {
     $previewBox.find('.content').html('');
     return;
   }
@@ -268,7 +268,7 @@ $previewBox
     let idx = 0;
     const arr = [];
     imgs.each((i, item) => {
-      if (item == this) {
+      if (item === this) {
         idx = i;
       }
       arr.push({
@@ -308,7 +308,7 @@ $editBox[0].addEventListener('paste', function (e) {
       files.push(blob);
     }
   });
-  if (files.length == 0) return;
+  if (files.length === 0) return;
   e.preventDefault();
   hdUpFile(files);
 });
@@ -319,7 +319,7 @@ $editBox[0].addEventListener('paste', function (e) {
     $editWrap.addClass('jzxz');
     previeW = $previewBox[0].offsetWidth;
     editW = $editBox[0].offsetWidth;
-    if (e.type == 'touchstart') {
+    if (e.type === 'touchstart') {
       x = e.touches[0].clientX;
     } else if (e.type === 'mousedown') {
       x = e.clientX;
@@ -332,7 +332,7 @@ $editBox[0].addEventListener('paste', function (e) {
   function hdMove(e) {
     e.preventDefault();
     let xx;
-    if (e.type == 'touchmove') {
+    if (e.type === 'touchmove') {
       xx = e.touches[0].clientX;
     } else if (e.type === 'mousemove') {
       xx = e.clientX;
@@ -389,7 +389,7 @@ async function hdUpFile(files) {
         HASH,
       }); //是否已经存在文件
 
-      if (parseInt(isrepeat.code) === 0) {
+      if (isrepeat.code === 1) {
         pro.close('文件已存在');
         const { url } = isrepeat.data;
         fData.push({
@@ -409,7 +409,7 @@ async function hdUpFile(files) {
           pro.update(percent);
         }
       );
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         const { url } = result.data;
         fData.push({
           filename: getSuffix(name)[0],
@@ -443,7 +443,7 @@ async function hdUpFile(files) {
   document.addEventListener('drop', function (e) {
     e.preventDefault();
     const files = [...e.dataTransfer.files];
-    if (files.length == 0) return;
+    if (files.length === 0) return;
     hdUpFile(files);
   });
 })();
@@ -487,7 +487,7 @@ function settingEdit(e) {
     e,
     data,
     ({ e, resetMenu, id }) => {
-      if (id == 'size') {
+      if (id === 'size') {
         _progressBar(e, editNoteFontSize, (percent) => {
           $editWrap.css({
             'font-size': percentToValue(12, 30, percent),
@@ -495,7 +495,7 @@ function settingEdit(e) {
           editNoteFontSize = percent;
           _setData('editNoteFontSize', editNoteFontSize);
         });
-      } else if (id == 'num') {
+      } else if (id === 'num') {
         editNoteCodeNum = !editNoteCodeNum;
         _setData('editNoteCodeNum', editNoteCodeNum);
         data[1].afterIcon = editNoteCodeNum
@@ -522,7 +522,7 @@ $headBtns
       multiple: true,
       accept: '.jpg,.jpeg,.png,.ico,.svg,.webp,.gif',
     });
-    if (files.length == 0) return;
+    if (files.length === 0) return;
     hdUpFile(files);
   })
   .on('click', '.preview_state', function () {
@@ -570,7 +570,7 @@ function openNotepad(e) {
           beforeText: '便条Key：',
           verify(val) {
             val = val.trim();
-            if (val == '') {
+            if (val === '') {
               return '请输入便条Key';
             } else if (val.length > 20) {
               return '便条key过长';

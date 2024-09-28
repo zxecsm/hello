@@ -20,8 +20,8 @@ export function reqNoteSearch(data) {
   return _getAjax('/note/search', data);
 }
 // 置顶
-export function reqNoteWeight(data) {
-  return _postAjax('/note/weight', data);
+export function reqNoteTop(data) {
+  return _postAjax('/note/top', data);
 }
 // 笔记设置分类
 export function reqNoteSetCategory(data) {

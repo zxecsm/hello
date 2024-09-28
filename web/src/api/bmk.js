@@ -9,8 +9,8 @@ export function reqBmkExport() {
   return _getAjax('/bmk/export');
 }
 // 分组移动位置
-export function reqBmkMoveList(data) {
-  return _postAjax('/bmk/move-list', data);
+export function reqBmkMoveGroup(data) {
+  return _postAjax('/bmk/move-group', data);
 }
 // 书签移动位置
 export function reqBmkMoveBmk(data) {
@@ -21,16 +21,16 @@ export function reqBmkList(data) {
   return _getAjax('/bmk/list', data);
 }
 // 新增分组
-export function reqBmkAddList(data) {
-  return _postAjax('/bmk/add-list', data);
+export function reqBmkAddGroup(data) {
+  return _postAjax('/bmk/add-group', data);
 }
 // 删除书签
 export function reqBmkDeleteBmk(data) {
   return _postAjax('/bmk/delete-bmk', data);
 }
 // 移动书签到分组
-export function reqBmkToList(data) {
-  return _postAjax('/bmk/bmk-to-list', data);
+export function reqBmkToGroup(data) {
+  return _postAjax('/bmk/bmk-to-group', data);
 }
 // 获取网站信息
 export function reqBmkParseSiteInfo(data) {
@@ -41,20 +41,20 @@ export function reqBmkAddBmk(data) {
   return _postAjax('/bmk/add-bmk', data);
 }
 // 编辑分组
-export function reqBmkEditList(data) {
-  return _postAjax('/bmk/edit-list', data);
+export function reqBmkEditGroup(data) {
+  return _postAjax('/bmk/edit-group', data);
 }
 // 分享分组
 export function reqBmkShare(data) {
   return _postAjax('/bmk/share', data);
 }
 // 删除分组
-export function reqBmkDeleteList(data) {
-  return _postAjax('/bmk/delete-list', data);
+export function reqBmkDeleteGroup(data) {
+  return _postAjax('/bmk/delete-group', data);
 }
 // 分组状态
-export function reqBmkListState(data) {
-  return _postAjax('/bmk/list-state', data);
+export function reqBmkGroupShareState(data) {
+  return _postAjax('/bmk/group-share-state', data);
 }
 // 更改书签logo
 export function reqBmkChangeLogo(data) {

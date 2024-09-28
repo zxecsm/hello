@@ -2,10 +2,10 @@ import { reqPlayerSongInfo } from '../../api/player';
 import rMenu from '../plugins/rightMenu';
 import { computeSize, formartSongTime, formatDate, formatNum } from './utils';
 // 显示歌曲信息
-export function showSongInfo(e, sobj) {
-  reqPlayerSongInfo({ id: sobj.id })
+export function showSongInfo(e, sobj, flag) {
+  reqPlayerSongInfo({ id: sobj.id, flag })
     .then((res) => {
-      if (res.code == 0) {
+      if (res.code === 1) {
         const {
           title,
           artist,
@@ -14,7 +14,7 @@ export function showSongInfo(e, sobj) {
           year,
           collect_count,
           play_count,
-          creat_time,
+          create_at,
         } = res.data;
         const data = [
           {
@@ -48,13 +48,13 @@ export function showSongInfo(e, sobj) {
           {
             text: formatDate({
               template: `{0}-{1}-{2}`,
-              timestamp: creat_time,
+              timestamp: create_at,
             }),
             beforeText: '添加时间：',
           },
         ];
         data.forEach((item, idx) => {
-          (item.pointer = false), (item.id = idx + 1);
+          (item.pointer = false), (item.id = idx + 1 + '');
         });
         rMenu.selectMenu(e, data, false, '歌曲信息');
       }
@@ -63,10 +63,10 @@ export function showSongInfo(e, sobj) {
 }
 // 显示书签信息
 export function showBmkInfo(e, obj) {
-  const { name, link, des, group } = obj;
+  const { title, link, des, group_title } = obj;
   const data = [
     {
-      text: name,
+      text: title,
       beforeText: '名称：',
     },
     {
@@ -78,14 +78,14 @@ export function showBmkInfo(e, obj) {
       beforeText: '描述：',
     },
   ];
-  if (group) {
+  if (group_title) {
     data.unshift({
-      text: group.id === 'home' ? '主页' : group.name,
+      text: group_title,
       beforeText: '分组：',
     });
   }
   data.forEach((item, idx) => {
-    (item.pointer = false), (item.id = idx + 1);
+    (item.pointer = false), (item.id = idx + 1 + '');
   });
   rMenu.selectMenu(e, data, false, '书签信息');
 }
@@ -94,7 +94,7 @@ export function showCountInfo(e, obj) {
   const { start, end, link, top, state } = obj;
   const data = [
     {
-      text: state == 0 ? '开启' : '关闭',
+      text: state === 0 ? '开启' : '关闭',
       beforeText: '状态：',
     },
     {
@@ -121,7 +121,7 @@ export function showCountInfo(e, obj) {
     },
   ];
   data.forEach((item, idx) => {
-    (item.pointer = false), (item.id = idx + 1);
+    (item.pointer = false), (item.id = idx + 1 + '');
   });
   rMenu.selectMenu(e, data, false, '倒计时信息');
 }
@@ -157,29 +157,29 @@ export function showFileInfo(e, obj) {
     },
   ];
   data.forEach((item, idx) => {
-    (item.pointer = false), (item.id = idx + 1);
+    (item.pointer = false), (item.id = idx + 1 + '');
   });
   rMenu.selectMenu(e, data, false, '属性信息');
 }
 // 显示笔记信息
 export function showNoteInfo(e, obj, categoryList) {
-  const { name, time, utime, visit_count, weight } = obj;
+  const { title, create_at, update_at, visit_count, top } = obj;
   let data = [
     {
-      text: name,
+      text: title,
       beforeText: '标题：',
     },
     {
       text: formatDate({
         template: '{0}-{1}-{2}',
-        timestamp: time,
+        timestamp: create_at,
       }),
       beforeText: '创建：',
     },
     {
       text: formatDate({
         template: '{0}-{1}-{2}',
-        timestamp: utime,
+        timestamp: update_at,
       }),
       beforeText: '更新：',
     },
@@ -192,12 +192,12 @@ export function showNoteInfo(e, obj, categoryList) {
       beforeText: '阅读：',
     },
     {
-      text: weight,
+      text: top,
       beforeText: '权重：',
     },
   ];
   data.forEach((item, idx) => {
-    (item.pointer = false), (item.id = idx + 1);
+    (item.pointer = false), (item.id = idx + 1 + '');
   });
   rMenu.selectMenu(e, data, false, '笔记信息');
 }

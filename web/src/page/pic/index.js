@@ -76,7 +76,7 @@ async function hdUpFile(files) {
         HASH,
       }); //是否已经存在文件
 
-      if (parseInt(isrepeat.code) === 0) {
+      if (isrepeat.code === 1) {
         pro.close('文件已存在');
         const { url } = isrepeat.data;
         fData.push({
@@ -96,7 +96,7 @@ async function hdUpFile(files) {
           pro.update(percent);
         }
       );
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         const { url } = result.data;
         fData.push({
           filename: getSuffix(name)[0],
@@ -139,7 +139,7 @@ $contentWrap
       multiple: true,
       accept: '.jpg,.jpeg,.png,.ico,.svg,.webp,.gif',
     });
-    if (files.length == 0) return;
+    if (files.length === 0) return;
     hdUpFile(files);
   })
   .on('click', '.go_home', function () {
@@ -156,7 +156,7 @@ $contentWrap
   document.addEventListener('drop', function (e) {
     e.preventDefault();
     const files = [...e.dataTransfer.files];
-    if (files.length == 0) return;
+    if (files.length === 0) return;
     hdUpFile(files);
   });
 })();
@@ -179,7 +179,7 @@ if (!isRoot()) {
 }
 // 获取图片信息
 function getPicItem(id) {
-  return $imgList.list.find((item) => item.id == id);
+  return $imgList.list.find((item) => item.id === id);
 }
 $imgList.list = [];
 // 生成列表
@@ -191,13 +191,13 @@ function renderImgList(y) {
   let showpage = curPageSize;
   reqPicList({ pageNo: picPageNo, pageSize: showpage })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         const { total, data, pageNo } = result.data;
         picPageNo = pageNo;
         $imgList.list = data;
         const html = _tpl(
           `
-          <p v-if="data.length == 0" style='text-align: center;'>{{_d.emptyList}}</p>
+          <p v-if="data.length === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
             <div v-for="{id} in data" class="img_item" :data-id="id">
               <div check="n" class="check_level"></div>
@@ -280,7 +280,7 @@ function copyLink(e, pobj) {
   const data = [];
   const obj = {
     url: getPreUrl() + hdPath(`/api/pub/picture/${pobj.url}`),
-    filename: pobj.title,
+    filename: pobj.hash,
   };
   typeTemplateArr.forEach((item, idx) => {
     const { type, template } = item;
@@ -289,7 +289,7 @@ function copyLink(e, pobj) {
       return obj[key];
     });
     data.push({
-      id: idx + 1,
+      id: idx + 1 + '',
       text: type,
       param: { text },
     });
@@ -315,10 +315,10 @@ function deletePic(e, ids, cb, isCheck) {
       confirm: { type: 'danger', text: '删除' },
     },
     (type) => {
-      if (type == 'confirm') {
+      if (type === 'confirm') {
         reqPicDelete(ids)
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               cb && cb();
               _msg.success(result.codeText);
               renderImgList();
@@ -345,11 +345,11 @@ function picMenu(e, pobj, el) {
     e,
     data,
     ({ e, close, id }) => {
-      if (id == '1') {
+      if (id === '1') {
         copyLink(e, pobj);
-      } else if (id == '3') {
+      } else if (id === '3') {
         deletePic(e, [pobj.id], close);
-      } else if (id == '2') {
+      } else if (id === '2') {
         close();
         $imgList.find('.check_level').css('display', 'block');
         $footer.stop().slideDown(_d.speed).find('span').attr({
@@ -465,7 +465,7 @@ const showLink = (function () {
     if (data.length === 0) return;
     const htmlH = _tpl(
       `
-      <span v-for="{type},idx in typeTemplateArr" :data-idx="idx" cursor="y" :class="idx == 0 ? 'active' : ''">{{type}}</span>
+      <span v-for="{type},idx in typeTemplateArr" :data-idx="idx" cursor="y" :class="idx === 0 ? 'active' : ''">{{type}}</span>
       `,
       {
         typeTemplateArr,
@@ -473,7 +473,7 @@ const showLink = (function () {
     );
     const htmlC = _tpl(
       `
-      <ul v-for="{type,template},idx in typeTemplateArr" :class="idx == 0 ? 'active' : ''">
+      <ul v-for="{type,template},idx in typeTemplateArr" :class="idx === 0 ? 'active' : ''">
         <li v-for="obj in data" :data-text="getText(template,obj)">{{getText(template,obj)}}<i cursor="y" class="iconfont icon-fuzhi"></i></li>
       </ul>
       `,
@@ -493,7 +493,7 @@ const showLink = (function () {
     $tabMask.stop().fadeIn(_d.speed);
   }
   $tabMask.on('click', function (e) {
-    if (e.target == this) {
+    if (e.target === this) {
       $tabMask.stop().fadeOut(_d.speed, () => {
         $content.html('');
         $head.html('');

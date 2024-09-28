@@ -140,7 +140,7 @@ let fileSort = _getData('fileSort');
 const wInput = wrapInput($search.find('.inp_box input')[0], {
   change(val) {
     val = val.trim();
-    if (val == '') {
+    if (val === '') {
       $search.find('.inp_box i').css('display', 'none');
     } else {
       $search.find('.inp_box i').css('display', 'block');
@@ -188,7 +188,7 @@ async function renderList(top) {
           <span class="text">{{getText(name,type).a}}<span class="suffix">{{getText(name,type).b}}</span>
           </span>
         </li>
-        <li :cursor="type == 'file' ? '' : 'cursor'" class="size">{{size ? computeSize(size) : type == 'file' ? '--' : '计算'}}</li>
+        <li :cursor="type === 'file' ? '' : 'cursor'" class="size">{{size ? computeSize(size) : type === 'file' ? '--' : '计算'}}</li>
         <li class="date">{{formatDate({template: '{0}-{1}-{2} {3}:{4}',timestamp: time})}}</li>
       </ul>
       <i v-for="item in 10" class='fill'></i>
@@ -201,7 +201,7 @@ async function renderList(top) {
       hdLogo(name, type) {
         let logo = '';
         if (!isImgFile(name)) {
-          if (type == 'file') {
+          if (type === 'file') {
             logo = fileLogoType(name);
           } else {
             logo = 'icon-24gl-folder';
@@ -212,7 +212,7 @@ async function renderList(top) {
       computeSize,
       getText(name, type) {
         let [a, b] = getSuffix(name);
-        if (type == 'file') {
+        if (type === 'file') {
           b = b ? '.' + b : '';
         } else {
           a = name;
@@ -281,7 +281,7 @@ const lazyImg = new LazyLoad();
               if (type === 'confirm') {
                 reqFileMove({ data, path: `${fileUrl}/${toData.name}` })
                   .then((res) => {
-                    if (res.code == 0) {
+                    if (res.code === 1) {
                       _msg.success(res.codeText);
                       openDir();
                     }
@@ -330,26 +330,26 @@ async function hdSort(list) {
     });
   }
   list.sort((a, b) => {
-    if (type == 'time' || type == 'type') {
-      if (isDes || type == 'type') {
+    if (type === 'time' || type === 'type') {
+      if (isDes || type === 'type') {
         return b.time - a.time;
       }
       return a.time - b.time;
-    } else if (type == 'name') {
+    } else if (type === 'name') {
       if (isDes) {
         return mixedSort(b.name, a.name);
       }
       return mixedSort(a.name, b.name);
-    } else if (type == 'size') {
+    } else if (type === 'size') {
       if (isDes) {
         return b.size - a.size;
       }
       return a.size - b.size;
     }
   });
-  if (type == 'type') {
-    const files = list.filter((item) => item.type == 'file');
-    const dirs = list.filter((item) => item.type == 'dir');
+  if (type === 'type') {
+    const files = list.filter((item) => item.type === 'file');
+    const dirs = list.filter((item) => item.type === 'dir');
     if (isDes) {
       list = [...files, ...dirs];
     } else {
@@ -370,9 +370,9 @@ async function openDir(path, top) {
     _setData('fileUrl', fileUrl);
     curmb.setPath(path);
     const res = await reqFileReadDir({ path });
-    if (res.code == 0) {
+    if (res.code === 1) {
       $contentWrap.originList = res.data.map((item, idx) => ({
-        id: idx + 1,
+        id: idx + 1 + '',
         ...item,
       }));
       if (top && wInput.getValue()) {
@@ -386,26 +386,26 @@ async function openDir(path, top) {
 }
 // 获取文件信息
 function getFileItem(id) {
-  return $contentWrap.list.find((item) => item.id == id);
+  return $contentWrap.list.find((item) => item.id === id + '');
 }
 // 读取文件和目录
 async function readFileAndDir(obj) {
   const { type, name, path } = obj;
   const p = `${path}/${name}`;
-  if (type == 'dir') {
+  if (type === 'dir') {
     pageNo = 1;
     openDir(p, 1);
-  } else if (type == 'file') {
+  } else if (type === 'file') {
     try {
       const res = await reqFileReadFile({ path: p });
-      if (res.code == 0) {
-        if (res.data.type == 'text') {
+      if (res.code === 1) {
+        if (res.data.type === 'text') {
           openFile(res.data.data, p);
-        } else if (res.data.type == 'other') {
+        } else if (res.data.type === 'other') {
           const fPath = getFilePath(`/file/${p}`);
           if (isImgFile(p)) {
             const list = $contentWrap.list.filter(
-              (item) => item.type == 'file' && isImgFile(item.name)
+              (item) => item.type === 'file' && isImgFile(item.name)
             );
             const arr = list.map((item) => {
               const p = `${item.path}/${item.name}`;
@@ -414,10 +414,10 @@ async function readFileAndDir(obj) {
                 u2: getFilePath(`/file/${p}`, 1),
               };
             });
-            if (arr.length == 0) return;
+            if (arr.length === 0) return;
             imgPreview(
               arr,
-              list.findIndex((item) => item.id == obj.id)
+              list.findIndex((item) => item.id === obj.id)
             );
           } else if (isVideoFile(p)) {
             _myOpen(`/videoplay/#${encodeURIComponent(fPath)}`, obj.name);
@@ -448,12 +448,12 @@ $contentWrap
     const p = `${path}/${name}`;
     reqFileReadDirSize({ path: p })
       .then((res) => {
-        if (res.code == 0) {
+        if (res.code === 1) {
           this.innerText = computeSize(res.data.size);
         }
       })
       .catch((error) => {
-        if (error.statusText == 'timeout') {
+        if (error.statusText === 'timeout') {
           _msg.success(`文件夹文件较多后台计算中`);
         }
       });
@@ -537,14 +537,14 @@ function hdContextMenu(e) {
       const files = await getFiles({
         multiple: true,
       });
-      if (files.length == 0) return;
+      if (files.length === 0) return;
       hdUp(files);
       close(1);
     } else if (id === 'updir') {
       const files = await getFiles({
         webkitdirectory: true,
       });
-      if (files.length == 0) return;
+      if (files.length === 0) return;
       hdUp(files);
       close(1);
     }
@@ -577,7 +577,7 @@ function rightList(e, obj, el) {
       beforeIcon: 'iconfont icon-fenxiang_2',
     },
   ];
-  if (obj.type == 'file') {
+  if (obj.type === 'file') {
     data.push({
       id: 'download',
       text: '下载',
@@ -609,7 +609,7 @@ function rightList(e, obj, el) {
       beforeIcon: 'iconfont icon-jiandao',
     },
   ];
-  if (getSuffix(obj.name)[1].toLowerCase() == 'zip') {
+  if (getSuffix(obj.name)[1].toLowerCase() === 'zip') {
     data.push({
       id: 'decompress',
       text: '解压',
@@ -644,16 +644,16 @@ function rightList(e, obj, el) {
     data,
     ({ e, id, close }) => {
       // 编辑列表
-      if (id == 'download') {
+      if (id === 'download') {
         close();
         downloadFile(getFilePath(`/file/${obj.path}/${obj.name}`), obj.name);
-      } else if (id == 'share') {
+      } else if (id === 'share') {
         hdShare(e, obj);
-      } else if (id == 'rename') {
+      } else if (id === 'rename') {
         hdRename(e, obj, () => {
           close();
         });
-      } else if (id == 'copy') {
+      } else if (id === 'copy') {
         waitObj = {
           type: 'copy',
           data: [obj],
@@ -661,11 +661,11 @@ function rightList(e, obj, el) {
         realtime.send({ type: 'pastefiledata', data: waitObj });
         showPaste();
         close();
-      } else if (id == 'del') {
+      } else if (id === 'del') {
         hdDel(e, [obj], () => {
           close();
         });
-      } else if (id == 'cut') {
+      } else if (id === 'cut') {
         waitObj = {
           type: 'cut',
           data: [obj],
@@ -673,25 +673,25 @@ function rightList(e, obj, el) {
         realtime.send({ type: 'pastefiledata', data: waitObj });
         showPaste();
         close();
-      } else if (id == 'compress') {
+      } else if (id === 'compress') {
         hdCompress(e, obj, () => {
           close();
         });
-      } else if (id == 'decompress') {
+      } else if (id === 'decompress') {
         hdDeCompress(e, obj, () => {
           close();
         });
-      } else if (id == 'info') {
+      } else if (id === 'info') {
         showFileInfo(e, obj);
-      } else if (id == 'check') {
+      } else if (id === 'check') {
         close();
         if (!isChecking) {
           startCheck();
           hdCheckItem(el);
         }
-      } else if (id == 'mode') {
+      } else if (id === 'mode') {
         editFileMode(e, obj);
-      } else if (id == 'copyPath') {
+      } else if (id === 'copyPath') {
         copyText(hdPath(`/${obj.path}/${obj.name}`));
         close();
       }
@@ -724,7 +724,7 @@ function editFileMode(e, obj) {
         if (obj.mode.split(' ')[1] === mode) return;
         reqFileMode({ data: obj, mode })
           .then((res) => {
-            if (res.code == 0) {
+            if (res.code === 1) {
               close(1);
               openDir();
               _msg.success(res.codeText);
@@ -742,12 +742,12 @@ function editFileMode(e, obj) {
 function hdShare(e, obj) {
   createShare(
     e,
-    { name: obj.name, title: `分享${obj.type == 'file' ? '文件' : '文件夹'}` },
+    { name: obj.name, title: `分享${obj.type === 'file' ? '文件' : '文件夹'}` },
     ({ close, inp }) => {
-      const { title, pass, valid } = inp;
-      reqFileShare({ data: obj, title, pass, valid })
+      const { title, pass, expireTime } = inp;
+      reqFileShare({ data: obj, title, pass, expireTime })
         .then((result) => {
-          if (parseInt(result.code) === 0) {
+          if (result.code === 1) {
             close(1);
             _myOpen(`/sharelist`, '分享列表');
           }
@@ -783,7 +783,7 @@ document.addEventListener('paste', pasteFile);
   $contentWrap[0].addEventListener('drop', function (e) {
     e.preventDefault();
     const files = [...e.dataTransfer.files];
-    if (files.length == 0) return;
+    if (files.length === 0) return;
     hdUp(files);
   });
 })();
@@ -795,16 +795,16 @@ async function hdDeCompress(e, obj, cb) {
       text: `确认解压文件：${obj.name}？`,
     },
     async (type) => {
-      if (type == 'confirm') {
+      if (type === 'confirm') {
         try {
           const res = await reqFileUnZip({ data: obj });
-          if (res.code == 0) {
+          if (res.code === 1) {
             _msg.success(res.codeText);
             openDir();
             cb && cb();
           }
         } catch (error) {
-          if (error.statusText == 'timeout') {
+          if (error.statusText === 'timeout') {
             _msg.success(`文件后台处理中`);
           }
           openDir();
@@ -819,19 +819,19 @@ async function hdCompress(e, obj, cb) {
   _pop(
     {
       e,
-      text: `确认压缩${obj.type == 'dir' ? '文件夹' : '文件'}：${obj.name}？`,
+      text: `确认压缩${obj.type === 'dir' ? '文件夹' : '文件'}：${obj.name}？`,
     },
     async (type) => {
-      if (type == 'confirm') {
+      if (type === 'confirm') {
         try {
           const res = await reqFileZip({ data: obj });
-          if (res.code == 0) {
+          if (res.code === 1) {
             _msg.success(res.codeText);
             openDir();
             cb && cb();
           }
         } catch (error) {
-          if (error.statusText == 'timeout') {
+          if (error.statusText === 'timeout') {
             _msg.success(`文件后台处理中`);
           }
           openDir();
@@ -844,7 +844,7 @@ async function hdCompress(e, obj, cb) {
 // 选中
 function hdCheckItem(el) {
   const $el = $(el);
-  if ($el.attr('check') == 'y') {
+  if ($el.attr('check') === 'y') {
     $el.css('background-color', 'transparent').attr('check', 'n');
   } else {
     $el.css('background-color', _d.checkColor).attr('check', 'y');
@@ -873,7 +873,7 @@ async function hdUp(files) {
       confirm: { text: '覆盖' },
     });
     if (type === 'close') return;
-    if (type == 'confirm') {
+    if (type === 'confirm') {
       rep = true;
     } else {
       rep = false;
@@ -890,14 +890,14 @@ async function hdUp(files) {
     }
     path = hdPath(path);
     const pro = new UpProgress(name);
-    if (size == 0) {
+    if (size === 0) {
       pro.fail();
       _msg.error(`不能上传空文件`);
       return;
     }
     if (!rep) {
       const res = await reqFileRepeat({ path });
-      if (res.code == 0) {
+      if (res.code === 1) {
         pro.close('略过同名文件');
         return;
       }
@@ -928,13 +928,13 @@ async function hdUp(files) {
           count,
           path,
         }); //合并切片
-        if (parseInt(mergeRes.code) === 0) {
+        if (mergeRes.code === 1) {
           pro.close();
         } else {
           pro.fail();
         }
       } catch (error) {
-        if (error.statusText == 'timeout') {
+        if (error.statusText === 'timeout') {
           pro.close(`文件后台处理中`);
         } else {
           pro.fail();
@@ -959,9 +959,9 @@ function createFile(e) {
         name: {
           placeholder: '文件名',
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入名称';
-            } else if (val.trim().length > 255) {
+            } else if (val.trim().length > _d.fieldLenght.filename) {
               return '名称过长';
             } else if (!isFilename(val.trim())) {
               return '名称包含了不允许的特殊字符';
@@ -978,7 +978,7 @@ function createFile(e) {
             path: fileUrl,
             name,
           });
-          if (res.code == 0) {
+          if (res.code === 1) {
             _msg.success(res.codeText);
             openDir();
             openFile('', fileUrl + '/' + name);
@@ -1003,9 +1003,9 @@ function createDir(e) {
         name: {
           placeholder: '文件夹名',
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入名称';
-            } else if (val.trim().length > 255) {
+            } else if (val.trim().length > _d.fieldLenght.filename) {
               return '名称过长';
             } else if (!isFilename(val.trim())) {
               return '名称包含了不允许的特殊字符';
@@ -1022,7 +1022,7 @@ function createDir(e) {
             path: fileUrl,
             name,
           });
-          if (res.code == 0) {
+          if (res.code === 1) {
             _msg.success(res.codeText);
             openDir();
             close(1);
@@ -1065,9 +1065,9 @@ $header
   })
   .on('click', '.h_upload_btn', function (e) {
     let data = [
-      { id: 1, text: '上传文件', beforeIcon: 'iconfont icon-24gl-fileText' },
+      { id: '1', text: '上传文件', beforeIcon: 'iconfont icon-24gl-fileText' },
       {
-        id: 2,
+        id: '2',
         text: '上传文件夹',
         beforeIcon: 'iconfont icon-24gl-folder',
       },
@@ -1076,18 +1076,18 @@ $header
       e,
       data,
       async ({ close, id }) => {
-        if (id == 1) {
+        if (id === '1') {
           const files = await getFiles({
             multiple: true,
           });
-          if (files.length == 0) return;
+          if (files.length === 0) return;
           hdUp(files);
           close();
-        } else if (id == 2) {
+        } else if (id === '2') {
           const files = await getFiles({
             webkitdirectory: true,
           });
-          if (files.length == 0) return;
+          if (files.length === 0) return;
           hdUp(files);
           close();
         }
@@ -1097,9 +1097,9 @@ $header
   })
   .on('click', '.h_add_item_btn', function (e) {
     let data = [
-      { id: 1, text: '新建文本', beforeIcon: 'iconfont icon-24gl-fileText' },
+      { id: '1', text: '新建文本', beforeIcon: 'iconfont icon-24gl-fileText' },
       {
-        id: 2,
+        id: '2',
         text: '新建文件夹',
         beforeIcon: 'iconfont icon-24gl-folder',
       },
@@ -1108,9 +1108,9 @@ $header
       e,
       data,
       async ({ e, id }) => {
-        if (id == 1) {
+        if (id === '1') {
           createFile(e);
-        } else if (id == 2) {
+        } else if (id === '2') {
           createDir(e);
         }
       },
@@ -1120,9 +1120,9 @@ $header
   .on('click', '.h_sort_btn', hdFileSort)
   .on('click', '.paste_btn .text', function (e) {
     const { type, data } = waitObj;
-    if (type == 'copy') {
+    if (type === 'copy') {
       hdCopy(e, data);
-    } else if (type == 'cut') {
+    } else if (type === 'cut') {
       hdCut(e, data);
     }
   })
@@ -1136,7 +1136,7 @@ $header
     let str = `操作：${type === 'copy' ? '复制' : '剪切'}`;
     data.forEach((item) => {
       const { name, type, size } = item;
-      str += `\n${type == 'file' ? '文件' : '目录'}：${name}${
+      str += `\n${type === 'file' ? '文件' : '目录'}：${name}${
         size ? ` (${computeSize(size)})` : ''
       }`;
     });
@@ -1194,7 +1194,7 @@ function hdFileSort(e) {
     data,
     ({ close, id, param }) => {
       if (id) {
-        if (id > 0 && id <= 4) {
+        if (+id > 0 && +id <= 4) {
           fileSort.type = param.value;
         } else {
           fileSort.isDes = param.value;
@@ -1225,13 +1225,13 @@ async function hdCopy(e, data, cb) {
         return;
       }
       const res = await reqFileCopy({ data, path: fileUrl });
-      if (res.code == 0) {
+      if (res.code === 1) {
         _msg.success(res.codeText);
         openDir();
         cb && cb();
       }
     } catch (error) {
-      if (error.statusText == 'timeout') {
+      if (error.statusText === 'timeout') {
         _msg.success(`文件后台处理中`);
       }
       openDir();
@@ -1256,7 +1256,7 @@ async function hdCut(e, data, cb) {
         return;
       }
       const res = await reqFileMove({ data, path: fileUrl });
-      if (res.code == 0) {
+      if (res.code === 1) {
         _msg.success(res.codeText);
         openDir();
         waitObj = {};
@@ -1265,7 +1265,7 @@ async function hdCut(e, data, cb) {
         cb && cb();
       }
     } catch (error) {
-      if (error.statusText == 'timeout') {
+      if (error.statusText === 'timeout') {
         _msg.success(`文件后台处理中`);
       }
       openDir();
@@ -1280,7 +1280,7 @@ async function hdCut(e, data, cb) {
 function getCheckItem() {
   const $cItem = $contentWrap.find('.file_item');
   return $cItem.filter(
-    (_, item) => $(item).find('.check_state').attr('check') == 'y'
+    (_, item) => $(item).find('.check_state').attr('check') === 'y'
   );
 }
 function getCheckDatas() {
@@ -1317,11 +1317,11 @@ function renderFoot() {
   const len = checkData.length;
   const html = _tpl(
     `
-    <span cursor="y" :data-check="items.length == len ? 'y' : 'n'" class="iconfont {{items.length == len ? 'icon-xuanzeyixuanze' : 'icon-xuanzeweixuanze'}}"></span>
+    <span cursor="y" :data-check="items.length === len ? 'y' : 'n'" class="iconfont {{items.length === len ? 'icon-xuanzeyixuanze' : 'icon-xuanzeweixuanze'}}"></span>
     <template v-if="len > 0">
       <button cursor="y" class="f_copy btn btn_primary">复制</button>
       <button cursor="y" class="f_cut btn btn_primary">剪切</button>
-      <template v-if="len == 1">
+      <template v-if="len === 1">
         <button cursor="y" class="f_share btn btn_primary">分享</button>
         <button cursor="y" class="f_rename btn btn_primary">重命名</button>
         <button v-if="isZip()" cursor="y" class="f_decompress btn btn_primary">解压缩</button>
@@ -1336,10 +1336,10 @@ function renderFoot() {
       items,
       len,
       isZip() {
-        return getSuffix(checkData[0].name)[1].toLowerCase() == 'zip';
+        return getSuffix(checkData[0].name)[1].toLowerCase() === 'zip';
       },
       checkIsFile() {
-        return checkData.every((item) => item.type == 'file');
+        return checkData.every((item) => item.type === 'file');
       },
       isRoot,
     }
@@ -1352,7 +1352,7 @@ function renderFoot() {
 function switchCheckAll(el) {
   const $this = $(el);
   const $items = $contentWrap.find('.file_item');
-  if ($this.data('check') == 'y') {
+  if ($this.data('check') === 'y') {
     $items
       .find('.check_state')
       .css({
@@ -1377,7 +1377,7 @@ $footer
   .on('click', '.f_download', function () {
     getCheckDatas().forEach((item) => {
       const { name, path, type } = item;
-      if (type == 'file') {
+      if (type === 'file') {
         downloadFile(getFilePath(`/file/${path}/${name}`), name);
       }
     });
@@ -1422,7 +1422,7 @@ $footer
 // 删除
 function hdDel(e, arr, cb) {
   let text = '确认删除？';
-  if (arr.length == 1) {
+  if (arr.length === 1) {
     text = `确认删除：${arr[0].name}？`;
   }
   const opt = {
@@ -1435,17 +1435,17 @@ function hdDel(e, arr, cb) {
     opt.confirm.text = '直接删除';
   }
   _pop(opt, async (type) => {
-    if (type == 'confirm' || type == 'cancel') {
+    if (type === 'confirm' || type === 'cancel') {
       try {
-        const force = type == 'confirm' ? 'y' : 'n';
+        const force = type === 'confirm' ? 1 : 0;
         const res = await reqFileDelete({ data: arr, force });
-        if (res.code == 0) {
+        if (res.code === 1) {
           _msg.success(res.codeText);
           openDir();
           cb && cb();
         }
       } catch (error) {
-        if (error.statusText == 'timeout') {
+        if (error.statusText === 'timeout') {
           _msg.success(`文件后台处理中`);
         }
         openDir();
@@ -1462,12 +1462,12 @@ function hdRename(e, obj, cb) {
       subText: '提交',
       items: {
         name: {
-          placeholder: `${obj.type == 'file' ? '文件名' : '文件夹名'}`,
+          placeholder: `${obj.type === 'file' ? '文件名' : '文件夹名'}`,
           value: obj.name,
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入名称';
-            } else if (val.trim().length > 255) {
+            } else if (val.trim().length > _d.fieldLenght.filename) {
               return '名称过长';
             } else if (!isFilename(val.trim())) {
               return '名称包含了不允许的特殊字符';
@@ -1481,7 +1481,7 @@ function hdRename(e, obj, cb) {
         try {
           let name = inp.name;
           const res = await reqFileRename({ data: obj, name });
-          if (res.code == 0) {
+          if (res.code === 1) {
             openDir();
             close();
             cb && cb();
@@ -1493,7 +1493,7 @@ function hdRename(e, obj, cb) {
       500,
       true
     ),
-    `重命名${obj.type == 'file' ? '文件' : '文件夹'}`
+    `重命名${obj.type === 'file' ? '文件' : '文件夹'}`
   );
 }
 // 显示/隐藏粘贴
@@ -1525,9 +1525,9 @@ document.addEventListener('keydown', function (e) {
     switchCheckAll($footer.find('span')[0]);
   } else if (ctrl && key === 'v') {
     const { type, data } = waitObj;
-    if (type == 'copy') {
+    if (type === 'copy') {
       hdCopy(false, data);
-    } else if (type == 'cut') {
+    } else if (type === 'cut') {
       hdCut(false, data);
     }
   }

@@ -82,7 +82,7 @@ class RightM {
     this.searchInpWrap = wrapInput(this.searchInp, {
       change: (val) => {
         val = val.trim();
-        if (val == '') {
+        if (val === '') {
           this.clearSearchText.style.display = 'none';
         } else {
           this.clearSearchText.style.display = 'block';
@@ -195,12 +195,12 @@ class RightM {
       ) {
         this.close(1, e);
       }
-    } else if (e.target == this.hClose) {
+    } else if (e.target === this.hClose) {
       this.close();
-    } else if (e.target == this.searchBtn) {
+    } else if (e.target === this.searchBtn) {
       this.searchBox.style.display = 'flex';
       this.searchInpWrap.focus();
-    } else if (e.target == this.clearSearchText) {
+    } else if (e.target === this.clearSearchText) {
       this.searchInpWrap.setValue('').focus();
     } else {
       this.opt.click && this.opt.click.call(this, { e, close });
@@ -271,7 +271,7 @@ function selectTabs(e, data, opt = {}, title = '') {
         return true;
       } else {
         _pop({ e, text: '关闭：输入框？' }, (type) => {
-          if (type == 'confirm') {
+          if (type === 'confirm') {
             close(1, e);
           }
         });
@@ -349,24 +349,24 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
   const html = _tpl(
     `
     <template v-for="{type,placeholder,value,selectItem,inputType,beforeText},key in items">
-      <div v-if="type == 'input'" class="inp_item">
+      <div v-if="type === 'input'" class="inp_item">
           <div v-if="beforeText" class="title">{{beforeText}}</div>
           <div class="inp_box">
             <input class='inp' :data-flag="key" autocomplete="off" :placeholder="placeholder" :value="value" :type="inputType"/>
             <i v-if="inputType === 'password'" cursor="y" class="show_pass_btn iconfont icon-yanjing_xianshi_o"></i>
-            <i cursor="y" class="clean_btn iconfont icon-guanbi {{value.trim() == '' ? '' : 'show'}}"></i>
+            <i cursor="y" class="clean_btn iconfont icon-guanbi {{value.trim() === '' ? '' : 'show'}}"></i>
           </div>
           <p class='err'></p>
         </div>
-      <div v-else-if="type == 'textarea'" class='texta_item'>
+      <div v-else-if="type === 'textarea'" class='texta_item'>
         <div v-if="beforeText" class="title">{{beforeText}}</div>
         <div class='texta_box'>
           <textarea title='Ctrl+Enter {{subText}}' class='texta' :data-flag="key" autocomplete="off" :placeholder="placeholder">{{value}}</textarea>
-          <i cursor="y" class="clean_btn iconfont icon-15qingkong-1 {{value.trim() == '' ? '' : 'show'}}"></i>
+          <i cursor="y" class="clean_btn iconfont icon-15qingkong-1 {{value.trim() === '' ? '' : 'show'}}"></i>
         </div>
         <p class='err'></p>
       </div>
-      <div v-else-if="type == 'select'" class='select_item'>
+      <div v-else-if="type === 'select'" class='select_item'>
         <div v-if="beforeText" class="title">{{beforeText}}</div>
         <div cursor="y" class='select_box' :data-flag="key"><span>{{selectInitValue(selectItem,value)}}</span><i class="iconfont icon-Down"></i></div>
         <p class='err'></p>
@@ -417,7 +417,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
         const wInput = wrapInput(item, {
           change(val) {
             val = val.trim();
-            if (val == '') {
+            if (val === '') {
               cleanBtn.classList.remove('show');
             } else {
               cleanBtn.classList.add('show');
@@ -452,14 +452,14 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       if (
         curItemsArr
           .filter((item) => item.type !== 'select')
-          .every((item) => item.value == '') ||
+          .every((item) => item.value === '') ||
         curItemsArr.map((item) => item.value).toString() ==
           initItemsArr.map((item) => item.value).toString()
       ) {
         return true;
       } else {
         _pop({ e, text: '关闭：输入框？' }, (type) => {
-          if (type == 'confirm') {
+          if (type === 'confirm') {
             close(1, e);
           }
         });
@@ -510,7 +510,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
         const arr = [];
         selectItem.forEach((item, idx) => {
           const obj = {
-            id: idx + 1,
+            id: idx + 1 + '',
             text: item.text,
           };
           if (item.value === value) {
@@ -640,7 +640,7 @@ function selectMenu(e, data, callback, title = '') {
       const item = _getTarget(this.content, e, '.item');
       if (item) {
         const id = item.dataset.id;
-        const d = data.find((item) => item.id == id);
+        const d = data.find((item) => item.id === id);
         callback && callback({ e, close, resetMenu, id, param: d.param || {} });
       }
     },

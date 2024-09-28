@@ -27,12 +27,12 @@ function bind(el, cb) {
 function hdClick(e) {
   const target = e.target;
   const tag = target.tagName.toLowerCase();
-  if (tag == 'i' || tag == 'span') {
-    if (tag == 'i') {
-      if (pathArr.length == 0) return;
+  if (tag === 'i' || tag === 'span') {
+    if (tag === 'i') {
+      if (pathArr.length === 0) return;
       pathArr.pop();
-    } else if (tag == 'span') {
-      if (target.className == 'home') {
+    } else if (tag === 'span') {
+      if (target.className === 'home') {
         pathArr = [];
       } else {
         const idx = +target.dataset.idx;
@@ -41,13 +41,13 @@ function hdClick(e) {
     }
     callback && callback(getPath());
     renderCrumb();
-  } else if (this == target) {
+  } else if (this === target) {
     editPath();
   }
 }
 // 手势右划后退
 function rightSlide() {
-  if (pathArr.length == 0) return;
+  if (pathArr.length === 0) return;
   pathArr.pop();
   callback && callback(getPath());
   renderCrumb();
@@ -69,7 +69,7 @@ function hdInputBlur() {
   renderCrumb();
 }
 function hdInputKeyup(e) {
-  if (e.key == 'Enter') {
+  if (e.key === 'Enter') {
     this.blur();
   }
 }

@@ -68,7 +68,7 @@ function setTop() {
 }
 // 提醒消息
 export function countMsg() {
-  if (expireCount == 0) return;
+  if (expireCount === 0) return;
   _msg.msg(
     {
       message: `您有 ${expireCount} 条已到期或即将到期的倒计时`,
@@ -77,7 +77,7 @@ export function countMsg() {
       duration: 8000,
     },
     (type) => {
-      if (type == 'click') {
+      if (type === 'click') {
         showCountBox();
       }
     },
@@ -113,7 +113,7 @@ export function getCountList(toTop) {
     countLoading();
   }
   reqCountList({ pageNo: countPageNo, pageSize: countPageSize }).then((res) => {
-    if (res.code == 0) {
+    if (res.code === 1) {
       const { total, pageNo, data, expireCount } = res.data;
       setExpireCount(expireCount);
       countList = data;
@@ -134,7 +134,7 @@ function renderCountList(total, toTop) {
     </div>
     <p v-if="countList.length <= 0" style="padding: 20px 0;pointer-events: none;text-align: center;">暂无倒计时项</p>
     <template v-else>
-      <div v-for="{id, title, total, past, remain, link, state, top} in countList" :data-id="id" class="item_box {{state == 1 ? 'close' : ''}}">
+      <div v-for="{id, title, total, past, remain, link, state, top} in countList" :data-id="id" class="item_box {{state === 0 ? 'close' : ''}}">
         <div class="title">
           <span :cursor="link?'y':''" class="iconfont {{link?'icon-link1':'icon-shalou'}} icon"></span>
           <span class="text">{{title}}</span>
@@ -155,7 +155,7 @@ function renderCountList(total, toTop) {
       readableTime,
       countList,
       hasRemain(countList) {
-        return countList.some((item) => item.remain <= 0 && item.state == 0);
+        return countList.some((item) => item.remain <= 0 && item.state === 1);
       },
       getPaging() {
         return countPgnt.getHTML({
@@ -176,7 +176,7 @@ function renderCountList(total, toTop) {
       const $item = $(item);
       const id = $item.data('id');
       const { percent, state } = getCount(id);
-      if (state == 1) return;
+      if (state === 0) return;
       let bgColor = '';
       let color = '';
       if (percent < 80) {
@@ -222,7 +222,7 @@ const countPgnt = pagination($countList[0], {
 });
 // 获取数据
 function getCount(id) {
-  return countList.find((item) => item.id == id);
+  return countList.find((item) => item.id === id);
 }
 // 显示
 export function showCountBox() {
@@ -268,9 +268,9 @@ function addCount(e) {
         title: {
           beforeText: '标题：',
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入标题';
-            } else if (val.trim().length > 200) {
+            } else if (val.trim().length > _d.fieldLenght.countTitle) {
               return '标题内容过长';
             }
           },
@@ -281,7 +281,7 @@ function addCount(e) {
           verify(val) {
             val = val.trim();
             if (!val) return;
-            if (val.length > 1000) {
+            if (val.length > _d.fieldLenght.url) {
               return '链接过长';
             } else if (!isurl(val)) {
               return '请输入正确的链接';
@@ -315,7 +315,7 @@ function addCount(e) {
         if (!verifyDate(inp)) return;
         reqCountAdd(inp)
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               close();
               _msg.success(result.codeText);
               getCountList();
@@ -342,7 +342,7 @@ function delCount(e, id, cb) {
     };
   if (id) {
     param = { ids: [id] };
-    if (id == 'all') {
+    if (id === 'all') {
       param = { ids: countList.map((item) => item.id) };
       opt = {
         e,
@@ -358,10 +358,10 @@ function delCount(e, id, cb) {
     }
   }
   _pop(opt, (type) => {
-    if (type == 'confirm') {
+    if (type === 'confirm') {
       reqCountDelete(param)
         .then((result) => {
-          if (parseInt(result.code) === 0) {
+          if (result.code === 1) {
             _msg.success(result.codeText);
             getCountList();
             cb && cb();
@@ -383,9 +383,9 @@ function editCount(e, count) {
           beforeText: '标题：',
           value: count.title,
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入标题';
-            } else if (val.trim().length > 200) {
+            } else if (val.trim().length > _d.fieldLenght.countTitle) {
               return '标题内容过长';
             }
           },
@@ -397,7 +397,7 @@ function editCount(e, count) {
           verify(val) {
             val = val.trim();
             if (!val) return;
-            if (val.length > 1000) {
+            if (val.length > _d.fieldLenght.url) {
               return '链接过长';
             } else if (!isurl(val)) {
               return '请输入正确的链接';
@@ -439,7 +439,7 @@ function editCount(e, count) {
         if (!verifyDate(inp)) return;
         reqCountEdit({ id: count.id, ...inp })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               close(true);
               _msg.success(result.codeText);
               getCountList();
@@ -471,9 +471,9 @@ function countMenu(e) {
     { id: 'top', text: '置顶', beforeIcon: 'iconfont icon-zhiding' },
     {
       id: 'state',
-      text: count.state == 0 ? '关闭' : '开启',
+      text: count.state === 1 ? '关闭' : '开启',
       beforeIcon: `iconfont ${
-        count.state == 0 ? 'icon-shibai' : 'icon-zhengque_chenggong_shibai'
+        count.state === 1 ? 'icon-shibai' : 'icon-zhengque_chenggong_shibai'
       }`,
     },
     {
@@ -491,18 +491,18 @@ function countMenu(e) {
     e,
     data,
     function ({ e, close, id }) {
-      if (id == 'edit') {
+      if (id === 'edit') {
         editCount(e, count);
-      } else if (id == 'del') {
+      } else if (id === 'del') {
         delCount(e, count.id, () => {
           close();
         });
-      } else if (id == 'top') {
+      } else if (id === 'top') {
         toTop(e, count);
-      } else if (id == 'state') {
-        reqCountState({ id: count.id, state: count.state == 0 ? '1' : '0' })
+      } else if (id === 'state') {
+        reqCountState({ id: count.id, state: count.state === 0 ? 1 : 0 })
           .then((res) => {
-            if (res.code == 0) {
+            if (res.code === 1) {
               close(1);
               getCountList();
               _msg.success(res.codeText);
@@ -527,10 +527,14 @@ function toTop(e, obj) {
           placeholder: '0：取消；数值越大越靠前',
           verify(val) {
             val = val.trim();
-            if (val == '') {
+            if (val === '') {
               return '请输入权重数';
-            } else if (!isInteger(+val) || val < 0 || val > 9999) {
-              return '请输入4位正整数';
+            } else if (
+              !isInteger(+val) ||
+              val < 0 ||
+              val > _d.fieldLenght.top
+            ) {
+              return `限制0-${_d.fieldLenght.top}`;
             }
           },
         },
@@ -539,10 +543,10 @@ function toTop(e, obj) {
     debounce(
       function ({ inp, close }) {
         const top = inp.num;
-        if (obj.top == top) return;
+        if (obj.top === top) return;
         reqCountTop({ id: obj.id, top })
           .then((res) => {
-            if (res.code == 0) {
+            if (res.code === 1) {
               close(1);
               getCountList();
               _msg.success(res.codeText);
@@ -566,10 +570,12 @@ $countList
     const $this = $(this);
     const id = $this.attr('data-id');
     const { start, end, link, state, top } = getCount(id);
-    const str = `状态：${state == 0 ? '开启' : '关闭'}\n开始日期：${formatDate({
-      template: '{0}-{1}-{2}',
-      timestamp: start,
-    })}\n结束日期：${formatDate({
+    const str = `状态：${state === 1 ? '开启' : '关闭'}\n开始日期：${formatDate(
+      {
+        template: '{0}-{1}-{2}',
+        timestamp: start,
+      }
+    )}\n结束日期：${formatDate({
       template: '{0}-{1}-{2}',
       timestamp: end,
     })}\n权重：${top}\n链接：${link || '--'}`;

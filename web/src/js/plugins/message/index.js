@@ -84,7 +84,7 @@ class Msg {
     this.el.removeEventListener('click', this.hdClick);
   }
   hdClick(e) {
-    if (e.target == this.oText) {
+    if (e.target === this.oText) {
       this.callback && this.callback('click');
     }
     this.close();
@@ -237,11 +237,11 @@ function error(message = '操作失败', callback, duration = 6000) {
 }
 function warning(message, callback, duration = 8000) {
   // 页面变为不可见时触发
-  if (document.visibilityState == 'hidden') {
+  if (document.visibilityState === 'hidden') {
     _playSound(imgMsg);
   }
   // 页面变为可见时触发
-  if (document.visibilityState == 'visible') {
+  if (document.visibilityState === 'visible') {
     _playSound(imgBlop);
   }
   new Msg(
@@ -260,11 +260,11 @@ function info(message, callback, duration = 3000) {
 function msg(opt, callback, sound) {
   if (sound) {
     // 页面变为不可见时触发
-    if (document.visibilityState == 'hidden') {
+    if (document.visibilityState === 'hidden') {
       _playSound(imgMsg);
     }
     // 页面变为可见时触发
-    if (document.visibilityState == 'visible') {
+    if (document.visibilityState === 'visible') {
       _playSound(imgBlop);
     }
   }

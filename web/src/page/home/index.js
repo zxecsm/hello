@@ -227,7 +227,7 @@ export function setBg(obj, cb) {
       windmill.stop();
       reqChangeBg({ type: obj.type, id: obj.id })
         .then((result) => {
-          if (parseInt(result.code) === 0) {
+          if (result.code === 1) {
             _msg.success(result.codeText);
             updateUserInfo();
             return;
@@ -247,7 +247,7 @@ function changeBg() {
   windmill.start();
   reqBgRandom({ type })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         setBg(result.data);
         return;
       }
@@ -307,7 +307,7 @@ function closeLoading() {
     // 查看消息
     reqChatNews()
       .then((result) => {
-        if (parseInt(result.code) === 0) {
+        if (result.code === 1) {
           const { group, friend } = result.data;
           if (group + friend > 0) {
             $showChatRoomBtn.attr(
@@ -322,7 +322,7 @@ function closeLoading() {
                 duration: 8000,
               },
               (type) => {
-                if (type == 'click') {
+                if (type === 'click') {
                   showChatRoom();
                 }
               },
@@ -339,13 +339,13 @@ function closeLoading() {
       .catch(() => {});
     // 查看是否有未完成事项
     reqTodoList().then((res) => {
-      if (res.code == 0) {
+      if (res.code === 1) {
         setTodoUndone(res.data.undoneCount);
         todoMsg();
       }
     });
     reqCountList().then((res) => {
-      if (res.code == 0) {
+      if (res.code === 1) {
         setExpireCount(res.data.expireCount);
         countMsg();
       }
@@ -385,7 +385,7 @@ const onceInit = hdOnce(function () {
 export function updateUserInfo(cb) {
   reqUserInfo()
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         setUserInfo(result.data);
         onceInit();
         let { logo, username, account, bg, bgxs, bgObj, email } = userInfo;
@@ -395,7 +395,7 @@ export function updateUserInfo(cb) {
         if (uname !== username) {
           reqUserUpdateToken()
             .then((res) => {
-              if (res.code == 0) {
+              if (res.code === 1) {
                 _setData('username', username);
               }
             })
@@ -574,12 +574,12 @@ function hdHomeBgBtn(e, obj) {
     e,
     data,
     ({ e, close, id }) => {
-      if (id == '1') {
+      if (id === '1') {
         delBg(e, [obj.id], () => {
           close();
           changeBg();
         });
-      } else if (id == '2') {
+      } else if (id === '2') {
         close();
         imgPreview([
           {
@@ -587,7 +587,7 @@ function hdHomeBgBtn(e, obj) {
             u2: getFilePath(`/bg/${obj.url}`, 1),
           },
         ]);
-      } else if (id == '3') {
+      } else if (id === '3') {
         close();
         downloadFile(
           getFilePath(`/bg/${obj.url}`),
@@ -751,12 +751,12 @@ function hdChatType(resData) {
   const chatAccount = setCurChatAccount(); //当前聊天框
   // 新消息处理
   if (flag === 'addmsg') {
-    if (from.account === userInfo.account && from.account == to) {
+    if (from.account === userInfo.account && from.account === to) {
       // 忽略自己给自己的消息通知
     } else if (from.account !== userInfo.account) {
       chatMessageNotification(
         from.des || from.username,
-        msgData.data,
+        msgData.content,
         from.account,
         to,
         from.logo
@@ -783,8 +783,8 @@ function hdChatType(resData) {
           to === 'chang'
             ? 'chang'
             : from.account === userInfo.account && chatAccount === to
-              ? to
-              : from.account;
+            ? to
+            : from.account;
         const flag = $chatListBox.find('.chat_item').last().attr('data-id');
         const word = $chatHeadBtns.find('.search_msg_inp input').val().trim();
         if (word.length > 100) {
@@ -793,15 +793,15 @@ function hdChatType(resData) {
         }
         reqChatReadMsg({
           type: 2,
-          acc,
+          account:acc,
           flag,
           word,
         })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               if (chatRoomWrapIsHide()) return;
               const data = result.data;
-              const str = renderMsgList(data, 1);
+              const str = renderMsgList(data, 1, 1);
               const cH = $chatListBox[0].clientHeight;
               const toBottom =
                 $chatListBox[0].scrollHeight - $chatListBox[0].scrollTop - cH <
@@ -837,7 +837,7 @@ function hdChatType(resData) {
     }
     // 撤回消息
   } else if (flag === 'del') {
-    if (from.account === userInfo.account && from.account == to) {
+    if (from.account === userInfo.account && from.account === to) {
     } else if (from.account !== userInfo.account) {
       chatMessageNotification(
         from.des || from.username,
@@ -867,7 +867,7 @@ function hdChatType(resData) {
     }
     //清空聊天框
   } else if (flag === 'clear') {
-    if (from.account === userInfo.account && from.account == to) {
+    if (from.account === userInfo.account && from.account === to) {
     } else if (from.account !== userInfo.account) {
       chatMessageNotification(
         from.des || from.username,
@@ -887,7 +887,7 @@ function hdChatType(resData) {
       }
     }
   } else if (flag === 'shake') {
-    if (from.account === userInfo.account && from.account == to) {
+    if (from.account === userInfo.account && from.account === to) {
     } else if (from.account !== userInfo.account && to !== 'chang') {
       chatMessageNotification(
         from.des || from.username,
@@ -905,13 +905,13 @@ function hdRemotePlayType(resData) {
   const { state, obj } = resData;
   setRemotePlayState(false);
   playerRemoteBtnState();
-  if (state == 'y') {
+  if (state === 1) {
     showMusicPlayerBox();
     if (setSongPlayMode() === 'random') {
       setCurPlayingList(myShuffle(deepClone(setPlayingList())));
     }
     musicPlay(obj);
-  } else if (state == 'n') {
+  } else if (state === 0) {
     initMusicLrc();
     pauseSong();
   }
@@ -930,7 +930,7 @@ function hdUpdatedataType(resData) {
   } else if (flag === 'playinglist') {
     reqPlayerGetPlayList()
       .then((result) => {
-        if (parseInt(result.code) === 0) {
+        if (result.code === 1) {
           setPlayingList(result.data);
           setCurPlayingList(
             setSongPlayMode() === 'random'
@@ -947,7 +947,7 @@ function hdUpdatedataType(resData) {
       if (songIspaused()) {
         reqPlayerGetLastPlay()
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               const _musicinfo = result.data;
               const { currentTime = 0, duration = 0, lastplay } = _musicinfo;
               if (!lastplay || (setRemotePlayState() && getPlaytimer())) return;
@@ -975,7 +975,7 @@ function hdUpdatedataType(resData) {
 function handleOnlineMsg(data) {
   const { text, account } = data;
   _msg.online(text, (type) => {
-    if (type == 'click') {
+    if (type === 'click') {
       setCurChatAccount(account);
       showChatRoom();
     }
@@ -990,9 +990,9 @@ realtime.init('home').add((res) => {
       hdChatType(data);
     } else if (type === 'updatedata') {
       hdUpdatedataType(data);
-    } else if (type == 'play') {
+    } else if (type === 'play') {
       hdRemotePlayType(data);
-    } else if (type == 'vol') {
+    } else if (type === 'vol') {
       const { value } = data;
       setMediaVolume(value);
       setPlayVolume();
@@ -1002,14 +1002,14 @@ realtime.init('home').add((res) => {
           value <= 0 ? 'icon-24gl-volumeCross' : 'icon-24gl-volumeHigh'
         }`,
       });
-    } else if (type == 'progress') {
+    } else if (type === 'progress') {
       const { value } = data;
       setSongCurrentTime(setPlayingSongInfo().duration * value);
-    } else if (type == 'playmode') {
+    } else if (type === 'playmode') {
       const { state } = data;
       setSongPlayMode(state);
       switchPlayMode();
-    } else if (type == 'online') {
+    } else if (type === 'online') {
       handleOnlineMsg(data);
     }
   });

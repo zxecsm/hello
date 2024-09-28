@@ -58,7 +58,7 @@ if (_getData('account')) {
 const accInp = wrapInput($account[0], {
   change(val) {
     val = val.trim();
-    if (val == '') {
+    if (val === '') {
       $account.next().css('display', 'none');
     } else {
       $account.next().css('display', 'block');
@@ -75,7 +75,7 @@ const accInp = wrapInput($account[0], {
 const pdInp = wrapInput($password[0], {
   change(val) {
     val = val.trim();
-    if (val == '') {
+    if (val === '') {
       $password.next().css('display', 'none');
     } else {
       $password.next().css('display', 'block');
@@ -92,7 +92,7 @@ const pdInp = wrapInput($password[0], {
 const rePdInp = wrapInput($repassword[0], {
   change(val) {
     val = val.trim();
-    if (val == '') {
+    if (val === '') {
       $repassword.next().css('display', 'none');
     } else {
       $repassword.next().css('display', 'block');
@@ -112,7 +112,7 @@ function hdNopdLogin() {
   if (code) {
     reqUserCodeLogin({ code })
       .then((res) => {
-        if (res.code == 0) {
+        if (res.code === 1) {
           const { username, account } = res.data;
           _setData('username', username);
           _setData('loginName', username);
@@ -150,9 +150,9 @@ function resetPassword(e) {
   _pop({ e, text: '获取邮箱验证码？' }, (type) => {
     if (type === 'confirm') {
       const acc = accInp.getValue().trim();
-      reqUserEmailCode({ acc })
+      reqUserEmailCode({ account: acc })
         .then((res) => {
-          if (res.code == 0) {
+          if (res.code === 1) {
             _msg.success(res.codeText);
             const { account, email } = res.data;
             rMenu.inpMenu(
@@ -164,7 +164,7 @@ function resetPassword(e) {
                     inputType: 'number',
                     verify(val) {
                       val = val.trim();
-                      if (val == '') {
+                      if (val === '') {
                         return '请输入验证码';
                       } else if (
                         val.length !== 6 ||
@@ -182,7 +182,7 @@ function resetPassword(e) {
                   const code = inp.pass;
                   reqUserResetPass({ email, account, code })
                     .then((res) => {
-                      if (res.code == 0) {
+                      if (res.code === 1) {
                         const { username, account } = res.data;
                         close();
                         _setData('username', username);
@@ -218,7 +218,7 @@ window.addEventListener('load', function () {
 accInp.setValue(_getData('loginName'));
 reqUserRegisterState()
   .then((res) => {
-    if (res.code == 0) {
+    if (res.code === 1) {
       if (res.data) {
         $register.css('display', 'block');
       }
@@ -279,13 +279,13 @@ $register.on('click', () => {
 let dark = _getData('dark');
 // 切换黑暗模式
 $darkState.on('click', function () {
-  if (dark == 'y') {
+  if (dark === 'y') {
     dark = 'n';
     _msg.success('关闭黑暗模式');
-  } else if (dark == 'n') {
+  } else if (dark === 'n') {
     dark = 's';
     _msg.success('跟随系统');
-  } else if (dark == 's') {
+  } else if (dark === 's') {
     dark = 'y';
     _msg.success('开启黑暗模式');
   }
@@ -294,11 +294,11 @@ $darkState.on('click', function () {
 });
 function changeTheme(flag) {
   dark = flag;
-  if (dark == 'y') {
+  if (dark === 'y') {
     $darkState.attr('class', 'dark_state iconfont icon-icon_yejian-yueliang');
-  } else if (dark == 'n') {
+  } else if (dark === 'n') {
     $darkState.attr('class', 'dark_state iconfont icon-taiyangtianqi');
-  } else if (dark == 's') {
+  } else if (dark === 's') {
     $darkState.attr('class', 'dark_state iconfont icon-xianshiqi');
   }
   darkMode(dark);
@@ -334,7 +334,7 @@ function hdLogin(obj) {
       reqUserLogin(obj)
         .then((result) => {
           $loading.stop().fadeOut();
-          if (parseInt(result.code) === 0) {
+          if (result.code === 1) {
             const { account, verify, username } = result.data;
             if (verify) {
               rMenu.inpMenu(
@@ -346,7 +346,7 @@ function hdLogin(obj) {
                       inputType: 'number',
                       verify(val) {
                         val = val.trim();
-                        if (val == '') {
+                        if (val === '') {
                           return '请输入验证码';
                         } else if (
                           val.length !== 6 ||
@@ -362,12 +362,12 @@ function hdLogin(obj) {
                 ({ inp }) => {
                   const token = inp.pass;
                   reqUserVerifyLogin({
-                    acc: account,
+                    account,
                     token,
                     password: obj.password,
                   })
                     .then((res) => {
-                      if (res.code == 0) {
+                      if (res.code === 1) {
                         const { account, username } = res.data;
                         _setData('username', username);
                         _setData('loginName', obj.account);
@@ -415,7 +415,7 @@ function hdRegister(obj) {
       reqUserRegister(obj)
         .then((result) => {
           $loading.stop().fadeOut();
-          if (parseInt(result.code) === 0) {
+          if (result.code === 1) {
             const { username, account } = result.data;
             _setData('username', username);
             _setData('loginName', obj.username);

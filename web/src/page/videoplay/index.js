@@ -30,7 +30,7 @@ const url = queryURLParams(myOpen()).HASH;
 let playerList = [];
 reqUserPlayerConfig()
   .then((res) => {
-    if (res.code == 0) {
+    if (res.code === 1) {
       playerList = res.data;
     }
   })
@@ -105,7 +105,7 @@ function selectPlayIn(e, url, sign) {
         if (xi === 'refresh') {
           reqUserClearFileKey()
             .then((res) => {
-              if (res.code == 0) {
+              if (res.code === 1) {
                 _delData('fileKeys');
                 close();
                 _msg.success();

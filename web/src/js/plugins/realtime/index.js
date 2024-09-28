@@ -5,7 +5,7 @@ import {
 } from '../../../api/user';
 
 const realtime = {
-  flag: 0,
+  flag: '',
   title: '',
   cbs: [],
   init(val = '') {
@@ -14,10 +14,10 @@ const realtime = {
     return this;
   },
   read() {
-    reqUserGetRealTime({ flag: this.flag, title: this.title })
+    reqUserGetRealTime({ flag: this.flag, page: this.title })
       .then((res) => {
         this.flag = res.data.flag; // 更新标识
-        if (res.code == 0) {
+        if (res.code === 1) {
           try {
             this.cbs.forEach((cb) => cb && cb(res.data.msgs));
           } catch (error) {

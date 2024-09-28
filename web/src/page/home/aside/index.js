@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import imgMrLogo from '../../../images/img/mrlogo.png';
+
 import {
   myOpen,
   _setData,
@@ -17,27 +18,32 @@ import {
   isInteger,
   LazyLoad,
   _mySlide,
+  _setTimeout,
 } from '../../../js/utils/utils.js';
+
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
 import _pop from '../../../js/plugins/popConfirm';
+
 import {
   reqBmkAddBmk,
-  reqBmkAddList,
+  reqBmkAddGroup,
   reqBmkChangeLogo,
   reqBmkDeleteBmk,
-  reqBmkDeleteList,
+  reqBmkDeleteGroup,
   reqBmkEditBmk,
-  reqBmkEditList,
+  reqBmkEditGroup,
   reqBmkList,
-  reqBmkListState,
+  reqBmkGroupShareState,
   reqBmkMoveBmk,
-  reqBmkMoveList,
+  reqBmkMoveGroup,
   reqBmkParseSiteInfo,
   reqBmkShare,
-  reqBmkToList,
+  reqBmkToGroup,
 } from '../../../api/bmk.js';
+
 import { upLogo } from '../rightSetting/index.js';
+
 import {
   checkedHomeBm,
   homeFootMenuIsHide,
@@ -45,17 +51,21 @@ import {
   getHomeBmList,
   showHomeFootMenu,
 } from '../searchBox/index.js';
+
 import { setUserInfo } from '../index.js';
 import { backWindow } from '../backWindow.js';
 import pagination from '../../../js/plugins/pagination/index.js';
 import toolTip from '../../../js/plugins/tooltip/index.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl } from '../../../js/utils/template.js';
+
 const $asideBtn = $('.aside_btn'),
   $asideWrap = $('.aside_wrap'),
   $aside = $asideWrap.find('.aside');
+
 let asidePageSize = _getData('asidePageSize');
 let bookmark = [];
+
 // 设置书签数据
 export function setBookMark(val) {
   if (val === undefined) {
@@ -63,6 +73,7 @@ export function setBookMark(val) {
   }
   bookmark = val;
 }
+
 // 拖动移动书签位置
 ~(function () {
   let fromDom = null;
@@ -78,6 +89,7 @@ export function setBookMark(val) {
           pid = $this.parent().prev().attr('data-id'),
           fromId = $fromDom.attr('data-id'),
           toId = $this.attr('data-id');
+
         if (fromId != toId) {
           dragMoveBookmark(pid, fromId, toId);
         }
@@ -88,11 +100,12 @@ export function setBookMark(val) {
       e.preventDefault();
     });
 })();
+
 // 书签移动位置
-export function dragMoveBookmark(listId, fromId, toId) {
-  reqBmkMoveBmk({ listId, fromId, toId })
+export function dragMoveBookmark(groupId, fromId, toId) {
+  reqBmkMoveBmk({ groupId, fromId, toId })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         getHomeBmList();
         getBookMarkList();
         return;
@@ -100,17 +113,19 @@ export function dragMoveBookmark(listId, fromId, toId) {
     })
     .catch(() => {});
 }
+
 // 分组移动位置
 function bmListMove(fromId, toId) {
-  reqBmkMoveList({ fromId, toId })
+  reqBmkMoveGroup({ fromId, toId })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         getBookMarkList();
         return;
       }
     })
     .catch(() => {});
 }
+
 // 拖动移动分组位置
 ~(function () {
   let fromDom = null;
@@ -134,27 +149,31 @@ function bmListMove(fromId, toId) {
       e.preventDefault();
     });
 })();
+
 $asideBtn.activeId = 'hide'; // 记录开启列表id
 // 获取书签列表
-export function getBookMarkList(p) {
+export function getBookMarkList(p, delayScroll = 0) {
   if (asideWrapIsHide()) return;
   const id = $asideBtn.activeId;
+
   reqBmkList({ id })
     .then((result) => {
-      if (result.code === 0) {
+      if (result.code === 1) {
         bookmark = result.data;
         if (!$asideBtn.activeId) {
           if (bookmark.list.length > 0) {
             $asideBtn.activeId = bookmark.list[0].id;
           }
         }
-        renderAsideList(p);
+        renderAsideList(p, delayScroll);
       }
     })
     .catch(() => {});
 }
+
 let asidePageNo = 1;
 let bmCheckState = true; // 选中状态
+
 // 切换书签和分组选中状态
 function switchCheckState() {
   const $fMenu = $aside.find('.foot_menu');
@@ -164,8 +183,9 @@ function switchCheckState() {
     $fMenu.addClass('liststate');
   }
 }
+
 // 生成列表
-function renderAsideList(p) {
+function renderAsideList(p, delayScroll = 0) {
   if (asideWrapIsHide()) return;
   $aside.find('.foot_menu').stop().slideUp(_d.speed).find('div').attr({
     class: 'iconfont icon-xuanzeweixuanze',
@@ -178,15 +198,15 @@ function renderAsideList(p) {
     <template v-for="item in _nav">
       <div class="list_title jzxz" :data-id="item.id" :flag="item.id==id?'on':'off'" draggable="true">
         <div cursor="y" check="n" class="check_bmlist"></div>
-        <i cursor="y" class="iconfont {{item.share == 'y' ? 'icon-24gl-unlock4' : 'icon-24gl-unlock2 active'}}"></i>
-        <em cursor="y">{{item.name}}</em>
+        <i cursor="y" class="iconfont {{item.share === 1 ? 'icon-24gl-unlock4' : 'icon-24gl-unlock2 active'}}"></i>
+        <em cursor="y">{{item.title}}</em>
       </div>
       <ul v-show="item.id==id">
         <template v-if="item.id==id">
           <li v-for="y in getBmList(item)" class="bm_item jzxz" :data-id="y.id" cursor="y" draggable="true">
             <div cursor="y" check="n" class="check_bm"></div>
             <div class="bm_logo"></div>
-            <div class="bm_name">{{y.name}}</div>
+            <div class="bm_name">{{y.title}}</div>
             <p>{{y.des || '描述'}}</p>
           </li>
           <div v-html="getPaging(item)"></div>
@@ -203,8 +223,8 @@ function renderAsideList(p) {
         asidePageNo < 1
           ? (asidePageNo = pageTotal)
           : asidePageNo > pageTotal
-            ? (asidePageNo = 1)
-            : null;
+          ? (asidePageNo = 1)
+          : null;
         return item.item.slice(
           (asidePageNo - 1) * asidePageSize,
           asidePageNo * asidePageSize
@@ -215,8 +235,8 @@ function renderAsideList(p) {
         asidePageNo < 1
           ? (asidePageNo = pageTotal)
           : asidePageNo > pageTotal
-            ? (asidePageNo = 1)
-            : null;
+          ? (asidePageNo = 1)
+          : null;
         return asidePgnt.getHTML({
           pageNo: asidePageNo,
           pageSize: asidePageSize,
@@ -225,20 +245,23 @@ function renderAsideList(p) {
       },
     }
   );
+
   const $aList = $aside.find('.list');
   $aList.html(html);
   if (p) {
     const curIdx = bookmark.list.findIndex(
-      (item) => item.id == $asideBtn.activeId
+      (item) => item.id === $asideBtn.activeId
     );
     if (curIdx >= 0) {
-      const $listTitle = $aList.find('.list_title').eq(curIdx);
-      $aList.stop().animate(
-        {
-          scrollTop: _position($listTitle[0]).top + $aList[0].scrollTop - 5,
-        },
-        _d.speed
-      );
+      _setTimeout(() => {
+        const $listTitle = $aList.find('.list_title').eq(curIdx);
+        $aList.stop().animate(
+          {
+            scrollTop: _position($listTitle[0]).top + $aList[0].scrollTop - 5,
+          },
+          _d.speed
+        );
+      }, delayScroll);
     }
   }
   hdAsideListItemLogo();
@@ -260,7 +283,9 @@ const asidePgnt = pagination($aside[0], {
     renderAsideList(1);
   },
 });
+
 const asideLoadImg = new LazyLoad();
+
 // 加载logo
 function hdAsideListItemLogo() {
   if ($asideBtn.activeId === 'hide') return;
@@ -270,12 +295,14 @@ function hdAsideListItemLogo() {
       $asideBtn.activeId,
       $item.attr('data-id')
     );
+
     if (logo) {
       logo = hdPath(`/api/pub/${logo}`);
     } else {
       logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
     }
     let $bm_logo = $item.find('.bm_logo');
+
     imgjz(
       logo,
       () => {
@@ -287,15 +314,18 @@ function hdAsideListItemLogo() {
     );
   });
 }
+
 // 获取分组信息
 function getBmListTitleData(id) {
   return bookmark.list.find((item) => item.id === id);
 }
+
 // 获取书签信息
-function getBmItemData(listId, id) {
-  const p = bookmark.list.find((item) => item.id === listId);
-  return p.item.find((item) => item.id == id);
+function getBmItemData(groupId, id) {
+  const p = bookmark.list.find((item) => item.id === groupId);
+  return p.item.find((item) => item.id === id);
 }
+
 // 获取选中书签
 function getAsideCheckBmItem() {
   const $bmItem = $aside.find('.bm_item'),
@@ -308,6 +338,7 @@ function getAsideCheckBmItem() {
   });
   return arr;
 }
+
 // 选中的分组
 function getAsideCheckBmList() {
   const $bmItem = $aside.find('.list_title'),
@@ -320,6 +351,7 @@ function getAsideCheckBmList() {
   });
   return arr;
 }
+
 // 新增分组
 function addBmList(e) {
   rMenu.inpMenu(
@@ -330,9 +362,9 @@ function addBmList(e) {
         text: {
           placeholder: '标题',
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入标题';
-            } else if (val.trim().length > 100) {
+            } else if (val.trim().length > _d.fieldLenght.title) {
               return '标题过长';
             }
           },
@@ -341,9 +373,9 @@ function addBmList(e) {
     },
     debounce(
       function ({ close, inp }) {
-        reqBmkAddList({ name: inp.text })
+        reqBmkAddGroup({ title: inp.text })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               close();
               _msg.success(result.codeText);
               getBookMarkList();
@@ -358,6 +390,7 @@ function addBmList(e) {
     '添加书签分组'
   );
 }
+
 // 删除书签
 export function delBm(e, arr, cb, text) {
   _pop(
@@ -367,10 +400,10 @@ export function delBm(e, arr, cb, text) {
       confirm: { type: 'danger', text: '删除' },
     },
     (type) => {
-      if (type == 'confirm') {
+      if (type === 'confirm') {
         reqBmkDeleteBmk({ ids: arr })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               _msg.success(result.codeText);
               cb && cb();
               getBookMarkList();
@@ -382,6 +415,7 @@ export function delBm(e, arr, cb, text) {
     }
   );
 }
+
 // 切换分组打开状态
 function switchListOpenState() {
   const $this = $(this).parent(),
@@ -398,6 +432,7 @@ function switchListOpenState() {
   asidePageNo = 1;
   getBookMarkList(1);
 }
+
 // 全选/全不选
 function hdCheckAll() {
   let che = $(this).attr('check');
@@ -425,13 +460,15 @@ function hdCheckAll() {
     _msg.botMsg(`选中：${che === 'y' ? $sidenav.length : 0}项`);
   }
 }
+
 export function tooltipBookmark(obj) {
-  const { name, link, des } = obj;
-  const str = `名称：${name || '--'}\n链接：${link || '--'}\n描述：${
+  const { title, link, des } = obj;
+  const str = `名称：${title || '--'}\n链接：${link || '--'}\n描述：${
     des || '--'
   }`;
   toolTip.setTip(str).show();
 }
+
 $asideWrap
   .on('click', '.list_title em', debounce(switchListOpenState, 500, true))
   .on('click', '.list_title i', function (e) {
@@ -473,12 +510,12 @@ $asideWrap
   .on('click', '.bm_logo', function (e) {
     e.stopPropagation();
     const $this = $(this).parent();
-    const listId = $asideBtn.activeId;
+    const groupId = $asideBtn.activeId;
     bookMarkSetting(
       e,
       {
-        listId,
-        ...getBmItemData(listId, $this.attr('data-id')),
+        groupId,
+        ...getBmItemData(groupId, $this.attr('data-id')),
       },
       0,
       this.parentNode.querySelector('.check_bm')
@@ -489,12 +526,12 @@ $asideWrap
     e.preventDefault();
     if (isMobile()) return;
     const $this = $(this);
-    const listId = $asideBtn.activeId;
+    const groupId = $asideBtn.activeId;
     bookMarkSetting(
       e,
       {
-        listId,
-        ...getBmItemData(listId, $this.attr('data-id')),
+        groupId,
+        ...getBmItemData(groupId, $this.attr('data-id')),
       },
       0,
       this.querySelector('.check_bm')
@@ -521,21 +558,21 @@ $asideWrap
   })
   .on('click', '.move_bm', function (e) {
     const arr = getAsideCheckBmItem();
-    const listId = $asideBtn.activeId;
+    const groupId = $asideBtn.activeId;
     if (arr.length === 0) return;
-    moveBookMark(e, listId, arr);
+    moveBookMark(e, groupId, arr);
   })
   .on('click', '.clock_bm', function () {
     if (bmCheckState) return;
     const arr = getAsideCheckBmList();
     if (arr.length === 0) return;
-    changeBmListState('n', arr);
+    changeBmListState(0, arr);
   })
   .on('click', '.open_bm', function () {
     if (bmCheckState) return;
     const arr = getAsideCheckBmList();
     if (arr.length === 0) return;
-    changeBmListState('y', arr);
+    changeBmListState(1, arr);
   })
   .on('click', '.close', function () {
     let $check = [];
@@ -555,6 +592,7 @@ $asideWrap
       hideAside();
     }
   });
+
 // 选中书签
 function checkAsideBm(el) {
   const $this = $(el),
@@ -581,6 +619,7 @@ function checkAsideBm(el) {
     });
   }
 }
+
 // 选中分组
 function checkAsideBmList(el) {
   const $this = $(el),
@@ -607,6 +646,7 @@ function checkAsideBmList(el) {
     });
   }
 }
+
 // 移动书签
 export function moveBookMark(e, pid, arr) {
   let data = [
@@ -614,23 +654,23 @@ export function moveBookMark(e, pid, arr) {
       id: 'home',
       text: '主页',
       beforeIcon: 'iconfont icon-liebiao1',
-      param: { id: 'home', name: '主页' },
+      param: { id: 'home', title: '主页' },
     },
   ];
-  if (pid == 'home') {
+  if (pid === 'home') {
     data = [];
   }
   bookmark.list.forEach((item) => {
     if (item.id != pid) {
       data.push({
         id: item.id,
-        text: item.name,
+        text: item.title,
         beforeIcon: 'iconfont icon-liebiao1',
-        param: { id: item.id, name: item.name },
+        param: { id: item.id, title: item.title },
       });
     }
   });
-  if (data.length == 0) {
+  if (data.length === 0) {
     _msg.error('没有可移动的书签分组');
     return;
   }
@@ -639,13 +679,13 @@ export function moveBookMark(e, pid, arr) {
     data,
     ({ e, close, id, param }) => {
       if (id) {
-        const listId = param.id,
-          listname = param.name;
-        _pop({ e, text: `确认移动到：${listname}？` }, (type) => {
-          if (type == 'confirm') {
-            reqBmkToList({ ids: arr, listId })
+        const groupId = param.id,
+          groupTitle = param.title;
+        _pop({ e, text: `确认移动到：${groupTitle}？` }, (type) => {
+          if (type === 'confirm') {
+            reqBmkToGroup({ ids: arr, groupId })
               .then((result) => {
-                if (parseInt(result.code) === 0) {
+                if (result.code === 1) {
                   close(true);
                   _msg.success(result.codeText);
                   getBookMarkList();
@@ -660,6 +700,7 @@ export function moveBookMark(e, pid, arr) {
     '移动书签到分组'
   );
 }
+
 // 分组菜单
 longPress($aside[0], '.list_title', function (e) {
   const $this = $(this),
@@ -670,21 +711,23 @@ longPress($aside[0], '.list_title', function (e) {
     $this.find('.check_bmlist')[0]
   );
 });
+
 // 书签菜单
 longPress($aside[0], '.bm_item', function (e) {
   const $this = $(this),
     ev = e.changedTouches[0];
-  const listId = $asideBtn.activeId;
+  const groupId = $asideBtn.activeId;
   bookMarkSetting(
     ev,
     {
-      listId,
-      ...getBmItemData(listId, $this.attr('data-id')),
+      groupId,
+      ...getBmItemData(groupId, $this.attr('data-id')),
     },
     0,
     this.querySelector('.check_bm')
   );
 });
+
 // 添加书签
 export function addBookMark(e, pid) {
   rMenu.inpMenu(
@@ -696,7 +739,7 @@ export function addBookMark(e, pid) {
           beforeText: '网址：',
           placeholder: 'https://',
           verify(val) {
-            if (val.trim().length > 1000) {
+            if (val.trim().length > _d.fieldLenght.url) {
               return '网址过长';
             } else if (!isurl(val)) {
               return '请输入正确的网址';
@@ -710,7 +753,7 @@ export function addBookMark(e, pid) {
         const u = inp.link;
         reqBmkParseSiteInfo({ url: u })
           .then((result) => {
-            if (result.code == 0) {
+            if (result.code === 1) {
               close();
               const { title, des } = result.data;
               rMenu.inpMenu(
@@ -723,9 +766,9 @@ export function addBookMark(e, pid) {
                       beforeText: '标题：',
                       value: title,
                       verify(val) {
-                        if (val.trim() == '') {
+                        if (val.trim() === '') {
                           return '请输入书签标题';
-                        } else if (val.trim().length > 100) {
+                        } else if (val.trim().length > _d.fieldLenght.title) {
                           return '标题过长';
                         }
                       },
@@ -735,7 +778,7 @@ export function addBookMark(e, pid) {
                       placeholder: 'https://',
                       value: u,
                       verify(val) {
-                        if (val.trim().length > 1000) {
+                        if (val.trim().length > _d.fieldLenght.url) {
                           return '网址过长';
                         } else if (!isurl(val)) {
                           return '请输入正确的网址';
@@ -748,7 +791,7 @@ export function addBookMark(e, pid) {
                       type: 'textarea',
                       placeholder: '描述',
                       verify(val) {
-                        if (val.trim().length > 300) {
+                        if (val.trim().length > _d.fieldLenght.des) {
                           return '描述过长';
                         }
                       },
@@ -757,27 +800,27 @@ export function addBookMark(e, pid) {
                 },
                 debounce(
                   function ({ close, inp }) {
-                    const name = inp.title,
+                    const title = inp.title,
                       link = inp.link,
                       des = inp.des;
                     reqBmkAddBmk({
-                      listId: pid,
+                      groupId: pid,
                       bms: [
                         {
-                          name,
+                          title,
                           link,
                           des,
                         },
                       ],
                     })
                       .then((result) => {
-                        if (parseInt(result.code) === 0) {
+                        if (result.code === 1) {
                           close(true);
                           _msg.success(result.codeText);
-                          if ($asideBtn.activeId == pid) {
+                          if ($asideBtn.activeId === pid) {
                             getBookMarkList();
                           }
-                          if (pid == 'home') {
+                          if (pid === 'home') {
                             getHomeBmList();
                           }
                         }
@@ -799,6 +842,7 @@ export function addBookMark(e, pid) {
     '添加书签'
   );
 }
+
 // 编辑分组
 function editBmList(e, obj) {
   rMenu.inpMenu(
@@ -821,11 +865,11 @@ function editBmList(e, obj) {
         text: {
           beforeText: '标题',
           placeholder: '标题',
-          value: obj.name,
+          value: obj.title,
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入标题';
-            } else if (val.trim().length > 100) {
+            } else if (val.trim().length > _d.fieldLenght.title) {
               return '标题过长';
             }
           },
@@ -834,20 +878,21 @@ function editBmList(e, obj) {
     },
     debounce(
       function ({ close, inp }) {
-        const name = inp.text;
+        const title = inp.text;
         let idx = inp.idx - 1;
-        if (name === obj.name && idx == obj.num) return;
+        if (title === obj.title && idx === obj.num) return;
         let toId = '';
-        if (idx != obj.num) {
+        if (idx !== obj.num) {
           const lastNum = bookmark.list.length - 1;
           if (idx > lastNum) {
             idx = lastNum;
           }
-          toId = (bookmark.list.find((item) => item.num == idx) || {}).id || '';
+          toId =
+            (bookmark.list.find((item) => item.num === idx) || {}).id || '';
         }
-        reqBmkEditList({ id: obj.id, name, toId })
+        reqBmkEditGroup({ id: obj.id, title, toId })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               close(true);
               _msg.success(result.codeText);
               getBookMarkList();
@@ -861,16 +906,17 @@ function editBmList(e, obj) {
     '编辑书签分组'
   );
 }
+
 // 分享分组
 function shareBmList(e, obj) {
   createShare(
     e,
-    { name: obj.name, title: '分享书签分组' },
+    { name: obj.title, title: '分享书签分组' },
     ({ close, inp }) => {
-      const { title, pass, valid } = inp;
-      reqBmkShare({ id: obj.id, title, pass, valid })
+      const { title, pass, expireTime } = inp;
+      reqBmkShare({ id: obj.id, title, pass, expireTime })
         .then((result) => {
-          if (parseInt(result.code) === 0) {
+          if (result.code === 1) {
             hideAside();
             close(1);
             openInIframe(`/sharelist`, '分享列表');
@@ -880,6 +926,7 @@ function shareBmList(e, obj) {
     }
   );
 }
+
 // 删除分组
 function delBmList(e, arr, cb, text) {
   _pop(
@@ -889,10 +936,10 @@ function delBmList(e, arr, cb, text) {
       confirm: { type: 'danger', text: '删除' },
     },
     (type) => {
-      if (type == 'confirm') {
-        reqBmkDeleteList({ ids: arr })
+      if (type === 'confirm') {
+        reqBmkDeleteGroup({ ids: arr })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               cb && cb();
               _msg.success(result.codeText);
               getBookMarkList();
@@ -903,25 +950,27 @@ function delBmList(e, arr, cb, text) {
     }
   );
 }
+
 // 更改分组状态
 function changeBmListState(share, arr, cb) {
-  reqBmkListState({
+  reqBmkGroupShareState({
     ids: arr,
     share,
   }).then((res) => {
-    if (res.code == 0) {
+    if (res.code === 1) {
       cb && cb();
       _msg.success(res.codeText);
       getBookMarkList();
     }
   });
 }
+
 // 操作列表
 function asideListMenu(e, obj, el) {
   let data = [
     {
       id: 'share',
-      text: obj.share == 'y' ? '锁定' : '公开',
+      text: obj.share === 1 ? '锁定' : '公开',
       beforeIcon: 'iconfont icon-suo',
     },
   ];
@@ -960,15 +1009,15 @@ function asideListMenu(e, obj, el) {
     data,
     ({ e, id, close }) => {
       // 编辑列表
-      if (id == 'rename') {
+      if (id === 'rename') {
         editBmList(e, obj);
-      } else if (id == 'add') {
+      } else if (id === 'add') {
         // 新增书签
         addBookMark(e, obj.id);
-      } else if (id == 'toshare') {
+      } else if (id === 'toshare') {
         //分享列表
         shareBmList(e, obj);
-      } else if (id == 'del') {
+      } else if (id === 'del') {
         //删除列表
         delBmList(
           e,
@@ -976,13 +1025,13 @@ function asideListMenu(e, obj, el) {
           () => {
             close();
           },
-          obj.name
+          obj.title
         );
-      } else if (id == 'share') {
-        changeBmListState(obj.share == 'y' ? 'n' : 'y', [obj.id], () => {
+      } else if (id === 'share') {
+        changeBmListState(obj.share === 1 ? 0 : 1, [obj.id], () => {
           close();
         });
-      } else if (id == 'check') {
+      } else if (id === 'check') {
         bmCheckState = false;
         switchCheckState();
         $aside.find('.foot_menu').stop().slideDown(_d.speed).find('div').attr({
@@ -998,9 +1047,10 @@ function asideListMenu(e, obj, el) {
         close();
       }
     },
-    obj.name
+    obj.title
   );
 }
+
 // 上传书签logo
 function upBmLogo(obj) {
   upLogo((purl) => {
@@ -1008,7 +1058,7 @@ function upBmLogo(obj) {
       id: obj.id,
       logo: `/logo/${setUserInfo().account}/${purl}`,
     }).then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         _msg.success(result.codeText);
         getBookMarkList();
         getHomeBmList();
@@ -1017,6 +1067,7 @@ function upBmLogo(obj) {
     });
   });
 }
+
 // 编辑书签
 function editBm(e, obj, isHome) {
   rMenu.inpMenu(
@@ -1039,11 +1090,11 @@ function editBm(e, obj, isHome) {
         title: {
           placeholder: '标题',
           beforeText: '标题：',
-          value: obj.name,
+          value: obj.title,
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入书签标题';
-            } else if (val.trim().length > 100) {
+            } else if (val.trim().length > _d.fieldLenght.title) {
               return '标题过长';
             }
           },
@@ -1053,7 +1104,7 @@ function editBm(e, obj, isHome) {
           placeholder: 'https://',
           value: obj.link,
           verify(val) {
-            if (val.trim().length > 1000) {
+            if (val.trim().length > _d.fieldLenght.url) {
               return '网址过长';
             } else if (!isurl(val)) {
               return '请输入正确的网址';
@@ -1066,7 +1117,7 @@ function editBm(e, obj, isHome) {
           placeholder: '描述',
           value: obj.des,
           verify(val) {
-            if (val.trim().length > 300) {
+            if (val.trim().length > _d.fieldLenght.des) {
               return '描述过长';
             }
           },
@@ -1080,44 +1131,44 @@ function editBm(e, obj, isHome) {
           idx = inp.idx - 1,
           des = inp.des;
         if (
-          an === obj.name &&
+          an === obj.title &&
           al === obj.link &&
           des === obj.des &&
-          idx == obj.num
+          idx === obj.num
         )
           return;
-        const pid = isHome ? 'home' : obj.listId;
+        const pid = isHome ? 'home' : obj.group_id;
         let tid = '';
         if (idx != obj.num) {
           let lastNum = 0;
-          if (pid == 'home') {
+          if (pid === 'home') {
             lastNum = bookmark.home.length - 1;
             if (idx > lastNum) {
               idx = lastNum;
             }
             tid =
-              (bookmark.home.find((item) => item.num == idx) || {}).id || '';
+              (bookmark.home.find((item) => item.num === idx) || {}).id || '';
           } else {
             const arr =
-              (bookmark.list.find((item) => item.id == pid) || {}).item || [];
+              (bookmark.list.find((item) => item.id === pid) || {}).item || [];
             lastNum = arr.length - 1;
             if (idx > lastNum) {
               idx = lastNum;
             }
-            tid = (arr.find((item) => item.num == idx) || {}).id || '';
+            tid = (arr.find((item) => item.num === idx) || {}).id || '';
           }
         }
         const requestObj = {
-          listId: pid,
+          groupId: pid,
           id: obj.id,
           des,
-          name: an,
+          title: an,
           link: al,
           toId: tid,
         };
         reqBmkEditBmk(requestObj)
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               close(true);
               _msg.success(result.codeText);
               getBookMarkList();
@@ -1151,20 +1202,20 @@ function setBmLogo(e, obj, isHome) {
     e,
     data,
     ({ e, close, id }) => {
-      if (id == '1') {
+      if (id === '1') {
         close(1);
         upBmLogo(obj, isHome);
-      } else if (id == '2') {
+      } else if (id === '2') {
         _pop(
           {
             e,
             text: '确认清除：自定义图标，使用自动获取图标？',
           },
           (type) => {
-            if (type == 'confirm') {
+            if (type === 'confirm') {
               reqBmkChangeLogo({ id: obj.id })
                 .then((res) => {
-                  if (res.code == 0) {
+                  if (res.code === 1) {
                     close(1);
                     getHomeBmList();
                     getBookMarkList();
@@ -1222,13 +1273,13 @@ export function bookMarkSetting(e, obj, isHome, el) {
     e,
     data,
     ({ e, close, id }) => {
-      if (id == '1') {
+      if (id === '1') {
         close();
         hideAside();
-        openInIframe(obj.link, obj.name);
-      } else if (id == '2') {
+        openInIframe(obj.link, obj.title);
+      } else if (id === '2') {
         setBmLogo(e, obj, isHome);
-      } else if (id == '3') {
+      } else if (id === '3') {
         //多选
         if (isHome) {
           showHomeFootMenu();
@@ -1251,13 +1302,13 @@ export function bookMarkSetting(e, obj, isHome, el) {
           checkAsideBm(el);
         }
         close();
-      } else if (id == '4') {
+      } else if (id === '4') {
         // 修改书签
         editBm(e, obj, isHome);
-      } else if (id == '5') {
+      } else if (id === '5') {
         // 移动书签
-        moveBookMark(e, isHome ? 'home' : obj.listId, [obj.id]);
-      } else if (id == '6') {
+        moveBookMark(e, isHome ? 'home' : obj.groupId, [obj.id]);
+      } else if (id === '6') {
         // 删除书签
         delBm(
           e,
@@ -1265,21 +1316,24 @@ export function bookMarkSetting(e, obj, isHome, el) {
           () => {
             close();
           },
-          obj.name
+          obj.title
         );
       }
     },
-    obj.name
+    obj.title
   );
 }
+
 // 侧栏是隐藏
 function asideWrapIsHide() {
   return $asideWrap.is(':hidden');
 }
+
 // 侧栏底部菜单是隐藏
 function asideFootMenuIsHide() {
   return $aside.find('.foot_menu').is(':hidden');
 }
+
 // 显示隐藏侧边
 export function toggleAside() {
   if (asideWrapIsHide()) {
@@ -1288,7 +1342,9 @@ export function toggleAside() {
     hideAside();
   }
 }
+
 $asideBtn.on('click', toggleAside);
+
 // 显示和隐藏侧栏
 export function showAside() {
   backWindow.add('aside', hideAside);
@@ -1296,8 +1352,9 @@ export function showAside() {
   $asideWrap.outerWidth();
   $asideWrap.css('display', 'block').addClass('open');
   $asideBtn.fadeOut(_d.speed);
-  getBookMarkList(1);
+  getBookMarkList(1, 500);
 }
+
 function hideAside() {
   backWindow.remove('aside');
   $asideBtn.fadeIn(_d.speed);
@@ -1309,6 +1366,7 @@ function hideAside() {
       $aside.find('.list').html('');
     });
 }
+
 // 手势
 _mySlide({
   el: '.aside_wrap',

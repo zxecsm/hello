@@ -1,92 +1,256 @@
-// const sqlite3 = require('sqlite3').verbose();
-const sqlite3 = require('sqlite3');
+const sqlite3 = require('sqlite3').verbose();
+
 const configObj = require('../data/config');
+
 const _f = require('./f');
-_f.c.mkdirSync(`${configObj.filepath}/data`, { recursive: true });
-const db = new sqlite3.Database(`${configObj.filepath}/data/hello.db`);
-function allSqlite(sql, valArr) {
-  return new Promise(async (resolve, reject) => {
-    db.all(sql, valArr, function (err, rows) {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve(rows);
+
+const { batchTask, nanoid } = require('./utils');
+
+// 如果目录不存在则创建目录
+_f.c.mkdirSync(`${configObj.filepath}/data/db`, { recursive: true });
+
+// 初始化数据库连接
+const db = new sqlite3.Database(
+  `${configObj.filepath}/data/db/hello.db`,
+  (err) => {
+    if (err) {
+      // eslint-disable-next-line no-console
+      console.error(err.message);
+    }
+  }
+);
+
+// 启用 WAL 模式
+db.exec('PRAGMA journal_mode = WAL;', (err) => {
+  if (err) {
+    // eslint-disable-next-line no-console
+    console.error('Error enabling WAL mode:', err.message);
+  }
+});
+
+// 事务
+async function executeInTransaction(callback) {
+  try {
+    // 开始事务
+    await runSqlite('BEGIN TRANSACTION');
+
+    // 执行回调函数中的数据库操作
+    await callback();
+
+    // 提交事务
+    await runSqlite('COMMIT');
+    // eslint-disable-next-line no-unused-vars
+  } catch (error) {
+    await runSqlite('ROLLBACK');
+  }
+}
+
+// 辅助函数：执行 SELECT 查询
+function allSqlite(sql, valArr = []) {
+  return new Promise((resolve, reject) => {
+    db.all(sql, valArr, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
     });
   });
 }
-function runSqlite(sql, valArr) {
-  return new Promise(async (resolve, reject) => {
+
+// 辅助函数：执行 INSERT/UPDATE/DELETE 查询
+function runSqlite(sql, valArr = []) {
+  return new Promise((resolve, reject) => {
     db.run(sql, valArr, function (err) {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve(this);
+      if (err) reject(err);
+      else resolve(this);
     });
   });
 }
-// 插入
-function insertData(table, datas) {
-  //INSERT INTO test (name,data) VALUES (?,?),(?,?) [ '25331a1e05ccec0', 'xxxxx', '25331a1e05def40', 'xxxxx' ]
-  const keyArr = Object.keys(datas[0]),
-    valsArr = new Array(datas.length).fill(
-      `(${new Array(keyArr.length).fill('?').join(',')})`
-    ),
-    valArr = [];
-  datas.forEach((item) => {
-    keyArr.forEach((y) => {
-      valArr.push(item[y]);
-    });
+
+// 插入数据
+function insertData(table, datas, idField = 'id') {
+  const create_at = Date.now();
+  datas = datas.map((item) => {
+    if (!item.hasOwnProperty(create_at)) {
+      item.create_at = create_at;
+    }
+    if (!item.hasOwnProperty(idField)) {
+      item[idField] = nanoid();
+    }
+    return item;
   });
+
+  const keyArr = Object.keys(datas[0]);
+  const valsArr = datas.map(() => `(${keyArr.map(() => '?').join(',')})`);
+  const valArr = datas.flatMap((item) => keyArr.map((key) => item[key]));
+
   const sql = `INSERT INTO ${table} (${keyArr.join(',')}) VALUES ${valsArr.join(
     ','
   )}`;
   return runSqlite(sql, valArr);
 }
-//查询
-function queryData(table, strItem, where = '', valArr = []) {
-  //SELECT * FROM test WHERE name LIKE ? [ '%%' ]
-  const sql = `SELECT ${strItem} FROM ${table} ${where}`;
+
+// 分批插入数据
+async function batchInsertData(table, datas, idField = 'id', limit = 500) {
+  await batchTask(async (offset) => {
+    const list = datas.slice(offset, offset + limit);
+
+    if (list.length === 0) return false;
+
+    await insertData(table, list, idField);
+
+    return true;
+  }, limit);
+}
+
+// 查询数据
+function queryData(table, fields, where = '', valArr = []) {
+  const sql = `SELECT ${fields} FROM ${table} ${where}`;
   return allSqlite(sql, valArr);
 }
-// 更新一条数据
+
+// 获取表的总行数
+async function getTableRowCount(table, where = '', valArr = []) {
+  const sql = `SELECT COUNT(*) AS count FROM ${table} ${where}`;
+  const rows = await allSqlite(sql, valArr);
+  return rows[0]?.count || 0;
+}
+
+// 获取随机一条数据
+async function getRandomRow(table, fields, where = '', valArr = []) {
+  // 获取总行数
+  const total = await getTableRowCount(table, where, valArr);
+
+  if (total === 0) {
+    return null; // 如果表中没有数据，返回 null
+  }
+
+  // 生成随机偏移量
+  const offset = Math.floor(Math.random() * total);
+
+  // 查询随机行
+  const rows = await queryData(table, fields, `${where} LIMIT ? OFFSET ?`, [
+    ...valArr,
+    1,
+    offset,
+  ]);
+  return rows[0] || null;
+}
+
+// 更新数据
 function updateData(table, sets, where = '', varr = []) {
-  //UPDATE test SET data = ? WHERE name LIKE ? [ 'xx', '%%' ]
-  const keyArr = Object.keys(sets),
-    valsArr = keyArr.map((item) => `${item} = ?`),
-    valArr = keyArr.map((item) => sets[item]),
-    sql = `UPDATE ${table} SET ${valsArr.join(',')} ${where}`;
+  const keyArr = Object.keys(sets);
+  const valsArr = keyArr.map((key) => `${key} = ?`);
+  const valArr = keyArr.map((key) => sets[key]);
+
+  const sql = `UPDATE ${table} SET ${valsArr.join(',')} ${where}`;
+
   return runSqlite(sql, [...valArr, ...varr]);
 }
-// 删除一条数据
-function deleteData(table, where = '', valArr = []) {
-  //DELETE FROM test WHERE name LIKE ? [ '%%' ]
+
+// 分批更新
+async function batchUpdateData(
+  table,
+  idField,
+  sets,
+  where = '',
+  valArr = [],
+  limit = 800
+) {
+  await batchTask(async (offset) => {
+    const ids = await queryData(table, idField, `${where} LIMIT ? OFFSET ?`, [
+      ...valArr,
+      limit,
+      offset,
+    ]);
+
+    if (ids.length === 0) return false;
+
+    const whereClause = where.toUpperCase().includes('IN ')
+      ? where
+      : `${where ? `${where} AND` : ''} ${idField} IN (${fillString(
+          ids.length
+        )})`;
+
+    await updateData(table, sets, whereClause, [
+      ...valArr,
+      ...ids.map((item) => item[idField]),
+    ]);
+
+    return true;
+  }, limit);
+}
+
+// 字段自增
+function incrementField(table, sets, where = '', varr = []) {
+  const keyArr = Object.keys(sets);
+  const valsArr = keyArr.map((key) => `${key} = ${key} + ?`);
+  const valArr = keyArr.map((key) => sets[key]);
+
+  const sql = `UPDATE ${table} SET ${valsArr.join(',')} ${where}`;
+
+  return runSqlite(sql, [...valArr, ...varr]);
+}
+
+// 删除数据
+async function deleteData(table, where = '', valArr = []) {
   const sql = `DELETE FROM ${table} ${where}`;
+
   return runSqlite(sql, valArr);
 }
-//批量条件更新不同值
-function batchUpdateData(table, arr, whe) {
-  //UPDATE bookmk SET num = (CASE WHEN id="24f341b42971f40" THEN "0" WHEN id="252d48475294000" THEN "1" END) WHERE id="24f341b42971f40" OR id="252d48475294000"
-  const vt = [];
-  const wa = [];
-  arr.forEach((item, ids) => {
-    const { key, where, data } = item;
-    const wt = [];
-    data.forEach((y) => {
-      wt.push(`WHEN ${where}="${y[where]}" THEN "${y[key]}"`);
-      if (ids === 0) {
-        if (whe) {
-          wa.push(`(${whe} AND ${where}="${y[where]}")`);
-        } else {
-          wa.push(`${where}="${y[where]}"`);
-        }
-      }
+
+// 分批删除
+async function batchDeleteData(
+  table,
+  idField,
+  where = '',
+  valArr = [],
+  limit = 800
+) {
+  await batchTask(async () => {
+    const ids = await queryData(table, idField, `${where} LIMIT ?`, [
+      ...valArr,
+      limit,
+    ]);
+
+    if (ids.length === 0) return false;
+
+    const whereClause = where.toUpperCase().includes('IN ')
+      ? where
+      : `${where ? `${where} AND` : ''} ${idField} IN (${fillString(
+          ids.length
+        )})`;
+
+    await deleteData(table, whereClause, [
+      ...valArr,
+      ...ids.map((item) => item[idField]),
+    ]);
+
+    return true;
+  }, limit);
+}
+
+// 批量条件更新不同值
+function batchDiffUpdateData(table, data, where = '', valArr = []) {
+  const setClauses = [];
+  const values = [];
+
+  // 遍历要更新的每个字段
+  data.forEach(({ key, where, data }) => {
+    // 为 SET 语句构建 WHEN-THEN 语句
+    const caseStatements = data.map(() => `WHEN ${where} = ? THEN ?`).join(' ');
+
+    // 添加到 SET 子句中
+    setClauses.push(`${key} = (CASE ${caseStatements} END)`);
+
+    // 将 WHERE 子句的参数和 SET 中的参数添加到 values 数组
+    data.forEach((item) => {
+      values.push(item[where], item[key]); // 第一个是 WHERE 条件，第二个是要更新的值
     });
-    vt.push(`${key} = (CASE ${wt.join(' ')} END)`);
   });
-  const sql = `UPDATE ${table} SET ${vt.join(',')} WHERE ${wa.join(' OR ')}`;
-  return runSqlite(sql);
+
+  // 构建完整的 SQL 语句
+  const sql = `UPDATE ${table} SET ${setClauses.join(', ')} ${where}`;
+
+  return runSqlite(sql, [...values, ...valArr]);
 }
 // const ob = {
 //   where: 'id',
@@ -99,13 +263,79 @@ function batchUpdateData(table, arr, whe) {
 //     num: i
 //   })
 // })
-// await batchUpdateData('bookmk', [ob])
+
+// 计算相关性分数的函数
+function createScoreSql(splitWord, keys) {
+  const { valArr, scoreArr } = keys.reduce(
+    (acc, key) => {
+      // 为模糊查询搜索词添加 %
+      acc.valArr.push(...splitWord.map((word) => `%${word}%`));
+
+      // 计算相关性分数
+      const scores = splitWord.map((_, index) => {
+        // 如果是第一个词，则优先级加10
+        const scoreWeight = index === 0 ? 10 : 1;
+        return `(CASE WHEN LOWER(${key}) LIKE LOWER(?) THEN ${scoreWeight} ELSE 0 END)`;
+      });
+      acc.scoreArr.push(...scores);
+
+      return acc;
+    },
+    { valArr: [], scoreArr: [] }
+  );
+
+  return {
+    // 返回 SQL 查询字符串
+    sql: `ORDER BY (${scoreArr.join(' + ')}) DESC`,
+    valArr,
+  };
+}
+
+// 生成搜索sql
+function createSearchSql(splitWord, keys) {
+  const { sqlArr, valArr } = keys.reduce(
+    (acc, key) => {
+      // 构建 WHERE 条件，使用 LOWER 来忽略大小写
+      const conditions = splitWord.map(() => `LOWER(${key}) LIKE LOWER(?)`);
+      acc.sqlArr.push(...conditions);
+
+      // 为模糊查询搜索词添加 %
+      acc.valArr.push(...splitWord.map((word) => `%${word}%`));
+
+      return acc;
+    },
+    { sqlArr: [], valArr: [] }
+  );
+
+  return {
+    // 返回 SQL 查询字符串
+    sql: sqlArr.join(' OR '),
+    valArr,
+  };
+}
+
+// 填充sql?
+function fillString(len) {
+  return new Array(len).fill('?').join(',');
+}
+
+// 导出模块
 module.exports = {
   runSqlite,
   allSqlite,
-  batchUpdateData,
+  batchDiffUpdateData,
+  fillString,
   insertData,
   updateData,
+  batchUpdateData,
   deleteData,
+  batchDeleteData,
   queryData,
+  getTableRowCount,
+  getRandomRow,
+  createSearchSql,
+  createScoreSql,
+  executeInTransaction,
+  incrementField,
+  batchInsertData,
 };

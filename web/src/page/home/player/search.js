@@ -72,7 +72,7 @@ export function showMusicSearchList() {
 }
 const searchListLazyImg = new LazyLoad();
 function getSearchSongItemData(id) {
-  return searchMusicList.find((item) => item.id == id);
+  return searchMusicList.find((item) => item.id === id);
 }
 $searchMusicWrap.splitWord = [];
 // 获取搜索列表
@@ -86,7 +86,7 @@ export function getSearchSongs(update) {
     }
     reqPlayerSearch({ word })
       .then((result) => {
-        if (parseInt(result.code) === 0) {
+        if (result.code === 1) {
           const { list: arr, splitWord } = result.data;
           searchMusicList = arr;
           $searchMusicWrap.splitWord = splitWord;
@@ -117,7 +117,7 @@ function renderSearchSongs(list, update) {
   } else {
     arr = list.slice((searchMusicPageNo - 1) * 50, searchMusicPageNo * 50);
   }
-  if (arr.length == 0) return;
+  if (arr.length === 0) return;
   if (musicPlayerIsHide() || searchWrapIsHide()) return;
   const scObj = getCollectSongs();
   const html = _tpl(
@@ -229,9 +229,9 @@ function searchListSongSetting(e, sobj) {
     e,
     data,
     ({ e, close, id }) => {
-      if (id == '1') {
+      if (id === '1') {
         shareSongList(e, [sobj.id]);
-      } else if (id == '9') {
+      } else if (id === '9') {
         delSong(
           e,
           'all',
@@ -242,22 +242,22 @@ function searchListSongSetting(e, sobj) {
           },
           `${sobj.artist} - ${sobj.title}`
         );
-      } else if (id == '7') {
+      } else if (id === '7') {
         close();
         let fname = `${sobj.artist} - ${sobj.title}`;
         downloadFile(sobj.uurl, `${fname}.${getSuffix(sobj.url)[1]}`);
-      } else if (id == '6') {
+      } else if (id === '6') {
         moveSongToList(e, 'all', [sobj.id]);
-      } else if (id == '2') {
+      } else if (id === '2') {
         close();
         copyText(sobj.artist + ' - ' + sobj.title);
-      } else if (id == '8') {
+      } else if (id === '8') {
         if (!isRoot()) return;
         editSongInfo(e, sobj);
-      } else if (id == '3') {
+      } else if (id === '3') {
         close();
         showEditLrc(sobj);
-      } else if (id == '4') {
+      } else if (id === '4') {
         close();
         sobj = hdSongInfo(sobj);
         let u1 = sobj.ppic;
@@ -267,9 +267,9 @@ function searchListSongSetting(e, sobj) {
             u2: `${u1}&t=1`,
           },
         ]);
-      } else if (id == '5') {
+      } else if (id === '5') {
         showSongInfo(e, sobj);
-      } else if (id == '10') {
+      } else if (id === '10') {
         delMv(
           e,
           sobj.id,
@@ -278,10 +278,10 @@ function searchListSongSetting(e, sobj) {
           },
           `${sobj.artist} - ${sobj.title}`
         );
-      } else if (id == '11') {
+      } else if (id === '11') {
         close();
         updateSongCover(sobj);
-      } else if (id == '12') {
+      } else if (id === '12') {
         close();
         upMv(sobj);
       }
@@ -293,7 +293,7 @@ function searchListSongSetting(e, sobj) {
 function playSearchList(id, e) {
   const obj = getSearchSongItemData(id);
   updateNewPlayList(searchMusicList);
-  if (setPlayingSongInfo().id == obj.id) {
+  if (setPlayingSongInfo().id === obj.id) {
     changePlayState();
     return;
   }
@@ -343,7 +343,7 @@ $searchMusicWrap
       const $this = $(this).parent();
       const issc = $this.attr('data-issc');
       const sobj = getSearchSongItemData($this.attr('data-id'));
-      if (issc == 'true') {
+      if (issc === 'true') {
         songCloseCollect(sobj.id);
       } else {
         songCollect([sobj.id]);

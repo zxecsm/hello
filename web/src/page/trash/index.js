@@ -70,7 +70,7 @@ if (!HASH) {
 const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
   change(val) {
     val = val.trim();
-    if (val == '') {
+    if (val === '') {
       $headWrap.find('.inp_box i').css('display', 'none');
     } else {
       $headWrap.find('.inp_box i').css('display', 'block');
@@ -120,7 +120,7 @@ function renderList(y) {
   } else if (HASH === 'history') {
     slogo = 'icon-history';
     btnText = '历史记录';
-  } else if (HASH === 'bookmk') {
+  } else if (HASH === 'bmk') {
     slogo = 'icon-shuqian';
     btnText = '书签';
   }
@@ -133,7 +133,7 @@ function renderList(y) {
     type: HASH,
   })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         let { total, data, pageNo, splitWord } = result.data;
         $contentWrap.list = data;
         $contentWrap.pagenum = pageNo;
@@ -141,10 +141,10 @@ function renderList(y) {
           `
           <p v-if="data.length === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
-            <ul v-for="{name,id,link,data} in list" class="item_box" :data-id="id" :data-type="HASH">
+            <ul v-for="{title,id,link,content} in list" class="item_box" :data-id="id" :data-type="HASH">
               <div cursor="y" check="n" class="check_state"></div>
               <li class="item_type iconfont {{slogo}}"></li>
-              <li v-html="getTitle(name,data,link)" :cursor="HASH !== 'booklist' ? 'y' : ''" class="item_title"></li>
+              <li v-html="getTitle(title,content,link)" :cursor="HASH !== 'bmk_group' ? 'y' : ''" class="item_title"></li>
               <li cursor="y" class="set_btn iconfont icon-icon"></li>
             </ul>
             <div v-html="getPaging()" class="pagingbox"></div>
@@ -155,10 +155,10 @@ function renderList(y) {
             _d,
             HASH,
             slogo,
-            getTitle(name, data, link) {
-              name ? null : (name = data);
-              link ? (name = `${name} (${link})`) : null;
-              return hdTitleHighlight(splitWord, name);
+            getTitle(title, content, link) {
+              title ? null : (title = content);
+              link ? (title = `${title} (${link})`) : null;
+              return hdTitleHighlight(splitWord, title);
             },
             getPaging() {
               return pgnt.getHTML({
@@ -209,9 +209,9 @@ function getTypeText(type) {
   switch (type) {
     case 'note':
       return '笔记';
-    case 'booklist':
+    case 'bmk_group':
       return '书签分组';
-    case 'bookmk':
+    case 'bmk':
       return '书签';
     case 'history':
       return '历史记录';
@@ -234,12 +234,12 @@ $headWrap
       {
         text: '书签分组',
         beforeIcon: 'iconfont icon-liebiao1',
-        param: { value: 'booklist' },
+        param: { value: 'bmk_group' },
       },
       {
         text: '书签',
         beforeIcon: 'iconfont icon-shuqian',
-        param: { value: 'bookmk' },
+        param: { value: 'bmk' },
       },
       {
         text: '历史记录',
@@ -248,8 +248,8 @@ $headWrap
       },
     ];
     data.forEach((item, idx) => {
-      item.id = idx + 1;
-      if (item.param.value == HASH) {
+      item.id = idx + 1 + '';
+      if (item.param.value === HASH) {
         item.active = true;
       } else {
         item.active = false;
@@ -275,13 +275,13 @@ $headWrap
 function hdRecover(e, ids, t, cb, isCheck) {
   const text = getTypeText(t);
   _pop({ e, text: `确认恢复：${isCheck ? '选中的' : ''}${text}？` }, (type) => {
-    if (type == 'confirm') {
+    if (type === 'confirm') {
       reqUserRecoverTrash({
         ids,
         type: t,
       })
         .then((result) => {
-          if (parseInt(result.code) === 0) {
+          if (result.code === 1) {
             _msg.success(result.codeText);
             renderList();
             cb && cb();
@@ -301,13 +301,13 @@ function hdDel(e, ids, t, cb, isCheck) {
       confirm: { type: 'danger', text: '删除' },
     },
     (type) => {
-      if (type == 'confirm') {
+      if (type === 'confirm') {
         reqUserDeleteTrash({
           ids,
           type: t,
         })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               _msg.success(result.codeText);
               renderList();
               cb && cb();
@@ -321,7 +321,7 @@ function hdDel(e, ids, t, cb, isCheck) {
 }
 reqSearchConfig()
   .then((res) => {
-    if (res.code == 0) {
+    if (res.code === 1) {
       _d.searchEngineData = res.data.searchEngineData;
     }
   })
@@ -338,7 +338,7 @@ $contentWrap
     const obj = getListItem(id);
     const t = $this.parent().attr('data-type');
     let data = [];
-    if (t == 'note') {
+    if (t === 'note') {
       data.push({
         id: '1',
         text: '笔记内容',
@@ -358,21 +358,21 @@ $contentWrap
       e,
       data,
       ({ e, close, id: flag }) => {
-        if (flag == '2') {
+        if (flag === '2') {
           hdRecover(e, [id], t, () => {
             close();
           });
-        } else if (flag == '3') {
+        } else if (flag === '3') {
           hdDel(e, [id], t, () => {
             close();
           });
-        } else if (flag == '1') {
+        } else if (flag === '1') {
           close();
           e.stopPropagation();
-          _myOpen(`/edit/#${encodeURIComponent(id)}`, obj.name);
+          _myOpen(`/edit/#${encodeURIComponent(id)}`, obj.title);
         }
       },
-      obj.name || obj.data
+      obj.title || obj.content
     );
   })
   .on('contextmenu', '.item_box', function (e) {
@@ -385,12 +385,12 @@ $contentWrap
   .on('mouseenter', '.item_box', function () {
     const $this = $(this);
     const type = $this.attr('data-type');
-    if (type === 'bookmk') {
+    if (type === 'bmk') {
       const obj = getListItem($this.attr('data-id'));
-      const { name, link, des, group } = obj;
-      const str = `分组：${group.id === 'home' ? '主页' : group.name}\n名称：${
-        name || '--'
-      }\n链接：${link || '--'}\n描述：${des || '--'}`;
+      const { title, link, des } = obj;
+      const str = `名称：${title || '--'}\n链接：${link || '--'}\n描述：${
+        des || '--'
+      }`;
       toolTip.setTip(str).show();
     }
   })
@@ -401,32 +401,33 @@ $contentWrap
     const $this = $(this).parent();
     const type = $this.attr('data-type');
     const obj = getListItem($this.attr('data-id'));
-    if (type === 'bookmk') {
+    if (type === 'bmk') {
       showBmkInfo(e, obj);
     } else if (type === 'history') {
-      copyText(obj.data);
-    } else if (type === 'note') {
-      copyText(obj.name);
-    } else if (type === 'booklist') {
-      copyText(obj.name);
+      copyText(obj.content);
+    } else if (type === 'note' || type === 'bmk_group') {
+      copyText(obj.title);
     }
   })
   .on('click', '.item_title', function (e) {
     const $this = $(this);
     const type = $this.parent().attr('data-type');
     const obj = getListItem($this.parent().attr('data-id'));
-    if (type === 'bookmk') {
+    if (type === 'bmk') {
       myOpen(obj.link, '_blank');
     } else if (type === 'history') {
-      if (isurl(obj.data)) {
-        myOpen(obj.data, '_blank');
+      if (isurl(obj.content)) {
+        myOpen(obj.content, '_blank');
       } else {
-        const url = getSearchEngine().searchlink.replace(/\{\{\}\}/, obj.data);
+        const url = getSearchEngine().searchlink.replace(
+          /\{\{\}\}/,
+          obj.content
+        );
         myOpen(url, '_blank');
       }
     } else if (type === 'note') {
       e.stopPropagation();
-      _myOpen(`/note/?v=${encodeURIComponent(obj.id)}`, obj.name);
+      _myOpen(`/note/?v=${encodeURIComponent(obj.id)}`, obj.title);
     }
   })
   .on('click', '.check_state', function () {
@@ -540,7 +541,7 @@ function switchCheckAll() {
 scrollState(
   window,
   throttle(function ({ type }) {
-    if (type == 'up') {
+    if (type === 'up') {
       $headWrap.removeClass('open');
     } else {
       $headWrap.addClass('open');

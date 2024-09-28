@@ -15,12 +15,12 @@ class HighlightWord {
   initNode(node) {
     for (let i = 0; i < node.childNodes.length; i++) {
       const child = node.childNodes[i];
-      if (child.nodeType == 1) {
+      if (child.nodeType === 1) {
         this.initNode(child);
-      } else if (child.nodeType == 3) {
+      } else if (child.nodeType === 3) {
         // 如果当前为文本节点，并且下一个兄弟也是文本节点，合并为一个文本节点
         const next = child.nextSibling;
-        if (next && next.nodeType == 3) {
+        if (next && next.nodeType === 3) {
           const newText = document.createTextNode(
             child.nodeValue + next.nodeValue
           );
@@ -41,7 +41,7 @@ class HighlightWord {
   }
   hdHighlight(node, word) {
     let flag = 0;
-    if (node.nodeType == 3) {
+    if (node.nodeType === 3) {
       const idx = node.nodeValue.toLowerCase().indexOf(word);
       if (idx >= 0) {
         const oText = node.splitText(idx);
@@ -53,7 +53,7 @@ class HighlightWord {
         flag = 1;
       }
     } else if (
-      node.nodeType == 1 &&
+      node.nodeType === 1 &&
       node.childNodes &&
       !/(script|style)/i.test(node.tagName)
     ) {

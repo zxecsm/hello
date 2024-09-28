@@ -104,7 +104,7 @@ export function reqPlayerGetShare(data) {
 export function reqPlayerSaveShare(data) {
   return _getAjax('/player/save-share', data);
 }
-// 随机500
+// 随机200
 export function reqPlayerRandomList() {
   return _getAjax('/player/random-list');
 }

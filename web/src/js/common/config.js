@@ -41,7 +41,25 @@ const searchWord = [
     link: 'https://suggestion.baidu.com/su?wd={{}}&cb=window.baidu.sug',
   },
 ];
+const fieldLenght = {
+  title: 200,
+  expTime: 999,
+  sharePass: 20,
+  url: 2000,
+  des: 500,
+  filename: 255,
+  searchHistory: 200,
+  chatDes: 20,
+  countTitle: 300,
+  top: 9999,
+  username: 20,
+  email: 255,
+  todoContent: 500,
+  noteCategoryTitle: 30,
+  chatFileExpire: 999,
+};
 const _d = {
+  fieldLenght,
   serverURL,
   mediaURL,
   levelObj,

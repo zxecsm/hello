@@ -34,11 +34,11 @@ export function editFileIsHiden() {
 changeTheme(_getData('dark'));
 // 切换黑暗模式
 function changeTheme(dark) {
-  if (dark == 'y') {
+  if (dark === 'y') {
     editor.setTheme('ace/theme/github_dark');
-  } else if (dark == 'n') {
+  } else if (dark === 'n') {
     editor.setTheme('ace/theme/chrome');
-  } else if (dark == 's') {
+  } else if (dark === 's') {
     if (isDarkMode()) {
       editor.setTheme('ace/theme/github_dark');
     } else {
@@ -89,37 +89,37 @@ const codeTypes = [
 ];
 function setTextType(type) {
   let res = 'text';
-  if (type == 'js' || type == 'vue' || type == 'jsx') {
+  if (type === 'js' || type === 'vue' || type === 'jsx') {
     res = 'js';
     type = 'ace/mode/javascript';
-  } else if (type == 'ts') {
+  } else if (type === 'ts') {
     res = 'ts';
     type = 'ace/mode/typescript';
-  } else if (type == 'md') {
+  } else if (type === 'md') {
     res = 'md';
     type = 'ace/mode/markdown';
-  } else if (type == 'css') {
+  } else if (type === 'css') {
     res = 'css';
     type = 'ace/mode/css';
-  } else if (type == 'html') {
+  } else if (type === 'html') {
     res = 'html';
     type = 'ace/mode/html';
-  } else if (type == 'json') {
+  } else if (type === 'json') {
     res = 'json';
     type = 'ace/mode/json';
-  } else if (type == 'less' || type == 'sass') {
+  } else if (type === 'less' || type === 'sass') {
     res = 'less';
     type = 'ace/mode/less';
-  } else if (type == 'conf') {
+  } else if (type === 'conf') {
     res = 'conf';
     type = 'ace/mode/nginx';
-  } else if (type == 'yaml' || type == 'yml') {
+  } else if (type === 'yaml' || type === 'yml') {
     res = 'yaml';
     type = 'ace/mode/yaml';
-  } else if (type == 'sql') {
+  } else if (type === 'sql') {
     res = 'sql';
     type = 'ace/mode/sql';
-  } else if (type == 'sh') {
+  } else if (type === 'sh') {
     res = 'sh';
     type = 'ace/mode/sh';
   } else {
@@ -145,7 +145,7 @@ $editFile.on('keydown', function (e) {
 // 切换保存状态
 function saveState() {
   if (readOnly) return;
-  if (oText == editor.getValue()) {
+  if (oText === editor.getValue()) {
     $editFile.find('.head_btn .save').css('display', 'none');
   } else {
     $editFile.find('.head_btn .save').css('display', 'block');
@@ -188,7 +188,7 @@ function settingMenu(e) {
     e,
     data,
     ({ e, resetMenu, id }) => {
-      if (id == 'size') {
+      if (id === 'size') {
         _progressBar(e, fileFontSize, (percent) => {
           $editFile.find('.editor').css({
             'font-size': percentToValue(12, 30, percent),
@@ -196,7 +196,7 @@ function settingMenu(e) {
           fileFontSize = percent;
           _setData('fileFontSize', fileFontSize);
         });
-      } else if (id == 'num') {
+      } else if (id === 'num') {
         fileEditCodeNum = !fileEditCodeNum;
         _setData('fileEditCodeNum', fileEditCodeNum);
         data[1].afterIcon = fileEditCodeNum
@@ -204,14 +204,14 @@ function settingMenu(e) {
           : 'iconfont icon-kaiguan-guan';
         resetMenu(data);
         changeCodeNum();
-      } else if (id == 'code') {
+      } else if (id === 'code') {
         function fn() {
           let data = [];
           codeTypes.forEach((item) => {
             data.push({
               id: item,
               text: item,
-              active: currentCodeType == item,
+              active: currentCodeType === item,
             });
           });
           return data;
@@ -248,7 +248,7 @@ $editFile
           text: '文件未保存，确认关闭吗？',
         },
         (type) => {
-          if (type == 'confirm') {
+          if (type === 'confirm') {
             hdClose();
           }
         }
@@ -263,9 +263,9 @@ async function hdSave() {
   if (readOnly) return;
   try {
     const text = editor.getValue();
-    if (text == oText) return;
+    if (text === oText) return;
     const res = await reqFileSaveFile({ path: filePath, text });
-    if (res.code == 0) {
+    if (res.code === 1) {
       _msg.success(res.codeText);
       oText = text;
       saveState();

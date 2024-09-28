@@ -47,7 +47,7 @@ window.addEventListener('load', () => {
 const wInput = wrapInput($head.find('.inp_box input')[0], {
   change(val) {
     val = val.trim();
-    if (val == '') {
+    if (val === '') {
       $head.find('.inp_box i').css('display', 'none');
     } else {
       $head.find('.inp_box i').css('display', 'block');
@@ -78,12 +78,12 @@ if (isIframe()) {
 function getLogList(e) {
   reqRootLogList()
     .then((res) => {
-      if (res.code == 0) {
+      if (res.code === 1) {
         const data = [];
         res.data.forEach((item, idx) => {
           const { name, size } = item;
           data.push({
-            id: idx + 1,
+            id: idx + 1 + '',
             text: `${name} - ${computeSize(size)}`,
             param: { name },
             beforeIcon: 'iconfont icon-rizhi',
@@ -109,7 +109,7 @@ function getLogData(name) {
   loadingImg($main[0]);
   reqRootLog({ name })
     .then((res) => {
-      if (res.code == 0) {
+      if (res.code === 1) {
         $main.list = res.data;
         $main.pageNo = 1;
         curName = name;
@@ -238,11 +238,11 @@ async function hdRender() {
   $main.pageNo < 1
     ? ($main.pageNo = pageTotal)
     : $main.pageNo > pageTotal
-      ? ($main.pageNo = 1)
-      : null;
+    ? ($main.pageNo = 1)
+    : null;
   const html = _tpl(
     `
-      <p v-if="arr.length == 0" style='text-align: center;'>{{_d.emptyList}}</p>
+      <p v-if="arr.length === 0" style='text-align: center;'>{{_d.emptyList}}</p>
       <template v-else>
         <p v-for="data in list" v-html="hdTitleHighlight([word], data)"></p>
         <div v-html="getPaging()"></div>
@@ -272,14 +272,14 @@ function dellog(e, name) {
   _pop(
     {
       e,
-      text: `确认${name == 'all' ? '清空：所有日志文件' : `删除：${name}`}？`,
-      confirm: { type: 'danger', text: name == 'all' ? '清空' : '删除' },
+      text: `确认${name === 'all' ? '清空：所有日志文件' : `删除：${name}`}？`,
+      confirm: { type: 'danger', text: name === 'all' ? '清空' : '删除' },
     },
     (type) => {
-      if (type == 'confirm') {
+      if (type === 'confirm') {
         reqRootDeleteLog({ name })
           .then((res) => {
-            if (res.code == 0) {
+            if (res.code === 1) {
               _msg.success('删除成功');
               $main.list = [];
               curName = null;

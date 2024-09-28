@@ -105,10 +105,10 @@ const verifyCode = hdOnce(() => {
 function getShareData(close) {
   reqPlayerGetShare({ id: HASH, pass: passCode })
     .then((resObj) => {
-      if (resObj.code == 0) {
+      if (resObj.code === 1) {
         _setDataTem('passCode', passCode, HASH);
         close && close();
-        let { account, username, logo, title, valid, email } = resObj.data;
+        let { account, username, logo, title, exp_time, email } = resObj.data;
         defaultShareTitle = title;
         userInfo = { account, username, email };
         logo = logo
@@ -117,11 +117,11 @@ function getShareData(close) {
         $userInfo.find('.from').text(username);
         $userInfo.find('.title').text(title);
         $userInfo.find('.valid').text(
-          valid == 0
+          exp_time === 0
             ? '永久'
             : formatDate({
                 template: '{0}-{1}-{2} {3}:{4}',
-                timestamp: valid,
+                timestamp: exp_time,
               })
         );
         imgjz(
@@ -144,7 +144,7 @@ function getShareData(close) {
         $lrcProgressBar
           .find('.total_time')
           .text(formartSongTime(playingSongInfo.duration));
-      } else if (resObj.code == 3) {
+      } else if (resObj.code === 3) {
         if (passCode) {
           _msg.error('提取码错误');
         }
@@ -250,7 +250,7 @@ function changePlayMode() {
 // 上一曲
 function playPrevSong() {
   let index;
-  if (curPlayingList.length == 0) {
+  if (curPlayingList.length === 0) {
     _msg.error('播放列表为空');
     pauseSong();
     return;
@@ -264,7 +264,7 @@ function playPrevSong() {
 function playNextSong() {
   $lrcProgressBar.find('.pro2').width('0');
   let index;
-  if (curPlayingList.length == 0) {
+  if (curPlayingList.length === 0) {
     _msg.error('播放列表为空');
     pauseSong();
     return;
@@ -395,7 +395,7 @@ function musiclrc() {
     flag: `${HASH}/${passCode}`,
   })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         let list = result.data;
         if (id !== playingSongInfo.id) return;
         list = list.map((item, idx) => {
@@ -526,10 +526,10 @@ $myAudio
   .on('timeupdate', function () {
     const curTime = Math.round(this.currentTime);
     upprog();
-    if ($myAudio[0]._flag == curTime) return;
+    if ($myAudio[0]._flag === curTime) return;
     const list = $myAudio._lrcList || [];
     list
-      .filter((item) => item.t == curTime)
+      .filter((item) => item.t === curTime)
       .forEach((item) => {
         lrcCount++;
         $myAudio[0]._flag = curTime;
@@ -670,7 +670,7 @@ let playingSize = 100;
 // 生成播放列表
 function renderPlayList() {
   if ($pMusicListBox.is(':hidden')) return;
-  if (!playingList || playingList.length == 0) {
+  if (!playingList || playingList.length === 0) {
     $pMusicListBox.find('.left').text(`正在播放(0)`);
     $pMusicListBox
       .find('.p_foot')
@@ -770,9 +770,9 @@ $pMusicListBox.on('click', '.save_playing_list', function (e) {
           placeholder: '歌单名称',
           value: defaultShareTitle,
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入名称';
-            } else if (val.trim().length > 100) {
+            } else if (val.trim().length > _d.fieldLenght.title) {
               return '名称过长';
             }
           },
@@ -781,12 +781,14 @@ $pMusicListBox.on('click', '.save_playing_list', function (e) {
     },
     debounce(
       function ({ close, inp }) {
-        reqPlayerSaveShare({ id: HASH, name: inp.name }).then((res) => {
-          if (res.code == 0) {
-            _msg.success(res.codeText);
-            close();
+        reqPlayerSaveShare({ id: HASH, name: inp.name, pass: passCode }).then(
+          (res) => {
+            if (res.code === 1) {
+              _msg.success(res.codeText);
+              close();
+            }
           }
-        });
+        );
       },
       1000,
       true
@@ -795,14 +797,14 @@ $pMusicListBox.on('click', '.save_playing_list', function (e) {
   );
 });
 function getPlayingListItem(id) {
-  return playingList.find((item) => item.id == id);
+  return playingList.find((item) => item.id === id);
 }
 $pMusicListBox
   .find('.p_foot')
   .on('click', '.song_info_wrap', function () {
     const $this = $(this).parent();
     const obj = getPlayingListItem($this.attr('data-id'));
-    if (playingSongInfo.id == obj.id) {
+    if (playingSongInfo.id === obj.id) {
       playState();
       return;
     }
@@ -823,7 +825,7 @@ $pMusicListBox
       album,
       year,
       duration,
-      creat_time,
+      create_at,
       play_count,
       collect_count,
     } = getPlayingListItem(id);
@@ -835,7 +837,7 @@ $pMusicListBox
       collect_count
     )}\n添加时间：${formatDate({
       template: `{0}-{1}-{2}`,
-      timestamp: creat_time,
+      timestamp: create_at,
     })}`;
     toolTip.setTip(str).show();
   })
@@ -853,7 +855,11 @@ $pMusicListBox
   })
   .on('click', '.logo_wrap', function (e) {
     const $this = $(this).parent();
-    showSongInfo(e, getPlayingListItem($this.attr('data-id')));
+    showSongInfo(
+      e,
+      getPlayingListItem($this.attr('data-id')),
+      `${HASH}/${passCode}`
+    );
   });
 // 高亮正在播放歌曲
 function playingListHighlight(a) {
@@ -862,7 +868,7 @@ function playingListHighlight(a) {
   $song_item.removeClass('active').find('.play_gif').removeClass('show');
   const y = Array.prototype.findIndex.call(
     $song_item,
-    (item) => item.dataset.id == playingSongInfo.id
+    (item) => item.dataset.id === playingSongInfo.id
   );
   if (y < 0) return;
   const cur = $song_item.eq(y);
@@ -972,7 +978,7 @@ $lrcMenuWrap
       e,
       data,
       ({ e, close, id }) => {
-        if (id == '1') {
+        if (id === '1') {
           close();
           let { size } = lrcState;
           _progressBar(e, size, (percent) => {
@@ -983,28 +989,28 @@ $lrcMenuWrap
             _setData('lrcState', lrcState);
             lrcScroll(true);
           });
-        } else if (id == '2') {
+        } else if (id === '2') {
           close();
           lrcState.position = 'left';
           $lrcListWrap.find('.lrc_items').css({
             'text-align': 'left',
           });
           _setData('lrcState', lrcState);
-        } else if (id == '3') {
+        } else if (id === '3') {
           close();
           lrcState.position = 'center';
           $lrcListWrap.find('.lrc_items').css({
             'text-align': 'center',
           });
           _setData('lrcState', lrcState);
-        } else if (id == '4') {
+        } else if (id === '4') {
           close();
           lrcState.position = 'right';
           $lrcListWrap.find('.lrc_items').css({
             'text-align': 'right',
           });
           _setData('lrcState', lrcState);
-        } else if (id == '6') {
+        } else if (id === '6') {
           close();
           let u1 = playingSongInfo.ppic;
           imgPreview([
@@ -1013,12 +1019,12 @@ $lrcMenuWrap
               u2: u1 + '?t=1',
             },
           ]);
-        } else if (id == '7') {
+        } else if (id === '7') {
           close();
           copyText(playingSongInfo.artist + ' - ' + playingSongInfo.title);
-        } else if (id == '8') {
-          showSongInfo(e, playingSongInfo);
-        } else if (id == '10') {
+        } else if (id === '8') {
+          showSongInfo(e, playingSongInfo, `${HASH}/${passCode}`);
+        } else if (id === '10') {
           close();
           let fname = `${playingSongInfo.artist}-${playingSongInfo.title}`;
           downloadFile(
@@ -1034,14 +1040,14 @@ $lrcMenuWrap
     const data = [];
     [2, 1.75, 1.5, 1.25, 1, 0.75, 0.25].forEach((item, idx) => {
       data.push({
-        id: idx + 1,
+        id: idx + 1 + '',
         text: 'x' + item,
         beforeIcon: 'iconfont icon-sudu',
         param: {
           b: item,
           a: 'x' + item,
         },
-        active: curPlaySpeed[1] == item ? true : false,
+        active: curPlaySpeed[1] === item ? true : false,
       });
     });
     rMenu.selectMenu(
@@ -1054,7 +1060,7 @@ $lrcMenuWrap
           $myAudio[0].playbackRate = b;
           curPlaySpeed = [a, b];
           data.forEach((item) => {
-            if (item.param.b == curPlaySpeed[1]) {
+            if (item.param.b === curPlaySpeed[1]) {
               item.active = true;
             } else {
               item.active = false;

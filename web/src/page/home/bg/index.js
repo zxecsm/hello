@@ -67,7 +67,7 @@ async function hdUpBg(files) {
         HASH,
       }); //是否已经存在文件
 
-      if (parseInt(isrepeat.code) === 0) {
+      if (isrepeat.code === 1) {
         pro.close('壁纸已存在');
         //文件已经存在操作
         return;
@@ -75,7 +75,7 @@ async function hdUpBg(files) {
       const result = await reqBgUp({ name, HASH }, file, (percent) => {
         pro.update(percent);
       });
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         pro.close();
       } else {
         pro.fail();
@@ -103,7 +103,7 @@ $allBgWrap
       multiple: true,
       accept: '.jpg,.jpeg,.png,.ico,.svg,.webp,.gif',
     });
-    if (files.length == 0) return;
+    if (files.length === 0) return;
     hdUpBg(files);
   })
   .on('click', '.b_close_btn', closeBgBox);
@@ -119,7 +119,7 @@ $allBgWrap
   allbg.addEventListener('drop', function (e) {
     e.preventDefault();
     let files = [...e.dataTransfer.files];
-    if (files.length == 0) return;
+    if (files.length === 0) return;
     hdUpBg(files);
   });
 })();
@@ -132,10 +132,10 @@ export function delBg(e, ids, cb, isCheck) {
       confirm: { type: 'danger', text: '删除' },
     },
     (type) => {
-      if (type == 'confirm') {
+      if (type === 'confirm') {
         reqBgDelete(ids)
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               cb && cb();
               _msg.success(result.codeText);
               renderBgList();
@@ -180,24 +180,24 @@ function bgItemMenu(e, obj, el) {
     e,
     data,
     ({ e, close, id }) => {
-      if (id == '1') {
+      if (id === '1') {
         $allBgWrap.stop().fadeOut(_d.speed, () => {
           $bgList.html('');
         });
         setBg(obj, close);
-      } else if (id == '4') {
+      } else if (id === '4') {
         if (isRoot()) {
           delBg(e, [obj.id], () => {
             close();
           });
         }
-      } else if (id == '2') {
+      } else if (id === '2') {
         close();
         downloadFile(
           getFilePath(`/bg/${obj.url}`),
           getPathFilename(obj.url)[0]
         );
-      } else if (id == '3') {
+      } else if (id === '3') {
         close();
         $bgList.find('.check_level').css('display', 'block');
         $bgFooter.stop().slideDown(_d.speed).find('span').attr({
@@ -224,7 +224,7 @@ function bgLoading() {
 }
 // 获取壁纸信息
 function getBgItem(id) {
-  return bgList.find((item) => item.id == id);
+  return bgList.find((item) => item.id === id);
 }
 // 壁纸库是隐藏
 function bgBoxIsHide() {
@@ -240,14 +240,14 @@ export function renderBgList(y) {
     showpage = _getData('bgPageSize');
   reqBgList({ type, pageNo: bgpage, pageSize: showpage })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         if (bgBoxIsHide()) return;
         let { total, data, pageNo } = result.data;
         bgpage = pageNo;
         bgList = data;
         const html = _tpl(
           `
-          <p v-if="data.length == 0" style='text-align: center;'>{{_d.emptyList}}</p>
+          <p v-if="data.length === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
             <div v-for="{id, url} in data" class="bg_item" :data-id="id">
               <div check="n" class="check_level"></div>

@@ -12,7 +12,7 @@ import {
   getScreenSize,
   formatDate,
   createShare,
-  getValidState,
+  getExpState,
   copyText,
   isLogin,
   wave,
@@ -59,9 +59,9 @@ function renderShareList(total, pageNo, top) {
     `
     <p v-if="sList.length === 0">{{_d.emptyList}}</p>
     <template v-else>
-      <li v-for="{id,type,title,pass,valid} in sList" :data-id="id" :data-url="getUrlAndLogo(type,id).url">
+      <li v-for="{id,type,title,pass,exp_time} in sList" :data-id="id" :data-url="getUrlAndLogo(type,id).url">
         <div cursor="y" class="item_type_logo iconfont {{getUrlAndLogo(type,id).logo}}"></div>
-        <div title="点击复制分享链接" class="title">名称：<span>{{title}}</span> ； 提取码：<span>{{pass || '无'}}</span> ； 有效期：<span :style="state < 0 ? 'color:red;' : ''">{{getState(valid)}}</span> ； </div>
+        <div title="点击复制分享链接" class="title">名称：<span>{{title}}</span> ； 提取码：<span>{{pass || '无'}}</span> ； 有效期：<span :style="state < 0 ? 'color:red;' : ''">{{getState(exp_time)}}</span> ； </div>
         <div cursor="y" class="copy_link iconfont icon-erweima"></div>
         <div cursor="y" class="edit iconfont icon-bianji"></div>
         <div cursor="y" class="delete iconfont icon-shanchu"></div>
@@ -75,26 +75,29 @@ function renderShareList(total, pageNo, top) {
       getUrlAndLogo(type, id) {
         let logo = 'icon-shoucang',
           url = getPreUrl();
-        if (type == 'music') {
+        if (type === 'music') {
           logo = `icon-yinle1`;
           url += `/sharemusic/#${id}`;
-        } else if (type == 'bookmk') {
+        } else if (type === 'bookmk') {
           logo = `icon-shuqian`;
           url += `/sharebm/#${id}`;
-        } else if (type == 'file') {
+        } else if (type === 'file') {
           logo = `icon-24gl-fileText`;
           url += `/sharefile/#${id}`;
-        } else if (type == 'dir') {
+        } else if (type === 'dir') {
           logo = `icon-24gl-folder`;
           url += `/sharefile/#${id}`;
         }
         return { logo, url };
       },
-      getState(valid) {
+      getState(exp_time) {
         let v = '永久';
-        const state = getValidState(valid);
+        const state = getExpState(exp_time);
         if (state > 0) {
-          v = formatDate({ template: '{0}-{1}-{2} {3}:{4}', timestamp: valid });
+          v = formatDate({
+            template: '{0}-{1}-{2} {3}:{4}',
+            timestamp: exp_time,
+          });
         } else if (state < 0) {
           v = '已过期';
         }
@@ -139,7 +142,7 @@ const pgnt = pagination($shareList[0], {
 function getShareList(top) {
   reqUserShareList({ pageNo, pageSize: sPageSize })
     .then((res) => {
-      if (res.code == 0) {
+      if (res.code === 1) {
         const { data, total } = res.data;
         pageNo = res.data.pageNo;
         sList = data;
@@ -150,7 +153,7 @@ function getShareList(top) {
 }
 // 获取分享信息
 function getShareItem(id) {
-  return sList.find((item) => item.id == id);
+  return sList.find((item) => item.id === id);
 }
 getShareList(1);
 // 删除
@@ -162,10 +165,10 @@ function deleteShare(e, obj) {
       confirm: { type: 'danger', text: '删除' },
     },
     (type) => {
-      if (type == 'confirm') {
+      if (type === 'confirm') {
         reqUserDeleteShare({ ids: [obj.id] })
           .then((res) => {
-            if (res.code == 0) {
+            if (res.code === 1) {
               _msg.success(res.codeText);
               getShareList();
             }
@@ -182,14 +185,14 @@ function editShare(e, obj) {
     {
       title: '编辑分享项',
       name: obj.title,
-      valid: getValidState(obj.valid),
+      expireTime: getExpState(obj.exp_time),
       pass: obj.pass,
     },
     ({ close, inp }) => {
-      const { title, pass, valid } = inp;
-      reqUserEditShare({ id: obj.id, title, pass, valid })
+      const { title, pass, expireTime } = inp;
+      reqUserEditShare({ id: obj.id, title, pass, expireTime })
         .then((result) => {
-          if (parseInt(result.code) === 0) {
+          if (result.code === 1) {
             close(1);
             getShareList();
           }
@@ -236,10 +239,10 @@ $headBtns
         confirm: { type: 'danger', text: '清空' },
       },
       (type) => {
-        if (type == 'confirm') {
+        if (type === 'confirm') {
           reqUserDeleteShare({ ids: sList.map((item) => item.id) })
             .then((res) => {
-              if (res.code == 0) {
+              if (res.code === 1) {
                 _msg.success(res.codeText);
                 getShareList();
               }

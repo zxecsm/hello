@@ -121,7 +121,7 @@ class Pagination {
       : this.opt.pageNo >= this.opt.totalPage
       ? (this.opt.pageNo = this.opt.totalPage)
       : null;
-    if (this.opt.total == 0) {
+    if (this.opt.total === 0) {
       return '';
     }
     if (this.opt.small) {
@@ -166,10 +166,10 @@ class Pagination {
           <button v-if="startPage==3" data-type="paging" cursor="y" data-flag="2">2</button>
           <button v-if="startPage>3" data-type="paging" cursor="y" :data-flag="startPage - 1">...</button>
         </template>
-        <button v-for="flag in continuousArr" data-type="paging" cursor="y" :data-flag="flag" :class="pageNo == flag ? 'active' : ''">{{flag}}</button>
+        <button v-for="flag in continuousArr" data-type="paging" cursor="y" :data-flag="flag" :class="pageNo === flag ? 'active' : ''">{{flag}}</button>
         <template v-if="totalPage > continuous">
           <button v-if="endPage < totalPage - 2" data-type="paging" cursor="y" :data-flag="endPage + 1">...</button>
-          <button v-if="endPage == totalPage - 2" data-type="paging" cursor="y" :data-flag="totalPage - 1">{{totalPage - 1}}</button>
+          <button v-if="endPage === totalPage - 2" data-type="paging" cursor="y" :data-flag="totalPage - 1">{{totalPage - 1}}</button>
           <button v-if="endPage < totalPage" data-type="paging" cursor="y" :data-flag="totalPage">{{totalPage}}</button>
         </template>
         <button v-if="pageNo < totalPage" data-type="paging" cursor="y" data-flag="next" class="iconfont icon-page-next"></button>

@@ -98,13 +98,13 @@ class Pop {
   }
   hdClick(e) {
     const target = e.target;
-    if (target == this.mask) {
+    if (target === this.mask) {
       this.close();
       this.callback && this.callback('close');
-    } else if (target == this.cancelBtn) {
+    } else if (target === this.cancelBtn) {
       this.close();
       this.callback && this.callback('cancel');
-    } else if (target == this.confirmBtn) {
+    } else if (target === this.confirmBtn) {
       this.close();
       this.callback && this.callback('confirm');
     }

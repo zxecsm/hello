@@ -55,7 +55,7 @@ setInterval(() => {
   sleep = sleep === null ? defaultSleep : sleep;
   sleep--;
   _setDataTem('sleep', sleep);
-  if (sleep == 0) {
+  if (sleep === 0) {
     canvas.style.display = 'block';
     if (timer) {
       clearInterval(timer);

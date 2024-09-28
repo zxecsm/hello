@@ -23,7 +23,7 @@ window.addEventListener('load', function () {
   if (!_d.isRootPage) {
     reqUserCustomCode()
       .then((res) => {
-        if (res.code == 0) {
+        if (res.code === 1) {
           addCustomCode(res.data);
         }
       })
@@ -148,7 +148,7 @@ window.onerror = function (message, url, line, column) {
   let flag = null;
   function handleFontType() {
     const fontType = _getData('fontType');
-    if (fontType == 'default') {
+    if (fontType === 'default') {
       document.body.style.fontFamily = 'Roboto, Arial, sans-serif';
       return;
     }
@@ -182,11 +182,11 @@ changeHeadBtnSort(_getData('headBtnToRight'));
   const icon = document.querySelector("link[rel*='icon']");
   document.addEventListener('visibilitychange', function () {
     // 页面变为不可见时触发
-    if (document.visibilityState == 'hidden') {
+    if (document.visibilityState === 'hidden') {
       icon.href = iconlogo;
     }
     // 页面变为可见时触发
-    if (document.visibilityState == 'visible') {
+    if (document.visibilityState === 'visible') {
       icon.href = icon1logo;
     }
   });

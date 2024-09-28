@@ -25,35 +25,35 @@ const $minimizeBox = $('.minimize_box');
 // 标签logo
 function getTagFont(type) {
   let font = 'iconfont ';
-  if (type == 'notes') {
+  if (type === 'notes') {
     font += `icon-mingcheng-jiluben`;
-  } else if (type == 'note') {
+  } else if (type === 'note') {
     font += `icon-jilu`;
-  } else if (type == 'history') {
+  } else if (type === 'history') {
     font += `icon-history`;
-  } else if (type == 'bmk') {
+  } else if (type === 'bmk') {
     font += `icon-shuqian`;
-  } else if (type == 'edit') {
+  } else if (type === 'edit') {
     font += `icon-bianji`;
-  } else if (type == 'log') {
+  } else if (type === 'log') {
     font += `icon-rizhi`;
-  } else if (type == 'pic') {
+  } else if (type === 'pic') {
     font += `icon-tupian`;
-  } else if (type == 'trash') {
+  } else if (type === 'trash') {
     font += `icon-huishouzhan`;
-  } else if (type == 'root') {
+  } else if (type === 'root') {
     font += `icon-zhanghao`;
-  } else if (type == 'sharebm') {
+  } else if (type === 'sharebm') {
     font += `icon-fenxiang_2`;
-  } else if (type == 'sharelist') {
+  } else if (type === 'sharelist') {
     font += `icon-fenxiang_2`;
-  } else if (type == 'sharemusic') {
+  } else if (type === 'sharemusic') {
     font += `icon-yinle1`;
-  } else if (type == 'videoplay') {
+  } else if (type === 'videoplay') {
     font += `icon-shipin1`;
-  } else if (type == 'file' || type == 'sharefile') {
+  } else if (type === 'file' || type === 'sharefile') {
     font += `icon-24gl-folder`;
-  } else if (type == 'notepad') {
+  } else if (type === 'notepad') {
     font += `icon-jilu`;
   }
   return font;
@@ -82,7 +82,7 @@ class CreateIframe {
   constructor(url, name) {
     this.url = url;
     this.name = name || url;
-    this.id = nanoid();
+    this.id = nanoid() + '_iframe';
     this.isTop = false;
     this.init();
   }
@@ -128,15 +128,15 @@ class CreateIframe {
     if (!lastWindow) {
       toCenter(this.box);
     } else {
-      if (lastWindow.id.includes('_')) {
+      if (lastWindow.id.includes('_iframe')) {
         if (isFullScreen(lastWindow.target)) {
           toCenter(this.box);
         } else {
           const lastIframe = windows
             .filter(
               (item) =>
-                item.id.includes('_') &&
-                item.target.style.visibility == 'visible'
+                item.id.includes('_iframe') &&
+                item.target.style.visibility === 'visible'
             )
             .slice(-1)[0];
           if (lastIframe) {
@@ -381,7 +381,7 @@ function switchIframeBox() {
   const htarget = _this._iframeBox.box;
   const obj = backWindow.getValue().slice(-1)[0];
   if (
-    htarget.style.visibility == 'hidden' ||
+    htarget.style.visibility === 'hidden' ||
     (obj && obj.id != _this._iframeBox.id)
   ) {
     _this._iframeBox.hdZindex();
@@ -440,11 +440,11 @@ function handleHideBox(e, _this) {
     data,
     ({ close, id }) => {
       close();
-      if (id == '1') {
+      if (id === '1') {
         myOpen(url, '_blank');
-      } else if (id == '2') {
+      } else if (id === '2') {
         hideAllwindow();
-      } else if (id == '3') {
+      } else if (id === '3') {
         closeAllwindow();
       }
     },

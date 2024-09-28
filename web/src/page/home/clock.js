@@ -102,7 +102,7 @@ clockMove();
 const clockData = _getData('clockData');
 function hdClick(e) {
   clockMove();
-  if (e.target.tagName.toLowerCase() == 'i') {
+  if (e.target.tagName.toLowerCase() === 'i') {
     _progressBar(e, clockData.size, (percent) => {
       clock.style.transform = `scale(${percentToValue(0.5, 4, percent)})`;
       clockData.size = percent;
@@ -113,7 +113,7 @@ function hdClick(e) {
 clock.addEventListener('click', hdClick);
 document.addEventListener('visibilitychange', function () {
   // 页面变为可见时触发
-  if (document.visibilityState == 'visible') {
+  if (document.visibilityState === 'visible') {
     clockMove();
   }
 });

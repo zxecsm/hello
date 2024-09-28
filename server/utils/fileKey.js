@@ -1,12 +1,15 @@
 const { nanoid } = require('./utils');
 const exp = 5 * 60 * 60 * 1000;
+
 const fileKey = {
   keys: {},
   add(account, p) {
     const key = `${nanoid()}-${Date.now()}`;
+
     if (account) {
       this.keys[key] = { account, p };
     }
+
     return key;
   },
   get(key) {
@@ -31,4 +34,5 @@ const fileKey = {
     }
   },
 };
+
 module.exports = fileKey;

@@ -234,7 +234,7 @@ function saveLrc() {
     text: val,
   })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         $editLrcWrap._val = val;
         _msg.success(result.codeText);
         return;
@@ -265,7 +265,7 @@ export function showEditLrc(sobj) {
       id: sobj.id,
     })
       .then((result) => {
-        if (parseInt(result.code) === 0) {
+        if (result.code === 1) {
           $editLrcWrap._val = result.data;
           $editLrcWrap.find('textarea').val(result.data);
           return;
@@ -324,7 +324,7 @@ export function playMv(obj) {
   highlightPlayingSong(false);
   playingListHighlight(false);
   toggleLrcMenuWrapBtnsState();
-  updateLastPlay('y', 1);
+  updateLastPlay(1, 1);
   initMusicLrc();
   $myVideo[0].playbackRate = setCurPlaySpeed()[1];
 }

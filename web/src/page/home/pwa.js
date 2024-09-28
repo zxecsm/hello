@@ -21,9 +21,9 @@ window.addEventListener('beforeinstallprompt', (e) => {
         cancel: { text: '暂不安装' },
       },
       (type) => {
-        if (type == 'confirm') {
+        if (type === 'confirm') {
           e.prompt();
-        } else if (type == 'cancel') {
+        } else if (type === 'cancel') {
           _setData('install', t);
         }
       }

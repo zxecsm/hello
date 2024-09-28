@@ -44,7 +44,7 @@ import {
   reqNoteSearch,
   reqNoteSetCategory,
   reqNoteState,
-  reqNoteWeight,
+  reqNoteTop,
 } from '../../api/note';
 import { CreateTabs } from './tabs';
 import {
@@ -106,7 +106,7 @@ export function setNoteCategoryList(val) {
 const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
   change(val) {
     val = val.trim();
-    if (val == '') {
+    if (val === '') {
       $headWrap.find('.inp_box i').css('display', 'none');
     } else {
       $headWrap.find('.inp_box i').css('display', 'block');
@@ -122,9 +122,9 @@ const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
   },
 });
 function updataCategory() {
-  reqNoteCategory({ acc: urlParams.acc || '' })
+  reqNoteCategory({ account: urlParams.acc || '' })
     .then((res) => {
-      if (res.code == 0) {
+      if (res.code === 1) {
         noteCategoryList = res.data;
         tabsObj.list = categoryToArr(HASH || '');
         $categoryTag.addClass('open');
@@ -186,20 +186,26 @@ function renderList(y) {
     _msg.error('搜索内容过长');
     return;
   }
+  let showpage = notePageSize;
+  const category = tabsObj.list.map((item) => item.id);
+
+  if (category.length > 10) {
+    _msg.error('分组过多');
+    return;
+  }
+
   if (y) {
     listLoading();
   }
-  let showpage = notePageSize;
-  const category = tabsObj.list.map((item) => item.id);
   reqNoteSearch({
-    acc: urlParams.acc || '',
+    account: urlParams.acc || '',
     word,
     pageNo: pagenum,
     pageSize: showpage,
     category,
   })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         const { total, data, pageNo, splitWord } = result.data;
         noteList = data;
         $contentWrap.pagenum = pageNo;
@@ -207,14 +213,14 @@ function renderList(y) {
           `
           <p v-if="data.length === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
-            <template v-for="{name,share,id,con,weight} in data">
+            <template v-for="{title,share,id,con,top} in data">
               <ul class="item_box" :data-id="id">
                 <div cursor="y" check="n" class="check_state"></div>
                 <li class="item_type iconfont icon-jilu"></li>
-                <li v-html="hdTitleHighlight(splitWord,name)" cursor="y" class="item_title"></li>
-                <li v-if="weight != 0 && !word && category.length === 0" class="top_btn iconfont icon-zhiding" style="color: var(--color5);"></li>
-                <li v-if="runState == 'own'" cursor="y" class="lock_state iconfont {{share === 'n'? 'icon-24gl-unlock2 open': 'icon-24gl-unlock4'}}"></li>
-                <li v-if="runState == 'own'" cursor="y" class="set_btn iconfont icon-icon"></li>
+                <li v-html="hdTitleHighlight(splitWord,title)" cursor="y" class="item_title"></li>
+                <li v-if="top != 0 && !word && category.length === 0" class="top_btn iconfont icon-zhiding" style="color: var(--color5);"></li>
+                <li v-if="runState === 'own'" cursor="y" class="lock_state iconfont {{share === 0? 'icon-24gl-unlock2 open': 'icon-24gl-unlock4'}}"></li>
+                <li v-if="runState === 'own'" cursor="y" class="set_btn iconfont icon-icon"></li>
               </ul>
               <p v-if="con && con.length > 0" v-html="hdHighlight(con)"></p>
             </template>
@@ -285,11 +291,11 @@ function hdHighlight(con) {
   return _tpl(
     `
     <template v-for="{type,value} in con">
-      <template v-if="type == 'text'">{{value}}</template>
-      <template v-else-if="type == 'icon">
+      <template v-if="type === 'text'">{{value}}</template>
+      <template v-else-if="type === 'icon">
         <br/><span style="color:var(--btn-danger-color);">···</span><br/>
       </template>
-      <span v-else-if="type == 'word'" style="color:var(--btn-danger-color);">{{value}}</span>
+      <span v-else-if="type === 'word'" style="color:var(--btn-danger-color);">{{value}}</span>
     </template>
     `,
     {
@@ -319,18 +325,18 @@ const pgnt = pagination($contentWrap[0], {
   },
 });
 // 删除笔记
-function deleteNote(e, ids, cb, name) {
+function deleteNote(e, ids, cb, title) {
   _pop(
     {
       e,
-      text: `确认删除：${name || '选中的笔记'}？`,
+      text: `确认删除：${title || '选中的笔记'}？`,
       confirm: { type: 'danger', text: '删除' },
     },
     (type) => {
-      if (type == 'confirm') {
+      if (type === 'confirm') {
         reqNoteDelete({ ids })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               cb && cb();
               _msg.success(result.codeText);
               renderList();
@@ -349,15 +355,19 @@ function toTop(e, obj) {
       items: {
         num: {
           beforeText: '权重数 (数值越大越靠前)：',
-          value: obj.weight,
+          value: obj.top,
           inputType: 'number',
           placeholder: '0：取消；数值越大越靠前',
           verify(val) {
             val = val.trim();
-            if (val == '') {
+            if (val === '') {
               return '请输入权重数';
-            } else if (!isInteger(+val) || val < 0 || val > 9999) {
-              return '请输入4位正整数';
+            } else if (
+              !isInteger(+val) ||
+              val < 0 ||
+              val > _d.fieldLenght.top
+            ) {
+              return `最大限制${_d.fieldLenght.top}`;
             }
           },
         },
@@ -366,10 +376,10 @@ function toTop(e, obj) {
     debounce(
       function ({ inp, close }) {
         const w = inp.num;
-        if (obj.weight == w) return;
-        reqNoteWeight({ id: obj.id, weight: w })
+        if (obj.top === w) return;
+        reqNoteTop({ id: obj.id, top: w })
           .then((res) => {
-            if (res.code == 0) {
+            if (res.code === 1) {
               close(1);
               renderList();
               _msg.success(res.codeText);
@@ -417,7 +427,7 @@ function noteEditCategory(e, obj) {
           category: data.map((item) => item.id),
         })
           .then((res) => {
-            if (res.code == 0) {
+            if (res.code === 1) {
               close(1);
               renderList();
               _msg.success(res.codeText);
@@ -430,10 +440,10 @@ function noteEditCategory(e, obj) {
   );
 }
 function verifyDate(obj) {
-  let { time, utime } = obj;
-  time = new Date(time).getTime();
-  utime = new Date(utime).getTime();
-  if (time > utime) {
+  let { create_at, update_at } = obj;
+  create_at = new Date(create_at).getTime();
+  update_at = new Date(update_at).getTime();
+  if (create_at > update_at) {
     _msg.error('创建日期不能大于更新日期');
     return false;
   }
@@ -445,13 +455,13 @@ function editNoteInfo(e, obj) {
     {
       subText: '提交',
       items: {
-        name: {
+        title: {
           beforeText: '标题：',
-          value: obj.name,
+          value: obj.title,
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入标题';
-            } else if (val.trim().length > 100) {
+            } else if (val.trim().length > _d.fieldLenght.title) {
               return '标题内容过长';
             }
           },
@@ -468,13 +478,13 @@ function editNoteInfo(e, obj) {
             }
           },
         },
-        time: {
+        create_at: {
           beforeText: '创建日期：',
           placeholder: 'YYYY-MM-DD',
           inputType: 'date',
           value: formatDate({
             template: '{0}-{1}-{2}',
-            timestamp: obj.time,
+            timestamp: obj.create_at,
           }),
           verify(val) {
             if (!isValidDate(val)) {
@@ -482,13 +492,13 @@ function editNoteInfo(e, obj) {
             }
           },
         },
-        utime: {
+        update_at: {
           beforeText: '更新日期：',
           placeholder: 'YYYY-MM-DD',
           inputType: 'date',
           value: formatDate({
             template: '{0}-{1}-{2}',
-            timestamp: obj.utime,
+            timestamp: obj.update_at,
           }),
           verify(val) {
             if (!isValidDate(val)) {
@@ -503,13 +513,13 @@ function editNoteInfo(e, obj) {
         if (!verifyDate(inp)) return;
         reqNoteEditInfo({
           id: obj.id,
-          name: inp.name,
-          time: inp.time,
-          utime: inp.utime,
+          title: inp.title,
+          create_at: inp.create_at,
+          update_at: inp.update_at,
           visit_count: inp.count,
         })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               close(true);
               _msg.success(result.codeText);
               renderList();
@@ -529,7 +539,7 @@ $contentWrap
     if (runState !== 'own') return;
     const $this = $(this).parent();
     const obj = getNoteInfo($this.attr('data-id'));
-    const { id: noteid, name, weight } = obj;
+    const { id: noteid, title, top } = obj;
     const data = [
       { id: '1', text: '置顶', beforeIcon: 'iconfont icon-zhiding' },
       { id: '2', text: '分类', beforeIcon: 'iconfont icon-liebiao1' },
@@ -546,38 +556,38 @@ $contentWrap
       e,
       data,
       ({ close, e, id }) => {
-        if (id == '1') {
-          toTop(e, { id: noteid, weight });
-        } else if (id == '2') {
+        if (id === '1') {
+          toTop(e, { id: noteid, top });
+        } else if (id === '2') {
           noteEditCategory(e, obj);
-        } else if (id == '3') {
+        } else if (id === '3') {
           showQcode(
             e,
             `${getPreUrl()}/note/?v=${encodeURIComponent(noteid)}`,
-            name
+            title
           );
-        } else if (id == '4') {
+        } else if (id === '4') {
           editNoteInfo(e, obj);
-        } else if (id == '5') {
+        } else if (id === '5') {
           close();
           e.stopPropagation();
-          _myOpen(`/edit/#${encodeURIComponent(noteid)}`, name);
-        } else if (id == '6') {
-          deleteNote(e, [noteid], close, name);
+          _myOpen(`/edit/#${encodeURIComponent(noteid)}`, title);
+        } else if (id === '6') {
+          deleteNote(e, [noteid], close, title);
         }
       },
-      name
+      title
     );
   })
   .on('click', '.item_title', function (e) {
     e.stopPropagation();
     const val = wInput.getValue().trim();
-    const { name, id } = getNoteInfo($(this).parent().attr('data-id'));
+    const { title, id } = getNoteInfo($(this).parent().attr('data-id'));
     _myOpen(
       `/note/?v=${encodeURIComponent(id)}${
         val ? '#' + encodeURIComponent(val) : ''
       }`,
-      name
+      title
     );
   })
   .on('contextmenu', '.item_box', function (e) {
@@ -589,19 +599,19 @@ $contentWrap
     checkedItem(this.querySelector('.check_state'));
   })
   .on('mouseenter', '.item_box', function () {
-    const { time, utime, category, visit_count, weight } = getNoteInfo(
+    const { create_at, update_at, category, visit_count, top } = getNoteInfo(
       $(this).attr('data-id')
     );
     const arr = categoryToArr(category).map((item) => item.title);
     const str = `创建：${formatDate({
       template: '{0}-{1}-{2}',
-      timestamp: time,
+      timestamp: create_at,
     })}\n更新：${formatDate({
       template: '{0}-{1}-{2}',
-      timestamp: utime,
+      timestamp: update_at,
     })}\n分类：${arr.join('-') || '--'}\n阅读：${formatNum(
       visit_count
-    )}\n权重：${weight}`;
+    )}\n权重：${top}`;
     toolTip.setTip(str).show();
   })
   .on('mouseleave', '.item_box', function () {
@@ -619,17 +629,17 @@ $contentWrap
       if (runState !== 'own') return;
       const $this = $(this).parent();
       const obj = getNoteInfo($this.attr('data-id'));
-      changeNoteState([obj.id], obj.share === 'n' ? 'y' : 'n');
+      changeNoteState([obj.id], obj.share === 0 ? 1 : 0);
     }, 2000)
   )
   .on('click', '.check_state', function () {
     checkedItem(this);
   });
 // 切换笔记状态
-function changeNoteState(ids, flag) {
-  reqNoteState({ ids, flag })
+function changeNoteState(ids, share) {
+  reqNoteState({ ids, share })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         _msg.success(result.codeText);
         renderList();
       }
@@ -729,13 +739,13 @@ $footer
     if (runState !== 'own') return;
     const ids = getCheckItems();
     if (ids.length === 0) return;
-    changeNoteState(ids, 'n');
+    changeNoteState(ids, 0);
   })
   .on('click', '.f_open', function () {
     if (runState !== 'own') return;
     const ids = getCheckItems();
     if (ids.length === 0) return;
-    changeNoteState(ids, 'y');
+    changeNoteState(ids, 1);
   })
   .on('click', '.f_close', function () {
     if (runState !== 'own') return;
@@ -771,7 +781,7 @@ function switchCheckAll() {
 scrollState(
   window,
   throttle(function ({ type }) {
-    if (type == 'up') {
+    if (type === 'up') {
       $headWrap.removeClass('open');
     } else {
       $headWrap.addClass('open');

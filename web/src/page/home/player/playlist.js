@@ -59,7 +59,7 @@ let playingPageSize = 100;
 const playListLazyImg = new LazyLoad();
 // 播放列表歌曲信息
 function getPlayingItemData(id) {
-  return playingList.find((item) => item.id == id);
+  return playingList.find((item) => item.id === id);
 }
 // 对比播放列表
 export function diffPlayingList(arr) {
@@ -112,7 +112,7 @@ export function renderPlayingList() {
   $pMusicListBox._checked = true;
   switchPlayingChecked();
   const scObj = getCollectSongs();
-  if (!playingList || playingList.length == 0) {
+  if (!playingList || playingList.length === 0) {
     $pMusicListBox.find('.left').text(`正在播放(0)`);
     $pMusicListBox
       .find('.p_foot')
@@ -229,23 +229,23 @@ $pMusicListBox
   .on('click', '.p_foot_menu div', function () {
     const $this = $(this);
     let state = $this.attr('check');
-    state = state == 'y' ? 'n' : 'y';
+    state = state === 'y' ? 'n' : 'y';
     const $item = $pMusicListBox.find('.check_state');
     $this.attr({
       class:
-        state == 'y'
+        state === 'y'
           ? 'iconfont icon-xuanzeyixuanze'
           : 'iconfont icon-xuanzeweixuanze',
       check: state,
     });
     $item
       .attr('check', state)
-      .css('background-color', state == 'y' ? _d.checkColor : 'transparent');
-    _msg.botMsg(`选中：${state == 'y' ? $item.length : 0}项`);
+      .css('background-color', state === 'y' ? _d.checkColor : 'transparent');
+    _msg.botMsg(`选中：${state === 'y' ? $item.length : 0}项`);
   })
   .on('click', '.delete_btn', function () {
     const arr = getPlayingListCheck();
-    if (arr.length == 0) return;
+    if (arr.length === 0) return;
     const obj = {};
     arr.forEach((item) => {
       obj[item] = true;
@@ -258,12 +258,12 @@ $pMusicListBox
   })
   .on('click', '.move_btn', function (e) {
     const arr = getPlayingListCheck();
-    if (arr.length == 0) return;
+    if (arr.length === 0) return;
     moveSongToList(e, 'all', arr);
   })
   .on('click', '.collect_songs_btn', function () {
     const arr = getPlayingListCheck();
-    if (arr.length == 0) return;
+    if (arr.length === 0) return;
     songCollect(arr);
   })
   .on('click', '.close', function () {
@@ -271,7 +271,7 @@ $pMusicListBox
     switchPlayingChecked();
   })
   .on('click', '.clear_playing_list', function () {
-    if (playingList.length == 0) return;
+    if (playingList.length === 0) return;
     playingList = [];
     setCurPlayingList([]);
     renderPlayingList();
@@ -279,7 +279,7 @@ $pMusicListBox
   })
   .on('click', '.share_playing_list', function (e) {
     const arr = playingList.map((item) => item.id);
-    if (arr.length == 0) {
+    if (arr.length === 0) {
       _msg.error('播放列表为空');
       return;
     }
@@ -288,7 +288,7 @@ $pMusicListBox
 // 播放播放列表歌曲
 function playPlayingList(id, e) {
   let obj = getPlayingItemData(id);
-  if (setPlayingSongInfo().id == obj.id) {
+  if (setPlayingSongInfo().id === obj.id) {
     changePlayState();
     return;
   }
@@ -392,7 +392,7 @@ $pMusicListBox
       const $this = $(this).parent();
       const issc = $this.attr('data-issc');
       const sobj = getPlayingItemData($this.attr('data-id'));
-      if (issc == 'true') {
+      if (issc === 'true') {
         songCloseCollect(sobj.id);
       } else {
         songCollect([sobj.id]);
@@ -432,7 +432,7 @@ export function playingListHighlight(isPosition) {
   $song_item.removeClass('active').find('.play_gif').removeClass('show');
   const idx = Array.prototype.findIndex.call(
     $song_item,
-    (item) => item.dataset.id == setPlayingSongInfo().id
+    (item) => item.dataset.id === setPlayingSongInfo().id
   );
   if (idx < 0) return;
   const cur = $song_item.eq(idx);

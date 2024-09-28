@@ -58,13 +58,13 @@ let editNoteCodeNum = _getData('editNoteCodeNum');
 let editNoteFontSize = _getData('editNoteFontSize');
 // 更改主题
 function changeTheme(dark) {
-  if (dark == 'y') {
+  if (dark === 'y') {
     $themeCss.attr('href', '/css/notethem/notecode1.css');
     editor.setTheme('ace/theme/github_dark');
-  } else if (dark == 'n') {
+  } else if (dark === 'n') {
     $themeCss.attr('href', '/css/notethem/notecode.css');
     editor.setTheme('ace/theme/chrome');
-  } else if (dark == 's') {
+  } else if (dark === 's') {
     if (isDarkMode()) {
       $themeCss.attr('href', '/css/notethem/notecode1.css');
       editor.setTheme('ace/theme/github_dark');
@@ -119,7 +119,7 @@ editor.commands.addCommand({
       multiple: true,
       accept: '.jpg,.jpeg,.png,.ico,.svg,.webp,.gif',
     });
-    if (files.length == 0) return;
+    if (files.length === 0) return;
     hdUpFile(files);
   },
 });
@@ -177,7 +177,7 @@ $previewBox.find('.content').on('scroll', syncScrollFromPreview);
 const wInput = wrapInput($headBtns.find('.note_title input')[0], {
   change(val) {
     val = val.trim();
-    if (val == '') {
+    if (val === '') {
       $headBtns.find('.note_title i').css('display', 'none');
     } else {
       $headBtns.find('.note_title i').css('display', 'block');
@@ -186,8 +186,8 @@ const wInput = wrapInput($headBtns.find('.note_title input')[0], {
   },
 });
 function initValue(obj) {
-  wInput.setValue(obj.name);
-  editor.setValue(obj.data);
+  wInput.setValue(obj.title);
+  editor.setValue(obj.content);
   editor.gotoLine(1);
   // editor.focus();
   orginData = obj;
@@ -196,8 +196,8 @@ let urlObj = queryURLParams(myOpen()),
   { HASH } = urlObj;
 // 对比记录
 let orginData = {
-  name: '',
-  data: '',
+  title: '',
+  content: '',
 };
 if (!HASH) {
   HASH = 'new';
@@ -217,10 +217,10 @@ function updateIframeTitle(title) {
 if (HASH === 'new') {
   //新增笔记
   initValue({
-    name: formatDate({ template: '{0}-{1}-{2} {3}:{4}' }),
-    data: _getData('newNote'),
+    title: formatDate({ template: '{0}-{1}-{2} {3}:{4}' }),
+    content: _getData('newNote'),
   });
-  orginData.data = '';
+  orginData.content = '';
   $headBtns.addClass('open');
   $editWrap.addClass('open');
 } else {
@@ -230,16 +230,16 @@ if (HASH === 'new') {
   } else {
     reqNoteRead({ v: HASH })
       .then((result) => {
-        if (parseInt(result.code) === 0) {
+        if (result.code === 1) {
           initValue(result.data);
           _setTimeout(() => {
-            updateIframeTitle(result.data.name);
+            updateIframeTitle(result.data.title);
           }, 1000);
           $headBtns.addClass('open');
           $editWrap.addClass('open');
-          if (temNoteObj[HASH] && temNoteObj[HASH] != result.data.data) {
+          if (temNoteObj[HASH] && temNoteObj[HASH] != result.data.content) {
             _pop({ text: '恢复：未保存的笔记？' }, (type) => {
-              if (type == 'confirm') {
+              if (type === 'confirm') {
                 editor.setValue(temNoteObj[HASH]);
                 editor.gotoLine(1);
               }
@@ -265,7 +265,7 @@ function rende() {
   }
   handleSave(); // 处理保存按钮
   if ($previewBox.is(':hidden')) return;
-  if (text.trim() == '') {
+  if (text.trim() === '') {
     $previewBox.find('.content').html('');
     return;
   }
@@ -293,10 +293,10 @@ mdWorker.addEventListener('message', (event) => {
 const imgLazy = new LazyLoad();
 // 处理保存按钮
 function handleSave() {
-  let name = wInput.getValue().trim(),
-    data = editor.getValue();
+  let title = wInput.getValue().trim(),
+    content = editor.getValue();
   // 对比内容
-  if (orginData.name + orginData.data == name + data) {
+  if (orginData.title + orginData.content === title + content) {
     $headBtns.find('.save_btn').removeClass('active');
     return;
   }
@@ -309,7 +309,7 @@ $previewBox
     let idx = 0;
     const arr = [];
     imgs.each((i, item) => {
-      if (item == this) {
+      if (item === this) {
         idx = i;
       }
       arr.push({
@@ -361,7 +361,7 @@ function pasteImg(e) {
       files.push(blob);
     }
   });
-  if (files.length == 0) return;
+  if (files.length === 0) return;
   e.preventDefault();
   hdUpFile(files);
 }
@@ -372,7 +372,7 @@ function pasteImg(e) {
     $editWrap.addClass('jzxz');
     previeW = $previewBox[0].offsetWidth;
     editW = $editBox[0].offsetWidth;
-    if (e.type == 'touchstart') {
+    if (e.type === 'touchstart') {
       x = e.touches[0].clientX;
     } else if (e.type === 'mousedown') {
       x = e.clientX;
@@ -385,7 +385,7 @@ function pasteImg(e) {
   function hdMove(e) {
     e.preventDefault();
     let xx;
-    if (e.type == 'touchmove') {
+    if (e.type === 'touchmove') {
       xx = e.touches[0].clientX;
     } else if (e.type === 'mousemove') {
       xx = e.clientX;
@@ -462,7 +462,7 @@ async function hdUpFile(files) {
           pro.update(percent);
         }
       );
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         const { url } = result.data;
         fData.push({
           filename: getSuffix(name)[0],
@@ -496,7 +496,7 @@ async function hdUpFile(files) {
   document.addEventListener('drop', function (e) {
     e.preventDefault();
     const files = [...e.dataTransfer.files];
-    if (files.length == 0) return;
+    if (files.length === 0) return;
     hdUpFile(files);
   });
 })();
@@ -544,13 +544,13 @@ function settingEdit(e) {
     e,
     data,
     ({ e, resetMenu, id }) => {
-      if (id == 'size') {
+      if (id === 'size') {
         _progressBar(e, editNoteFontSize, (percent) => {
           editNoteFontSize = percent;
           setNoteFontSize();
           _setData('editNoteFontSize', editNoteFontSize);
         });
-      } else if (id == 'num') {
+      } else if (id === 'num') {
         editNoteCodeNum = !editNoteCodeNum;
         _setData('editNoteCodeNum', editNoteCodeNum);
         data[1].afterIcon = editNoteCodeNum
@@ -603,7 +603,7 @@ $headBtns
       multiple: true,
       accept: '.jpg,.jpeg,.png,.ico,.svg,.webp,.gif',
     });
-    if (files.length == 0) return;
+    if (files.length === 0) return;
     hdUpFile(files);
   })
   .on('click', '.note_title i', function () {
@@ -626,23 +626,23 @@ function saveNote() {
     toLogin();
     return;
   }
-  const name = wInput.getValue().trim(),
-    data = editor.getValue();
-  if (name === '') {
+  const title = wInput.getValue().trim(),
+    content = editor.getValue();
+  if (title === '') {
     _msg.error('请输入标题');
     return;
   }
-  if (name > 100) {
+  if (title > 100) {
     _msg.error('标题过长');
     return;
   }
-  if (name === orginData.name && data === orginData.data) return;
-  reqNoteEdit({ id: HASH, name, data })
+  if (title === orginData.title && content === orginData.content) return;
+  reqNoteEdit({ id: HASH, title, content })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
-        orginData.data = data;
-        orginData.name = name;
-        updateIframeTitle(name);
+      if (result.code === 1) {
+        orginData.content = content;
+        orginData.title = title;
+        updateIframeTitle(title);
         $headBtns.find('.save_btn').removeClass('active');
         if (result.data) {
           // 新建笔记成功

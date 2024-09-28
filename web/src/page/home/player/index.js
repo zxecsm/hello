@@ -228,10 +228,10 @@ export function shareSongList(e, arr, cb) {
     return;
   }
   createShare(e, { title: '分享歌曲' }, ({ close, inp }) => {
-    const { title, pass, valid } = inp;
-    reqPlayerShare({ list: arr, title, pass, valid })
+    const { title, pass, expireTime } = inp;
+    reqPlayerShare({ list: arr, title, pass, expireTime })
       .then((result) => {
-        if (parseInt(result.code) === 0) {
+        if (result.code === 1) {
           close(1);
           cb && cb();
           openInIframe(`/sharelist`, '分享列表');
@@ -244,7 +244,7 @@ export function shareSongList(e, arr, cb) {
 export function songCloseCollect(id, cb) {
   reqPlayerCloseCollectSong({ id })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         _msg.success(result.codeText);
         cb && cb();
         getSongList();
@@ -263,7 +263,7 @@ export function songCollect(ids, cb) {
     ids,
   })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         getSongList();
         _msg.success(result.codeText);
         cb && cb();
@@ -379,7 +379,7 @@ const musicSearchInput = wrapInput(
       }
     },
     change(val) {
-      if (val.trim() == '') {
+      if (val.trim() === '') {
         $musicHeadWrap.find('.search_music_inp i').css('display', 'none');
         hideMusicSearchList();
       } else {
@@ -423,25 +423,25 @@ export function getCollectSongs() {
 // 删除歌曲
 export function delSong(e, listId, ids, title, cb, text) {
   let opt = {};
-  if (title == 'del') {
+  if (title === 'del') {
     opt = {
       e,
       text: `确认删除：${text || '选中的歌曲'}？`,
       confirm: { type: 'danger', text: '删除' },
     };
-  } else if (title == 'clean') {
+  } else if (title === 'clean') {
     opt = { e, text: '确认清空：歌单？' };
   } else {
     opt = { e, text: `确认移除：${text || '选中歌曲'}？` };
   }
   _pop(opt, (type) => {
-    if (type == 'confirm') {
+    if (type === 'confirm') {
       reqPlayerDeleteSong({
         listId,
         ids,
       })
         .then((result) => {
-          if (parseInt(result.code) === 0) {
+          if (result.code === 1) {
             _msg.success(result.codeText);
             getSongList();
             cb && cb();
@@ -456,14 +456,14 @@ export function moveSongToList(e, pid, ar) {
   let list = [];
   let cIdx = 0;
   musicList.forEach((v, i) => {
-    if (v.id == pid) {
+    if (v.id === pid) {
       cIdx = i;
     }
-    if (i < 3 || v.id == pid) return;
+    if (i < 3 || v.id === pid) return;
     let p = getFilePath(v.pic, 1);
-    if (v.pic == 'history') {
+    if (v.pic === 'history') {
       p = imgHistory;
-    } else if (v.pic == 'default') {
+    } else if (v.pic === 'default') {
       p = imgMusic;
     }
     v.pic = p;
@@ -503,18 +503,18 @@ export function moveSongToList(e, pid, ar) {
           {
             e,
             text: `确认${
-              pid == 'all' || cIdx < 3 ? '添加到' : '移动到'
+              pid === 'all' || cIdx < 3 ? '添加到' : '移动到'
             }：${listname}？`,
           },
           (type) => {
-            if (type == 'confirm') {
+            if (type === 'confirm') {
               reqPlayerSongToList({
-                listId: pid,
+                fromId: pid,
                 toId: tid,
                 ids: ar,
               })
                 .then((result) => {
-                  if (parseInt(result.code) === 0) {
+                  if (result.code === 1) {
                     close(true);
                     _msg.success(result.codeText);
                     getSongList();
@@ -527,7 +527,7 @@ export function moveSongToList(e, pid, ar) {
         );
       }
     },
-    `${pid == 'all' || cIdx < 3 ? '添加歌曲' : '移动歌曲'}到歌单`
+    `${pid === 'all' || cIdx < 3 ? '添加歌曲' : '移动歌曲'}到歌单`
   );
 }
 // 编辑歌曲信息
@@ -542,9 +542,9 @@ export function editSongInfo(e, sobj) {
           beforeText: '歌手名：',
           placeholder: '歌手名',
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入歌手名';
-            } else if (val.trim().length > 100) {
+            } else if (val.trim().length > _d.fieldLenght.title) {
               return '歌手名过长';
             }
           },
@@ -554,9 +554,9 @@ export function editSongInfo(e, sobj) {
           beforeText: '歌曲名：',
           placeholder: '歌曲名',
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入歌曲名';
-            } else if (val.trim().length > 100) {
+            } else if (val.trim().length > _d.fieldLenght.title) {
               return '歌曲名过长';
             }
           },
@@ -566,9 +566,9 @@ export function editSongInfo(e, sobj) {
           placeholder: '专辑',
           beforeText: '专辑：',
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入专辑名';
-            } else if (val.trim().length > 100) {
+            } else if (val.trim().length > _d.fieldLenght.title) {
               return '专辑名过长';
             }
           },
@@ -591,7 +591,7 @@ export function editSongInfo(e, sobj) {
           inputType: 'number',
           verify(val) {
             const num = parseFloat(val);
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入时长';
             } else if (isNaN(num) || num < 0) {
               return '请输入正整数';
@@ -605,7 +605,7 @@ export function editSongInfo(e, sobj) {
           inputType: 'number',
           verify(val) {
             const num = parseInt(val);
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入播放量';
             } else if (isNaN(num) || num < 0) {
               return '请输入正整数';
@@ -619,7 +619,7 @@ export function editSongInfo(e, sobj) {
           inputType: 'number',
           verify(val) {
             const num = parseInt(val);
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入收藏量';
             } else if (isNaN(num) || num < 0) {
               return '请输入正整数';
@@ -665,7 +665,7 @@ export function editSongInfo(e, sobj) {
           collect_count: newCollectCount,
         })
           .then((res) => {
-            if (res.code == 0) {
+            if (res.code === 1) {
               close(true);
               _msg.success(res.codeText);
               getSongList();
@@ -689,10 +689,10 @@ export function delMv(e, id, cb, text) {
       confirm: { type: 'danger', text: '删除' },
     },
     (type) => {
-      if (type == 'confirm') {
+      if (type === 'confirm') {
         reqPlayerDeleteMv({ id })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               _msg.success(result.codeText);
               getSongList();
               cb && cb();
@@ -741,7 +741,7 @@ export function setPlayVolume() {
         if (fIdx > 2 && tIdx > 2 && fIdx !== tIdx) {
           reqPlayerMoveList({ fromId, toId })
             .then((result) => {
-              if (parseInt(result.code) === 0) {
+              if (result.code === 1) {
                 getSongList();
                 return;
               }
@@ -765,7 +765,7 @@ export function getSongList(cb) {
   const id = $songListWrap.listId;
   reqPlayerGetLastPlay()
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         if (musicPlayerIsHide()) return;
         if (songIspaused()) {
           const _musicinfo = result.data;
@@ -786,7 +786,7 @@ export function getSongList(cb) {
           playId,
         })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               musicList = result.data;
               cb && cb();
               toggleLrcMenuWrapBtnsState();
@@ -804,7 +804,7 @@ export function getSongList(cb) {
   if (setPlayingList().length === 0) {
     reqPlayerGetPlayList()
       .then((result) => {
-        if (parseInt(result.code) === 0) {
+        if (result.code === 1) {
           setPlayingList(result.data);
           curPlayingList = deepClone(setPlayingList());
           renderPlayingList();
@@ -844,9 +844,9 @@ function renderSongList() {
       imgTianjia,
       getPic(pic) {
         let p = getFilePath(pic, 1);
-        if (pic == 'history') {
+        if (pic === 'history') {
           p = imgHistory;
-        } else if (pic == 'default') {
+        } else if (pic === 'default') {
           p = imgMusic;
         }
         return p;
@@ -872,7 +872,7 @@ function getSongs(gao) {
     playId,
   })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         musicList = result.data;
         if (!id) return;
         renderSongs(gao);
@@ -927,11 +927,11 @@ function renderSongs(gao) {
       });
     }
   }
-  const scObj = ind == 1 ? {} : getCollectSongs();
+  const scObj = ind === 1 ? {} : getCollectSongs();
   let pic = getFilePath(songListInfo.pic, 1);
-  if (songListInfo.pic == 'history') {
+  if (songListInfo.pic === 'history') {
     pic = imgHistory;
-  } else if (songListInfo.pic == 'default') {
+  } else if (songListInfo.pic === 'default') {
     pic = imgMusic;
   }
   // 分页
@@ -949,8 +949,8 @@ function renderSongs(gao) {
     songPageNo < 1
       ? (songPageNo = pageTotal)
       : songPageNo > pageTotal
-        ? (songPageNo = 1)
-        : null;
+      ? (songPageNo = 1)
+      : null;
     slist = songListInfo.item.slice(
       (songPageNo - 1) * musicPageSize,
       songPageNo * musicPageSize
@@ -975,7 +975,7 @@ function renderSongs(gao) {
       </div>
       <div v-if="listId === 'all'" cursor="y" class="random_song_list_btn"><i class="iconfont icon-suiji"></i></div>
       <div v-if="ind > 2 || isRoot()" cursor="y" class="edit_song_list_btn"><i class="iconfont icon-bianji"></i></div>
-      <div v-if="ind == 2" cursor="y" class="upload_song_btn"><i class="iconfont icon-shangchuan1"></i></div>
+      <div v-if="ind === 2" cursor="y" class="upload_song_btn"><i class="iconfont icon-shangchuan1"></i></div>
       <div v-else cursor="y" class="share_song_list_btn"><i class="iconfont icon-fenxiang_2"></i></div>
       <div cursor="y" class="checked_song_btn"><i class="iconfont icon-duoxuan"></i></div>
       <div v-if="ind > 0" cursor="y" class="sort_songs"><i class="iconfont icon-paixu"></i></div>
@@ -1072,9 +1072,9 @@ function addSongList(e) {
           placeholder: '标题',
           beforeText: '标题：',
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入标题';
-            } else if (val.trim().length > 100) {
+            } else if (val.trim().length > _d.fieldLenght.title) {
               return '标题过长';
             }
           },
@@ -1084,7 +1084,7 @@ function addSongList(e) {
           beforeText: '描述：',
           placeholder: '描述',
           verify(val) {
-            if (val.trim().length > 300) {
+            if (val.trim().length > _d.fieldLenght.des) {
               return '描述过长';
             }
           },
@@ -1095,7 +1095,7 @@ function addSongList(e) {
       function ({ close, inp }) {
         reqPlayerAddList({ name: inp.title, des: inp.des })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               close();
               _msg.success(result.codeText);
               getSongList();
@@ -1165,10 +1165,10 @@ function deleteSongList(e, name, id, cb) {
       confirm: { type: 'danger', text: '移除' },
     },
     (type) => {
-      if (type == 'confirm') {
+      if (type === 'confirm') {
         reqPlayerDeleteList({ id })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               cb && cb();
               _msg.success(result.codeText);
               getSongList();
@@ -1207,9 +1207,9 @@ function songListMenu(e, sid) {
     e,
     data,
     ({ e, close, id }) => {
-      if (id == '1') {
+      if (id === '1') {
         editSongList(e, { name, des, num }, sid);
-      } else if (id == '2') {
+      } else if (id === '2') {
         deleteSongList(e, name, sid, close);
       }
     },
@@ -1218,8 +1218,8 @@ function songListMenu(e, sid) {
 }
 // 获取歌曲信息
 function getSongInfo(id) {
-  const p = musicList.find((item) => item.id == $songListWrap.listId);
-  return p.item.find((item) => item.id == id);
+  const p = musicList.find((item) => item.id === $songListWrap.listId);
+  return p.item.find((item) => item.id === id);
 }
 // 获取选中的歌曲
 function getCheckSongs() {
@@ -1256,9 +1256,9 @@ function editSongList(e, obj, sid) {
         placeholder: '标题',
         value: name,
         verify(val) {
-          if (val.trim() == '') {
+          if (val.trim() === '') {
             return '请输入标题';
-          } else if (val.trim().length > 100) {
+          } else if (val.trim().length > _d.fieldLenght.title) {
             return '标题过长';
           }
         },
@@ -1269,7 +1269,7 @@ function editSongList(e, obj, sid) {
         placeholder: '描述',
         value: des || '',
         verify(val) {
-          if (val.trim().length > 300) {
+          if (val.trim().length > _d.fieldLenght.des) {
             return '描述过长';
           }
         },
@@ -1287,12 +1287,12 @@ function editSongList(e, obj, sid) {
         let nname = inp.title,
           idx = inp.idx - 1,
           ndes = inp.des;
-        if (nname + ndes == name + (des || '') && idx == obj.num) return;
+        if (nname + ndes === name + (des || '') && idx === obj.num) return;
         let toId = '';
         if (idx != obj.num) {
           const lastNum = musicList.length - 1;
           idx = idx > lastNum ? lastNum : idx < 3 ? 3 : idx;
-          toId = (musicList.find((item) => item.num == idx) || {}).id || '';
+          toId = (musicList.find((item) => item.num === idx) || {}).id || '';
         }
         reqPlayerEditList({
           id: sid,
@@ -1301,7 +1301,7 @@ function editSongList(e, obj, sid) {
           toId,
         })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               close(true);
               _msg.success(result.codeText);
               getSongList();
@@ -1322,7 +1322,7 @@ export async function updateSongCover(obj) {
     const files = await getFiles({
       accept: '.jpg,.jpeg,.png',
     });
-    if (files.length == 0) return;
+    if (files.length === 0) return;
     const file = files[0];
     const { name, size } = file;
     const pro = new UpProgress(file.name);
@@ -1347,7 +1347,7 @@ export async function updateSongCover(obj) {
         pro.update(percent);
       }
     );
-    if (parseInt(result.code) === 0) {
+    if (result.code === 1) {
       pro.close();
       getSongList();
     } else {
@@ -1364,7 +1364,7 @@ export async function upMv(obj) {
   const files = await getFiles({
     accept: '.mp4',
   });
-  if (files.length == 0) return;
+  if (files.length === 0) return;
   const file = files[0];
   const { name, size } = file;
   const pro = new UpProgress(name);
@@ -1390,7 +1390,7 @@ export async function upMv(obj) {
         pro.update(percent);
       }
     );
-    if (parseInt(result.code) === 0) {
+    if (result.code === 1) {
       pro.close();
       realtime.send({ type: 'updatedata', data: { flag: 'music' } });
       getSongList();
@@ -1408,7 +1408,7 @@ async function upSong() {
     multiple: true,
     accept: '.mp3',
   });
-  if (files.length == 0) return;
+  if (files.length === 0) return;
   await concurrencyTasks(files, 5, async (file) => {
     const { name, size } = file;
     const pro = new UpProgress(name);
@@ -1429,7 +1429,7 @@ async function upSong() {
       });
       let isrepeat = await reqPlayerRepeat({ HASH }); //是否已经存在文件
 
-      if (parseInt(isrepeat.code) === 0) {
+      if (isrepeat.code === 1) {
         //文件已经存在操作
         pro.close('歌曲已存在');
         return;
@@ -1445,7 +1445,7 @@ async function upSong() {
           pro.update(percent);
         }
       );
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         pro.close();
       } else {
         pro.fail();
@@ -1618,9 +1618,9 @@ function songMenu(e, idx, sobj) {
     e,
     data,
     ({ e, close, id }) => {
-      if (id == '1') {
+      if (id === '1') {
         shareSongList(e, [sobj.id]);
-      } else if (id == '9') {
+      } else if (id === '9') {
         delSong(
           e,
           'all',
@@ -1631,7 +1631,7 @@ function songMenu(e, idx, sobj) {
           },
           `${sobj.artist} - ${sobj.title}`
         );
-      } else if (id == '15') {
+      } else if (id === '15') {
         let id = $songListWrap.listId;
         delSong(
           e,
@@ -1643,22 +1643,22 @@ function songMenu(e, idx, sobj) {
           },
           `${sobj.artist} - ${sobj.title}`
         );
-      } else if (id == '7') {
+      } else if (id === '7') {
         close();
         const fname = `${sobj.artist}-${sobj.title}`;
         downloadFile(sobj.uurl, `${fname}.${getSuffix(sobj.url)[1]}`);
-      } else if (id == '6') {
+      } else if (id === '6') {
         moveSongToList(e, 'all', [sobj.id]);
-      } else if (id == '2') {
+      } else if (id === '2') {
         close();
         copyText(sobj.artist + ' - ' + sobj.title);
-      } else if (id == '8') {
+      } else if (id === '8') {
         if (!isRoot()) return;
         editSongInfo(e, sobj);
-      } else if (id == '3') {
+      } else if (id === '3') {
         close();
         showEditLrc(sobj);
-      } else if (id == '4') {
+      } else if (id === '4') {
         close();
         const u1 = sobj.ppic;
         imgPreview([
@@ -1667,9 +1667,9 @@ function songMenu(e, idx, sobj) {
             u2: `${u1}&t=1`,
           },
         ]);
-      } else if (id == '5') {
+      } else if (id === '5') {
         showSongInfo(e, sobj);
-      } else if (id == '10') {
+      } else if (id === '10') {
         delMv(
           e,
           sobj.id,
@@ -1678,27 +1678,27 @@ function songMenu(e, idx, sobj) {
           },
           `${sobj.artist} - ${sobj.title}`
         );
-      } else if (id == '11') {
+      } else if (id === '11') {
         const id = $songListWrap.listId;
         moveSongToList(e, id, [sobj.id]);
-      } else if (id == '12') {
+      } else if (id === '12') {
         close();
         updateSongCover(sobj);
-      } else if (id == '13') {
+      } else if (id === '13') {
         close();
         upMv(sobj);
-      } else if (id == '14') {
+      } else if (id === '14') {
         close();
         const list = musicList[idx].item || [];
         const toId = list[0].id;
-        if (toId == sobj.id) return;
+        if (toId === sobj.id) return;
         reqPlayerMoveSong({
           listId: $songListWrap.listId,
           fromId: sobj.id,
           toId: toId,
         })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               getSongList();
               return;
             }
@@ -1770,7 +1770,7 @@ const playRandomList = debounce(
   function (e) {
     reqPlayerRandomList()
       .then((res) => {
-        if (res.code == 0) {
+        if (res.code === 1) {
           temPlaylist = res.data;
           playSongListBtn(e);
         }
@@ -1806,9 +1806,9 @@ $msuicContentBox
         cancel: { text: '查看指南' },
       },
       (type) => {
-        if (type == 'confirm') {
+        if (type === 'confirm') {
           upSong();
-        } else if (type == 'cancel') {
+        } else if (type === 'cancel') {
           openInIframe('/note/?v=about', '关于');
         }
       }
@@ -1881,14 +1881,14 @@ $msuicContentBox
     // 移除选中
     const id = $songListWrap.listId;
     const arr = getCheckSongs().map((item) => item.id);
-    if (arr.length === 0 || id == 'all') return;
+    if (arr.length === 0 || id === 'all') return;
     delSong(e, id, arr, '');
   })
   .on('click', '.clear_all_song_btn', function (e) {
     // 清空
     const id = $songListWrap.listId;
     const idx = musicList.findIndex((item) => item.id === id);
-    if (idx > 1 || id == 'all') return;
+    if (idx > 1 || id === 'all') return;
     delSong(
       e,
       id,
@@ -1912,13 +1912,13 @@ $msuicContentBox
       e,
       data,
       ({ e, close, id }) => {
-        if (id == '1') {
+        if (id === '1') {
           close();
           // 选中添加到播放列表
           let arr = getCheckSongs();
           addSongToPlayList(e, arr);
           switchSongChecked();
-        } else if (id == '2') {
+        } else if (id === '2') {
           let arr = getCheckSongs().map((item) => item.id);
           moveSongToList(e, 'all', arr);
         }
@@ -1953,7 +1953,7 @@ $msuicContentBox
       const $this = $(this).parent();
       const issc = $this.attr('data-issc');
       const sobj = getSongInfo($this.attr('data-id'));
-      if (issc == 'true') {
+      if (issc === 'true') {
         songCloseCollect(sobj.id);
       } else {
         songCollect([sobj.id]);
@@ -2081,7 +2081,7 @@ export function songTooltip(obj) {
     album,
     year,
     duration,
-    creat_time,
+    create_at,
     play_count,
     collect_count,
   } = obj;
@@ -2093,7 +2093,7 @@ export function songTooltip(obj) {
     collect_count
   )}\n添加时间：${formatDate({
     template: `{0}-{1}-{2}`,
-    timestamp: creat_time,
+    timestamp: create_at,
   })}`;
   toolTip.setTip(str).show();
 }
@@ -2101,7 +2101,7 @@ export function songTooltip(obj) {
 function playSongList(id, e) {
   const sobj = getSongInfo(id);
   updateNewPlayList(temPlaylist);
-  if (setPlayingSongInfo().id == sobj.id) {
+  if (setPlayingSongInfo().id === sobj.id) {
     changePlayState();
   } else {
     if (e) {
@@ -2132,7 +2132,7 @@ function playSongList(id, e) {
         ) {
           reqPlayerMoveSong({ listId: id, fromId: fid, toId: tid })
             .then((result) => {
-              if (parseInt(result.code) === 0) {
+              if (result.code === 1) {
                 getSongList();
                 return;
               }
@@ -2196,7 +2196,7 @@ export function highlightPlayingSong(isPosition) {
     $songs.removeClass('active').find('.play_gif').removeClass('show');
     const idx = [].findIndex.call($songs, (item) => {
       const $item = $(item);
-      return $item.attr('data-id') == setPlayingSongInfo().id;
+      return $item.attr('data-id') === setPlayingSongInfo().id;
     });
 
     if (idx >= 0) {

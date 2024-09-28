@@ -72,15 +72,15 @@ if (isRoot()) {
 function renderUserList(pageNo, total, top) {
   const html = _tpl(
     `
-    <tr v-for="{account,username,time,email,state,online,hide} in userList" :data-acc="account">
-      <td>{{formatDate({template: '{0}-{1}-{2} {3}:{4}',timestamp: time})}}</td>
-      <td class="online_status" :cursor="online === 'y' ? 'y' : ''" style="color:{{online === 'y' ? 'green' : 'var(--color6)'}};">{{online === 'y' ? (hide === 'y' ? '隐身' : '在线') : '离线'}}</td>
+    <tr v-for="{account,username,update_at,email,state,online,hide} in userList" :data-acc="account">
+      <td>{{formatDate({template: '{0}-{1}-{2} {3}:{4}',timestamp: update_at})}}</td>
+      <td class="online_status" :cursor="online === 1 ? 'y' : ''" style="color:{{online === 1 ? 'green' : 'var(--color6)'}};">{{online === 1 ? (hide === 1 ? '隐身' : '在线') : '离线'}}</td>
       <td>{{username}}</td>
       <td>{{email || '--'}}</td>
       <td>{{account}}</td>
-      <td style="color:{{state == 0 ? 'green' : 'var(--btn-danger-color)'}};">{{state == 0 ? '启用' : '停用'}}</td>
+      <td style="color:{{state === 1 ? 'green' : 'var(--btn-danger-color)'}};">{{state === 1 ? '启用' : '停用'}}</td>
       <td :style="account === 'root' ? 'opacity: 0;pointer-events: none;' : ''">
-        <button cursor="y" class="user_state btn btn_primary">{{state == 0 ? '停用' : '启用'}}</button>
+        <button cursor="y" class="user_state btn btn_primary">{{state === 1 ? '停用' : '启用'}}</button>
         <button cursor="y" class="del_account btn btn_danger">删除</button>
       </td>
     </tr>
@@ -126,7 +126,7 @@ const pgnt = pagination($paginationBox[0], {
 function getUserList(top) {
   reqRootUserList({ pageNo, pageSize: uPageSize })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         const { registerState, uploadSaveDay, data, total } = (dataObj =
           result.data);
         pageNo = result.data.pageNo;
@@ -168,16 +168,16 @@ function changeUserState(e, obj) {
   _pop(
     {
       e,
-      text: `确认${state == 0 ? '停用' : '启用'}：${username}(${account})？`,
+      text: `确认${state === 1 ? '停用' : '启用'}：${username}(${account})？`,
     },
     (type) => {
-      if (type == 'confirm') {
+      if (type === 'confirm') {
         reqRootAccountState({
-          acc: account,
-          flag: state == '0' ? '1' : '0',
+          account,
+          state: state === 1 ? 0 : 1,
         })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               _msg.success(result.codeText);
               getUserList();
             }
@@ -197,10 +197,10 @@ function deleteAccount(e, obj) {
       confirm: { type: 'danger', text: '删除' },
     },
     (type) => {
-      if (type == 'confirm') {
-        reqRootDeleteAccount({ acc: account })
+      if (type === 'confirm') {
+        reqRootDeleteAccount({ account })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               _msg.success(result.codeText);
               getUserList();
             }
@@ -223,7 +223,7 @@ $list
   })
   .on('mouseenter', '.online_status', function () {
     const { os, online } = getUserInfo($(this).parent().attr('data-acc'));
-    if (online === 'n') return;
+    if (online === 0) return;
     const str = `登录设备：\n${os.join('\n')}`;
     toolTip.setTip(str).show();
   })
@@ -232,7 +232,7 @@ $list
   })
   .on('click', '.online_status', function (e) {
     const { os, online } = getUserInfo($(this).parent().attr('data-acc'));
-    if (online === 'n') return;
+    if (online === 0) return;
     const str = os.join('\n');
     rMenu.rightInfo(e, str, '登录设备');
   });
@@ -247,10 +247,10 @@ function cleanMusicFile(e) {
       text: `确认清理：歌曲文件？`,
     },
     (type) => {
-      if (type == 'confirm') {
+      if (type === 'confirm') {
         reqRootCleanMusicFile()
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               _msg.success(result.codeText);
               return;
             }
@@ -268,10 +268,10 @@ function cleanBgFile(e) {
       text: `确认清理：壁纸文件？`,
     },
     (type) => {
-      if (type == 'confirm') {
+      if (type === 'confirm') {
         reqRootCleanBgFile()
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               _msg.success(result.codeText);
               return;
             }
@@ -289,10 +289,10 @@ function cleanLogoFile(e) {
       text: `确认清理：logo文件？`,
     },
     (type) => {
-      if (type == 'confirm') {
+      if (type === 'confirm') {
         reqRootCleanLogoFile()
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               _msg.success(result.codeText);
               return;
             }
@@ -310,10 +310,10 @@ function cleanPicFile(e) {
       text: `确认清理：图床文件？`,
     },
     (type) => {
-      if (type == 'confirm') {
+      if (type === 'confirm') {
         reqRootCleanPicFile()
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               _msg.success(result.codeText);
               return;
             }
@@ -355,7 +355,7 @@ function cleanThumbFile(e) {
     e,
     data,
     ({ e, id, close }) => {
-      const obj = data.find((item) => item.id == id);
+      const obj = data.find((item) => item.id === id);
       if (obj) {
         _pop(
           {
@@ -363,10 +363,10 @@ function cleanThumbFile(e) {
             text: `确认清空：${obj.text} 缩略图？`,
           },
           (type) => {
-            if (type == 'confirm') {
+            if (type === 'confirm') {
               reqRootCleanThumbFile({ type: id })
                 .then((result) => {
-                  if (parseInt(result.code) === 0) {
+                  if (result.code === 1) {
                     close();
                     _msg.success(result.codeText);
                     return;
@@ -385,7 +385,7 @@ function cleanThumbFile(e) {
 function changeRegisterState() {
   reqRootRegisterState()
     .then((res) => {
-      if (res.code == 0) {
+      if (res.code === 1) {
         $headBtns
           .find('.register_state span')
           .attr(
@@ -425,7 +425,7 @@ function changeTrashState(e) {
       } else if (id === 'state') {
         reqRootTrashState()
           .then((res) => {
-            if (res.code == 0) {
+            if (res.code === 1) {
               dataObj.trashState = res.data;
               data[1].afterIcon = dataObj.trashState ? openIcon : closeIcon;
               resetMenu(data);
@@ -451,8 +451,12 @@ function changeChatFileSaveTime(e) {
           inputType: 'number',
           verify(val) {
             val = parseFloat(val);
-            if (!isInteger(val) || val < 0 || val > 999) {
-              return '请输入1000内正整数';
+            if (
+              !isInteger(val) ||
+              val < 0 ||
+              val > _d.fieldLenght.chatFileExpire
+            ) {
+              return `最大限制${_d.fieldLenght.chatFileExpire}`;
             }
           },
         },
@@ -462,7 +466,7 @@ function changeChatFileSaveTime(e) {
       function ({ close, inp }) {
         const day = parseInt(inp.text);
         reqRootCleanChatFile({ day }).then((res) => {
-          if (res.code == 0) {
+          if (res.code === 1) {
             close();
             dataObj.uploadSaveDay = day;
             $headBtns
@@ -487,9 +491,9 @@ function changeChatFileSaveTime(e) {
 // 更新token Key
 function updateTokenKey(e) {
   _pop({ e, text: `确认更新：tokenKey？` }, (type) => {
-    if (type == 'confirm') {
+    if (type === 'confirm') {
       reqRootUpdateTokenKey().then((res) => {
-        if (res.code == 0) {
+        if (res.code === 1) {
           _msg.success(res.codeText);
         }
       });
@@ -499,9 +503,9 @@ function updateTokenKey(e) {
 // 清理数据库空间
 function cleanDatabase(e) {
   _pop({ e, text: `确认释放：数据库空间？` }, (type) => {
-    if (type == 'confirm') {
+    if (type === 'confirm') {
       reqRootCleanDatabase().then((res) => {
-        if (res.code == 0) {
+        if (res.code === 1) {
           _msg.success(res.codeText);
         }
       });
@@ -550,6 +554,8 @@ function setEmail(e) {
               val = val.trim();
               if (val === '') {
                 return '请输入SMTP服务器地址';
+              } else if (val.length > _d.fieldLenght.email) {
+                return 'host过长';
               }
             }
           },
@@ -561,7 +567,7 @@ function setEmail(e) {
           verify(val, items) {
             if (items.state.value === 'y') {
               val = parseInt(val);
-              if (isNaN(val) || val < 0) {
+              if (isNaN(val) || val < 0 || val > 65535) {
                 return '端口格式错误';
               }
             }
@@ -574,6 +580,8 @@ function setEmail(e) {
             if (items.state.value === 'y') {
               if (!isEmail(val)) {
                 return '发件人邮箱格式错误';
+              } else if (val.length > _d.fieldLenght.email) {
+                return '邮箱过长';
               }
             }
           },
@@ -588,19 +596,19 @@ function setEmail(e) {
     },
     debounce(function ({ inp, close }) {
       const obj = {
-        state: inp.state,
-        secure: inp.secure,
+        state: inp.state === 'y' ? 1 : 0,
+        secure: inp.secure === 'y' ? 1 : 0,
         host: inp.host,
         port: inp.port || 465,
         user: inp.user,
         pass: inp.pass,
       };
       reqRootEmail(obj).then((res) => {
-        if (res.code == 0) {
+        if (res.code === 1) {
           close();
           dataObj.email = obj;
-          dataObj.email.state = obj.state === 'y' ? true : false;
-          dataObj.email.secure = obj.secure === 'y' ? true : false;
+          dataObj.email.state = obj.state === 1 ? true : false;
+          dataObj.email.secure = obj.secure === 1 ? true : false;
           _msg.success(res.codeText);
         }
       });
@@ -613,7 +621,7 @@ _d.isRootPage = true;
 let customCode = { js: '', css: '' };
 reqUserCustomCode()
   .then((res) => {
-    if (res.code == 0) {
+    if (res.code === 1) {
       customCode = res.data;
       addCustomCode(customCode);
     }
@@ -643,7 +651,7 @@ function customCssJs(e) {
         if (js === customCode.js && css === customCode.css) return;
         reqRootCustomCode({ js, css })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               close(true);
               _msg.success(result.codeText);
               customCode = { js, css };
@@ -672,6 +680,8 @@ function testEmail(e) {
             val = val.trim();
             if (!isEmail(val)) {
               return '邮箱格式错误';
+            } else if (val.length > _d.fieldLenght.email) {
+              return '邮箱过长';
             }
           },
         },
@@ -682,7 +692,7 @@ function testEmail(e) {
         _setData('testEmail', inp.email);
         reqRootTestEmail({ email: inp.email })
           .then((res) => {
-            if (res.code == 0) {
+            if (res.code === 1) {
               _msg.success(res.codeText);
             }
           })
@@ -707,7 +717,7 @@ function testTFA(e) {
           value: _getData('testCode') || '',
           verify(val) {
             val = val.trim();
-            if (val == '') {
+            if (val === '') {
               return '请输入验证码';
             } else if (val.length !== 6 || !isInteger(+val) || val < 0) {
               return '请输入6位正整数';
@@ -721,7 +731,7 @@ function testTFA(e) {
         _setData('testCode', inp.token);
         reqRootTestTfa({ token: inp.token })
           .then((res) => {
-            if (res.code == 0) {
+            if (res.code === 1) {
               _msg.success(res.codeText);
             }
           })
@@ -781,7 +791,7 @@ function handleRandomBg(e) {
       } else if (id === 'state') {
         reqRootRandomBgState()
           .then((res) => {
-            if (res.code == 0) {
+            if (res.code === 1) {
               dataObj.randomBgApi = res.data;
               data[1].afterIcon = dataObj.randomBgApi ? openIcon : closeIcon;
               resetMenu(data);

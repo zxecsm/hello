@@ -1,28 +1,35 @@
 const express = require('express'),
   route = express.Router();
-const configObj = require('../data/config');
+
+const configObj = require('../../data/config');
+
 const {
   _err,
   _nologin,
-  compressionImg,
-  getCompressionSize,
   isImgFile,
-  getPathFilename,
   validaString,
   paramErr,
+} = require('../../utils/utils');
+
+const { queryData } = require('../../utils/sqlite');
+
+const _f = require('../../utils/f');
+
+const fileKey = require('../../utils/fileKey');
+const {
   hdPath,
-  _hdPath,
-  isValid,
+  getCurPath,
+  getPathFilename,
   getRootDir,
-} = require('../utils/utils');
-const { queryData } = require('../utils/sqlite');
-const _f = require('../utils/f');
-const fileKey = require('../utils/fileKey');
+} = require('../file/file');
+const { getCompressionSize, compressionImg } = require('../../utils/img');
+const { validShareState } = require('../user/user');
+
 // 读取文件
 route.get('/', async (req, res) => {
   try {
-    let { account } = req._hello.userinfo;
     let { t = '', p, pass = '', sign = '' } = req.query;
+
     if (
       !validaString(sign, 0, 100) ||
       !validaString(t, 0, 1, 1) ||
@@ -32,19 +39,28 @@ route.get('/', async (req, res) => {
       paramErr(res, req);
       return;
     }
+
+    let { account } = req._hello.userinfo;
+
     if (!account) {
       const fKey = fileKey.get(sign);
+
       if (fKey) {
         account = fKey.account;
         p = fKey.p;
       }
     }
+
     const url = hdPath('/' + p);
+
     // 获取访问目录
     const pArr = url.split('/').filter((item) => item);
+
     let dir = pArr[0];
+
     const publicArr = ['pic', 'sharemusic', 'sharefile'];
     const verifyArr = ['bg', 'upload', 'file', 'music'];
+
     if (publicArr.includes(dir)) {
     } else if (verifyArr.includes(dir)) {
       if (!account) {
@@ -55,39 +71,50 @@ route.get('/', async (req, res) => {
       _err(res, '无权访问')(req, dir, 1);
       return;
     }
+
     // 合并url
     let path = '';
+
     if (dir === 'upload') {
       const id = pArr[1];
+
       const msg = (
-        await queryData('getchatfile', 'flag,url', `WHERE id=?`, [id])
+        await queryData('chat_upload_view', 'flag,url', `WHERE id = ?`, [id])
       )[0];
-      if (msg) {
-        if (msg.url && (msg.flag == 'chang' || msg.flag.includes(account))) {
-          path = hdPath(`${configObj.filepath}/upload/${msg.url}`);
-        }
+
+      if (
+        msg &&
+        msg.url &&
+        (msg.flag === 'chang' || msg.flag.includes(account))
+      ) {
+        path = hdPath(`${configObj.filepath}/upload/${msg.url}`);
+      } else {
+        _err(res, '无权访问')(req, `${dir}-${id}`, 1);
+        return;
       }
     } else if (dir === 'file') {
-      path = _hdPath(account, pArr.slice(1).join('/'));
+      path = getCurPath(account, pArr.slice(1).join('/'));
     } else if (dir === 'sharefile') {
       const id = pArr[1];
-      const share = (
-        await queryData(
-          'share',
-          '*',
-          `WHERE id=? AND (pass=? OR pass=?) AND type IN(?,?)`,
-          [id, '', pass, 'file', 'dir']
-        )
-      )[0];
-      if (share && !isValid(share.valid)) {
-        const obj = JSON.parse(share.data);
+      const share = await validShareState(req, ['file', 'dir'], id, pass);
+
+      if (share.state === 0) {
+        _err(res, share.text)(req, `${dir}-${id}`, 1);
+        return;
+      }
+
+      if (share.state === 1) {
+        const obj = share.data.data;
+
         const { name, type } = obj;
+
         const rootP = hdPath(
           getRootDir(share.account) + '/' + obj.path + '/' + name
         );
-        if (type == 'file') {
+
+        if (type === 'file') {
           path = rootP;
-        } else if (type == 'dir') {
+        } else if (type === 'dir') {
           path = hdPath(`${rootP}/${pArr.slice(2).join('/')}`);
         }
       }
@@ -97,17 +124,14 @@ route.get('/', async (req, res) => {
       } else {
         const id = pArr[1];
         const mid = pArr[2];
-        const share = (
-          await queryData(
-            'share',
-            '*',
-            `WHERE id=? AND type=? AND (pass=? OR pass=?)`,
-            [id, 'music', '', pass]
-          )
-        )[0];
-        if (share && !isValid(share.valid)) {
-          const arr = JSON.parse(share.data);
-          if (arr.some((item) => item == mid)) {
+
+        const share = await validShareState(req, ['music'], id, pass);
+        if (share.state === 0) {
+          _err(res, share.text)(req, `${dir}-${id}`, 1);
+          return;
+        }
+        if (share.state === 1) {
+          if (share.data.data.some((item) => item === mid)) {
             path = `${configObj.filepath}/music/${pArr.slice(3).join('/')}`;
           }
         }
@@ -116,15 +140,18 @@ route.get('/', async (req, res) => {
       path = configObj.filepath + url;
     }
     path = hdPath(path);
+
     if (!_f.c.existsSync(path)) {
       _err(res, '文件不存在')(req, path, 1);
       return;
     }
+
     const stat = await _f.p.stat(path);
     if (stat.isDirectory()) {
       _err(res, '文件不存在')(req, path, 1);
       return;
     }
+
     try {
       if (
         stat.isFile() &&
@@ -148,13 +175,19 @@ route.get('/', async (req, res) => {
           dir = 'music';
         }
         const thumbP = `${configObj.filepath}/thumb/${dir}`;
+
         const tp = `${thumbP}/${getPathFilename(url)[1]}_${stat.size}.png`;
+
         if (!_f.c.existsSync(tp)) {
           await _f.mkdir(thumbP);
+
           const { x, y } = getCompressionSize(dir);
+
           const buf = await compressionImg(path, x, y, 20);
+
           await _f.p.writeFile(tp, buf);
         }
+
         path = tp;
       }
       // eslint-disable-next-line no-unused-vars
@@ -164,4 +197,5 @@ route.get('/', async (req, res) => {
     _err(res)(req, error);
   }
 });
+
 module.exports = route;

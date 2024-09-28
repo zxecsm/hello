@@ -204,7 +204,7 @@ export function switchPlayMode() {
 // 上一曲
 export function playPrevSong() {
   let index;
-  if (setCurPlayingList().length == 0) {
+  if (setCurPlayingList().length === 0) {
     _msg.error('播放列表为空');
     pauseSong();
     return;
@@ -219,7 +219,7 @@ export function playNextSong() {
   updatePlayerBottomProgress(0);
   $lrcProgressBar.find('.pro2').width('0');
   let index;
-  if (setCurPlayingList().length == 0) {
+  if (setCurPlayingList().length === 0) {
     _msg.error('播放列表为空');
     pauseSong();
     return;
@@ -267,7 +267,7 @@ function playSong() {
     //远程播放
     realtime.send({
       type: 'play',
-      data: { state: 'y', obj: playingSongInfo },
+      data: { state: 1, obj: playingSongInfo },
     });
   } else {
     document.title = `\xa0\xa0\xa0♪正在播放：${playingSongInfo.artist} - ${playingSongInfo.title}`;
@@ -288,7 +288,7 @@ function renderLrc() {
     id,
   })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         let list = result.data;
         if (id !== playingSongInfo.id) return;
         list = list.map((item, idx) => {
@@ -412,10 +412,10 @@ function songStartPlaying() {
 function songTimeUpdate() {
   const curPlayTime = Math.round(this.currentTime);
   updateSongProgress();
-  if ($myAudio[0]._flag == curPlayTime) return;
+  if ($myAudio[0]._flag === curPlayTime) return;
   const list = lrcList || [];
   list
-    .filter((item) => item.t == curPlayTime)
+    .filter((item) => item.t === curPlayTime)
     // 多句同时间排队执行，100ms执行一次
     .forEach((item) => {
       lrcCount++;
@@ -502,7 +502,7 @@ $lrcHead
       playerRemoteBtnState();
       realtime.send({
         type: 'play',
-        data: { state: 'n' },
+        data: { state: 0 },
       });
     } else {
       if (!playingSongInfo.hash) return;
@@ -513,7 +513,7 @@ $lrcHead
       playerRemoteBtnState(1);
       realtime.send({
         type: 'play',
-        data: { state: 'y', obj: playingSongInfo },
+        data: { state: 1, obj: playingSongInfo },
       });
     }
   })
@@ -568,7 +568,7 @@ export function musicPlay(obj) {
   playingListHighlight(false);
   const text = `${playingSongInfo.artist} - ${playingSongInfo.title}`;
   _msg.msg({ message: text, icon: 'iconfont icon-yinle1' }, (type) => {
-    if (type == 'click') {
+    if (type === 'click') {
       if (musicPlayerIsHide()) {
         showMusicPlayerBox();
       }
@@ -581,7 +581,7 @@ export function musicPlay(obj) {
     if (!remotePlayState) {
       //未开启远程
       resetLastPlayCount();
-      updateLastPlay('y', 1);
+      updateLastPlay(1, 1);
     }
   }, 2000);
 }
@@ -797,7 +797,7 @@ $lrcMenuWrap
       e,
       data,
       ({ e, close, id }) => {
-        if (id == '1') {
+        if (id === '1') {
           close();
           const { size } = lrcState;
           _progressBar(e, size, (percent) => {
@@ -808,32 +808,32 @@ $lrcMenuWrap
             _setData('lrcState', lrcState);
             lrcScroll(true);
           });
-        } else if (id == '2') {
+        } else if (id === '2') {
           close();
           lrcState.position = 'left';
           $lrcListWrap.find('.lrc_items').css({
             'text-align': 'left',
           });
           _setData('lrcState', lrcState);
-        } else if (id == '3') {
+        } else if (id === '3') {
           close();
           lrcState.position = 'center';
           $lrcListWrap.find('.lrc_items').css({
             'text-align': 'center',
           });
           _setData('lrcState', lrcState);
-        } else if (id == '4') {
+        } else if (id === '4') {
           close();
           lrcState.position = 'right';
           $lrcListWrap.find('.lrc_items').css({
             'text-align': 'right',
           });
           _setData('lrcState', lrcState);
-        } else if (id == '5') {
+        } else if (id === '5') {
           if (!playingSongInfo.hash) return;
           close();
           showEditLrc(playingSongInfo);
-        } else if (id == '6') {
+        } else if (id === '6') {
           close();
           let u1 = playingSongInfo.ppic;
           imgPreview([
@@ -842,12 +842,12 @@ $lrcMenuWrap
               u2: `${u1}&t=1`,
             },
           ]);
-        } else if (id == '7') {
+        } else if (id === '7') {
           close();
           copyText(playingSongInfo.artist + ' - ' + playingSongInfo.title);
-        } else if (id == '9') {
+        } else if (id === '9') {
           moveSongToList(e, 'all', [playingSongInfo.id]);
-        } else if (id == '11') {
+        } else if (id === '11') {
           if (!playingSongInfo.hash) return;
           let sobj = deepClone(playingSongInfo);
           delSong(
@@ -860,9 +860,9 @@ $lrcMenuWrap
             },
             `${sobj.artist} - ${sobj.title}`
           );
-        } else if (id == '8') {
+        } else if (id === '8') {
           showSongInfo(e, playingSongInfo);
-        } else if (id == '10') {
+        } else if (id === '10') {
           close();
           let fname = `${playingSongInfo.artist}-${playingSongInfo.title}`;
           downloadFile(
@@ -878,14 +878,14 @@ $lrcMenuWrap
     let data = [];
     [2, 1.75, 1.5, 1.25, 1, 0.75, 0.25].forEach((item, idx) => {
       data.push({
-        id: idx + 1,
+        id: idx + 1 + '',
         text: 'x' + item,
         beforeIcon: 'iconfont icon-sudu',
         param: {
           b: item,
           a: 'x' + item,
         },
-        active: curPlaySpeed[1] == item ? true : false,
+        active: curPlaySpeed[1] === item ? true : false,
       });
     });
     rMenu.selectMenu(
@@ -898,7 +898,7 @@ $lrcMenuWrap
           $myAudio[0].playbackRate = b;
           curPlaySpeed = [a, b];
           data.forEach((item) => {
-            if (item.param.b == curPlaySpeed[1]) {
+            if (item.param.b === curPlaySpeed[1]) {
               item.active = true;
             } else {
               item.active = false;

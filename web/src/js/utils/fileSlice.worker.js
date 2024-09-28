@@ -12,7 +12,7 @@ self.onmessage = async function (e) {
     });
     self.postMessage({
       type: 'progress',
-      value: chunks.length == 1 ? 1 : i / (chunks.length - 1),
+      value: chunks.length === 1 ? 1 : i / (chunks.length - 1),
     });
   }
   self.postMessage({ type: 'result', value: res, HASH: spark.end() });

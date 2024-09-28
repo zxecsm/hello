@@ -61,7 +61,7 @@ realtime.init().add((res) => {
 const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
   change(val) {
     val = val.trim();
-    if (val == '') {
+    if (val === '') {
       $headWrap.find('.inp_box i').css('display', 'none');
     } else {
       $headWrap.find('.inp_box i').css('display', 'block');
@@ -109,7 +109,7 @@ function renderList(y) {
     pageSize: showpage,
   })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         const { total, data, pageNo, splitWord } = result.data;
         hList = data;
         $contentWrap.pagenum = pageNo;
@@ -117,10 +117,10 @@ function renderList(y) {
           `
           <p v-if="list.length === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
-            <ul v-for="{id, data} in list" class="item_box" :data-id="id">
+            <ul v-for="{id, content} in list" class="item_box" :data-id="id">
               <div cursor="y" check="n" class="check_state"></div>
               <li class="item_type iconfont icon-history"></li>
-              <li cursor="y" v-html="hdTitleHighlight(splitWord,data)" class="item_title"></li>
+              <li cursor="y" v-html="hdTitleHighlight(splitWord,content)" class="item_title"></li>
               <li cursor="y" class="del_item iconfont icon-shanchu"></li>
             </ul>
             <div v-html="getPagin()" class="pagingbox"></div>
@@ -176,7 +176,7 @@ const pgnt = pagination($contentWrap[0], {
 renderList(true);
 reqSearchConfig()
   .then((res) => {
-    if (res.code == 0) {
+    if (res.code === 1) {
       _d.searchEngineData = res.data.searchEngineData;
     }
   })
@@ -196,10 +196,10 @@ function deleteHistory(e, ids, isCheck) {
       confirm: { type: 'danger', text: '删除' },
     },
     (type) => {
-      if (type == 'confirm') {
+      if (type === 'confirm') {
         reqSearchDelete({ ids })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               _msg.success(result.codeText);
               renderList();
             }
@@ -216,11 +216,11 @@ $contentWrap
     deleteHistory(e, [id]);
   })
   .on('click', '.item_title', function () {
-    const { data } = getItemInfo($(this).parent().attr('data-id'));
-    if (isurl(data)) {
-      myOpen(data, '_blank');
+    const { content } = getItemInfo($(this).parent().attr('data-id'));
+    if (isurl(content)) {
+      myOpen(content, '_blank');
     } else {
-      const url = getSearchEngine().searchlink.replace(/\{\{\}\}/, data);
+      const url = getSearchEngine().searchlink.replace(/\{\{\}\}/, content);
       myOpen(url, '_blank');
     }
   })
@@ -232,8 +232,8 @@ $contentWrap
     checkedItem(this.querySelector('.check_state'));
   })
   .on('click', '.item_type', function () {
-    const { data } = getItemInfo($(this).parent().attr('data-id'));
-    copyText(data);
+    const { content } = getItemInfo($(this).parent().attr('data-id'));
+    copyText(content);
   })
   .on('click', '.check_state', function () {
     checkedItem(this);
@@ -303,9 +303,9 @@ function addHistory(e) {
         text: {
           type: 'textarea',
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入需要添加的内容';
-            } else if (val.trim().length > 100) {
+            } else if (val.trim().length > _d.fieldLenght.searchHistory) {
               return '内容过长';
             }
           },
@@ -314,10 +314,10 @@ function addHistory(e) {
     },
     debounce(
       function ({ close, inp }) {
-        const data = inp.text;
-        reqSearchSave({ data })
+        const content = inp.text;
+        reqSearchSave({ content })
           .then((res) => {
-            if (res.code == 0) {
+            if (res.code === 1) {
               $contentWrap.pagenum = 1;
               renderList(true);
               close();
@@ -388,7 +388,7 @@ function switchCheckAll() {
 scrollState(
   window,
   throttle(function ({ type }) {
-    if (type == 'up') {
+    if (type === 'up') {
       $headWrap.removeClass('open');
     } else {
       $headWrap.addClass('open');

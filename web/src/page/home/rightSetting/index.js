@@ -39,6 +39,7 @@ import {
   isurl,
   parseObjectJson,
   changeHeadBtnSort,
+  encodeHtml,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -112,7 +113,7 @@ export function setTopsFlag(val) {
 export function updateTipsFlag() {
   reqUserTips()
     .then((res) => {
-      if (res.code == 0) {
+      if (res.code === 1) {
         setTopsFlag(res.data);
         switchTipsBtn();
       }
@@ -195,8 +196,11 @@ function changeUsername(e) {
           placeholder: '用户名',
           value: setUserInfo().username,
           verify(val) {
-            if (val.trim().length < 1 || val.trim().length > 20) {
-              return '请输入1-20位';
+            if (
+              val.trim().length < 1 ||
+              val.trim().length > _d.fieldLenght.username
+            ) {
+              return `限制1-${_d.fieldLenght.username}位`;
             }
           },
         },
@@ -210,10 +214,10 @@ function changeUsername(e) {
           username,
         })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               close();
               _msg.success(result.codeText);
-              if (!chatRoomWrapIsHide() && setCurChatAccount() == 'chang') {
+              if (!chatRoomWrapIsHide() && setCurChatAccount() === 'chang') {
                 openFriend(setCurChatAccount(), true);
               }
               updateUserInfo();
@@ -232,7 +236,7 @@ function changeUsername(e) {
 function dailyChangeBg() {
   reqUserDailyChangeBg()
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         updateUserInfo();
         _msg.success(result.codeText);
         return;
@@ -244,7 +248,7 @@ function dailyChangeBg() {
 function hdHideState() {
   reqUserHideState()
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         updateUserInfo();
         _msg.success(result.codeText);
         return;
@@ -263,7 +267,7 @@ export async function upLogo(cb) {
     const files = await getFiles({
       accept: '.jpg,.jpeg,.png,.ico,.svg,.webp,.gif',
     });
-    if (files.length == 0) return;
+    if (files.length === 0) return;
     const file = files[0];
     if (!isImgFile(file.name)) {
       _msg.error(`图片格式错误`);
@@ -282,7 +286,7 @@ export async function upLogo(cb) {
       pro.update(percent);
     })
       .then((result) => {
-        if (parseInt(result.code) === 0) {
+        if (result.code === 1) {
           pro.close();
           const logo = result.data.logo;
           cb && cb(logo);
@@ -324,11 +328,11 @@ function hdUserLogo(e) {
     e,
     data,
     ({ e, id, close }) => {
-      if (id == '1') {
+      if (id === '1') {
         upLogo((logo) => {
           close();
           reqUserChangeLogo({ logo }).then((res) => {
-            if (res.code == '0') {
+            if (res.code === 1) {
               if (!chatRoomWrapIsHide()) {
                 openFriend(setCurChatAccount(), true);
               }
@@ -336,7 +340,7 @@ function hdUserLogo(e) {
             }
           });
         });
-      } else if (id == '2') {
+      } else if (id === '2') {
         close();
         imgPreview([
           {
@@ -345,7 +349,7 @@ function hdUserLogo(e) {
             ),
           },
         ]);
-      } else if (id == '3') {
+      } else if (id === '3') {
         _pop(
           {
             e,
@@ -353,9 +357,9 @@ function hdUserLogo(e) {
             confirm: { type: 'danger', text: '删除' },
           },
           (type) => {
-            if (type == 'confirm') {
+            if (type === 'confirm') {
               reqUserChangeLogo().then((res) => {
-                if (res.code == 0) {
+                if (res.code === 1) {
                   close();
                   updateUserInfo();
                 }
@@ -392,10 +396,10 @@ function bindEmail(e) {
               confirm: { type: 'danger', text: '解绑' },
             },
             (type) => {
-              if (type == 'confirm') {
+              if (type === 'confirm') {
                 reqUserBindEmail({ password: md5(pd) })
                   .then((result) => {
-                    if (parseInt(result.code) === 0) {
+                    if (result.code === 1) {
                       close();
                       updateUserInfo();
                       _msg.success(result.codeText);
@@ -422,6 +426,8 @@ function bindEmail(e) {
             verify(val) {
               if (!isEmail(val)) {
                 return '请输入正确的邮箱';
+              } else if (val.length > _d.fieldLenght.email) {
+                return '邮箱过长';
               }
             },
           },
@@ -432,7 +438,7 @@ function bindEmail(e) {
           const email = inp.email;
           reqUserBindEmailCode({ email })
             .then((res) => {
-              if (res.code == 0) {
+              if (res.code === 1) {
                 close();
                 _msg.success(res.codeText);
                 rMenu.inpMenu(
@@ -448,7 +454,7 @@ function bindEmail(e) {
                         inputType: 'number',
                         verify(val) {
                           val = val.trim();
-                          if (val == '') {
+                          if (val === '') {
                             return '请输入验证码';
                           } else if (
                             val.length !== 6 ||
@@ -467,7 +473,7 @@ function bindEmail(e) {
                       const code = inp.code;
                       reqUserBindEmail({ password: md5(pd), code, email })
                         .then((result) => {
-                          if (parseInt(result.code) === 0) {
+                          if (result.code === 1) {
                             close();
                             updateUserInfo();
                             _msg.success(result.codeText);
@@ -503,7 +509,7 @@ function handleForwardMsg(e) {
         state: {
           beforeText: '接口状态：',
           type: 'select',
-          value: state,
+          value: state === 1 ? 'y' : 'n',
           selectItem: [
             { value: 'y', text: '开启' },
             { value: 'n', text: '关闭' },
@@ -525,7 +531,11 @@ function handleForwardMsg(e) {
           placeholder:
             'https://api.xxx.com/xxx?text={{msg}} {{msg}} 会被替换为消息文本',
           verify(val, items) {
-            if (items.state.value === 'y' && !isurl(val)) {
+            if (
+              items.state.value === 'y' &&
+              !isurl(val) &&
+              val.length > _d.fieldLenght.url
+            ) {
               return '请输入正确的接口地址';
             }
           },
@@ -559,9 +569,15 @@ function handleForwardMsg(e) {
         let { state, link, type, header, body } = inp;
         header = parseObjectJson(header) || {};
         body = parseObjectJson(body) || {};
-        reqChatForwardMsgLink({ state, link, type, header, body })
+        reqChatForwardMsgLink({
+          state: state === 'y' ? 1 : 0,
+          link,
+          type,
+          header,
+          body,
+        })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               close(true);
               updateUserInfo();
               _msg.success(result.codeText);
@@ -593,9 +609,9 @@ export function renderUserinfo() {
     <ul><li>用户</li><li>{{username}}</li><li cursor="y" class="edit_user_name">修改</li></ul>
     <ul><li>账号</li><li>{{account}}</li></ul>
     <ul><li>邮箱</li><li>{{email || '未绑定邮箱'}}</li><li cursor="y" class="bind_email">{{email ? '解绑' : '绑定'}}</li></ul>
-    <ul><li>状态</li><li>开启隐身</li><li style="color: var(--icon-color);" class="hide iconfont {{hide && hide === 'y' ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'}}" cursor="y"></li></ul>
+    <ul><li>状态</li><li>开启隐身</li><li style="color: var(--icon-color);" class="hide iconfont {{hide && hide === 1 ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'}}" cursor="y"></li></ul>
     <ul><li>转发</li><li>消息转发至外部应用</li><li cursor="y" class="forward_msg">编辑</li></ul>
-    <ul><li>壁纸</li><li>每日自动更换壁纸</li><li style="color: var(--icon-color);" class="dailybg iconfont {{dailybg && dailybg === 'y' ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'}}" cursor="y"></li></ul>
+    <ul><li>壁纸</li><li>每日自动更换壁纸</li><li style="color: var(--icon-color);" class="dailybg iconfont {{daily_change_bg && daily_change_bg === 1 ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'}}" cursor="y"></li></ul>
     `,
     {
       ...setUserInfo(),
@@ -655,18 +671,18 @@ function setGentlemanLock(e) {
 function setPageFont(e) {
   reqUserFontList()
     .then((res) => {
-      if (res.code == 0) {
+      if (res.code === 1) {
         res.data.sort((a, b) => mixedSort(a, b));
         res.data.unshift('default');
         const data = [];
         res.data.forEach((item, idx) => {
           let name = item.slice(0, -4);
           data.push({
-            id: idx + 1,
-            text: item == 'default' ? '默认字体' : name,
+            id: idx + 1 + '',
+            text: item === 'default' ? '默认字体' : name,
             beforeText: (idx + 1 + '').padStart(2, '0') + '. ',
             param: { font: item },
-            active: _getData('fontType') == item ? true : false,
+            active: _getData('fontType') === item ? true : false,
           });
         });
         rMenu.selectMenu(
@@ -677,7 +693,7 @@ function setPageFont(e) {
               const font = param.font;
               _setData('fontType', font);
               data.forEach((item) => {
-                if (font == item.param.font) {
+                if (font === item.param.font) {
                   item.active = true;
                 } else {
                   item.active = false;
@@ -703,11 +719,11 @@ function hdIframeDarkMode(dark) {
   [...document.querySelectorAll('iframe')].forEach((item) => {
     try {
       const html = item.contentWindow.document.documentElement;
-      if (dark == 'y') {
+      if (dark === 'y') {
         html.classList.add('dark');
-      } else if (dark == 'n') {
+      } else if (dark === 'n') {
         html.classList.remove('dark');
-      } else if (dark == 's') {
+      } else if (dark === 's') {
         if (isDarkMode()) {
           html.classList.add('dark');
         } else {
@@ -735,9 +751,9 @@ function hdIframeCloseBtnSortMode(flag) {
 // 设置
 export function settingMenu(e, isMain) {
   let icon = 'icon-xianshiqi';
-  if (dark == 'y') {
+  if (dark === 'y') {
     icon = 'icon-icon_yejian-yueliang';
-  } else if (dark == 'n') {
+  } else if (dark === 'n') {
     icon = 'icon-taiyangtianqi';
   }
   let data = [
@@ -796,12 +812,12 @@ export function settingMenu(e, isMain) {
     e,
     data,
     ({ e, resetMenu, close, id, param }) => {
-      if (id == '1') {
+      if (id === '1') {
         close();
         showBgBox();
-      } else if (id == '2') {
+      } else if (id === '2') {
         setGentlemanLock(e);
-      } else if (id == '3') {
+      } else if (id === '3') {
         const clickLove = _getData('clickLove');
         const pmsound = _getData('pmsound');
         const tip = _getData('toolTip');
@@ -854,10 +870,10 @@ export function settingMenu(e, isMain) {
           e,
           data,
           ({ e, id, resetMenu, param }) => {
-            if (id == '1') {
+            if (id === '1') {
               // 模糊背景
               resizeBgFilter(e);
-            } else if (id == '2') {
+            } else if (id === '2') {
               // 黑白
               _progressBar(
                 e,
@@ -868,10 +884,10 @@ export function settingMenu(e, isMain) {
                   _setData('pageGrayscale', per);
                 }, 500)
               );
-            } else if (id == '3') {
+            } else if (id === '3') {
               // 字体列表
               setPageFont(e);
-            } else if (id == '4') {
+            } else if (id === '4') {
               // 点击效果设置
               if (param.value) {
                 data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
@@ -885,7 +901,7 @@ export function settingMenu(e, isMain) {
                 _setData('clickLove', true);
               }
               resetMenu(data);
-            } else if (id == '5') {
+            } else if (id === '5') {
               // 提示音
               if (param.value) {
                 data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
@@ -899,7 +915,7 @@ export function settingMenu(e, isMain) {
                 _setData('pmsound', true);
               }
               resetMenu(data);
-            } else if (id == '6') {
+            } else if (id === '6') {
               // 提示工具
               if (param.value) {
                 data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
@@ -917,7 +933,7 @@ export function settingMenu(e, isMain) {
           },
           '个性化设置'
         );
-      } else if (id == '4') {
+      } else if (id === '4') {
         // 黑暗模式
         const flag = param.value;
         if (flag === 'y') {
@@ -961,15 +977,15 @@ export function settingMenu(e, isMain) {
           _setData('headBtnToRight', true);
         }
         resetMenu(data);
-      } else if (id == '7') {
+      } else if (id === '7') {
         close();
         // 隐藏所有窗口
         hideAllwindow(1);
-      } else if (id == '8') {
+      } else if (id === '8') {
         close();
         // 关闭所有窗口
         closeAllwindow(1);
-      } else if (id == '6') {
+      } else if (id === '6') {
         close();
         openInIframe('/edit/#new', '新笔记');
       }
@@ -987,10 +1003,10 @@ function hdAdmin(e) {
     e,
     data,
     ({ close, id }) => {
-      if (id == '1') {
+      if (id === '1') {
         close(1);
         showRootPage();
-      } else if (id == '2') {
+      } else if (id === '2') {
         close(1);
         showLogPage();
       }
@@ -1018,7 +1034,7 @@ function createQrCode(e) {
         text: {
           type: 'textarea',
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入需要生成字符';
             }
           },
@@ -1062,21 +1078,21 @@ function hdTools(e) {
     e,
     data,
     ({ e, close, id }) => {
-      if (id == '1') {
+      if (id === '1') {
         close();
         showNote();
-      } else if (id == '2') {
+      } else if (id === '2') {
         close();
         showFileManage();
-      } else if (id == '3') {
+      } else if (id === '3') {
         close();
         showPicture();
-      } else if (id == '4') {
+      } else if (id === '4') {
         createQrCode(e);
-      } else if (id == '5') {
+      } else if (id === '5') {
         close();
         showNotepad();
-      } else if (id == '6') {
+      } else if (id === '6') {
         const data = [
           {
             id: '1',
@@ -1093,18 +1109,18 @@ function hdTools(e) {
           e,
           data,
           ({ e, close, id }) => {
-            if (id == '1') {
+            if (id === '1') {
               importBm(close);
-            } else if (id == '2') {
+            } else if (id === '2') {
               exportBm(e, close);
             }
           },
           '导入/导出书签'
         );
-      } else if (id == '7') {
+      } else if (id === '7') {
         close();
         showHistory();
-      } else if (id == '8') {
+      } else if (id === '8') {
         close();
         showBmk();
       }
@@ -1150,7 +1166,7 @@ function changeUserPd(e) {
           newpassword: md5(newpassword),
         })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               close();
               _msg.success(result.codeText, () => {
                 toLogin();
@@ -1193,14 +1209,14 @@ function closeAccount(e) {
             confirm: { type: 'danger', text: '注销' },
           },
           (type) => {
-            if (type == 'confirm') {
+            if (type === 'confirm') {
               reqUserAccountState({ password: md5(pd) })
                 .then((result) => {
-                  if (parseInt(result.code) === 0) {
+                  if (result.code === 1) {
                     close();
                     _delData();
                     _msg.success(result.codeText, (type) => {
-                      if (type == 'close') {
+                      if (type === 'close') {
                         myOpen('/login/');
                       }
                     });
@@ -1229,7 +1245,7 @@ function allowLogin(e) {
           inputType: 'number',
           verify(val) {
             val = val.trim();
-            if (val == '') {
+            if (val === '') {
               return '请输入登录码';
             } else if (val.length !== 6 || !isInteger(+val) || val < 0) {
               return '请输入6位正整数';
@@ -1259,7 +1275,7 @@ function allowLogin(e) {
         reqUserAllowLogin({ code })
           .then((res) => {
             closeLogin();
-            if (res.code == 0) {
+            if (res.code === 1) {
               close();
               _msg.success(res.codeText);
               _msg.botMsg(`认证成功`, 1);
@@ -1317,18 +1333,18 @@ function hdAccountManage(e) {
     e,
     data,
     ({ e, close, id }) => {
-      if (id == '1') {
+      if (id === '1') {
         showUserInfo();
         close(true);
-      } else if (id == '3') {
+      } else if (id === '3') {
         changeUserPd(e);
-      } else if (id == '5') {
+      } else if (id === '5') {
         closeAccount(e);
-      } else if (id == '2') {
+      } else if (id === '2') {
         allowLogin(e);
-      } else if (id == '6') {
+      } else if (id === '6') {
         hdAdmin(e);
-      } else if (id == '4') {
+      } else if (id === '4') {
         if (verify) {
           rMenu.inpMenu(
             e,
@@ -1347,7 +1363,7 @@ function hdAccountManage(e) {
                   if (type === 'confirm') {
                     reqUserVerify({ password: md5(pd) })
                       .then((res) => {
-                        if (res.code == 0) {
+                        if (res.code === 1) {
                           close(1);
                           updateUserInfo();
                           _msg.success(res.codeText);
@@ -1365,7 +1381,7 @@ function hdAccountManage(e) {
         } else {
           reqUserGetVerify()
             .then((res) => {
-              if (res.code == 0) {
+              if (res.code === 1) {
                 hdVerifyLogin(e, res.data, account);
               }
             })
@@ -1423,7 +1439,7 @@ async function hdVerifyLogin(e, verify, account) {
                 inputType: 'number',
                 verify(val) {
                   val = val.trim();
-                  if (val == '') {
+                  if (val === '') {
                     return '请输入验证码';
                   } else if (val.length !== 6 || !isInteger(+val) || val < 0) {
                     return '请输入6位正整数';
@@ -1438,7 +1454,7 @@ async function hdVerifyLogin(e, verify, account) {
               const pd = inp.pd;
               reqUserVerify({ token, password: md5(pd) })
                 .then((res) => {
-                  if (res.code == 0) {
+                  if (res.code === 1) {
                     close(1);
                     updateUserInfo();
                     _msg.success(res.codeText);
@@ -1472,7 +1488,7 @@ function importBm(cb) {
       const list = hdImportBm(getbookmark(res));
       reqBmkImport({ list })
         .then((res) => {
-          if (res.code == 0) {
+          if (res.code === 1) {
             cb && cb();
             _msg.success(res.codeText);
           }
@@ -1518,15 +1534,15 @@ function userLogout(e) {
       },
     },
     (type) => {
-      if (type == 'close') return;
-      let other = 'y';
-      type === 'confirm' ? (other = 'n') : null;
+      if (type === 'close') return;
+      let other = 1;
+      type === 'confirm' ? (other = 0) : null;
       reqUserLogout({ other })
         .then((result) => {
-          if (parseInt(result.code) === 0) {
+          if (result.code === 1) {
             _msg.success(result.codeText, (type) => {
               if (type === 'close') {
-                if (other === 'n') {
+                if (other === 0) {
                   toLogin();
                 }
               }
@@ -1551,7 +1567,7 @@ function setTipsFlag(e) {
       if (id === 'close' || id === 'update') {
         reqRootTips({ flag: id })
           .then((res) => {
-            if (res.code == 0) {
+            if (res.code === 1) {
               close();
               _msg.success(res.codeText);
             }
@@ -1641,9 +1657,11 @@ function hdExportBm(arr) {
       <DT><H3 PERSONAL_TOOLBAR_FOLDER="true">收藏夹栏</H3>
       <DL><p>\n`;
   arr.forEach((item) => {
-    str += `<DT><H3>${item.name}</H3>\n<DL><p>\n`;
+    str += `<DT><H3>${encodeHtml(item.title)}</H3>\n<DL><p>\n`;
     item.children.forEach((y) => {
-      str += `<DT><A HREF="${y.link}">${y.name}</A>\n`;
+      str += `<DT><A HREF="${encodeHtml(y.link)}" data-des="${encodeHtml(
+        y.des
+      )}">${encodeHtml(y.title)}</A>\n`;
     });
     str += `</DL><p>\n`;
   });
@@ -1653,17 +1671,17 @@ function hdExportBm(arr) {
 // 生成导入配置
 function hdImportBm(arr) {
   let res = [];
-  function fn(arr, name = 'xxx') {
+  function fn(arr, title = 'xxx') {
     let dirs = arr.filter((item) => item.folder),
       its = arr.filter((item) => !item.folder);
     if (its.length > 0) {
       res.push({
-        name,
+        title,
         list: its,
       });
     }
     dirs.forEach((item) => {
-      fn(item.children, item.name);
+      fn(item.children, item.title);
     });
   }
   fn(arr, 'home');

@@ -1,0 +1,213 @@
+const configObj = require('../../data/config');
+
+const { resolve } = require('path');
+
+const {
+  queryData,
+  deleteData,
+  batchDeleteData,
+  fillString,
+} = require('../../utils/sqlite');
+const _f = require('../../utils/f');
+const { _delDir } = require('../file/file');
+const shareVerify = require('../../utils/shareVerify');
+const { isValidShare, errLog } = require('../../utils/utils');
+
+// 获取用户信息
+async function getUserInfo(account, fields = '*') {
+  return (
+    await queryData('user', fields, `WHERE state = ? AND account = ?`, [
+      1,
+      account,
+    ])
+  )[0];
+}
+
+// 密码加密
+function encryption(str) {
+  return str.slice(10, -10).split('').reverse().join('');
+}
+
+// 获取外部播放器配置
+async function playInConfig() {
+  const p = `${configObj.filepath}/data/playIn.json`;
+
+  const logop = `${configObj.filepath}/playerlogo`;
+
+  if (!_f.c.existsSync(logop)) {
+    await _f.cp(resolve(__dirname, `../img/playerlogo`), logop);
+  }
+
+  if (!_f.c.existsSync(p)) {
+    await _f.cp(resolve(__dirname, `../data/playIn.json`), p);
+  }
+
+  return JSON.parse(await _f.p.readFile(p));
+}
+
+// 删除用户数据
+async function deleteUser(account) {
+  await deleteData('user', `WHERE account = ?`, [account]);
+
+  await batchDeleteData('bmk', 'id', `WHERE account = ?`, [account]);
+
+  await batchDeleteData('bmk_group', 'id', `WHERE account = ?`, [account]);
+
+  await batchDeleteData('chat', 'id', `WHERE _from = ? OR _to = ?`, [
+    account,
+    account,
+  ]);
+
+  await batchDeleteData('count_down', 'id', `WHERE account = ?`, [account]);
+
+  await batchDeleteData('friends', 'id', `WHERE account = ? OR friend = ?`, [
+    account,
+    account,
+  ]);
+
+  await batchDeleteData('history', 'id', `WHERE account = ?`, [account]);
+
+  await deleteData('last_play', `WHERE account = ?`, [account]);
+
+  await batchDeleteData('note', 'id', `WHERE account = ?`, [account]);
+
+  await batchDeleteData('note_category', 'id', `WHERE account = ?`, [account]);
+
+  await deleteData('playing_list', `WHERE account = ?`, [account]);
+
+  await batchDeleteData('share', 'id', `WHERE account = ?`, [account]);
+
+  await deleteData('song_list', `WHERE account = ?`, [account]);
+
+  await batchDeleteData('todo', 'id', `WHERE account = ?`, [account]);
+
+  await _delDir(`${configObj.filepath}/logo/${account}`);
+}
+
+// 验证分享
+async function validShareState(req, types, id, pass) {
+  const { ip } = req._hello;
+  if (shareVerify.verify(ip, id)) {
+    const share = (
+      await queryData(
+        'share',
+        'exp_time,data,account,pass',
+        `WHERE id = ? AND type IN (${fillString(types.length)})`,
+        [id, ...types]
+      )
+    )[0];
+
+    if (!share)
+      return {
+        state: 0,
+        text: '分享已取消',
+      };
+
+    if (isValidShare(share.exp_time))
+      return {
+        state: 0,
+        text: '分享已过期',
+      };
+
+    if (share.pass && pass !== share.pass) {
+      if (pass) {
+        shareVerify.add(ip, id);
+      }
+
+      return {
+        state: 0,
+        text: '提取码错误',
+      };
+    }
+
+    share.data = JSON.parse(share.data);
+
+    return {
+      state: 1,
+      data: share,
+    };
+  } else {
+    return {
+      state: 0,
+      text: '提取码多次错误，请10分钟后再试',
+    };
+  }
+}
+
+// 验证分享
+async function validShareAddUserState(req, types, id, pass) {
+  const { ip } = req._hello;
+
+  if (shareVerify.verify(ip, id)) {
+    const share = (
+      await queryData(
+        'share_user_view',
+        'username,logo,email,exp_time,account,data,pass',
+        `WHERE id = ? AND type IN (${fillString(types.length)})`,
+        [id, ...types]
+      )
+    )[0];
+
+    if (!share)
+      return {
+        state: 0,
+        text: '分享已取消',
+      };
+
+    if (isValidShare(share.exp_time))
+      return {
+        state: 0,
+        text: '分享已过期',
+      };
+
+    if (share.pass && pass !== share.pass) {
+      if (pass) {
+        shareVerify.add(ip, id);
+      }
+
+      await errLog(req, `提取码错误(${id})`);
+
+      return {
+        state: 3,
+        text: '提取码错误',
+      };
+    }
+
+    share.data = JSON.parse(share.data);
+
+    return {
+      state: 1,
+      data: share,
+    };
+  } else {
+    return {
+      state: 0,
+      text: '提取码多次错误，请10分钟后再试',
+    };
+  }
+}
+
+// 拆分分享idpass
+function splitShareFlag(str) {
+  const idx = str.indexOf('/');
+  let a = '',
+    b = '';
+
+  if (idx < 0) {
+    a = str;
+  } else {
+    a = str.slice(0, idx);
+    b = str.slice(idx + 1);
+  }
+
+  return [a, b];
+}
+module.exports = {
+  getUserInfo,
+  encryption,
+  playInConfig,
+  deleteUser,
+  validShareState,
+  validShareAddUserState,
+  splitShareFlag,
+};

@@ -1,32 +1,42 @@
 const os = require('os');
 //Cookie
 const cookieParser = require('cookie-parser');
+
 const express = require('express');
 const app = express();
+
 // 获取访问设备信息
 const UAParser = require('ua-parser-js');
-// 操作SQLite数据库
-const { queryData } = require('./utils/sqlite');
+
 const {
   writelog,
   getClientIp,
-  jwtde,
   getIn,
   _err,
-  setCookie,
   debounce,
-  heperMsgAndForward,
 } = require('./utils/utils');
+
 const { resolve } = require('path');
+
 const configObj = require('./data/config.js');
+
 const verifyLimit = require('./utils/verifyLimit.js');
+
+const { heperMsgAndForward } = require('./routes/chat/chat.js');
+
+const { jwtde, setCookie } = require('./utils/jwt.js');
+
+const { getUserInfo } = require('./routes/user/user.js');
+
 require('./data/createData');
 //Cookie
 app.use(cookieParser());
 app.use(express.json({ limit: '20000kb' }));
 app.use(express.urlencoded({ extended: true, limit: '20000kb' }));
 app.use(express.static(resolve(__dirname, 'static')));
+
 const reqLimit = verifyLimit({ space: 10, count: 500 }, false);
+
 const informReqLimit = debounce(
   async (req) => {
     try {
@@ -38,9 +48,11 @@ const informReqLimit = debounce(
   5000,
   1
 );
+
 app.use(async (req, res, next) => {
   try {
     const _clientConfig = new UAParser(req.headers['user-agent']).getResult(); //获取访问设备信息
+
     const osName = `${getIn(_clientConfig, ['os', 'name']) || 'other'}${
       getIn(_clientConfig, ['os', 'version']) || ''
     }`;
@@ -48,6 +60,7 @@ app.use(async (req, res, next) => {
     const osVendor = getIn(_clientConfig, ['device', 'vendor']);
     const osModel = getIn(_clientConfig, ['device', 'model']);
     const cpu = getIn(_clientConfig, ['cpu', 'architecture']);
+
     req._hello = {
       path: req.path,
       temid: req.headers['temid'],
@@ -58,10 +71,14 @@ app.use(async (req, res, next) => {
       })`,
       method: req.method.toLocaleLowerCase(),
     };
+
     const { jwt, ip, method, path } = req._hello;
+
     const flag = jwt.userinfo.account || '';
+
     if (reqLimit.verify(ip, flag)) {
       reqLimit.add(ip, flag);
+
       await writelog(req, `${method}(${path})`);
       next();
     } else {
@@ -73,6 +90,7 @@ app.use(async (req, res, next) => {
     _err(res);
   }
 });
+
 app.use(
   '/api/pub/font',
   express.static(`${configObj.filepath}/font`, { maxAge: 2592000000 })
@@ -98,24 +116,23 @@ app.use(
   express.static(`${configObj.filepath}/playerlogo`, { maxAge: 2592000000 })
 );
 app.use('/api/getfavicon', require('./routes/getfavicon'));
+
 app.use(async (req, res, next) => {
   try {
     req._hello.userinfo = {};
+
     const {
       userinfo: { account },
       iat,
       exp,
     } = req._hello.jwt;
-    if (account) {
-      const user = (
-        await queryData('user', '*', `WHERE state = ? AND account = ?`, [
-          '0',
-          account,
-        ])
-      )[0];
+
+    if (account && account !== 'hello') {
+      const user = await getUserInfo(account, '*');
+
       if (user) {
         //对比token生成的时间
-        if ((user.flag || 0) < iat) {
+        if ((user.exp_token_time || 0) < iat) {
           req._hello.userinfo = user;
           if (Date.now() / 1000 - iat >= (exp - iat) / 2) {
             const { account, username } = req._hello.userinfo;
@@ -130,27 +147,30 @@ app.use(async (req, res, next) => {
     _err(res);
   }
 });
-app.use('/api/user', require('./routes/user'));
-app.use('/api/bg', require('./routes/bg'));
-app.use('/api/pic', require('./routes/pic'));
-app.use('/api/root', require('./routes/root'));
-app.use('/api/player', require('./routes/player'));
-app.use('/api/bmk', require('./routes/bmk'));
-app.use('/api/chat', require('./routes/chat'));
-app.use('/api/search', require('./routes/search'));
-app.use('/api/note', require('./routes/note'));
-app.use('/api/getfile', require('./routes/getfile'));
-app.use('/api/todo', require('./routes/todo'));
-app.use('/api/count', require('./routes/count'));
-app.use('/api/file', require('./routes/file'));
-app.use('/api/notepad', require('./routes/notepad'));
+
+app.use('/api/user', require('./routes/user/index.js'));
+app.use('/api/bg', require('./routes/bg/index.js'));
+app.use('/api/pic', require('./routes/pic/index.js'));
+app.use('/api/root', require('./routes/root/index.js'));
+app.use('/api/player', require('./routes/player/index.js'));
+app.use('/api/bmk', require('./routes/bmk/index.js'));
+app.use('/api/chat', require('./routes/chat/index.js'));
+app.use('/api/search', require('./routes/search/index.js'));
+app.use('/api/note', require('./routes/note/index.js'));
+app.use('/api/getfile', require('./routes/getfile/index.js'));
+app.use('/api/todo', require('./routes/todo/index.js'));
+app.use('/api/count', require('./routes/count/index.js'));
+app.use('/api/file', require('./routes/file/index.js'));
+app.use('/api/notepad', require('./routes/notepad/index.js'));
+
 app.use((req, res) => {
   res.sendFile(resolve(__dirname, 'data/404.html'));
 });
+
 app.listen(configObj.port, () => {
   const arr = getLocahost().map(
     (item) =>
-      `http://${item}${configObj.port == 80 ? '' : `:${configObj.port}`}`
+      `http://${item}${configObj.port === 80 ? '' : `:${configObj.port}`}`
   );
   // eslint-disable-next-line no-console
   console.log(`
@@ -164,6 +184,7 @@ app.listen(configObj.port, () => {
   // eslint-disable-next-line no-console
   console.log(`服务开启成功，访问地址为：\n${arr.join('\n')}`);
 });
+
 function getLocahost() {
   const obj = os.networkInterfaces();
   let arr = [];
@@ -173,7 +194,7 @@ function getLocahost() {
       arr = [
         ...arr,
         ...value
-          .filter((item) => item.family == 'IPv4')
+          .filter((item) => item.family === 'IPv4')
           .map((item) => item.address),
       ];
     }

@@ -21,7 +21,7 @@ let lastPlayCount = 0; // 同步播放进度计数
     if (lastPlayCount >= 10) {
       lastPlayCount = 0;
       if (!songIspaused()) {
-        updateLastPlay('n');
+        updateLastPlay(0);
       }
     }
     // 如果歌曲正在播放，则标题跑马灯
@@ -36,10 +36,10 @@ let lastPlayCount = 0; // 同步播放进度计数
       timestamp: +Date.now(),
     }).split('-');
     if (
-      (minute == 59 && second >= 30) ||
-      (minute == 29 && second >= 30) ||
-      (minute == 0 && second == 0) ||
-      (minute == 30 && second == 0)
+      (minute === 59 && second >= 30) ||
+      (minute === 29 && second >= 30) ||
+      (minute === 0 && second === 0) ||
+      (minute === 30 && second === 0)
     ) {
       _msg.botMsg(`整点报时：${hour}:${minute}:${second}`, 1);
     }
@@ -59,7 +59,7 @@ export function updateLastPlay(history, y) {
     duration: setPlayingSongInfo().duration,
   })
     .then((result) => {
-      if (result.code == 0) {
+      if (result.code === 1) {
         if (y) {
           if (!musicPlayerIsHide()) {
             if (

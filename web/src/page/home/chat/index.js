@@ -132,7 +132,7 @@ const chatSearchInput = wrapInput(
   {
     change(val) {
       val = val.trim();
-      if (val == '') {
+      if (val === '') {
         $chatHeadBtns.find('.search_msg_inp i').css('display', 'none');
       } else {
         $chatHeadBtns.find('.search_msg_inp i').css('display', 'block');
@@ -161,9 +161,9 @@ const hdChatSearchInput = debounce(function () {
   }
   const acc = curChatAccount;
   loadingImg($chatListBox.find('.chat_list')[0]);
-  reqChatReadMsg({ type: 0, acc, word: val })
+  reqChatReadMsg({ type: 0, account: acc, word: val })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         if (chatRoomWrapIsHide()) return;
         const html = renderMsgList(result.data);
         $chatListBox.find('.chat_list').html(html);
@@ -174,12 +174,12 @@ const hdChatSearchInput = debounce(function () {
     .catch(() => {});
 }, 1000);
 let userPageNo = 1,
-  userPageSize = 10,
+  userPageSize = 50,
   isForward = false, // 转发状态
   forwardData = null;
 // 获取用户信息
 function getUserItem(account) {
-  return userList.find((item) => item.account == account);
+  return userList.find((item) => item.account === account);
 }
 const cUserListLoad = new LazyLoad();
 // 获取用户列表
@@ -189,7 +189,7 @@ function getUserList(top) {
   }
   reqChatUserList({ pageNo: userPageNo, pageSize: userPageSize })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         const { data, pageNo, totalPage, total } = result.data;
         userPageNo = pageNo;
         userList = data;
@@ -203,11 +203,11 @@ function renderUserList(pageNo, total, totalPage, top) {
   if (chatRoomWrapIsHide() || $userListBox.is(':hidden')) return;
   const html = _tpl(
     `
-    <ul v-for="{username, account, online, des = '', islook} in userList" :data-account="account" class="user_item">
-      <i :x="islook" class="msg_alert"></i>
-      <li cursor="y" class="user_logo" style="{{online === 'y' ? '' : 'filter: grayscale(1);'}}"></li>
+    <ul v-for="{username, account, online, des = '', read} in userList" :data-account="account" class="user_item">
+      <i :x="read === 1 ? 'y' : 'n'" class="msg_alert"></i>
+      <li cursor="y" class="user_logo" style="{{online === 1 ? '' : 'filter: grayscale(1);'}}"></li>
       <li cursor="y" class="user_name">{{getUsername(account,username,des)}}</li>
-      <li v-if="account !== 'hello'" :cursor="online === 'y' ? 'y' : ''" :style=getStyle(account,online) class="online iconfont icon-tuichudenglu1"></li>
+      <li v-if="account !== 'hello'" :cursor="online === 1 ? 'y' : ''" :style=getStyle(account,online) class="online iconfont icon-tuichudenglu1"></li>
     </ul>
     <div v-if="totalPage > 1" v-html="getPaging()"></div>
       `,
@@ -215,30 +215,30 @@ function renderUserList(pageNo, total, totalPage, top) {
       userList,
       totalPage,
       getUsername(account, username, des) {
-        if (setUserInfo().account == account) {
+        if (setUserInfo().account === account) {
           username = '文件传输助手';
         }
         return des || username;
       },
       getStyle(account, online) {
         let color = 'var(--color6)';
-        if (setUserInfo().account == account) {
-          if (setUserInfo().hide === 'y') {
+        if (setUserInfo().account === account) {
+          if (setUserInfo().hide === 1) {
             color = '#e9d00c';
           } else {
-            if (online === 'y') {
+            if (online === 1) {
               color = 'green';
             }
           }
         } else {
-          if (online === 'y') {
+          if (online === 1) {
             color = 'green';
           }
         }
         return { color };
       },
       isMe(account) {
-        return setUserInfo().account == account;
+        return setUserInfo().account === account;
       },
       getPaging() {
         return pgnt.getHTML({ pageNo, total, pageSize: userPageSize });
@@ -331,10 +331,10 @@ function clearMsg(e) {
       confirm: { type: 'danger', text: '清空' },
     },
     (type) => {
-      if (type == 'confirm') {
-        reqChatDeleteMsg({ acc })
+      if (type === 'confirm') {
+        reqChatDeleteMsg({ to: acc })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               _msg.success(result.codeText);
             }
           })
@@ -354,7 +354,7 @@ function hdforwardMsg(e, acc) {
     if (type === 'confirm') {
       reqChatforward({ to: acc, id: forwardData.id })
         .then((res) => {
-          if (res.code == 0) {
+          if (res.code === 1) {
             isForward = false;
             _msg.success(res.codeText);
           }
@@ -407,21 +407,46 @@ $chatHeadBtns
   );
 // 获取消息数据
 function getChatItem(id) {
-  return chatList.find((item) => item.id == id);
+  return chatList.find((item) => item.id === id);
 }
 // 生成消息列表
-export function renderMsgList(carr, isAdd) {
+export function renderMsgList(carr, isAdd, isPush) {
   if (carr.length === 0) return '';
   if (isAdd) {
     carr = carr.filter((item) => !chatList.some((y) => y.id === item.id));
-    chatList = [...chatList, ...carr];
+    if (isPush) {
+      chatList = [...chatList, ...carr];
+    } else {
+      chatList = [...carr, ...chatList];
+    }
   } else {
     chatList = carr;
   }
+  let flagStr = '';
+  chatList = chatList.map((item) => {
+    const d = formatDate({
+      template: '{0}-{1}-{2}',
+      timestamp: item.create_at,
+    });
+    if (d === flagStr) {
+      item.showTime = 'n';
+    } else {
+      item.showTime = 'y';
+    }
+    flagStr = d;
+    return item;
+  });
+  if (isAdd) {
+    if (isPush) {
+      carr = chatList.slice(-carr.length);
+    } else {
+      carr = chatList.slice(0, carr.length);
+    }
+  }
   const html = _tpl(
     `
-    <template v-for="{id,data,time,_from,_to,name,size,showTime,type,des = ''} in carr">
-      <div v-if="showTime === 'y'" class="chat_time">{{getDate(time)[0]}}</div>
+    <template v-for="{id,content,create_at,_from,_to,username,size,showTime,type,des = ''} in carr">
+      <div v-if="showTime === 'y'" class="chat_time">{{getDate(create_at)[0]}}</div>
       <ul class="chat_item" :data-id="id">
         <li v-if="isRight(_from)" cursor="y" class="chat_menu_btn iconfont icon-icon"></li>
         <li v-else cursor="y" class="c_left_logo">
@@ -429,35 +454,35 @@ export function renderMsgList(carr, isAdd) {
         </li>
         <li class="c_content_box">
           <span class="c_user_name" style="text-align: {{!isRight(_from) ? 'left' : 'right'}};">
-            {{getUsername(name,des,_to)}} <span>{{getDate(time)[1]}}</span>
+            {{getUsername(username,des,_to)}} <span>{{getDate(create_at)[1]}}</span>
           </span>
-          <div v-if="type == 'image'" cursor="y" class="c_img_msg_box" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
-            <div class="c_img"><span>{{size}}</span></div>
+          <div v-if="type === 'image'" cursor="y" class="c_img_msg_box" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
+            <div class="c_img"><span>{{computeSize(size)}}</span></div>
           </div>
-          <div v-else-if="type == 'voice'" cursor="y" 
+          <div v-else-if="type === 'voice'" cursor="y" 
             class="c_voice_msg_box {{isRight(_from) ? 'bcolor' : ''}}" 
-            style="float: {{!isRight(_from) ? 'left' : 'right'}};width: {{(parseFloat(size) / 30) * 100}}%;text-align:{{isRight(_from) ? 'right' : 'left'}}">
+            style="float: {{!isRight(_from) ? 'left' : 'right'}};width: {{(size / 30) * 100}}%;text-align:{{isRight(_from) ? 'right' : 'left'}}">
             <template v-if="isRight(_from)">
               <span class="c_right_triangle bcolor"></span>
-              <span style="font-size:12px;">{{size}}</span>
+              <span style="font-size:12px;">{{size.toFixed(2)}}s</span>
               <i class="iconfont icon-yuyin-cuxiantiao"></i>
             </template>
             <template v-else>
               <span class="c_left_triangle"></span>
               <i class="iconfont icon-yuyin1"></i>
-              <span style="font-size:12px;">{{size}}</span>
+              <span style="font-size:12px;">{{size.toFixed(2)}}s</span>
             </template>
           </div>
-          <div v-else-if="type == 'file'" :title="data" class="c_file_msg_box" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
+          <div v-else-if="type === 'file'" :title="content" class="c_file_msg_box" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
             <div cursor="y" class="c_file_info">
-              <span class="file_name">{{data}}</span>
-              <span class="file_size">{{size}}</span>
+              <span class="file_name">{{content}}</span>
+              <span class="file_size">{{computeSize(size)}}</span>
             </div>
-            <div class="file_type iconfont {{fileLogoType(data)}}"></div>
+            <div class="file_type iconfont {{fileLogoType(content)}}"></div>
             <span class="{{isRight(_from) ? 'c_right_triangle' : 'c_left_triangle'}}"></span>
           </div>
-          <p v-else-if="type == 'text'" class="c_text_msg_box {{isRight(_from) ? 'bcolor' : ''}}" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
-            <div v-html="hdTextMsg(data)"></div>
+          <p v-else-if="type === 'text'" class="c_text_msg_box {{isRight(_from) ? 'bcolor' : ''}}" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
+            <div v-html="hdTextMsg(content)"></div>
             <span class="{{isRight(_from)?'c_right_triangle bcolor':'c_left_triangle'}}"></span>
           </p>
         </li>
@@ -470,23 +495,24 @@ export function renderMsgList(carr, isAdd) {
     `,
     {
       carr,
-      getDate(time) {
+      getDate(create_at) {
         return formatDate({
           template: '{0}-{1}-{2} {3}:{4}',
-          timestamp: time,
+          timestamp: create_at,
         }).split(' ');
       },
       hdTextMsg,
       isRight(_from) {
         return _from === setUserInfo().account ? true : false;
       },
-      getUsername(name, des, _to) {
+      getUsername(username, des, _to) {
         if (_to === 'chang') {
-          return des || name || '未知';
+          return des || username || '未知';
         }
         return '';
       },
       fileLogoType,
+      computeSize,
     }
   );
   return html;
@@ -519,13 +545,13 @@ export function chatimgLoad() {
     const $item = $(item);
     let {
       des = '',
-      name,
+      username,
       logo,
       _from,
     } = getChatItem($item.parent().parent().data('id'));
     logo = logo
       ? hdPath(`/api/pub/logo/${_from}/${logo}`)
-      : getTextImg(des || name);
+      : getTextImg(des || username);
     if (_from === 'hello') {
       logo = imgHelloLogo;
     }
@@ -541,7 +567,7 @@ export function chatimgLoad() {
       () => {
         $item
           .css({
-            'background-image': `url(${getTextImg(des || name)})`,
+            'background-image': `url(${getTextImg(des || username)})`,
           })
           .addClass('load');
       }
@@ -559,8 +585,8 @@ export function chatMessageNotification(name, data, from, to, logo) {
       duration: 8000,
     },
     (type) => {
-      if (type == 'click') {
-        curChatAccount = to == 'chang' ? to : from;
+      if (type === 'click') {
+        curChatAccount = to === 'chang' ? to : from;
         chatSearchInput.setValue('').focus();
         showChatRoom();
       }
@@ -572,7 +598,7 @@ export function chatMessageNotification(name, data, from, to, logo) {
     logo = imgHelloLogo;
   }
   // 页面变为不可见时触发
-  if (document.visibilityState == 'hidden') {
+  if (document.visibilityState === 'hidden') {
     sendNotification(
       {
         title: name + '：',
@@ -580,7 +606,7 @@ export function chatMessageNotification(name, data, from, to, logo) {
         icon: logo,
       },
       () => {
-        curChatAccount = to == 'chang' ? to : from;
+        curChatAccount = to === 'chang' ? to : from;
         chatSearchInput.setValue('').focus();
         showChatRoom();
       }
@@ -597,7 +623,7 @@ export function showChatRoom() {
     openFriend(chatAcc, false, () => {
       reqChatNews()
         .then((result) => {
-          if (parseInt(result.code) === 0) {
+          if (result.code === 1) {
             const { group, friend } = result.data;
             if (friend > 0) {
               $chatHeadBtns.find('.c_msg_alert').stop().fadeIn(_d.speed);
@@ -627,7 +653,7 @@ const hideBackBotBtn = debounce(function () {
 }, 5000);
 // 用户菜单
 function userMenu(e, msgObj, isUserList) {
-  const { _from, name, des, logo, email } = msgObj;
+  const { _from, username, des, logo, email } = msgObj;
   if (_from === 'hello') {
     rMenu.rightInfo(e, helperInfo, '助手功能');
     return;
@@ -636,7 +662,7 @@ function userMenu(e, msgObj, isUserList) {
   let data = [
     {
       id: '1',
-      text: name,
+      text: username,
       beforeIcon: 'iconfont icon-zhanghao',
     },
   ];
@@ -647,7 +673,7 @@ function userMenu(e, msgObj, isUserList) {
       beforeIcon: 'iconfont icon-yanjing_xianshi_o',
     });
   }
-  if (chatAcc == 'chang' || isUserList) {
+  if (chatAcc === 'chang' || isUserList) {
     data.push({
       id: '2',
       text: '发送消息',
@@ -671,14 +697,14 @@ function userMenu(e, msgObj, isUserList) {
     e,
     data,
     ({ e, close, id }) => {
-      if (id == '2') {
+      if (id === '2') {
         close();
         openFriend(_from);
-      } else if (id == '3') {
+      } else if (id === '3') {
         let url = `/notes/?acc=${_from}`;
-        openInIframe(url, (des || name) + '的笔记本');
+        openInIframe(url, (des || username) + '的笔记本');
         close();
-      } else if (id == '1') {
+      } else if (id === '1') {
         const data = [
           {
             id: '1',
@@ -702,7 +728,7 @@ function userMenu(e, msgObj, isUserList) {
           e,
           data,
           ({ e, id }) => {
-            if (id == '1') {
+            if (id === '1') {
               rMenu.inpMenu(
                 e,
                 {
@@ -712,8 +738,8 @@ function userMenu(e, msgObj, isUserList) {
                       placeholder: '备注',
                       value: des,
                       verify(val) {
-                        if (val.trim().length > 20) {
-                          return '请输入0-20位';
+                        if (val.trim().length > _d.fieldLenght.chatDes) {
+                          return `限制1-${_d.fieldLenght.chatDes}位`;
                         }
                       },
                     },
@@ -722,14 +748,14 @@ function userMenu(e, msgObj, isUserList) {
                 debounce(
                   function ({ close, inp }) {
                     const des = inp.text;
-                    reqChatSetDes({ acc: _from, des })
+                    reqChatSetDes({ account: _from, des })
                       .then((res) => {
-                        if (res.code == 0) {
+                        if (res.code === 1) {
                           _msg.success(res.codeText);
                           close(true);
-                          if (curChatAccount == 'chang') {
+                          if (curChatAccount === 'chang') {
                             openFriend(curChatAccount, true);
-                          } else if (curChatAccount == _from) {
+                          } else if (curChatAccount === _from) {
                             setChatTitle(curChatAccount);
                           }
                           if (isUserList) {
@@ -745,23 +771,23 @@ function userMenu(e, msgObj, isUserList) {
                 ),
                 '设置备注'
               );
-            } else if (id == '2') {
+            } else if (id === '2') {
               copyText(_from);
-            } else if (id == '3') {
+            } else if (id === '3') {
               mailTo(email);
             }
           },
           '用户信息'
         );
-      } else if (id == '4') {
+      } else if (id === '4') {
         close();
-        openInIframe(`/bmk?acc=${_from}`, (des || name) + '的书签夹');
-      } else if (id == '5') {
+        openInIframe(`/bmk?acc=${_from}`, (des || username) + '的书签夹');
+      } else if (id === '5') {
         imgPreview([{ u1: hdPath(`/api/pub/logo/${_from}/${logo}`) }]);
         close();
       }
     },
-    des || name
+    des || username
   );
 }
 // 打开文件
@@ -769,26 +795,26 @@ function openChatFile() {
   const $this = $(this).parent().parent();
   const obj = getChatItem($this.data('id'));
   const msgId = obj.id,
-    name = obj.data;
+    content = obj.content;
   //查看文件是否过期
   reqChatExpired({ hash: obj.hash })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         const { isText } = result.data;
         if (isText) {
-          downloadFile(getFilePath(`/upload/${msgId}`), name);
+          downloadFile(getFilePath(`/upload/${msgId}`), content);
         } else {
-          if (isVideoFile(name)) {
+          if (isVideoFile(content)) {
             openInIframe(
               `/videoplay/#${encodeURIComponent(
                 getFilePath(`/upload/${msgId}`)
               )}`,
-              name
+              content
             );
-          } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(name)) {
-            openInIframe(getFilePath(`/upload/${msgId}`), name);
+          } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(content)) {
+            openInIframe(getFilePath(`/upload/${msgId}`), content);
           } else {
-            downloadFile(getFilePath(`/upload/${msgId}`), name);
+            downloadFile(getFilePath(`/upload/${msgId}`), content);
           }
         }
         return;
@@ -804,7 +830,7 @@ function openChatImg() {
   // 检查图片是否过期
   reqChatExpired({ hash: obj.hash })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         imgPreview([
           {
             u1: getFilePath(`/upload/${id}`),
@@ -838,14 +864,14 @@ function scrollTopMsg() {
     }
     reqChatReadMsg({
       flag,
-      acc: curChatAccount,
+      account: curChatAccount,
       type: 1,
       word,
     })
       .then((result) => {
-        if (parseInt(result.code) === 0) {
+        if (result.code === 1) {
           if (chatRoomWrapIsHide()) return;
-          let html = renderMsgList(result.data, 1);
+          let html = renderMsgList(result.data, 1, 0);
           if (html === '') {
             html += `<div class="nomore" style="text-align: center;font-size: 14px;color: var(--text-hover-color);">没有更多了<div>`;
           }
@@ -907,9 +933,9 @@ $chatRoomWrap.on('click', '.scroll_to_bot_btn', function () {
 // 消息菜单
 function chatMsgMenu(e, cobj) {
   const chatAcc = curChatAccount;
-  const { type, _from, id: tt, data: z, hash } = cobj;
+  const { type, _from, id: tt, content: z, hash } = cobj;
   let data = [];
-  if (type == 'text') {
+  if (type === 'text') {
     data = [
       {
         id: '1',
@@ -952,17 +978,17 @@ function chatMsgMenu(e, cobj) {
     e,
     data,
     ({ close, id, e }) => {
-      if (id == '4') {
+      if (id === '4') {
         _pop(
           {
             e,
             text: `确认撤回：消息？`,
           },
           (type) => {
-            if (type == 'confirm') {
-              reqChatDeleteMsg({ id: tt, acc: chatAcc })
+            if (type === 'confirm') {
+              reqChatDeleteMsg({ id: tt, to: chatAcc })
                 .then((result) => {
-                  if (parseInt(result.code) === 0) {
+                  if (result.code === 1) {
                     close();
                     _msg.success(result.codeText);
                     return;
@@ -972,25 +998,25 @@ function chatMsgMenu(e, cobj) {
             }
           }
         );
-      } else if (id == '1') {
+      } else if (id === '1') {
         copyText(z);
         close();
-      } else if (id == '2') {
+      } else if (id === '2') {
         chatMsgInp.setValue(z).focus();
         close();
-      } else if (id == '3') {
+      } else if (id === '3') {
         let flag = null;
-        if (type == 'image') {
+        if (type === 'image') {
           flag = '图片';
-        } else if (type == 'voice') {
+        } else if (type === 'voice') {
           flag = '语音';
-        } else if (type == 'file') {
+        } else if (type === 'file') {
           flag = '文件';
         }
         if (!flag) return;
         reqChatExpired({ hash })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               close();
               downloadFile(getFilePath(`/upload/${tt}`), z);
               return;
@@ -998,7 +1024,7 @@ function chatMsgMenu(e, cobj) {
             _msg.error(`${flag}已过期`);
           })
           .catch(() => {});
-      } else if (id == '5') {
+      } else if (id === '5') {
         isForward = true;
         forwardData = cobj;
         close();
@@ -1006,13 +1032,13 @@ function chatMsgMenu(e, cobj) {
         $userListBox.stop().slideDown(_d.speed, () => {
           getUserList(true);
         });
-      } else if (id == '6') {
+      } else if (id === '6') {
         close();
         _setData('newNote', z);
         openInIframe('/edit/#new', '新笔记');
       }
     },
-    cobj.data
+    cobj.content
   );
 }
 // 播放语音
@@ -1045,8 +1071,8 @@ $chatAudio
 // 发送文本消息
 function sendTextMsg() {
   const chatAcc = curChatAccount,
-    data = chatMsgInp.getValue().trim();
-  if (data.length > 2500) {
+    content = chatMsgInp.getValue().trim();
+  if (content.length > 2500) {
     _msg.error('发送内容过长');
     return;
   }
@@ -1056,24 +1082,11 @@ function sendTextMsg() {
     .children('i')
     .attr('class', 'iconfont icon-jiahao');
   chatMsgInp.setValue('').focus();
-  if (data === '') return;
-  const obj = {
-    data,
-    type: 'text',
-  };
-  sendChatMsg(obj, chatAcc);
-}
-// 发送消息
-function sendChatMsg(obj, chatAcc) {
+  if (content === '') return;
   reqChatSendMsg({
-    _to: chatAcc,
-    data: obj.data,
-    size: obj.size,
-    hash: obj.hash,
-    type: obj.type,
-  })
-    .then(() => {})
-    .catch(() => {});
+    to: chatAcc,
+    content,
+  }).catch(() => {});
 }
 function switchShakeBtn() {
   const $shakeBtn = $chatFootBox.find('.c_sent_shake_btn');
@@ -1126,10 +1139,10 @@ const chatMsgInp = wrapInput(
 );
 $chatFootBox
   .on('click', '.c_sent_msg_btn', async function () {
-    if ($(this).attr('x') == 1) {
+    if ($(this).attr('x') === '1') {
       const chatAcc = curChatAccount;
       const files = await getFiles({ multiple: true });
-      if (files.length == 0) return;
+      if (files.length === 0) return;
       sendfile(files, chatAcc);
     } else {
       sendTextMsg();
@@ -1142,9 +1155,9 @@ $chatFootBox
     'click',
     '.c_sent_shake_btn',
     throttle(() => {
-      reqChatShakeMsg({ acc: curChatAccount })
+      reqChatShakeMsg({ to: curChatAccount })
         .then((res) => {
-          if (res.code == 0) {
+          if (res.code === 1) {
             _msg.success();
           }
         })
@@ -1153,7 +1166,7 @@ $chatFootBox
   )
   .on('click', '.c_change_btn', function () {
     const $this = $(this);
-    if ($this.attr('x') == 1) {
+    if ($this.attr('x') === '1') {
       $chatFootBox.find('.c_get_voice_btn').css('display', 'block');
       $chatFootBox.find('.c_text_msg').css('display', 'none');
       $this.attr('x', 2).children('i').attr('class', 'iconfont icon-w_jianpan');
@@ -1188,7 +1201,7 @@ $chatFootBox
       }
     });
     const chatAcc = curChatAccount;
-    if (files.length == 0) return;
+    if (files.length === 0) return;
     e.preventDefault();
     sendfile(files, chatAcc);
   });
@@ -1205,7 +1218,7 @@ $chatFootBox
     e.preventDefault();
     const files = [...e.dataTransfer.files],
       chatAcc = curChatAccount;
-    if (files.length == 0) return;
+    if (files.length === 0) return;
     sendfile(files, chatAcc);
   });
 })();
@@ -1214,36 +1227,33 @@ async function sendfile(files, chatAcc) {
   await concurrencyTasks(files, 5, async (file) => {
     const { name, size } = file;
     const pro = new UpProgress(name);
-    if (size == 0) {
+    if (size === 0) {
       pro.fail('发送失败');
       _msg.error(`不能发送空文件`);
       return;
     }
+    const type = isImgFile(name) ? 'image' : 'file';
     try {
       const { chunks, count, HASH } = await fileSlice(file, (percent) => {
         pro.loading(percent);
       });
-      const breakpointarr = (await reqChatBreakpoint({ HASH })).data, //断点续传
-        isrepeat = await reqChatRepeat({
-          HASH,
-        }), //是否已经存在文件
-        obj = {
-          size: computeSize(size),
-          data: name,
-          type: isImgFile(name) ? 'image' : 'file',
-        }; //生成消息对象
+
+      const isrepeat = await reqChatRepeat({
+        HASH,
+        type,
+        name,
+        to: chatAcc,
+      }); //是否已经存在文件
+      if (isrepeat.code === 1) {
+        //文件已经存在操作
+        pro.close('发送成功');
+        return;
+      }
+
+      const breakpointarr = (await reqChatBreakpoint({ HASH })).data; //断点续传
 
       function compale(index) {
         pro.update(index / count);
-      }
-
-      if (parseInt(isrepeat.code) === 0) {
-        //文件已经存在操作
-        pro.close('发送成功');
-        const { id } = isrepeat.data;
-        obj.hash = id;
-        sendChatMsg(obj, chatAcc);
-        return;
       }
 
       let index = breakpointarr.length;
@@ -1266,17 +1276,16 @@ async function sendfile(files, chatAcc) {
           HASH,
           count,
           name,
-          _to: chatAcc,
-          size: obj.size,
-          type: obj.type,
+          to: chatAcc,
+          type,
         }); //合并切片
-        if (parseInt(mergeRes.code) === 0) {
+        if (mergeRes.code === 1) {
           pro.close('发送成功');
         } else {
           pro.close('发送失败');
         }
       } catch (error) {
-        if (error.statusText == 'timeout') {
+        if (error.statusText === 'timeout') {
           pro.close('处理文件中');
         } else {
           pro.close('发送失败');
@@ -1312,8 +1321,7 @@ function upVoice(blob, duration) {
       {
         HASH,
         name: `${HASH}.wav`,
-        _to: chatAcc,
-        size: duration + 's',
+        to: chatAcc,
       },
       blob,
       (percent) => {
@@ -1321,7 +1329,7 @@ function upVoice(blob, duration) {
       }
     )
       .then((res) => {
-        if (res.code == 0) {
+        if (res.code === 1) {
           pro.close('发送成功');
           playSound(imgVoice);
         }
@@ -1418,9 +1426,9 @@ function updateOnlineStatus() {
   updateOnlineStatus.clear();
   onlineTimer = setInterval(() => {
     const acc = curChatAccount;
-    reqChatGetDes({ acc })
+    reqChatGetDes({ account: acc })
       .then((res) => {
-        if (res.code == 0) {
+        if (res.code === 1) {
           const { username, des, online } = res.data;
           curChatUserInfo = res.data;
           if (online) {
@@ -1450,24 +1458,24 @@ updateOnlineStatus.clear = function () {
 // 设置消息标题
 function setChatTitle(acc) {
   chatTitleScroll.init('');
-  if (acc == setUserInfo().account) {
+  if (acc === setUserInfo().account) {
     chatTitleScroll.init('文件传输助手');
     $onlineStatus.css('display', 'none');
     updateOnlineStatus.clear();
-  } else if (acc == 'chang') {
+  } else if (acc === 'chang') {
     chatTitleScroll.init('聊天室');
     $onlineStatus.css('display', 'none');
     updateOnlineStatus.clear();
-  } else if (acc == 'hello') {
+  } else if (acc === 'hello') {
     chatTitleScroll.init('Hello助手');
     $onlineStatus.css('display', 'none');
     updateOnlineStatus.clear();
   } else {
     $onlineStatus.css('display', 'block');
     updateOnlineStatus();
-    reqChatGetDes({ acc })
+    reqChatGetDes({ account: acc })
       .then((res) => {
-        if (res.code == 0) {
+        if (res.code === 1) {
           const { username, des, online } = res.data;
           curChatUserInfo = res.data;
           if (online) {
@@ -1518,9 +1526,9 @@ export function openFriend(acc, noHideUserList, cb) {
     $userListBox.html('');
   }
   loadingImg($chatListBox.find('.chat_list')[0]);
-  reqChatReadMsg({ acc, type: 0 })
+  reqChatReadMsg({ account: acc, type: 0 })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         if (chatRoomWrapIsHide()) return;
         const html = renderMsgList(result.data);
         $chatListBox.find('.chat_list').html(html);
@@ -1543,7 +1551,7 @@ $userListBox
       from = obj.account;
     if (!name || !from) return;
     if (_getTarget(this, e, '.user_logo')) {
-      if (setUserInfo().account == from) {
+      if (setUserInfo().account === from) {
         showUserInfo();
         hideUserList();
         return;
@@ -1561,9 +1569,9 @@ $userListBox
       openFriend(from);
     } else if (_getTarget(this, e, '.online')) {
       const { os, online, account } = obj;
-      if (account === 'hello' || online === 'n') return;
+      if (account === 'hello' || online === 0) return;
       let status = '在线';
-      if (account === setUserInfo().account && setUserInfo().hide === 'y') {
+      if (account === setUserInfo().account && setUserInfo().hide === 1) {
         status = '隐身';
       }
       const str = `状态：${status}\n登录设备：\n${os.join('\n')}`;
@@ -1579,10 +1587,10 @@ $userListBox
       return;
     }
     let status = '在线';
-    if (account === setUserInfo().account && setUserInfo().hide === 'y') {
+    if (account === setUserInfo().account && setUserInfo().hide === 1) {
       status = '隐身';
     }
-    if (online === 'n') {
+    if (online === 0) {
       status = '离线';
     }
     if (account === setUserInfo().account) {
@@ -1591,7 +1599,7 @@ $userListBox
     const str = `用户名：${username}\n备注：${
       des || '--'
     }\n账号：${account}\n邮箱：${email || '--'}\n状态：${status}${
-      online === 'y' ? `\n登录设备：\n${os.join('\n')}` : ''
+      online === 1 ? `\n登录设备：\n${os.join('\n')}` : ''
     }`;
     toolTip.setTip(str).show();
   })

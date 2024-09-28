@@ -1,31 +1,40 @@
 const express = require('express'),
   route = express.Router();
+
 const {
   queryData,
   updateData,
   deleteData,
   insertData,
-} = require('../utils/sqlite');
-const timedTask = require('../utils/timedTask');
+  getTableRowCount,
+  fillString,
+} = require('../../utils/sqlite');
+
+const timedTask = require('../../utils/timedTask');
+
 const {
   _nologin,
   _err,
   _success,
-  nanoid,
   validaString,
   paramErr,
   syncUpdateData,
   createPagingData,
   _type,
-  createFillString,
   isValidDate,
   isurl,
   validationValue,
-  helloHelperMsg,
-  forwardMsg,
   writelog,
   concurrencyTasks,
-} = require('../utils/utils');
+  batchTask,
+} = require('../../utils/utils');
+
+const {
+  helloHelperMsg,
+  sendNotificationsToCustomAddresses,
+} = require('../chat/chat');
+const { fieldLenght } = require('../config');
+const { computerDay } = require('./count');
 
 //拦截器
 route.use((req, res, next) => {
@@ -35,47 +44,75 @@ route.use((req, res, next) => {
     _nologin(res);
   }
 });
+
 let countNum = 0;
 timedTask.add(async () => {
   countNum++;
   if (countNum >= 5 * 60 * 60) {
     countNum = 0;
-    const t = Date.now() + 2 * 1000 * 60 * 60 * 24;
-    const expireCount = await queryData(
-      'count_down',
-      '*',
-      `WHERE end<? AND state=?`,
-      [t, '0']
-    );
-    const undoneTodo = await queryData('todo', '*', `WHERE state=?`, ['0']);
-    if (undoneTodo.length === 0 && expireCount.length === 0) return;
+
     const obj = {};
-    expireCount.forEach((item) => {
-      const { account } = item;
-      if (obj.hasOwnProperty(account)) {
-        obj[account].count_down++;
-      } else {
-        obj[account] = {
-          count_down: 1,
-          todo: 0,
-        };
-      }
+
+    const t = Date.now() + 2 * 1000 * 60 * 60 * 24;
+
+    await batchTask(async (offset, limit) => {
+      const list = await queryData(
+        'count_down',
+        'account',
+        `WHERE end < ? AND state = ? LIMIT ? OFFSET ?`,
+        [t, 1, limit, offset]
+      );
+
+      if (list.length === 0) return false;
+
+      list.forEach((item) => {
+        const { account } = item;
+
+        if (obj.hasOwnProperty(account)) {
+          obj[account].count_down++;
+        } else {
+          obj[account] = {
+            count_down: 1,
+            todo: 0,
+          };
+        }
+      });
+
+      return true;
     });
-    undoneTodo.forEach((item) => {
-      const { account } = item;
-      if (obj.hasOwnProperty(account)) {
-        obj[account].todo++;
-      } else {
-        obj[account] = {
-          count_down: 0,
-          todo: 1,
-        };
-      }
+
+    await batchTask(async (offset, limit) => {
+      const list = await queryData(
+        'todo',
+        'account',
+        `WHERE state = ? LIMIT ? OFFSET ?`,
+        [1, limit, offset]
+      );
+
+      if (list.length === 0) return false;
+
+      list.forEach((item) => {
+        const { account } = item;
+
+        if (obj.hasOwnProperty(account)) {
+          obj[account].todo++;
+        } else {
+          obj[account] = {
+            count_down: 0,
+            todo: 1,
+          };
+        }
+      });
+      return true;
     });
+
     const keys = Object.keys(obj);
+
     await concurrencyTasks(keys, 5, async (key) => {
       const { count_down, todo } = obj[key];
+
       let text = '';
+
       if (count_down > 0 && todo > 0) {
         text = `您有 ${count_down} 条已到期或即将到期的倒计时，和 ${todo} 条未完成事项`;
       } else if (count_down > 0) {
@@ -83,8 +120,10 @@ timedTask.add(async () => {
       } else if (todo > 0) {
         text = `您有 ${todo} 条未完成事项`;
       }
+
       const msg = await helloHelperMsg(key, text);
-      forwardMsg(
+
+      sendNotificationsToCustomAddresses(
         {
           _hello: {
             userinfo: {
@@ -94,144 +133,176 @@ timedTask.add(async () => {
         },
         msg
       ).catch((err) => {
-        writelog(false, `转发信息失败(${err})`, 'error');
+        writelog(false, `发送通知到自定义地址失败(${err})`, 'error');
       });
     });
+
     writelog(false, `通知倒计时和代办事项成功`, 'user');
   }
 });
-function computerDay(start, end) {
-  const total = end - start; // 总时间
-  let past = Date.now() - start; // 过去
-  // past > total ? (past = total) : past < 0 ? (past = 0) : null;
-  const percent = parseInt((past / total) * 100); // 百分比
-  const remain = total - past; // 剩下
-  return { total, past, remain, percent };
-}
+
 // 倒计时列表
 route.get('/list', async (req, res) => {
   try {
-    const { account } = req._hello.userinfo;
     let { pageNo = 1, pageSize = 40 } = req.query;
     pageNo = parseInt(pageNo);
     pageSize = parseInt(pageSize);
+
     if (
       isNaN(pageNo) ||
       isNaN(pageSize) ||
       pageNo < 1 ||
       pageSize < 1 ||
-      pageSize > 200
+      pageSize > fieldLenght.maxPagesize
     ) {
       paramErr(res, req);
       return;
     }
-    const list = (
-      await queryData('count_down', '*', `WHERE account=?`, [account])
-    ).map((item) => {
-      const { start, end } = item;
-      return {
-        ...item,
-        ...computerDay(start, end),
-      };
-    });
-    const expireCount = list.filter(
-      (item) => item.state === '0' && item.remain < 2 * 1000 * 60 * 60 * 24
-    ).length;
-    list.sort((a, b) => a.end - b.end);
-    list.sort((a, b) => b.top - a.top);
+
+    const { account } = req._hello.userinfo;
+
+    const offset = (pageNo - 1) * pageSize;
+
+    const total = await getTableRowCount('count_down', `WHERE account = ?`, [
+      account,
+    ]);
+
+    let list = [],
+      expireCount = 0;
+
+    if (total > 0) {
+      expireCount = await getTableRowCount(
+        'count_down',
+        `WHERE account = ? AND state = ? AND end < ?`,
+        [account, 1, Date.now() + 2 * 1000 * 60 * 60 * 24]
+      );
+
+      list = (
+        await queryData(
+          'count_down',
+          'id,title,link,start,end,state,top',
+          `WHERE account = ? ORDER BY top DESC, end ASC LIMIT ? OFFSET ?`,
+          [account, pageSize, offset]
+        )
+      ).map((item) => {
+        const { start, end } = item;
+        return {
+          ...item,
+          ...computerDay(start, end),
+        };
+      });
+    }
+
     _success(res, 'ok', {
-      ...createPagingData(list, pageSize, pageNo),
+      ...createPagingData([...Array(total)], pageSize, pageNo),
+      data: list,
       expireCount,
     });
   } catch (error) {
     _err(res)(req, error);
   }
 });
+
 // 增加
 route.post('/add', async (req, res) => {
   try {
     let { title, start, end, link = '' } = req.body;
+
     if (
-      !validaString(title, 1, 200) ||
+      !validaString(title, 1, fieldLenght.title) ||
       !isValidDate(start) ||
       !isValidDate(end) ||
-      (link && (!validaString(link, 1, 1000) || !isurl(link)))
+      (link && (!validaString(link, 1, fieldLenght.url) || !isurl(link)))
     ) {
       paramErr(res, req);
       return;
     }
+
     start = new Date(start + ' 00:00:00').getTime();
     end = new Date(end + ' 00:00:00').getTime();
+
     if (start >= end) {
       paramErr(res, req);
       return;
     }
+
     const { account } = req._hello.userinfo;
-    const id = nanoid();
+
     await insertData('count_down', [
       {
-        id,
         account,
         title,
         start,
         end,
         link,
-        state: '0',
-        top: '0',
       },
     ]);
+
     syncUpdateData(req, 'countlist');
-    _success(res, `添加倒计时成功`)(req, id, 1);
+
+    _success(res, `添加倒计时成功`)(req, title, 1);
   } catch (error) {
     _err(res)(req, error);
   }
 });
+
 // 删除
 route.post('/delete', async (req, res) => {
   try {
     const { ids } = req.body;
+
     if (
       !_type.isArray(ids) ||
-      ids.length == 0 ||
-      ids.length > 200 ||
-      !ids.every((item) => validaString(item, 1, 50, 1))
+      ids.length === 0 ||
+      ids.length > fieldLenght.maxPagesize ||
+      !ids.every((item) => validaString(item, 1, fieldLenght.id, 1))
     ) {
       paramErr(res, req);
       return;
     }
+
     const { account } = req._hello.userinfo;
+
     await deleteData(
       'count_down',
-      `WHERE id IN (${createFillString(ids.length)}) AND account=?`,
+      `WHERE id IN (${fillString(ids.length)}) AND account = ?`,
       [...ids, account]
     );
+
     syncUpdateData(req, 'countlist');
+
     _success(res, `删除倒计时成功`)(req, ids.length, 1);
   } catch (error) {
     _err(res)(req, error);
   }
 });
+
 // 编辑
 route.post('/edit', async (req, res) => {
   try {
     let { id, title, start, end, link = '' } = req.body;
-    const { account } = req._hello.userinfo;
+
     if (
-      !validaString(id, 1, 50, 1) ||
-      !validaString(title, 1, 200) ||
+      !validaString(id, 1, fieldLenght.id, 1) ||
+      !validaString(title, 1, fieldLenght.title) ||
       !isValidDate(start) ||
       !isValidDate(end) ||
-      (link && (!validaString(link, 1, 1000) || !isurl(link)))
+      (link && (!validaString(link, 1, fieldLenght.url) || !isurl(link)))
     ) {
       paramErr(res, req);
       return;
     }
+
     start = new Date(start + ' 00:00:00').getTime();
     end = new Date(end + ' 00:00:00').getTime();
+
     if (start >= end) {
       paramErr(res, req);
       return;
     }
+
+    const { account } = req._hello.userinfo;
+
     await updateData(
       'count_down',
       {
@@ -240,49 +311,71 @@ route.post('/edit', async (req, res) => {
         end,
         link,
       },
-      `WHERE id=? AND account=?`,
+      `WHERE id = ? AND account = ?`,
       [id, account]
     );
+
     syncUpdateData(req, 'countlist');
-    _success(res, '更新倒计时成功')(req, id, 1);
+
+    _success(res, '更新倒计时成功')(req, title, 1);
   } catch (error) {
     _err(res)(req, error);
   }
 });
+
 // 置顶权重
 route.post('/top', async (req, res) => {
   try {
     let { id, top } = req.body;
     top = parseInt(top);
-    if (isNaN(top) || top < 0 || top > 9999 || !validaString(id, 1, 50, 1)) {
+
+    if (
+      isNaN(top) ||
+      top < 0 ||
+      top > fieldLenght.top ||
+      !validaString(id, 1, fieldLenght.id, 1)
+    ) {
       paramErr(res, req);
       return;
     }
+
     const { account } = req._hello.userinfo;
-    await updateData('count_down', { top }, `WHERE id=? AND account=?`, [
+
+    await updateData('count_down', { top }, `WHERE id = ? AND account = ?`, [
       id,
       account,
     ]);
+
     syncUpdateData(req, 'countlist');
+
     _success(res, '修改倒计时权重成功')(req, `${id}-${top}`, 1);
   } catch (error) {
     _err(res)(req, error);
   }
 });
+
 // 状态
 route.post('/state', async (req, res) => {
   try {
-    let { id, state } = req.body;
-    if (!validationValue(state, ['0', '1']) || !validaString(id, 1, 50, 1)) {
+    const { id, state } = req.body;
+
+    if (
+      !validationValue(state, [1, 0]) ||
+      !validaString(id, 1, fieldLenght.id, 1)
+    ) {
       paramErr(res, req);
       return;
     }
+
     const { account } = req._hello.userinfo;
-    await updateData('count_down', { state }, `WHERE id=? AND account=?`, [
+
+    await updateData('count_down', { state }, `WHERE id = ? AND account = ?`, [
       id,
       account,
     ]);
+
     syncUpdateData(req, 'countlist');
+
     _success(res, '修改倒计时状态成功')(req, `${id}-${state}`, 1);
   } catch (error) {
     _err(res)(req, error);

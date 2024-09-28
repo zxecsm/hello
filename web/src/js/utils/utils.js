@@ -271,11 +271,11 @@ export function hdTextMsg(str) {
   const s = [];
   splitTextType(str, urlReg, 'link').forEach((item) => {
     const { type, value } = item;
-    if (type == 'link') {
+    if (type === 'link') {
       s.push(item);
     } else if (!type) {
       splitTextType(value, phoneReg, 'tel').forEach((p) => {
-        if (p.type == 'tel') {
+        if (p.type === 'tel') {
           s.push(p);
         } else if (!p.type) {
           splitTextType(p.value, emailReg, 'email').forEach((e) => {
@@ -288,9 +288,9 @@ export function hdTextMsg(str) {
   return _tpl(
     `
     <template v-for="{type,value} in s">
-      <a v-if="type == 'link'" cursor="y" target='_blank' :href='value'>{{value}}</a>
-      <a v-else-if="type == 'tel'" cursor="y" href='tel:{{value}}'>{{value}}</a>
-      <a v-else-if="type == 'email'" cursor="y" href='mailto:{{value}}'>{{value}}</a>
+      <a v-if="type === 'link'" cursor="y" target='_blank' :href='value'>{{value}}</a>
+      <a v-else-if="type === 'tel'" cursor="y" href='tel:{{value}}'>{{value}}</a>
+      <a v-else-if="type === 'email'" cursor="y" href='mailto:{{value}}'>{{value}}</a>
       <template v-else>{{value}}</template>
     </template>
     `,
@@ -541,11 +541,11 @@ export function _postAjax(url, data = {}, opt = {}) {
         if (load) {
           _loadingBar.end();
         }
-        if (data.code == 1) {
+        if (data.code === 0) {
           _msg.error(data.codeText);
           reject(data.codeText);
           return;
-        } else if (data.code == 2) {
+        } else if (data.code === 2) {
           toLogin();
           return;
         }
@@ -559,9 +559,9 @@ export function _postAjax(url, data = {}, opt = {}) {
           _loadingBar.end();
         }
         if (!stopErrorMsg) {
-          if (err.statusText == 'error') {
+          if (err.statusText === 'error') {
             _msg.error(`连接失败!( ╯□╰ )`);
-          } else if (err.statusText == 'timeout') {
+          } else if (err.statusText === 'timeout') {
             // _msg.error(`请求超时!( ╯□╰ )`);
           }
         }
@@ -607,11 +607,11 @@ export function _getAjax(url, data = {}, opt = {}) {
         if (load) {
           _loadingBar.end();
         }
-        if (data.code == 1) {
+        if (data.code === 0) {
           _msg.error(data.codeText);
           reject(data.codeText);
           return;
-        } else if (data.code == 2) {
+        } else if (data.code === 2) {
           toLogin();
           return;
         }
@@ -625,9 +625,9 @@ export function _getAjax(url, data = {}, opt = {}) {
           _loadingBar.end();
         }
         if (!stopErrorMsg) {
-          if (err.statusText == 'error') {
+          if (err.statusText === 'error') {
             _msg.error(`连接失败!( ╯□╰ )`);
-          } else if (err.statusText == 'timeout') {
+          } else if (err.statusText === 'timeout') {
             // _msg.error(`请求超时!( ╯□╰ )`);
           }
         }
@@ -672,11 +672,11 @@ export function _upFile(url, data = {}, file, callback) {
         return xhr;
       },
       success: (data) => {
-        if (data.code == 1) {
+        if (data.code === 0) {
           _msg.error(data.codeText);
           reject(data.codeText);
           return;
-        } else if (data.code == 2) {
+        } else if (data.code === 2) {
           toLogin();
           return;
         }
@@ -756,41 +756,37 @@ export function getFileReader(file, type) {
 }
 // 切片
 export async function fileSlice(file, callback) {
-  try {
-    let chunkSize = file.size / 100;
-    const max = 50 * 1024 * 1024,
-      min = 5 * 1024 * 1024;
-    if (chunkSize > max) {
-      chunkSize = max;
-    } else if (chunkSize < min) {
-      chunkSize = min;
-    }
-    const [a, b] = getSuffix(file.name || ''),
-      count = Math.ceil(file.size / chunkSize),
-      spark = new SparkMD5.ArrayBuffer(),
-      chunks = [];
-    for (let i = 0; i < count; i++) {
-      const chunk = file.slice(i * chunkSize, (i + 1) * chunkSize);
-      const buf = await getFileReader(chunk);
-      spark.append(buf);
-      chunks.push({
-        file: chunk,
-        filename: `_${i}`,
-      });
-      callback && callback(count == 1 ? 1 : i / (count - 1));
-    }
-    const HASH = spark.end();
-    return {
-      HASH,
-      chunks,
-      count,
-      suffix: b,
-      filename: a,
-      size: file.size,
-    };
-  } catch (error) {
-    throw error;
+  let chunkSize = file.size / 100;
+  const max = 50 * 1024 * 1024,
+    min = 5 * 1024 * 1024;
+  if (chunkSize > max) {
+    chunkSize = max;
+  } else if (chunkSize < min) {
+    chunkSize = min;
   }
+  const [a, b] = getSuffix(file.name || ''),
+    count = Math.ceil(file.size / chunkSize),
+    spark = new SparkMD5.ArrayBuffer(),
+    chunks = [];
+  for (let i = 0; i < count; i++) {
+    const chunk = file.slice(i * chunkSize, (i + 1) * chunkSize);
+    const buf = await getFileReader(chunk);
+    spark.append(buf);
+    chunks.push({
+      file: chunk,
+      filename: `_${i}`,
+    });
+    callback && callback(count === 1 ? 1 : i / (count - 1));
+  }
+  const HASH = spark.end();
+  return {
+    HASH,
+    chunks,
+    count,
+    suffix: b,
+    filename: a,
+    size: file.size,
+  };
 }
 // 登录
 export function toLogin() {
@@ -813,9 +809,9 @@ export function formatDate(opt = {}) {
     timeArr = [year, month, day, hour, minute, second, week];
   return template.replace(/\{(\d+)\}/g, function () {
     const key = arguments[1];
-    if (key == 6) return weekArr[timeArr[key]];
+    if (key === 6) return weekArr[timeArr[key]];
     const val = timeArr[key] + '';
-    if (val == 'undefined') return '';
+    if (val === 'undefined') return '';
     return val.length < 2 ? '0' + val : val;
   });
 }
@@ -941,22 +937,17 @@ export function nanoid() {
   return (
     'h' +
     Date.now().toString(36) +
-    '_' +
     Number(String(Math.random()).slice(2)).toString(36)
   );
 }
 // 图片尺寸
 export async function _imgSize(file) {
-  try {
-    const url = await getFileReader(file, 'url');
-    const oImg = await loadImg(url);
-    return {
-      width: oImg.width,
-      height: oImg.height,
-    };
-  } catch (error) {
-    throw error;
-  }
+  const url = await getFileReader(file, 'url');
+  const oImg = await loadImg(url);
+  return {
+    width: oImg.width,
+    height: oImg.height,
+  };
 }
 // 读取深层属性
 export function getIn(target, keys) {
@@ -1819,12 +1810,9 @@ export class ContentScroll {
         this.el.style.transition = `transform ${duration}s linear`;
         this.el.style.transform = `translateX(${-(cW + interSpace)}px)`;
       }
-      this.timer = setTimeout(
-        () => {
-          this.start.call(this);
-        },
-        duration * 1000 + 2000
-      );
+      this.timer = setTimeout(() => {
+        this.start.call(this);
+      }, duration * 1000 + 2000);
     }, 2000);
   }
   close() {
@@ -1921,10 +1909,10 @@ export function myDrag(opt) {
     y = target.offsetTop;
     const l = target.offsetLeft,
       t = target.offsetTop;
-    if (e.type == 'touchstart') {
+    if (e.type === 'touchstart') {
       pointerX = e.touches[0].clientX;
       pointerY = e.touches[0].clientY;
-    } else if (e.type == 'mousedown') {
+    } else if (e.type === 'mousedown') {
       pointerX = e.clientX;
       pointerY = e.clientY;
     }
@@ -1938,10 +1926,10 @@ export function myDrag(opt) {
   }
   function hdMove(e) {
     e.preventDefault();
-    if (e.type == 'touchmove') {
+    if (e.type === 'touchmove') {
       pointerX = e.touches[0].clientX;
       pointerY = e.touches[0].clientY;
-    } else if (e.type == 'mousemove') {
+    } else if (e.type === 'mousemove') {
       pointerX = e.clientX;
       pointerY = e.clientY;
     }
@@ -2002,7 +1990,7 @@ export function scrollState(target, cb) {
 }
 // 窗口居中
 export function toCenter(el, obj) {
-  if (el.style.display == 'none' || el.style.visibility == 'hidden') return;
+  if (el.style.display === 'none' || el.style.visibility === 'hidden') return;
   if (obj) {
     const { left, top } = obj;
     el.style.left = left + 'px';
@@ -2199,7 +2187,7 @@ export function myResize(opt, minW = 200, minH = 200) {
     h = target.offsetHeight;
     ol = target.offsetLeft;
     ot = target.offsetTop;
-    if (e.type == 'touchstart') {
+    if (e.type === 'touchstart') {
       x = e.touches[0].clientX;
       y = e.touches[0].clientY;
     } else {
@@ -2218,7 +2206,7 @@ export function myResize(opt, minW = 200, minH = 200) {
     let cx, cy;
     let ww = window.innerWidth,
       wh = window.innerHeight;
-    if (e.type == 'touchmove') {
+    if (e.type === 'touchmove') {
       cx = e.touches[0].clientX;
       cy = e.touches[0].clientY;
     } else {
@@ -2231,7 +2219,7 @@ export function myResize(opt, minW = 200, minH = 200) {
       diffY = cy - y;
     x = cx;
     y = cy;
-    if (flag == trigger1) {
+    if (flag === trigger1) {
       w -= diffX;
       h -= diffY;
       if (w > minW) {
@@ -2242,34 +2230,34 @@ export function myResize(opt, minW = 200, minH = 200) {
         ot += diffY;
         target.style.top = ot + 'px';
       }
-    } else if (flag == trigger2) {
+    } else if (flag === trigger2) {
       w += diffX;
       h -= diffY;
       if (h > minH) {
         ot += diffY;
         target.style.top = ot + 'px';
       }
-    } else if (flag == trigger3) {
+    } else if (flag === trigger3) {
       w += diffX;
       h += diffY;
-    } else if (flag == trigger4) {
+    } else if (flag === trigger4) {
       w -= diffX;
       h += diffY;
       if (w > minW) {
         ol += diffX;
         target.style.left = ol + 'px';
       }
-    } else if (flag == trigger5) {
+    } else if (flag === trigger5) {
       h -= diffY;
       if (h > minH) {
         ot += diffY;
         target.style.top = ot + 'px';
       }
-    } else if (flag == trigger6) {
+    } else if (flag === trigger6) {
       w += diffX;
-    } else if (flag == trigger7) {
+    } else if (flag === trigger7) {
       h += diffY;
-    } else if (flag == trigger8) {
+    } else if (flag === trigger8) {
       w -= diffX;
       if (w > minW) {
         ol += diffX;
@@ -2309,24 +2297,24 @@ export function toHide(el, opt, cb) {
   const { to, scale, speed = 500, useVisibility } = opt;
   let tran = '';
   let s = '';
-  if (to == 'right') {
+  if (to === 'right') {
     tran = `translateX(100%)`;
-  } else if (to == 'left') {
+  } else if (to === 'left') {
     tran = `translateX(-100%)`;
-  } else if (to == 'top') {
+  } else if (to === 'top') {
     tran = `translateY(-100%)`;
-  } else if (to == 'bottom') {
+  } else if (to === 'bottom') {
     tran = `translateY(100%)`;
-  } else if (to == 'auto') {
+  } else if (to === 'auto') {
     tran = `translate${randomNum(1, 10) % 2 ? 'Y' : 'X'}(${
       randomNum(1, 10) % 2 ? '-' : ''
     }100%)`;
   }
-  if (scale == 'big') {
+  if (scale === 'big') {
     s = `scale(${2})`;
-  } else if (scale == 'small') {
+  } else if (scale === 'small') {
     s = `scale(${0})`;
-  } else if (scale == 'auto') {
+  } else if (scale === 'auto') {
     s = `scale(${randomNum(1, 10) % 2 ? 1 : 2})`;
   }
   const second = speed / 1000;
@@ -2348,7 +2336,7 @@ export function toHide(el, opt, cb) {
 // 二维码
 export async function showQcode(e, text, title = '展示二维码') {
   try {
-    if (text.trim() == '') {
+    if (text.trim() === '') {
       throw '请输入需要生成的内容';
     }
     const url = await QRCode.toDataURL(text, { width: 500, height: 500 });
@@ -2495,9 +2483,9 @@ export function hdTitleHighlight(
     <template v-if="splitWord.length === 0 || con.length === 0">{{content}}</template>
     <template v-else>
       <template  v-for="{type,value} in con">
-        <template v-if="type == 'text'">{{value}}</template>
-        <template v-else-if="type == 'icon'">...</template>
-        <span v-else-if="type == 'word'" :style="{color}">{{value}}</span>
+        <template v-if="type === 'text'">{{value}}</template>
+        <template v-else-if="type === 'icon'">...</template>
+        <span v-else-if="type === 'word'" :style="{color}">{{value}}</span>
       </template>
     </template>
     `,
@@ -2516,7 +2504,7 @@ export async function getSplitWord(str) {
   } catch (error) {
     try {
       const res = await reqSearchSplitWord({ word: str });
-      if (res.code == 0) {
+      if (res.code === 1) {
         return res.data;
       }
       // eslint-disable-next-line no-unused-vars
@@ -2609,7 +2597,7 @@ export function parseBookmark(node) {
           const oDl = item.querySelector('dl');
           if (oH3 || oDl) {
             child = {
-              name: oH3 ? oH3.innerText : '',
+              title: oH3 ? oH3.innerText : '',
               folder: true,
               children: [],
             };
@@ -2617,8 +2605,9 @@ export function parseBookmark(node) {
           } else {
             const oA = item.querySelector('a');
             child = {
-              name: oA ? oA.innerText : '',
-              url: oA ? oA.href : '',
+              title: oA ? oA.innerText : '',
+              link: oA ? oA.href : '',
+              des: oA ? oA.dataset.des || '' : '',
             };
           }
           list.push(child);
@@ -2660,15 +2649,11 @@ export function getTextImg(name, size = 400) {
 }
 // 上传配置
 export async function upStr() {
-  try {
-    const files = await getFiles();
-    if (files.length == 0) return '';
-    const file = files[0];
-    const text = await getFileReader(file, 'text');
-    return text;
-  } catch (error) {
-    throw error;
-  }
+  const files = await getFiles();
+  if (files.length === 0) return '';
+  const file = files[0];
+  const text = await getFileReader(file, 'text');
+  return text;
 }
 // 下载配置
 export function downloadText(content, filename) {
@@ -2688,15 +2673,15 @@ export function downloadText(content, filename) {
 export function creatSelect(e, opt, callback) {
   let { active = '', data } = opt;
   data = data.map((item) => ({
-    id: item,
+    id: item + '',
     param: { value: item },
     text: `${item}/页`,
-    active: item == active ? true : false,
+    active: item === active ? true : false,
   }));
   rMenu.selectMenu(e, data, function ({ id, close, resetMenu, param }) {
     if (id) {
       data.forEach((item) => {
-        if (item.id == id) {
+        if (item.id === id) {
           item.active = true;
         } else {
           item.active = false;
@@ -2741,7 +2726,13 @@ export function inputPageNo(e, opt, callback) {
 }
 // 分享
 export function createShare(e, opt, cb) {
-  const { subText = '提交', title = '', name = '', valid = 0, pass = '' } = opt;
+  const {
+    subText = '提交',
+    title = '',
+    name = '',
+    expireTime = 0,
+    pass = '',
+  } = opt;
   rMenu.inpMenu(
     e,
     {
@@ -2752,22 +2743,22 @@ export function createShare(e, opt, cb) {
           inputType: 'text',
           beforeText: '分享名称：',
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入名称';
-            } else if (val.trim().length > 100) {
+            } else if (val.trim().length > _d.fieldLenght.title) {
               return '名称过长';
             }
           },
         },
-        valid: {
-          value: valid,
+        expireTime: {
+          value: expireTime,
           placeholder: '0：代表永久；负数：代表过期',
           inputType: 'number',
           beforeText: '过期时间（天）：',
           verify(val) {
             val = parseFloat(val);
-            if (!isInteger(val) || val > 999) {
-              return '请输入1000内的整数';
+            if (!isInteger(val) || val > _d.fieldLenght.expTime) {
+              return `最大限制${_d.fieldLenght.expTime}`;
             }
           },
         },
@@ -2777,7 +2768,7 @@ export function createShare(e, opt, cb) {
           beforeText: '提取码：',
           placeholder: '为空则不设置提取码',
           verify(val) {
-            if (val.trim().length > 20) {
+            if (val.trim().length > _d.fieldLenght.sharePass) {
               return '提取码过长';
             }
           },
@@ -2795,14 +2786,14 @@ export function createShare(e, opt, cb) {
   );
 }
 // 过期
-export function isValid(t) {
+export function isValidShare(t) {
   return t != 0 && t <= Date.now();
 }
 // 计算过期天数
-export function getValidState(t) {
+export function getExpState(t) {
   const time = Date.now();
   const day = 24 * 60 * 60 * 1000;
-  if (t == 0) {
+  if (t === 0) {
     return 0;
   } else if (t <= time) {
     return Math.floor((t - time) / day);
@@ -2824,7 +2815,7 @@ export function enterPassCode(cb) {
             val = val.trim();
             if (val.length === 0) {
               return '请输入提取码';
-            } else if (val.length > 20) {
+            } else if (val.length > _d.fieldLenght.sharePass) {
               return '提取码过长';
             }
           },
@@ -2911,42 +2902,42 @@ export function userLogoMenu(e, account, username, email) {
     ({ close, id }) => {
       close();
       let url = '';
-      if (id == '2') {
+      if (id === '2') {
         url = `/notes/?acc=${encodeURIComponent(account)}`;
         if (isIframe()) {
           _myOpen(url, username + '的笔记本');
         } else {
           myOpen(url);
         }
-      } else if (id == '1') {
+      } else if (id === '1') {
         url = `/?c=${encodeURIComponent(account)}`;
         if (isIframe()) {
           myOpen(url, '_blank');
         } else {
           myOpen(url);
         }
-      } else if (id == 3) {
+      } else if (id === '3') {
         url = `/bmk?acc=${encodeURIComponent(account)}`;
         if (isIframe()) {
           _myOpen(url, username + '的书签夹');
         } else {
           myOpen(url);
         }
-      } else if (id == '4') {
+      } else if (id === '4') {
         url = `/?p=open`;
         if (isIframe()) {
           myOpen(url, '_blank');
         } else {
           myOpen(url);
         }
-      } else if (id == '5') {
+      } else if (id === '5') {
         url = `/`;
         if (isIframe()) {
           myOpen(url, '_blank');
         } else {
           myOpen(url);
         }
-      } else if (id == '6') {
+      } else if (id === '6') {
         mailTo(email);
       }
     },
@@ -3098,12 +3089,9 @@ export function wave(idx = 1) {
     document.body.appendChild(bubble);
 
     // 在动画结束后删除泡泡
-    _setTimeout(
-      () => {
-        bubble.remove();
-      },
-      parseFloat(bubble.style.animationDuration) * 1000
-    );
+    _setTimeout(() => {
+      bubble.remove();
+    }, parseFloat(bubble.style.animationDuration) * 1000);
   }
   createBubble();
   // 定时生成泡泡
@@ -3122,7 +3110,7 @@ export async function getFileKey(p) {
       return fKey.key;
     }
     const res = await reqUserFileKey({ p });
-    if (res.code == 0) {
+    if (res.code === 1) {
       fileKeys.push({ p, key: res.data });
       _setData('fileKeys', fileKeys);
       return res.data;

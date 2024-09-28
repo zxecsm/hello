@@ -39,10 +39,6 @@ import {
   reqSearchList,
   reqSearchSave,
 } from '../../../api/search.js';
-import { setCurChatAccount, showChatRoom } from '../chat/index.js';
-import { renderPlayingList, updateNewPlayList } from '../player/playlist.js';
-import { showMusicPlayerBox } from '../player/index.js';
-import { musicPlay } from '../player/lrc.js';
 import { backWindow, setZidx } from '../backWindow.js';
 import toolTip from '../../../js/plugins/tooltip/index.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
@@ -96,7 +92,7 @@ export function getHomeBmList() {
   }
   reqBmkList({ id: 'home' })
     .then((result) => {
-      if (result.code === 0) {
+      if (result.code === 1) {
         setBookMark(result.data);
         renderHomeBmList();
         return;
@@ -118,7 +114,7 @@ function bmsLoading() {
 }
 // 获取书签信息
 function getHomeBmData(id) {
-  return setBookMark().home.find((item) => item.id == id);
+  return setBookMark().home.find((item) => item.id === id);
 }
 // 选中书签
 function getHomeCheckBmItem() {
@@ -150,10 +146,10 @@ function renderHomeBmList() {
   let list = setBookMark().home;
   const html = _tpl(
     `
-    <li v-for="{id,name} in list" class="home_bm_item" :data-id="id" draggable="true">
+    <li v-for="{id,title} in list" class="home_bm_item" :data-id="id" draggable="true">
       <div cursor="y" check="n" class="check_home_bm"></div>
       <div class="home_bm_logo" cursor="y"></div>
-      <p cursor="y">{{name}}</p>
+      <p cursor="y">{{title}}</p>
     </li>
     <li class="home_bm_item">
       <div cursor="y" x="add" style="background-image:url({{imgTianjia}})" class="home_bm_logo">
@@ -177,7 +173,7 @@ function lazyLoadHomeBmLogo() {
     (item) => {
       const $item = $(item);
       const flag = $item.find('.home_bm_logo').attr('x');
-      if (flag == 'add') return;
+      if (flag === 'add') return;
       let { logo, link } = getHomeBmData($item.attr('data-id'));
       const $homeBmLogo = $item.find('.home_bm_logo');
       if (logo) {
@@ -240,21 +236,18 @@ $searchBoxMask
   })
   .on('click', '.type_logo', function (e) {
     const $this = $(this).parent();
-    const { type, name, data, link, des, title, username, artist, group } =
-      getSearchItemInfo($this.attr('data-id'));
+    const { type, content, link, des, title, group_title } = getSearchItem(
+      $this.attr('data-id')
+    );
     let str = '';
     if (type === 'ss') {
-      copyText(data);
+      copyText(content);
     } else if (type === 'note') {
-      copyText(name);
+      copyText(title);
     } else if (type === 'bmk') {
-      str = `分组：${group.id === 'home' ? '主页' : group.name}\n名称：${
-        name || '--'
-      }\n链接：${link || '--'}\n描述：${des || '--'}`;
-    } else if (type === 'music') {
-      copyText(`${artist}-${title}`);
-    } else if (type === 'user') {
-      str = `用户：${username || '--'}\n备注：${des || '--'}`;
+      str = `分组：${group_title}\n名称：${title || '--'}\n链接：${
+        link || '--'
+      }\n描述：${des || '--'}`;
     }
     if (str) {
       rMenu.rightInfo(e, str);
@@ -262,21 +255,18 @@ $searchBoxMask
   })
   .on('mouseenter', '.search_item', function () {
     const $this = $(this);
-    const { type, name, data, link, des, title, username, artist, group } =
-      getSearchItemInfo($this.attr('data-id'));
+    const { type, content, link, des, title, group_title } = getSearchItem(
+      $this.attr('data-id')
+    );
     let str = '';
     if (type === 'ss') {
-      str = data;
+      str = content;
     } else if (type === 'note') {
-      str = name;
+      str = title;
     } else if (type === 'bmk') {
-      str = `分组：${group.id === 'home' ? '主页' : group.name}\n名称：${
-        name || '--'
-      }\n链接：${link || '--'}\n描述：${des || '--'}`;
-    } else if (type === 'music') {
-      str = `${artist} - ${title}`;
-    } else if (type === 'user') {
-      str = `用户：${username || '--'}\n备注：${des || '--'}`;
+      str = `分组：${group_title}\n名称：${title || '--'}\n链接：${
+        link || '--'
+      }\n描述：${des || '--'}`;
     }
     toolTip.setTip(str).show();
   })
@@ -356,9 +346,6 @@ function hideSearchBox() {
 export function openCheckState() {
   $homeBmWrap.find('.home_bm_item .check_home_bm').css('display', 'block');
 }
-function getSearchItemInfo(id) {
-  return searchList.find((item) => item.id == id);
-}
 // 选中书签
 export function checkedHomeBm(el) {
   const $this = $(el),
@@ -421,7 +408,7 @@ function isSearchOpenPop() {
 // 搜索框处理
 const searchInput = wrapInput($searchInpWrap.find('.inp_box input')[0], {
   change(val) {
-    if (val.trim() == '') {
+    if (val.trim() === '') {
       $searchInpWrap.find('.inp_box i').css('display', 'none');
       $searchInpWrap.find('.translate_btn').css('display', 'none');
       $searchInpWrap.find('.search_submit').css('display', 'none');
@@ -448,7 +435,7 @@ function getSearchWordLink() {
 }
 reqSearchConfig()
   .then((res) => {
-    if (res.code == 0) {
+    if (res.code === 1) {
       _d.searchEngineData = res.data.searchEngineData;
       _d.translator = res.data.translator;
       switchSearchEngine();
@@ -491,7 +478,7 @@ let searchResultIdx = -1;
 function delHistory(el, ids) {
   reqSearchDelete({ ids })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         _msg.success(result.codeText);
         el.remove();
         return;
@@ -560,17 +547,6 @@ function hdClickSearchItem() {
     } else {
       myOpen(link, '_blank');
     }
-  } else if (type === 'music') {
-    showMusicPlayerBox(() => {
-      const list = searchList.filter((item) => item.type == 'music');
-      const obj = getSearchItem(id);
-      updateNewPlayList(list);
-      renderPlayingList();
-      musicPlay(obj);
-    });
-  } else if (type === 'user') {
-    setCurChatAccount(id);
-    showChatRoom();
   }
 }
 $searchInpWrap
@@ -583,7 +559,7 @@ $searchInpWrap
     e.stopPropagation();
     e.preventDefault();
     const key = e.key;
-    if (key == 'Enter') {
+    if (key === 'Enter') {
       const val = searchInput.getValue().trim();
       toSearch(val);
     }
@@ -613,13 +589,13 @@ $searchInpWrap
 function saveSearchText(str) {
   str = str.trim();
   if (str === '' || str.length > 100) return;
-  reqSearchSave({ data: str })
+  reqSearchSave({ content: str })
     .then(() => {})
     .catch(() => {});
 }
 // 获取搜索项
 function getSearchItem(id) {
-  return searchList.find((item) => item.id == id);
+  return searchList.find((item) => item.id === id);
 }
 // 生成列表
 function renderSearchList() {
@@ -629,27 +605,19 @@ function renderSearchList() {
   if (list.length > 0) {
     searchstr = _tpl(
       `
-      <li v-for="{ type, id, name, data, des, flag, title, username, artist } in list" :data-type="type" :data-id="id" class="search_item">
+      <li v-for="{ type, id, title, content, flag } in list" :data-type="type" :data-id="id" class="search_item">
         <template v-if="type === 'ss'">
-          <span class="type_logo iconfont {{flag == 'ts' ? 'icon-tishi' : 'icon-history'}}"></span>
-          <span v-html="hdTitleHighlight(splitWord, data)" cursor="y" class="text"></span>
+          <span class="type_logo iconfont {{flag === 'ts' ? 'icon-tishi' : 'icon-history'}}"></span>
+          <span v-html="hdTitleHighlight(splitWord, content)" cursor="y" class="text"></span>
           <span v-if="flag != 'ts'" cursor="y" class="dellss iconfont icon-guanbi"></span>
         </template>
         <template v-else-if="type === 'note'">
           <span class="type_logo iconfont icon-jilu"></span>
-          <span v-html="hdTitleHighlight(splitWord, name)" cursor="y" class="text"></span>
+          <span v-html="hdTitleHighlight(splitWord, title)" cursor="y" class="text"></span>
         </template>
         <template v-else-if="type === 'bmk'">
           <span class="type_logo iconfont icon-shuqian"></span>
-          <span v-html="hdTitleHighlight(splitWord, name)" cursor="y" class="text"></span>
-        </template>
-        <template v-else-if="type === 'music'">
-          <span style="font-size:20px" class="type_logo iconfont icon-yinle1"></span>
-          <span v-html="hdTitleHighlight(splitWord, artist+'-'+title)" cursor="y" class="text"></span>
-        </template>
-        <template v-else-if="type === 'user'">
-          <span class="type_logo iconfont icon-chengyuan"></span>
-          <span v-html="hdTitleHighlight(splitWord, username + (des?'('+des+')':''))" cursor="y" class="text"></span>
+          <span v-html="hdTitleHighlight(splitWord, title)" cursor="y" class="text"></span>
         </template>
       </li>
       `,
@@ -673,7 +641,7 @@ function getSearchList(val) {
   loadingImg($sList[0]);
   reqSearchList({ word: val })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         const { splitWord, list } = result.data;
         $searchInpWrap.splitWord = splitWord;
         searchList = list;
@@ -703,17 +671,17 @@ window.google = {
 // 处理提示词
 function hdSearchWord(res) {
   const { type } = getSearchWordLink();
-  if (type == 'close') return;
-  if (type == 'Google') {
+  if (type === 'close') return;
+  if (type === 'Google') {
     res = getIn(res, [1]);
     if (res && res.length > 0) {
       res = res.map((item) => item[0]);
     } else {
       res = [];
     }
-  } else if (type == 'Baidu') {
+  } else if (type === 'Baidu') {
     res = getIn(res, ['s']) || [];
-  } else if (type == 'Bing') {
+  } else if (type === 'Bing') {
     res = getIn(res, ['AS', 'Results']) || [];
     let arr = [];
     res.forEach((item) => {
@@ -726,13 +694,13 @@ function hdSearchWord(res) {
   } else {
     res = [];
   }
-  if (!res || res.length == 0) return;
+  if (!res || res.length === 0) return;
   const val = $searchInpWrap.splitWord;
   res = res.map((item, idx) => ({
-    data: item,
+    content: item,
     flag: 'ts',
     type: 'ss',
-    id: idx + 1,
+    id: idx + 1 + '',
     sNum: getWordCount(val, item),
   }));
   searchList = [...searchList, ...res];
@@ -750,9 +718,9 @@ function switchSearchCallWord(e) {
   _d.searchWord.forEach((item, idx) => {
     const { type } = item;
     data.push({
-      id: idx + 1,
-      text: type == 'close' ? '关闭' : type,
-      active: obj.type == type,
+      id: idx + 1 + '',
+      text: type === 'close' ? '关闭' : type,
+      active: obj.type === type,
     });
   });
   rMenu.selectMenu(
@@ -807,9 +775,9 @@ function searchSetting(e) {
     e,
     data,
     ({ e, close, resetMenu, id, param }) => {
-      if (id == '1') {
+      if (id === '1') {
         switchSearchCallWord(e);
-      } else if (id == '2') {
+      } else if (id === '2') {
         const flag = param.openInPop;
         if (flag) {
           data[4].param.openInPop = false;
@@ -823,12 +791,12 @@ function searchSetting(e) {
           _msg.success('开启成功');
         }
         resetMenu(data);
-      } else if (id == '3') {
+      } else if (id === '3') {
         close();
         showHistory();
-      } else if (id == '5') {
+      } else if (id === '5') {
         selectSearch(e);
-      } else if (id == '4') {
+      } else if (id === '4') {
         close();
         showBmk();
       }
@@ -843,7 +811,7 @@ $searchBoxMask
 function selectSearch(e) {
   const html = _tpl(
     `
-    <div v-for="{name,icon},i in _d.searchEngineData" cursor="y" class="item {{getSearchEngine().name == name ? 'active' : ''}}" :xi="i">
+    <div v-for="{name,icon},i in _d.searchEngineData" cursor="y" class="item {{getSearchEngine().name === name ? 'active' : ''}}" :xi="i">
       <img style="width: 40px;height: 40px;border-radius: 4px;" :data-src="icon"/>
       <span style="margin-left:10px;">{{name}}</span>
     </div>

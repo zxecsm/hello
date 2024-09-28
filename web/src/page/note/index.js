@@ -105,13 +105,13 @@ $setBtnsWrap
   })
   .on('click', '.change_theme_btn', function () {
     // 切换黑暗模式
-    if (dark == 'y') {
+    if (dark === 'y') {
       dark = 'n';
       _msg.success('关闭黑暗模式');
-    } else if (dark == 'n') {
+    } else if (dark === 'n') {
       dark = 's';
       _msg.success('跟随系统');
-    } else if (dark == 's') {
+    } else if (dark === 's') {
       dark = 'y';
       _msg.success('开启黑暗模式');
     }
@@ -174,22 +174,22 @@ const highlightWord = new HighlightWord($noteBox[0]);
 if (urlparmes.v) {
   reqNoteRead({ v: urlparmes.v })
     .then((result) => {
-      if (parseInt(result.code) === 0) {
+      if (result.code === 1) {
         const {
-          name,
-          data,
+          title,
+          content,
           account,
           username,
-          time,
-          utime,
+          create_at,
+          update_at,
           logo,
           category,
           email,
           visit_count = 0,
         } = result.data;
-        noteObj.md = data;
-        const readInfo = noteReadInfo(data);
-        titleName = name;
+        noteObj.md = content;
+        const readInfo = noteReadInfo(content);
+        titleName = title;
         _setTimeout(() => {
           if (isIframe()) {
             try {
@@ -242,35 +242,35 @@ if (urlparmes.v) {
               .css('background-image', `url(${getTextImg(username)})`);
           }
         );
-        mdWorker.postMessage(data);
-        $noteInfo.find('h1').text(name);
-        document.title = name;
+        mdWorker.postMessage(content);
+        $noteInfo.find('h1').text(title);
+        document.title = title;
         if (!['about', 'tips'].includes(urlparmes.v)) {
           const $headInfo = $noteInfo.find('div');
           $headInfo.html(
             _tpl(
               `
-          <span>创建：{{formatDate({template: '{0}-{1}-{2}',timestamp: time})}}</span>
-          <span class="iconfont icon-fenge"></span><span :title="formatDate({template: '{0}-{1}-{2}',timestamp: utime || time})">更新：{{getDateDiff(utime || time)}}</span>
+          <span>创建：{{formatDate({template: '{0}-{1}-{2}',timestamp: create_at})}}</span>
+          <span class="iconfont icon-fenge"></span><span :title="formatDate({template: '{0}-{1}-{2}',timestamp: update_at || create_at})">更新：{{getDateDiff(update_at || create_at)}}</span>
           <span class="iconfont icon-fenge"></span><span>阅读量：{{formatNum(visit_count)}}</span>
           <span class="iconfont icon-fenge"></span><span>字数：{{readInfo.word}}</span>
           <span class="iconfont icon-fenge"></span><span>阅读：约 {{readInfo.time}} 分钟</span>
           `,
               {
                 formatDate,
-                time,
+                create_at,
                 visit_count,
                 getDateDiff,
                 formatNum,
                 readInfo,
-                utime,
+                update_at,
               }
             )
           );
           if (category) {
-            reqNoteCategory({ acc: account })
+            reqNoteCategory({ account })
               .then((res) => {
-                if (res.code == 0) {
+                if (res.code === 1) {
                   const list = res.data.filter((item) =>
                     category.includes(item.id)
                   );
@@ -368,7 +368,7 @@ $noteBox
     let idx = 0;
     const arr = [];
     imgs.each((i, item) => {
-      if (item == this) {
+      if (item === this) {
         idx = i;
       }
       arr.push({
@@ -454,8 +454,8 @@ function nextPrevSearch(isNext) {
   highlightnum >= _length
     ? (highlightnum = 0)
     : highlightnum < 0
-      ? (highlightnum = _length - 1)
-      : null;
+    ? (highlightnum = _length - 1)
+    : null;
   $pageSearchWrap.find('.res_total_num').text(`${highlightnum + 1}/${_length}`);
   highlightPosition(highlightnum);
 }
@@ -479,15 +479,15 @@ $contentWrap.css({
 // 黑暗模式
 function changeTheme(flag) {
   dark = flag;
-  if (dark == 'y') {
+  if (dark === 'y') {
     $setBtnsWrap
       .find('.change_theme_btn')
       .attr('class', 'change_theme_btn iconfont icon-icon_yejian-yueliang');
-  } else if (dark == 'n') {
+  } else if (dark === 'n') {
     $setBtnsWrap
       .find('.change_theme_btn')
       .attr('class', 'change_theme_btn iconfont icon-taiyangtianqi');
-  } else if (dark == 's') {
+  } else if (dark === 's') {
     $setBtnsWrap
       .find('.change_theme_btn')
       .attr('class', 'change_theme_btn iconfont icon-xianshiqi');
@@ -496,11 +496,11 @@ function changeTheme(flag) {
   hdTheme(dark);
 }
 function hdTheme(dark) {
-  if (dark == 'y') {
+  if (dark === 'y') {
     $themeCss.attr('href', '/css/notethem/notecode1.css');
-  } else if (dark == 'n') {
+  } else if (dark === 'n') {
     $themeCss.attr('href', '/css/notethem/notecode.css');
-  } else if (dark == 's') {
+  } else if (dark === 's') {
     if (isDarkMode()) {
       $themeCss.attr('href', '/css/notethem/notecode1.css');
     } else {

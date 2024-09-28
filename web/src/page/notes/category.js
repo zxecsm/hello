@@ -24,7 +24,7 @@ export function renderCategoryList() {
   }
   reqNoteCategory()
     .then((res) => {
-      if (res.code == 0) {
+      if (res.code === 1) {
         setNoteCategoryList(res.data);
         const html = _tpl(
           `
@@ -76,10 +76,10 @@ function addCategory(e) {
           placeholder: '标题',
           beforeText: '标题：',
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入分类标题';
-            } else if (val.trim().length > 30) {
-              return '请输入30字以内';
+            } else if (val.trim().length > _d.fieldLenght.noteCategoryTitle) {
+              return `请输入${_d.fieldLenght.noteCategoryTitle}字以内`;
             }
           },
         },
@@ -90,7 +90,7 @@ function addCategory(e) {
         const title = inp.text;
         reqNoteAddCategory({ title })
           .then((res) => {
-            if (res.code == 0) {
+            if (res.code === 1) {
               renderCategoryList();
               close();
               _msg.success(res.codeText);
@@ -116,10 +116,10 @@ function editCategory(e, obj) {
           beforeText: '标题：',
           value: obj.title,
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入分类标题';
-            } else if (val.trim().length > 30) {
-              return '请输入30字以内';
+            } else if (val.trim().length > _d.fieldLenght.noteCategoryTitle) {
+              return `请输入${_d.fieldLenght.noteCategoryTitle}字以内`;
             }
           },
         },
@@ -131,7 +131,7 @@ function editCategory(e, obj) {
         if (obj.title === title) return;
         reqNoteEditCategory({ id: obj.id, title })
           .then((res) => {
-            if (res.code == 0) {
+            if (res.code === 1) {
               renderCategoryList();
               close(1);
               _msg.success(res.codeText);
@@ -154,10 +154,10 @@ function deleteCategory(e, obj, cb) {
       confirm: { text: '删除', type: 'danger' },
     },
     (t) => {
-      if (t == 'confirm') {
+      if (t === 'confirm') {
         reqNoteDeleteCategory({ id: obj.id })
           .then((res) => {
-            if (res.code == 0) {
+            if (res.code === 1) {
               cb && cb();
               renderCategoryList();
               _msg.success(res.codeText);

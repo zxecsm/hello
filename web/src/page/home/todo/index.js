@@ -69,7 +69,7 @@ export function setTodoUndone(val) {
 }
 // 提醒消息
 export function todoMsg() {
-  if (undoneCount == 0) return;
+  if (undoneCount === 0) return;
   _msg.msg(
     {
       message: `您有 ${undoneCount} 条未完成事项`,
@@ -78,7 +78,7 @@ export function todoMsg() {
       duration: 8000,
     },
     (type) => {
-      if (type == 'click') {
+      if (type === 'click') {
         showTodoBox();
       }
     },
@@ -107,7 +107,7 @@ export function getTodoList(toTop) {
     todoLoading();
   }
   reqTodoList({ pageNo: todoPageNo, pageSize: todoPageSize }).then((res) => {
-    if (res.code == 0) {
+    if (res.code === 1) {
       const { total, pageNo, data } = res.data;
       setTodoUndone(res.data.undoneCount);
       todoList = data;
@@ -126,13 +126,13 @@ function renderTodoList(total, toTop) {
       <button v-if="hasFinish()" cursor="y" class="clear_btn btn btn_danger">清除已完成</button>
       <button v-if="todoList.length > 0" cursor="y" class="clear_all_btn btn btn_danger">清空</button>
     </div>
-    <p v-if="todoList.length == 0" style="padding: 20px 0;pointer-events: none;text-align: center;">暂无待办事项</p>
+    <p v-if="todoList.length === 0" style="padding: 20px 0;pointer-events: none;text-align: center;">暂无待办事项</p>
     <template v-else>
-      <ul v-for="{id, data, state, time} in todoList" :data-id="id">
-        <li cursor="y" class="todo_state iconfont {{state == '0' ? 'icon-xuanzeweixuanze' : 'icon-xuanzeyixuanze'}}"></li>
+      <ul v-for="{id, content, state, update_at} in todoList" :data-id="id">
+        <li cursor="y" class="todo_state iconfont {{state === 1 ? 'icon-xuanzeweixuanze' : 'icon-xuanzeyixuanze'}}"></li>
         <li class="todo_text">
-          <div v-html="hdTextMsg(data)" class="text {{state == '0' ? '' : 'del'}}"></div>
-          <div class="time">更新：{{formatDate({template: '{0}-{1}-{2} {3}:{4}',timestamp: time})}}</div>
+          <div v-html="hdTextMsg(content)" class="text {{state === 1 ? '' : 'del'}}"></div>
+          <div class="time">更新：{{formatDate({template: '{0}-{1}-{2} {3}:{4}',timestamp: update_at})}}</div>
         </li>
         <li cursor="y" class="set_btn iconfont icon-icon"></li>
       </ul>
@@ -142,7 +142,7 @@ function renderTodoList(total, toTop) {
     {
       todoList,
       hasFinish() {
-        return todoList.some((item) => item.state == '1');
+        return todoList.some((item) => item.state === 0);
       },
       hdTextMsg,
       formatDate,
@@ -186,7 +186,7 @@ const todoPgnt = pagination($todoList[0], {
 });
 // 获取todo数据
 function getTodo(id) {
-  return todoList.find((item) => item.id == id);
+  return todoList.find((item) => item.id === id);
 }
 // 显示todo
 export function showTodoBox() {
@@ -233,9 +233,9 @@ function addTodo(e) {
           type: 'textarea',
           placeholder: '待办内容',
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入待办内容';
-            } else if (val.trim().length > 500) {
+            } else if (val.trim().length > _d.fieldLenght.todoContent) {
               return '待办内容过长';
             }
           },
@@ -244,9 +244,9 @@ function addTodo(e) {
     },
     debounce(
       function ({ close, inp }) {
-        reqTodoAdd({ data: inp.text })
+        reqTodoAdd({ content: inp.text })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               close();
               _msg.success(result.codeText);
               getTodoList();
@@ -269,11 +269,11 @@ function delTodo(e, id, cb) {
       confirm: { type: 'danger', text: '清除' },
     },
     param = {
-      ids: todoList.filter((item) => item.state === '1').map((item) => item.id),
+      ids: todoList.filter((item) => item.state === 0).map((item) => item.id),
     };
   if (id) {
     param = { ids: [id] };
-    if (id == 'all') {
+    if (id === 'all') {
       param = { ids: todoList.map((item) => item.id) };
       opt = {
         e,
@@ -289,10 +289,10 @@ function delTodo(e, id, cb) {
     }
   }
   _pop(opt, (type) => {
-    if (type == 'confirm') {
+    if (type === 'confirm') {
       reqTodoDelete(param)
         .then((result) => {
-          if (parseInt(result.code) === 0) {
+          if (result.code === 1) {
             _msg.success(result.codeText);
             getTodoList();
             cb && cb();
@@ -313,11 +313,11 @@ function editTodo(e, todo) {
         text: {
           type: 'textarea',
           placeholder: '待办内容',
-          value: todo.data,
+          value: todo.content,
           verify(val) {
-            if (val.trim() == '') {
+            if (val.trim() === '') {
               return '请输入待办内容';
-            } else if (val.trim().length > 500) {
+            } else if (val.trim().length > _d.fieldLenght.todoContent) {
               return '待办内容过长';
             }
           },
@@ -326,11 +326,11 @@ function editTodo(e, todo) {
     },
     debounce(
       function ({ close, inp }) {
-        let data = inp.text;
-        if (data == todo.data) return;
-        reqTodoEdit({ id: todo.id, data })
+        const content = inp.text;
+        if (content === todo.content) return;
+        reqTodoEdit({ id: todo.id, content })
           .then((result) => {
-            if (parseInt(result.code) === 0) {
+            if (result.code === 1) {
               close(true);
               _msg.success(result.codeText);
               getTodoList();
@@ -355,7 +355,7 @@ function todoMenu(e) {
       beforeIcon: 'iconfont icon-fuzhi',
     },
   ];
-  if (todo.state == 0) {
+  if (todo.state === 1) {
     data.push({
       id: 'edit',
       text: '编辑',
@@ -371,18 +371,18 @@ function todoMenu(e) {
     e,
     data,
     function ({ e, close, id }) {
-      if (id == 'edit') {
+      if (id === 'edit') {
         editTodo(e, todo);
-      } else if (id == 'del') {
+      } else if (id === 'del') {
         delTodo(e, todo.id, () => {
           close();
         });
-      } else if (id == 'copy') {
-        copyText(todo.data);
+      } else if (id === 'copy') {
+        copyText(todo.content);
         close();
       }
     },
-    todo.data
+    todo.content
   );
 }
 $todoList
@@ -395,15 +395,17 @@ $todoList
   .on('click', '.todo_state', function () {
     changeTodoState($(this).parent().attr('data-id'));
   });
+
 function changeTodoState(id) {
   const todo = getTodo(id);
-  let obj = { id: todo.id };
-  if (todo.state == '1') {
-    obj.flag = 'y';
+  let obj = { id: todo.id, state: 1 };
+  if (todo.state === 1) {
+    obj.state = 0;
   }
+
   reqTodoState(obj)
     .then((res) => {
-      if (res.code == 0) {
+      if (res.code === 1) {
         _msg.success(res.codeText);
         getTodoList();
       }

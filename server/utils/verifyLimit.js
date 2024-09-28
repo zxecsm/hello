@@ -4,10 +4,12 @@ class VerifyLimit {
       space: 10 * 60, // 秒
       count: 3, // 次
     };
+
     this.opt = Object.assign(defaultOpt, opt);
     this.updateTimestamp = updateTimestamp; // true: 间隔 10*60 秒 3 次  false: 10*60 秒内 3 次
     this.data = {};
   }
+
   add(ip, flag = '') {
     const key = 'key_' + ip + flag;
     const t = Date.now();
@@ -20,6 +22,7 @@ class VerifyLimit {
       this.data[key] = { n: 1, t };
     }
   }
+
   verify(ip, flag = '') {
     const key = 'key_' + ip + flag;
     const nt = Date.now();
@@ -38,7 +41,9 @@ class VerifyLimit {
     return true;
   }
 }
+
 function verifyLimit(opt = {}, updateTimestamp = true) {
   return new VerifyLimit(opt, updateTimestamp);
 }
+
 module.exports = verifyLimit;
