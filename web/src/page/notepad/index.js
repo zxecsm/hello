@@ -129,7 +129,7 @@ const initState = debounce(() => {
   isSyncingPreviewScroll = false;
 }, 1000);
 // 编辑器滚动同步到预览区
-function syncScrollFromEditor() {
+function syncScrollFromEditor(noAnimate) {
   if (isSyncingPreviewScroll) return;
   isSyncingEditorScroll = true;
   if ($previewBox.is(':hidden')) return;
@@ -145,27 +145,38 @@ function syncScrollFromEditor() {
     if (firstElement.tagName && firstElement.tagName.toLowerCase() === 'tr') {
       firstElement = firstElement.parentNode.parentNode;
     }
-    // 滚动预览区域到对应的行
-    $previewBox.find('.content').stop().animate(
-      {
-        scrollTop: firstElement.offsetTop,
-      },
-      _d.speed
-    );
+    const offset = firstElement.offsetTop;
+    if (noAnimate) {
+      $previewBox.find('.content').scrollTop(offset);
+    } else {
+      // 滚动预览区域到对应的行
+      $previewBox.find('.content').stop().animate(
+        {
+          scrollTop: offset,
+        },
+        _d.speed
+      );
+    }
   }
   initState();
 }
 // 监听 Ace 编辑器的滚动事件
-editor.session.on('changeScrollTop', debounce(syncScrollFromEditor, 200));
+editor.session.on(
+  'changeScrollTop',
+  debounce(() => {
+    syncScrollFromEditor();
+  }, 200)
+);
 // 预览区滚动同步到编辑器
 function syncScrollFromPreview() {
   if (isSyncingEditorScroll) return;
   isSyncingPreviewScroll = true;
   if ($editBox.is(':hidden')) return;
   const scrollTop = $previewBox.find('.content').scrollTop();
-  let elements = Array.from($previewBox[0].querySelectorAll('[data-line]'));
 
-  let firstVisibleElement = elements.find((el) => el.offsetTop >= scrollTop);
+  let firstVisibleElement = previewLines.find(
+    (el) => el.offsetTop >= scrollTop
+  );
 
   if (firstVisibleElement) {
     const line = parseInt(firstVisibleElement.getAttribute('data-line'), 10);
@@ -264,7 +275,7 @@ mdWorker.addEventListener('message', (event) => {
       );
     }
   );
-  syncScrollFromEditor();
+  syncScrollFromEditor(1);
 });
 const imgLazy = new LazyLoad();
 $previewBox
