@@ -414,7 +414,7 @@ route.get('/list', async (req, res) => {
         item.item = item.item.map((y) => ({ id: y.id }));
       });
 
-      await updateSongList(list);
+      await updateSongList(account, list);
     }
 
     const newSong = await queryData(
