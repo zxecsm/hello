@@ -431,8 +431,8 @@ function createNode(ast, pEl) {
     const el = createEl(tag);
     setAttr(el, attrs);
     const v_show = attrTool.get(attrs, 'v-show');
-    if (v_show && !v_show.value) {
-      el.style.display = 'none';
+    if (v_show) {
+      el.style.display = v_show.value ? 'block' : 'none';
     }
     const v_html = attrTool.get(attrs, 'v-html');
     if (v_html) {

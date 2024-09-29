@@ -28,6 +28,7 @@ import {
   darkMode,
   concurrencyTasks,
   copyText,
+  getMinIndex,
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
@@ -119,6 +120,7 @@ editor.commands.addCommand({
     hdUpFile(files);
   },
 });
+let previewLines = [];
 // 同步滚动逻辑，基于编辑器当前可见行
 let isSyncingEditorScroll = false;
 let isSyncingPreviewScroll = false;
@@ -130,13 +132,15 @@ const initState = debounce(() => {
 function syncScrollFromEditor() {
   if (isSyncingPreviewScroll) return;
   isSyncingEditorScroll = true;
-
+  if ($previewBox.is(':hidden')) return;
   // 获取编辑器中可见的第一个行号
   const firstVisibleRow = editor.getFirstVisibleRow();
-  let firstElement = $previewBox[0].querySelector(
-    `[data-line="${firstVisibleRow}"]`
-  );
 
+  // 获取预览最靠近编辑器第一行的行号
+  const curLine = getMinIndex(
+    previewLines.map((item) => Math.abs(firstVisibleRow - item.dataset.line))
+  );
+  let firstElement = previewLines[curLine];
   if (firstElement) {
     if (firstElement.tagName && firstElement.tagName.toLowerCase() === 'tr') {
       firstElement = firstElement.parentNode.parentNode;
@@ -152,12 +156,12 @@ function syncScrollFromEditor() {
   initState();
 }
 // 监听 Ace 编辑器的滚动事件
-editor.session.on('changeScrollTop', syncScrollFromEditor);
+editor.session.on('changeScrollTop', debounce(syncScrollFromEditor, 200));
 // 预览区滚动同步到编辑器
 function syncScrollFromPreview() {
   if (isSyncingEditorScroll) return;
   isSyncingPreviewScroll = true;
-
+  if ($editBox.is(':hidden')) return;
   const scrollTop = $previewBox.find('.content').scrollTop();
   let elements = Array.from($previewBox[0].querySelectorAll('[data-line]'));
 
@@ -169,7 +173,7 @@ function syncScrollFromPreview() {
   }
   initState();
 }
-$previewBox.find('.content').on('scroll', syncScrollFromPreview);
+$previewBox.find('.content').on('scroll', debounce(syncScrollFromPreview, 200));
 // 对比记录
 let orginData = {
   data: '',
@@ -244,6 +248,7 @@ function rende() {
 }
 mdWorker.addEventListener('message', (event) => {
   $previewBox.find('.content').html(event.data);
+  previewLines = [...$previewBox[0].querySelectorAll(`[data-line]`)];
   imgLazy.bind(
     $previewBox.find('.content')[0].querySelectorAll('img'),
     (item) => {

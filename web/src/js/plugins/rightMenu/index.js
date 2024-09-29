@@ -353,7 +353,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
           <div v-if="beforeText" class="title">{{beforeText}}</div>
           <div class="inp_box">
             <input class='inp' :data-flag="key" autocomplete="off" :placeholder="placeholder" :value="value" :type="inputType"/>
-            <i v-if="inputType === 'password'" cursor="y" class="show_pass_btn iconfont icon-yanjing_xianshi_o"></i>
+            <i v-if="inputType === 'password'" v-show="value.trim() !== ''" cursor="y" class="show_pass_btn iconfont icon-yanjing_xianshi_o"></i>
             <i cursor="y" class="clean_btn iconfont icon-guanbi {{value.trim() === '' ? '' : 'show'}}"></i>
           </div>
           <p class='err'></p>
@@ -413,10 +413,14 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
         const inpBox = item.parentNode;
         const inpItem = inpBox.parentNode;
         const cleanBtn = inpItem.querySelector('.clean_btn');
+        const showPassBtn = inpItem.querySelector('.show_pass_btn');
         const err = inpItem.querySelector('.err');
         const wInput = wrapInput(item, {
           change(val) {
             val = val.trim();
+            if (showPassBtn) {
+              showPassBtn.style.display = val === '' ? 'none' : 'block';
+            }
             if (val === '') {
               cleanBtn.classList.remove('show');
             } else {
@@ -501,9 +505,8 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       } else if (cleanBtn) {
         const inp = cleanBtn.parentNode.firstElementChild;
         inp.value = '';
-        items[inp.dataset.flag].value = '';
         inp.focus();
-        cleanBtn.classList.remove('show');
+        inp.dispatchEvent(new Event('input'));
       } else if (sBox) {
         const key = sBox.dataset.flag;
         const { value, selectItem, beforeText } = items[key];

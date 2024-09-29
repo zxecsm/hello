@@ -2366,16 +2366,10 @@ export async function showQcode(e, text, title = '展示二维码') {
 }
 // 最小值索引
 export function getMinIndex(arr) {
-  let res = 0,
-    flag = arr[0];
-  for (let i = 1; i < arr.length; i++) {
-    const item = arr[i];
-    if (flag >= item) {
-      flag = item;
-      res = i;
-    }
-  }
-  return res;
+  return arr.reduce(
+    (minIndex, current, index) => (current <= arr[minIndex] ? index : minIndex),
+    0
+  );
 }
 // 加载图
 const oImg = (function () {

@@ -238,7 +238,7 @@ route.get('/list', async (req, res) => {
 
     let bms = await queryData(
       'bmk',
-      'id,title,link,logo,des',
+      'id,title,link,logo,des,group_id',
       `WHERE account = ? AND state = ? AND group_id = ? ORDER BY num ASC`,
       [acc || account, 1, id]
     );
@@ -647,7 +647,7 @@ route.post('/add-bmk', async (req, res) => {
 // 编辑书签
 route.post('/edit-bmk', async (req, res) => {
   try {
-    const { groupId, id, title, link, des, toId = '' } = req.body;
+    const { groupId, id, title, link, des = '', toId = '' } = req.body;
 
     if (
       !validaString(groupId, 1, fieldLenght.id, 1) ||

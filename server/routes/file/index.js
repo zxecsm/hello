@@ -781,8 +781,8 @@ route.post('/rename', async (req, res) => {
     if (
       !validaString(name, 1, fieldLenght.filename) ||
       !_type.isObject(data) ||
-      !validaString(data.name, fieldLenght.filename) ||
-      !validaString(data.path, fieldLenght.url) ||
+      !validaString(data.name, 1, fieldLenght.filename) ||
+      !validaString(data.path, 1, fieldLenght.url) ||
       !validationValue(data.type, ['dir', 'file'])
     ) {
       paramErr(res, req);

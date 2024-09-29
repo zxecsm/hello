@@ -109,7 +109,7 @@ route.get('/', async (req, res) => {
         const { name, type } = obj;
 
         const rootP = hdPath(
-          getRootDir(share.account) + '/' + obj.path + '/' + name
+          getRootDir(share.data.account) + '/' + obj.path + '/' + name
         );
 
         if (type === 'file') {
