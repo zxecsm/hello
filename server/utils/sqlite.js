@@ -69,7 +69,7 @@ function runSqlite(sql, valArr = []) {
 function insertData(table, datas, idField = 'id') {
   const create_at = Date.now();
   datas = datas.map((item) => {
-    if (!item.hasOwnProperty(create_at)) {
+    if (!item.hasOwnProperty('create_at')) {
       item.create_at = create_at;
     }
     if (!item.hasOwnProperty(idField)) {
