@@ -556,6 +556,7 @@ async function insertInitialData() {
       id: 'about',
       account: 'root',
       title: 'About',
+      share: 1,
       content: (
         await _f.p.readFile(resolve(__dirname, './default_about.md'))
       ).toString(),
@@ -565,6 +566,7 @@ async function insertInitialData() {
       id: 'tips',
       account: 'root',
       title: 'Tips',
+      share: 1,
       content: '',
     },
   ];

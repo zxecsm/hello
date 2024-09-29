@@ -24,6 +24,7 @@ const {
 } = require('../file/file');
 const { getCompressionSize, compressionImg } = require('../../utils/img');
 const { validShareState } = require('../user/user');
+const { fieldLenght } = require('../config');
 
 // 读取文件
 route.get('/', async (req, res) => {
@@ -31,10 +32,10 @@ route.get('/', async (req, res) => {
     let { t = '', p, pass = '', sign = '' } = req.query;
 
     if (
-      !validaString(sign, 0, 100) ||
+      !validaString(sign, 0, fieldLenght.id) ||
       !validaString(t, 0, 1, 1) ||
-      !validaString(pass, 0, 20) ||
-      !validaString(p, 1, 1000)
+      !validaString(pass, 0, fieldLenght.sharePass) ||
+      !validaString(p, 1, fieldLenght.url)
     ) {
       paramErr(res, req);
       return;

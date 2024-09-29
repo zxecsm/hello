@@ -89,10 +89,7 @@ route.get('/lrc', async (req, res) => {
   try {
     const { id, flag = '' } = req.query;
 
-    if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
-      !validaString(flag, 0, fieldLenght.shareFlag)
-    ) {
+    if (!validaString(id, 1, fieldLenght.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -100,7 +97,7 @@ route.get('/lrc', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     if (!account) {
-      if (!flag) {
+      if (!validaString(flag, 1, fieldLenght.shareFlag)) {
         paramErr(res, req);
         return;
       }
@@ -170,10 +167,7 @@ route.get('/song-info', async (req, res) => {
   try {
     const { id, flag = '' } = req.query;
 
-    if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
-      !validaString(flag, 0, fieldLenght.shareFlag)
-    ) {
+    if (!validaString(id, 1, fieldLenght.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -181,7 +175,7 @@ route.get('/song-info', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     if (!account) {
-      if (!flag) {
+      if (!validaString(flag, 1, fieldLenght.shareFlag)) {
         paramErr(res, req);
         return;
       }

@@ -35,11 +35,11 @@ async function playInConfig() {
   const logop = `${configObj.filepath}/playerlogo`;
 
   if (!_f.c.existsSync(logop)) {
-    await _f.cp(resolve(__dirname, `../img/playerlogo`), logop);
+    await _f.cp(resolve(__dirname, `../../img/playerlogo`), logop);
   }
 
   if (!_f.c.existsSync(p)) {
-    await _f.cp(resolve(__dirname, `../data/playIn.json`), p);
+    await _f.cp(resolve(__dirname, `../../data/playIn.json`), p);
   }
 
   return JSON.parse(await _f.p.readFile(p));
