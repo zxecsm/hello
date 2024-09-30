@@ -45,6 +45,7 @@ import {
   isFullScreen,
   isVideoFile,
   concurrencyTasks,
+  isValidDate,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -77,6 +78,7 @@ import fileSlice from '../../../js/utils/fileSlice.js';
 import { hideIframeMask, showIframeMask } from '../iframe.js';
 import toolTip from '../../../js/plugins/tooltip/index.js';
 import { _tpl } from '../../../js/utils/template.js';
+import { verifyDate } from '../count_down/index.js';
 const $document = $(document),
   $chatRoomWrap = $('.chat_room_wrap'),
   $userListBox = $chatRoomWrap.find('.user_list_box'),
@@ -161,7 +163,8 @@ const hdChatSearchInput = debounce(function () {
   }
   const acc = curChatAccount;
   loadingImg($chatListBox.find('.chat_list')[0]);
-  reqChatReadMsg({ type: 0, account: acc, word: val })
+  const { start = '', end = '' } = searchDateLimit;
+  reqChatReadMsg({ type: 0, account: acc, word: val, start, end })
     .then((result) => {
       if (result.code === 1) {
         if (chatRoomWrapIsHide()) return;
@@ -311,6 +314,8 @@ export function closeChatRoom() {
     chatTitleScroll.close();
     $chatListBox.find('.chat_list').html('');
     chatSearchInput.setValue('').focus();
+    searchDateLimit = {};
+    changeDateSearchState();
     cImgLoad.unBind();
     cUserListLoad.unBind();
     cUserLogoLoad.unBind();
@@ -588,6 +593,8 @@ export function chatMessageNotification(name, data, from, to, logo) {
       if (type === 'click') {
         curChatAccount = to === 'chang' ? to : from;
         chatSearchInput.setValue('').focus();
+        searchDateLimit = {};
+        changeDateSearchState();
         showChatRoom();
       }
     },
@@ -608,6 +615,8 @@ export function chatMessageNotification(name, data, from, to, logo) {
       () => {
         curChatAccount = to === 'chang' ? to : from;
         chatSearchInput.setValue('').focus();
+        searchDateLimit = {};
+        changeDateSearchState();
         showChatRoom();
       }
     );
@@ -649,7 +658,7 @@ export function showChatRoom() {
 $showChatRoomBtn.on('click', debounce(showChatRoom, 500, true));
 // 隐藏回到底部按钮
 const hideBackBotBtn = debounce(function () {
-  $chatRoomWrap.find('.scroll_to_bot_btn').fadeOut(_d.speed);
+  $chatFootBox.find('.scroll_to_bot_btn').fadeOut(_d.speed);
 }, 5000);
 // 用户菜单
 function userMenu(e, msgObj, isUserList) {
@@ -862,11 +871,14 @@ function scrollTopMsg() {
       _msg.error('搜索内容过长');
       return;
     }
+    const { start = '', end = '' } = searchDateLimit;
     reqChatReadMsg({
       flag,
       account: curChatAccount,
       type: 1,
       word,
+      start,
+      end,
     })
       .then((result) => {
         if (result.code === 1) {
@@ -917,19 +929,82 @@ $chatListBox
   })
   .on('click', '.c_img', openChatImg)
   .on('scroll', function () {
-    $chatRoomWrap.find('.scroll_to_bot_btn').fadeIn(_d.speed);
+    $chatFootBox.find('.scroll_to_bot_btn').fadeIn(_d.speed);
     hideBackBotBtn();
   })
   .on('scroll', debounce(scrollTopMsg, 200));
-// 回到底部
-$chatRoomWrap.on('click', '.scroll_to_bot_btn', function () {
-  $chatListBox.animate(
+
+let searchDateLimit = {};
+function hdDateSearchChat(e) {
+  const { start = '', end = '' } = searchDateLimit;
+  const today = formatDate({ template: '{0}-{1}-{2}' });
+  rMenu.inpMenu(
+    e,
     {
-      scrollTop: $chatListBox[0].scrollHeight,
+      subText: '提交',
+      items: {
+        start: {
+          beforeText: '开始日期：',
+          placeholder: 'YYYY-MM-DD',
+          value: start || today,
+          inputType: 'date',
+          verify(val) {
+            if (!isValidDate(val)) {
+              return '请输入正确的日期';
+            }
+          },
+        },
+        end: {
+          beforeText: '结束日期：',
+          placeholder: 'YYYY-MM-DD',
+          value: end || today,
+          inputType: 'date',
+          verify(val) {
+            if (!isValidDate(val)) {
+              return '请输入正确的日期';
+            }
+          },
+        },
+      },
     },
-    _d.speed
+    debounce(
+      function ({ close, inp }) {
+        if (!verifyDate(inp)) return;
+        searchDateLimit = inp;
+        changeDateSearchState();
+        hdChatSearchInput();
+        close();
+      },
+      1000,
+      true
+    ),
+    '选择消息日期范围'
   );
-});
+}
+export function getSearchDateLimit() {
+  return searchDateLimit;
+}
+function changeDateSearchState() {
+  const { start, end } = searchDateLimit;
+  const $dateSearch = $chatRoomWrap.find('.date_search');
+  if (start && end) {
+    $dateSearch
+      .find('.date_text')
+      .text(`${searchDateLimit.start} >> ${searchDateLimit.end}`);
+    $dateSearch.addClass('active');
+  } else {
+    $dateSearch.find('.date_text').text(``);
+    $dateSearch.removeClass('active');
+  }
+}
+$chatRoomWrap
+  .on('click', '.date_search .date_icon', hdDateSearchChat)
+  .on('click', '.date_search .date_text', hdDateSearchChat)
+  .on('click', '.date_search .date_close', () => {
+    searchDateLimit = {};
+    changeDateSearchState();
+    hdChatSearchInput();
+  });
 // 消息菜单
 function chatMsgMenu(e, cobj) {
   const chatAcc = curChatAccount;
@@ -1188,6 +1263,14 @@ $chatFootBox
       sendTextMsg();
       e.preventDefault();
     }
+  })
+  .on('click', '.scroll_to_bot_btn', function () {
+    $chatListBox.animate(
+      {
+        scrollTop: $chatListBox[0].scrollHeight,
+      },
+      _d.speed
+    );
   })
   .find('.c_text_content')[0]
   // 粘贴发送文件
@@ -1520,6 +1603,8 @@ export function openFriend(acc, noHideUserList, cb) {
     $chatHeadBtns.find('.clear_msg_btn').stop().fadeIn(_d.speed);
   }
   chatSearchInput.setValue('').focus();
+  searchDateLimit = {};
+  changeDateSearchState();
   chatMsgInp.setValue(temChatMsg[acc] || '');
   if (!noHideUserList) {
     $userListBox.css('display', 'none');

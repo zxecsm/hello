@@ -593,7 +593,7 @@ function previewState() {
     $headBtns._flag = 'n';
     $headBtns
       .find('.preview_state')
-      .attr('class', 'preview_state iconfont icon-yanjing_yincang_o');
+      .attr('class', 'preview_state iconfont icon-yanjing_xianshi_o');
     $previewBox.css('display', 'none');
     $editBox.addClass('open');
     $headBtns.find('.to_max_btn').css('display', 'none');
@@ -601,7 +601,7 @@ function previewState() {
     $headBtns._flag = 'y';
     $headBtns
       .find('.preview_state')
-      .attr('class', 'preview_state iconfont icon-yanjing_xianshi_o');
+      .attr('class', 'preview_state iconfont icon-yanjing_yincang_o');
     $previewBox.css('display', 'block');
     $editBox.removeClass('open');
     $headBtns.find('.to_max_btn').css('display', 'block');

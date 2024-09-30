@@ -142,7 +142,7 @@ async function validShareAddUserState(req, types, id, pass) {
     const share = (
       await queryData(
         'share_user_view',
-        'username,logo,email,exp_time,account,data,pass',
+        'username,logo,email,exp_time,title,account,data,pass',
         `WHERE id = ? AND type IN (${fillString(types.length)})`,
         [id, ...types]
       )

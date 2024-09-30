@@ -82,6 +82,7 @@ import {
   chatRoomWrapIsHide,
   chatimgLoad,
   closeChatRoom,
+  getSearchDateLimit,
   renderMsgList,
   setCurChatAccount,
   shakeChat,
@@ -791,11 +792,14 @@ function hdChatType(resData) {
           _msg.error('搜索内容过长');
           return;
         }
+        const { start = '', end = '' } = getSearchDateLimit();
         reqChatReadMsg({
           type: 2,
-          account:acc,
+          account: acc,
           flag,
           word,
+          start,
+          end,
         })
           .then((result) => {
             if (result.code === 1) {

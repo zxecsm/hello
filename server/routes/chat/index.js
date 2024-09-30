@@ -36,6 +36,7 @@ const {
   getSplitWord,
   unique,
   getSongInfo,
+  isValidDate,
 } = require('../../utils/utils');
 const { fieldLenght } = require('../config');
 const { getSuffix } = require('../file/file');
@@ -203,7 +204,14 @@ route.get('/getdes', async (req, res) => {
 // 读取消息
 route.get('/read-msg', async (req, res) => {
   try {
-    let { account: acc, type, flag = '', word = '' } = req.query;
+    let {
+      account: acc,
+      type,
+      flag = '',
+      word = '',
+      start = '',
+      end = '',
+    } = req.query;
     type = parseInt(type);
 
     if (
@@ -211,7 +219,9 @@ route.get('/read-msg', async (req, res) => {
       !validaString(flag, 0, fieldLenght.id, 1) ||
       !validaString(word, 0, fieldLenght.searchWord) ||
       isNaN(type) ||
-      !validationValue(type, [0, 1, 2])
+      !validationValue(type, [0, 1, 2]) ||
+      (start && !isValidDate(start)) ||
+      (end && !isValidDate(end))
     ) {
       paramErr(res, req);
       return;
@@ -256,6 +266,19 @@ route.get('/read-msg', async (req, res) => {
 
       valArr.push(...searchSql.valArr);
       offsetValArr.push(...searchSql.valArr);
+    }
+
+    if (start && end) {
+      const sTime = new Date(start + ' 00:00:00').getTime();
+      const eTime = new Date(end + ' 00:00:00').getTime();
+
+      const sql = ` AND create_at >= ? AND create_at < ?`;
+
+      where += sql;
+      offsetWhere += sql;
+
+      valArr.push(sTime, eTime);
+      offsetValArr.push(sTime, eTime);
     }
 
     let offset = 0;

@@ -78,7 +78,15 @@ route.get('/share', async (req, res) => {
       return;
     }
 
-    let { username, logo, email, exp_time, account: acc, data } = share.data;
+    let {
+      username,
+      logo,
+      email,
+      exp_time,
+      title,
+      account: acc,
+      data,
+    } = share.data;
 
     const { account } = req._hello.userinfo;
 
@@ -94,6 +102,7 @@ route.get('/share', async (req, res) => {
       exp_time,
       account: acc,
       data,
+      title,
     })(req, id, 1);
   } catch (error) {
     _err(res)(req, error);

@@ -260,6 +260,7 @@ $cheadBtns
   });
 // 新增
 function addCount(e) {
+  const today = formatDate({ template: '{0}-{1}-{2}' });
   rMenu.inpMenu(
     e,
     {
@@ -291,6 +292,7 @@ function addCount(e) {
         start: {
           beforeText: '开始日期：',
           placeholder: 'YYYY-MM-DD',
+          value: today,
           inputType: 'date',
           verify(val) {
             if (!isValidDate(val)) {
@@ -301,6 +303,7 @@ function addCount(e) {
         end: {
           beforeText: '结束日期：',
           placeholder: 'YYYY-MM-DD',
+          value: today,
           inputType: 'date',
           verify(val) {
             if (!isValidDate(val)) {
@@ -454,7 +457,7 @@ function editCount(e, count) {
     '编辑倒计时'
   );
 }
-function verifyDate(obj) {
+export function verifyDate(obj) {
   let { start, end } = obj;
   start = new Date(start).getTime();
   end = new Date(end).getTime();
