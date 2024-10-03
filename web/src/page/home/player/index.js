@@ -466,8 +466,7 @@ export function moveSongToList(e, pid, ar) {
     } else if (v.pic === 'default') {
       p = imgMusic;
     }
-    v.pic = p;
-    list.push(v);
+    list.push({ ...v, pic: p });
   });
   if (list.length <= 0) {
     _msg.error('没有可选歌单');
