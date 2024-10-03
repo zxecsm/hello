@@ -125,6 +125,8 @@ realtime.init().add((res) => {
       } else {
         hidePaste();
       }
+    } else if (type === 'errMsg') {
+      _msg.error(item.data.text);
     }
   });
 });

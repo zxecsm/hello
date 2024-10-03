@@ -699,6 +699,16 @@ function syncUpdateData(req, flag, id = '') {
   });
 }
 
+// 错误通知消息
+function errorNotifyMsg(req, text) {
+  msg.set(req._hello.userinfo.account, nanoid(), {
+    type: 'errMsg',
+    data: {
+      text,
+    },
+  });
+}
+
 // 文件名格式
 function isFilename(name) {
   return !/[?\\\\/<>*|]/g.test(name);
@@ -877,5 +887,6 @@ module.exports = {
   extractIP,
   uLog,
   unique,
+  errorNotifyMsg,
   tplReplace,
 };

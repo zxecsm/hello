@@ -218,22 +218,46 @@ const botMsg = (function () {
   }
   return mstc;
 })();
+
+let cacheMsg = [];
+
+function addCache(msg) {
+  cacheMsg.push(msg);
+}
+document.addEventListener('visibilitychange', function () {
+  // 页面变为可见时触发
+  if (document.visibilityState === 'visible') {
+    cacheMsg.forEach((item) => {
+      new Msg(item.opt, item.callback);
+    });
+    cacheMsg = [];
+  }
+});
 function success(message = '操作成功', callback, duration = 3000) {
-  new Msg(
-    {
-      message,
-      type: 'success',
-      duration,
-      icon: 'iconfont icon-zhengque_chenggong_shibai',
-    },
-    callback
-  );
+  const opt = {
+    message,
+    type: 'success',
+    duration,
+    icon: 'iconfont icon-zhengque_chenggong_shibai',
+  };
+  if (document.visibilityState === 'hidden') {
+    addCache({ opt, callback });
+    return;
+  }
+  new Msg(opt, callback);
 }
 function error(message = '操作失败', callback, duration = 6000) {
-  new Msg(
-    { message, type: 'error', duration, icon: 'iconfont icon-shibai' },
-    callback
-  );
+  const opt = {
+    message,
+    type: 'error',
+    duration,
+    icon: 'iconfont icon-shibai',
+  };
+  if (document.visibilityState === 'hidden') {
+    addCache({ opt, callback });
+    return;
+  }
+  new Msg(opt, callback);
 }
 function warning(message, callback, duration = 8000) {
   // 页面变为不可见时触发
@@ -244,18 +268,25 @@ function warning(message, callback, duration = 8000) {
   if (document.visibilityState === 'visible') {
     _playSound(imgBlop);
   }
-  new Msg(
-    {
-      message,
-      type: 'warning',
-      duration,
-      icon: 'iconfont icon-warning-circle',
-    },
-    callback
-  );
+  const opt = {
+    message,
+    type: 'warning',
+    duration,
+    icon: 'iconfont icon-warning-circle',
+  };
+  if (document.visibilityState === 'hidden') {
+    addCache({ opt, callback });
+    return;
+  }
+  new Msg(opt, callback);
 }
 function info(message, callback, duration = 3000) {
-  new Msg({ message, duration, icon: 'iconfont icon-info-circle' }, callback);
+  const opt = { message, duration, icon: 'iconfont icon-info-circle' };
+  if (document.visibilityState === 'hidden') {
+    addCache({ opt, callback });
+    return;
+  }
+  new Msg(opt, callback);
 }
 function msg(opt, callback, sound) {
   if (sound) {
@@ -268,15 +299,27 @@ function msg(opt, callback, sound) {
       _playSound(imgBlop);
     }
   }
+  if (document.visibilityState === 'hidden') {
+    addCache({ opt, callback });
+    return;
+  }
   new Msg(opt, callback);
 }
 function online(message, callback, duration = 8000) {
   playSound(onlineMsg);
-  new Msg(
-    { message, duration, type: 'success', icon: 'iconfont icon-zaixianzixun' },
-    callback
-  );
+  const opt = {
+    message,
+    duration,
+    type: 'success',
+    icon: 'iconfont icon-zaixianzixun',
+  };
+  if (document.visibilityState === 'hidden') {
+    addCache({ opt, callback });
+    return;
+  }
+  new Msg(opt, callback);
 }
+
 const _playSound = debounce(playSound, 1000, true);
 const _msg = {
   success,

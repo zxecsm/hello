@@ -18,6 +18,8 @@ const {
   uLog,
   isRoot,
   concurrencyTasks,
+  errorNotifyMsg,
+  nanoid,
 } = require('../../utils/utils');
 
 const configObj = require('../../data/config');
@@ -192,6 +194,11 @@ route.get('/read-dir', async (req, res) => {
 
 // 读取目录大小
 route.get('/read-dir-size', async (req, res) => {
+  let timer = setTimeout(() => {
+    clearTimeout(timer);
+    timer = null;
+  }, 10000);
+
   try {
     const { path, flag = '' } = req.query;
 
@@ -241,8 +248,23 @@ route.get('/read-dir-size', async (req, res) => {
       fileSize.add(p, size);
     }
 
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    } else {
+      req._hello.temid = nanoid();
+      syncUpdateData(req, 'file');
+    }
+
     _success(res, '读取文件夹大小成功', { size })(req, p, 1);
   } catch (error) {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    } else {
+      errorNotifyMsg(req, `读取文件夹大小失败`);
+    }
+
     _err(res)(req, error);
   }
 });
@@ -455,6 +477,11 @@ route.post('/save-file', async (req, res) => {
 
 // 复制
 route.post('/copy', async (req, res) => {
+  let timer = setTimeout(() => {
+    clearTimeout(timer);
+    timer = null;
+  }, 10000);
+
   try {
     const { path, data } = req.body;
 
@@ -505,16 +532,35 @@ route.post('/copy', async (req, res) => {
       await uLog(req, `复制${type === 'dir' ? '文件夹' : '文件'}(${f}=>${to})`);
     });
 
-    syncUpdateData(req, 'file');
+    if (timer) {
+      syncUpdateData(req, 'file');
+      clearTimeout(timer);
+      timer = null;
+    } else {
+      req._hello.temid = nanoid();
+      syncUpdateData(req, 'file');
+    }
 
     _success(res);
   } catch (error) {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    } else {
+      errorNotifyMsg(req, `复制文件失败`);
+    }
+
     _err(res)(req, error);
   }
 });
 
 // 移动
 route.post('/move', async (req, res) => {
+  let timer = setTimeout(() => {
+    clearTimeout(timer);
+    timer = null;
+  }, 10000);
+
   try {
     const { path, data } = req.body;
 
@@ -571,16 +617,35 @@ route.post('/move', async (req, res) => {
       await uLog(req, `移动${type === 'dir' ? '文件夹' : '文件'}(${f}=>${t})`);
     });
 
-    syncUpdateData(req, 'file');
+    if (timer) {
+      syncUpdateData(req, 'file');
+      clearTimeout(timer);
+      timer = null;
+    } else {
+      req._hello.temid = nanoid();
+      syncUpdateData(req, 'file');
+    }
 
     _success(res);
   } catch (error) {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    } else {
+      errorNotifyMsg(req, `移动文件失败`);
+    }
+
     _err(res)(req, error);
   }
 });
 
 // 压缩
 route.post('/zip', async (req, res) => {
+  let timer = setTimeout(() => {
+    clearTimeout(timer);
+    timer = null;
+  }, 10000);
+
   try {
     const { data } = req.body;
 
@@ -621,17 +686,37 @@ route.post('/zip', async (req, res) => {
       await compressFile(f, t);
     }
 
-    syncUpdateData(req, 'file');
-
     await uLog(req, `压缩${type === 'dir' ? '文件夹' : '文件'}(${f}=>${t})`);
+
+    if (timer) {
+      syncUpdateData(req, 'file');
+      clearTimeout(timer);
+      timer = null;
+    } else {
+      req._hello.temid = nanoid();
+      syncUpdateData(req, 'file');
+    }
+
     _success(res);
   } catch (error) {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    } else {
+      errorNotifyMsg(req, `压缩失败`);
+    }
+
     _err(res)(req, error);
   }
 });
 
 // 解压缩
 route.post('/unzip', async (req, res) => {
+  let timer = setTimeout(() => {
+    clearTimeout(timer);
+    timer = null;
+  }, 10000);
+
   try {
     const { data } = req.body;
 
@@ -674,16 +759,35 @@ route.post('/unzip', async (req, res) => {
       await uLog(req, `解压文件(${f}=>${t}/)`);
     }
 
-    syncUpdateData(req, 'file');
+    if (timer) {
+      syncUpdateData(req, 'file');
+      clearTimeout(timer);
+      timer = null;
+    } else {
+      req._hello.temid = nanoid();
+      syncUpdateData(req, 'file');
+    }
 
     _success(res);
   } catch (error) {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    } else {
+      errorNotifyMsg(req, `解压失败`);
+    }
+
     _err(res)(req, error);
   }
 });
 
 // 删除
 route.post('/delete', async (req, res) => {
+  let timer = setTimeout(() => {
+    clearTimeout(timer);
+    timer = null;
+  }, 10000);
+
   try {
     const { data, force = 0 } = req.body;
 
@@ -739,10 +843,24 @@ route.post('/delete', async (req, res) => {
       await uLog(req, `删除${type === 'dir' ? '文件夹' : '文件'}(${p})`);
     });
 
-    syncUpdateData(req, 'file');
+    if (timer) {
+      syncUpdateData(req, 'file');
+      clearTimeout(timer);
+      timer = null;
+    } else {
+      req._hello.temid = nanoid();
+      syncUpdateData(req, 'file');
+    }
 
     _success(res);
   } catch (error) {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    } else {
+      errorNotifyMsg(req, `删除失败`);
+    }
+
     _err(res)(req, error);
   }
 });
@@ -901,6 +1019,11 @@ route.post('/up', async (req, res) => {
 
 // 合并文件
 route.post('/merge', async (req, res) => {
+  let timer = setTimeout(() => {
+    clearTimeout(timer);
+    timer = null;
+  }, 10000);
+
   try {
     let { HASH, count, path } = req.body;
     count = parseInt(count);
@@ -939,8 +1062,23 @@ route.post('/merge', async (req, res) => {
       `${fpath}`
     );
 
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    } else {
+      req._hello.temid = nanoid();
+      syncUpdateData(req, 'file');
+    }
+
     _success(res, `上传文件成功`)(req, fpath, 1);
   } catch (error) {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    } else {
+      errorNotifyMsg(req, `上传文件失败`);
+    }
+
     _err(res)(req, error);
   }
 });

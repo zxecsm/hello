@@ -1475,12 +1475,12 @@ function switchSongChecked() {
   $msuicContentBox.find('.list_items_wrap .check_all_song_btn').attr('x', '1');
 }
 // 播放歌单
-function playSongListBtn(e) {
-  if (temPlaylist.length === 0) {
+function playSongListBtn(e, list) {
+  if (list.length === 0) {
     _msg.error('播放列表为空');
     return;
   }
-  updateNewPlayList(temPlaylist);
+  updateNewPlayList(list);
   changePlayingAnimate(e);
   musicPlay(curPlayingList[0]);
 }
@@ -1771,8 +1771,7 @@ const playRandomList = debounce(
     reqPlayerRandomList()
       .then((res) => {
         if (res.code === 1) {
-          temPlaylist = res.data;
-          playSongListBtn(e);
+          playSongListBtn(e, res.data);
         }
       })
       .catch(() => {});
@@ -1815,7 +1814,9 @@ $msuicContentBox
     );
   })
   .on('scroll', hdSongsScroll)
-  .on('click', '.play_list_btn', playSongListBtn)
+  .on('click', '.play_list_btn', (e) => {
+    playSongListBtn(e, temPlaylist);
+  })
   .on('click', '.add_song_playing_btn', function (e) {
     //添加到播放列表
     const $this = $(this);
