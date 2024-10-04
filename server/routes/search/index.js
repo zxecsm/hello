@@ -268,8 +268,13 @@ route.get('/list', async (req, res) => {
     bmkList.forEach((item) => {
       const { title, link, des, group_id } = item,
         n = `${title}${link}${des}`;
-      const group_title = groupObj[group_id].title;
+
+      const groupInfo = groupObj[group_id];
+
+      if (!groupInfo) return;
+
       const sNum = getWordCount(splitWord, n);
+
       if (sNum > 0) {
         list.push({
           title,
@@ -277,7 +282,7 @@ route.get('/list', async (req, res) => {
           des,
           type: 'bmk',
           sNum,
-          group_title,
+          group_title: groupInfo.title,
         });
       }
     });
