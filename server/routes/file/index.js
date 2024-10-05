@@ -197,7 +197,7 @@ route.get('/read-dir-size', async (req, res) => {
   let timer = setTimeout(() => {
     clearTimeout(timer);
     timer = null;
-  }, 10000);
+  }, fieldLenght.operationTimeout);
 
   try {
     const { path, flag = '' } = req.query;
@@ -480,7 +480,7 @@ route.post('/copy', async (req, res) => {
   let timer = setTimeout(() => {
     clearTimeout(timer);
     timer = null;
-  }, 10000);
+  }, fieldLenght.operationTimeout);
 
   try {
     const { path, data } = req.body;
@@ -559,7 +559,7 @@ route.post('/move', async (req, res) => {
   let timer = setTimeout(() => {
     clearTimeout(timer);
     timer = null;
-  }, 10000);
+  }, fieldLenght.operationTimeout);
 
   try {
     const { path, data } = req.body;
@@ -644,7 +644,7 @@ route.post('/zip', async (req, res) => {
   let timer = setTimeout(() => {
     clearTimeout(timer);
     timer = null;
-  }, 10000);
+  }, fieldLenght.operationTimeout);
 
   try {
     const { data } = req.body;
@@ -715,7 +715,7 @@ route.post('/unzip', async (req, res) => {
   let timer = setTimeout(() => {
     clearTimeout(timer);
     timer = null;
-  }, 10000);
+  }, fieldLenght.operationTimeout);
 
   try {
     const { data } = req.body;
@@ -786,7 +786,7 @@ route.post('/delete', async (req, res) => {
   let timer = setTimeout(() => {
     clearTimeout(timer);
     timer = null;
-  }, 10000);
+  }, fieldLenght.operationTimeout);
 
   try {
     const { data, force = 0 } = req.body;
@@ -859,6 +859,50 @@ route.post('/delete', async (req, res) => {
       timer = null;
     } else {
       errorNotifyMsg(req, `删除失败`);
+    }
+
+    _err(res)(req, error);
+  }
+});
+
+// 清空回收站
+route.get('/clear-trash', async (req, res) => {
+  let timer = setTimeout(() => {
+    clearTimeout(timer);
+    timer = null;
+  }, fieldLenght.operationTimeout);
+
+  try {
+    const { account } = req._hello.userinfo;
+
+    const trashDir = getTrashDir(account);
+
+    if (_f.c.existsSync(trashDir)) {
+      const list = await _f.p.readdir(trashDir);
+
+      await concurrencyTasks(list, 5, async (item) => {
+        const p = `${trashDir}/${item}`;
+
+        await _f.del(p);
+      });
+    }
+
+    if (timer) {
+      syncUpdateData(req, 'file');
+      clearTimeout(timer);
+      timer = null;
+    } else {
+      req._hello.temid = nanoid();
+      syncUpdateData(req, 'file');
+    }
+
+    _success(res, '清空回收站成功')(req);
+  } catch (error) {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    } else {
+      errorNotifyMsg(req, `清空回收站失败`);
     }
 
     _err(res)(req, error);
@@ -1022,7 +1066,7 @@ route.post('/merge', async (req, res) => {
   let timer = setTimeout(() => {
     clearTimeout(timer);
     timer = null;
-  }, 10000);
+  }, fieldLenght.operationTimeout);
 
   try {
     let { HASH, count, path } = req.body;

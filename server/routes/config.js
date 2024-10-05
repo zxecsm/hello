@@ -26,6 +26,7 @@ const fieldLenght = {
   songList: 100,
   bgPageSize: 100,
   chatPageSize: 100,
+  operationTimeout: 10000,
 };
 
 module.exports = { fieldLenght };

@@ -57,6 +57,7 @@ const fieldLenght = {
   todoContent: 500,
   noteCategoryTitle: 30,
   chatFileExpire: 999,
+  operationTimeout: 10000,
 };
 const _d = {
   fieldLenght,

@@ -1,3 +1,4 @@
+import _d from '../js/common/config';
 import { _getAjax, _postAjax, _upFile } from '../js/utils/utils';
 // 读取目录
 export function reqFileReadDir(data) {
@@ -21,11 +22,15 @@ export function reqFileShare(data) {
 }
 // 解压
 export function reqFileUnZip(data) {
-  return _postAjax('/file/unzip', data, { timeout: 10000 });
+  return _postAjax('/file/unzip', data, {
+    timeout: _d.fieldLenght.operationTimeout,
+  });
 }
 // 压缩
 export function reqFileZip(data) {
-  return _postAjax('/file/zip', data, { timeout: 10000 });
+  return _postAjax('/file/zip', data, {
+    timeout: _d.fieldLenght.operationTimeout,
+  });
 }
 // 重复
 export function reqFileRepeat(data) {
@@ -41,7 +46,10 @@ export function reqFileUp(data, file, cb) {
 }
 // 合并
 export function reqFileMerge(data) {
-  return _postAjax('/file/merge', data, { timeout: 10000, parallel: true });
+  return _postAjax('/file/merge', data, {
+    timeout: _d.fieldLenght.operationTimeout,
+    parallel: true,
+  });
 }
 // 创建文件
 export function reqFileCreateFile(data) {
@@ -53,15 +61,29 @@ export function reqFileCreateDir(data) {
 }
 // 复制
 export function reqFileCopy(data) {
-  return _postAjax('/file/copy', data, { timeout: 10000 });
+  return _postAjax('/file/copy', data, {
+    timeout: _d.fieldLenght.operationTimeout,
+  });
 }
 // 移动
 export function reqFileMove(data) {
-  return _postAjax('/file/move', data, { timeout: 10000 });
+  return _postAjax('/file/move', data, {
+    timeout: _d.fieldLenght.operationTimeout,
+  });
 }
 // 删除
 export function reqFileDelete(data) {
-  return _postAjax('/file/delete', data, { timeout: 10000 });
+  return _postAjax('/file/delete', data, {
+    timeout: _d.fieldLenght.operationTimeout,
+  });
+}
+// 清空回收站
+export function reqFileClearTrash() {
+  return _getAjax(
+    '/file/clear-trash',
+    {},
+    { timeout: _d.fieldLenght.operationTimeout }
+  );
 }
 // 重命名
 export function reqFileRename(data) {
@@ -73,5 +95,7 @@ export function reqFileGetShare(data) {
 }
 // 读取目录大小
 export function reqFileReadDirSize(data) {
-  return _getAjax('/file/read-dir-size', data, { timeout: 10000 });
+  return _getAjax('/file/read-dir-size', data, {
+    timeout: _d.fieldLenght.operationTimeout,
+  });
 }

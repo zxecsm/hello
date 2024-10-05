@@ -55,6 +55,7 @@ import bus from '../../js/utils/bus';
 import loadfailImg from '../../images/img/loadfail.png';
 import {
   reqFileBreakpoint,
+  reqFileClearTrash,
   reqFileCopy,
   reqFileCreateDir,
   reqFileCreateFile,
@@ -369,6 +370,15 @@ async function openDir(path, top) {
       path = fileUrl;
     }
     fileUrl = path = hdPath('/' + path);
+
+    const $clearTrashBtn = $header.find('.clear_trash_btn');
+
+    if (fileUrl === '/.trash') {
+      $clearTrashBtn.css('display', 'block');
+    } else {
+      $clearTrashBtn.css('display', 'none');
+    }
+
     _setData('fileUrl', fileUrl);
     curmb.setPath(path);
     const res = await reqFileReadDir({ path });
@@ -809,7 +819,6 @@ async function hdDeCompress(e, obj, cb) {
           if (error.statusText === 'timeout') {
             _msg.success(`文件后台处理中`);
           }
-          openDir();
           cb && cb();
         }
       }
@@ -836,7 +845,6 @@ async function hdCompress(e, obj, cb) {
           if (error.statusText === 'timeout') {
             _msg.success(`文件后台处理中`);
           }
-          openDir();
           cb && cb();
         }
       }
@@ -1128,6 +1136,7 @@ $header
       hdCut(e, data);
     }
   })
+  .on('click', '.clear_trash_btn', hdClearTrash)
   .on('click', '.paste_btn .close', () => {
     waitObj = {};
     realtime.send({ type: 'pastefiledata', data: waitObj });
@@ -1147,6 +1156,27 @@ $header
   .on('mouseleave', '.paste_btn', function () {
     toolTip.hide();
   });
+// 清空回收站
+function hdClearTrash(e) {
+  _pop(
+    { e, text: '确认清空回收站？', confirm: { type: 'danger', text: '清空' } },
+    (type) => {
+      if (type === 'confirm') {
+        reqFileClearTrash()
+          .then((res) => {
+            if (res.code === 1) {
+              openDir();
+            }
+          })
+          .catch((error) => {
+            if (error.statusText === 'timeout') {
+              _msg.success(`文件后台处理中`);
+            }
+          });
+      }
+    }
+  );
+}
 // 排序
 function hdFileSort(e) {
   const { type, isDes } = fileSort;
@@ -1236,7 +1266,6 @@ async function hdCopy(e, data, cb) {
       if (error.statusText === 'timeout') {
         _msg.success(`文件后台处理中`);
       }
-      openDir();
       cb && cb();
     }
   }
@@ -1270,7 +1299,6 @@ async function hdCut(e, data, cb) {
       if (error.statusText === 'timeout') {
         _msg.success(`文件后台处理中`);
       }
-      openDir();
       waitObj = {};
       realtime.send({ type: 'pastefiledata', data: waitObj });
       hidePaste();
@@ -1450,7 +1478,6 @@ function hdDel(e, arr, cb) {
         if (error.statusText === 'timeout') {
           _msg.success(`文件后台处理中`);
         }
-        openDir();
         cb && cb();
       }
     }
