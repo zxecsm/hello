@@ -1,4 +1,4 @@
-const fieldLenght = {
+export const fieldLenght = {
   id: 50,
   title: 200,
   url: 2000,
@@ -28,5 +28,3 @@ const fieldLenght = {
   chatPageSize: 100,
   operationTimeout: 10000,
 };
-
-module.exports = { fieldLenght };

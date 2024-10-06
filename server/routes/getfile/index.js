@@ -1,30 +1,33 @@
-const express = require('express'),
-  route = express.Router();
+import express from 'express';
 
-const configObj = require('../../data/config');
+import configObj from '../../data/config.js';
 
-const {
+import {
   _err,
   _nologin,
   isImgFile,
   validaString,
   paramErr,
-} = require('../../utils/utils');
+} from '../../utils/utils.js';
 
-const { queryData } = require('../../utils/sqlite');
+import { queryData } from '../../utils/sqlite.js';
 
-const _f = require('../../utils/f');
+import _f from '../../utils/f.js';
 
-const fileKey = require('../../utils/fileKey');
-const {
+import fileKey from '../../utils/fileKey.js';
+
+import {
   hdPath,
   getCurPath,
   getPathFilename,
   getRootDir,
-} = require('../file/file');
-const { getCompressionSize, compressionImg } = require('../../utils/img');
-const { validShareState } = require('../user/user');
-const { fieldLenght } = require('../config');
+} from '../file/file.js';
+
+import { getCompressionSize, compressionImg } from '../../utils/img.js';
+import { validShareState } from '../user/user.js';
+import { fieldLenght } from '../config.js';
+
+const route = express.Router();
 
 // 读取文件
 route.get('/', async (req, res) => {
@@ -199,4 +202,4 @@ route.get('/', async (req, res) => {
   }
 });
 
-module.exports = route;
+export default route;

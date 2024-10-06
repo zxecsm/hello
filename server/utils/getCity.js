@@ -1,6 +1,6 @@
 // ip地理位置
-const IP2Region = require('ip2region').default;
-const queryIP = new IP2Region();
+import IP2Region from 'ip2region';
+const queryIP = new IP2Region.default();
 
 function getCity(ip) {
   const res = { country: '**', province: '**', city: '**', isp: '**' };
@@ -17,4 +17,4 @@ function getCity(ip) {
   return res;
 }
 
-module.exports = getCity;
+export default getCity;

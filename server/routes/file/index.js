@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
 
-const {
+import {
   _nologin,
   validaString,
   _success,
@@ -20,19 +20,19 @@ const {
   concurrencyTasks,
   errorNotifyMsg,
   nanoid,
-} = require('../../utils/utils');
+} from '../../utils/utils.js';
 
-const configObj = require('../../data/config');
+import configObj from '../../data/config.js';
 
-const { insertData } = require('../../utils/sqlite');
+import { insertData } from '../../utils/sqlite.js';
 
-const _f = require('../../utils/f');
+import _f from '../../utils/f.js';
 
-const { getFriendDes } = require('../chat/chat');
+import { getFriendDes } from '../chat/chat.js';
 
-const fileSize = require('./cacheFileSize');
+import fileSize from './cacheFileSize.js';
 
-const {
+import {
   hdPath,
   getRootDir,
   getTrashDir,
@@ -47,13 +47,15 @@ const {
   compressFile,
   uncompress,
   readMenu,
-} = require('./file');
-const { fieldLenght } = require('../config');
-const {
+} from './file.js';
+
+import { fieldLenght } from '../config.js';
+
+import {
   validShareState,
   validShareAddUserState,
   splitShareFlag,
-} = require('../user/user');
+} from '../user/user.js';
 
 const route = express.Router();
 
@@ -1174,4 +1176,4 @@ route.post('/repeat', async (req, res) => {
   }
 });
 
-module.exports = route;
+export default route;

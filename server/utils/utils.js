@@ -1,18 +1,30 @@
 // 歌曲信息解析
-const mm = require('music-metadata');
+import { parseFile } from 'music-metadata';
 // 接收上传文件
-const { formidable } = require('formidable');
+import { formidable } from 'formidable';
 
-const configObj = require('../data/config');
+import configObj from '../data/config.js';
 
-const msg = require('../data/msg');
+import msg from '../data/msg.js';
 
-const _f = require('./f');
+import _f from './f.js';
 
-const getCity = require('./getCity');
+import getCity from './getCity.js';
+
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+export function getDirname(meta) {
+  const __filename = fileURLToPath(meta.url);
+  return dirname(__filename);
+}
+
+export function getFilename(meta) {
+  return fileURLToPath(meta.url);
+}
 
 // 记录日志
-async function writelog(req, str, flag = 'hello') {
+export async function writelog(req, str, flag = 'hello') {
   try {
     str = str + '';
 
@@ -56,7 +68,7 @@ async function writelog(req, str, flag = 'hello') {
 }
 
 // 操作日志
-function uLog(req, str) {
+export function uLog(req, str) {
   return writelog(
     req,
     `${req._hello.method}(${req._hello.path}) - ${str}`,
@@ -65,7 +77,7 @@ function uLog(req, str) {
 }
 
 // 错误日志
-function errLog(req, err) {
+export function errLog(req, err) {
   return writelog(
     req,
     `${req._hello.method}(${req._hello.path}) - ${err}`,
@@ -74,7 +86,7 @@ function errLog(req, err) {
 }
 
 // 参数错误
-function paramErr(res, req) {
+export function paramErr(res, req) {
   _err(res, '参数错误');
   let param = '';
 
@@ -92,7 +104,7 @@ function paramErr(res, req) {
 }
 
 // 客户端ip获取
-function getClientIp(req) {
+export function getClientIp(req) {
   let ip = '';
 
   try {
@@ -117,7 +129,7 @@ function getClientIp(req) {
   return ip ? ip[0] : '0.0.0.0';
 }
 
-function extractIP(text) {
+export function extractIP(text) {
   const ipv4Regex =
     /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/;
 
@@ -135,7 +147,7 @@ function extractIP(text) {
 }
 
 // 格式时间日期
-function formatDate(opt = {}) {
+export function formatDate(opt = {}) {
   const { template = '{0}-{1}-{2} {3}:{4}:{5}', timestamp = Date.now() } = opt;
   const date = new Date(+timestamp);
   const year = date.getFullYear(),
@@ -157,7 +169,7 @@ function formatDate(opt = {}) {
 }
 
 //处理返回的结果
-function _send(res, options) {
+export function _send(res, options) {
   res.status(200);
 
   res.type('application/json');
@@ -174,7 +186,7 @@ function _send(res, options) {
   );
 }
 
-function _success(res, codeText = '操作成功', data = null) {
+export function _success(res, codeText = '操作成功', data = null) {
   _send(res, {
     data,
     codeText,
@@ -192,14 +204,14 @@ function _success(res, codeText = '操作成功', data = null) {
   };
 }
 
-function _nologin(res) {
+export function _nologin(res) {
   _send(res, {
     code: 2,
     codeText: `当前未登录，请登录后再操作`,
   });
 }
 
-function _nothing(res, codeText = 'ok', data = null) {
+export function _nothing(res, codeText = 'ok', data = null) {
   _send(res, {
     code: 3,
     codeText,
@@ -207,7 +219,7 @@ function _nothing(res, codeText = 'ok', data = null) {
   });
 }
 
-function _err(res, codeText = '操作失败', data = null) {
+export function _err(res, codeText = '操作失败', data = null) {
   _send(res, {
     code: 0,
     codeText,
@@ -227,7 +239,7 @@ function _err(res, codeText = '操作失败', data = null) {
 }
 
 // 等待
-function delay(time) {
+export function delay(time) {
   return new Promise((resolve) => {
     let timer = setTimeout(() => {
       clearTimeout(timer);
@@ -238,7 +250,7 @@ function delay(time) {
 }
 
 // 定时器
-function _setTimeout(callback, time) {
+export function _setTimeout(callback, time) {
   let timer = setTimeout(() => {
     clearTimeout(timer);
     timer = null;
@@ -248,7 +260,7 @@ function _setTimeout(callback, time) {
 }
 
 //接收文件
-function receiveFiles(req, path, filename, maxFileSize = 5) {
+export function receiveFiles(req, path, filename, maxFileSize = 5) {
   return new Promise((resolve, reject) => {
     maxFileSize = maxFileSize * 1024 * 1024;
 
@@ -277,7 +289,7 @@ function receiveFiles(req, path, filename, maxFileSize = 5) {
 }
 
 // 合并切片
-async function mergefile(count, from, to) {
+export async function mergefile(count, from, to) {
   const list = await _f.p.readdir(from);
 
   if (list.length < count) {
@@ -311,7 +323,7 @@ async function mergefile(count, from, to) {
 }
 
 // 生成id
-function nanoid() {
+export function nanoid() {
   return (
     'h' +
     Date.now().toString(36) +
@@ -319,12 +331,12 @@ function nanoid() {
   );
 }
 // 随机数
-function randomNum(x, y) {
+export function randomNum(x, y) {
   return Math.round(Math.random() * (y - x) + x);
 }
 
 // 判断网址
-function isurl(url) {
+export function isurl(url) {
   try {
     const newUrl = new URL(url);
 
@@ -340,19 +352,19 @@ function isurl(url) {
 }
 
 // 获取url域名
-function getHost(url) {
+export function getHost(url) {
   let res = url.match(/\/\/([^/?#]+)/)[1];
 
   return res || 'hello.com';
 }
 
 // 图片格式
-function isImgFile(name) {
+export function isImgFile(name) {
   return /(\.jpg|\.jpeg|\.png|\.ico|\.svg|\.webp|\.gif)$/gi.test(name);
 }
 
 // 转义正则符号
-function encodeStr(keyword) {
+export function encodeStr(keyword) {
   return keyword.replace(
     /[\[\(\$\^\.\]\*\\\?\+\{\}\\|\)]/gi,
     (key) => `\\${key}`
@@ -360,7 +372,7 @@ function encodeStr(keyword) {
 }
 
 // 搜索词所在索引
-function getWordIdx(splitWord, content) {
+export function getWordIdx(splitWord, content) {
   if (splitWord.length === 0) return [];
   let regStr = '(';
   splitWord.forEach((item, idx) => {
@@ -383,7 +395,7 @@ function getWordIdx(splitWord, content) {
 }
 
 // 提取包含搜索词的内容
-function getWordContent(splitWord, content) {
+export function getWordContent(splitWord, content) {
   const arr = getWordIdx(splitWord, content);
   if (arr.length < 1) return [];
   const spacing = 200,
@@ -436,7 +448,7 @@ function getWordContent(splitWord, content) {
 }
 
 // 包含搜索词数
-function getWordCount(splitWord, content) {
+export function getWordCount(splitWord, content) {
   if (splitWord.length === 0) return 0;
   const lowerContent = content.toLowerCase();
   return splitWord.reduce((pre, item, idx) => {
@@ -453,7 +465,7 @@ function getWordCount(splitWord, content) {
 }
 
 // 去重
-function unique(arr, keys) {
+export function unique(arr, keys) {
   const obj = {};
   return arr.filter((item) => {
     if (keys) {
@@ -468,7 +480,7 @@ function unique(arr, keys) {
 }
 
 // 分词
-function getSplitWord(str) {
+export function getSplitWord(str) {
   let words = [];
   str = str.trim();
   if (!str) return words;
@@ -490,7 +502,7 @@ function getSplitWord(str) {
   }, []);
 }
 
-function replaceObjectValue(obj, msg) {
+export function replaceObjectValue(obj, msg) {
   return (function fn(obj) {
     const res = Array.isArray(obj) ? [] : {};
     for (let key in obj) {
@@ -511,7 +523,7 @@ function replaceObjectValue(obj, msg) {
 }
 
 // 深拷贝
-function deepClone(obj) {
+export function deepClone(obj) {
   //判断传入对象为数组或者对象
   const result = Array.isArray(obj) ? [] : {};
   // for in遍历
@@ -540,8 +552,8 @@ function deepClone(obj) {
 }
 // const util = require('util')
 // 歌曲标签信息
-async function getSongInfo(path) {
-  const metadata = await mm.parseFile(path);
+export async function getSongInfo(path) {
+  const metadata = await parseFile(path);
   // console.log(util.inspect(metadata, { showHidden: false, depth: null }));
   let duration = getIn(metadata, ['format', 'duration']) || 0,
     artist = getIn(metadata, ['common', 'artist']) || '未知',
@@ -567,19 +579,19 @@ async function getSongInfo(path) {
   };
 }
 // 音乐文件
-function isMusicFile(str) {
+export function isMusicFile(str) {
   return /\.(mp3)$/i.test(str);
 }
 // 视频文件
-function isVideoFile(str) {
+export function isVideoFile(str) {
   return /(\.rmvb|\.3gp|\.mp4|\.m4v|\.avi|\.mkv|\.flv)$/i.test(str);
 }
 // 验证值
-function validationValue(target, arr) {
+export function validationValue(target, arr) {
   return arr.includes(target);
 }
 // 字符限制
-function validaString(target, min = 0, max = 0, w) {
+export function validaString(target, min = 0, max = 0, w) {
   if (!_type.isString(target) || !_type.isNumber(min) || !_type.isNumber(max))
     return false;
   const len = target.length;
@@ -595,7 +607,7 @@ function validaString(target, min = 0, max = 0, w) {
   return false;
 }
 // 数据类型判断
-const _type = (function () {
+export const _type = (function () {
   const _obj = {
       isNumber: 'Number',
       isBoolean: 'Boolean',
@@ -623,7 +635,7 @@ const _type = (function () {
 })();
 
 // 时间路径
-function getTimePath(timestamp) {
+export function getTimePath(timestamp) {
   return formatDate({
     template: '{0}/{1}/{2}',
     timestamp: timestamp || Date.now(),
@@ -631,11 +643,11 @@ function getTimePath(timestamp) {
 }
 
 // 读取深层值
-function getIn(target, keys) {
+export function getIn(target, keys) {
   return keys.reduce((obj, key) => (obj ? obj[key] : undefined), target);
 }
 
-function tplReplace(tpl, data) {
+export function tplReplace(tpl, data) {
   return tpl.replace(/\{\{(.*?)\}\}/g, (_, k) => {
     return (
       getIn(
@@ -650,7 +662,7 @@ function tplReplace(tpl, data) {
 }
 
 // 检查文件是否文本文件
-function isTextFile(filepath, length = 1000) {
+export function isTextFile(filepath, length = 1000) {
   try {
     let res = true;
     const fd = _f.c.openSync(filepath, 'r');
@@ -674,22 +686,22 @@ function isTextFile(filepath, length = 1000) {
 }
 
 // 整数
-function isInteger(obj) {
+export function isInteger(obj) {
   return Math.floor(obj) === obj;
 }
 
 // 过期判断
-function isValidShare(t) {
+export function isValidShare(t) {
   return t != 0 && t <= Date.now();
 }
 
 // 处理文件名
-function hdFilename(str, fill) {
+export function hdFilename(str, fill) {
   return str.replace(/[\\\\/]/gi, fill || '');
 }
 
 // 同步更新数据
-function syncUpdateData(req, flag, id = '') {
+export function syncUpdateData(req, flag, id = '') {
   msg.set(req._hello.userinfo.account, req._hello.temid, {
     type: 'updatedata',
     data: {
@@ -700,7 +712,7 @@ function syncUpdateData(req, flag, id = '') {
 }
 
 // 错误通知消息
-function errorNotifyMsg(req, text) {
+export function errorNotifyMsg(req, text) {
   msg.set(req._hello.userinfo.account, nanoid(), {
     type: 'errMsg',
     data: {
@@ -710,12 +722,12 @@ function errorNotifyMsg(req, text) {
 }
 
 // 文件名格式
-function isFilename(name) {
+export function isFilename(name) {
   return !/[?\\\\/<>*|]/g.test(name);
 }
 
 // 处理分页
-function createPagingData(list, pageSize, pageNo) {
+export function createPagingData(list, pageSize, pageNo) {
   const totalPage = Math.ceil(list.length / pageSize) || 1;
   pageNo > totalPage ? (pageNo = totalPage) : pageNo <= 0 ? (pageNo = 1) : null;
   const data = list.slice(pageSize * (pageNo - 1), pageSize * pageNo);
@@ -728,12 +740,12 @@ function createPagingData(list, pageSize, pageNo) {
 }
 
 // 验证邮箱
-function isEmail(email) {
+export function isEmail(email) {
   return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
 }
 
 // 验证日期
-function isValidDate(dateString) {
+export function isValidDate(dateString) {
   // 正则表达式用于匹配 YYYY-MM-DD 格式的日期
   const regex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
   if (!regex.test(dateString)) {
@@ -748,11 +760,11 @@ function isValidDate(dateString) {
   return date.toISOString().startsWith(dateString);
 }
 
-function isRoot(req) {
+export function isRoot(req) {
   return req._hello.userinfo.account === 'root';
 }
 
-function myShuffle(arr) {
+export function myShuffle(arr) {
   let m = arr.length,
     t,
     i;
@@ -765,7 +777,7 @@ function myShuffle(arr) {
   return arr;
 }
 
-function parseObjectJson(str) {
+export function parseObjectJson(str) {
   try {
     const res = JSON.parse(str);
     if (_type.isString(res) || !_type.isObject(res)) {
@@ -778,7 +790,7 @@ function parseObjectJson(str) {
   }
 }
 
-function debounce(callback, wait, immedia) {
+export function debounce(callback, wait, immedia) {
   let timer = null,
     res = null;
   return function (...args) {
@@ -796,7 +808,7 @@ function debounce(callback, wait, immedia) {
 }
 
 // 并行任务
-async function concurrencyTasks(tasks, concurrency, taskCallback) {
+export async function concurrencyTasks(tasks, concurrency, taskCallback) {
   let index = 0;
 
   async function handleTask() {
@@ -820,7 +832,7 @@ async function concurrencyTasks(tasks, concurrency, taskCallback) {
 }
 
 // 分批处理
-async function batchTask(callback, limit = 1000) {
+export async function batchTask(callback, limit = 1000) {
   if (!callback) return;
 
   async function processBatch(offset = 0) {
@@ -833,60 +845,3 @@ async function batchTask(callback, limit = 1000) {
 
   await processBatch();
 }
-
-module.exports = {
-  concurrencyTasks,
-  batchTask,
-  replaceObjectValue,
-  debounce,
-  parseObjectJson,
-  myShuffle,
-  isValidDate,
-  isRoot,
-  isEmail,
-  createPagingData,
-  hdFilename,
-  syncUpdateData,
-  isFilename,
-  isValidShare,
-  isInteger,
-  errLog,
-  isTextFile,
-  getIn,
-  getTimePath,
-  isVideoFile,
-  validaString,
-  _type,
-  validationValue,
-  isMusicFile,
-  getSongInfo,
-  deepClone,
-  getWordIdx,
-  isImgFile,
-  getHost,
-  writelog,
-  getClientIp,
-  getWordCount,
-  formatDate,
-  isurl,
-  _send,
-  _success,
-  _nologin,
-  _nothing,
-  _err,
-  _setTimeout,
-  delay,
-  getWordContent,
-  getSplitWord,
-  receiveFiles,
-  mergefile,
-  nanoid,
-  randomNum,
-  paramErr,
-  encodeStr,
-  extractIP,
-  uLog,
-  unique,
-  errorNotifyMsg,
-  tplReplace,
-};

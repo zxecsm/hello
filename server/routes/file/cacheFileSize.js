@@ -32,4 +32,4 @@ const fileSize = {
   },
 };
 
-module.exports = fileSize;
+export default fileSize;

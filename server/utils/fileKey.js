@@ -1,4 +1,4 @@
-const { nanoid } = require('./utils');
+import { nanoid } from './utils.js';
 const exp = 5 * 60 * 60 * 1000;
 
 const fileKey = {
@@ -35,4 +35,4 @@ const fileKey = {
   },
 };
 
-module.exports = fileKey;
+export default fileKey;

@@ -1,21 +1,20 @@
-const express = require('express'),
-  route = express.Router();
+import express from 'express';
 
-const configObj = require('../../data/config');
+import configObj from '../../data/config.js';
 
-const _f = require('../../utils/f');
+import _f from '../../utils/f.js';
 
-const { getImgInfo } = require('../../utils/img');
+import { getImgInfo } from '../../utils/img.js';
 
-const {
+import {
   queryData,
   deleteData,
   insertData,
   fillString,
   getTableRowCount,
-} = require('../../utils/sqlite');
+} from '../../utils/sqlite.js';
 
-const {
+import {
   _success,
   _nothing,
   _err,
@@ -30,10 +29,13 @@ const {
   isRoot,
   concurrencyTasks,
   uLog,
-} = require('../../utils/utils');
-const { fieldLenght } = require('../config');
+} from '../../utils/utils.js';
 
-const { _delDir, getSuffix } = require('../file/file');
+import { fieldLenght } from '../config.js';
+
+import { _delDir, getSuffix } from '../file/file.js';
+
+const route = express.Router();
 
 //拦截器
 route.use((req, res, next) => {
@@ -207,4 +209,4 @@ route.post('/delete', async (req, res) => {
   }
 });
 
-module.exports = route;
+export default route;

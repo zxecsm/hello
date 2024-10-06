@@ -1,7 +1,6 @@
-const express = require('express'),
-  route = express.Router();
+import express from 'express';
 
-const {
+import {
   insertData,
   updateData,
   deleteData,
@@ -10,9 +9,9 @@ const {
   createSearchSql,
   createScoreSql,
   getTableRowCount,
-} = require('../../utils/sqlite');
+} from '../../utils/sqlite.js';
 
-const {
+import {
   _success,
   _nologin,
   _err,
@@ -23,9 +22,12 @@ const {
   getSplitWord,
   syncUpdateData,
   createPagingData,
-} = require('../../utils/utils');
-const { fieldLenght } = require('../config');
-const { getSearchConfig } = require('./search');
+} from '../../utils/utils.js';
+
+import { fieldLenght } from '../config.js';
+import { getSearchConfig } from './search.js';
+
+const route = express.Router();
 
 //拦截器
 route.use((req, res, next) => {
@@ -266,7 +268,7 @@ route.get('/list', async (req, res) => {
     });
 
     bmkList.forEach((item) => {
-      const { title, link, des, group_id } = item,
+      const { title, link, des, group_id, id } = item,
         n = `${title}${link}${des}`;
 
       const groupInfo = groupObj[group_id];
@@ -277,6 +279,7 @@ route.get('/list', async (req, res) => {
 
       if (sNum > 0) {
         list.push({
+          id,
           title,
           link,
           des,
@@ -330,4 +333,4 @@ route.post('/delete', async (req, res) => {
   }
 });
 
-module.exports = route;
+export default route;

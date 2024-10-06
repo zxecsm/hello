@@ -1,8 +1,11 @@
-const configObj = require('../../data/config');
-const { resolve } = require('path');
-const _f = require('../../utils/f');
+import configObj from '../../data/config.js';
+import { resolve } from 'path';
+import _f from '../../utils/f.js';
+import { getDirname } from '../../utils/utils.js';
 
-async function getSearchConfig() {
+const __dirname = getDirname(import.meta);
+
+export async function getSearchConfig() {
   const p = `${configObj.filepath}/data/searchConfig.json`;
   const logop = `${configObj.filepath}/searchlogo`;
   if (!_f.c.existsSync(logop)) {
@@ -13,7 +16,3 @@ async function getSearchConfig() {
   }
   return JSON.parse(await _f.p.readFile(p));
 }
-
-module.exports = {
-  getSearchConfig,
-};

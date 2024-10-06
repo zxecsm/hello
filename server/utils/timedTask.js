@@ -1,4 +1,4 @@
-const { formatDate, writelog } = require('./utils');
+import { formatDate, writelog } from './utils.js';
 
 const cbs = new Set();
 
@@ -38,4 +38,4 @@ const timedTask = {
   stop,
 };
 
-module.exports = timedTask;
+export default timedTask;

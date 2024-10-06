@@ -1,14 +1,14 @@
-const {
+import {
   queryData,
   fillString,
   insertData,
   updateData,
-} = require('../../utils/sqlite');
+} from '../../utils/sqlite.js';
 
-const { batchTask, unique } = require('../../utils/utils');
+import { batchTask, unique } from '../../utils/utils.js';
 
 // 处理歌单封面
-function handleMusicList(arr) {
+export function handleMusicList(arr) {
   arr.forEach((v, i) => {
     v.len = v.item.length;
     if (i === 0) {
@@ -26,7 +26,7 @@ function handleMusicList(arr) {
 }
 
 // 解析歌词
-function parseLrc(lrc) {
+export function parseLrc(lrc) {
   const reg = /\[(\d+\:\d+(\.\d+)?)\]([^\[\n\r]+)/gi,
     res = [];
 
@@ -45,7 +45,7 @@ function parseLrc(lrc) {
 }
 
 // 分批读取音乐信息
-async function batchGetMusics(ids) {
+export async function batchGetMusics(ids) {
   ids = unique(ids);
 
   const res = {};
@@ -72,7 +72,7 @@ async function batchGetMusics(ids) {
 }
 
 // 获取歌曲列表
-async function getMusicList(account) {
+export async function getMusicList(account) {
   let songListObj = (
     await queryData('song_list', 'data', `WHERE account = ?`, [account])
   )[0];
@@ -97,7 +97,7 @@ async function getMusicList(account) {
 }
 
 // 更新歌曲列表
-function updateSongList(account, data) {
+export function updateSongList(account, data) {
   return updateData(
     'song_list',
     {
@@ -109,7 +109,7 @@ function updateSongList(account, data) {
 }
 
 // 歌单移动位置
-async function songlistMoveLocation(account, fId, tId) {
+export async function songlistMoveLocation(account, fId, tId) {
   if (fId === tId) return;
 
   const list = await getMusicList(account);
@@ -124,7 +124,7 @@ async function songlistMoveLocation(account, fId, tId) {
 }
 
 // 歌曲移动位置
-async function songMoveLocation(account, listId, fromId, toId) {
+export async function songMoveLocation(account, listId, fromId, toId) {
   if (fromId === toId) return;
 
   const list = await getMusicList(account);
@@ -142,13 +142,3 @@ async function songMoveLocation(account, listId, fromId, toId) {
     await updateSongList(account, list);
   }
 }
-
-module.exports = {
-  handleMusicList,
-  parseLrc,
-  batchGetMusics,
-  getMusicList,
-  updateSongList,
-  songlistMoveLocation,
-  songMoveLocation,
-};

@@ -1,7 +1,6 @@
-const express = require('express'),
-  route = express.Router();
+import express from 'express';
 
-const {
+import {
   insertData,
   updateData,
   queryData,
@@ -11,9 +10,9 @@ const {
   createSearchSql,
   createScoreSql,
   getTableRowCount,
-} = require('../../utils/sqlite');
+} from '../../utils/sqlite.js';
 
-const {
+import {
   _success,
   _nologin,
   _err,
@@ -26,10 +25,12 @@ const {
   createPagingData,
   isValidDate,
   getSplitWord,
-} = require('../../utils/utils');
+} from '../../utils/utils.js';
 
-const { getFriendDes } = require('../chat/chat');
-const { fieldLenght } = require('../config');
+import { getFriendDes } from '../chat/chat.js';
+import { fieldLenght } from '../config.js';
+
+const route = express.Router();
 
 // 读取笔记
 route.get('/read', async (req, res) => {
@@ -619,4 +620,4 @@ route.get('/delete-category', async (req, res) => {
   }
 });
 
-module.exports = route;
+export default route;

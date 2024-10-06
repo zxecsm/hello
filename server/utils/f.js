@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'fs';
 const fsp = fs.promises;
 
 // 创建目录
@@ -40,4 +40,4 @@ async function del(path) {
 }
 const _f = { p: fsp, c: fs, del, mkdir, cp };
 
-module.exports = _f;
+export default _f;

@@ -1,24 +1,24 @@
-const configObj = require('../../data/config');
+import configObj from '../../data/config.js';
 
-const { _d } = require('../../data/data');
+import { _d } from '../../data/data.js';
 
-const _f = require('../../utils/f');
+import _f from '../../utils/f.js';
 
-const { concurrencyTasks, writelog } = require('../../utils/utils');
+import { concurrencyTasks, writelog } from '../../utils/utils.js';
 
-const compressing = require('compressing');
+import compressing from 'compressing';
 
 // 处理路径
-function hdPath(path) {
+export function hdPath(path) {
   return path.replace(/(\/){2,}/g, '/');
 }
 
-function getCurPath(acc, p) {
+export function getCurPath(acc, p) {
   return hdPath(getRootDir(acc) + '/' + p);
 }
 
 // 用户根目录
-function getRootDir(acc) {
+export function getRootDir(acc) {
   let path = configObj.rootP;
 
   if (acc !== 'root') {
@@ -28,23 +28,23 @@ function getRootDir(acc) {
 }
 
 // 获取回收站目录
-function getTrashDir(account) {
+export function getTrashDir(account) {
   return hdPath(`${getRootDir(account)}/.trash`);
 }
 
 // 判断是否父目录
-function isParentDir(parentP, childP) {
+export function isParentDir(parentP, childP) {
   if (childP === parentP) return false;
   return parentP === childP.slice(0, parentP.length);
 }
 
 // 文件所在目录
-function getFileDir(path) {
+export function getFileDir(path) {
   return path.split('/').slice(0, -1).join('/');
 }
 
 // 获取扩展名
-function getSuffix(str) {
+export function getSuffix(str) {
   let idx = str.lastIndexOf('.'),
     a = '',
     b = '';
@@ -60,7 +60,7 @@ function getSuffix(str) {
 }
 
 // 文件随机后缀
-function getRandomName(str) {
+export function getRandomName(str) {
   const r = '_' + Math.random().toString().slice(-6),
     [a, b] = getSuffix(str);
 
@@ -72,7 +72,7 @@ function getRandomName(str) {
 }
 
 // path获取文件名
-function getPathFilename(path) {
+export function getPathFilename(path) {
   const filename = path.split('/').slice(-1)[0];
 
   const [a, b] = getSuffix(filename);
@@ -81,7 +81,7 @@ function getPathFilename(path) {
 }
 
 // 删除站点文件
-async function _delDir(path) {
+export async function _delDir(path) {
   if (!_f.c.existsSync(path)) return;
 
   if (_d.trashState) {
@@ -116,7 +116,7 @@ async function _delDir(path) {
 }
 
 // 清理空目录
-async function delEmptyFolder(path) {
+export async function delEmptyFolder(path) {
   const s = await _f.p.stat(path);
 
   if (s.isDirectory()) {
@@ -134,7 +134,7 @@ async function delEmptyFolder(path) {
 }
 
 // 读取目录大小
-async function getDirSize(path) {
+export async function getDirSize(path) {
   let size = 0;
 
   (await getAllFile(path)).forEach((item) => {
@@ -145,7 +145,7 @@ async function getDirSize(path) {
 }
 
 // 获取所有文件
-async function getAllFile(path) {
+export async function getAllFile(path) {
   try {
     const arr = [];
 
@@ -184,20 +184,20 @@ async function getAllFile(path) {
 }
 
 // 压缩文件
-function compressFile(p1, p2) {
+export function compressFile(p1, p2) {
   return compressing.zip.compressFile(p1, p2);
 }
 // 压缩目录
-function compressDir(p1, p2) {
+export function compressDir(p1, p2) {
   return compressing.zip.compressDir(p1, p2);
 }
 // 解压
-function uncompress(p1, p2) {
+export function uncompress(p1, p2) {
   return compressing.zip.uncompress(p1, p2);
 }
 
 // 读取目录文件
-async function readMenu(path) {
+export async function readMenu(path) {
   try {
     const list = await _f.p.readdir(path);
 
@@ -241,7 +241,7 @@ async function readMenu(path) {
 }
 
 // 文件权限
-function getPermissions(stats) {
+export function getPermissions(stats) {
   let permissions = '';
   // 检查所有者权限
   if (stats.mode & _f.c.constants.S_IRUSR) permissions += 'r';
@@ -280,24 +280,3 @@ function getPermissions(stats) {
   }, '');
   return permissions + ' ' + num;
 }
-
-module.exports = {
-  hdPath,
-  getRootDir,
-  getTrashDir,
-  _delDir,
-  delEmptyFolder,
-  getCurPath,
-  isParentDir,
-  getPathFilename,
-  getAllFile,
-  getDirSize,
-  getSuffix,
-  getRandomName,
-  getFileDir,
-  compressFile,
-  compressDir,
-  uncompress,
-  readMenu,
-  getPermissions,
-};

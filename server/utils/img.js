@@ -1,9 +1,9 @@
-const sharp = require('sharp');
+import sharp from 'sharp';
 
-const _f = require('./f');
+import _f from './f.js';
 
 // 压缩图片
-async function compressionImg(path, x = 400, y = 400, quality) {
+export async function compressionImg(path, x = 400, y = 400, quality) {
   const inputBuf = await _f.p.readFile(path);
   const img = sharp(inputBuf);
   const meta = await img.metadata();
@@ -19,14 +19,14 @@ async function compressionImg(path, x = 400, y = 400, quality) {
 }
 
 // 读取图片信息
-async function getImgInfo(path) {
+export async function getImgInfo(path) {
   const inputBuf = await _f.p.readFile(path);
   const img = sharp(inputBuf);
   return img.metadata();
 }
 
 // 计算图片压缩尺寸
-function getCompressionSize(type) {
+export function getCompressionSize(type) {
   let x = 400,
     y = 400;
   if (type === 'pic') {
@@ -38,9 +38,3 @@ function getCompressionSize(type) {
   }
   return { x, y };
 }
-
-module.exports = {
-  compressionImg,
-  getImgInfo,
-  getCompressionSize,
-};

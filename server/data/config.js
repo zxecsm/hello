@@ -6,4 +6,4 @@ const configObj = {
   rootP,
   userFileP: `${filepath}/userFile`,
 };
-module.exports = configObj;
+export default configObj;

@@ -1,8 +1,13 @@
-const { resolve } = require('path');
-const configObj = require('./config');
-const _f = require('../utils/f');
+import { resolve } from 'path';
+import configObj from './config.js';
+
+import _f from '../utils/f.js';
+import { getDirname } from '../utils/utils.js';
+
+const __dirname = getDirname(import.meta);
 
 const configPath = resolve(__dirname, 'config.json');
+
 const dataConfigPath = `${configObj.filepath}/data/config.json`;
 
 // 加载默认配置
@@ -16,13 +21,10 @@ if (_f.c.existsSync(dataConfigPath)) {
 }
 
 // 创建深度代理，自动保存配置
-const proxiedConfig = deepProxy(config, saveConfig);
+export const _d = deepProxy(config, saveConfig);
 
 // 保存当前配置到文件
 saveConfig();
-
-// 导出配置对象和密钥生成函数
-module.exports = { _d: proxiedConfig, generateKey };
 
 /**
  * 读取配置文件
@@ -45,7 +47,7 @@ function loadConfig(path) {
 function saveConfig() {
   const dataDir = `${configObj.filepath}/data`;
   _f.c.mkdirSync(dataDir, { recursive: true });
-  _f.c.writeFileSync(dataConfigPath, JSON.stringify(proxiedConfig, null, 2));
+  _f.c.writeFileSync(dataConfigPath, JSON.stringify(_d, null, 2));
 }
 
 /**
@@ -76,7 +78,7 @@ function deepProxy(target, callback) {
  * @param {number} keyLength - 密钥长度
  * @returns {string} - 返回生成的密钥
  */
-function generateKey(keyLength) {
+export function generateKey(keyLength) {
   const characters =
     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=';
   return Array.from({ length: keyLength }, () =>

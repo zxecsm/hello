@@ -1,23 +1,22 @@
-const express = require('express'),
-  route = express.Router();
+import express from 'express';
 
-const configObj = require('../../data/config');
-const { _d, generateKey } = require('../../data/data');
-const msg = require('../../data/msg');
-const mailer = require('../../utils/email');
-const _f = require('../../utils/f');
-const _2fa = require('../../utils/speakeasy');
+import configObj from '../../data/config.js';
+import { _d, generateKey } from '../../data/data.js';
+import msg from '../../data/msg.js';
+import mailer from '../../utils/email.js';
+import _f from '../../utils/f.js';
+import _2fa from '../../utils/speakeasy.js';
 
-const {
+import {
   updateData,
   queryData,
   runSqlite,
   getTableRowCount,
-} = require('../../utils/sqlite');
+} from '../../utils/sqlite.js';
 
-const timedTask = require('../../utils/timedTask');
+import timedTask from '../../utils/timedTask.js';
 
-const {
+import {
   _success,
   _err,
   validaString,
@@ -29,22 +28,24 @@ const {
   isEmail,
   isRoot,
   concurrencyTasks,
-} = require('../../utils/utils');
+} from '../../utils/utils.js';
 
-const { cleanUpload } = require('../chat/chat');
+import { cleanUpload } from '../chat/chat.js';
 
-const { fieldLenght } = require('../config');
+import { fieldLenght } from '../config.js';
 
-const {
+import {
   _delDir,
   delEmptyFolder,
   getPathFilename,
   getAllFile,
   getSuffix,
   readMenu,
-} = require('../file/file');
+} from '../file/file.js';
 
-const { deleteUser } = require('../user/user');
+import { deleteUser } from '../user/user.js';
+
+const route = express.Router();
 
 //拦截器
 route.use((req, res, next) => {
@@ -585,4 +586,4 @@ timedTask.add(async (flag) => {
   }
 });
 
-module.exports = route;
+export default route;

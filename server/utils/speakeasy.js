@@ -1,4 +1,4 @@
-const speakeasy = require('speakeasy');
+import speakeasy from 'speakeasy';
 const temObj = {};
 
 function create(acc) {
@@ -43,4 +43,4 @@ function del(acc) {
 
 const _2fa = { create, getToken, verify, del };
 
-module.exports = _2fa;
+export default _2fa;

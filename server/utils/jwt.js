@@ -1,8 +1,9 @@
-const jwt = require('jsonwebtoken');
-const { _d } = require('../data/data');
+import jwt from 'jsonwebtoken';
+
+import { _d } from '../data/data.js';
 
 // 生成token
-function jwten(userinfo) {
+export function jwten(userinfo) {
   return jwt.sign(
     {
       exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 2,
@@ -13,7 +14,7 @@ function jwten(userinfo) {
 }
 
 // 解密token
-function jwtde(token) {
+export function jwtde(token) {
   try {
     let obj = jwt.verify(token, _d.tokenKey);
     obj.userinfo = obj.userinfo || {};
@@ -25,16 +26,10 @@ function jwtde(token) {
 }
 
 // 设置cookie
-function setCookie(res, userinfo) {
+export function setCookie(res, userinfo) {
   let token = jwten(userinfo);
   res.cookie('token', token, {
     maxAge: 1000 * 60 * 60 * 24 * 2,
     httpOnly: true,
   });
 }
-
-module.exports = {
-  jwtde,
-  jwten,
-  setCookie,
-};

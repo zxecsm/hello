@@ -83,4 +83,5 @@ const msg = {
   set,
   getConnect,
 };
-module.exports = msg;
+
+export default msg;

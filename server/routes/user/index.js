@@ -1,13 +1,12 @@
-const express = require('express'),
-  route = express.Router();
+import express from 'express';
 
-const msg = require('../../data/msg');
+import msg from '../../data/msg.js';
 
-const { _d } = require('../../data/data');
+import { _d } from '../../data/data.js';
 
-const configObj = require('../../data/config');
+import configObj from '../../data/config.js';
 
-const {
+import {
   writelog,
   _success,
   _nologin,
@@ -27,9 +26,9 @@ const {
   isRoot,
   getSplitWord,
   batchTask,
-} = require('../../utils/utils');
+} from '../../utils/utils.js';
 
-const {
+import {
   insertData,
   updateData,
   deleteData,
@@ -38,36 +37,38 @@ const {
   getTableRowCount,
   createSearchSql,
   createScoreSql,
-} = require('../../utils/sqlite');
+} from '../../utils/sqlite.js';
 
-const timedTask = require('../../utils/timedTask');
+import timedTask from '../../utils/timedTask.js';
 
-const _f = require('../../utils/f');
+import _f from '../../utils/f.js';
 
-const _2fa = require('../../utils/speakeasy');
+import _2fa from '../../utils/speakeasy.js';
 
-const verifyLimit = require('../../utils/verifyLimit');
+import verifyLimit from '../../utils/verifyLimit.js';
 
-const mailer = require('../../utils/email');
+import mailer from '../../utils/email.js';
 
-const fileKey = require('../../utils/fileKey');
+import fileKey from '../../utils/fileKey.js';
 
-const {
+import {
   sendNotifyMsg,
   onlineMsg,
   becomeFriends,
   heperMsgAndForward,
   parseForwardMsgLink,
-} = require('../chat/chat');
+} from '../chat/chat.js';
 
-const { getSuffix } = require('../file/file');
+import { getSuffix } from '../file/file.js';
 
-const { encryption, playInConfig, getUserInfo, deleteUser } = require('./user');
+import { encryption, playInConfig, getUserInfo, deleteUser } from './user.js';
 
-const { setCookie } = require('../../utils/jwt');
-const { fieldLenght } = require('../config');
+import { setCookie } from '../../utils/jwt.js';
+import { fieldLenght } from '../config.js';
 
 const codeObj = {};
+
+const route = express.Router();
 
 // 记录错误
 route.post('/error', async (req, res) => {
@@ -1717,4 +1718,4 @@ route.post('/recover-trash', async (req, res) => {
   }
 });
 
-module.exports = route;
+export default route;

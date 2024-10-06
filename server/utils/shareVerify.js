@@ -1,4 +1,4 @@
-const verifyLimit = require('./verifyLimit');
+import verifyLimit from './verifyLimit.js';
 
 const shareVerify = verifyLimit();
-module.exports = shareVerify;
+export default shareVerify;

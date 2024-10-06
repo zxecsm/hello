@@ -1,18 +1,18 @@
-const express = require('express');
+import express from 'express';
 
-const {
+import {
   _err,
   validaString,
   paramErr,
   _success,
   uLog,
-} = require('../../utils/utils');
+} from '../../utils/utils.js';
 
-const configObj = require('../../data/config');
+import configObj from '../../data/config.js';
 
-const _f = require('../../utils/f');
+import _f from '../../utils/f.js';
 
-const { _delDir } = require('../file/file');
+import { _delDir } from '../file/file.js';
 
 const route = express.Router();
 
@@ -73,4 +73,4 @@ route.post('/', async (req, res) => {
   }
 });
 
-module.exports = route;
+export default route;

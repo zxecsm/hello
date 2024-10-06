@@ -1,18 +1,17 @@
-const express = require('express'),
-  route = express.Router();
+import express from 'express';
 
-const {
+import {
   queryData,
   updateData,
   deleteData,
   insertData,
   getTableRowCount,
   fillString,
-} = require('../../utils/sqlite');
+} from '../../utils/sqlite.js';
 
-const timedTask = require('../../utils/timedTask');
+import timedTask from '../../utils/timedTask.js';
 
-const {
+import {
   _nologin,
   _err,
   _success,
@@ -27,14 +26,17 @@ const {
   writelog,
   concurrencyTasks,
   batchTask,
-} = require('../../utils/utils');
+} from '../../utils/utils.js';
 
-const {
+import {
   helloHelperMsg,
   sendNotificationsToCustomAddresses,
-} = require('../chat/chat');
-const { fieldLenght } = require('../config');
-const { computerDay } = require('./count');
+} from '../chat/chat.js';
+
+import { fieldLenght } from '../config.js';
+import { computerDay } from './count.js';
+
+const route = express.Router();
 
 //拦截器
 route.use((req, res, next) => {
@@ -381,4 +383,5 @@ route.post('/state', async (req, res) => {
     _err(res)(req, error);
   }
 });
-module.exports = route;
+
+export default route;

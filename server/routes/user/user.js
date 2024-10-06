@@ -1,20 +1,24 @@
-const configObj = require('../../data/config');
+import configObj from '../../data/config.js';
 
-const { resolve } = require('path');
+import { resolve } from 'path';
 
-const {
+import {
   queryData,
   deleteData,
   batchDeleteData,
   fillString,
-} = require('../../utils/sqlite');
-const _f = require('../../utils/f');
-const { _delDir } = require('../file/file');
-const shareVerify = require('../../utils/shareVerify');
-const { isValidShare, errLog } = require('../../utils/utils');
+} from '../../utils/sqlite.js';
+
+import _f from '../../utils/f.js';
+import { _delDir } from '../file/file.js';
+
+import shareVerify from '../../utils/shareVerify.js';
+import { isValidShare, errLog, getDirname } from '../../utils/utils.js';
+
+const __dirname = getDirname(import.meta);
 
 // 获取用户信息
-async function getUserInfo(account, fields = '*') {
+export async function getUserInfo(account, fields = '*') {
   return (
     await queryData('user', fields, `WHERE state = ? AND account = ?`, [
       1,
@@ -24,12 +28,12 @@ async function getUserInfo(account, fields = '*') {
 }
 
 // 密码加密
-function encryption(str) {
+export function encryption(str) {
   return str.slice(10, -10).split('').reverse().join('');
 }
 
 // 获取外部播放器配置
-async function playInConfig() {
+export async function playInConfig() {
   const p = `${configObj.filepath}/data/playIn.json`;
 
   const logop = `${configObj.filepath}/playerlogo`;
@@ -46,7 +50,7 @@ async function playInConfig() {
 }
 
 // 删除用户数据
-async function deleteUser(account) {
+export async function deleteUser(account) {
   await deleteData('user', `WHERE account = ?`, [account]);
 
   await batchDeleteData('bmk', 'id', `WHERE account = ?`, [account]);
@@ -85,7 +89,7 @@ async function deleteUser(account) {
 }
 
 // 验证分享
-async function validShareState(req, types, id, pass) {
+export async function validShareState(req, types, id, pass) {
   const { ip } = req._hello;
   if (shareVerify.verify(ip, id)) {
     const share = (
@@ -135,7 +139,7 @@ async function validShareState(req, types, id, pass) {
 }
 
 // 验证分享
-async function validShareAddUserState(req, types, id, pass) {
+export async function validShareAddUserState(req, types, id, pass) {
   const { ip } = req._hello;
 
   if (shareVerify.verify(ip, id)) {
@@ -188,7 +192,7 @@ async function validShareAddUserState(req, types, id, pass) {
 }
 
 // 拆分分享idpass
-function splitShareFlag(str) {
+export function splitShareFlag(str) {
   const idx = str.indexOf('/');
   let a = '',
     b = '';
@@ -202,12 +206,3 @@ function splitShareFlag(str) {
 
   return [a, b];
 }
-module.exports = {
-  getUserInfo,
-  encryption,
-  playInConfig,
-  deleteUser,
-  validShareState,
-  validShareAddUserState,
-  splitShareFlag,
-};

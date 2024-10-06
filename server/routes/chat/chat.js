@@ -1,7 +1,7 @@
-const { default: axios } = require('axios');
-const msg = require('../../data/msg');
+import axios from 'axios';
+import msg from '../../data/msg.js';
 
-const {
+import {
   queryData,
   updateData,
   insertData,
@@ -9,9 +9,9 @@ const {
   allSqlite,
   batchUpdateData,
   deleteData,
-} = require('../../utils/sqlite');
+} from '../../utils/sqlite.js';
 
-const {
+import {
   nanoid,
   uLog,
   concurrencyTasks,
@@ -21,16 +21,16 @@ const {
   errLog,
   batchTask,
   parseObjectJson,
-} = require('../../utils/utils');
+} from '../../utils/utils.js';
 
-const { getUserInfo } = require('../user/user');
-const { _d } = require('../../data/data');
-const configObj = require('../../data/config');
-const _f = require('../../utils/f');
-const { hdPath, _delDir, delEmptyFolder } = require('../file/file');
+import { getUserInfo } from '../user/user.js';
+import { _d } from '../../data/data.js';
+import configObj from '../../data/config.js';
+import _f from '../../utils/f.js';
+import { hdPath, _delDir, delEmptyFolder } from '../file/file.js';
 
 // 获取好友备注
-async function getFriendDes(mAcc, fAcc) {
+export async function getFriendDes(mAcc, fAcc) {
   const fData = (
     await queryData('friends', 'des', `WHERE account = ? AND friend = ?`, [
       mAcc,
@@ -42,7 +42,7 @@ async function getFriendDes(mAcc, fAcc) {
 }
 
 // 标记为已读
-async function markAsRead(mAcc, fAcc) {
+export async function markAsRead(mAcc, fAcc) {
   const time = Date.now();
 
   const change = await updateData(
@@ -75,7 +75,7 @@ async function markAsRead(mAcc, fAcc) {
 }
 
 // 助手消息
-async function hdHelloMsg(req, data, type) {
+export async function hdHelloMsg(req, data, type) {
   let { receive_chat_state, chat_id, account } = req._hello.userinfo;
 
   const stopMsgText =
@@ -130,7 +130,7 @@ async function hdHelloMsg(req, data, type) {
 }
 
 // 保存聊天消息
-async function saveChatMsg(account, obj) {
+export async function saveChatMsg(account, obj) {
   obj._from = account;
 
   obj.flag = obj._to === 'chang' ? 'chang' : `${account}-${obj._to}`;
@@ -141,7 +141,7 @@ async function saveChatMsg(account, obj) {
 }
 
 // 发送通知
-async function sendNotifyMsg(req, to, flag, tt) {
+export async function sendNotifyMsg(req, to, flag, tt) {
   const { account, logo, username } = req._hello.userinfo;
 
   const notifyObj = {
@@ -252,7 +252,7 @@ async function sendNotifyMsg(req, to, flag, tt) {
 }
 
 // 转发消息
-async function sendNotificationsToCustomAddresses(req, obj) {
+export async function sendNotificationsToCustomAddresses(req, obj) {
   if (obj._from === obj._to || obj._to === 'hello') return;
 
   if (obj._to === 'chang') {
@@ -298,7 +298,7 @@ async function sendNotificationsToCustomAddresses(req, obj) {
   }
 }
 
-async function hdForwardToLink(req, list, fArr, text) {
+export async function hdForwardToLink(req, list, fArr, text) {
   if (list.length > 0) {
     const { username } = req._hello.userinfo;
 
@@ -337,7 +337,7 @@ async function hdForwardToLink(req, list, fArr, text) {
 }
 
 // 上线通知
-async function onlineMsg(req, pass) {
+export async function onlineMsg(req, pass) {
   const { account, hide, username } = req._hello.userinfo;
 
   const connect = msg.getConnect();
@@ -377,7 +377,7 @@ async function onlineMsg(req, pass) {
 }
 
 // 成为朋友
-function becomeFriends(me, friend, read1 = 1, read2 = 1) {
+export function becomeFriends(me, friend, read1 = 1, read2 = 1) {
   const time = Date.now();
 
   if (friend === 'chang' || me === friend) {
@@ -408,7 +408,7 @@ function becomeFriends(me, friend, read1 = 1, read2 = 1) {
 }
 
 // 助手消息和转发消息
-async function heperMsgAndForward(req, to, text) {
+export async function heperMsgAndForward(req, to, text) {
   const msg = await helloHelperMsg(to, text);
 
   sendNotificationsToCustomAddresses(
@@ -426,7 +426,7 @@ async function heperMsgAndForward(req, to, text) {
 }
 
 // 助手消息
-async function helloHelperMsg(to, text) {
+export async function helloHelperMsg(to, text) {
   const msgObj = {
     _to: to,
     content: text,
@@ -452,7 +452,7 @@ async function helloHelperMsg(to, text) {
 }
 
 // 解析forward_msg_link
-function parseForwardMsgLink(str) {
+export function parseForwardMsgLink(str) {
   const res = parseObjectJson(str);
   return (
     res || {
@@ -465,7 +465,7 @@ function parseForwardMsgLink(str) {
 }
 
 // 获取成员列表
-function getChatUserList(account, pageSize, offset) {
+export function getChatUserList(account, pageSize, offset) {
   const sql = `SELECT f.des,f.read,u.update_at,u.username,u.account,u.logo,u.email,u.hide
    FROM user AS u 
    LEFT JOIN friends AS f 
@@ -478,7 +478,7 @@ function getChatUserList(account, pageSize, offset) {
 }
 
 // 清理到期聊天文件
-async function cleanUpload() {
+export async function cleanUpload() {
   if (_d.uploadSaveDay > 0) {
     const uploadDir = `${configObj.filepath}/upload`;
 
@@ -515,19 +515,3 @@ async function cleanUpload() {
     await delEmptyFolder(uploadDir);
   }
 }
-
-module.exports = {
-  markAsRead,
-  getFriendDes,
-  hdHelloMsg,
-  saveChatMsg,
-  sendNotifyMsg,
-  helloHelperMsg,
-  sendNotificationsToCustomAddresses,
-  onlineMsg,
-  becomeFriends,
-  heperMsgAndForward,
-  parseForwardMsgLink,
-  getChatUserList,
-  cleanUpload,
-};

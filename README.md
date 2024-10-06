@@ -31,14 +31,14 @@ vim /opt/hello/hello/server/data/config.js
 
 ```javascript
 const filepath = '/opt/hello/data'; // 网站数据存放目录
-const rootP = '/home'; // 文件管理根目录
+const rootP = '/home'; // 文件管理器根目录
 const configObj = {
   port: 55555,
   filepath,
   rootP,
   userFileP: `${filepath}/userFile`,
 };
-module.exports = configObj;
+export default configObj;
 ```
 
 ```bash

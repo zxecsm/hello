@@ -1,11 +1,10 @@
-const express = require('express'),
-  route = express.Router();
+import express from 'express';
 
-const configObj = require('../../data/config');
-const msg = require('../../data/msg');
-const _f = require('../../utils/f');
+import configObj from '../../data/config.js';
+import msg from '../../data/msg.js';
+import _f from '../../utils/f.js';
 
-const {
+import {
   insertData,
   updateData,
   queryData,
@@ -14,9 +13,9 @@ const {
   getTableRowCount,
   batchDeleteData,
   fillString,
-} = require('../../utils/sqlite');
+} from '../../utils/sqlite.js';
 
-const {
+import {
   _success,
   _nologin,
   _nothing,
@@ -37,13 +36,13 @@ const {
   unique,
   getSongInfo,
   isValidDate,
-} = require('../../utils/utils');
-const { fieldLenght } = require('../config');
-const { getSuffix } = require('../file/file');
+} from '../../utils/utils.js';
+import { fieldLenght } from '../config.js';
+import { getSuffix } from '../file/file.js';
 
-const { getUserInfo } = require('../user/user');
+import { getUserInfo } from '../user/user.js';
 
-const {
+import {
   getFriendDes,
   markAsRead,
   hdHelloMsg,
@@ -53,7 +52,9 @@ const {
   becomeFriends,
   heperMsgAndForward,
   getChatUserList,
-} = require('./chat');
+} from './chat.js';
+
+const route = express.Router();
 
 // 收信接口
 route.all('/:chat_id/sendMessage', async (req, res) => {
@@ -1051,4 +1052,4 @@ route.post('/forward-msg-link', async (req, res) => {
   }
 });
 
-module.exports = route;
+export default route;

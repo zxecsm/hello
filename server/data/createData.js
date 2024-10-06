@@ -1,17 +1,19 @@
-const _f = require('../utils/f');
+import _f from '../utils/f.js';
 
-const {
+import {
   queryData,
   runSqlite,
   insertData,
   executeInTransaction,
-} = require('../utils/sqlite');
+} from '../utils/sqlite.js';
 
-const { resolve } = require('path');
+import { resolve } from 'path';
 
-const { writelog, nanoid } = require('../utils/utils');
+import { writelog, nanoid, getDirname } from '../utils/utils.js';
 
-const { becomeFriends } = require('../routes/chat/chat');
+import { becomeFriends } from '../routes/chat/chat.js';
+
+const __dirname = getDirname(import.meta);
 
 // 所有表创建的 SQL 语句配置
 const createTableSQLs = [

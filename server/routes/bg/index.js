@@ -1,11 +1,10 @@
-const express = require('express'),
-  route = express.Router();
+import express from 'express';
 
-const configObj = require('../../data/config');
-const { _d } = require('../../data/data');
-const _f = require('../../utils/f');
+import configObj from '../../data/config.js';
+import { _d } from '../../data/data.js';
+import _f from '../../utils/f.js';
 
-const {
+import {
   updateData,
   insertData,
   queryData,
@@ -13,11 +12,11 @@ const {
   getTableRowCount,
   batchUpdateData,
   fillString,
-} = require('../../utils/sqlite');
+} from '../../utils/sqlite.js';
 
-const timedTask = require('../../utils/timedTask');
+import timedTask from '../../utils/timedTask.js';
 
-const {
+import {
   _success,
   _nologin,
   _nothing,
@@ -34,13 +33,16 @@ const {
   concurrencyTasks,
   createPagingData,
   uLog,
-} = require('../../utils/utils');
-const { hdPath, _delDir, getSuffix } = require('../file/file');
+} from '../../utils/utils.js';
 
-const { getRandowBg } = require('./bg');
+import { hdPath, _delDir, getSuffix } from '../file/file.js';
 
-const { getImgInfo } = require('../../utils/img');
-const { fieldLenght } = require('../config');
+import { getRandowBg } from './bg.js';
+
+import { getImgInfo } from '../../utils/img.js';
+import { fieldLenght } from '../config.js';
+
+const route = express.Router();
 
 // 获取随机一张壁纸
 route.get('/r', async (req, res) => {
@@ -312,4 +314,4 @@ route.post('/repeat', async (req, res) => {
   }
 });
 
-module.exports = route;
+export default route;

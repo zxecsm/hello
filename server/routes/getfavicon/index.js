@@ -1,21 +1,29 @@
-const express = require('express');
+import express from 'express';
+
+import { resolve } from 'path';
+
+import cheerio from '../bmk/cheerio.js';
+
+import axios from 'axios';
+
+import {
+  errLog,
+  writelog,
+  concurrencyTasks,
+  getDirname,
+} from '../../utils/utils.js';
+
+import configObj from '../../data/config.js';
+
+import _f from '../../utils/f.js';
+
+import timedTask from '../../utils/timedTask.js';
+import { _delDir, readMenu } from '../file/file.js';
+import { compressionImg } from '../../utils/img.js';
+
 const route = express.Router();
 
-const { resolve } = require('path');
-
-const cheerio = require('cheerio');
-
-const { default: axios } = require('axios');
-
-const { errLog, writelog, concurrencyTasks } = require('../../utils/utils');
-
-const configObj = require('../../data/config');
-
-const _f = require('../../utils/f');
-
-const timedTask = require('../../utils/timedTask');
-const { _delDir, readMenu } = require('../file/file');
-const { compressionImg } = require('../../utils/img');
+const __dirname = getDirname(import.meta);
 
 timedTask.add(async (flag) => {
   if (flag.slice(-6) === '001000') {
@@ -155,4 +163,4 @@ route.get('/', async (req, res) => {
   }
 });
 
-module.exports = route;
+export default route;

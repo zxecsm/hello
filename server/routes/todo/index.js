@@ -1,16 +1,15 @@
-const express = require('express'),
-  route = express.Router();
+import express from 'express';
 
-const {
+import {
   queryData,
   updateData,
   deleteData,
   insertData,
   fillString,
   getTableRowCount,
-} = require('../../utils/sqlite');
+} from '../../utils/sqlite.js';
 
-const {
+import {
   _nologin,
   _err,
   _success,
@@ -20,8 +19,11 @@ const {
   createPagingData,
   _type,
   validationValue,
-} = require('../../utils/utils');
-const { fieldLenght } = require('../config');
+} from '../../utils/utils.js';
+
+import { fieldLenght } from '../config.js';
+
+const route = express.Router();
 
 //拦截器
 route.use((req, res, next) => {
@@ -205,4 +207,4 @@ route.post('/edit', async (req, res) => {
   }
 });
 
-module.exports = route;
+export default route;

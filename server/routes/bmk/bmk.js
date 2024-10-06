@@ -1,11 +1,11 @@
-const {
+import {
   queryData,
   batchDiffUpdateData,
   fillString,
-} = require('../../utils/sqlite');
+} from '../../utils/sqlite.js';
 
 // 移动分组位置
-async function bookListMoveLocation(account, fromId, toId) {
+export async function bookListMoveLocation(account, fromId, toId) {
   if (fromId === toId) return;
 
   const list = await queryData(
@@ -39,7 +39,7 @@ async function bookListMoveLocation(account, fromId, toId) {
 }
 
 // 移动书签位置
-async function bookmarkMoveLocation(account, groupId, fromId, toId) {
+export async function bookmarkMoveLocation(account, groupId, fromId, toId) {
   if (fromId === toId) return;
 
   const bms = await queryData(
@@ -72,7 +72,7 @@ async function bookmarkMoveLocation(account, groupId, fromId, toId) {
 }
 
 // 分组是否存在
-async function bmkGroupExist(account, groupId) {
+export async function bmkGroupExist(account, groupId) {
   const list = await queryData(
     'bmk_group',
     'id',
@@ -82,9 +82,3 @@ async function bmkGroupExist(account, groupId) {
 
   return list.length > 0;
 }
-
-module.exports = {
-  bmkGroupExist,
-  bookmarkMoveLocation,
-  bookListMoveLocation,
-};

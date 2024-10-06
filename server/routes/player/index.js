@@ -1,7 +1,6 @@
-const express = require('express'),
-  route = express.Router();
+import express from 'express';
 
-const {
+import {
   insertData,
   updateData,
   queryData,
@@ -12,9 +11,9 @@ const {
   createScoreSql,
   getTableRowCount,
   allSqlite,
-} = require('../../utils/sqlite');
+} from '../../utils/sqlite.js';
 
-const {
+import {
   deepClone,
   getSongInfo,
   _success,
@@ -39,22 +38,22 @@ const {
   concurrencyTasks,
   getSplitWord,
   tplReplace,
-} = require('../../utils/utils');
+} from '../../utils/utils.js';
 
-const { _d } = require('../../data/data');
+import { _d } from '../../data/data.js';
 
-const configObj = require('../../data/config');
+import configObj from '../../data/config.js';
 
-const _f = require('../../utils/f');
+import _f from '../../utils/f.js';
 
-const {
+import {
   _delDir,
   getPathFilename,
   getSuffix,
   getFileDir,
-} = require('../file/file');
+} from '../file/file.js';
 
-const {
+import {
   handleMusicList,
   parseLrc,
   batchGetMusics,
@@ -62,19 +61,21 @@ const {
   updateSongList,
   songlistMoveLocation,
   songMoveLocation,
-} = require('./player');
+} from './player.js';
 
-const { getFriendDes } = require('../chat/chat');
+import { getFriendDes } from '../chat/chat.js';
 
-const {
+import {
   validShareState,
   validShareAddUserState,
   splitShareFlag,
-} = require('../user/user');
+} from '../user/user.js';
 
-const { fieldLenght } = require('../config');
+import { fieldLenght } from '../config.js';
 
 const maxSonglistCount = 2000;
+
+const route = express.Router();
 
 // 获取歌词
 route.get('/lrc', async (req, res) => {
@@ -1608,4 +1609,4 @@ route.get('/save-share', async function (req, res) {
   }
 });
 
-module.exports = route;
+export default route;

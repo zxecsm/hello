@@ -1,34 +1,55 @@
-const os = require('os');
+import os from 'os';
 //Cookie
-const cookieParser = require('cookie-parser');
+import cookieParser from 'cookie-parser';
 
-const express = require('express');
-const app = express();
+import express from 'express';
 
 // 获取访问设备信息
-const UAParser = require('ua-parser-js');
+import UAParser from 'ua-parser-js';
 
-const {
+import {
   writelog,
   getClientIp,
   getIn,
   _err,
   debounce,
-} = require('./utils/utils');
+  getDirname,
+} from './utils/utils.js';
 
-const { resolve } = require('path');
+import { resolve } from 'path';
 
-const configObj = require('./data/config.js');
+import configObj from './data/config.js';
 
-const verifyLimit = require('./utils/verifyLimit.js');
+import verifyLimit from './utils/verifyLimit.js';
 
-const { heperMsgAndForward } = require('./routes/chat/chat.js');
+import { heperMsgAndForward } from './routes/chat/chat.js';
 
-const { jwtde, setCookie } = require('./utils/jwt.js');
+import { jwtde, setCookie } from './utils/jwt.js';
 
-const { getUserInfo } = require('./routes/user/user.js');
+import { getUserInfo } from './routes/user/user.js';
 
-require('./data/createData');
+import './data/createData.js';
+
+import bgRoute from './routes/bg/index.js';
+import bmkRoute from './routes/bmk/index.js';
+import chatRoute from './routes/chat/index.js';
+import countRoute from './routes/count/index.js';
+import fileRoute from './routes/file/index.js';
+import getfaviconRoute from './routes/getfavicon/index.js';
+import getfileRoute from './routes/getfile/index.js';
+import noteRoute from './routes/note/index.js';
+import notepadRoute from './routes/notepad/index.js';
+import picRoute from './routes/pic/index.js';
+import playerRoute from './routes/player/index.js';
+import rootRoute from './routes/root/index.js';
+import searchRoute from './routes/search/index.js';
+import todoRoute from './routes/todo/index.js';
+import userRoute from './routes/user/index.js';
+
+const __dirname = getDirname(import.meta);
+
+const app = express();
+
 //Cookie
 app.use(cookieParser());
 app.use(express.json({ limit: '20000kb' }));
@@ -115,7 +136,7 @@ app.use(
   '/api/pub/playerlogo',
   express.static(`${configObj.filepath}/playerlogo`, { maxAge: 2592000000 })
 );
-app.use('/api/getfavicon', require('./routes/getfavicon'));
+app.use('/api/getfavicon', getfaviconRoute);
 
 app.use(async (req, res, next) => {
   try {
@@ -148,20 +169,20 @@ app.use(async (req, res, next) => {
   }
 });
 
-app.use('/api/user', require('./routes/user/index.js'));
-app.use('/api/bg', require('./routes/bg/index.js'));
-app.use('/api/pic', require('./routes/pic/index.js'));
-app.use('/api/root', require('./routes/root/index.js'));
-app.use('/api/player', require('./routes/player/index.js'));
-app.use('/api/bmk', require('./routes/bmk/index.js'));
-app.use('/api/chat', require('./routes/chat/index.js'));
-app.use('/api/search', require('./routes/search/index.js'));
-app.use('/api/note', require('./routes/note/index.js'));
-app.use('/api/getfile', require('./routes/getfile/index.js'));
-app.use('/api/todo', require('./routes/todo/index.js'));
-app.use('/api/count', require('./routes/count/index.js'));
-app.use('/api/file', require('./routes/file/index.js'));
-app.use('/api/notepad', require('./routes/notepad/index.js'));
+app.use('/api/user', userRoute);
+app.use('/api/bg', bgRoute);
+app.use('/api/pic', picRoute);
+app.use('/api/root', rootRoute);
+app.use('/api/player', playerRoute);
+app.use('/api/bmk', bmkRoute);
+app.use('/api/chat', chatRoute);
+app.use('/api/search', searchRoute);
+app.use('/api/note', noteRoute);
+app.use('/api/getfile', getfileRoute);
+app.use('/api/todo', todoRoute);
+app.use('/api/count', countRoute);
+app.use('/api/file', fileRoute);
+app.use('/api/notepad', notepadRoute);
 
 app.use((req, res) => {
   res.sendFile(resolve(__dirname, 'data/404.html'));

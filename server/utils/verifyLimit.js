@@ -46,4 +46,4 @@ function verifyLimit(opt = {}, updateTimestamp = true) {
   return new VerifyLimit(opt, updateTimestamp);
 }
 
-module.exports = verifyLimit;
+export default verifyLimit;

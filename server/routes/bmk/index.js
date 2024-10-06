@@ -1,9 +1,8 @@
-const express = require('express'),
-  route = express.Router();
+import express from 'express';
 
-const { default: axios } = require('axios');
+import axios from 'axios';
 
-const {
+import {
   batchDiffUpdateData,
   insertData,
   updateData,
@@ -12,9 +11,9 @@ const {
   createSearchSql,
   fillString,
   createScoreSql,
-} = require('../../utils/sqlite');
+} from '../../utils/sqlite.js';
 
-const {
+import {
   _success,
   _nologin,
   _err,
@@ -33,26 +32,27 @@ const {
   writelog,
   concurrencyTasks,
   getSplitWord,
-} = require('../../utils/utils');
+} from '../../utils/utils.js';
 
-const cheerio = require('cheerio');
+import cheerio from './cheerio.js';
 
-const configObj = require('../../data/config');
-const _f = require('../../utils/f');
+import configObj from '../../data/config.js';
+import _f from '../../utils/f.js';
 
-const timedTask = require('../../utils/timedTask');
+import timedTask from '../../utils/timedTask.js';
 
-const {
+import {
   bookListMoveLocation,
   bookmarkMoveLocation,
   bmkGroupExist,
-} = require('./bmk');
+} from './bmk.js';
 
-const { _delDir, readMenu } = require('../file/file');
-const { fieldLenght } = require('../config');
-const { validShareAddUserState, validShareState } = require('../user/user');
-const { getFriendDes } = require('../chat/chat');
+import { _delDir, readMenu } from '../file/file.js';
+import { fieldLenght } from '../config.js';
+import { validShareAddUserState, validShareState } from '../user/user.js';
+import { getFriendDes } from '../chat/chat.js';
 
+const route = express.Router();
 // 分享
 route.get('/share', async (req, res) => {
   try {
@@ -1035,4 +1035,4 @@ route.get('/export', async (req, res) => {
   }
 });
 
-module.exports = route;
+export default route;

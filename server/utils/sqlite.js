@@ -1,10 +1,10 @@
-const sqlite3 = require('sqlite3').verbose();
+import sqlite3 from 'sqlite3';
 
-const configObj = require('../data/config');
+import configObj from '../data/config.js';
 
-const _f = require('./f');
+import _f from './f.js';
 
-const { batchTask, nanoid } = require('./utils');
+import { batchTask, nanoid } from './utils.js';
 
 // 如果目录不存在则创建目录
 _f.c.mkdirSync(`${configObj.filepath}/data/db`, { recursive: true });
@@ -29,7 +29,7 @@ db.exec('PRAGMA journal_mode = WAL;', (err) => {
 });
 
 // 事务
-async function executeInTransaction(callback) {
+export async function executeInTransaction(callback) {
   try {
     // 开始事务
     await runSqlite('BEGIN TRANSACTION');
@@ -46,7 +46,7 @@ async function executeInTransaction(callback) {
 }
 
 // 辅助函数：执行 SELECT 查询
-function allSqlite(sql, valArr = []) {
+export function allSqlite(sql, valArr = []) {
   return new Promise((resolve, reject) => {
     db.all(sql, valArr, (err, rows) => {
       if (err) reject(err);
@@ -56,7 +56,7 @@ function allSqlite(sql, valArr = []) {
 }
 
 // 辅助函数：执行 INSERT/UPDATE/DELETE 查询
-function runSqlite(sql, valArr = []) {
+export function runSqlite(sql, valArr = []) {
   return new Promise((resolve, reject) => {
     db.run(sql, valArr, function (err) {
       if (err) reject(err);
@@ -66,7 +66,7 @@ function runSqlite(sql, valArr = []) {
 }
 
 // 插入数据
-function insertData(table, datas, idField = 'id') {
+export function insertData(table, datas, idField = 'id') {
   const create_at = Date.now();
   datas = datas.map((item) => {
     if (!item.hasOwnProperty('create_at')) {
@@ -89,7 +89,12 @@ function insertData(table, datas, idField = 'id') {
 }
 
 // 分批插入数据
-async function batchInsertData(table, datas, idField = 'id', limit = 500) {
+export async function batchInsertData(
+  table,
+  datas,
+  idField = 'id',
+  limit = 500
+) {
   await batchTask(async (offset) => {
     const list = datas.slice(offset, offset + limit);
 
@@ -102,20 +107,20 @@ async function batchInsertData(table, datas, idField = 'id', limit = 500) {
 }
 
 // 查询数据
-function queryData(table, fields, where = '', valArr = []) {
+export function queryData(table, fields, where = '', valArr = []) {
   const sql = `SELECT ${fields} FROM ${table} ${where}`;
   return allSqlite(sql, valArr);
 }
 
 // 获取表的总行数
-async function getTableRowCount(table, where = '', valArr = []) {
+export async function getTableRowCount(table, where = '', valArr = []) {
   const sql = `SELECT COUNT(*) AS count FROM ${table} ${where}`;
   const rows = await allSqlite(sql, valArr);
   return rows[0]?.count || 0;
 }
 
 // 获取随机一条数据
-async function getRandomRow(table, fields, where = '', valArr = []) {
+export async function getRandomRow(table, fields, where = '', valArr = []) {
   // 获取总行数
   const total = await getTableRowCount(table, where, valArr);
 
@@ -136,7 +141,7 @@ async function getRandomRow(table, fields, where = '', valArr = []) {
 }
 
 // 更新数据
-function updateData(table, sets, where = '', varr = []) {
+export function updateData(table, sets, where = '', varr = []) {
   const keyArr = Object.keys(sets);
   const valsArr = keyArr.map((key) => `${key} = ?`);
   const valArr = keyArr.map((key) => sets[key]);
@@ -147,7 +152,7 @@ function updateData(table, sets, where = '', varr = []) {
 }
 
 // 分批更新
-async function batchUpdateData(
+export async function batchUpdateData(
   table,
   idField,
   sets,
@@ -180,7 +185,7 @@ async function batchUpdateData(
 }
 
 // 字段自增
-function incrementField(table, sets, where = '', varr = []) {
+export function incrementField(table, sets, where = '', varr = []) {
   const keyArr = Object.keys(sets);
   const valsArr = keyArr.map((key) => `${key} = ${key} + ?`);
   const valArr = keyArr.map((key) => sets[key]);
@@ -191,14 +196,14 @@ function incrementField(table, sets, where = '', varr = []) {
 }
 
 // 删除数据
-async function deleteData(table, where = '', valArr = []) {
+export async function deleteData(table, where = '', valArr = []) {
   const sql = `DELETE FROM ${table} ${where}`;
 
   return runSqlite(sql, valArr);
 }
 
 // 分批删除
-async function batchDeleteData(
+export async function batchDeleteData(
   table,
   idField,
   where = '',
@@ -229,7 +234,7 @@ async function batchDeleteData(
 }
 
 // 批量条件更新不同值
-function batchDiffUpdateData(table, data, where = '', valArr = []) {
+export function batchDiffUpdateData(table, data, where = '', valArr = []) {
   const setClauses = [];
   const values = [];
 
@@ -265,7 +270,7 @@ function batchDiffUpdateData(table, data, where = '', valArr = []) {
 // })
 
 // 计算相关性分数的函数
-function createScoreSql(splitWord, keys) {
+export function createScoreSql(splitWord, keys) {
   const { valArr, scoreArr } = keys.reduce(
     (acc, key) => {
       // 为模糊查询搜索词添加 %
@@ -292,7 +297,7 @@ function createScoreSql(splitWord, keys) {
 }
 
 // 生成搜索sql
-function createSearchSql(splitWord, keys) {
+export function createSearchSql(splitWord, keys) {
   const { sqlArr, valArr } = keys.reduce(
     (acc, key) => {
       // 构建 WHERE 条件，使用 LOWER 来忽略大小写
@@ -315,27 +320,6 @@ function createSearchSql(splitWord, keys) {
 }
 
 // 填充sql?
-function fillString(len) {
+export function fillString(len) {
   return new Array(len).fill('?').join(',');
 }
-
-// 导出模块
-module.exports = {
-  runSqlite,
-  allSqlite,
-  batchDiffUpdateData,
-  fillString,
-  insertData,
-  updateData,
-  batchUpdateData,
-  deleteData,
-  batchDeleteData,
-  queryData,
-  getTableRowCount,
-  getRandomRow,
-  createSearchSql,
-  createScoreSql,
-  executeInTransaction,
-  incrementField,
-  batchInsertData,
-};

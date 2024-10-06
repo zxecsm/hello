@@ -1,5 +1,5 @@
-const nodemailer = require('nodemailer');
-const { _d } = require('../data/data');
+import nodemailer from 'nodemailer';
+import { _d } from '../data/data.js';
 
 const temData = {};
 
@@ -72,4 +72,4 @@ const mailer = {
   sendCode,
 };
 
-module.exports = mailer;
+export default mailer;

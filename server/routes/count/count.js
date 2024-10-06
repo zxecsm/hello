@@ -1,4 +1,4 @@
-function computerDay(start, end) {
+export function computerDay(start, end) {
   const total = end - start; // 总时间
   let past = Date.now() - start; // 过去
   // past > total ? (past = total) : past < 0 ? (past = 0) : null;
@@ -6,7 +6,3 @@ function computerDay(start, end) {
   const remain = total - past; // 剩下
   return { total, past, remain, percent };
 }
-
-module.exports = {
-  computerDay,
-};
