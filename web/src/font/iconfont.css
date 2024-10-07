@@ -1,8 +1,8 @@
 @font-face {
   font-family: "iconfont"; /* Project id 2809795 */
-  src: url('iconfont.woff2?t=1723554845046') format('woff2'),
-       url('iconfont.woff?t=1723554845046') format('woff'),
-       url('iconfont.ttf?t=1723554845046') format('truetype');
+  src: url('iconfont.woff2?t=1728299231629') format('woff2'),
+       url('iconfont.woff?t=1728299231629') format('woff'),
+       url('iconfont.ttf?t=1728299231629') format('truetype');
 }
 
 .iconfont {
@@ -11,6 +11,34 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-ic_skip_next_px:before {
+  content: "\e67e";
+}
+
+.icon-shang:before {
+  content: "\e65d";
+}
+
+.icon-zuo:before {
+  content: "\e67f";
+}
+
+.icon-you:before {
+  content: "\e681";
+}
+
+.icon-xiala:before {
+  content: "\e682";
+}
+
+.icon-bukejian:before {
+  content: "\e645";
+}
+
+.icon-kejian:before {
+  content: "\e648";
 }
 
 .icon-tuichudenglu1:before {
@@ -373,14 +401,6 @@
   content: "\e62d";
 }
 
-.icon-yanjing_xianshi_o:before {
-  content: "\ebcc";
-}
-
-.icon-yanjing_yincang_o:before {
-  content: "\ebcd";
-}
-
 .icon-about:before {
   content: "\e640";
 }
@@ -529,31 +549,11 @@
   content: "\e60e";
 }
 
-.icon-page-next:before {
-  content: "\e66c";
-}
-
 .icon-search:before {
   content: "\e609";
 }
 
-.icon-prev:before {
-  content: "\e659";
-}
-
 .icon-icon:before {
   content: "\e67a";
-}
-
-.icon-up:before {
-  content: "\e616";
-}
-
-.icon-Down:before {
-  content: "\e60f";
-}
-
-.icon-skip-next:before {
-  content: "\e6d2";
 }
 

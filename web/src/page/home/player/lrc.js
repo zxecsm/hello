@@ -68,6 +68,7 @@ import toolTip from '../../../js/plugins/tooltip/index.js';
 import { showSongInfo } from '../../../js/utils/showinfo.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl, deepClone } from '../../../js/utils/template.js';
+import notifyMusicControlPanel from './notifyMusicControlPanel.js';
 const $myAudio = $(new Audio()),
   $musicLrcWrap = $('.music_player_box .music_lrc_wrap'),
   $lrcBg = $musicLrcWrap.find('.lrc_bg'),
@@ -263,6 +264,12 @@ function playSong() {
     _msg.error('请选择需要播放的歌曲');
     return;
   }
+  notifyMusicControlPanel.updateMetadata({
+    title: playingSongInfo.title,
+    artist: playingSongInfo.artist,
+    album: playingSongInfo.album,
+    artwork: [{ src: playingSongInfo.ppic }],
+  });
   if (remotePlayState) {
     //远程播放
     realtime.send({
@@ -448,6 +455,20 @@ $myAudio
     playNextSong();
   })
   .on('timeupdate', songTimeUpdate);
+
+notifyMusicControlPanel
+  .bind('play', playSong)
+  .bind('pause', pauseSong)
+  .bind('previoustrack', playPrevSong)
+  .bind('nexttrack', playNextSong)
+  .bind('seekbackward', () => {
+    setSongCurrentTime(Math.max(setSongCurrentTime() - 10, 0));
+  })
+  .bind('seekforward', () => {
+    setSongCurrentTime(
+      Math.min(setSongCurrentTime() + 10, playingSongInfo.duration)
+    );
+  });
 // 滚动歌曲信息
 const lrcHeadContentScrollName = new ContentScroll(
   $lrcHead.find('.song_name div')[0]

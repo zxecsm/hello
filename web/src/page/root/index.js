@@ -419,7 +419,7 @@ function changeTrashState(e) {
     data,
     ({ id, resetMenu, close }) => {
       if (id === 'toTrash') {
-        _setData('fileUrl', '/.trash');
+        _setData('curFileDirPath', '/.trash');
         _myOpen(`/file/`, '文件管理');
         close();
       } else if (id === 'state') {

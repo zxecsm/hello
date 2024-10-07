@@ -24,6 +24,7 @@ import { _tpl } from '../../js/utils/template';
 import videoLinkLogo from '../../images/img/videoLink.png';
 import refreshLogo from '../../images/img/refresh.png';
 import _msg from '../../js/plugins/message';
+import { initRainCodeSleep } from '../../js/common/codeRain';
 const vd = document.querySelector('video'),
   playIn = document.querySelector('.playIn');
 const url = queryURLParams(myOpen()).HASH;
@@ -138,6 +139,7 @@ vd.onerror = function () {
     }
   });
 };
+vd.ontimeupdate = initRainCodeSleep;
 changeDark.bind((isDark) => {
   if (_getData('dark') != 's') return;
   const dark = isDark ? 'y' : 'n';

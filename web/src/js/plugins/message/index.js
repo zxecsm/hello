@@ -4,10 +4,12 @@ import imgBlop from '../../../images/img/blop.mp3';
 import imgMsg from '../../../images/img/msg.mp3';
 import onlineMsg from '../../../images/img/online.mp3';
 import './index.less';
+import { initRainCodeSleep } from '../../common/codeRain';
 const msgArr = [];
 const zIndex = _d.levelObj.msg;
 class Msg {
   constructor(opt = {}, callback) {
+    initRainCodeSleep();
     const defaultOpt = {
       message: 'default text',
       type: 'info',
@@ -222,6 +224,9 @@ const botMsg = (function () {
 let cacheMsg = [];
 
 function addCache(msg) {
+  if (cacheMsg.length > 100) {
+    cacheMsg.shift();
+  }
   cacheMsg.push(msg);
 }
 document.addEventListener('visibilitychange', function () {

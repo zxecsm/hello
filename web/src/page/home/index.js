@@ -556,7 +556,7 @@ function hdHomeBgBtn(e, obj) {
     {
       id: '2',
       text: '查看',
-      beforeIcon: 'iconfont icon-yanjing_xianshi_o',
+      beforeIcon: 'iconfont icon-kejian',
     },
     {
       id: '3',

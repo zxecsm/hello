@@ -62,7 +62,7 @@ export function createNoteDir($box) {
       const oLi = _tpl.getDom(
         `
         <li :title="text" cursor="y" :h="level" :data-id="id">
-          <span :style="item.children.length === 0 ? 'opacity:0;' : ''" class="icon iconfont icon-page-next"></span>
+          <span :style="item.children.length === 0 ? 'opacity:0;' : ''" class="icon iconfont icon-you"></span>
           <span class="text">{{text}}</span>
         </li>
         `,
@@ -101,10 +101,10 @@ export function createNoteDir($box) {
     if (!isShow) return;
     const $icon = $this.find('.icon');
     if (isShow === 'y') {
-      $icon.attr('class', 'icon iconfont icon-page-next');
+      $icon.attr('class', 'icon iconfont icon-you');
       $ul.stop().slideUp(_d.speed).attr('data-show', 'n');
     } else {
-      $icon.attr('class', 'icon iconfont icon-Down');
+      $icon.attr('class', 'icon iconfont icon-xiala');
       $ul.stop().slideDown(_d.speed).attr('data-show', 'y');
     }
   });
@@ -132,7 +132,7 @@ export function createNoteDir($box) {
           flag = flag.parent();
           if (flag.attr('data-show') === 'n') {
             const $icon = flag.prev().find('.icon');
-            $icon.attr('class', 'icon iconfont icon-Down');
+            $icon.attr('class', 'icon iconfont icon-xiala');
             flag.stop().slideDown(_d.speed).attr('data-show', 'y');
           }
         }

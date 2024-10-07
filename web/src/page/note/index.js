@@ -352,13 +352,13 @@ $noteBox
     if (flag === 'y') {
       $this.attr({
         'data-flag': 'n',
-        class: 'shrink iconfont icon-up',
+        class: 'shrink iconfont icon-shang',
       });
       $this.parent().find('code').removeClass('hide');
     } else {
       $this.attr({
         'data-flag': 'y',
-        class: 'shrink iconfont icon-Down',
+        class: 'shrink iconfont icon-xiala',
       });
       $this.parent().find('code').addClass('hide');
     }

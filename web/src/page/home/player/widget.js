@@ -41,6 +41,7 @@ import { playingListHighlight } from './playlist';
 import { updateLastPlay } from '../timer';
 import { hideIframeMask, showIframeMask } from '../iframe';
 import { _tpl, deepClone } from '../../../js/utils/template';
+import { initRainCodeSleep } from '../../../js/common/codeRain';
 
 const $miniPlayer = $('.mini_player'),
   $miniLrcWrap = $('.mini_lrc_wrap'),
@@ -328,9 +329,11 @@ export function playMv(obj) {
   initMusicLrc();
   $myVideo[0].playbackRate = setCurPlaySpeed()[1];
 }
-$myVideo[0].onerror = function () {
-  _msg.error(`MV 加载失败`);
-};
+$myVideo
+  .on('error', function () {
+    _msg.error(`MV 加载失败`);
+  })
+  .on('timeupdate', initRainCodeSleep);
 myDrag({
   trigger: $miniPlayer[0],
   border: true,

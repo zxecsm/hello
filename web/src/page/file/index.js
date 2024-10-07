@@ -87,7 +87,7 @@ const $search = $('.search');
 const $header = $('.header');
 const $footer = $('.footer');
 let pageSize = _getData('filesPageSize');
-let fileUrl = _getData('fileUrl');
+let curFileDirPath = _getData('curFileDirPath');
 let fileShowGrid = _getData('fileShowGrid');
 // 更改显示模式
 function changeListShowModel() {
@@ -118,7 +118,7 @@ realtime.init().add((res) => {
       data: { flag },
     } = item;
     if (type === 'updatedata' && flag === 'file') {
-      openDir();
+      curmb.toGo(curFileDirPath);
     } else if (type === 'pastefiledata') {
       waitObj = item.data;
       if (waitObj.type) {
@@ -132,9 +132,12 @@ realtime.init().add((res) => {
   });
 });
 // 绑定面包屑
-curmb.bind($curmbBox.find('.container')[0], (path) => {
-  pageNo = 1;
-  openDir(path, 1);
+curmb.bind($curmbBox.find('.container')[0], (path, page, toTop) => {
+  if (page) {
+    pageNo = page;
+  }
+  curFileDirPath = path;
+  openDir(curFileDirPath, toTop);
 });
 $contentWrap.list = [];
 $contentWrap.originList = [];
@@ -282,11 +285,11 @@ const lazyImg = new LazyLoad();
             { e, text: `${data[0].name} 移动到：${toData.name}？` },
             (type) => {
               if (type === 'confirm') {
-                reqFileMove({ data, path: `${fileUrl}/${toData.name}` })
+                reqFileMove({ data, path: `${curFileDirPath}/${toData.name}` })
                   .then((res) => {
                     if (res.code === 1) {
                       _msg.success(res.codeText);
-                      openDir();
+                      curmb.toGo(curFileDirPath);
                     }
                   })
                   .catch(() => {});
@@ -361,26 +364,20 @@ async function hdSort(list) {
   }
   return list;
 }
-openDir(fileUrl, 1);
-bus.on('refreshList', openDir);
+curmb.toGo(curFileDirPath);
+bus.on('refreshList', curmb.toGo);
 // 打开目录
 async function openDir(path, top) {
   try {
-    if (!path) {
-      path = fileUrl;
-    }
-    fileUrl = path = hdPath('/' + path);
-
     const $clearTrashBtn = $header.find('.clear_trash_btn');
 
-    if (fileUrl === '/.trash') {
+    if (path === '/.trash') {
       $clearTrashBtn.css('display', 'block');
     } else {
       $clearTrashBtn.css('display', 'none');
     }
 
-    _setData('fileUrl', fileUrl);
-    curmb.setPath(path);
+    _setData('curFileDirPath', path);
     const res = await reqFileReadDir({ path });
     if (res.code === 1) {
       $contentWrap.originList = res.data.map((item, idx) => ({
@@ -405,14 +402,13 @@ async function readFileAndDir(obj) {
   const { type, name, path } = obj;
   const p = `${path}/${name}`;
   if (type === 'dir') {
-    pageNo = 1;
-    openDir(p, 1);
+    curmb.toGo(p, 1, 1);
   } else if (type === 'file') {
     try {
       const res = await reqFileReadFile({ path: p });
       if (res.code === 1) {
         if (res.data.type === 'text') {
-          openFile(res.data.data, p);
+          openFile(res.data.data, p, path);
         } else if (res.data.type === 'other') {
           const fPath = getFilePath(`/file/${p}`);
           if (isImgFile(p)) {
@@ -738,7 +734,7 @@ function editFileMode(e, obj) {
           .then((res) => {
             if (res.code === 1) {
               close(1);
-              openDir();
+              curmb.toGo(curFileDirPath);
               _msg.success(res.codeText);
             }
           })
@@ -812,7 +808,7 @@ async function hdDeCompress(e, obj, cb) {
           const res = await reqFileUnZip({ data: obj });
           if (res.code === 1) {
             _msg.success(res.codeText);
-            openDir();
+            curmb.toGo(curFileDirPath);
             cb && cb();
           }
         } catch (error) {
@@ -838,7 +834,7 @@ async function hdCompress(e, obj, cb) {
           const res = await reqFileZip({ data: obj });
           if (res.code === 1) {
             _msg.success(res.codeText);
-            openDir();
+            curmb.toGo(curFileDirPath);
             cb && cb();
           }
         } catch (error) {
@@ -892,7 +888,7 @@ async function hdUp(files) {
   maskLoading.start();
   await concurrencyTasks(files, 5, async (file) => {
     const { name, size, webkitRelativePath } = file;
-    let path = fileUrl;
+    let path = curFileDirPath;
     if (webkitRelativePath) {
       path = `${path}/${webkitRelativePath}`;
     } else {
@@ -957,7 +953,7 @@ async function hdUp(files) {
   });
   maskLoading.end();
   realtime.send({ type: 'updatedata', data: { flag: 'file' } });
-  openDir();
+  curmb.toGo(curFileDirPath);
 }
 // 新建文件
 function createFile(e) {
@@ -985,13 +981,13 @@ function createFile(e) {
         try {
           const name = hdFilename(inp.name);
           const res = await reqFileCreateFile({
-            path: fileUrl,
+            path: curFileDirPath,
             name,
           });
           if (res.code === 1) {
             _msg.success(res.codeText);
-            openDir();
-            openFile('', fileUrl + '/' + name);
+            curmb.toGo(curFileDirPath);
+            openFile('', curFileDirPath + '/' + name, curFileDirPath);
             close(1);
           }
           // eslint-disable-next-line no-unused-vars
@@ -1029,12 +1025,12 @@ function createDir(e) {
         try {
           const name = inp.name;
           const res = await reqFileCreateDir({
-            path: fileUrl,
+            path: curFileDirPath,
             name,
           });
           if (res.code === 1) {
             _msg.success(res.codeText);
-            openDir();
+            curmb.toGo(curFileDirPath);
             close(1);
           }
           // eslint-disable-next-line no-unused-vars
@@ -1061,7 +1057,7 @@ $header
     }
   })
   .on('click', '.h_trash_btn', function () {
-    openDir('/.trash', 1);
+    curmb.toGo('/.trash', 1, 1);
   })
   .on('click', '.h_go_home', function () {
     myOpen('/');
@@ -1165,7 +1161,7 @@ function hdClearTrash(e) {
         reqFileClearTrash()
           .then((res) => {
             if (res.code === 1) {
-              openDir();
+              curmb.toGo(curFileDirPath, 1);
             }
           })
           .catch((error) => {
@@ -1249,17 +1245,17 @@ async function hdCopy(e, data, cb) {
         !data.every((item) => {
           const { path, name } = item;
           const f = hdPath(`${path}/${name}`);
-          const t = hdPath(`${fileUrl}/${name}`);
+          const t = hdPath(`${curFileDirPath}/${name}`);
           return !isParentDir(f, t);
         })
       ) {
         _msg.error('无效操作');
         return;
       }
-      const res = await reqFileCopy({ data, path: fileUrl });
+      const res = await reqFileCopy({ data, path: curFileDirPath });
       if (res.code === 1) {
         _msg.success(res.codeText);
-        openDir();
+        curmb.toGo(curFileDirPath);
         cb && cb();
       }
     } catch (error) {
@@ -1279,17 +1275,17 @@ async function hdCut(e, data, cb) {
         !data.every((item) => {
           const { path, name } = item;
           const f = hdPath(`${path}/${name}`);
-          const t = hdPath(`${fileUrl}/${name}`);
+          const t = hdPath(`${curFileDirPath}/${name}`);
           return f !== t && !isParentDir(f, t);
         })
       ) {
         _msg.error('无效操作');
         return;
       }
-      const res = await reqFileMove({ data, path: fileUrl });
+      const res = await reqFileMove({ data, path: curFileDirPath });
       if (res.code === 1) {
         _msg.success(res.codeText);
-        openDir();
+        curmb.toGo(curFileDirPath);
         waitObj = {};
         realtime.send({ type: 'pastefiledata', data: waitObj });
         hidePaste();
@@ -1460,7 +1456,7 @@ function hdDel(e, arr, cb) {
     text,
     confirm: { type: 'danger', text: '删除' },
   };
-  if (fileUrl !== '/.trash') {
+  if (curFileDirPath !== '/.trash') {
     opt.cancel = { text: '放入回收站', type: 'primary' };
     opt.confirm.text = '直接删除';
   }
@@ -1471,7 +1467,7 @@ function hdDel(e, arr, cb) {
         const res = await reqFileDelete({ data: arr, force });
         if (res.code === 1) {
           _msg.success(res.codeText);
-          openDir();
+          curmb.toGo(curFileDirPath);
           cb && cb();
         }
       } catch (error) {
@@ -1511,7 +1507,7 @@ function hdRename(e, obj, cb) {
           let name = inp.name;
           const res = await reqFileRename({ data: obj, name });
           if (res.code === 1) {
-            openDir();
+            curmb.toGo(curFileDirPath);
             close();
             cb && cb();
             _msg.success(res.codeText);

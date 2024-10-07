@@ -69,7 +69,7 @@ md.renderer.rules.fence = function (tokens, idx) {
     lineNum >= maxLine ? 'hide' : ''
   }">${html}</code><div cursor="y" class="codeCopy iconfont icon-fuzhi"></div>${
     lineNum >= maxLine
-      ? `<div data-flag="y" cursor="y" class="shrink iconfont icon-Down"></div>`
+      ? `<div data-flag="y" cursor="y" class="shrink iconfont icon-xiala"></div>`
       : ''
   }</pre>`;
 };

@@ -204,6 +204,12 @@ const wInput = wrapInput($headBtns.find('.note_title input')[0], {
     }
     handleSave();
   },
+  focus() {
+    $headBtns.find('.note_title').addClass('focus');
+  },
+  blur() {
+    $headBtns.find('.note_title').removeClass('focus');
+  },
 });
 function initValue(obj) {
   wInput.setValue(obj.title);
@@ -349,13 +355,13 @@ $previewBox
     if (flag === 'y') {
       $this.attr({
         'data-flag': 'n',
-        class: 'shrink iconfont icon-up',
+        class: 'shrink iconfont icon-shang',
       });
       $this.parent().find('code').removeClass('hide');
     } else {
       $this.attr({
         'data-flag': 'y',
-        class: 'shrink iconfont icon-Down',
+        class: 'shrink iconfont icon-xiala',
       });
       $this.parent().find('code').addClass('hide');
     }
@@ -593,7 +599,7 @@ function previewState() {
     $headBtns._flag = 'n';
     $headBtns
       .find('.preview_state')
-      .attr('class', 'preview_state iconfont icon-yanjing_xianshi_o');
+      .attr('class', 'preview_state iconfont icon-kejian');
     $previewBox.css('display', 'none');
     $editBox.addClass('open');
     $headBtns.find('.to_max_btn').css('display', 'none');
@@ -601,7 +607,7 @@ function previewState() {
     $headBtns._flag = 'y';
     $headBtns
       .find('.preview_state')
-      .attr('class', 'preview_state iconfont icon-yanjing_yincang_o');
+      .attr('class', 'preview_state iconfont icon-bukejian');
     $previewBox.css('display', 'block');
     $editBox.removeClass('open');
     $headBtns.find('.to_max_btn').css('display', 'block');

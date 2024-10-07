@@ -316,7 +316,7 @@ function hdUserLogo(e) {
     data.push({
       id: '2',
       text: '查看',
-      beforeIcon: 'iconfont icon-yanjing_xianshi_o',
+      beforeIcon: 'iconfont icon-kejian',
     });
     data.push({
       id: '3',

@@ -59,7 +59,7 @@ h6::after {
   left: 0;
   bottom: -2px;
   width: 0;
-  transition: width 0.5s ease-in-out;
+  transition: width 0.3s ease-in-out;
   background-color: var(--text-hover-color);
 }
 

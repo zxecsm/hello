@@ -1401,8 +1401,8 @@ export function imgPreview(arr, idx = 0) {
   z-index: 2;
   `;
   close.className = 'iconfont icon-guanbi';
-  pre.className = 'iconfont icon-prev';
-  next.className = 'iconfont icon-page-next';
+  pre.className = 'iconfont icon-zuo';
+  next.className = 'iconfont icon-you';
   pre.setAttribute('cursor', '');
   next.setAttribute('cursor', '');
   close.setAttribute('cursor', '');
@@ -1715,22 +1715,12 @@ export function getDuration(file) {
 // 浏览器通知
 export function sendNotification(opt, callback) {
   try {
-    // 先检查浏览器是否支持
-    if (!('Notification' in window) || Notification.permission === 'denied')
+    // 检查是否支持 Notification API
+    if (!('Notification' in window) || Notification.permission === 'denied') {
       return;
-
-    if (Notification.permission === 'granted') {
-      //用户已授权，直接发送通知
-      notify();
-    } else {
-      // 默认，先向用户询问是否允许显示通知
-      Notification.requestPermission(function (permission) {
-        // 如果用户同意，就可以直接发送通知
-        if (permission === 'granted') {
-          notify();
-        }
-      });
     }
+
+    // 创建通知的函数
     function notify() {
       const obj = {
         title: '新通知',
@@ -1745,6 +1735,19 @@ export function sendNotification(opt, callback) {
       notification.onclick = function () {
         callback && callback();
       };
+    }
+
+    // 根据权限状态发送通知
+    if (Notification.permission === 'granted') {
+      // 用户已经授权，直接发送通知
+      notify();
+    } else if (Notification.permission !== 'denied') {
+      // 请求权限（使用 Promise 处理）
+      Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+          notify();
+        }
+      });
     }
     // eslint-disable-next-line no-unused-vars
   } catch (error) {}
@@ -3169,4 +3172,13 @@ export async function concurrencyTasks(tasks, concurrency, taskCallback) {
     activeUps.push(handleTask());
   }
   await Promise.all(activeUps);
+}
+
+export function findLastIndex(array, predicate) {
+  for (let i = array.length - 1; i >= 0; i--) {
+    if (predicate(array[i], i, array)) {
+      return i;
+    }
+  }
+  return -1; // 如果没有找到则返回 -1
 }

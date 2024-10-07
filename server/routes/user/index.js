@@ -118,15 +118,6 @@ route.get('/custom-code', async (req, res) => {
   }
 });
 
-// 注册状态
-route.get('/register-state', async (req, res) => {
-  try {
-    _success(res, 'ok', _d.registerState);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
 // 注册限制
 let registerCount = 0;
 timedTask.add((flag) => {

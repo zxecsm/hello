@@ -66,7 +66,7 @@ const $header = $('.header');
 const $shareInfo = $('.share_info');
 const $fileBox = $('.file_box');
 let pageSize = _getData('filesPageSize');
-let fileUrl = _getDataTem('fileUrl') || '/';
+let curFileDirPath = _getDataTem('curFileDirPath') || '/';
 let fileShowGrid = _getData('fileShowGrid');
 let urlparmes = queryURLParams(myOpen()),
   HASH = urlparmes.HASH;
@@ -160,7 +160,7 @@ function getShareData(close) {
           $fileBox.addClass('open');
         } else if (data.type === 'dir') {
           $fileBox.remove();
-          openDir(fileUrl, 1);
+          curmb.toGo(curFileDirPath, 0, 1);
         }
       } else if (res.code === 3) {
         if (passCode) {
@@ -189,9 +189,12 @@ function changeListShowModel() {
 changeListShowModel();
 let pageNo = 1;
 // 面包屑
-curmb.bind($curmbBox.find('.container')[0], (path) => {
-  pageNo = 1;
-  openDir(path, 1);
+curmb.bind($curmbBox.find('.container')[0], (path, page, toTop) => {
+  if (page) {
+    pageNo = page;
+  }
+  curFileDirPath = path;
+  openDir(curFileDirPath, toTop);
 });
 $contentWrap.list = [];
 $contentWrap.originList = [];
@@ -379,16 +382,11 @@ async function hdSort(list) {
   }
   return list;
 }
-bus.on('refreshList', openDir);
+bus.on('refreshList', curmb.toGo);
 // 打开目录
 async function openDir(path, top) {
   try {
-    if (!path) {
-      path = fileUrl;
-    }
-    fileUrl = path = hdPath('/' + path);
-    _setDataTem('fileUrl', fileUrl);
-    curmb.setPath(path);
+    _setDataTem('curFileDirPath', path);
     const res = await reqFileReadDir({
       path,
       flag: `${HASH}/${passCode}`,
@@ -414,8 +412,7 @@ async function readFileAndDir(obj) {
   const { type, name, path } = obj;
   const p = `${path}/${name}`;
   if (type === 'dir') {
-    pageNo = 1;
-    openDir(p, 1);
+    curmb.toGo(p, 1, 1);
   } else if (type === 'file') {
     try {
       const res = await reqFileReadFile({

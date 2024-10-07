@@ -164,7 +164,7 @@ html.dark {
   src: url('../../font/consolas.ttf') format('truetype');
 }
 body {
-  color: var(--color1);
+  color: var(--color2);
   background-color: var(--color10);
   font-size: 16px;
   cursor: var(--cursor-default);

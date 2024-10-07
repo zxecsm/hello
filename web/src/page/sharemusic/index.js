@@ -63,6 +63,8 @@ import { showSongInfo } from '../../js/utils/showinfo';
 import rMenu from '../../js/plugins/rightMenu';
 import changeDark from '../../js/utils/changeDark';
 import { _tpl, deepClone } from '../../js/utils/template';
+import { initRainCodeSleep } from '../../js/common/codeRain';
+import notifyMusicControlPanel from '../home/player/notifyMusicControlPanel';
 const urlparmes = queryURLParams(myOpen()),
   HASH = urlparmes.HASH,
   $myAudio = $(new Audio()),
@@ -345,9 +347,11 @@ function playMv(obj) {
   lrcInit();
   $myVideo[0].playbackRate = curPlaySpeed[1];
 }
-$myVideo[0].onerror = function () {
-  _msg.error(`MV 加载失败`);
-};
+$myVideo
+  .on('error', function () {
+    _msg.error(`MV 加载失败`);
+  })
+  .on('timeupdate', initRainCodeSleep);
 function pauseVideo() {
   $myVideo[0].pause();
 }
@@ -376,6 +380,12 @@ function playSong() {
     musicMvContentScroll.close();
   }
   if (!playingSongInfo) return;
+  notifyMusicControlPanel.updateMetadata({
+    title: playingSongInfo.title,
+    artist: playingSongInfo.artist,
+    album: playingSongInfo.album,
+    artwork: [{ src: playingSongInfo.ppic }],
+  });
   document.title = `\xa0\xa0\xa0♪正在播放：${playingSongInfo.artist} - ${playingSongInfo.title}`;
   $myAudio[0].play();
   if ($myAudio._lrcList.length === 0) {
@@ -543,6 +553,20 @@ $myAudio
           }
         }, lrcCount * 100);
       });
+  });
+notifyMusicControlPanel
+  .bind('play', playSong)
+  .bind('pause', pauseSong)
+  .bind('previoustrack', playPrevSong)
+  .bind('nexttrack', playNextSong)
+  .bind('seekbackward', () => {
+    $myAudio[0].currentTime = Math.max($myAudio[0].currentTime - 10, 0);
+  })
+  .bind('seekforward', () => {
+    $myAudio[0].currentTime = Math.min(
+      $myAudio[0].currentTime + 10,
+      playingSongInfo.duration
+    );
   });
 //进度条
 $lrcProgressBar

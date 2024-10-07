@@ -29,9 +29,7 @@ body {
       transform: translateY(-100px);
       opacity: 0;
       &.open {
-        transition:
-          transform 0.8s ease-in-out,
-          opacity 0.8s ease-in-out;
+        transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
         opacity: 1;
         transform: none;
       }
@@ -49,13 +47,17 @@ body {
         border-bottom: 1px solid var(--color9);
         align-items: center;
 
+        &.focus {
+          border-bottom: 1px solid var(--text-hover-color);
+        }
+
         input {
           flex: auto;
           width: 0;
           height: 100%;
           margin: 0;
           outline: none;
-          font-size: 24px;
+          font-size: 20px;
           border: none;
           background: transparent;
           -webkit-appearance: none;
@@ -87,10 +89,6 @@ body {
         }
       }
 
-      .preview_state {
-        font-size: 35px;
-      }
-
       .save_btn.active {
         color: var(--icon-color);
       }
@@ -106,9 +104,7 @@ body {
       transform: translateY(100px);
       opacity: 0;
       &.open {
-        transition:
-          transform 0.8s ease-in-out,
-          opacity 0.8s ease-in-out;
+        transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
         opacity: 1;
         transform: none;
       }

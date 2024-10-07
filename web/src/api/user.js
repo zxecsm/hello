@@ -67,10 +67,6 @@ export function reqUserRealTime(data) {
 export function reqUserCodeLogin(data) {
   return _postAjax('/user/code-login', data);
 }
-// 注册状态
-export function reqUserRegisterState() {
-  return _getAjax('/user/register-state');
-}
 // 登录
 export function reqUserLogin(data) {
   return _postAjax('/user/login', data);

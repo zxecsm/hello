@@ -58,6 +58,7 @@ const fieldLenght = {
   noteCategoryTitle: 30,
   chatFileExpire: 999,
   operationTimeout: 10000,
+  rainCodeSleep: 60 * 5,
 };
 const _d = {
   fieldLenght,
@@ -115,7 +116,7 @@ const _d = {
     editNoteCodeNum: true, // 编辑笔记显示行号
     bmPageSize: 20, // 书签每页显示
     filesPageSize: 20, // 文件列表每页显示
-    fileUrl: '/', // 文件路径
+    curFileDirPath: '/', // 文件路径
     fileKeys: [], // 临时文件直链
     fileSort: { type: 'time', isDes: true }, // 文件排序
     fileFontSize: 0.22, // 文件编辑文本大小

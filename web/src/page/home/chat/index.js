@@ -679,7 +679,7 @@ function userMenu(e, msgObj, isUserList) {
     data.push({
       id: '5',
       text: '头像',
-      beforeIcon: 'iconfont icon-yanjing_xianshi_o',
+      beforeIcon: 'iconfont icon-kejian',
     });
   }
   if (chatAcc === 'chang' || isUserList) {

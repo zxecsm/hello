@@ -6,6 +6,7 @@ import {
   _position,
   _setTimeout,
   debounce,
+  findLastIndex,
   hdTextMsg,
   imgjz,
   myDrag,
@@ -216,7 +217,7 @@ class RightM {
       if (e) {
         const x = e.clientX,
           y = e.clientY;
-        idx = rightBoxList.findLastIndex((item) => {
+        idx = findLastIndex(rightBoxList, (item) => {
           const rBox = item.rightBox,
             op = rBox._op,
             os = rBox._os,
@@ -353,7 +354,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
           <div v-if="beforeText" class="title">{{beforeText}}</div>
           <div class="inp_box">
             <input class='inp' :data-flag="key" autocomplete="off" :placeholder="placeholder" :value="value" :type="inputType"/>
-            <i v-if="inputType === 'password'" v-show="value.trim() !== ''" cursor="y" class="show_pass_btn iconfont icon-yanjing_xianshi_o"></i>
+            <i v-if="inputType === 'password'" v-show="value.trim() !== ''" cursor="y" class="show_pass_btn iconfont icon-kejian"></i>
             <i cursor="y" class="clean_btn iconfont icon-guanbi {{value.trim() === '' ? '' : 'show'}}"></i>
           </div>
           <p class='err'></p>
@@ -368,7 +369,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       </div>
       <div v-else-if="type === 'select'" class='select_item'>
         <div v-if="beforeText" class="title">{{beforeText}}</div>
-        <div cursor="y" class='select_box' :data-flag="key"><span>{{selectInitValue(selectItem,value)}}</span><i class="iconfont icon-Down"></i></div>
+        <div cursor="y" class='select_box' :data-flag="key"><span>{{selectInitValue(selectItem,value)}}</span><i class="iconfont icon-xiala"></i></div>
         <p class='err'></p>
       </div>
     </template>
@@ -539,12 +540,10 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
         const inp = showPassBtn.parentNode.firstElementChild;
         if (inp.type === 'password') {
           inp.type = 'text';
-          showPassBtn.className =
-            'show_pass_btn iconfont icon-yanjing_yincang_o';
+          showPassBtn.className = 'show_pass_btn iconfont icon-bukejian';
         } else {
           inp.type = 'password';
-          showPassBtn.className =
-            'show_pass_btn iconfont icon-yanjing_xianshi_o';
+          showPassBtn.className = 'show_pass_btn iconfont icon-kejian';
         }
       }
     },

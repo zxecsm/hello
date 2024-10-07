@@ -1,4 +1,11 @@
-import { _getDataTem, _setDataTem, debounce, isIframe } from '../utils/utils';
+import {
+  _getDataTem,
+  _setDataTem,
+  debounce,
+  isIframe,
+  throttle,
+} from '../utils/utils';
+import _d from './config';
 const canvas = document.createElement('canvas');
 canvas.style.cssText = `
 position: fixed;
@@ -48,11 +55,10 @@ function drawString() {
   }
 }
 let timer = null;
-const defaultSleep = 60 * 5;
 setInterval(() => {
   if (isIframe()) return;
   let sleep = _getDataTem('sleep');
-  sleep = sleep === null ? defaultSleep : sleep;
+  sleep = sleep === null ? _d.fieldLenght.rainCodeSleep : sleep;
   sleep--;
   _setDataTem('sleep', sleep);
   if (sleep === 0) {
@@ -70,9 +76,10 @@ setInterval(() => {
     }
   }
 }, 1000);
-function setDefaultSleep() {
-  _setDataTem('sleep', defaultSleep);
-}
-document.addEventListener('mousemove', setDefaultSleep);
-document.addEventListener('touchstart', setDefaultSleep);
-document.addEventListener('keydown', setDefaultSleep);
+
+export const initRainCodeSleep = throttle(() => {
+  _setDataTem('sleep', _d.fieldLenght.rainCodeSleep);
+}, 2000);
+document.addEventListener('mousemove', initRainCodeSleep);
+document.addEventListener('touchstart', initRainCodeSleep);
+document.addEventListener('keydown', initRainCodeSleep);

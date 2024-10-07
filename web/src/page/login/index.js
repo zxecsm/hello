@@ -26,7 +26,6 @@ import {
   reqUserEmailCode,
   reqUserLogin,
   reqUserRegister,
-  reqUserRegisterState,
   reqUserResetPass,
   reqUserVerifyLogin,
 } from '../../api/user.js';
@@ -216,15 +215,6 @@ window.addEventListener('load', function () {
   $box.addClass('open');
 });
 accInp.setValue(_getData('loginName'));
-reqUserRegisterState()
-  .then((res) => {
-    if (res.code === 1) {
-      if (res.data) {
-        $register.css('display', 'block');
-      }
-    }
-  })
-  .catch(() => {});
 let showpd = _getData('showpd');
 // 显示密码切换
 function hdShowPd() {

@@ -1,9 +1,27 @@
 import { _tpl } from '../../../js/utils/template';
 import { _mySlide, hdPath } from '../../../js/utils/utils';
 import './index.less';
+
+let history = [];
 let pathArr = [];
+
 let target = null;
 let callback = null;
+
+function addHistory() {
+  if (
+    history.length > 0 &&
+    arrToPath(history[history.length - 1]) === getPath()
+  )
+    return;
+  history.push(pathArr);
+}
+
+function getLastHistory() {
+  const res = history.pop();
+  return res || [];
+}
+
 // 生成路径
 function renderCrumb() {
   const html = _tpl(
@@ -16,6 +34,7 @@ function renderCrumb() {
   );
   _tpl.html(target, html);
 }
+
 // 绑定
 function bind(el, cb) {
   callback = cb;
@@ -23,51 +42,67 @@ function bind(el, cb) {
   el.classList.add('crumb');
   el.addEventListener('click', hdClick);
 }
+
+function toBack() {
+  pathArr = getLastHistory();
+  renderCrumb();
+  callback && callback(getPath());
+}
+
+function toGo(p, ...arg) {
+  if (typeof p === 'string') {
+    p = pathToArr(p);
+  }
+  if (arrToPath(p) !== getPath()) {
+    addHistory();
+  }
+  pathArr = p;
+  renderCrumb();
+  callback && callback(getPath(), ...arg);
+}
+
 // 点击事件
 function hdClick(e) {
   const target = e.target;
   const tag = target.tagName.toLowerCase();
   if (tag === 'i' || tag === 'span') {
     if (tag === 'i') {
-      if (pathArr.length === 0) return;
-      pathArr.pop();
+      toBack();
     } else if (tag === 'span') {
+      let p = [];
       if (target.className === 'home') {
-        pathArr = [];
+        p = [];
       } else {
         const idx = +target.dataset.idx;
-        pathArr = pathArr.slice(0, idx);
+        p = pathArr.slice(0, idx);
       }
+      toGo(p);
     }
-    callback && callback(getPath());
-    renderCrumb();
   } else if (this === target) {
     editPath();
   }
 }
+
 // 手势右划后退
-function rightSlide() {
-  if (pathArr.length === 0) return;
-  pathArr.pop();
-  callback && callback(getPath());
-  renderCrumb();
-}
 _mySlide({
   el: '.content_wrap',
-  right: rightSlide,
+  right: toBack,
 });
+
 _mySlide({
   el: '.crumb_box',
-  right: rightSlide,
+  right: toBack,
 });
+
 function hdInputBlur() {
-  if (getPath() != this.value.trim()) {
-    setPath(this.value.trim());
-    callback && callback(getPath());
-    return;
+  const val = this.value.trim();
+  if (getPath() !== val) {
+    toGo(val);
+  } else {
+    renderCrumb();
   }
-  renderCrumb();
 }
+
 function hdInputKeyup(e) {
   if (e.key === 'Enter') {
     this.blur();
@@ -76,6 +111,7 @@ function hdInputKeyup(e) {
 const oInp = document.createElement('input');
 oInp.addEventListener('blur', hdInputBlur);
 oInp.addEventListener('keyup', hdInputKeyup);
+
 // 编辑路径
 function editPath() {
   oInp.value = getPath();
@@ -83,18 +119,24 @@ function editPath() {
   target.appendChild(oInp);
   oInp.focus();
 }
+
 // 获取路径
 function getPath() {
-  return hdPath('/' + pathArr.join('/'));
+  return arrToPath(pathArr);
 }
-// 设置路径
-function setPath(p) {
-  pathArr = p.split('/').filter((item) => item);
-  renderCrumb();
+
+function arrToPath(arr) {
+  return hdPath('/' + arr.join('/'));
 }
+
+function pathToArr(path) {
+  return path.split('/').filter((item) => item);
+}
+
 const curmb = {
   bind,
   getPath,
-  setPath,
+  toGo,
 };
+
 export default curmb;
