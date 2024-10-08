@@ -264,12 +264,6 @@ function playSong() {
     _msg.error('请选择需要播放的歌曲');
     return;
   }
-  notifyMusicControlPanel.updateMetadata({
-    title: playingSongInfo.title,
-    artist: playingSongInfo.artist,
-    album: playingSongInfo.album,
-    artwork: [{ src: playingSongInfo.ppic }],
-  });
   if (remotePlayState) {
     //远程播放
     realtime.send({

@@ -3,7 +3,7 @@ import {
   _mySlide,
   _position,
   debounce,
-  getPageScrollTop,
+  pageScrollTop,
   getScreenSize,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
@@ -90,8 +90,8 @@ export function createNoteDir($box) {
     $this.addClass('active');
     const id = $this.attr('data-id'),
       $curH = $box.find(`#${id}`),
-      _top = _position($curH[0], true).top + getPageScrollTop();
-    // setPageScrollTop(_top - 60);
+      _top = _position($curH[0], true).top + pageScrollTop();
+    // pageScrollTop(_top - 60);
     window.scrollTo({
       top: _top - 60,
       behavior: 'smooth',

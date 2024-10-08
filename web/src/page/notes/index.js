@@ -10,7 +10,7 @@ import {
   throttle,
   debounce,
   _myOpen,
-  setPageScrollTop,
+  pageScrollTop,
   myOpen,
   toLogin,
   scrollState,
@@ -171,7 +171,7 @@ function listLoading() {
     str += `<ul style="pointer-events: none;height:40px;margin-bottom:6px;background-color: var(--color9);" class="item_box"></ul>`;
   });
   $contentWrap.html(str);
-  setPageScrollTop(0);
+  pageScrollTop(0);
 }
 // 渲染列表
 $contentWrap.pagenum = 1;
@@ -251,7 +251,7 @@ function renderList(y) {
         $contentWrap.html(html).addClass('open');
         $headWrap.addClass('open');
         if (y) {
-          setPageScrollTop(0);
+          pageScrollTop(0);
         }
       }
     })

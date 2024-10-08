@@ -1,3 +1,4 @@
+import bus from '../../../js/utils/bus';
 import { _tpl } from '../../../js/utils/template';
 import { _mySlide, hdPath } from '../../../js/utils/utils';
 import './index.less';
@@ -8,18 +9,26 @@ let pathArr = [];
 let target = null;
 let callback = null;
 
+let pageInfo = { pageNo: 1, top: 0 };
+
+bus.on('setPageInfo', (info) => (pageInfo = info));
+
+function updatePageInfo() {
+  bus.emit('getPageInfo');
+}
+
 function addHistory() {
   if (
     history.length > 0 &&
-    arrToPath(history[history.length - 1]) === getPath()
+    arrToPath(history[history.length - 1].pathArr) === getPath()
   )
     return;
-  history.push(pathArr);
+  history.push({ pageInfo, pathArr });
 }
 
 function getLastHistory() {
   const res = history.pop();
-  return res || [];
+  return res || { pageInfo: { pageNo: 1, top: 0 }, pathArr: [] };
 }
 
 // 生成路径
@@ -44,12 +53,13 @@ function bind(el, cb) {
 }
 
 function toBack() {
-  pathArr = getLastHistory();
+  const { pageInfo, pathArr: p } = getLastHistory();
+  pathArr = p;
   renderCrumb();
-  callback && callback(getPath());
+  callback && callback(getPath(), pageInfo);
 }
 
-function toGo(p, ...arg) {
+function toGo(p, param = {}) {
   if (typeof p === 'string') {
     p = pathToArr(p);
   }
@@ -58,7 +68,7 @@ function toGo(p, ...arg) {
   }
   pathArr = p;
   renderCrumb();
-  callback && callback(getPath(), ...arg);
+  callback && callback(getPath(), param);
 }
 
 // 点击事件
@@ -76,7 +86,8 @@ function hdClick(e) {
         const idx = +target.dataset.idx;
         p = pathArr.slice(0, idx);
       }
-      toGo(p);
+      updatePageInfo();
+      toGo(p, { pageNo: 1, top: 0 });
     }
   } else if (this === target) {
     editPath();
@@ -97,7 +108,8 @@ _mySlide({
 function hdInputBlur() {
   const val = this.value.trim();
   if (getPath() !== val) {
-    toGo(val);
+    updatePageInfo();
+    toGo(val, { pageNo: 1, top: 0 });
   } else {
     renderCrumb();
   }

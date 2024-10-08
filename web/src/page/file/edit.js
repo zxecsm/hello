@@ -54,11 +54,9 @@ export function setReadOnly(val) {
   readOnly = val;
   // editor.setReadOnly(readOnly);
 }
-let fileDir = '';
 // 编辑文件
-export function openFile(text, path, dir) {
+export function openFile(text, path) {
   path = hdPath(path);
-  fileDir = dir;
   hideContainer();
   filePath = path;
   $editFile.css('display', 'flex');
@@ -280,7 +278,7 @@ function hdClose() {
   showContainer();
   editTitleContentScroll.close();
   if (originText != oText) {
-    bus.emit('refreshList', fileDir);
+    bus.emit('refreshList');
   }
   toHide(
     $editFile[0],

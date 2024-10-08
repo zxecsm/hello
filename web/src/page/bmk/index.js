@@ -9,7 +9,7 @@ import {
   _getData,
   throttle,
   debounce,
-  setPageScrollTop,
+  pageScrollTop,
   myOpen,
   toLogin,
   scrollState,
@@ -196,7 +196,7 @@ function listLoading() {
     str += `<ul style="pointer-events: none;height:40px;margin-bottom:6px;background-color: var(--color9);" class="item_box"></ul>`;
   });
   $contentWrap.html(str);
-  setPageScrollTop(0);
+  pageScrollTop(0);
 }
 
 let bmksPageNo = 1;
@@ -296,7 +296,7 @@ function renderList(y) {
         $headWrap.addClass('open');
 
         if (y) {
-          setPageScrollTop(0);
+          pageScrollTop(0);
         }
       }
     })

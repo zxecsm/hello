@@ -8,7 +8,7 @@ import {
   formatDate,
   pageErr,
   debounce,
-  setPageScrollTop,
+  pageScrollTop,
   isIframe,
   getScreenSize,
   isInteger,
@@ -98,7 +98,7 @@ function renderUserList(pageNo, total, top) {
   });
   $list.html(html);
   if (top) {
-    setPageScrollTop(0);
+    pageScrollTop(0);
   }
 }
 // 分页

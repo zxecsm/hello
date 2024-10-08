@@ -9,7 +9,7 @@ import {
   myOpen,
   imgjz,
   pageErr,
-  setPageScrollTop,
+  pageScrollTop,
   getTextImg,
   formatDate,
   enterPassCode,
@@ -110,7 +110,7 @@ function renderList() {
     );
   });
 
-  setPageScrollTop(0);
+  pageScrollTop(0);
 }
 
 // 分页

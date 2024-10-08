@@ -36,7 +36,7 @@ import {
   myOpen,
   pageErr,
   queryURLParams,
-  setPageScrollTop,
+  pageScrollTop,
   userLogoMenu,
   wrapInput,
 } from '../../js/utils/utils';
@@ -160,7 +160,7 @@ function getShareData(close) {
           $fileBox.addClass('open');
         } else if (data.type === 'dir') {
           $fileBox.remove();
-          curmb.toGo(curFileDirPath, 0, 1);
+          updateCurPage();
         }
       } else if (res.code === 3) {
         if (passCode) {
@@ -189,12 +189,12 @@ function changeListShowModel() {
 changeListShowModel();
 let pageNo = 1;
 // 面包屑
-curmb.bind($curmbBox.find('.container')[0], (path, page, toTop) => {
-  if (page) {
-    pageNo = page;
+curmb.bind($curmbBox.find('.container')[0], (path, param) => {
+  if (param.pageNo) {
+    pageNo = param.pageNo;
   }
   curFileDirPath = path;
-  openDir(curFileDirPath, toTop);
+  openDir(curFileDirPath, param.top);
 });
 $contentWrap.list = [];
 $contentWrap.originList = [];
@@ -209,7 +209,7 @@ const wInput = wrapInput($search.find('.inp_box input')[0], {
       $search.find('.inp_box i').css('display', 'block');
     }
     pageNo = 1;
-    renderList(1);
+    renderList(0);
   },
   focus(target) {
     $(target).parent().addClass('focus');
@@ -317,8 +317,8 @@ async function renderList(top) {
       );
     }
   });
-  if (top) {
-    setPageScrollTop(0);
+  if (top !== undefined) {
+    pageScrollTop(top);
   }
 }
 const lazyImg = new LazyLoad();
@@ -326,13 +326,13 @@ const lazyImg = new LazyLoad();
 const pgnt = pagination($pagination.find('.container')[0], {
   change(val) {
     pageNo = val;
-    renderList(1);
+    renderList(0);
     _msg.botMsg(`第 ${pageNo} 页`);
   },
   changeSize(val) {
     pageSize = val;
     pageNo = 1;
-    renderList(1);
+    renderList(0);
     _msg.botMsg(`第 ${pageNo} 页`);
     _setData('filesPageSize', pageSize);
   },
@@ -382,7 +382,16 @@ async function hdSort(list) {
   }
   return list;
 }
-bus.on('refreshList', curmb.toGo);
+
+function updateCurPage() {
+  curmb.toGo(curFileDirPath);
+}
+
+bus.on('getPageInfo', updatePageInfo).on('refreshList', updateCurPage);
+
+function updatePageInfo() {
+  bus.emit('setPageInfo', { pageNo, top: pageScrollTop() });
+}
 // 打开目录
 async function openDir(path, top) {
   try {
@@ -396,7 +405,7 @@ async function openDir(path, top) {
         id: idx + 1 + '',
         ...item,
       }));
-      if (top && wInput.getValue()) {
+      if (top === 0 && wInput.getValue()) {
         wInput.setValue('');
       } else {
         renderList(top);
@@ -412,7 +421,8 @@ async function readFileAndDir(obj) {
   const { type, name, path } = obj;
   const p = `${path}/${name}`;
   if (type === 'dir') {
-    curmb.toGo(p, 1, 1);
+    updatePageInfo();
+    curmb.toGo(p, { pageNo: 1, top: 0 });
   } else if (type === 'file') {
     try {
       const res = await reqFileReadFile({
@@ -674,7 +684,7 @@ function hdFileSort(e) {
         }
         close();
         pageNo = 1;
-        renderList(1);
+        renderList(0);
         _setData('fileSort', fileSort);
       }
     },
@@ -689,7 +699,7 @@ $header
   })
   .on('click', '.h_search_btn', function () {
     if ($search.is(':hidden')) {
-      setPageScrollTop(0);
+      pageScrollTop(0);
       openSearch();
     } else {
       closeSearch();

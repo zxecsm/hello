@@ -137,6 +137,7 @@ import rMenu from '../../../js/plugins/rightMenu/index.js';
 import fileSlice from '../../../js/utils/fileSlice.js';
 import { hideIframeMask, showIframeMask } from '../iframe.js';
 import { _tpl, deepClone } from '../../../js/utils/template.js';
+import notifyMusicControlPanel from './notifyMusicControlPanel.js';
 const $musicPlayerBox = $('.music_player_box'),
   $musicFootProgress = $musicPlayerBox.find('.music_foot_progress'),
   $musicPlayerBg = $musicPlayerBox.find('.music_palyer_bg'),
@@ -2261,23 +2262,30 @@ export function updateSongInfo() {
   if (!musicPlayerIsHide()) {
     initMusicTitleScroll();
   }
-  const id = setPlayingSongInfo().id;
-  setAudioSrc(setPlayingSongInfo().uurl);
+  const songInfo = setPlayingSongInfo();
+  const id = songInfo.id;
+  setAudioSrc(songInfo.uurl);
   $playingSongLogo
     .css('background-image', `url(${loadSvg})`)
     .removeClass('load');
   imgjz(
-    setPlayingSongInfo().ppic,
+    songInfo.ppic,
     () => {
       if (setPlayingSongInfo().id !== id) return;
       $playingSongLogo
-        .css('background-image', `url(${setPlayingSongInfo().ppic})`)
+        .css('background-image', `url(${songInfo.ppic})`)
         .addClass('load');
-      setLrcBg(setPlayingSongInfo().ppic);
-      changeMiniPlayerBg(setPlayingSongInfo().ppic);
+      setLrcBg(songInfo.ppic);
+      changeMiniPlayerBg(songInfo.ppic);
       $musicPlayerBg
-        .css('background-image', `url("${setPlayingSongInfo().ppic}")`)
+        .css('background-image', `url("${songInfo.ppic}")`)
         .removeClass('lrcbgss');
+      notifyMusicControlPanel.updateMetadata({
+        title: songInfo.title,
+        artist: songInfo.artist,
+        album: songInfo.album,
+        artwork: [{ src: songInfo.ppic }],
+      });
     },
     () => {
       if (setPlayingSongInfo().id !== id) return;
@@ -2289,6 +2297,12 @@ export function updateSongInfo() {
       $musicPlayerBg
         .css('background-image', `url(${imgMusic})`)
         .removeClass('lrcbgss');
+      notifyMusicControlPanel.updateMetadata({
+        title: songInfo.title,
+        artist: songInfo.artist,
+        album: songInfo.album,
+        artwork: [{ src: imgMusic }],
+      });
     }
   );
 }

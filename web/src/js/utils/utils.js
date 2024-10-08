@@ -1680,20 +1680,17 @@ export function getPreUrl() {
   return myOpen().match(reg)[0];
 }
 // 设置滚动
-export function setPageScrollTop(top) {
-  document.documentElement.scrollTop /* 标准 */ = top;
-  window.pageYOffset /* Safari */ = top;
-  document.body.scrollTop /* IE6/7/8 */ = top;
-}
-// 获取滚动
-export function getPageScrollTop() {
-  const doc = document;
-  return (
-    doc.documentElement.scrollTop /* 标准 */ ||
-    window.pageYOffset /* Safari */ ||
-    doc.body.scrollTop /* IE6/7/8 */ ||
-    0
-  );
+export function pageScrollTop(top) {
+  if (top === undefined) {
+    return (
+      window.pageYOffset ||
+      document.documentElement.scrollTop ||
+      document.body.scrollTop ||
+      0
+    );
+  }
+  // 通用设置滚动位置，适用于所有浏览器
+  window.scrollTo(0, top);
 }
 // 404
 export function pageErr() {
@@ -1975,7 +1972,7 @@ export function scrollState(target, cb) {
   function hdScroll() {
     let s = 0;
     if (target === window) {
-      s = getPageScrollTop();
+      s = pageScrollTop();
     } else {
       s = target.scrollTop;
     }

@@ -15,7 +15,7 @@ import {
   _position,
   _myOpen,
   imgPreview,
-  getPageScrollTop,
+  pageScrollTop,
   pageErr,
   darkMode,
   getDateDiff,
@@ -461,7 +461,7 @@ function nextPrevSearch(isNext) {
 }
 // 高亮定位
 function highlightPosition(num) {
-  const pageTop = getPageScrollTop();
+  const pageTop = pageScrollTop();
   const DH = window.innerHeight,
     _top = _position($highlightWords.eq(num)[0], true).top + pageTop;
   $highlightWords.removeClass('active').eq(num).addClass('active');
@@ -511,7 +511,7 @@ function hdTheme(dark) {
 window.changeTheme = changeTheme;
 changeTheme(dark);
 window.addEventListener('scroll', function () {
-  const p = getPageScrollTop();
+  const p = pageScrollTop();
   if (p >= 60) {
     $authorInfo.addClass('active');
     $fillBox.css('display', 'block');
@@ -523,7 +523,7 @@ window.addEventListener('scroll', function () {
 window.addEventListener(
   'scroll',
   throttle(function () {
-    const p = getPageScrollTop();
+    const p = pageScrollTop();
     if (p <= 100) {
       $setBtnsWrap.find('.to_top_btn').stop().slideUp(_d.speed);
     } else {

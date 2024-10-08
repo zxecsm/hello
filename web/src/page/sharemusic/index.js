@@ -198,10 +198,22 @@ function updateSongInfo() {
       $lrcBg
         .css('background-image', `url("${playingSongInfo.ppic}")`)
         .removeClass('lrcbgss');
+      notifyMusicControlPanel.updateMetadata({
+        title: playingSongInfo.title,
+        artist: playingSongInfo.artist,
+        album: playingSongInfo.album,
+        artwork: [{ src: playingSongInfo.ppic }],
+      });
     },
     () => {
       if (id !== playingSongInfo.id) return;
       $lrcBg.css('background-image', `url(${imgMusic})`).removeClass('lrcbgss');
+      notifyMusicControlPanel.updateMetadata({
+        title: playingSongInfo.title,
+        artist: playingSongInfo.artist,
+        album: playingSongInfo.album,
+        artwork: [{ src: imgMusic }],
+      });
     }
   );
 }
@@ -380,12 +392,6 @@ function playSong() {
     musicMvContentScroll.close();
   }
   if (!playingSongInfo) return;
-  notifyMusicControlPanel.updateMetadata({
-    title: playingSongInfo.title,
-    artist: playingSongInfo.artist,
-    album: playingSongInfo.album,
-    artwork: [{ src: playingSongInfo.ppic }],
-  });
   document.title = `\xa0\xa0\xa0♪正在播放：${playingSongInfo.artist} - ${playingSongInfo.title}`;
   $myAudio[0].play();
   if ($myAudio._lrcList.length === 0) {

@@ -8,7 +8,7 @@ import {
   _setData,
   _getData,
   debounce,
-  setPageScrollTop,
+  pageScrollTop,
   toLogin,
   scrollState,
   throttle,
@@ -91,7 +91,7 @@ function listLoading() {
     str += `<ul style="pointer-events: none;height:40px;margin-bottom:6px;background-color: var(--color9);" class="item_box"></ul>`;
   });
   $contentWrap.html(str);
-  setPageScrollTop(0);
+  pageScrollTop(0);
 }
 let curPageSize = _getData('trashPageSize');
 $contentWrap.pagenum = 1;
@@ -175,7 +175,7 @@ function renderList(y) {
         $headWrap._checkState = false;
         $footer.stop().slideUp(_d.speed);
         if (y) {
-          setPageScrollTop(0);
+          pageScrollTop(0);
         }
       }
     })

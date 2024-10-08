@@ -20,6 +20,7 @@ import {
   formatDate,
   getFilePath,
   getFiles,
+  pageScrollTop,
   getPaging,
   getScreenSize,
   getSuffix,
@@ -39,7 +40,6 @@ import {
   longPress,
   mixedSort,
   myOpen,
-  setPageScrollTop,
   toLogin,
   wrapInput,
 } from '../../js/utils/utils';
@@ -118,7 +118,7 @@ realtime.init().add((res) => {
       data: { flag },
     } = item;
     if (type === 'updatedata' && flag === 'file') {
-      curmb.toGo(curFileDirPath);
+      updateCurPage();
     } else if (type === 'pastefiledata') {
       waitObj = item.data;
       if (waitObj.type) {
@@ -132,12 +132,12 @@ realtime.init().add((res) => {
   });
 });
 // 绑定面包屑
-curmb.bind($curmbBox.find('.container')[0], (path, page, toTop) => {
-  if (page) {
-    pageNo = page;
+curmb.bind($curmbBox.find('.container')[0], (path, param) => {
+  if (param.pageNo) {
+    pageNo = param.pageNo;
   }
   curFileDirPath = path;
-  openDir(curFileDirPath, toTop);
+  openDir(curFileDirPath, param.top);
 });
 $contentWrap.list = [];
 $contentWrap.originList = [];
@@ -152,7 +152,7 @@ const wInput = wrapInput($search.find('.inp_box input')[0], {
       $search.find('.inp_box i').css('display', 'block');
     }
     pageNo = 1;
-    renderList(1);
+    renderList(0);
   },
   focus(target) {
     $(target).parent().addClass('focus');
@@ -262,8 +262,8 @@ async function renderList(top) {
       );
     }
   });
-  if (top) {
-    setPageScrollTop(0);
+  if (top !== undefined) {
+    pageScrollTop(top);
   }
 }
 const lazyImg = new LazyLoad();
@@ -289,7 +289,7 @@ const lazyImg = new LazyLoad();
                   .then((res) => {
                     if (res.code === 1) {
                       _msg.success(res.codeText);
-                      curmb.toGo(curFileDirPath);
+                      updateCurPage();
                     }
                   })
                   .catch(() => {});
@@ -308,13 +308,13 @@ const lazyImg = new LazyLoad();
 const pgnt = pagination($pagination.find('.container')[0], {
   change(val) {
     pageNo = val;
-    renderList(1);
+    renderList(0);
     _msg.botMsg(`第 ${pageNo} 页`);
   },
   changeSize(val) {
     pageSize = val;
     pageNo = 1;
-    renderList(1);
+    renderList(0);
     _msg.botMsg(`第 ${pageNo} 页`);
     _setData('filesPageSize', pageSize);
   },
@@ -364,8 +364,17 @@ async function hdSort(list) {
   }
   return list;
 }
-curmb.toGo(curFileDirPath);
-bus.on('refreshList', curmb.toGo);
+
+function updateCurPage() {
+  curmb.toGo(curFileDirPath);
+}
+
+bus.on('getPageInfo', updatePageInfo).on('refreshList', updateCurPage);
+
+function updatePageInfo() {
+  bus.emit('setPageInfo', { pageNo, top: pageScrollTop() });
+}
+updateCurPage();
 // 打开目录
 async function openDir(path, top) {
   try {
@@ -384,7 +393,7 @@ async function openDir(path, top) {
         id: idx + 1 + '',
         ...item,
       }));
-      if (top && wInput.getValue()) {
+      if (top === 0 && wInput.getValue()) {
         wInput.setValue('');
       } else {
         renderList(top);
@@ -402,13 +411,14 @@ async function readFileAndDir(obj) {
   const { type, name, path } = obj;
   const p = `${path}/${name}`;
   if (type === 'dir') {
-    curmb.toGo(p, 1, 1);
+    updatePageInfo();
+    curmb.toGo(p, { pageNo: 1, top: 0 });
   } else if (type === 'file') {
     try {
       const res = await reqFileReadFile({ path: p });
       if (res.code === 1) {
         if (res.data.type === 'text') {
-          openFile(res.data.data, p, path);
+          openFile(res.data.data, p);
         } else if (res.data.type === 'other') {
           const fPath = getFilePath(`/file/${p}`);
           if (isImgFile(p)) {
@@ -734,7 +744,7 @@ function editFileMode(e, obj) {
           .then((res) => {
             if (res.code === 1) {
               close(1);
-              curmb.toGo(curFileDirPath);
+              updateCurPage();
               _msg.success(res.codeText);
             }
           })
@@ -808,7 +818,7 @@ async function hdDeCompress(e, obj, cb) {
           const res = await reqFileUnZip({ data: obj });
           if (res.code === 1) {
             _msg.success(res.codeText);
-            curmb.toGo(curFileDirPath);
+            updateCurPage();
             cb && cb();
           }
         } catch (error) {
@@ -834,7 +844,7 @@ async function hdCompress(e, obj, cb) {
           const res = await reqFileZip({ data: obj });
           if (res.code === 1) {
             _msg.success(res.codeText);
-            curmb.toGo(curFileDirPath);
+            updateCurPage();
             cb && cb();
           }
         } catch (error) {
@@ -953,7 +963,7 @@ async function hdUp(files) {
   });
   maskLoading.end();
   realtime.send({ type: 'updatedata', data: { flag: 'file' } });
-  curmb.toGo(curFileDirPath);
+  updateCurPage();
 }
 // 新建文件
 function createFile(e) {
@@ -986,8 +996,8 @@ function createFile(e) {
           });
           if (res.code === 1) {
             _msg.success(res.codeText);
-            curmb.toGo(curFileDirPath);
-            openFile('', curFileDirPath + '/' + name, curFileDirPath);
+            updateCurPage();
+            openFile('', curFileDirPath + '/' + name);
             close(1);
           }
           // eslint-disable-next-line no-unused-vars
@@ -1030,7 +1040,7 @@ function createDir(e) {
           });
           if (res.code === 1) {
             _msg.success(res.codeText);
-            curmb.toGo(curFileDirPath);
+            updateCurPage();
             close(1);
           }
           // eslint-disable-next-line no-unused-vars
@@ -1050,14 +1060,15 @@ $header
   })
   .on('click', '.h_search_btn', function () {
     if ($search.is(':hidden')) {
-      setPageScrollTop(0);
+      pageScrollTop(0);
       openSearch();
     } else {
       closeSearch();
     }
   })
   .on('click', '.h_trash_btn', function () {
-    curmb.toGo('/.trash', 1, 1);
+    updatePageInfo();
+    curmb.toGo('/.trash', { pageNo: 1, top: 0 });
   })
   .on('click', '.h_go_home', function () {
     myOpen('/');
@@ -1161,7 +1172,7 @@ function hdClearTrash(e) {
         reqFileClearTrash()
           .then((res) => {
             if (res.code === 1) {
-              curmb.toGo(curFileDirPath, 1);
+              updateCurPage();
             }
           })
           .catch((error) => {
@@ -1229,7 +1240,7 @@ function hdFileSort(e) {
         }
         close();
         pageNo = 1;
-        renderList(1);
+        renderList(0);
         _setData('fileSort', fileSort);
       }
     },
@@ -1255,7 +1266,7 @@ async function hdCopy(e, data, cb) {
       const res = await reqFileCopy({ data, path: curFileDirPath });
       if (res.code === 1) {
         _msg.success(res.codeText);
-        curmb.toGo(curFileDirPath);
+        updateCurPage();
         cb && cb();
       }
     } catch (error) {
@@ -1285,7 +1296,7 @@ async function hdCut(e, data, cb) {
       const res = await reqFileMove({ data, path: curFileDirPath });
       if (res.code === 1) {
         _msg.success(res.codeText);
-        curmb.toGo(curFileDirPath);
+        updateCurPage();
         waitObj = {};
         realtime.send({ type: 'pastefiledata', data: waitObj });
         hidePaste();
@@ -1467,7 +1478,7 @@ function hdDel(e, arr, cb) {
         const res = await reqFileDelete({ data: arr, force });
         if (res.code === 1) {
           _msg.success(res.codeText);
-          curmb.toGo(curFileDirPath);
+          updateCurPage();
           cb && cb();
         }
       } catch (error) {
@@ -1507,7 +1518,7 @@ function hdRename(e, obj, cb) {
           let name = inp.name;
           const res = await reqFileRename({ data: obj, name });
           if (res.code === 1) {
-            curmb.toGo(curFileDirPath);
+            updateCurPage();
             close();
             cb && cb();
             _msg.success(res.codeText);

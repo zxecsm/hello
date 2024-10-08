@@ -20,7 +20,7 @@ import {
   hdTitleHighlight,
   copyText,
   isLogin,
-  setPageScrollTop,
+  pageScrollTop,
   wave,
   darkMode,
 } from '../../js/utils/utils';
@@ -83,7 +83,7 @@ function listLoading() {
     str += `<ul style="pointer-events: none;height:40px;margin-bottom:6px;background-color: var(--color9);" class="item_box"></ul>`;
   });
   $contentWrap.html(str);
-  setPageScrollTop(0);
+  pageScrollTop(0);
 }
 let curPageSize = _getData('historyPageSize'),
   hList = [];
@@ -146,7 +146,7 @@ function renderList(y) {
         $headWrap._flag = false;
         $footer.stop().slideUp(_d.speed);
         if (y) {
-          setPageScrollTop(0);
+          pageScrollTop(0);
         }
       }
     })

@@ -9,7 +9,7 @@ import {
   computeSize,
   darkMode,
   debounce,
-  getPageScrollTop,
+  pageScrollTop,
   getScreenSize,
   getWordCount,
   hdTitleHighlight,
@@ -19,7 +19,6 @@ import {
   loadingImg,
   myOpen,
   pageErr,
-  setPageScrollTop,
   toLogin,
   wave,
   wrapInput,
@@ -198,7 +197,7 @@ window.addEventListener(
   'scroll',
   debounce(function () {
     if (
-      getPageScrollTop() + this.document.documentElement.clientHeight >
+      pageScrollTop() + this.document.documentElement.clientHeight >
       this.document.documentElement.scrollHeight - 50
     ) {
       $stat.pageNo++;
@@ -265,7 +264,7 @@ async function hdRender() {
     }
   );
   $main.html(html);
-  setPageScrollTop(0);
+  pageScrollTop(0);
 }
 // 生成日志
 function dellog(e, name) {
