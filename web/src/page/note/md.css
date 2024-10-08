@@ -183,12 +183,12 @@ th {
 em,
 strong,
 u,
-s,
 del {
   color: var(--color3);
 }
 s {
   text-decoration-color: #c62828;
+  color: var(--color5);
 }
 mark {
   color: #c62828;

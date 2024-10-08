@@ -29,6 +29,7 @@ import {
   concurrencyTasks,
   copyText,
   getMinIndex,
+  getScreenSize,
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
@@ -524,6 +525,34 @@ function settingEdit(e) {
     '设置'
   );
 }
+if (getScreenSize().w <= _d.screen) {
+  previewState();
+}
+// 预览切换
+function previewState() {
+  if (!$headBtns._flag) {
+    $headBtns._flag = 'y';
+  }
+  if ($headBtns._flag === 'y') {
+    $headBtns._flag = 'n';
+    $headBtns
+      .find('.preview_state')
+      .attr('class', 'preview_state iconfont icon-kejian');
+    $previewBox.css('display', 'none');
+    $editBox.addClass('open');
+    $headBtns.find('.to_max_btn').css('display', 'none');
+  } else {
+    $headBtns._flag = 'y';
+    $headBtns
+      .find('.preview_state')
+      .attr('class', 'preview_state iconfont icon-bukejian');
+    $previewBox.css('display', 'block');
+    $editBox.removeClass('open');
+    $headBtns.find('.to_max_btn').css('display', 'block');
+    rende();
+  }
+  $editBox.css('display', 'block');
+}
 $headBtns
   .on('click', '.setting_btn', settingEdit)
   .on('click', '.table_btn', createTable)
@@ -541,30 +570,7 @@ $headBtns
     if (files.length === 0) return;
     hdUpFile(files);
   })
-  .on('click', '.preview_state', function () {
-    if (!$headBtns._flag) {
-      $headBtns._flag = 'y';
-    }
-    if ($headBtns._flag === 'y') {
-      $headBtns._flag = 'n';
-      $headBtns
-        .find('.preview_state')
-        .attr('class', 'preview_state iconfont icon-kejian');
-      $previewBox.css('display', 'none');
-      $editBox.addClass('open');
-      $headBtns.find('.to_max_btn').css('display', 'none');
-    } else {
-      $headBtns._flag = 'y';
-      $headBtns
-        .find('.preview_state')
-        .attr('class', 'preview_state iconfont icon-bukejian');
-      $previewBox.css('display', 'block');
-      $editBox.removeClass('open');
-      $headBtns.find('.to_max_btn').css('display', 'block');
-      rende();
-    }
-    $editBox.css('display', 'block');
-  })
+  .on('click', '.preview_state', previewState)
   .on('click', '.to_max_btn', function () {
     $editBox.toggle();
   })

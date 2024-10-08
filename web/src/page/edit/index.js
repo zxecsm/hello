@@ -32,6 +32,7 @@ import {
   concurrencyTasks,
   copyText,
   getMinIndex,
+  getScreenSize,
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
@@ -589,6 +590,9 @@ function settingEdit(e) {
     },
     '设置'
   );
+}
+if (getScreenSize().w <= _d.screen) {
+  previewState();
 }
 // 预览切换
 function previewState() {
