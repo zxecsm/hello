@@ -3,7 +3,7 @@ import { _tpl } from '../../../js/utils/template';
 import { _mySlide, hdPath } from '../../../js/utils/utils';
 import './index.less';
 
-let history = [];
+let historyList = [];
 let pathArr = [];
 
 let target = null;
@@ -19,15 +19,15 @@ function updatePageInfo() {
 
 function addHistory() {
   if (
-    history.length > 0 &&
-    arrToPath(history[history.length - 1].pathArr) === getPath()
+    historyList.length > 0 &&
+    arrToPath(historyList[historyList.length - 1].pathArr) === getPath()
   )
     return;
-  history.push({ pageInfo, pathArr });
+  historyList.push({ pageInfo, pathArr });
 }
 
 function getLastHistory() {
-  const res = history.pop();
+  const res = historyList.pop();
   return res || { pageInfo: { pageNo: 1, top: 0 }, pathArr: [] };
 }
 

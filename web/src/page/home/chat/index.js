@@ -656,10 +656,6 @@ export function showChatRoom() {
   }
 }
 $showChatRoomBtn.on('click', debounce(showChatRoom, 500, true));
-// 隐藏回到底部按钮
-const hideBackBotBtn = debounce(function () {
-  $chatFootBox.find('.scroll_to_bot_btn').fadeOut(_d.speed);
-}, 5000);
 // 用户菜单
 function userMenu(e, msgObj, isUserList) {
   const { _from, username, des, logo, email } = msgObj;
@@ -929,8 +925,16 @@ $chatListBox
   })
   .on('click', '.c_img', openChatImg)
   .on('scroll', function () {
-    $chatFootBox.find('.scroll_to_bot_btn').fadeIn(_d.speed);
-    hideBackBotBtn();
+    if (
+      $chatListBox.find('.chat_list').outerHeight() -
+        $chatListBox.scrollTop() -
+        $chatListBox.outerHeight() >
+      200
+    ) {
+      $chatFootBox.find('.scroll_to_bot_btn').css('display', 'block');
+    } else {
+      $chatFootBox.find('.scroll_to_bot_btn').css('display', 'none');
+    }
   })
   .on('scroll', debounce(scrollTopMsg, 200));
 

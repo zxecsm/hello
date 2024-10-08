@@ -475,6 +475,8 @@ route.post('/forward', async (req, res) => {
 
     chat._to = to;
 
+    delete chat.create_at;
+
     if (hash) {
       await updateData('upload', { update_at: Date.now() }, `WHERE id = ?`, [
         hash,
