@@ -25,6 +25,7 @@ import {
   createPagingData,
   isValidDate,
   getSplitWord,
+  nanoid,
 } from '../../utils/utils.js';
 
 import { getFriendDes } from '../chat/chat.js';
@@ -399,8 +400,11 @@ route.post('/edit', async (req, res) => {
     );
 
     if (change.changes === 0) {
+      id = nanoid();
+
       await insertData('note', [
         {
+          id,
           title,
           content,
           update_at: time,

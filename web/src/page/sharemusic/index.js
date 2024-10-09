@@ -198,22 +198,28 @@ function updateSongInfo() {
       $lrcBg
         .css('background-image', `url("${playingSongInfo.ppic}")`)
         .removeClass('lrcbgss');
-      notifyMusicControlPanel.updateMetadata({
-        title: playingSongInfo.title,
-        artist: playingSongInfo.artist,
-        album: playingSongInfo.album,
-        artwork: [{ src: playingSongInfo.ppic }],
-      });
+      _setTimeout(() => {
+        if (id !== playingSongInfo.id) return;
+        notifyMusicControlPanel.updateMetadata({
+          title: playingSongInfo.title,
+          artist: playingSongInfo.artist,
+          album: playingSongInfo.album,
+          artwork: [{ src: playingSongInfo.ppic }],
+        });
+      }, 1000);
     },
     () => {
       if (id !== playingSongInfo.id) return;
       $lrcBg.css('background-image', `url(${imgMusic})`).removeClass('lrcbgss');
-      notifyMusicControlPanel.updateMetadata({
-        title: playingSongInfo.title,
-        artist: playingSongInfo.artist,
-        album: playingSongInfo.album,
-        artwork: [{ src: imgMusic }],
-      });
+      _setTimeout(() => {
+        if (id !== playingSongInfo.id) return;
+        notifyMusicControlPanel.updateMetadata({
+          title: playingSongInfo.title,
+          artist: playingSongInfo.artist,
+          album: playingSongInfo.album,
+          artwork: [{ src: imgMusic }],
+        });
+      }, 1000);
     }
   );
 }

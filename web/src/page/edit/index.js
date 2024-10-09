@@ -88,6 +88,7 @@ editor.getSession().on(
     rende();
   }, 1000)
 );
+editor.getSession().on('change', handleSave);
 editor.commands.addCommand({
   name: 'createLink',
   bindKey: { win: 'Ctrl-K', mac: 'Command-K' },
@@ -213,11 +214,10 @@ const wInput = wrapInput($headBtns.find('.note_title input')[0], {
   },
 });
 function initValue(obj) {
-  wInput.setValue(obj.title);
   editor.setValue(obj.content);
+  wInput.setValue(obj.title);
   editor.gotoLine(1);
   // editor.focus();
-  orginData = obj;
 }
 let urlObj = queryURLParams(myOpen()),
   { HASH } = urlObj;
@@ -247,7 +247,6 @@ if (HASH === 'new') {
     title: formatDate({ template: '{0}-{1}-{2} {3}:{4}' }),
     content: _getData('newNote'),
   });
-  orginData.content = '';
   $headBtns.addClass('open');
   $editWrap.addClass('open');
 } else {
@@ -258,6 +257,7 @@ if (HASH === 'new') {
     reqNoteRead({ v: HASH })
       .then((result) => {
         if (result.code === 1) {
+          orginData = result.data;
           initValue(result.data);
           _setTimeout(() => {
             updateIframeTitle(result.data.title);
@@ -290,7 +290,6 @@ function rende() {
     }
     $editBox.flag = true;
   }
-  handleSave(); // 处理保存按钮
   if ($previewBox.is(':hidden')) return;
   if (text.trim() === '') {
     $previewBox.find('.content').html('');
@@ -321,7 +320,7 @@ mdWorker.addEventListener('message', (event) => {
 const imgLazy = new LazyLoad();
 // 处理保存按钮
 function handleSave() {
-  let title = wInput.getValue().trim(),
+  const title = wInput.getValue().trim(),
     content = editor.getValue();
   // 对比内容
   if (orginData.title + orginData.content === title + content) {
@@ -663,7 +662,7 @@ function saveNote() {
     _msg.error('请输入标题');
     return;
   }
-  if (title > 100) {
+  if (title > _d.fieldLenght.title) {
     _msg.error('标题过长');
     return;
   }
