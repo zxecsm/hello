@@ -1135,14 +1135,8 @@ $header
     );
   })
   .on('click', '.h_sort_btn', hdFileSort)
-  .on('click', '.paste_btn .text', function (e) {
-    const { type, data } = waitObj;
-    if (type === 'copy') {
-      hdCopy(e, data);
-    } else if (type === 'cut') {
-      hdCut(e, data);
-    }
-  })
+  .on('click', '.paste_btn .text', hdPaste)
+  .on('click', '.paste_btn .type', hdPaste)
   .on('click', '.clear_trash_btn', hdClearTrash)
   .on('click', '.paste_btn .close', () => {
     waitObj = {};
@@ -1163,6 +1157,15 @@ $header
   .on('mouseleave', '.paste_btn', function () {
     toolTip.hide();
   });
+// 处理粘贴
+function hdPaste(e) {
+  const { type, data } = waitObj;
+  if (type === 'copy') {
+    hdCopy(e, data);
+  } else if (type === 'cut') {
+    hdCut(e, data);
+  }
+}
 // 清空回收站
 function hdClearTrash(e) {
   _pop(
@@ -1538,7 +1541,9 @@ function showPaste() {
     .find('.paste_btn')
     .html(
       _tpl(
-        `<span cursor="y" class="text">粘贴({{waitObj.data.length}})</span><span cursor="y" class="close iconfont icon-guanbi"></span>`,
+        `<span cursor="y" class="type iconfont {{waitObj.type==='copy'?'icon-fuzhi':'icon-jiandao'}}"></span>
+        <span cursor="y" class="text">粘贴({{waitObj.data.length}})</span>
+        <span cursor="y" class="close iconfont icon-guanbi"></span>`,
         { waitObj }
       )
     )

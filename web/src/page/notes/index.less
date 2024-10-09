@@ -87,9 +87,7 @@ html {
     transform: translateY(100px);
     opacity: 0;
     &.open {
-      transition:
-        transform 0.8s ease-in-out,
-        opacity 0.8s ease-in-out;
+      transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
       opacity: 1;
       transform: none;
     }
@@ -125,11 +123,14 @@ html {
     transform: translateY(100px);
     opacity: 0;
     &.open {
-      transition:
-        transform 0.8s ease-in-out,
-        opacity 0.8s ease-in-out;
+      transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
       opacity: 1;
       transform: none;
+    }
+    ol,
+    li,
+    ul {
+      list-style: none;
     }
     ul {
       position: relative;

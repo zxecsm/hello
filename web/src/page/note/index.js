@@ -2,7 +2,7 @@ import $ from 'jquery';
 import '../../font/iconfont.css';
 import '../../css/common/common.css';
 import './index.less';
-import './md.css';
+import './md.less';
 import {
   queryURLParams,
   myOpen,

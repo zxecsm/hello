@@ -3,6 +3,7 @@ import createEditer from '../../js/utils/editor';
 import {
   ContentScroll,
   _getData,
+  _myOpen,
   _progressBar,
   _setData,
   darkMode,
@@ -236,6 +237,15 @@ function settingMenu(e) {
 $editFile
   .find('.head_btn')
   .on('click', '.setting', settingMenu)
+  .on('click', '.to_note', () => {
+    const text = editor.getValue();
+    if (text === '') {
+      _msg.error('文本为空');
+      return;
+    }
+    _setData('newNote', text);
+    _myOpen('/edit/#new', '新笔记');
+  })
   .on('click', '.close', function (e) {
     if (readOnly) {
       hdClose();
