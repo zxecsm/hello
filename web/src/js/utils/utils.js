@@ -830,36 +830,63 @@ export function selectText(el) {
   }
 }
 // 一键复制
-export async function copyText(content, obj = {}) {
-  const { success, error } = obj;
+export async function copyText(
+  content,
+  { success = '复制成功', error = '复制失败', stopMsg = false } = {}
+) {
   content = content.trim();
+
+  if (!content) {
+    if (!stopMsg) {
+      _msg.error(error || '内容为空，复制失败');
+    }
+    return;
+  }
+
   try {
-    if (!navigator.clipboard) {
+    // 使用 Clipboard API
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(content);
+      if (!stopMsg) {
+        _msg.success(success);
+      }
+    } else {
       throw new Error();
     }
-    await navigator.clipboard.writeText(content);
-    _msg.success(success || '复制成功');
-    // eslint-disable-next-line no-unused-vars
-  } catch (err) {
-    if (typeof document.execCommand !== 'function') {
-      _msg.error(error || '复制失败');
-      return;
+  } catch {
+    // 回退到 execCommand 方法
+    if (typeof document.execCommand === 'function') {
+      fallbackCopyText(content);
+      if (!stopMsg) {
+        _msg.success(success);
+      }
+    } else {
+      if (!stopMsg) {
+        _msg.error(error);
+      }
     }
-    window.getSelection().removeAllRanges();
-    const div = document.createElement('div'),
-      range = document.createRange();
-    div.innerText = content;
-    div.setAttribute(
-      'style',
-      'position: fixed;height: 1px;fontSize: 1px;overflow: hidden;'
-    );
-    document.body.appendChild(div);
-    range.selectNode(div);
-    window.getSelection().addRange(range);
-    document.execCommand('copy');
-    div.remove();
-    _msg.success(success || '复制成功');
   }
+}
+
+function fallbackCopyText(content) {
+  const tempDiv = document.createElement('div');
+  const selection = window.getSelection();
+  const range = document.createRange();
+
+  // 设置临时 div 样式
+  tempDiv.innerText = content;
+  tempDiv.style.position = 'fixed';
+  tempDiv.style.opacity = '0';
+  tempDiv.style.pointerEvents = 'none';
+
+  document.body.appendChild(tempDiv);
+  range.selectNode(tempDiv);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  document.execCommand('copy');
+  selection.removeAllRanges();
+  tempDiv.remove();
 }
 // 文件大小计算
 export function computeSize(fsize) {

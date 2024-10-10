@@ -47,6 +47,7 @@ import MdWorker from '../../js/utils/md.worker.js';
 import fileSlice from '../../js/utils/fileSlice.js';
 import changeDark from '../../js/utils/changeDark.js';
 import _d from '../../js/common/config.js';
+import { editorSmoothScrollToLine } from './edit.js';
 const mdWorker = new MdWorker();
 const $contentWrap = $('.content_wrap'),
   $headBtns = $contentWrap.find('.head_btns'),
@@ -190,7 +191,8 @@ function syncScrollFromPreview() {
 
   if (firstVisibleElement) {
     const line = parseInt(firstVisibleElement.getAttribute('data-line'), 10);
-    editor.scrollToLine(line);
+    // editor.scrollToLine(line);
+    editorSmoothScrollToLine(editor, line, 500);
   }
   initState();
 }
@@ -217,7 +219,9 @@ function initValue(obj) {
   editor.setValue(obj.content);
   wInput.setValue(obj.title);
   editor.gotoLine(1);
-  // editor.focus();
+  if (obj.content === '') {
+    editor.focus();
+  }
 }
 let urlObj = queryURLParams(myOpen()),
   { HASH } = urlObj;
