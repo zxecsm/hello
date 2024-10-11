@@ -44,6 +44,8 @@ import { _d } from '../../data/data.js';
 
 import configObj from '../../data/config.js';
 
+import md5 from '../../utils/md5.js';
+
 import _f from '../../utils/f.js';
 
 import {
@@ -61,6 +63,7 @@ import {
   updateSongList,
   songlistMoveLocation,
   songMoveLocation,
+  nodeID3,
 } from './player.js';
 
 import { getFriendDes } from '../chat/chat.js';
@@ -110,7 +113,7 @@ route.get('/lrc', async (req, res) => {
       if (share.state === 0) {
         errData[0].p = share.text;
 
-        await errLog(req, `${share.text}-(${sid})`);
+        await errLog(req, `${share.text}(${sid})`);
 
         _success(res, 'ok', errData);
         return;
@@ -911,9 +914,51 @@ route.post('/edit-song', async (req, res) => {
       return;
     }
 
+    const songInfo = (
+      await queryData('songs', 'url,hash,artist,title', `WHERE id = ?`, [id])
+    )[0];
+
+    if (!songInfo) {
+      _err(res, '歌曲不存在')(req, id, 1);
+      return;
+    }
+
+    let newHASH = '';
+
+    try {
+      const songUrl = `${configObj.filepath}/music/${songInfo.url}`;
+
+      // 写入歌曲文件
+      await nodeID3.update(
+        {
+          title,
+          artist,
+          album,
+          year,
+        },
+        songUrl
+      );
+
+      newHASH = await md5.getFileMD5Hash(songUrl);
+    } catch {
+      await errLog(
+        req,
+        `写入元数据到歌曲文件失败(${songInfo.artist}-${songInfo.title})`
+      );
+    }
+
     await updateData(
       'songs',
-      { title, artist, album, year, duration, play_count, collect_count },
+      {
+        title,
+        artist,
+        album,
+        year,
+        duration,
+        play_count,
+        collect_count,
+        hash: newHASH || songInfo.hash,
+      },
       `WHERE id = ?`,
       [id]
     );
@@ -1284,7 +1329,9 @@ route.post('/edit-lrc', async (req, res) => {
     }
 
     const musicinfo = (
-      await queryData('songs', 'lrc,artist,title', `WHERE id = ?`, [id])
+      await queryData('songs', 'url,lrc,artist,title,hash', `WHERE id = ?`, [
+        id,
+      ])
     )[0];
 
     if (!musicinfo) {
@@ -1296,6 +1343,39 @@ route.post('/edit-lrc', async (req, res) => {
     await _f.mkdir(`${configObj.filepath}/music/${getFileDir(musicinfo.lrc)}`);
 
     await _f.fsp.writeFile(url, text);
+
+    try {
+      const songUrl = `${configObj.filepath}/music/${musicinfo.url}`;
+
+      // 写入歌曲文件
+      await nodeID3.update(
+        {
+          unsynchronisedLyrics: {
+            language: 'eng',
+            text,
+          },
+        },
+        songUrl
+      );
+
+      const newHASH = await md5.getFileMD5Hash(songUrl);
+
+      if (newHASH && newHASH !== musicinfo.hash) {
+        await updateData(
+          'songs',
+          {
+            hash: newHASH,
+          },
+          `WHERE id = ?`,
+          [id]
+        );
+      }
+    } catch {
+      await errLog(
+        req,
+        `写入元数据到歌曲文件失败(${musicinfo.artist}-${musicinfo.title}`
+      );
+    }
 
     _success(res, '更新歌词成功')(
       req,
@@ -1378,24 +1458,26 @@ route.post('/up', async (req, res) => {
       }
 
       const song = (
-        await queryData('songs', 'id', `WHERE hash = ?`, [HASH])
+        await queryData('songs', 'id,artist,title', `WHERE hash = ?`, [HASH])
       )[0];
 
       if (song) {
-        _err(res, '歌曲已存在')(req, HASH, 1);
+        _err(res, '歌曲已存在')(req, `${song.artist}-${song.title}`, 1);
         return;
       }
+
+      const songId = nanoid();
 
       const timePath = getTimePath(Date.now());
 
       const suffix = getSuffix(name)[1];
 
-      const tDir = `${configObj.filepath}/music/${timePath}/${HASH}`;
-      const tName = `${HASH}.${suffix}`;
+      const tDir = `${configObj.filepath}/music/${timePath}/${songId}`;
+      const tName = `h.${suffix}`;
 
       await _f.mkdir(tDir);
 
-      await receiveFiles(req, tDir, tName, 20);
+      await receiveFiles(req, tDir, tName, 30);
 
       const songInfo = await getSongInfo(`${tDir}/${tName}`);
 
@@ -1412,16 +1494,17 @@ route.post('/up', async (req, res) => {
 
       if (pic) {
         await _f.fsp.writeFile(
-          `${tDir}/${HASH}.${getPathFilename(picFormat)[0]}`,
+          `${tDir}/h.${getPathFilename(picFormat)[0]}`,
           pic
         );
-        pic = `${timePath}/${HASH}/${HASH}.${getPathFilename(picFormat)[0]}`;
+        pic = `${timePath}/${songId}/h.${getPathFilename(picFormat)[0]}`;
       }
 
-      await _f.fsp.writeFile(`${tDir}/${HASH}.lrc`, lrc);
+      await _f.fsp.writeFile(`${tDir}/h.lrc`, lrc);
 
       await insertData('songs', [
         {
+          id: songId,
           artist,
           title,
           duration,
@@ -1429,8 +1512,8 @@ route.post('/up', async (req, res) => {
           year,
           hash: HASH,
           pic,
-          url: `${timePath}/${HASH}/${tName}`,
-          lrc: `${timePath}/${HASH}/${HASH}.lrc`,
+          url: `${timePath}/${songId}/${tName}`,
+          lrc: `${timePath}/${songId}/h.lrc`,
         },
       ]);
 
@@ -1452,7 +1535,9 @@ route.post('/up', async (req, res) => {
       }
 
       const songInfo = (
-        await queryData('songs', 'url,pic,title,artist', `WHERE id = ?`, [id])
+        await queryData('songs', 'url,pic,hash,title,artist', `WHERE id = ?`, [
+          id,
+        ])
       )[0];
 
       if (!songInfo) {
@@ -1460,7 +1545,7 @@ route.post('/up', async (req, res) => {
         return;
       }
 
-      const { url, pic, title, artist } = songInfo;
+      const { url, pic, title, artist, hash } = songInfo;
 
       const tDir = `${configObj.filepath}/music/${getFileDir(url)}`;
       const tName = `${getPathFilename(url)[1]}.${getSuffix(name)[1]}`;
@@ -1469,13 +1554,43 @@ route.post('/up', async (req, res) => {
 
       await receiveFiles(req, tDir, tName, 5);
 
-      if (getPathFilename(pic)[0] != tName) {
+      if (getPathFilename(pic)[0] !== tName) {
         if (pic) {
           await _delDir(`${tDir}/${getPathFilename(pic)[0]}`);
         }
+      }
+
+      let newHASH = '';
+
+      try {
+        const songUrl = `${configObj.filepath}/music/${url}`;
+
+        // 写入歌曲文件
+        await nodeID3.update(
+          {
+            image: {
+              type: {
+                id: 3,
+                name: 'front cover',
+              },
+              imageBuffer: await _f.fsp.readFile(`${tDir}/${tName}`),
+            },
+          },
+          songUrl
+        );
+
+        newHASH = await md5.getFileMD5Hash(songUrl);
+      } catch {
+        await errLog(req, `写入元数据到歌曲文件失败(${artist}-${title})`);
+      }
+
+      if (getPathFilename(pic)[0] !== tName || (newHASH && newHASH !== hash)) {
         await updateData(
           'songs',
-          { pic: `${getSuffix(url)[0]}.${getSuffix(name)[1]}` },
+          {
+            pic: `${getSuffix(url)[0]}.${getSuffix(name)[1]}`,
+            hash: newHASH || hash,
+          },
           `WHERE id = ?`,
           [id]
         );

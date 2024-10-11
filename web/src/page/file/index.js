@@ -26,7 +26,7 @@ import {
   getSuffix,
   getWordCount,
   hdFilename,
-  hdPath,
+  normalizePath,
   imgPreview,
   imgjz,
   isFilename,
@@ -708,7 +708,7 @@ function rightList(e, obj, el) {
       } else if (id === 'mode') {
         editFileMode(e, obj);
       } else if (id === 'copyPath') {
-        copyText(hdPath(`/${obj.path}/${obj.name}`));
+        copyText(normalizePath(`/${obj.path}/${obj.name}`));
         close();
       }
     },
@@ -902,7 +902,7 @@ async function hdUp(files) {
     } else {
       path = `${path}/${name}`;
     }
-    path = hdPath(path);
+    path = normalizePath(path);
     const pro = new UpProgress(name);
     if (size === 0) {
       pro.fail();
@@ -1253,8 +1253,8 @@ async function hdCopy(e, data, cb) {
       if (
         !data.every((item) => {
           const { path, name } = item;
-          const f = hdPath(`${path}/${name}`);
-          const t = hdPath(`${curFileDirPath}/${name}`);
+          const f = normalizePath(`${path}/${name}`);
+          const t = normalizePath(`${curFileDirPath}/${name}`);
           return !isParentDir(f, t);
         })
       ) {
@@ -1283,8 +1283,8 @@ async function hdCut(e, data, cb) {
       if (
         !data.every((item) => {
           const { path, name } = item;
-          const f = hdPath(`${path}/${name}`);
-          const t = hdPath(`${curFileDirPath}/${name}`);
+          const f = normalizePath(`${path}/${name}`);
+          const t = normalizePath(`${curFileDirPath}/${name}`);
           return f !== t && !isParentDir(f, t);
         })
       ) {

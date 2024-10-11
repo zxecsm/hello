@@ -87,16 +87,8 @@ export function _setTimeout(callback, time) {
 }
 // 获取文件后缀
 export function getSuffix(str) {
-  let idx = str.lastIndexOf('.'),
-    a = '',
-    b = '';
-  if (idx < 0) {
-    a = str;
-  } else {
-    a = str.slice(0, idx);
-    b = str.slice(idx + 1);
-  }
-  return [a, b];
+  const idx = str.lastIndexOf('.');
+  return idx === -1 ? [str, ''] : [str.slice(0, idx), str.slice(idx + 1)];
 }
 //节流
 export function throttle(callback, wait) {
@@ -682,7 +674,7 @@ export function _upFile(url, data = {}, file, callback) {
   });
 }
 // 处理路径
-export function hdPath(path) {
+export function normalizePath(path) {
   return path.replace(/(\/){2,}/g, '/');
 }
 // 选择文件
@@ -954,9 +946,10 @@ export function tplReplace(tpl, data) {
 }
 // 提取文件名
 export function getPathFilename(path) {
-  const filename = path.split('/').slice(-1)[0];
-  const [a, b] = getSuffix(filename);
-  return [filename, a, b];
+  const filename = path.substring(path.lastIndexOf('/') + 1);
+  const [name, extension] = getSuffix(filename);
+
+  return [filename, name, extension];
 }
 // 压缩图片
 export function compressionImg(file, x = 400, y = 400) {
@@ -2814,7 +2807,7 @@ export function enterPassCode(cb) {
 }
 // 生成文件路径
 export function getFilePath(p, t) {
-  p = hdPath('/' + p);
+  p = normalizePath('/' + p);
   return `${_d.mediaURL}/?${qs.stringify({ p, t })}`;
 }
 // 格式歌曲时间

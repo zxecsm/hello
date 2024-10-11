@@ -209,7 +209,7 @@ route.get('/clean-music-file', async (req, res) => {
     const musicDir = `${configObj.filepath}/music`;
 
     if (_f.fs.existsSync(musicDir)) {
-      const songs = await queryData('songs', '*');
+      const songs = await queryData('songs', 'url');
       const allMusicFile = await getAllFile(musicDir);
 
       await concurrencyTasks(allMusicFile, 5, async (item) => {

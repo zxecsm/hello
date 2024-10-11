@@ -30,7 +30,7 @@ import {
   getFilePath,
   _getDataTem,
   _setDataTem,
-  hdPath,
+  normalizePath,
   myShuffle,
   isLogin,
   isRoot,
@@ -414,7 +414,7 @@ export function updateUserInfo(cb) {
         updateRightBoxUsername(username);
         // 更新头像
         logo = logo
-          ? hdPath(`/api/pub/logo/${account}/${logo}`)
+          ? normalizePath(`/api/pub/logo/${account}/${logo}`)
           : getTextImg(username);
         imgjz(
           logo,

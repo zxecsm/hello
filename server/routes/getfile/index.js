@@ -17,7 +17,7 @@ import _f from '../../utils/f.js';
 import fileKey from '../../utils/fileKey.js';
 
 import {
-  hdPath,
+  normalizePath,
   getCurPath,
   getPathFilename,
   getRootDir,
@@ -55,7 +55,7 @@ route.get('/', async (req, res) => {
       }
     }
 
-    const url = hdPath('/' + p);
+    const url = normalizePath('/' + p);
 
     // 获取访问目录
     const pArr = url.split('/').filter((item) => item);
@@ -91,7 +91,7 @@ route.get('/', async (req, res) => {
         msg.url &&
         (msg.flag === 'chang' || msg.flag.includes(account))
       ) {
-        path = hdPath(`${configObj.filepath}/upload/${msg.url}`);
+        path = normalizePath(`${configObj.filepath}/upload/${msg.url}`);
       } else {
         _err(res, '无权访问')(req, `${dir}-${id}`, 1);
         return;
@@ -112,14 +112,14 @@ route.get('/', async (req, res) => {
 
         const { name, type } = obj;
 
-        const rootP = hdPath(
+        const rootP = normalizePath(
           getRootDir(share.data.account) + '/' + obj.path + '/' + name
         );
 
         if (type === 'file') {
           path = rootP;
         } else if (type === 'dir') {
-          path = hdPath(`${rootP}/${pArr.slice(2).join('/')}`);
+          path = normalizePath(`${rootP}/${pArr.slice(2).join('/')}`);
         }
       }
     } else if (dir === 'sharemusic') {
@@ -143,7 +143,7 @@ route.get('/', async (req, res) => {
     } else {
       path = configObj.filepath + url;
     }
-    path = hdPath(path);
+    path = normalizePath(path);
 
     if (!_f.fs.existsSync(path)) {
       _err(res, '文件不存在')(req, path, 1);

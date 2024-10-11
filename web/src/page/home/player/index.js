@@ -1415,9 +1415,9 @@ async function upSong() {
       _msg.error(`歌曲格式错误`);
       return;
     }
-    if (size <= 0 || size >= 20 * 1024 * 1024) {
+    if (size <= 0 || size >= 30 * 1024 * 1024) {
       pro.fail();
-      _msg.error(`歌曲大小必须0~20M范围`);
+      _msg.error(`歌曲大小必须0~30M范围`);
       return;
     }
     try {

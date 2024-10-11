@@ -27,7 +27,7 @@ import { getUserInfo } from '../user/user.js';
 import { _d } from '../../data/data.js';
 import configObj from '../../data/config.js';
 import _f from '../../utils/f.js';
-import { hdPath, _delDir, delEmptyFolder } from '../file/file.js';
+import { normalizePath, _delDir, delEmptyFolder } from '../file/file.js';
 
 // 获取好友备注
 export async function getFriendDes(mAcc, fAcc) {
@@ -505,7 +505,7 @@ export async function cleanUpload() {
 
       await concurrencyTasks(list, 5, async (item) => {
         const { url } = item;
-        const path = hdPath(`${uploadDir}/${url}`);
+        const path = normalizePath(`${uploadDir}/${url}`);
         await _delDir(path);
       });
 

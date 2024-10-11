@@ -39,7 +39,7 @@ import {
   enterPassCode,
   _getDataTem,
   _setDataTem,
-  hdPath,
+  normalizePath,
   userLogoMenu,
   LazyLoad,
   hdOnce,
@@ -114,7 +114,7 @@ function getShareData(close) {
         defaultShareTitle = title;
         userInfo = { account, username, email };
         logo = logo
-          ? hdPath(`/api/pub/logo/${account}/${logo}`)
+          ? normalizePath(`/api/pub/logo/${account}/${logo}`)
           : getTextImg(username);
         $userInfo.find('.from').text(username);
         $userInfo.find('.title').text(title);

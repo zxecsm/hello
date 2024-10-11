@@ -1,3 +1,5 @@
+import NodeID3 from 'node-id3';
+
 import {
   queryData,
   fillString,
@@ -6,6 +8,8 @@ import {
 } from '../../utils/sqlite.js';
 
 import { batchTask, unique } from '../../utils/utils.js';
+
+export const nodeID3 = NodeID3.Promise;
 
 // 处理歌单封面
 export function handleMusicList(arr) {

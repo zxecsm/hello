@@ -25,7 +25,7 @@ import {
   downloadText,
   getTextImg,
   getFiles,
-  hdPath,
+  normalizePath,
   isInteger,
   _delDataTem,
   myDrag,
@@ -342,7 +342,7 @@ function hdUserLogo(e) {
         close();
         imgPreview([
           {
-            u1: hdPath(
+            u1: normalizePath(
               `/api/pub/logo/${setUserInfo().account}/${setUserInfo().logo}`
             ),
           },
@@ -621,7 +621,7 @@ export function renderUserinfo() {
   );
   $userInfoWrap.find('.user_list').html(html);
   logo = logo
-    ? hdPath(`/api/pub/logo/${account}/${logo}`)
+    ? normalizePath(`/api/pub/logo/${account}/${logo}`)
     : getTextImg(username);
   imgjz(
     logo,

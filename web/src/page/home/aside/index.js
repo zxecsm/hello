@@ -14,7 +14,7 @@ import {
   longPress,
   isMobile,
   createShare,
-  hdPath,
+  normalizePath,
   isInteger,
   LazyLoad,
   _mySlide,
@@ -297,7 +297,7 @@ function hdAsideListItemLogo() {
     );
 
     if (logo) {
-      logo = hdPath(`/api/pub/${logo}`);
+      logo = normalizePath(`/api/pub/${logo}`);
     } else {
       logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
     }

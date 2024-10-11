@@ -25,7 +25,7 @@ import {
   getTextImg,
   getWordCount,
   hdOnce,
-  hdPath,
+  normalizePath,
   imgPreview,
   imgjz,
   isImgFile,
@@ -95,7 +95,7 @@ function getShareData(close) {
         uObj = { username, account, email };
         shareObj = data;
         logo = logo
-          ? hdPath(`/api/pub/logo/${account}/${logo}`)
+          ? normalizePath(`/api/pub/logo/${account}/${logo}`)
           : getTextImg(username);
         imgjz(
           logo,

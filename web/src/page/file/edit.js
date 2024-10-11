@@ -8,7 +8,7 @@ import {
   _setData,
   darkMode,
   getSuffix,
-  hdPath,
+  normalizePath,
   isDarkMode,
   isIframe,
   percentToValue,
@@ -57,7 +57,7 @@ export function setReadOnly(val) {
 }
 // 编辑文件
 export function openFile(text, path) {
-  path = hdPath(path);
+  path = normalizePath(path);
   hideContainer();
   filePath = path;
   $editFile.css('display', 'flex');

@@ -35,7 +35,7 @@ import {
   uLog,
 } from '../../utils/utils.js';
 
-import { hdPath, _delDir, getSuffix } from '../file/file.js';
+import { normalizePath, _delDir, getSuffix } from '../file/file.js';
 
 import { getRandowBg } from './bg.js';
 
@@ -64,7 +64,7 @@ route.get('/r', async (req, res) => {
     }
 
     // 获取壁纸 URL 并返回
-    const url = hdPath(`${configObj.filepath}/bg/${bgData.url}`);
+    const url = normalizePath(`${configObj.filepath}/bg/${bgData.url}`);
     res.sendFile(url);
   } catch (error) {
     _err(res)(req, error);

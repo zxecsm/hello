@@ -8,13 +8,13 @@ import { concurrencyTasks, writelog } from '../../utils/utils.js';
 
 import compressing from 'compressing';
 
-// 处理路径
-export function hdPath(path) {
+// 规范化路径
+export function normalizePath(path) {
   return path.replace(/(\/){2,}/g, '/');
 }
 
 export function getCurPath(acc, p) {
-  return hdPath(getRootDir(acc) + '/' + p);
+  return normalizePath(getRootDir(acc) + '/' + p);
 }
 
 // 用户根目录
@@ -24,12 +24,12 @@ export function getRootDir(acc) {
   if (acc !== 'root') {
     path = `${configObj.userFileP}/${acc}`;
   }
-  return hdPath(path);
+  return normalizePath(path);
 }
 
 // 获取回收站目录
 export function getTrashDir(account) {
-  return hdPath(`${getRootDir(account)}/.trash`);
+  return normalizePath(`${getRootDir(account)}/.trash`);
 }
 
 // 判断是否父目录
@@ -40,23 +40,13 @@ export function isParentDir(parentP, childP) {
 
 // 文件所在目录
 export function getFileDir(path) {
-  return path.split('/').slice(0, -1).join('/');
+  return path.substring(0, path.lastIndexOf('/')) || '/';
 }
 
 // 获取扩展名
 export function getSuffix(str) {
-  let idx = str.lastIndexOf('.'),
-    a = '',
-    b = '';
-
-  if (idx < 0) {
-    a = str;
-  } else {
-    a = str.slice(0, idx);
-    b = str.slice(idx + 1);
-  }
-
-  return [a, b];
+  const idx = str.lastIndexOf('.');
+  return idx === -1 ? [str, ''] : [str.slice(0, idx), str.slice(idx + 1)];
 }
 
 // 文件随机后缀
@@ -73,11 +63,10 @@ export function getRandomName(str) {
 
 // path获取文件名
 export function getPathFilename(path) {
-  const filename = path.split('/').slice(-1)[0];
+  const filename = path.substring(path.lastIndexOf('/') + 1);
+  const [name, extension] = getSuffix(filename);
 
-  const [a, b] = getSuffix(filename);
-
-  return [filename, a, b];
+  return [filename, name, extension];
 }
 
 // 删除站点文件

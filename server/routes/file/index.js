@@ -33,7 +33,7 @@ import { getFriendDes } from '../chat/chat.js';
 import fileSize from './cacheFileSize.js';
 
 import {
-  hdPath,
+  normalizePath,
   getRootDir,
   getTrashDir,
   getCurPath,
@@ -153,9 +153,9 @@ route.get('/read-dir', async (req, res) => {
 
       const { name } = data;
 
-      rootP = hdPath(getRootDir(account) + '/' + data.path + '/' + name);
+      rootP = normalizePath(getRootDir(account) + '/' + data.path + '/' + name);
 
-      p = hdPath(`${rootP}/${path}`);
+      p = normalizePath(`${rootP}/${path}`);
     } else {
       p = getCurPath(account, path);
       rootP = getRootDir(account);
@@ -165,13 +165,13 @@ route.get('/read-dir', async (req, res) => {
       const arr = [];
 
       (await readMenu(p)).forEach((item) => {
-        const fullPath = hdPath(`${item.path}/${item.name}`);
+        const fullPath = normalizePath(`${item.path}/${item.name}`);
 
         // 隐藏回收站目录
         if (account && item.type === 'dir' && getTrashDir(account) === fullPath)
           return;
 
-        const path = hdPath('/' + item.path.slice(rootP.length));
+        const path = normalizePath('/' + item.path.slice(rootP.length));
 
         const obj = {
           ...item,
@@ -235,9 +235,11 @@ route.get('/read-dir-size', async (req, res) => {
 
       const { name } = data;
 
-      const rootP = hdPath(getRootDir(account) + '/' + data.path + '/' + name);
+      const rootP = normalizePath(
+        getRootDir(account) + '/' + data.path + '/' + name
+      );
 
-      p = hdPath(`${rootP}/${path}`);
+      p = normalizePath(`${rootP}/${path}`);
     } else {
       p = getCurPath(account, path);
     }
@@ -307,12 +309,14 @@ route.get('/read-file', async (req, res) => {
 
       const { name, type } = data;
 
-      const rootP = hdPath(getRootDir(account) + '/' + data.path + '/' + name);
+      const rootP = normalizePath(
+        getRootDir(account) + '/' + data.path + '/' + name
+      );
 
       if (type === 'file') {
         p = rootP;
       } else if (type === 'dir') {
-        p = hdPath(`${rootP}/${path}`);
+        p = normalizePath(`${rootP}/${path}`);
       }
     } else {
       p = getCurPath(account, path);
@@ -374,7 +378,7 @@ route.post('/create-file', async (req, res) => {
     }
 
     const dir = getCurPath(req._hello.userinfo.account, path);
-    const fpath = hdPath(`${dir}/${name}`);
+    const fpath = normalizePath(`${dir}/${name}`);
 
     const { account } = req._hello.userinfo;
 
@@ -408,7 +412,7 @@ route.post('/share', async (req, res) => {
       (!_type.isObject(data) &&
         !validaString(data.name, 1, fieldLenght.filename) &&
         !validaString(data.path, 1, fieldLenght.url) &&
-        hdPath(data.path) !== '/' &&
+        normalizePath(data.path) !== '/' &&
         !validationValue(data.type, ['dir', 'file']))
     ) {
       paramErr(res, req);
@@ -521,12 +525,12 @@ route.post('/copy', async (req, res) => {
 
       const f = getCurPath(account, `${path}/${name}`);
 
-      let to = hdPath(`${p}/${name}`);
+      let to = normalizePath(`${p}/${name}`);
 
       if (isParentDir(f, to) || !name) return;
 
       if (_f.fs.existsSync(to) || to === trashDir) {
-        to = hdPath(`${p}/${getRandomName(name)}`);
+        to = normalizePath(`${p}/${getRandomName(name)}`);
       }
 
       await _f.cp(f, to);
@@ -600,12 +604,12 @@ route.post('/move', async (req, res) => {
 
       const f = getCurPath(account, `${path}/${name}`);
 
-      let t = hdPath(`${p}/${name}`);
+      let t = normalizePath(`${p}/${name}`);
 
       if (f === t || isParentDir(f, t) || !name) return;
 
       if (_f.fs.existsSync(t) || t === trashDir) {
-        t = hdPath(`${p}/${getRandomName(name)}`);
+        t = normalizePath(`${p}/${getRandomName(name)}`);
       }
 
       try {
@@ -671,14 +675,14 @@ route.post('/zip', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     const p = getCurPath(account, path);
-    const f = hdPath(`${p}/${name}`);
+    const f = normalizePath(`${p}/${name}`);
 
     const fname = getSuffix(name)[0] + '.zip';
 
-    let t = hdPath(`${p}/${fname}`);
+    let t = normalizePath(`${p}/${fname}`);
 
     if (_f.fs.existsSync(t) || t === getTrashDir(account)) {
-      t = hdPath(`${p}/${getRandomName(fname)}`);
+      t = normalizePath(`${p}/${getRandomName(fname)}`);
     }
 
     if (type === 'dir') {
@@ -744,19 +748,19 @@ route.post('/unzip', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     const p = getCurPath(account, path);
-    const f = hdPath(`${p}/${name}`);
+    const f = normalizePath(`${p}/${name}`);
 
     const fname = getSuffix(name)[0];
 
-    let t = hdPath(`${p}/${fname}`);
+    let t = normalizePath(`${p}/${fname}`);
 
     if (_f.fs.existsSync(t) || t === getTrashDir(account)) {
-      t = hdPath(`${p}/${getRandomName(fname)}`);
+      t = normalizePath(`${p}/${getRandomName(fname)}`);
 
       await uncompress(f, t);
       await uLog(req, `解压文件(${f}=>${t})`);
     } else {
-      await uncompress(f, hdPath(`${t}/`));
+      await uncompress(f, normalizePath(`${t}/`));
       await uLog(req, `解压文件(${f}=>${t}/)`);
     }
 
@@ -969,8 +973,8 @@ route.post('/rename', async (req, res) => {
 
     const dir = getCurPath(account, data.path);
 
-    const p = hdPath(`${dir}/${data.name}`),
-      t = hdPath(`${dir}/${name}`);
+    const p = normalizePath(`${dir}/${data.name}`),
+      t = normalizePath(`${dir}/${name}`);
 
     if (_f.fs.existsSync(t) || getTrashDir(account) === t) {
       _err(res, '已存在重名文件')(req, t, 1);
@@ -1010,7 +1014,7 @@ route.post('/mode', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     const dir = getCurPath(account, data.path);
-    const p = hdPath(`${dir}/${data.name}`);
+    const p = normalizePath(`${dir}/${data.name}`);
 
     if (!isRoot(req)) {
       _err(res, '无权操作')(req, p, 1);
@@ -1091,7 +1095,7 @@ route.post('/merge', async (req, res) => {
 
     if (fpath === getTrashDir(account)) {
       name = getRandomName(name);
-      fpath = hdPath(`${dir}/${name}`);
+      fpath = normalizePath(`${dir}/${name}`);
     }
 
     if (_f.fs.existsSync(fpath)) {

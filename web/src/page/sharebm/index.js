@@ -15,7 +15,7 @@ import {
   enterPassCode,
   _getDataTem,
   _setDataTem,
-  hdPath,
+  normalizePath,
   debounce,
   userLogoMenu,
   LazyLoad,
@@ -160,7 +160,7 @@ function getShareData(close) {
         defaultTitle = title;
 
         logo = logo
-          ? hdPath(`/api/pub/logo/${account}/${logo}`)
+          ? normalizePath(`/api/pub/logo/${account}/${logo}`)
           : getTextImg(username);
 
         imgjz(

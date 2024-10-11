@@ -26,7 +26,7 @@ import {
   percentToValue,
   getTextImg,
   wrapInput,
-  hdPath,
+  normalizePath,
   userLogoMenu,
   noteReadInfo,
   formatDate,
@@ -224,7 +224,7 @@ if (urlparmes.v) {
           });
         }
         const logoUrl = logo
-          ? hdPath(`/api/pub/logo/${account}/${logo}`)
+          ? normalizePath(`/api/pub/logo/${account}/${logo}`)
           : getTextImg(username);
         imgjz(
           logoUrl,

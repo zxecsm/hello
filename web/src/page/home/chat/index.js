@@ -36,7 +36,7 @@ import {
   getFilePath,
   _getDataTem,
   _setDataTem,
-  hdPath,
+  normalizePath,
   LazyLoad,
   mailTo,
   isRoot,
@@ -283,7 +283,7 @@ function lazyLoadChatLogo() {
       des = '',
     } = getUserItem($item.parent().data('account'));
     logo = logo
-      ? hdPath(`/api/pub/logo/${account}/${logo}`)
+      ? normalizePath(`/api/pub/logo/${account}/${logo}`)
       : getTextImg(des || username);
     if (account === 'hello') {
       logo = imgHelloLogo;
@@ -555,7 +555,7 @@ export function chatimgLoad() {
       _from,
     } = getChatItem($item.parent().parent().data('id'));
     logo = logo
-      ? hdPath(`/api/pub/logo/${_from}/${logo}`)
+      ? normalizePath(`/api/pub/logo/${_from}/${logo}`)
       : getTextImg(des || username);
     if (_from === 'hello') {
       logo = imgHelloLogo;
@@ -600,7 +600,9 @@ export function chatMessageNotification(name, data, from, to, logo) {
     },
     1
   );
-  logo = logo ? hdPath(`/api/pub/logo/${from}/${logo}`) : getTextImg(name);
+  logo = logo
+    ? normalizePath(`/api/pub/logo/${from}/${logo}`)
+    : getTextImg(name);
   if (from === 'hello') {
     logo = imgHelloLogo;
   }
@@ -788,7 +790,7 @@ function userMenu(e, msgObj, isUserList) {
         close();
         openInIframe(`/bmk?acc=${_from}`, (des || username) + '的书签夹');
       } else if (id === '5') {
-        imgPreview([{ u1: hdPath(`/api/pub/logo/${_from}/${logo}`) }]);
+        imgPreview([{ u1: normalizePath(`/api/pub/logo/${_from}/${logo}`) }]);
         close();
       }
     },
