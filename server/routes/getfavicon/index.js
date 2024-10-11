@@ -26,6 +26,8 @@ const route = express.Router();
 
 const __dirname = getDirname(import.meta);
 
+const defaultIcon = resolve(__dirname, '../../img/default-icon.png');
+
 timedTask.add(async (flag) => {
   if (flag.slice(-6) === '001000') {
     const now = Date.now();
@@ -67,15 +69,23 @@ async function downFile(url, path) {
 }
 
 route.get('/', async (req, res) => {
-  let p = '';
+  let p = '',
+    miss = '';
 
   try {
     const u = new URL(req.query.u);
 
     p = `${configObj.filepath}/favicon/${md5.getStringHash(u.host)}.png`;
 
+    miss = `${p}.miss`;
+
     if (_f.fs.existsSync(p)) {
       res.sendFile(p);
+      return;
+    }
+
+    if (_f.fs.existsSync(miss)) {
+      res.sendFile(defaultIcon);
       return;
     }
 
@@ -143,20 +153,18 @@ route.get('/', async (req, res) => {
       } catch {}
       res.sendFile(p);
     } else {
-      throw new Error(`图标不存在`);
+      throw new Error(`获取图标失败`);
     }
   } catch (error) {
-    const dPath = resolve(__dirname, '../../img/default-icon.png');
-
-    if (p) {
+    if (miss) {
       try {
-        await _f.cp(dPath, p);
+        await _f.fsp.writeFile(miss, '');
       } catch {}
     }
 
     await errLog(req, `${error}(${req.query.u})`);
 
-    res.sendFile(dPath);
+    res.sendFile(defaultIcon);
   }
 });
 

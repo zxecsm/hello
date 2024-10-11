@@ -311,7 +311,8 @@ timedTask.add(async (flag) => {
 // 获取网站信息
 route.get('/parse-site-info', async (req, res) => {
   const obj = { title: '', des: '' };
-  let p = '';
+  let p = '',
+    miss = '';
 
   try {
     const { url } = req.query;
@@ -325,10 +326,19 @@ route.get('/parse-site-info', async (req, res) => {
 
     p = `${configObj.filepath}/siteinfo/${md5.getStringHash(url)}.json`;
 
+    miss = p + '.miss';
+
     if (_f.fs.existsSync(p)) {
       _success(res, 'ok', JSON.parse(await _f.fsp.readFile(p)));
       return;
     }
+
+    if (_f.fs.existsSync(miss)) {
+      _success(res, 'ok', obj);
+      return;
+    }
+
+    await _f.mkdir(`${configObj.filepath}/siteinfo`);
 
     const result = await axios({
       method: 'get',
@@ -348,15 +358,13 @@ route.get('/parse-site-info', async (req, res) => {
     obj.title = $title.text() || '';
     obj.des = $des.attr('content') || '';
 
-    await _f.mkdir(`${configObj.filepath}/siteinfo`);
     await _f.fsp.writeFile(p, JSON.stringify(obj));
 
     _success(res, 'ok', obj);
   } catch (error) {
-    if (p) {
+    if (miss) {
       try {
-        await _f.mkdir(`${configObj.filepath}/siteinfo`);
-        await _f.fsp.writeFile(p, JSON.stringify(obj));
+        await _f.fsp.writeFile(miss, '');
       } catch {}
     }
 
