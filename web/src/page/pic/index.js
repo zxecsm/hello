@@ -42,9 +42,9 @@ import {
   reqPicUp,
 } from '../../api/pic';
 import rMenu from '../../js/plugins/rightMenu';
-import fileSlice from '../../js/utils/fileSlice';
 import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
+import md5 from '../../js/utils/md5';
 if (!isLogin()) {
   toLogin();
 }
@@ -69,7 +69,7 @@ async function hdUpFile(files) {
     }
     try {
       //文件切片
-      let { HASH } = await fileSlice(file, (percent) => {
+      let { HASH } = await md5.fileSlice(file, (percent) => {
         pro.loading(percent);
       });
       const isrepeat = await reqPicRepeat({
@@ -106,8 +106,7 @@ async function hdUpFile(files) {
       } else {
         pro.fail();
       }
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {
+    } catch {
       pro.fail();
     }
   });

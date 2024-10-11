@@ -208,7 +208,7 @@ route.get('/clean-music-file', async (req, res) => {
   try {
     const musicDir = `${configObj.filepath}/music`;
 
-    if (_f.c.existsSync(musicDir)) {
+    if (_f.fs.existsSync(musicDir)) {
       const songs = await queryData('songs', '*');
       const allMusicFile = await getAllFile(musicDir);
 
@@ -234,7 +234,7 @@ route.get('/clean-bg-file', async (req, res) => {
   try {
     const bgDir = `${configObj.filepath}/bg`;
 
-    if (_f.c.existsSync(bgDir)) {
+    if (_f.fs.existsSync(bgDir)) {
       const bgs = await queryData('bg', '*');
       const allBgFile = await getAllFile(bgDir);
 
@@ -259,7 +259,7 @@ route.get('/clean-pic-file', async (req, res) => {
   try {
     const picDir = `${configObj.filepath}/pic`;
 
-    if (_f.c.existsSync(picDir)) {
+    if (_f.fs.existsSync(picDir)) {
       const pics = await queryData('pic', '*');
       const allPicFile = await getAllFile(picDir);
 
@@ -360,7 +360,7 @@ route.get('/log', async (req, res) => {
       return;
     }
 
-    const log = (await _f.p.readFile(`${configObj.filepath}/log/${name}`))
+    const log = (await _f.fsp.readFile(`${configObj.filepath}/log/${name}`))
       .toString()
       .split('\n');
 
@@ -494,8 +494,8 @@ route.post('/custom-code', async (req, res) => {
     const u = `${configObj.filepath}/custom`;
 
     await _f.mkdir(u);
-    await _f.p.writeFile(`${u}/custom.js`, js);
-    await _f.p.writeFile(`${u}/custom.css`, css);
+    await _f.fsp.writeFile(`${u}/custom.js`, js);
+    await _f.fsp.writeFile(`${u}/custom.css`, css);
 
     _success(res, '添加自定义代码成功')(req);
   } catch (error) {

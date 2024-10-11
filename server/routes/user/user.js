@@ -38,15 +38,15 @@ export async function playInConfig() {
 
   const logop = `${configObj.filepath}/playerlogo`;
 
-  if (!_f.c.existsSync(logop)) {
+  if (!_f.fs.existsSync(logop)) {
     await _f.cp(resolve(__dirname, `../../img/playerlogo`), logop);
   }
 
-  if (!_f.c.existsSync(p)) {
+  if (!_f.fs.existsSync(p)) {
     await _f.cp(resolve(__dirname, `../../data/playIn.json`), p);
   }
 
-  return JSON.parse(await _f.p.readFile(p));
+  return JSON.parse(await _f.fsp.readFile(p));
 }
 
 // 删除用户数据

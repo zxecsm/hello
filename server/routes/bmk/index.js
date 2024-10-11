@@ -51,6 +51,7 @@ import { _delDir, readMenu } from '../file/file.js';
 import { fieldLenght } from '../config.js';
 import { validShareAddUserState, validShareState } from '../user/user.js';
 import { getFriendDes } from '../chat/chat.js';
+import md5 from '../../utils/md5.js';
 
 const route = express.Router();
 // 分享
@@ -322,10 +323,10 @@ route.get('/parse-site-info', async (req, res) => {
 
     await uLog(req, `获取网站信息(${url})`);
 
-    p = `${configObj.filepath}/siteinfo/${encodeURIComponent(url)}.json`;
+    p = `${configObj.filepath}/siteinfo/${md5.getStringHash(url)}.json`;
 
-    if (_f.c.existsSync(p)) {
-      _success(res, 'ok', JSON.parse(await _f.p.readFile(p)));
+    if (_f.fs.existsSync(p)) {
+      _success(res, 'ok', JSON.parse(await _f.fsp.readFile(p)));
       return;
     }
 
@@ -348,16 +349,15 @@ route.get('/parse-site-info', async (req, res) => {
     obj.des = $des.attr('content') || '';
 
     await _f.mkdir(`${configObj.filepath}/siteinfo`);
-    await _f.p.writeFile(p, JSON.stringify(obj));
+    await _f.fsp.writeFile(p, JSON.stringify(obj));
 
     _success(res, 'ok', obj);
   } catch (error) {
     if (p) {
       try {
         await _f.mkdir(`${configObj.filepath}/siteinfo`);
-        await _f.p.writeFile(p, JSON.stringify(obj));
-        // eslint-disable-next-line no-unused-vars
-      } catch (error) {}
+        await _f.fsp.writeFile(p, JSON.stringify(obj));
+      } catch {}
     }
 
     await errLog(req, error);

@@ -145,12 +145,12 @@ route.get('/', async (req, res) => {
     }
     path = hdPath(path);
 
-    if (!_f.c.existsSync(path)) {
+    if (!_f.fs.existsSync(path)) {
       _err(res, '文件不存在')(req, path, 1);
       return;
     }
 
-    const stat = await _f.p.stat(path);
+    const stat = await _f.fsp.stat(path);
     if (stat.isDirectory()) {
       _err(res, '文件不存在')(req, path, 1);
       return;
@@ -182,20 +182,19 @@ route.get('/', async (req, res) => {
 
         const tp = `${thumbP}/${getPathFilename(url)[1]}_${stat.size}.png`;
 
-        if (!_f.c.existsSync(tp)) {
+        if (!_f.fs.existsSync(tp)) {
           await _f.mkdir(thumbP);
 
           const { x, y } = getCompressionSize(dir);
 
           const buf = await compressionImg(path, x, y, 20);
 
-          await _f.p.writeFile(tp, buf);
+          await _f.fsp.writeFile(tp, buf);
         }
 
         path = tp;
       }
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {}
+    } catch {}
     res.sendFile(path);
   } catch (error) {
     _err(res)(req, error);

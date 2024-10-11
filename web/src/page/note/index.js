@@ -198,8 +198,7 @@ if (urlparmes.v) {
                 window.iframeId,
                 titleName
               );
-              // eslint-disable-next-line no-unused-vars
-            } catch (error) {}
+            } catch {}
           }
         }, 1000);
         $authorInfo._uobj = {

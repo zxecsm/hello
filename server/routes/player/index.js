@@ -139,8 +139,8 @@ route.get('/lrc', async (req, res) => {
 
     const url = `${configObj.filepath}/music/${songInfo.lrc}`;
 
-    if (_f.c.existsSync(url)) {
-      const str = (await _f.p.readFile(url)).toString(),
+    if (_f.fs.existsSync(url)) {
+      const str = (await _f.fsp.readFile(url)).toString(),
         lrcList = parseLrc(str);
 
       lrcList.unshift({
@@ -1252,14 +1252,14 @@ route.get('/read-lrc', async (req, res) => {
 
     const url = `${configObj.filepath}/music/${musicinfo.lrc}`;
 
-    if (_f.c.existsSync(url)) {
-      const str = (await _f.p.readFile(url)).toString();
+    if (_f.fs.existsSync(url)) {
+      const str = (await _f.fsp.readFile(url)).toString();
       _success(res, 'ok', str);
     } else {
       await _f.mkdir(
         `${configObj.filepath}/music/${getFileDir(musicinfo.lrc)}`
       );
-      await _f.p.writeFile(url, '');
+      await _f.fsp.writeFile(url, '');
 
       _success(res, 'ok', '');
     }
@@ -1295,7 +1295,7 @@ route.post('/edit-lrc', async (req, res) => {
 
     await _f.mkdir(`${configObj.filepath}/music/${getFileDir(musicinfo.lrc)}`);
 
-    await _f.p.writeFile(url, text);
+    await _f.fsp.writeFile(url, text);
 
     _success(res, '更新歌词成功')(
       req,
@@ -1411,14 +1411,14 @@ route.post('/up', async (req, res) => {
       } = songInfo;
 
       if (pic) {
-        await _f.p.writeFile(
+        await _f.fsp.writeFile(
           `${tDir}/${HASH}.${getPathFilename(picFormat)[0]}`,
           pic
         );
         pic = `${timePath}/${HASH}/${HASH}.${getPathFilename(picFormat)[0]}`;
       }
 
-      await _f.p.writeFile(`${tDir}/${HASH}.lrc`, lrc);
+      await _f.fsp.writeFile(`${tDir}/${HASH}.lrc`, lrc);
 
       await insertData('songs', [
         {
@@ -1551,7 +1551,7 @@ route.post('/repeat', async (req, res) => {
     )[0];
 
     if (songInfo) {
-      if (_f.c.existsSync(`${configObj.filepath}/music/${songInfo.url}`)) {
+      if (_f.fs.existsSync(`${configObj.filepath}/music/${songInfo.url}`)) {
         _success(res);
         return;
       }

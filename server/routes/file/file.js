@@ -82,7 +82,7 @@ export function getPathFilename(path) {
 
 // 删除站点文件
 export async function _delDir(path) {
-  if (!_f.c.existsSync(path)) return;
+  if (!_f.fs.existsSync(path)) return;
 
   if (_d.trashState) {
     const trashDir = getTrashDir('root');
@@ -99,14 +99,13 @@ export async function _delDir(path) {
 
     let fname = getPathFilename(path)[0];
 
-    if (_f.c.existsSync(`${trashDir}/${fname}`)) {
+    if (_f.fs.existsSync(`${trashDir}/${fname}`)) {
       fname = getRandomName(fname);
     }
 
     try {
-      await _f.p.rename(path, `${trashDir}/${fname}`);
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {
+      await _f.fsp.rename(path, `${trashDir}/${fname}`);
+    } catch {
       await _f.cp(path, `${trashDir}/${fname}`);
       await _f.del(path);
     }
@@ -117,17 +116,17 @@ export async function _delDir(path) {
 
 // 清理空目录
 export async function delEmptyFolder(path) {
-  const s = await _f.p.stat(path);
+  const s = await _f.fsp.stat(path);
 
   if (s.isDirectory()) {
-    const list = await _f.p.readdir(path);
+    const list = await _f.fsp.readdir(path);
 
     await concurrencyTasks(list, 5, async (item) => {
       await delEmptyFolder(`${path}/${item}`);
     });
 
     // 清除空文件夹
-    if ((await _f.p.readdir(path)).length === 0) {
+    if ((await _f.fsp.readdir(path)).length === 0) {
       await _delDir(path);
     }
   }
@@ -151,10 +150,10 @@ export async function getAllFile(path) {
 
     async function getFile(path) {
       try {
-        const s = await _f.p.stat(path);
+        const s = await _f.fsp.stat(path);
 
         if (s.isDirectory()) {
-          const list = await _f.p.readdir(path);
+          const list = await _f.fsp.readdir(path);
 
           await concurrencyTasks(list, 5, async (item) => {
             await getFile(`${path}/${item}`);
@@ -199,7 +198,7 @@ export function uncompress(p1, p2) {
 // 读取目录文件
 export async function readMenu(path) {
   try {
-    const list = await _f.p.readdir(path);
+    const list = await _f.fsp.readdir(path);
 
     const arr = [];
 
@@ -207,7 +206,7 @@ export async function readMenu(path) {
       try {
         const f = `${path}/${name}`;
 
-        const s = await _f.p.stat(f);
+        const s = await _f.fsp.stat(f);
 
         if (s.isDirectory()) {
           arr.push({
@@ -244,27 +243,27 @@ export async function readMenu(path) {
 export function getPermissions(stats) {
   let permissions = '';
   // 检查所有者权限
-  if (stats.mode & _f.c.constants.S_IRUSR) permissions += 'r';
+  if (stats.mode & _f.fs.constants.S_IRUSR) permissions += 'r';
   else permissions += '-';
-  if (stats.mode & _f.c.constants.S_IWUSR) permissions += 'w';
+  if (stats.mode & _f.fs.constants.S_IWUSR) permissions += 'w';
   else permissions += '-';
-  if (stats.mode & _f.c.constants.S_IXUSR) permissions += 'x';
+  if (stats.mode & _f.fs.constants.S_IXUSR) permissions += 'x';
   else permissions += '-';
 
   // 检查所属组权限
-  if (stats.mode & _f.c.constants.S_IRGRP) permissions += 'r';
+  if (stats.mode & _f.fs.constants.S_IRGRP) permissions += 'r';
   else permissions += '-';
-  if (stats.mode & _f.c.constants.S_IWGRP) permissions += 'w';
+  if (stats.mode & _f.fs.constants.S_IWGRP) permissions += 'w';
   else permissions += '-';
-  if (stats.mode & _f.c.constants.S_IXGRP) permissions += 'x';
+  if (stats.mode & _f.fs.constants.S_IXGRP) permissions += 'x';
   else permissions += '-';
 
   // 检查其他用户权限
-  if (stats.mode & _f.c.constants.S_IROTH) permissions += 'r';
+  if (stats.mode & _f.fs.constants.S_IROTH) permissions += 'r';
   else permissions += '-';
-  if (stats.mode & _f.c.constants.S_IWOTH) permissions += 'w';
+  if (stats.mode & _f.fs.constants.S_IWOTH) permissions += 'w';
   else permissions += '-';
-  if (stats.mode & _f.c.constants.S_IXOTH) permissions += 'x';
+  if (stats.mode & _f.fs.constants.S_IXOTH) permissions += 'x';
   else permissions += '-';
 
   const groups = permissions.match(/(.{3})/g).map((group) => {

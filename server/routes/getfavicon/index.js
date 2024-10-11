@@ -20,6 +20,7 @@ import _f from '../../utils/f.js';
 import timedTask from '../../utils/timedTask.js';
 import { _delDir, readMenu } from '../file/file.js';
 import { compressionImg } from '../../utils/img.js';
+import md5 from '../../utils/md5.js';
 
 const route = express.Router();
 
@@ -62,7 +63,7 @@ async function downFile(url, path) {
     maxBodyLength: 1024 * 200,
   });
 
-  await _f.p.writeFile(path, res.data);
+  await _f.fsp.writeFile(path, res.data);
 }
 
 route.get('/', async (req, res) => {
@@ -71,11 +72,9 @@ route.get('/', async (req, res) => {
   try {
     const u = new URL(req.query.u);
 
-    const eu = encodeURIComponent(u.host);
+    p = `${configObj.filepath}/favicon/${md5.getStringHash(u.host)}.png`;
 
-    p = decodeURI(`${configObj.filepath}/favicon/${eu}.png`);
-
-    if (_f.c.existsSync(p)) {
+    if (_f.fs.existsSync(p)) {
       res.sendFile(p);
       return;
     }
@@ -136,13 +135,12 @@ route.get('/', async (req, res) => {
     }
 
     await downFile(iconUrl, p);
-    if (_f.c.existsSync(p)) {
+    if (_f.fs.existsSync(p)) {
       try {
         const buf = await compressionImg(p);
 
-        await _f.p.writeFile(p, buf);
-        // eslint-disable-next-line no-unused-vars
-      } catch (error) {}
+        await _f.fsp.writeFile(p, buf);
+      } catch {}
       res.sendFile(p);
     } else {
       throw new Error(`图标不存在`);
@@ -153,8 +151,7 @@ route.get('/', async (req, res) => {
     if (p) {
       try {
         await _f.cp(dPath, p);
-        // eslint-disable-next-line no-unused-vars
-      } catch (error) {}
+      } catch {}
     }
 
     await errLog(req, `${error}(${req.query.u})`);

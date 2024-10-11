@@ -7,8 +7,7 @@ try {
         item && item(event.matches);
       });
     });
-  // eslint-disable-next-line no-unused-vars
-} catch (error) {}
+} catch {}
 const changeDark = {
   cbs: [],
   bind(cb) {

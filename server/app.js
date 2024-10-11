@@ -63,8 +63,7 @@ const informReqLimit = debounce(
     try {
       const { os, ip } = req._hello;
       await heperMsgAndForward(req, 'root', `[${os}(${ip})] 请求频率超过限制`);
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {}
+    } catch {}
   },
   5000,
   1
@@ -184,7 +183,7 @@ app.use('/api/count', countRoute);
 app.use('/api/file', fileRoute);
 app.use('/api/notepad', notepadRoute);
 
-app.use((req, res) => {
+app.use((_, res) => {
   res.sendFile(resolve(__dirname, 'data/404.html'));
 });
 

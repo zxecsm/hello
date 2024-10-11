@@ -161,7 +161,7 @@ route.get('/read-dir', async (req, res) => {
       rootP = getRootDir(account);
     }
 
-    if (_f.c.existsSync(p)) {
+    if (_f.fs.existsSync(p)) {
       const arr = [];
 
       (await readMenu(p)).forEach((item) => {
@@ -244,7 +244,7 @@ route.get('/read-dir-size', async (req, res) => {
 
     let size = 0;
 
-    if (_f.c.existsSync(p)) {
+    if (_f.fs.existsSync(p)) {
       size = await getDirSize(p);
 
       fileSize.add(p, size);
@@ -318,12 +318,12 @@ route.get('/read-file', async (req, res) => {
       p = getCurPath(account, path);
     }
 
-    if (!_f.c.existsSync(p)) {
+    if (!_f.fs.existsSync(p)) {
       _err(res, '文件不存在')(req, p, 1);
       return;
     }
 
-    const stat = await _f.p.stat(p);
+    const stat = await _f.fsp.stat(p);
 
     if (stat.isDirectory()) {
       _err(res, '文件不存在')(req, p, 1);
@@ -334,7 +334,7 @@ route.get('/read-file', async (req, res) => {
       //文本文件
       _success(res, 'ok', {
         type: 'text',
-        data: (await _f.p.readFile(p)).toString(),
+        data: (await _f.fsp.readFile(p)).toString(),
       });
     } else {
       _success(res, 'ok', {
@@ -378,13 +378,13 @@ route.post('/create-file', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    if (_f.c.existsSync(fpath) || getTrashDir(account) === fpath) {
+    if (_f.fs.existsSync(fpath) || getTrashDir(account) === fpath) {
       _err(res, '已存在重名文件')(req, fpath, 1);
       return;
     }
 
     await _f.mkdir(dir);
-    await _f.p.writeFile(fpath, '');
+    await _f.fsp.writeFile(fpath, '');
 
     syncUpdateData(req, 'file');
 
@@ -462,12 +462,12 @@ route.post('/save-file', async (req, res) => {
 
     const fpath = getCurPath(account, path);
 
-    if (!_f.c.existsSync(fpath) || getTrashDir(account) === fpath) {
+    if (!_f.fs.existsSync(fpath) || getTrashDir(account) === fpath) {
       _err(res, '文件不存在')(req, fpath, 1);
       return;
     }
 
-    await _f.p.writeFile(fpath, text);
+    await _f.fsp.writeFile(fpath, text);
 
     syncUpdateData(req, 'file');
 
@@ -508,7 +508,7 @@ route.post('/copy', async (req, res) => {
 
     const p = getCurPath(account, path);
 
-    if (!_f.c.existsSync(p)) {
+    if (!_f.fs.existsSync(p)) {
       _err(res, '目标文件夹不存在')(req, p, 1);
       return;
     }
@@ -525,7 +525,7 @@ route.post('/copy', async (req, res) => {
 
       if (isParentDir(f, to) || !name) return;
 
-      if (_f.c.existsSync(to) || to === trashDir) {
+      if (_f.fs.existsSync(to) || to === trashDir) {
         to = hdPath(`${p}/${getRandomName(name)}`);
       }
 
@@ -587,7 +587,7 @@ route.post('/move', async (req, res) => {
 
     const p = getCurPath(account, path);
 
-    if (!_f.c.existsSync(p)) {
+    if (!_f.fs.existsSync(p)) {
       _err(res, '目标文件夹不存在')(req, p, 1);
       return;
     }
@@ -604,14 +604,13 @@ route.post('/move', async (req, res) => {
 
       if (f === t || isParentDir(f, t) || !name) return;
 
-      if (_f.c.existsSync(t) || t === trashDir) {
+      if (_f.fs.existsSync(t) || t === trashDir) {
         t = hdPath(`${p}/${getRandomName(name)}`);
       }
 
       try {
-        await _f.p.rename(f, t);
-        // eslint-disable-next-line no-unused-vars
-      } catch (error) {
+        await _f.fsp.rename(f, t);
+      } catch {
         await _f.cp(f, t);
         await _f.del(f);
       }
@@ -678,7 +677,7 @@ route.post('/zip', async (req, res) => {
 
     let t = hdPath(`${p}/${fname}`);
 
-    if (_f.c.existsSync(t) || t === getTrashDir(account)) {
+    if (_f.fs.existsSync(t) || t === getTrashDir(account)) {
       t = hdPath(`${p}/${getRandomName(fname)}`);
     }
 
@@ -751,7 +750,7 @@ route.post('/unzip', async (req, res) => {
 
     let t = hdPath(`${p}/${fname}`);
 
-    if (_f.c.existsSync(t) || t === getTrashDir(account)) {
+    if (_f.fs.existsSync(t) || t === getTrashDir(account)) {
       t = hdPath(`${p}/${getRandomName(fname)}`);
 
       await uncompress(f, t);
@@ -829,14 +828,13 @@ route.post('/delete', async (req, res) => {
       } else {
         await _f.mkdir(trashDir);
 
-        if (_f.c.existsSync(`${trashDir}/${name}`)) {
+        if (_f.fs.existsSync(`${trashDir}/${name}`)) {
           name = getRandomName(name);
         }
 
         try {
-          await _f.p.rename(p, `${trashDir}/${name}`);
-          // eslint-disable-next-line no-unused-vars
-        } catch (error) {
+          await _f.fsp.rename(p, `${trashDir}/${name}`);
+        } catch {
           await _f.cp(p, `${trashDir}/${name}`);
           await _f.del(p);
         }
@@ -879,8 +877,8 @@ route.get('/clear-trash', async (req, res) => {
 
     const trashDir = getTrashDir(account);
 
-    if (_f.c.existsSync(trashDir)) {
-      const list = await _f.p.readdir(trashDir);
+    if (_f.fs.existsSync(trashDir)) {
+      const list = await _f.fsp.readdir(trashDir);
 
       await concurrencyTasks(list, 5, async (item) => {
         const p = `${trashDir}/${item}`;
@@ -931,7 +929,7 @@ route.post('/create-dir', async (req, res) => {
 
     const fpath = getCurPath(req._hello.userinfo.account, `${path}/${name}`);
 
-    if (_f.c.existsSync(fpath)) {
+    if (_f.fs.existsSync(fpath)) {
       _err(res, '已存在重名文件')(req, fpath, 1);
       return;
     }
@@ -974,12 +972,12 @@ route.post('/rename', async (req, res) => {
     const p = hdPath(`${dir}/${data.name}`),
       t = hdPath(`${dir}/${name}`);
 
-    if (_f.c.existsSync(t) || getTrashDir(account) === t) {
+    if (_f.fs.existsSync(t) || getTrashDir(account) === t) {
       _err(res, '已存在重名文件')(req, t, 1);
       return;
     }
 
-    await _f.p.rename(p, t);
+    await _f.fsp.rename(p, t);
 
     syncUpdateData(req, 'file');
 
@@ -1020,12 +1018,12 @@ route.post('/mode', async (req, res) => {
     }
 
     const txt = data.type === 'dir' ? '文件夹' : '文件';
-    if (!_f.c.existsSync(p)) {
+    if (!_f.fs.existsSync(p)) {
       _err(res, `${txt}不存在`)(req, p, 1);
       return;
     }
 
-    await _f.p.chmod(p, mode.toString(8));
+    await _f.fsp.chmod(p, mode.toString(8));
 
     syncUpdateData(req, 'file');
 
@@ -1096,7 +1094,7 @@ route.post('/merge', async (req, res) => {
       fpath = hdPath(`${dir}/${name}`);
     }
 
-    if (_f.c.existsSync(fpath)) {
+    if (_f.fs.existsSync(fpath)) {
       await _f.del(fpath);
     } else {
       await _f.mkdir(dir);
@@ -1144,8 +1142,8 @@ route.post('/breakpoint', async (req, res) => {
     let path = `${configObj.filepath}/tem/${account}_${HASH}`,
       list = [];
 
-    if (_f.c.existsSync(path)) {
-      list = await _f.p.readdir(path);
+    if (_f.fs.existsSync(path)) {
+      list = await _f.fsp.readdir(path);
     }
 
     _success(res, 'ok', list);
@@ -1165,7 +1163,7 @@ route.post('/repeat', async (req, res) => {
 
     const p = getCurPath(req._hello.userinfo.account, path);
 
-    if (_f.c.existsSync(p)) {
+    if (_f.fs.existsSync(p)) {
       _success(res);
       return;
     }

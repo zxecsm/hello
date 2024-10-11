@@ -411,8 +411,7 @@ async function openDir(path, top) {
         renderList(top);
       }
     }
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {}
+  } catch {}
 }
 function getFileItem(id) {
   return $contentWrap.list.find((item) => item.id === id + '');
@@ -468,8 +467,7 @@ async function readFileAndDir(obj) {
           }
         }
       }
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {}
+    } catch {}
   }
 }
 $fileBox
@@ -514,8 +512,7 @@ async function readFile() {
           }
         }
       }
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {}
+    } catch {}
   }
 }
 $contentWrap

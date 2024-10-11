@@ -30,8 +30,8 @@ route.get('/', async (req, res) => {
 
     const p = `${configObj.filepath}/notepad/${k}.md`;
 
-    if (_f.c.existsSync(p)) {
-      note = (await _f.p.readFile(p)).toString();
+    if (_f.fs.existsSync(p)) {
+      note = (await _f.fsp.readFile(p)).toString();
     }
 
     _success(res, '读取便条成功', note)(req, k, 1);
@@ -53,15 +53,15 @@ route.post('/', async (req, res) => {
     const p = `${configObj.filepath}/notepad/${k}.md`;
 
     if (data) {
-      if (!_f.c.existsSync(p)) {
+      if (!_f.fs.existsSync(p)) {
         await _f.mkdir(`${configObj.filepath}/notepad`);
       }
 
-      await _f.p.writeFile(p, data);
+      await _f.fsp.writeFile(p, data);
 
       await uLog(req, `更新便条成功(${k})`);
     } else {
-      if (_f.c.existsSync(p)) {
+      if (_f.fs.existsSync(p)) {
         await _delDir(p);
 
         await uLog(req, `删除便条成功(${k})`);

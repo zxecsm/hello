@@ -4,7 +4,7 @@ import _f from './f.js';
 
 // 压缩图片
 export async function compressionImg(path, x = 400, y = 400, quality) {
-  const inputBuf = await _f.p.readFile(path);
+  const inputBuf = await _f.fsp.readFile(path);
   const img = sharp(inputBuf);
   const meta = await img.metadata();
   const buf = await img
@@ -20,7 +20,7 @@ export async function compressionImg(path, x = 400, y = 400, quality) {
 
 // 读取图片信息
 export async function getImgInfo(path) {
-  const inputBuf = await _f.p.readFile(path);
+  const inputBuf = await _f.fsp.readFile(path);
   const img = sharp(inputBuf);
   return img.metadata();
 }

@@ -17,8 +17,7 @@ const md = new MarkdownIt({
   //     } else {
   //       return hljs.highlightAuto(str).value;
   //     }
-  //     // eslint-disable-next-line no-unused-vars
-  //   } catch (error) {
+  //   } catch {
   //     return '';
   //   }
   // },
@@ -63,8 +62,7 @@ md.renderer.rules.fence = function (tokens, idx) {
     } else {
       html = hljs.highlightAuto(token.content).value;
     }
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {}
+  } catch {}
   return `<pre data-line="${startLine}" class="hljs"><code class="${
     lineNum >= maxLine ? 'hide' : ''
   }">${html}</code><div cursor="y" class="codeCopy iconfont icon-fuzhi"></div>${

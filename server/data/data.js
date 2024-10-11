@@ -15,7 +15,7 @@ let config = loadConfig(configPath);
 config.tokenKey = generateKey(30);
 
 // 合并已有的配置文件
-if (_f.c.existsSync(dataConfigPath)) {
+if (_f.fs.existsSync(dataConfigPath)) {
   const fileConfig = loadConfig(dataConfigPath);
   config = { ...config, ...fileConfig };
 }
@@ -33,10 +33,9 @@ saveConfig();
  */
 function loadConfig(path) {
   try {
-    const data = _f.c.readFileSync(path, 'utf-8');
+    const data = _f.fs.readFileSync(path, 'utf-8');
     return JSON.parse(data);
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {
+  } catch {
     return {};
   }
 }
@@ -46,8 +45,8 @@ function loadConfig(path) {
  */
 function saveConfig() {
   const dataDir = `${configObj.filepath}/data`;
-  _f.c.mkdirSync(dataDir, { recursive: true });
-  _f.c.writeFileSync(dataConfigPath, JSON.stringify(_d, null, 2));
+  _f.fs.mkdirSync(dataDir, { recursive: true });
+  _f.fs.writeFileSync(dataConfigPath, JSON.stringify(_d, null, 2));
 }
 
 /**

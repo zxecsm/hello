@@ -9,8 +9,7 @@ async function start() {
       _msg.botMsg(`录音中：${params.duration.toFixed(2)}s`, 1);
     };
     await recorder.start();
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {
+  } catch {
     _msg.error('没有开启权限或浏览器不支持语音输入');
     close();
   }

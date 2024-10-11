@@ -37,8 +37,8 @@ import { hideRightMenu } from '../rightSetting/index.js';
 import { setBg } from '../index.js';
 import { backWindow, setZidx } from '../backWindow.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
-import fileSlice from '../../../js/utils/fileSlice.js';
 import { _tpl } from '../../../js/utils/template.js';
+import md5 from '../../../js/utils/md5.js';
 const $allBgWrap = $('.all_bg_wrap'),
   $bgList = $allBgWrap.find('.bg_list'),
   $bgFooter = $allBgWrap.find('.bg_footer');
@@ -60,7 +60,7 @@ async function hdUpBg(files) {
     }
     try {
       //文件切片
-      const { HASH } = await fileSlice(file, (percent) => {
+      const { HASH } = await md5.fileSlice(file, (percent) => {
         pro.loading(percent);
       });
       const isrepeat = await reqBgRepeat({
@@ -80,8 +80,7 @@ async function hdUpBg(files) {
       } else {
         pro.fail();
       }
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {
+    } catch {
       pro.fail();
     }
   });
@@ -142,8 +141,8 @@ export function delBg(e, ids, cb, isCheck) {
               return;
             }
           })
-          // eslint-disable-next-line no-unused-vars
-          .catch((err) => {});
+
+          .catch(() => {});
       }
     }
   );

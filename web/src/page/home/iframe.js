@@ -206,8 +206,7 @@ class CreateIframe {
       this.iframeWindow.addEventListener('mousedown', this.hdDown);
       this.iframeWindow.addEventListener('touchstart', this.hdStart);
       this.iframeWindow.iframeId = this.id;
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {}
+    } catch {}
   }
   // 更新标题
   updateTitle() {
@@ -278,8 +277,7 @@ class CreateIframe {
       this.iframeWindow.removeEventListener('touchstart', this.hdStart);
       this.iframeWindow.document.write('');
       this.iframeWindow.document.clear();
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {}
+    } catch {}
     this.dragClose();
     this.resizeClose();
     toHide(this.box, { to: 'bottom', scale: 'small' }, () => {
@@ -303,15 +301,13 @@ class CreateIframe {
       try {
         this.iframeWindow.location.reload();
         return;
-        // eslint-disable-next-line no-unused-vars
-      } catch (error) {}
+      } catch {}
       this.iframe.src = this.url;
     } else if (_getTarget(this.box, e, '.i_new_page_open_btn')) {
       try {
         let url = this.iframeWindow.location.href;
         this.url = url;
-        // eslint-disable-next-line no-unused-vars
-      } catch (error) {}
+      } catch {}
       myOpen(this.url, '_blank');
     } else if (_getTarget(this.box, e, '.i_hide_btn')) {
       this.hdHide();

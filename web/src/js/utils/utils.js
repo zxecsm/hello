@@ -1,5 +1,4 @@
 import $ from 'jquery';
-import SparkMD5 from 'spark-md5';
 import QRCode from 'qrcode';
 import _d from '../common/config';
 import { _loadingBar } from '../plugins/loadingBar';
@@ -235,17 +234,16 @@ export function imgjz(url, fn, fnn) {
       fnn && fnn(img);
     });
 }
-// 判断网址
+// 检查是否为有效的 HTTP/HTTPS URL
 export function isurl(url) {
   try {
     const newUrl = new URL(url);
-    if (newUrl.protocol === 'http:' || newUrl.protocol === 'https:') {
-      return newUrl;
-    }
-    return false;
-    // eslint-disable-next-line no-unused-vars
-  } catch (err) {
-    return false;
+    // 检查协议是否为 http 或 https
+    return newUrl.protocol === 'http:' || newUrl.protocol === 'https:'
+      ? newUrl
+      : false;
+  } catch {
+    return false; // 捕获错误并返回 false
   }
 }
 // 拆分字符
@@ -303,12 +301,6 @@ export function mailTo(email) {
 // 大屏
 export function isBigScreen() {
   return window.innerWidth > _d.screen;
-}
-// 获取url域名
-export function getHost(url) {
-  const link = document.createElement('a');
-  link.href = url;
-  return link.host;
 }
 // 判断是否苹果设备
 export function isios() {
@@ -754,65 +746,32 @@ export function getFileReader(file, type) {
     };
   });
 }
-// 切片
-export async function fileSlice(file, callback) {
-  let chunkSize = file.size / 100;
-  const max = 50 * 1024 * 1024,
-    min = 5 * 1024 * 1024;
-  if (chunkSize > max) {
-    chunkSize = max;
-  } else if (chunkSize < min) {
-    chunkSize = min;
-  }
-  const [a, b] = getSuffix(file.name || ''),
-    count = Math.ceil(file.size / chunkSize),
-    spark = new SparkMD5.ArrayBuffer(),
-    chunks = [];
-  for (let i = 0; i < count; i++) {
-    const chunk = file.slice(i * chunkSize, (i + 1) * chunkSize);
-    const buf = await getFileReader(chunk);
-    spark.append(buf);
-    chunks.push({
-      file: chunk,
-      filename: `_${i}`,
-    });
-    callback && callback(count === 1 ? 1 : i / (count - 1));
-  }
-  const HASH = spark.end();
-  return {
-    HASH,
-    chunks,
-    count,
-    suffix: b,
-    filename: a,
-    size: file.size,
-  };
-}
 // 登录
 export function toLogin() {
   _delData('account');
   _setDataTem('originurl', myOpen());
   myOpen('/login');
 }
-// 格式化当前日期
-export function formatDate(opt = {}) {
-  const { template = '{0}-{1}-{2} {3}:{4}:{5}', timestamp = Date.now() } = opt;
+// 格式时间日期
+export function formatDate({
+  template = '{0}-{1}-{2} {3}:{4}:{5}',
+  timestamp = Date.now(),
+} = {}) {
   const date = new Date(+timestamp);
-  const year = date.getFullYear(),
-    month = date.getMonth() + 1,
-    day = date.getDate(),
-    week = date.getDay(),
-    hour = date.getHours(),
-    minute = date.getMinutes(),
-    second = date.getSeconds();
-  const weekArr = ['日', '一', '二', '三', '四', '五', '六'],
-    timeArr = [year, month, day, hour, minute, second, week];
-  return template.replace(/\{(\d+)\}/g, function () {
-    const key = arguments[1];
-    if (key === 6) return weekArr[timeArr[key]];
-    const val = timeArr[key] + '';
-    if (val === 'undefined') return '';
-    return val.length < 2 ? '0' + val : val;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hour = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
+  const second = String(date.getSeconds()).padStart(2, '0');
+  const weekArr = ['日', '一', '二', '三', '四', '五', '六'];
+  const week = weekArr[date.getDay()]; // 直接获取周几
+
+  const timeArr = [year, month, day, hour, minute, second, week];
+
+  return template.replace(/\{(\d+)\}/g, (_, key) => {
+    const index = Number(key); // 转换为数字
+    return timeArr[index] !== undefined ? timeArr[index] : '';
   });
 }
 // 选中文本
@@ -1110,8 +1069,7 @@ export function _myOpen(url, name) {
     try {
       parent.window.openInIframe(url, name || url);
       return;
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {}
+    } catch {}
   }
   myOpen(url, '_blank');
 }
@@ -1295,9 +1253,11 @@ export function _progressBar(e, percent, callback) {
     }
   };
 }
-// 图片
+// 图片格式
 export function isImgFile(name) {
-  return /(\.jpg|\.jpeg|\.png|\.ico|\.svg|\.webp|\.gif)$/gi.test(name);
+  return /(\.jpg|\.jpeg|\.png|\.ico|\.svg|\.webp|\.gif|\.bmp|\.tiff|\.tif|\.jfif|\.heif|\.heic)$/gi.test(
+    name
+  );
 }
 // 文件logo类型
 export function fileLogoType(fname) {
@@ -1773,8 +1733,7 @@ export function sendNotification(opt, callback) {
         }
       });
     }
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {}
+  } catch {}
 }
 // 音乐文件
 export function isMusicFile(str) {
@@ -2521,15 +2480,13 @@ export async function getSplitWord(str) {
   try {
     const intl = new Intl.Segmenter('cn', { granularity: 'word' });
     words = [...intl.segment(str)].map((item) => item.segment.trim());
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {
+  } catch {
     try {
       const res = await reqSearchSplitWord({ word: str });
       if (res.code === 1) {
         return res.data;
       }
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {
+    } catch {
       words = str.split(' ');
     }
   }
@@ -3138,8 +3095,7 @@ export async function getFileKey(p) {
     }
     _setData('fileKeys', fileKeys);
     return '';
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {
+  } catch {
     return '';
   }
 }
@@ -3176,8 +3132,7 @@ export function parseObjectJson(str) {
       throw new Error();
     }
     return res;
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {
+  } catch {
     return '';
   }
 }

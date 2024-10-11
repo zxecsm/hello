@@ -216,8 +216,7 @@ function evaluateExpression(expression, data) {
       return '';
     }
     return res;
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {
+  } catch {
     return '';
   }
 }
@@ -531,7 +530,6 @@ export function _tpl(template, data) {
   const ast = parseHtmlToAst(template);
   const fragment = createFrag();
   const nodes = createDom(vnode(ast, data)).children[0].childNodes;
-  // console.log(createDom(vnode(ast, data)).children[0].innerHTML);
   [...nodes].forEach((item) => {
     fragment.appendChild(item);
   });

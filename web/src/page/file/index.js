@@ -76,9 +76,9 @@ import {
 import toolTip from '../../js/plugins/tooltip';
 import { showFileInfo } from '../../js/utils/showinfo';
 import rMenu from '../../js/plugins/rightMenu';
-import fileSlice from '../../js/utils/fileSlice';
 import realtime from '../../js/plugins/realtime';
 import { _tpl } from '../../js/utils/template';
+import md5 from '../../js/utils/md5';
 _d.isFilePage = true;
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
@@ -399,8 +399,7 @@ async function openDir(path, top) {
         renderList(top);
       }
     }
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {}
+  } catch {}
 }
 // 获取文件信息
 function getFileItem(id) {
@@ -446,8 +445,7 @@ async function readFileAndDir(obj) {
           }
         }
       }
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {}
+    } catch {}
   }
 }
 $contentWrap
@@ -921,7 +919,7 @@ async function hdUp(files) {
 
     try {
       //文件切片
-      const { chunks, count, HASH } = await fileSlice(file, (percent) => {
+      const { chunks, count, HASH } = await md5.fileSlice(file, (percent) => {
         pro.loading(percent);
       });
       const breakpointarr = (await reqFileBreakpoint({ HASH })).data; //断点续传
@@ -956,8 +954,7 @@ async function hdUp(files) {
           pro.fail();
         }
       }
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {
+    } catch {
       pro.fail();
     }
   });
@@ -1000,8 +997,7 @@ function createFile(e) {
             openFile('', curFileDirPath + '/' + name);
             close(1);
           }
-          // eslint-disable-next-line no-unused-vars
-        } catch (error) {}
+        } catch {}
       },
       500,
       true
@@ -1043,8 +1039,7 @@ function createDir(e) {
             updateCurPage();
             close(1);
           }
-          // eslint-disable-next-line no-unused-vars
-        } catch (error) {}
+        } catch {}
       },
       500,
       true
@@ -1526,8 +1521,7 @@ function hdRename(e, obj, cb) {
             cb && cb();
             _msg.success(res.codeText);
           }
-          // eslint-disable-next-line no-unused-vars
-        } catch (error) {}
+        } catch {}
       },
       500,
       true

@@ -106,7 +106,7 @@ route.post('/repeat', async (req, res) => {
     const pic = (await queryData('pic', 'id,url', `WHERE hash = ?`, [HASH]))[0];
 
     if (pic) {
-      if (_f.c.existsSync(`${configObj.filepath}/pic/${pic.url}`)) {
+      if (_f.fs.existsSync(`${configObj.filepath}/pic/${pic.url}`)) {
         _success(res, 'ok', pic);
         return;
       }

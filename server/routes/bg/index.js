@@ -300,7 +300,7 @@ route.post('/repeat', async (req, res) => {
     const bg = (await queryData('bg', 'url,id', `WHERE hash = ?`, [HASH]))[0];
 
     if (bg) {
-      if (_f.c.existsSync(`${configObj.filepath}/bg/${bg.url}`)) {
+      if (_f.fs.existsSync(`${configObj.filepath}/bg/${bg.url}`)) {
         _success(res);
         return;
       }

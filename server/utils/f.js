@@ -38,6 +38,6 @@ async function del(path) {
     await fsp.unlink(path);
   }
 }
-const _f = { p: fsp, c: fs, del, mkdir, cp };
+const _f = { fsp, fs, del, mkdir, cp };
 
 export default _f;

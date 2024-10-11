@@ -3,7 +3,6 @@ import '../../css/common/common.css';
 import '../../font/iconfont.css';
 import './index.less';
 import $ from 'jquery';
-import md5 from 'md5';
 import './coloured.js';
 import {
   myOpen,
@@ -32,6 +31,7 @@ import {
 import rMenu from '../../js/plugins/rightMenu/index.js';
 import _pop from '../../js/plugins/popConfirm/index.js';
 import changeDark from '../../js/utils/changeDark.js';
+import md5 from '../../js/utils/md5.js';
 const $box = $('.box'),
   $title = $box.find('.title'),
   $register = $box.find('.register'),
@@ -432,12 +432,12 @@ $submit.on('click', function () {
   if (isLoginState) {
     hdLogin({
       account: account,
-      password: md5(password),
+      password: md5.getStringHash(password),
     });
   } else {
     hdRegister({
       username: account,
-      password: md5(password),
+      password: md5.getStringHash(password),
     });
   }
 });

@@ -37,8 +37,7 @@ try {
       });
     }
   }
-  // eslint-disable-next-line no-unused-vars
-} catch (error) {}
+} catch {}
 
 const notifyMusicControlPanel = {
   bind(type, cb) {
@@ -57,8 +56,7 @@ const notifyMusicControlPanel = {
           });
         }
       }
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {}
+    } catch {}
   },
   updatePositionState({ duration, playbackRate, position }) {
     try {
@@ -71,8 +69,7 @@ const notifyMusicControlPanel = {
           });
         }
       }
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {}
+    } catch {}
   },
 };
 

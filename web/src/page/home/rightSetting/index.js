@@ -1,6 +1,5 @@
 import $ from 'jquery';
 import QRCode from 'qrcode';
-import md5 from 'md5';
 import {
   myOpen,
   _setData,
@@ -82,11 +81,11 @@ import {
 import { backWindow, setZidx } from '../backWindow.js';
 import { reqRootTips } from '../../../api/root.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
-import fileSlice from '../../../js/utils/fileSlice.js';
 import { setExpireCount, showCountBox } from '../count_down/index.js';
 import { hideIframeMask, showIframeMask } from '../iframe.js';
 import changeDark from '../../../js/utils/changeDark.js';
 import { reqChatForwardMsgLink } from '../../../api/chat.js';
+import md5 from '../../../js/utils/md5.js';
 import { _tpl } from '../../../js/utils/template.js';
 // local数据
 let dark = _getData('dark'),
@@ -279,7 +278,7 @@ export async function upLogo(cb) {
       _msg.error(`图片大小必须0~5M范围`);
       return;
     }
-    const { HASH } = await fileSlice(file, (percent) => {
+    const { HASH } = await md5.fileSlice(file, (percent) => {
       pro.loading(percent);
     });
     reqUserUpLogo({ HASH, name: file.name }, file, function (percent) {
@@ -297,8 +296,7 @@ export async function upLogo(cb) {
       .catch(() => {
         pro.fail();
       });
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {
+  } catch {
     _msg.error('上传失败');
     return;
   }
@@ -397,7 +395,7 @@ function bindEmail(e) {
             },
             (type) => {
               if (type === 'confirm') {
-                reqUserBindEmail({ password: md5(pd) })
+                reqUserBindEmail({ password: md5.getStringHash(pd) })
                   .then((result) => {
                     if (result.code === 1) {
                       close();
@@ -471,7 +469,11 @@ function bindEmail(e) {
                     function ({ inp, close }) {
                       const pd = inp.pd;
                       const code = inp.code;
-                      reqUserBindEmail({ password: md5(pd), code, email })
+                      reqUserBindEmail({
+                        password: md5.getStringHash(pd),
+                        code,
+                        email,
+                      })
                         .then((result) => {
                           if (result.code === 1) {
                             close();
@@ -731,8 +733,7 @@ function hdIframeDarkMode(dark) {
         }
       }
       item.contentWindow.changeTheme && item.contentWindow.changeTheme(dark);
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {}
+    } catch {}
   });
 }
 function hdIframeCloseBtnSortMode(flag) {
@@ -744,8 +745,7 @@ function hdIframeCloseBtnSortMode(flag) {
       } else {
         html.classList.remove('head_btn_to_right');
       }
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {}
+    } catch {}
   });
 }
 // 设置
@@ -1162,8 +1162,8 @@ function changeUserPd(e) {
           return;
         }
         reqUserChangPd({
-          oldpassword: md5(oldpassword),
-          newpassword: md5(newpassword),
+          oldpassword: md5.getStringHash(oldpassword),
+          newpassword: md5.getStringHash(newpassword),
         })
           .then((result) => {
             if (result.code === 1) {
@@ -1174,8 +1174,8 @@ function changeUserPd(e) {
               return;
             }
           })
-          // eslint-disable-next-line no-unused-vars
-          .catch((err) => {});
+
+          .catch(() => {});
       },
       500,
       true
@@ -1210,7 +1210,7 @@ function closeAccount(e) {
           },
           (type) => {
             if (type === 'confirm') {
-              reqUserAccountState({ password: md5(pd) })
+              reqUserAccountState({ password: md5.getStringHash(pd) })
                 .then((result) => {
                   if (result.code === 1) {
                     close();
@@ -1361,7 +1361,7 @@ function hdAccountManage(e) {
                 const pd = inp.pd;
                 _pop({ e, text: '确认关闭：两步验证吗？' }, (type) => {
                   if (type === 'confirm') {
-                    reqUserVerify({ password: md5(pd) })
+                    reqUserVerify({ password: md5.getStringHash(pd) })
                       .then((res) => {
                         if (res.code === 1) {
                           close(1);
@@ -1452,7 +1452,7 @@ async function hdVerifyLogin(e, verify, account) {
             function ({ inp, close }) {
               const token = inp.text;
               const pd = inp.pd;
-              reqUserVerify({ token, password: md5(pd) })
+              reqUserVerify({ token, password: md5.getStringHash(pd) })
                 .then((res) => {
                   if (res.code === 1) {
                     close(1);

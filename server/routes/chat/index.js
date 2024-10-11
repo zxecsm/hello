@@ -357,7 +357,7 @@ route.get('/expired', async (req, res) => {
     if (file) {
       const u = `${configObj.filepath}/upload/${file.url}`;
 
-      if (_f.c.existsSync(u)) {
+      if (_f.fs.existsSync(u)) {
         _success(res, 'ok', {
           isText: isTextFile(u),
         });
@@ -858,7 +858,7 @@ route.post('/merge', async (req, res) => {
       update_at: time,
     };
 
-    const stat = await _f.p.stat(`${tDir}/${tName}`);
+    const stat = await _f.fsp.stat(`${tDir}/${tName}`);
 
     const obj = {
       _to: to,
@@ -919,8 +919,8 @@ route.post('/breakpoint', async (req, res) => {
     let path = `${configObj.filepath}/tem/${account}_${HASH}`,
       arr = [];
 
-    if (_f.c.existsSync(path)) {
-      arr = await _f.p.readdir(path);
+    if (_f.fs.existsSync(path)) {
+      arr = await _f.fsp.readdir(path);
     }
 
     _success(res, 'ok', arr);
@@ -951,7 +951,7 @@ route.post('/repeat', async (req, res) => {
     if (upload) {
       const p = `${configObj.filepath}/upload/${upload.url}`;
 
-      if (_f.c.existsSync(p)) {
+      if (_f.fs.existsSync(p)) {
         let log = to;
         if (to !== 'chang' && to !== 'hello') {
           const user = await getUserInfo(to, 'account,username');
@@ -972,7 +972,7 @@ route.post('/repeat', async (req, res) => {
 
         const tName = `${HASH}${suffix ? `.${suffix}` : ''}`;
 
-        const stat = await _f.p.stat(p);
+        const stat = await _f.fsp.stat(p);
 
         const obj = {
           _to: to,

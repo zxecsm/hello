@@ -7,7 +7,7 @@ import _f from './f.js';
 import { batchTask, nanoid } from './utils.js';
 
 // 如果目录不存在则创建目录
-_f.c.mkdirSync(`${configObj.filepath}/data/db`, { recursive: true });
+_f.fs.mkdirSync(`${configObj.filepath}/data/db`, { recursive: true });
 
 // 初始化数据库连接
 const db = new sqlite3.Database(
@@ -39,8 +39,7 @@ export async function executeInTransaction(callback) {
 
     // 提交事务
     await runSqlite('COMMIT');
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {
+  } catch {
     await runSqlite('ROLLBACK');
   }
 }

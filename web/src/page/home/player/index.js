@@ -134,10 +134,10 @@ import pagination from '../../../js/plugins/pagination/index.js';
 import toolTip from '../../../js/plugins/tooltip/index.js';
 import { showSongInfo } from '../../../js/utils/showinfo.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
-import fileSlice from '../../../js/utils/fileSlice.js';
 import { hideIframeMask, showIframeMask } from '../iframe.js';
 import { _tpl, deepClone } from '../../../js/utils/template.js';
 import notifyMusicControlPanel from './notifyMusicControlPanel.js';
+import md5 from '../../../js/utils/md5.js';
 const $musicPlayerBox = $('.music_player_box'),
   $musicFootProgress = $musicPlayerBox.find('.music_foot_progress'),
   $musicPlayerBg = $musicPlayerBox.find('.music_palyer_bg'),
@@ -1353,8 +1353,7 @@ export async function updateSongCover(obj) {
     } else {
       pro.fail();
     }
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {
+  } catch {
     _msg.error('上传封面失败');
     return;
   }
@@ -1397,8 +1396,7 @@ export async function upMv(obj) {
     } else {
       pro.fail();
     }
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {
+  } catch {
     pro.fail();
   }
 }
@@ -1424,7 +1422,7 @@ async function upSong() {
     }
     try {
       //文件切片
-      let { HASH } = await fileSlice(file, (percent) => {
+      let { HASH } = await md5.fileSlice(file, (percent) => {
         pro.loading(percent);
       });
       let isrepeat = await reqPlayerRepeat({ HASH }); //是否已经存在文件
@@ -1450,8 +1448,7 @@ async function upSong() {
       } else {
         pro.fail();
       }
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {
+    } catch {
       pro.fail();
     }
   });

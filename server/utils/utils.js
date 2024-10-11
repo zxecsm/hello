@@ -14,6 +14,7 @@ import getCity from './getCity.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
+// 获取模块目录
 export function getDirname(meta) {
   const __filename = fileURLToPath(meta.url);
   return dirname(__filename);
@@ -51,20 +52,19 @@ export async function writelog(req, str, flag = 'hello') {
 
     const hp = `${configObj.filepath}/log/${flag}.log`;
     // console.log(str);
-    _f.c.appendFileSync(hp, str);
+    _f.fs.appendFileSync(hp, str);
 
-    const s = await _f.p.stat(hp);
+    const s = await _f.fsp.stat(hp);
 
     if (s.size > 10 * 1024 * 1024) {
-      await _f.p.rename(
+      await _f.fsp.rename(
         hp,
         `${configObj.filepath}/log/${formatDate({
           template: '{0}{1}{2}_{3}{4}{5}',
         })}_${flag}.log`
       );
     }
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {}
+  } catch {}
 }
 
 // 操作日志
@@ -87,7 +87,6 @@ export function errLog(req, err) {
 
 // 参数错误
 export function paramErr(res, req) {
-  _err(res, '参数错误');
   let param = '';
 
   if (req._hello.method === 'get') {
@@ -96,94 +95,73 @@ export function paramErr(res, req) {
     param = JSON.stringify(req.body);
   }
 
-  writelog(
-    req,
-    `${req._hello.method}(${req._hello.path}) - 参数错误：[ ${param || ''} ]`,
-    'error'
-  );
+  _err(res, '参数错误')(req, param || '', 1);
 }
 
 // 客户端ip获取
 export function getClientIp(req) {
-  let ip = '';
-
   try {
-    ip =
+    const ip =
       req.headers['x-forwarded-for'] ||
       req.ip ||
-      req.connection.remoteAddress ||
-      req.socket.remoteAddress ||
-      req.connection.socket.remoteAddress ||
+      req.connection?.remoteAddress ||
+      req.socket?.remoteAddress ||
+      req.connection?.socket?.remoteAddress ||
       '';
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {
-    ip = '';
+
+    if (!ip) return '0.0.0.0';
+
+    const formattedIp = ip.startsWith('::ffff:') ? ip.slice(7) : ip;
+
+    const extractedIp = extractIP(formattedIp);
+    return extractedIp ? extractedIp[0] : '0.0.0.0';
+  } catch {
+    return '0.0.0.0';
   }
-
-  if (/^\:\:ffff\:/i.test(ip)) {
-    ip = ip.slice(7);
-  }
-
-  ip = extractIP(ip);
-
-  return ip ? ip[0] : '0.0.0.0';
 }
 
 export function extractIP(text) {
-  const ipv4Regex =
-    /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/;
-
-  const ipv6Regex =
-    /\b(?:(?:[0-9A-Fa-f]{1,4}:){7}(?:[0-9A-Fa-f]{1,4}|:))|(?:(?:[0-9A-Fa-f]{1,4}:){6}(?::[0-9A-Fa-f]{1,4}|(?=::[0-9A-Fa-f]{1,4})))|(?:(?:[0-9A-Fa-f]{1,4}:){5}(?:(?::[0-9A-Fa-f]{1,4}){1,2}|:(?=::[0-9A-Fa-f]{1,4})))|(?:(?:[0-9A-Fa-f]{1,4}:){4}(?:(?::[0-9A-Fa-f]{1,4}){1,3}|:(?=(?::[0-9A-Fa-f]{1,4}){1,2})))|(?:(?:[0-9A-Fa-f]{1,4}:){3}(?:(?::[0-9A-Fa-f]{1,4}){1,4}|:(?=(?::[0-9A-Fa-f]{1,4}){1,3})))|(?:(?:[0-9A-Fa-f]{1,4}:){2}(?:(?::[0-9A-Fa-f]{1,4}){1,5}|:(?=(?::[0-9A-Fa-f]{1,4}){1,4})))|(?:(?:[0-9A-Fa-f]{1,4}:){1}(?:(?::[0-9A-Fa-f]{1,4}){1,6}|:(?=(?::[0-9A-Fa-f]{1,4}){1,5})))|(?:(?:(?::[0-9A-Fa-f]{1,4}){1,7})|(?:(?:::)(?::[0-9A-Fa-f]{1,4}){1,6}))\b/; // 这里省略了IPv6的正则表达式，以避免过长，使用上面的IPv6正则表达式替换即可
-
+  const ipv4Regex = /\b(?:\d{1,3}\.){3}\d{1,3}\b/;
+  const ipv6Regex = /\b([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}\b/;
   const ipRegex = new RegExp(
     `(${ipv4Regex.source})|(${ipv6Regex.source})`,
     'g'
   );
 
-  const matches = text.match(ipRegex);
-
-  return matches ? matches : null;
+  return text.match(ipRegex) || null;
 }
 
 // 格式时间日期
-export function formatDate(opt = {}) {
-  const { template = '{0}-{1}-{2} {3}:{4}:{5}', timestamp = Date.now() } = opt;
+export function formatDate({
+  template = '{0}-{1}-{2} {3}:{4}:{5}',
+  timestamp = Date.now(),
+} = {}) {
   const date = new Date(+timestamp);
-  const year = date.getFullYear(),
-    month = date.getMonth() + 1,
-    day = date.getDate(),
-    week = date.getDay(),
-    hour = date.getHours(),
-    minute = date.getMinutes(),
-    second = date.getSeconds();
-  const weekArr = ['日', '一', '二', '三', '四', '五', '六'],
-    timeArr = [year, month, day, hour, minute, second, week];
-  return template.replace(/\{(\d+)\}/g, function () {
-    const key = arguments[1];
-    if (key === 6) return weekArr[timeArr[key]];
-    const val = timeArr[key] + '';
-    if (val === 'undefined') return '';
-    return val.length < 2 ? '0' + val : val;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hour = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
+  const second = String(date.getSeconds()).padStart(2, '0');
+  const weekArr = ['日', '一', '二', '三', '四', '五', '六'];
+  const week = weekArr[date.getDay()]; // 直接获取周几
+
+  const timeArr = [year, month, day, hour, minute, second, week];
+
+  return template.replace(/\{(\d+)\}/g, (_, key) => {
+    const index = Number(key); // 转换为数字
+    return timeArr[index] !== undefined ? timeArr[index] : '';
   });
 }
 
 //处理返回的结果
 export function _send(res, options) {
-  res.status(200);
-
-  res.type('application/json');
-
-  res.send(
-    Object.assign(
-      {
-        code: 1,
-        codeText: 'ok',
-        data: null,
-      },
-      options
-    )
-  );
+  res.status(200).json({
+    code: 1,
+    codeText: 'ok',
+    data: null,
+    ...options,
+  });
 }
 
 export function _success(res, codeText = '操作成功', data = null) {
@@ -276,7 +254,7 @@ export function receiveFiles(req, path, filename, maxFileSize = 5) {
         let newPath = `${path}/${files.attrname[0].newFilename}`,
           originalPath = `${path}/${hdFilename(filename)}`;
 
-        _f.c.rename(newPath, originalPath, function (err) {
+        _f.fs.rename(newPath, originalPath, function (err) {
           if (err) {
             reject(err);
             return;
@@ -290,7 +268,7 @@ export function receiveFiles(req, path, filename, maxFileSize = 5) {
 
 // 合并切片
 export async function mergefile(count, from, to) {
-  const list = await _f.p.readdir(from);
+  const list = await _f.fsp.readdir(from);
 
   if (list.length < count) {
     throw `文件数据错误`;
@@ -306,17 +284,16 @@ export async function mergefile(count, from, to) {
 
   for (let i = 0; i < list.length; i++) {
     const u = `${from}/${list[i]}`;
-    const f = await _f.p.readFile(u);
-    await _f.p.appendFile(temFile, f);
+    const f = await _f.fsp.readFile(u);
+    await _f.fsp.appendFile(temFile, f);
     await _f.del(u);
   }
 
   await _f.del(from);
 
   try {
-    await _f.p.rename(temFile, to);
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {
+    await _f.fsp.rename(temFile, to);
+  } catch {
     await _f.cp(temFile, to);
     await _f.del(temFile);
   }
@@ -335,32 +312,24 @@ export function randomNum(x, y) {
   return Math.round(Math.random() * (y - x) + x);
 }
 
-// 判断网址
+// 检查是否为有效的 HTTP/HTTPS URL
 export function isurl(url) {
   try {
     const newUrl = new URL(url);
-
-    if (newUrl.protocol === 'http:' || newUrl.protocol === 'https:') {
-      return newUrl;
-    }
-
-    return false;
-    // eslint-disable-next-line no-unused-vars
-  } catch (err) {
-    return false;
+    // 检查协议是否为 http 或 https
+    return newUrl.protocol === 'http:' || newUrl.protocol === 'https:'
+      ? newUrl
+      : false;
+  } catch {
+    return false; // 捕获错误并返回 false
   }
-}
-
-// 获取url域名
-export function getHost(url) {
-  let res = url.match(/\/\/([^/?#]+)/)[1];
-
-  return res || 'hello.com';
 }
 
 // 图片格式
 export function isImgFile(name) {
-  return /(\.jpg|\.jpeg|\.png|\.ico|\.svg|\.webp|\.gif)$/gi.test(name);
+  return /(\.jpg|\.jpeg|\.png|\.ico|\.svg|\.webp|\.gif|\.bmp|\.tiff|\.tif|\.jfif|\.heif|\.heic)$/gi.test(
+    name
+  );
 }
 
 // 转义正则符号
@@ -487,8 +456,7 @@ export function getSplitWord(str) {
   try {
     const intl = new Intl.Segmenter('cn', { granularity: 'word' });
     words = [...intl.segment(str)].map((item) => item.segment.trim());
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {
+  } catch {
     words = str.split(' ');
   }
   words.unshift(str);
@@ -550,11 +518,10 @@ export function deepClone(obj) {
   // 返回新的对象
   return result;
 }
-// const util = require('util')
+
 // 歌曲标签信息
 export async function getSongInfo(path) {
   const metadata = await parseFile(path);
-  // console.log(util.inspect(metadata, { showHidden: false, depth: null }));
   let duration = getIn(metadata, ['format', 'duration']) || 0,
     artist = getIn(metadata, ['common', 'artist']) || '未知',
     title = getIn(metadata, ['common', 'title']) || '未知',
@@ -578,34 +545,39 @@ export async function getSongInfo(path) {
     picFormat,
   };
 }
+
 // 音乐文件
 export function isMusicFile(str) {
   return /\.(mp3)$/i.test(str);
 }
-// 视频文件
-export function isVideoFile(str) {
-  return /(\.rmvb|\.3gp|\.mp4|\.m4v|\.avi|\.mkv|\.flv)$/i.test(str);
-}
+
 // 验证值
 export function validationValue(target, arr) {
   return arr.includes(target);
 }
+
 // 字符限制
-export function validaString(target, min = 0, max = 0, w) {
+export function validaString(target, min = 0, max = 0, isAlphanumeric = false) {
+  // 验证输入类型
   if (!_type.isString(target) || !_type.isNumber(min) || !_type.isNumber(max))
     return false;
-  const len = target.length;
-  if (len >= min) {
-    if (max > 0 && len > max) {
-      return false;
-    }
-    if (w && len > 0) {
-      return /^[\w]+$/.test(target);
-    }
-    return true;
+
+  const length = target.length;
+
+  // 检查最小长度限制
+  if (length < min) return false;
+
+  // 检查最大长度限制
+  if (max > 0 && length > max) return false;
+
+  // 如果需要，检查是否为字母数字_
+  if (isAlphanumeric && length > 0) {
+    return /^[\w]+$/.test(target);
   }
-  return false;
+
+  return true;
 }
+
 // 数据类型判断
 export const _type = (function () {
   const _obj = {
@@ -665,10 +637,10 @@ export function tplReplace(tpl, data) {
 export function isTextFile(filepath, length = 1000) {
   try {
     let res = true;
-    const fd = _f.c.openSync(filepath, 'r');
+    const fd = _f.fs.openSync(filepath, 'r');
     for (let i = 0; i < length; i++) {
       const buf = new Buffer.alloc(1);
-      const bytes = _f.c.readSync(fd, buf, 0, 1, i);
+      const bytes = _f.fs.readSync(fd, buf, 0, 1, i);
       const char = buf.toString().charCodeAt();
       if (bytes === 0) {
         break;
@@ -677,10 +649,9 @@ export function isTextFile(filepath, length = 1000) {
         break;
       }
     }
-    _f.c.closeSync(fd);
+    _f.fs.closeSync(fd);
     return res;
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -784,8 +755,7 @@ export function parseObjectJson(str) {
       throw new Error();
     }
     return res;
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {
+  } catch {
     return '';
   }
 }

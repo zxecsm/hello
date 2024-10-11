@@ -43,8 +43,7 @@ let lastPlayCount = 0; // 同步播放进度计数
     ) {
       _msg.botMsg(`整点报时：${hour}:${minute}:${second}`, 1);
     }
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {}
+  } catch {}
   _setTimeout(timerFn, 1000);
 })();
 export function resetLastPlayCount() {

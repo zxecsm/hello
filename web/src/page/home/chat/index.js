@@ -74,11 +74,11 @@ import { setUserInfo } from '../index.js';
 import { backWindow, setZidx } from '../backWindow.js';
 import pagination from '../../../js/plugins/pagination/index.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
-import fileSlice from '../../../js/utils/fileSlice.js';
 import { hideIframeMask, showIframeMask } from '../iframe.js';
 import toolTip from '../../../js/plugins/tooltip/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import { verifyDate } from '../count_down/index.js';
+import md5 from '../../../js/utils/md5.js';
 const $document = $(document),
   $chatRoomWrap = $('.chat_room_wrap'),
   $userListBox = $chatRoomWrap.find('.user_list_box'),
@@ -1321,7 +1321,7 @@ async function sendfile(files, chatAcc) {
     }
     const type = isImgFile(name) ? 'image' : 'file';
     try {
-      const { chunks, count, HASH } = await fileSlice(file, (percent) => {
+      const { chunks, count, HASH } = await md5.fileSlice(file, (percent) => {
         pro.loading(percent);
       });
 
@@ -1378,8 +1378,7 @@ async function sendfile(files, chatAcc) {
           pro.close('发送失败');
         }
       }
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {
+    } catch {
       pro.close('发送失败');
     }
   });
@@ -1400,31 +1399,33 @@ function upVoice(blob, duration) {
   }
   const chatAcc = curChatAccount;
   const pro = new UpProgress(`语音`);
-  fileSlice(blob, function (percent) {
-    pro.update(percent);
-  }).then((buf) => {
-    const { HASH } = buf;
-    reqChatUpVoice(
-      {
-        HASH,
-        name: `${HASH}.wav`,
-        to: chatAcc,
-      },
-      blob,
-      (percent) => {
-        pro.update(percent);
-      }
-    )
-      .then((res) => {
-        if (res.code === 1) {
-          pro.close('发送成功');
-          playSound(imgVoice);
+  md5
+    .fileSlice(blob, function (percent) {
+      pro.update(percent);
+    })
+    .then((buf) => {
+      const { HASH } = buf;
+      reqChatUpVoice(
+        {
+          HASH,
+          name: `${HASH}.wav`,
+          to: chatAcc,
+        },
+        blob,
+        (percent) => {
+          pro.update(percent);
         }
-      })
-      .catch(() => {
-        pro.fail('发送失败');
-      });
-  });
+      )
+        .then((res) => {
+          if (res.code === 1) {
+            pro.close('发送成功');
+            playSound(imgVoice);
+          }
+        })
+        .catch(() => {
+          pro.fail('发送失败');
+        });
+    });
 }
 ~(function () {
   let x = null,

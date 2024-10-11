@@ -560,7 +560,7 @@ async function insertInitialData() {
       title: 'About',
       share: 1,
       content: (
-        await _f.p.readFile(resolve(__dirname, './default_about.md'))
+        await _f.fsp.readFile(resolve(__dirname, './default_about.md'))
       ).toString(),
     },
     {
@@ -587,8 +587,7 @@ async function insertInitialData() {
 (async () => {
   try {
     await queryData('user', 'account');
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {
+  } catch {
     await executeInTransaction(async () => {
       // 如果表不存在则创建表
       await createTables();

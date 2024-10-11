@@ -19,8 +19,7 @@ export function jwtde(token) {
     let obj = jwt.verify(token, _d.tokenKey);
     obj.userinfo = obj.userinfo || {};
     return obj;
-    // eslint-disable-next-line no-unused-vars
-  } catch (error) {
+  } catch {
     return { userinfo: {} };
   }
 }

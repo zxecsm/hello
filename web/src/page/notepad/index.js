@@ -40,10 +40,10 @@ import { reqGetNotePad, reqNotePad } from '../../api/notepad';
 import { reqPicRepeat, reqPicUp } from '../../api/pic';
 import rMenu from '../../js/plugins/rightMenu';
 import MdWorker from '../../js/utils/md.worker.js';
-import fileSlice from '../../js/utils/fileSlice.js';
 import changeDark from '../../js/utils/changeDark.js';
 import _d from '../../js/common/config.js';
 import { editorSmoothScrollToLine } from '../edit/edit.js';
+import md5 from '../../js/utils/md5.js';
 const mdWorker = new MdWorker();
 const $contentWrap = $('.content_wrap'),
   $headBtns = $contentWrap.find('.head_btns'),
@@ -403,7 +403,7 @@ async function hdUpFile(files) {
     }
     try {
       //文件切片
-      const { HASH } = await fileSlice(file, (percent) => {
+      const { HASH } = await md5.fileSlice(file, (percent) => {
         pro.loading(percent);
       });
       const isrepeat = await reqPicRepeat({
@@ -440,8 +440,7 @@ async function hdUpFile(files) {
       } else {
         pro.fail();
       }
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {
+    } catch {
       pro.fail();
     }
   });

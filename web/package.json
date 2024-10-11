@@ -47,7 +47,6 @@
     "markdown-it-sub": "^2.0.0",
     "markdown-it-sup": "^2.0.0",
     "markdown-it-task-checkbox": "^1.0.6",
-    "md5": "^2.3.0",
     "qrcode": "^1.5.4",
     "qs": "^6.13.0",
     "spark-md5": "^3.0.2"
