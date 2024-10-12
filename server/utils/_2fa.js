@@ -1,13 +1,18 @@
 import speakeasy from 'speakeasy';
-const temObj = {};
+import { CacheByExpire } from './cache.js';
+
+const cache = new CacheByExpire(10 * 60 * 1000, 30 * 60 * 1000);
 
 function create(acc) {
-  clean();
-  if (temObj.hasOwnProperty(acc)) {
-    return temObj[acc].verify;
+  const data = cache.get(acc);
+
+  if (data) {
+    return data.verify;
   } else {
     const verify = speakeasy.generateSecret().base32;
-    temObj[acc] = { t: Date.now(), verify };
+
+    cache.set(acc, { verify });
+
     return verify;
   }
 }
@@ -27,18 +32,8 @@ function verify(verify, token) {
   });
 }
 
-function clean() {
-  const now = Date.now();
-  Object.keys(temObj).forEach((item) => {
-    const { t } = temObj[item];
-    if (now - t > 10 * 60 * 1000) {
-      del(item);
-    }
-  });
-}
-
 function del(acc) {
-  delete temObj[acc];
+  cache.delete(acc);
 }
 
 const _2fa = { create, getToken, verify, del };

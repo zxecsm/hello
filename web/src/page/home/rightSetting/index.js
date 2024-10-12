@@ -78,7 +78,7 @@ import {
   openFriend,
   setCurChatAccount,
 } from '../chat/index.js';
-import { backWindow, setZidx } from '../backWindow.js';
+import { popWindow, setZidx } from '../popWindow.js';
 import { reqRootTips } from '../../../api/root.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { setExpireCount, showCountBox } from '../count_down/index.js';
@@ -175,7 +175,7 @@ export function showRightMenu() {
 export function hideRightMenu() {
   $rightBox.removeClass('open');
   $rightMenuMask.stop().fadeOut(_d.speed);
-  backWindow.remove('rightmenu');
+  popWindow.remove('rightmenu');
 }
 // 滑动
 _mySlide({
@@ -257,7 +257,7 @@ function hdHideState() {
 }
 // 隐藏用户个人信息
 export function hideUserInfo() {
-  backWindow.remove('userinfo');
+  popWindow.remove('userinfo');
   toHide($userInfoWrap[0], { to: 'bottom', scale: 'small' });
 }
 // 上传头像

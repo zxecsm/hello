@@ -29,10 +29,12 @@ let readOnly = false;
 const editor = createEditer($editFile.find('.editor')[0]);
 let fileEditCodeNum = _getData('fileEditCodeNum');
 let fileFontSize = _getData('fileFontSize');
+let fileTextLineFeed = _getData('fileTextLineFeed');
 export function editFileIsHiden() {
   return $editFile.is(':hidden');
 }
 changeTheme(_getData('dark'));
+editor.session.setUseWrapMode(fileTextLineFeed);
 // 切换黑暗模式
 function changeTheme(dark) {
   if (dark === 'y') {
@@ -176,6 +178,14 @@ function settingMenu(e) {
   const data = [
     { id: 'size', text: '字体大小', beforeIcon: 'iconfont icon-font-size' },
     {
+      id: 'lineFeed',
+      text: '自动换行',
+      beforeIcon: 'iconfont icon-wenzihuanhang',
+      afterIcon: fileTextLineFeed
+        ? 'iconfont icon-kaiguan-kai1'
+        : 'iconfont icon-kaiguan-guan',
+    },
+    {
       id: 'num',
       text: '行号',
       beforeIcon: 'iconfont icon-bianhao',
@@ -200,7 +210,7 @@ function settingMenu(e) {
       } else if (id === 'num') {
         fileEditCodeNum = !fileEditCodeNum;
         _setData('fileEditCodeNum', fileEditCodeNum);
-        data[1].afterIcon = fileEditCodeNum
+        data[2].afterIcon = fileEditCodeNum
           ? 'iconfont icon-kaiguan-kai1'
           : 'iconfont icon-kaiguan-guan';
         resetMenu(data);
@@ -229,6 +239,14 @@ function settingMenu(e) {
           },
           '选择语言'
         );
+      } else if (id === 'lineFeed') {
+        fileTextLineFeed = !fileTextLineFeed;
+        _setData('fileTextLineFeed', fileTextLineFeed);
+        data[1].afterIcon = fileTextLineFeed
+          ? 'iconfont icon-kaiguan-kai1'
+          : 'iconfont icon-kaiguan-guan';
+        resetMenu(data);
+        editor.session.setUseWrapMode(fileTextLineFeed);
       }
     },
     '设置'

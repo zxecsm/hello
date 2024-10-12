@@ -103,6 +103,7 @@ const _d = {
     noteWiden: false, // 笔记显示区域加宽
     loginName: '', // 登录名
     username: '', // 用户名
+    account: '', // 账号
     showpd: false, // 显示密码
     dark: 's', // 黑暗模式 s：随系统 y：开启 n：关闭
     headBtnToRight: true, // 窗口头部按钮排序
@@ -113,6 +114,7 @@ const _d = {
     fontType: 'default', // 字体类型
     notePageSize: 20, // 笔记每页显示
     editNoteFontSize: 0.22, // 编辑笔记输入框字体大小
+    editNoteTextLineFeed: false, // 编辑笔记自动换行
     editNoteCodeNum: true, // 编辑笔记显示行号
     bmPageSize: 20, // 书签每页显示
     filesPageSize: 20, // 文件列表每页显示
@@ -120,6 +122,7 @@ const _d = {
     fileKeys: [], // 临时文件直链
     fileSort: { type: 'time', isDes: true }, // 文件排序
     fileFontSize: 0.22, // 文件编辑文本大小
+    fileTextLineFeed: false, // 文件编辑文字自动换行
     fileShowGrid: false, // 文件列表块状显示
     fileEditCodeNum: true, // 编辑文件显示行号
     newNote: '', // 未保存的新笔记
@@ -132,11 +135,9 @@ const _d = {
     trashPageSize: 20, // 回收站每页显示
     songPlaySpeed: ['x1', 1], // 歌曲播放速度
     showSongTranslation: false, // 显示歌词翻译
-    lastweizi: {},
     lrcState: { size: 0.25, position: 'left' }, // 歌词状态
     songListPageSize: 50, // 歌曲每页显示
     asidePageSize: 6, // 侧边书签每页显示
-    account: '', // 账号
     noteFontSize: 0.22, // 笔记文本大小
     tipsFlag: 0, // tips标识
     toolTip: true, // 提示工具

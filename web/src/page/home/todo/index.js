@@ -30,7 +30,7 @@ import {
   reqTodoList,
   reqTodoState,
 } from '../../../api/todo.js';
-import { backWindow, setZidx } from '../backWindow.js';
+import { popWindow, setZidx } from '../popWindow.js';
 import pagination from '../../../js/plugins/pagination/index.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { hideRightMenu } from '../rightSetting/index.js';
@@ -211,7 +211,7 @@ export function closeTodoBox() {
       scale: 'small',
     },
     () => {
-      backWindow.remove('todo');
+      popWindow.remove('todo');
       $todoList.html('');
     }
   );

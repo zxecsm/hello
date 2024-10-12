@@ -1,6 +1,6 @@
 import express from 'express';
 
-import msg from '../../data/msg.js';
+import _connect from '../../utils/connect.js';
 
 import { _d } from '../../data/data.js';
 
@@ -43,7 +43,7 @@ import timedTask from '../../utils/timedTask.js';
 
 import _f from '../../utils/f.js';
 
-import _2fa from '../../utils/speakeasy.js';
+import _2fa from '../../utils/_2fa.js';
 
 import verifyLimit from '../../utils/verifyLimit.js';
 
@@ -1200,7 +1200,7 @@ route.get('/real-time', async (req, res) => {
       onlineMsg(req);
     }
 
-    const con = msg.get(account, cb, req._hello);
+    const con = _connect.add(account, cb, req._hello);
 
     //初始化指令标识
     if (!flag) {
@@ -1312,7 +1312,7 @@ route.post('/real-time', async (req, res) => {
 
       data.to = account;
 
-      msg.set(data.to, id, { type, data });
+      _connect.send(data.to, id, { type, data });
 
       _success(res);
     }
@@ -1325,7 +1325,7 @@ route.post('/real-time', async (req, res) => {
 
       data.to = account;
 
-      msg.set(data.to, id, { type, data });
+      _connect.send(data.to, id, { type, data });
 
       _success(res);
     }
@@ -1340,7 +1340,7 @@ route.post('/real-time', async (req, res) => {
 
       data.to = account;
 
-      msg.set(data.to, id, { type, data });
+      _connect.send(data.to, id, { type, data });
 
       _success(res);
     }
@@ -1355,7 +1355,7 @@ route.post('/real-time', async (req, res) => {
 
       data.to = account;
 
-      msg.set(data.to, id, { type, data });
+      _connect.send(data.to, id, { type, data });
 
       _success(res);
     }
@@ -1410,11 +1410,11 @@ route.post('/real-time', async (req, res) => {
           return;
         }
 
-        msg.set(account, id, { type, data });
+        _connect.send(account, id, { type, data });
 
         _success(res);
       } else {
-        msg.set(account, id, { type, data: {} });
+        _connect.send(account, id, { type, data: {} });
 
         _success(res);
       }

@@ -1671,6 +1671,8 @@ route.post('/repeat', async (req, res) => {
         return;
       }
       await deleteData('songs', `WHERE id = ?`, [songInfo.id]);
+
+      await _delDir(`${configObj.filepath}/music/${getFileDir(songInfo.url)}`);
     }
 
     _nothing(res);

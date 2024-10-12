@@ -6,7 +6,6 @@ import _msg from '../plugins/message';
 import qs from 'qs';
 import loadSvg from '../../images/img/loading.svg';
 import { reqSearchSplitWord } from '../../api/search';
-import { backWindow } from '../../page/home/backWindow';
 import rMenu from '../plugins/rightMenu';
 import { reqUserFileKey } from '../../api/user';
 import { _tpl } from './template';
@@ -1397,7 +1396,6 @@ export function imgPreview(arr, idx = 0) {
     pre.style.display = 'block';
     next.style.display = 'block';
   }
-  backWindow.add('showimg', closeBox);
   function cut(idx) {
     scale = 1;
     image.style.opacity = 0;
@@ -1508,7 +1506,6 @@ export function imgPreview(arr, idx = 0) {
     }
   }
   function closeBox() {
-    backWindow.remove('showimg');
     box.removeEventListener('click', hdClick);
     box.removeEventListener('pointerdown', hdDown);
     image.removeEventListener('wheel', hdWheel);

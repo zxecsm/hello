@@ -53,7 +53,7 @@ import {
 } from '../searchBox/index.js';
 
 import { setUserInfo } from '../index.js';
-import { backWindow } from '../backWindow.js';
+import { popWindow } from '../popWindow.js';
 import pagination from '../../../js/plugins/pagination/index.js';
 import toolTip from '../../../js/plugins/tooltip/index.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
@@ -1347,7 +1347,7 @@ $asideBtn.on('click', toggleAside);
 
 // 显示和隐藏侧栏
 export function showAside() {
-  backWindow.add('aside', hideAside);
+  popWindow.add('aside', hideAside);
   loadingImg($aside.find('.list')[0]);
   $asideWrap.outerWidth();
   $asideWrap.css('display', 'block').addClass('open');
@@ -1356,7 +1356,7 @@ export function showAside() {
 }
 
 function hideAside() {
-  backWindow.remove('aside');
+  popWindow.remove('aside');
   $asideBtn.fadeIn(_d.speed);
   $asideWrap
     .removeClass('open')

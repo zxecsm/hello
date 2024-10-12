@@ -1,7 +1,6 @@
 import express from 'express';
 
 import configObj from '../../data/config.js';
-import msg from '../../data/msg.js';
 import _f from '../../utils/f.js';
 
 import {
@@ -53,6 +52,8 @@ import {
   heperMsgAndForward,
   getChatUserList,
 } from './chat.js';
+
+import _connect from '../../utils/connect.js';
 
 const route = express.Router();
 
@@ -189,7 +190,7 @@ route.get('/getdes', async (req, res) => {
       user.online = false;
     }
 
-    const con = msg.getConnect()[acc];
+    const con = _connect.get(acc);
 
     _success(res, 'ok', {
       username: user.username,
@@ -650,7 +651,7 @@ route.get('/user-list', async (req, res) => {
     const users = await getChatUserList(account, pageSize, offset);
 
     const n = Date.now();
-    const cons = msg.getConnect();
+    const cons = _connect.getConnects();
 
     const list = users.map((u) => {
       const {

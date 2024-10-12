@@ -16,7 +16,7 @@ import {
   toHide,
   toSetSize,
 } from '../../js/utils/utils';
-import { backWindow, setZidx } from './backWindow';
+import { popWindow, setZidx } from './popWindow';
 import imgMrLogo from '../../images/img/mrlogo.png';
 import { closeAllwindow, hideAllwindow } from './index';
 import rMenu from '../../js/plugins/rightMenu';
@@ -123,7 +123,7 @@ class CreateIframe {
     this.box.style.display = 'flex';
     this.box.style.visibility = 'visible';
     toSetSize(this.box, 1250);
-    const windows = backWindow.getValue();
+    const windows = popWindow.getList();
     const lastWindow = windows.slice(-1)[0];
     if (!lastWindow) {
       toCenter(this.box);
@@ -281,7 +281,7 @@ class CreateIframe {
     this.dragClose();
     this.resizeClose();
     toHide(this.box, { to: 'bottom', scale: 'small' }, () => {
-      backWindow.remove(this.id);
+      popWindow.remove(this.id);
       this.iframe.remove();
       this.box.remove();
     });
@@ -323,7 +323,7 @@ class CreateIframe {
   }
   hdHide() {
     toHide(this.box, { to: 'top', scale: 'small', useVisibility: true }, () => {
-      backWindow.remove(this.id);
+      popWindow.remove(this.id);
       this.tagBox.classList.add('hide');
       this.scrollT.close();
     });
@@ -375,7 +375,7 @@ function addHideBox(iframeBox) {
 function switchIframeBox() {
   const _this = this.parentNode;
   const htarget = _this._iframeBox.box;
-  const obj = backWindow.getValue().slice(-1)[0];
+  const obj = popWindow.getList().slice(-1)[0];
   if (
     htarget.style.visibility === 'hidden' ||
     (obj && obj.id != _this._iframeBox.id)

@@ -27,7 +27,7 @@ import {
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
 import _pop from '../../../js/plugins/popConfirm';
-import { backWindow, setZidx } from '../backWindow.js';
+import { popWindow, setZidx } from '../popWindow.js';
 import pagination from '../../../js/plugins/pagination/index.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import {
@@ -247,7 +247,7 @@ export function closeCountBox() {
       scale: 'small',
     },
     () => {
-      backWindow.remove('count');
+      popWindow.remove('count');
       $countList.html('');
     }
   );

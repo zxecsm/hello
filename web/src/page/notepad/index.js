@@ -55,6 +55,7 @@ const $contentWrap = $('.content_wrap'),
 
 let editNoteCodeNum = _getData('editNoteCodeNum');
 let editNoteFontSize = _getData('editNoteFontSize');
+let editNoteTextLineFeed = _getData('editNoteTextLineFeed');
 // 黑暗模式
 function changeTheme(dark) {
   if (dark === 'y') {
@@ -78,6 +79,7 @@ window.changeTheme = changeTheme;
 const editor = createEditer($editBox[0]);
 editor.getSession().setMode('ace/mode/markdown');
 changeTheme(_getData('dark'));
+editor.session.setUseWrapMode(editNoteTextLineFeed);
 // 快捷键
 editor.getSession().on(
   'change',
@@ -495,6 +497,14 @@ function settingEdit(e) {
   const data = [
     { id: 'size', text: '字体大小', beforeIcon: 'iconfont icon-font-size' },
     {
+      id: 'lineFeed',
+      text: '自动换行',
+      beforeIcon: 'iconfont icon-wenzihuanhang',
+      afterIcon: editNoteTextLineFeed
+        ? 'iconfont icon-kaiguan-kai1'
+        : 'iconfont icon-kaiguan-guan',
+    },
+    {
       id: 'num',
       text: '行号',
       beforeIcon: 'iconfont icon-bianhao',
@@ -518,11 +528,19 @@ function settingEdit(e) {
       } else if (id === 'num') {
         editNoteCodeNum = !editNoteCodeNum;
         _setData('editNoteCodeNum', editNoteCodeNum);
-        data[1].afterIcon = editNoteCodeNum
+        data[2].afterIcon = editNoteCodeNum
           ? 'iconfont icon-kaiguan-kai1'
           : 'iconfont icon-kaiguan-guan';
         resetMenu(data);
         changeCodeNum();
+      } else if (id === 'lineFeed') {
+        editNoteTextLineFeed = !editNoteTextLineFeed;
+        _setData('editNoteTextLineFeed', editNoteTextLineFeed);
+        data[1].afterIcon = editNoteTextLineFeed
+          ? 'iconfont icon-kaiguan-kai1'
+          : 'iconfont icon-kaiguan-guan';
+        resetMenu(data);
+        editor.session.setUseWrapMode(editNoteTextLineFeed);
       }
     },
     '设置'
@@ -619,17 +637,6 @@ function openNotepad(e) {
 }
 if (isIframe()) {
   $headBtns.find('.h_go_home').remove();
-}
-if (!isIframe()) {
-  // 禁止后退
-  function pushHistory() {
-    window.history.pushState(null, '', myOpen());
-  }
-  pushHistory();
-  window.addEventListener('popstate', function () {
-    pushHistory();
-    // to do something
-  });
 }
 if (!isIframe()) wave(5);
 changeDark.bind((isDark) => {

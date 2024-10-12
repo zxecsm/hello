@@ -52,7 +52,7 @@ import { UpProgress } from '../../../js/plugins/UpProgress';
 import _msg from '../../../js/plugins/message';
 import _pop from '../../../js/plugins/popConfirm';
 import realtime from '../../../js/plugins/realtime';
-import { backWindow, setZidx } from '../backWindow.js';
+import { popWindow, setZidx } from '../popWindow.js';
 import {
   reqPlayerAddList,
   reqPlayerCloseCollectSong,
@@ -281,7 +281,7 @@ function unBindMusicPlayerLazyImg() {
 }
 // 隐藏播放器
 export function hideMusicPlayBox() {
-  backWindow.remove('music');
+  popWindow.remove('music');
   if (isBigScreen()) {
     if (!musicPlayerIsHide()) {
       showMiniPlayer();
@@ -298,7 +298,7 @@ export function hideMusicPlayBox() {
 // 关闭播放器
 export function closeMusicPlayer() {
   toHide($musicPlayerBox[0], { to: 'bottom', scale: 'small' }, () => {
-    backWindow.remove('music');
+    popWindow.remove('music');
     $songItemsBox.html('');
     $songListUl.html('');
     closeMusicTitleScroll();

@@ -5,7 +5,7 @@ import { formidable } from 'formidable';
 
 import configObj from '../data/config.js';
 
-import msg from '../data/msg.js';
+import _connect from './connect.js';
 
 import _f from './f.js';
 
@@ -673,7 +673,7 @@ export function hdFilename(str, fill) {
 
 // 同步更新数据
 export function syncUpdateData(req, flag, id = '') {
-  msg.set(req._hello.userinfo.account, req._hello.temid, {
+  _connect.send(req._hello.userinfo.account, req._hello.temid, {
     type: 'updatedata',
     data: {
       flag,
@@ -684,7 +684,7 @@ export function syncUpdateData(req, flag, id = '') {
 
 // 错误通知消息
 export function errorNotifyMsg(req, text) {
-  msg.set(req._hello.userinfo.account, nanoid(), {
+  _connect.send(req._hello.userinfo.account, nanoid(), {
     type: 'errMsg',
     data: {
       text,

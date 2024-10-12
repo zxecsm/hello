@@ -52,7 +52,7 @@ export default function createEditer(el) {
   // 关闭行号
   // editor.setOption('showGutter',false)
   // 自动换行
-  editor.session.setUseWrapMode(true);
+  // editor.session.setUseWrapMode(true);
   // 行高亮
   // editor.setHighlightActiveLine(false);
   // 语法检查

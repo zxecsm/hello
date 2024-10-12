@@ -7,7 +7,7 @@ import {
   myDrag,
   percentToValue,
 } from '../../js/utils/utils';
-import { setZidx } from './backWindow';
+import { setZidx } from './popWindow';
 import { hideIframeMask, showIframeMask } from './iframe';
 const _head = document.querySelector('head'),
   _style = document.createElement('style');

@@ -39,7 +39,7 @@ import {
   reqSearchList,
   reqSearchSave,
 } from '../../../api/search.js';
-import { backWindow, setZidx } from '../backWindow.js';
+import { popWindow, setZidx } from '../popWindow.js';
 import toolTip from '../../../js/plugins/tooltip/index.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { showBmk, showHistory } from '../rightSetting/index.js';
@@ -335,7 +335,7 @@ $searchBoxMask
   });
 // 隐藏搜索框
 function hideSearchBox() {
-  backWindow.remove('search');
+  popWindow.remove('search');
   homeLoadImg.unBind();
   $homeBmWrap.find('ul').html('');
   $searchBoxMask.stop().hide(_d.speed);

@@ -1,3 +1,5 @@
+import { CacheByExpire } from './cache.js';
+
 class VerifyLimit {
   constructor(opt = {}, updateTimestamp = true) {
     const defaultOpt = {
@@ -7,37 +9,34 @@ class VerifyLimit {
 
     this.opt = Object.assign(defaultOpt, opt);
     this.updateTimestamp = updateTimestamp; // true: 间隔 10*60 秒 3 次  false: 10*60 秒内 3 次
-    this.data = {};
+    this.cache = new CacheByExpire(this.opt.space * 1000, 1000 * 60 * 10);
   }
 
   add(ip, flag = '') {
     const key = 'key_' + ip + flag;
-    const t = Date.now();
-    if (this.data.hasOwnProperty(key)) {
-      this.data[key]['n']++;
+
+    const data = this.cache.get(key);
+
+    if (data) {
+      data.count++;
+
       if (this.updateTimestamp) {
-        this.data[key]['t'] = t;
+        this.cache.resetExpireTime(key);
       }
     } else {
-      this.data[key] = { n: 1, t };
+      this.cache.set(key, { count: 1 });
     }
   }
 
   verify(ip, flag = '') {
     const key = 'key_' + ip + flag;
-    const nt = Date.now();
-    Object.keys(this.data).forEach((k) => {
-      const { t } = this.data[k];
-      if (nt - t > this.opt.space * 1000) {
-        delete this.data[k];
-      }
-    });
-    if (
-      this.data.hasOwnProperty(key) &&
-      this.data[key]['n'] >= this.opt.count
-    ) {
+
+    const data = this.cache.get(key);
+
+    if (data && data.count >= this.opt.count) {
       return false;
     }
+
     return true;
   }
 }

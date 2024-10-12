@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import _d from '../../../js/common/config';
-import { backWindow, setZidx } from '../backWindow';
+import { popWindow, setZidx } from '../popWindow';
 import {
   ContentScroll,
   _getData,
@@ -212,7 +212,7 @@ $editLrcWrap.find('textarea').on('keydown', function (e) {
 });
 // 关闭编辑歌词
 export function closeEditLrcBox() {
-  backWindow.remove('editlrc');
+  popWindow.remove('editlrc');
   toHide(
     $editLrcWrap[0],
     {
@@ -294,7 +294,7 @@ export function playVideo() {
 export function closeMvBox() {
   pauseVideo();
   toHide($musicMvWrap[0], { to: 'bottom', scale: 'small' }, () => {
-    backWindow.remove('mv');
+    popWindow.remove('mv');
   });
   musicMvContentScroll.close();
 }

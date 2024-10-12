@@ -1,5 +1,5 @@
 import axios from 'axios';
-import msg from '../../data/msg.js';
+import _connect from '../../utils/connect.js';
 
 import {
   queryData,
@@ -177,7 +177,7 @@ export async function sendNotifyMsg(req, to, flag, tt) {
       );
     }
 
-    const accs = Object.keys(msg.getConnect());
+    const accs = Object.keys(_connect.getConnects());
 
     await batchTask(async (offset, limit) => {
       const list = accs.slice(offset, offset + limit);
@@ -203,7 +203,11 @@ export async function sendNotifyMsg(req, to, flag, tt) {
 
         notifyObj.data.from.des = des;
 
-        msg.set(key, key === account ? nanoid() : req._hello.temid, notifyObj);
+        _connect.send(
+          key,
+          key === account ? nanoid() : req._hello.temid,
+          notifyObj
+        );
       });
 
       return true;
@@ -223,7 +227,7 @@ export async function sendNotifyMsg(req, to, flag, tt) {
     }
 
     if (notifyObj.data.to === account) {
-      msg.set(account, nanoid(), notifyObj);
+      _connect.send(account, nanoid(), notifyObj);
     } else {
       let des = '';
 
@@ -242,10 +246,10 @@ export async function sendNotifyMsg(req, to, flag, tt) {
 
       notifyObj.data.from.des = des;
 
-      msg.set(notifyObj.data.to, req._hello.temid, notifyObj);
+      _connect.send(notifyObj.data.to, req._hello.temid, notifyObj);
 
       if (flag !== 'shake') {
-        msg.set(account, nanoid(), notifyObj);
+        _connect.send(account, nanoid(), notifyObj);
       }
     }
   }
@@ -340,10 +344,10 @@ export async function hdForwardToLink(req, list, fArr, text) {
 export async function onlineMsg(req, pass) {
   const { account, hide, username } = req._hello.userinfo;
 
-  const connect = msg.getConnect();
+  const con = _connect.getConnects();
 
-  if ((!connect.hasOwnProperty(account) && hide === 0) || pass) {
-    const accs = Object.keys(connect);
+  if ((!con.hasOwnProperty(account) && hide === 0) || pass) {
+    const accs = Object.keys(con);
 
     await batchTask(async (offset, limit) => {
       const list = accs.slice(offset, offset + limit);
@@ -365,7 +369,7 @@ export async function onlineMsg(req, pass) {
         if (f) {
           des = f.des;
         }
-        msg.set(key, req._hello.temid, {
+        _connect.send(key, req._hello.temid, {
           type: 'online',
           data: { text: `${des || username} 已上线`, account },
         });

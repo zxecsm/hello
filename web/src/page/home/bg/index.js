@@ -35,7 +35,7 @@ import {
 } from '../../../api/bg.js';
 import { hideRightMenu } from '../rightSetting/index.js';
 import { setBg } from '../index.js';
-import { backWindow, setZidx } from '../backWindow.js';
+import { popWindow, setZidx } from '../popWindow.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import md5 from '../../../js/utils/md5.js';
@@ -92,7 +92,7 @@ async function hdUpBg(files) {
 export function closeBgBox() {
   $allBgWrap.stop().fadeOut(_d.speed, () => {
     bglazyImg.unBind();
-    backWindow.remove('bg');
+    popWindow.remove('bg');
     $bgList.html('');
   });
 }

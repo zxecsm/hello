@@ -71,7 +71,7 @@ import {
 } from '../../../api/chat.js';
 import { showUserInfo } from '../rightSetting/index.js';
 import { setUserInfo } from '../index.js';
-import { backWindow, setZidx } from '../backWindow.js';
+import { popWindow, setZidx } from '../popWindow.js';
 import pagination from '../../../js/plugins/pagination/index.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { hideIframeMask, showIframeMask } from '../iframe.js';
@@ -310,7 +310,7 @@ function lazyLoadChatLogo() {
 // 关闭聊天室
 export function closeChatRoom() {
   toHide($chatRoomWrap[0], { to: 'bottom', scale: 'small' }, () => {
-    backWindow.remove('chat');
+    popWindow.remove('chat');
     chatTitleScroll.close();
     $chatListBox.find('.chat_list').html('');
     chatSearchInput.setValue('').focus();

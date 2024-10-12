@@ -2,10 +2,10 @@ import express from 'express';
 
 import configObj from '../../data/config.js';
 import { _d, generateKey } from '../../data/data.js';
-import msg from '../../data/msg.js';
+import _connect from '../../utils/connect.js';
 import mailer from '../../utils/email.js';
 import _f from '../../utils/f.js';
-import _2fa from '../../utils/speakeasy.js';
+import _2fa from '../../utils/_2fa.js';
 
 import {
   updateData,
@@ -122,7 +122,7 @@ route.get('/user-list', async (req, res) => {
       ['hello', pageSize, offset]
     );
 
-    const cons = msg.getConnect();
+    const cons = _connect.getConnects();
 
     list = list.map((item) => {
       const con = cons[item.account];
@@ -521,8 +521,8 @@ route.post('/tips', async (req, res) => {
 
     const temId = nanoid();
 
-    Object.keys(msg.getConnect()).forEach((key) => {
-      msg.set(key, temId, {
+    Object.keys(_connect.getConnects()).forEach((key) => {
+      _connect.send(key, temId, {
         type: 'updatedata',
         data: {
           flag: 'tips',
