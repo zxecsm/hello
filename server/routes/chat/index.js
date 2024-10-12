@@ -297,7 +297,7 @@ route.get('/read-msg', async (req, res) => {
     let list = [];
 
     const fields = `logo,email,username,_from,_to,id,create_at,content,hash,size,type,flag`;
-    if (type === 0) {
+    if (type === 0 || (type === 2 && offset <= 0)) {
       //打开聊天框
       where += ` ORDER BY create_at DESC LIMIT ?`;
       valArr.push(pageSize);
