@@ -909,6 +909,11 @@ async function hdUp(files) {
       _msg.error(`不能上传空文件`);
       return;
     }
+    if (size > _d.fieldLenght.maxFileSize) {
+      pro.fail();
+      _msg.error(`上传文件限制0-4.8G`);
+      return;
+    }
     if (!rep) {
       const res = await reqFileRepeat({ path });
       if (res.code === 1) {

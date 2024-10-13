@@ -1321,6 +1321,11 @@ async function sendfile(files, chatAcc) {
       _msg.error(`不能发送空文件`);
       return;
     }
+    if (size > _d.fieldLenght.maxFileSize) {
+      pro.fail('发送失败');
+      _msg.error(`发送文件限制0-4.8G`);
+      return;
+    }
     const type = isImgFile(name) ? 'image' : 'file';
     try {
       const { chunks, count, HASH } = await md5.fileSlice(file, (percent) => {
@@ -1391,12 +1396,8 @@ function upVoice(blob, duration) {
     _msg.error('发送失败');
     return;
   }
-  if (duration < 2) {
-    _msg.error('语音最短2s');
-    return;
-  }
-  if (duration > 30) {
-    _msg.error('语音最长30s');
+  if (duration < 2 || duration > 30) {
+    _msg.error('语音限制2-30s');
     return;
   }
   const chatAcc = curChatAccount;

@@ -59,6 +59,7 @@ const fieldLenght = {
   chatFileExpire: 999,
   operationTimeout: 10000,
   rainCodeSleep: 60 * 5,
+  maxFileSize: 1024 * 1024 * 5000,
 };
 const _d = {
   fieldLenght,

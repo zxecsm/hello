@@ -269,13 +269,13 @@ export async function upLogo(cb) {
     if (files.length === 0) return;
     const file = files[0];
     if (!isImgFile(file.name)) {
-      _msg.error(`图片格式错误`);
+      _msg.error(`头像格式错误`);
       return;
     }
     const pro = new UpProgress(file.name);
     if (file.size <= 0 || file.size >= 5 * 1024 * 1024) {
       pro.fail();
-      _msg.error(`图片大小必须0~5M范围`);
+      _msg.error(`头像限制0-5M`);
       return;
     }
     const { HASH } = await md5.fileSlice(file, (percent) => {

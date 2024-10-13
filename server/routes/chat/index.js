@@ -819,7 +819,8 @@ route.post('/merge', async (req, res) => {
       !validaString(to, 1, fieldLenght.id, 1) ||
       !validationValue(type, ['image', 'file']) ||
       isNaN(count) ||
-      count < 1
+      count < 1 ||
+      count > fieldLenght.maxFileSlice
     ) {
       paramErr(res, req);
       return;

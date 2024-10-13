@@ -1080,7 +1080,8 @@ route.post('/merge', async (req, res) => {
       !validaString(HASH, 1, fieldLenght.id, 1) ||
       !validaString(path, 1, fieldLenght.url) ||
       isNaN(count) ||
-      count < 1
+      count < 1 ||
+      count > fieldLenght.maxFileSlice
     ) {
       paramErr(res, req);
       return;

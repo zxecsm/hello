@@ -398,7 +398,7 @@ async function hdUpFile(files) {
     }
     if (size <= 0 || size >= 5 * 1024 * 1024) {
       pro.fail();
-      _msg.error(`图片大小必须0~5M范围`);
+      _msg.error(`图片限制0-5M`);
       return;
     }
     try {

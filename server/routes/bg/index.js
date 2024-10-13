@@ -265,7 +265,7 @@ route.post('/up', async (req, res) => {
 
     await _f.mkdir(tDir);
 
-    await receiveFiles(req, tDir, tName, 20);
+    await receiveFiles(req, tDir, tName, 10);
 
     const { width, height } = await getImgInfo(`${tDir}/${tName}`);
     const type = width < height ? 'bgxs' : 'bg';

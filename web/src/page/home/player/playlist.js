@@ -402,7 +402,7 @@ $pMusicListBox
 // 更新播放列表
 export const updatePlayingList = debounce(function (msg) {
   if (playingList.length > _d.maxSongList) {
-    _msg.error(`播放列表最多${_d.maxSongList}首`);
+    _msg.error(`播放列表限制${_d.maxSongList}首`);
     playingList = playingList.slice(0, _d.maxSongList);
   }
   reqPlayerPlayList({

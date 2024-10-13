@@ -225,7 +225,7 @@ export function shareSongList(e, arr, cb) {
     return;
   }
   if (arr.length > _d.maxSongList) {
-    _msg.error(`分享列表最多${_d.maxSongList}首`);
+    _msg.error(`分享列表限制${_d.maxSongList}首`);
     return;
   }
   createShare(e, { title: '分享歌曲' }, ({ close, inp }) => {
@@ -257,7 +257,7 @@ export function songCloseCollect(id, cb) {
 // 收藏歌曲
 export function songCollect(ids, cb) {
   if (musicList[1].len + ids.length > _d.maxSongList) {
-    _msg.error(`收藏最多${_d.maxSongList}首`);
+    _msg.error(`收藏限制${_d.maxSongList}首`);
     return;
   }
   reqPlayerCollectSong({
@@ -496,7 +496,7 @@ export function moveSongToList(e, pid, ar) {
           listname = $this.attr('data-name');
         const toObj = musicList.find((item) => item.id === tid);
         if (toObj.len + ar.length > _d.maxSongList) {
-          _msg.error(`歌单最多${_d.maxSongList}首`);
+          _msg.error(`歌单限制${_d.maxSongList}首`);
           return;
         }
         _pop(
@@ -1328,12 +1328,12 @@ export async function updateSongCover(obj) {
     const pro = new UpProgress(file.name);
     if (!isImgFile(name)) {
       pro.fail();
-      _msg.error(`图片格式错误`);
+      _msg.error(`封面格式错误`);
       return;
     }
     if (size <= 0 || size >= 5 * 1024 * 1024) {
       pro.fail();
-      _msg.error(`图片大小必须0~5M范围`);
+      _msg.error(`封面限制0-5M`);
       return;
     }
     const result = await reqPlayerUp(
@@ -1374,7 +1374,7 @@ export async function upMv(obj) {
   }
   if (size <= 0 || size >= 200 * 1024 * 1024) {
     pro.fail();
-    _msg.error(`MV大小必须0~200M范围`);
+    _msg.error(`MV限制0-200M`);
     return;
   }
   try {
@@ -1417,7 +1417,7 @@ async function upSong() {
     }
     if (size <= 0 || size >= 30 * 1024 * 1024) {
       pro.fail();
-      _msg.error(`歌曲大小必须0~30M范围`);
+      _msg.error(`歌曲限制0-30M`);
       return;
     }
     try {

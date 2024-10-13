@@ -50,12 +50,12 @@ async function hdUpBg(files) {
     const pro = new UpProgress(name);
     if (!isImgFile(name)) {
       pro.fail();
-      _msg.error(`图片格式错误`);
+      _msg.error(`壁纸格式错误`);
       return;
     }
-    if (size <= 0 || size >= 20 * 1024 * 1024) {
+    if (size <= 0 || size >= 10 * 1024 * 1024) {
       pro.fail();
-      _msg.error(`图片大小必须0~20M范围`);
+      _msg.error(`壁纸限制0-10M`);
       return;
     }
     try {
