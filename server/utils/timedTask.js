@@ -22,7 +22,6 @@ let timer = setInterval(() => {
       try {
         cb(flag);
       } catch (error) {
-        remove(cb);
         writelog(false, `[ timedTask ] - ${error}`, 'error');
       }
     });
