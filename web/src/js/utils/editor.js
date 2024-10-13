@@ -43,10 +43,24 @@ export default function createEditer(el) {
   // editor.getSession().setMode('ace/mode/javascript');
   editor.setOptions({
     // 补全
-    enableBasicAutocompletion: true,
-    enableSnippets: true,
-    enableLiveAutocompletion: true,
+    enableBasicAutocompletion: true, // 启用基本自动完成功能。开启后，编辑器会根据已有的代码提供自动补全建议
+    enableSnippets: true, // 简写方式快速插入常用的代码块
+    enableLiveAutocompletion: true, // 实时自动完成会根据用户正在输入的内容，动态更新自动补全建议
   });
+  // 未选中复制整行
+  editor.setOption('copyWithEmptySelection', true);
+  // 空格代替制表符
+  editor.setOption('useSoftTabs', true);
+  // 启用滚动动画
+  editor.setOption('animatedScroll', true);
+  // 显示不可见字符（例如空格、制表符、换行符）。
+  // editor.setOption('showInvisibles', true);
+  // 控制折叠部件（如代码折叠标记）是否淡入淡出
+  editor.setOption('fadeFoldWidgets', true);
+  // 控制换行符的模式
+  editor.session.setOption('newLineMode', 'unix');
+  // 控制是否启用 Web Worker 来处理代码分析、语法检查等后台任务
+  editor.session.setOption('useWorker', true);
   // 打印边距
   editor.setShowPrintMargin(false);
   // 关闭行号

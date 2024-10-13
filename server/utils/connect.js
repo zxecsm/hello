@@ -67,7 +67,6 @@ function get(account) {
 
 // 获取所有连接信息
 function getConnects() {
-  cache.cleanup();
   return cache.getCacheData();
 }
 

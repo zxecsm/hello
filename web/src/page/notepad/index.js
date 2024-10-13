@@ -42,7 +42,6 @@ import rMenu from '../../js/plugins/rightMenu';
 import MdWorker from '../../js/utils/md.worker.js';
 import changeDark from '../../js/utils/changeDark.js';
 import _d from '../../js/common/config.js';
-import { editorSmoothScrollToLine } from '../edit/edit.js';
 import md5 from '../../js/utils/md5.js';
 const mdWorker = new MdWorker();
 const $contentWrap = $('.content_wrap'),
@@ -184,8 +183,7 @@ function syncScrollFromPreview() {
 
   if (firstVisibleElement) {
     const line = parseInt(firstVisibleElement.getAttribute('data-line'), 10);
-    // editor.scrollToLine(line);
-    editorSmoothScrollToLine(editor, line, 500);
+    editor.scrollToLine(line);
   }
   initState();
 }

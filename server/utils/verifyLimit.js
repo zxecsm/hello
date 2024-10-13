@@ -9,7 +9,7 @@ class VerifyLimit {
 
     this.opt = Object.assign(defaultOpt, opt);
     this.updateTimestamp = updateTimestamp; // true: 间隔 10*60 秒 3 次  false: 10*60 秒内 3 次
-    this.cache = new CacheByExpire(this.opt.space * 1000, 1000 * 60 * 10);
+    this.cache = new CacheByExpire(this.opt.space * 1000);
   }
 
   add(ip, flag = '') {

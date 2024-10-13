@@ -240,6 +240,8 @@ export function _setTimeout(callback, time) {
 //接收文件
 export function receiveFiles(req, path, filename, maxFileSize = 5) {
   return new Promise((resolve, reject) => {
+    req.setTimeout(0);
+
     maxFileSize = maxFileSize * 1024 * 1024;
 
     formidable({
