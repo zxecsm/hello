@@ -59,12 +59,11 @@ import {
   parseForwardMsgLink,
 } from '../chat/chat.js';
 
-import { getSuffix } from '../file/file.js';
-
 import { encryption, playInConfig, getUserInfo, deleteUser } from './user.js';
 
 import { setCookie } from '../../utils/jwt.js';
 import { fieldLenght } from '../config.js';
+import _path from '../../utils/path.js';
 
 const codeObj = {};
 
@@ -102,7 +101,7 @@ route.get('/custom-code', async (req, res) => {
   try {
     const obj = { css: '', js: '' };
 
-    const u = `${configObj.filepath}/custom`;
+    const u = _path.normalize(`${configObj.filepath}/custom`);
 
     if (_f.fs.existsSync(`${u}/custom.css`)) {
       obj.css = (await _f.fsp.readFile(`${u}/custom.css`)).toString();
@@ -550,7 +549,7 @@ route.get('/font-list', async (req, res) => {
   try {
     let list = [];
 
-    const p = `${configObj.filepath}/font`;
+    const p = _path.normalize(`${configObj.filepath}/font`);
 
     if (_f.fs.existsSync(p)) {
       list = await _f.fsp.readdir(p);
@@ -1014,25 +1013,15 @@ route.get('/userinfo', async (req, res) => {
   }
 });
 
-// 更换头像
-route.post('/change-logo', async (req, res) => {
+// 删除头像
+route.get('/delete-logo', async (req, res) => {
   try {
-    const { logo = '' } = req.body;
-
-    if (
-      !validaString(logo, 0, fieldLenght.logo) ||
-      (logo && !isImgFile(logo))
-    ) {
-      paramErr(res, req);
-      return;
-    }
-
     const { account } = req._hello.userinfo;
 
     await updateData(
       'user',
       {
-        logo,
+        logo: '',
       },
       `WHERE account = ? AND state = ?`,
       [account, 1]
@@ -1040,7 +1029,7 @@ route.post('/change-logo', async (req, res) => {
 
     syncUpdateData(req, 'userinfo');
 
-    _success(res, '更新头像成功')(req, logo, 1);
+    _success(res, '删除头像成功')(req);
   } catch (error) {
     _err(res)(req, error);
   }
@@ -1049,9 +1038,14 @@ route.post('/change-logo', async (req, res) => {
 // 上传logo
 route.post('/up-logo', async (req, res) => {
   try {
-    const { name, HASH } = req.query;
+    const { name, HASH, type, id } = req.query;
 
-    if (!isImgFile(name) || !validaString(HASH, 1, fieldLenght.id, 1)) {
+    if (
+      !isImgFile(name) ||
+      !validaString(HASH, 1, fieldLenght.id, 1) ||
+      !validationValue(type, ['bookmark', 'userlogo']) ||
+      (type === 'bookmark' && !validaString(id, 1, fieldLenght.id, 1))
+    ) {
       paramErr(res, req);
       return;
     }
@@ -1060,16 +1054,42 @@ route.post('/up-logo', async (req, res) => {
 
     const timePath = getTimePath();
 
-    const path = `${configObj.filepath}/logo/${account}/${timePath}`;
+    const path = _path.normalize(
+      `${configObj.filepath}/logo/${account}/${timePath}`
+    );
 
     await _f.mkdir(path);
-    await receiveFiles(req, path, `${HASH}.${getSuffix(name)[1]}`, 5);
+    await receiveFiles(req, path, `${HASH}.${_path.extname(name)[2]}`, 5);
 
-    const logo = `${timePath}/${HASH}.${getSuffix(name)[1]}`;
+    const logo = _path.normalize(
+      `${timePath}/${HASH}.${_path.extname(name)[2]}`
+    );
 
-    _success(res, '上传LOGO成功', {
-      logo,
-    })(req, logo, 1);
+    if (type === 'bookmark') {
+      await updateData(
+        'bmk',
+        { logo: _path.normalize(`/logo/${account}/${logo}`) },
+        `WHERE account = ? AND id = ? AND state = ?`,
+        [account, id, 1]
+      );
+
+      syncUpdateData(req, 'bookmark');
+
+      _success(res, '更新书签LOGO成功')(req, logo, 1);
+    } else if (type === 'userlogo') {
+      await updateData(
+        'user',
+        {
+          logo,
+        },
+        `WHERE account = ? AND state = ?`,
+        [account, 1]
+      );
+
+      syncUpdateData(req, 'userinfo');
+
+      _success(res, '更新头像成功')(req, logo, 1);
+    }
   } catch (error) {
     _err(res)(req, error);
   }

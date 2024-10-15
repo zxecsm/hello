@@ -30,6 +30,7 @@ import {
 
 import { getFriendDes } from '../chat/chat.js';
 import { fieldLenght } from '../config.js';
+import { saveNoteHistory } from './note.js';
 
 const route = express.Router();
 
@@ -388,18 +389,35 @@ route.post('/edit', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const change = await updateData(
-      'note',
-      {
-        title,
-        content,
-        update_at: time,
-      },
-      `WHERE id = ? AND account = ?`,
-      [id, account]
-    );
+    const note = (
+      await queryData('note', 'content', `WHERE id = ? AND account = ?`, [
+        id,
+        account,
+      ])
+    )[0];
 
-    if (change.changes === 0) {
+    if (note) {
+      await saveNoteHistory(req, id, note.content);
+
+      await updateData(
+        'note',
+        {
+          title,
+          content,
+          update_at: time,
+        },
+        `WHERE id = ? AND account = ?`,
+        [id, account]
+      );
+
+      syncUpdateData(req, 'file');
+
+      syncUpdateData(req, 'note', id);
+
+      syncUpdateData(req, 'trash');
+
+      _success(res, '更新笔记成功')(req, title, 1);
+    } else {
       id = nanoid();
 
       await insertData('note', [
@@ -415,12 +433,6 @@ route.post('/edit', async (req, res) => {
       syncUpdateData(req, 'note');
 
       _success(res, '新增笔记成功', { id })(req, title, 1);
-    } else {
-      syncUpdateData(req, 'note', id);
-
-      syncUpdateData(req, 'trash');
-
-      _success(res, '更新笔记成功')(req, title, 1);
     }
   } catch (error) {
     _err(res)(req, error);

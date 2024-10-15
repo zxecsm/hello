@@ -9,6 +9,7 @@ import { reqSearchSplitWord } from '../../api/search';
 import rMenu from '../plugins/rightMenu';
 import { reqUserFileKey } from '../../api/user';
 import { _tpl } from './template';
+import _path from './path';
 // 解析url
 export function queryURLParams(url) {
   const obj = {};
@@ -70,11 +71,6 @@ export function _delDataTem(key) {
     sessionStorage.clear();
   }
 }
-// 判断父目录
-export function isParentDir(parentP, childP) {
-  if (childP === parentP) return false;
-  return parentP === childP.slice(0, parentP.length);
-}
 // 定时器
 export function _setTimeout(callback, time) {
   let timer = setTimeout(() => {
@@ -83,11 +79,6 @@ export function _setTimeout(callback, time) {
     callback();
   }, time);
   return timer;
-}
-// 获取文件后缀
-export function getSuffix(str) {
-  const idx = str.lastIndexOf('.');
-  return idx === -1 ? [str, ''] : [str.slice(0, idx), str.slice(idx + 1)];
 }
 //节流
 export function throttle(callback, wait) {
@@ -672,10 +663,6 @@ export function _upFile(url, data = {}, file, callback) {
     });
   });
 }
-// 处理路径
-export function normalizePath(path) {
-  return path.replace(/(\/){2,}/g, '/');
-}
 // 选择文件
 export function getFiles(opt = {}) {
   return new Promise((resolve) => {
@@ -942,13 +929,6 @@ export function tplReplace(tpl, data) {
       ) || ''
     );
   });
-}
-// 提取文件名
-export function getPathFilename(path) {
-  const filename = path.substring(path.lastIndexOf('/') + 1);
-  const [name, extension] = getSuffix(filename);
-
-  return [filename, name, extension];
 }
 // 压缩图片
 export function compressionImg(file, x = 400, y = 400) {
@@ -2804,7 +2784,7 @@ export function enterPassCode(cb) {
 }
 // 生成文件路径
 export function getFilePath(p, t) {
-  p = normalizePath('/' + p);
+  p = _path.normalize('/' + p);
   return `${_d.mediaURL}/?${qs.stringify({ p, t })}`;
 }
 // 格式歌曲时间

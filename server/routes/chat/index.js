@@ -26,7 +26,6 @@ import {
   paramErr,
   getTimePath,
   createPagingData,
-  isTextFile,
   isRoot,
   errLog,
   isurl,
@@ -37,7 +36,6 @@ import {
   isValidDate,
 } from '../../utils/utils.js';
 import { fieldLenght } from '../config.js';
-import { getSuffix } from '../file/file.js';
 
 import { getUserInfo } from '../user/user.js';
 
@@ -54,6 +52,7 @@ import {
 } from './chat.js';
 
 import _connect from '../../utils/connect.js';
+import _path from '../../utils/path.js';
 
 const route = express.Router();
 
@@ -356,11 +355,11 @@ route.get('/expired', async (req, res) => {
     const file = (await queryData('upload', 'url', `WHERE id = ?`, [hash]))[0];
 
     if (file) {
-      const u = `${configObj.filepath}/upload/${file.url}`;
+      const u = _path.normalize(`${configObj.filepath}/upload/${file.url}`);
 
       if (_f.fs.existsSync(u)) {
         _success(res, 'ok', {
-          isText: isTextFile(u),
+          isText: _f.isTextFile(u),
         });
         return;
       }
@@ -714,7 +713,9 @@ route.post('/up', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const path = `${configObj.filepath}/tem/${account}_${HASH}`;
+    const path = _path.normalize(
+      `${configObj.filepath}/tem/${account}_${HASH}`
+    );
 
     await _f.mkdir(path);
     await receiveFiles(req, path, name, 50);
@@ -757,15 +758,15 @@ route.post('/up-voice', async (req, res) => {
     const time = Date.now();
 
     const timePath = getTimePath(time);
-    const tDir = `${configObj.filepath}/upload/${timePath}`;
-    const tName = `${HASH}.${getSuffix(name)[1]}`;
+    const tDir = _path.normalize(`${configObj.filepath}/upload/${timePath}`);
+    const tName = `${HASH}.${_path.extname(name)[2]}`;
 
     await _f.mkdir(tDir);
     await receiveFiles(req, tDir, tName, 3);
 
     const fobj = {
       id: HASH,
-      url: `${timePath}/${tName}`,
+      url: _path.normalize(`${timePath}/${tName}`),
       update_at: time,
     };
 
@@ -840,23 +841,23 @@ route.post('/merge', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const suffix = getSuffix(name)[1];
+    const suffix = _path.extname(name)[2];
     const time = Date.now();
     const timePath = getTimePath(time);
 
-    const tDir = `${configObj.filepath}/upload/${timePath}`;
+    const tDir = _path.normalize(`${configObj.filepath}/upload/${timePath}`);
     const tName = `${HASH}${suffix ? `.${suffix}` : ''}`;
 
     await _f.mkdir(tDir);
     await mergefile(
       count,
-      `${configObj.filepath}/tem/${account}_${HASH}`,
+      _path.normalize(`${configObj.filepath}/tem/${account}_${HASH}`),
       `${tDir}/${tName}`
     );
 
     const fobj = {
       id: HASH,
-      url: `${timePath}/${tName}`,
+      url: _path.normalize(`${timePath}/${tName}`),
       update_at: time,
     };
 
@@ -918,7 +919,7 @@ route.post('/breakpoint', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    let path = `${configObj.filepath}/tem/${account}_${HASH}`,
+    let path = _path.normalize(`${configObj.filepath}/tem/${account}_${HASH}`),
       arr = [];
 
     if (_f.fs.existsSync(path)) {
@@ -951,7 +952,7 @@ route.post('/repeat', async (req, res) => {
     )[0];
 
     if (upload) {
-      const p = `${configObj.filepath}/upload/${upload.url}`;
+      const p = _path.normalize(`${configObj.filepath}/upload/${upload.url}`);
 
       if (_f.fs.existsSync(p)) {
         let log = to;
@@ -970,7 +971,7 @@ route.post('/repeat', async (req, res) => {
           HASH,
         ]);
 
-        const suffix = getSuffix(name)[1];
+        const suffix = _path.extname(name)[2];
 
         const tName = `${HASH}${suffix ? `.${suffix}` : ''}`;
 

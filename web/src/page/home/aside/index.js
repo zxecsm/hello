@@ -14,7 +14,6 @@ import {
   longPress,
   isMobile,
   createShare,
-  normalizePath,
   isInteger,
   LazyLoad,
   _mySlide,
@@ -28,7 +27,6 @@ import _pop from '../../../js/plugins/popConfirm';
 import {
   reqBmkAddBmk,
   reqBmkAddGroup,
-  reqBmkChangeLogo,
   reqBmkDeleteBmk,
   reqBmkDeleteGroup,
   reqBmkEditBmk,
@@ -40,6 +38,7 @@ import {
   reqBmkParseSiteInfo,
   reqBmkShare,
   reqBmkToGroup,
+  reqBmkDeleteLogo,
 } from '../../../api/bmk.js';
 
 import { upLogo } from '../rightSetting/index.js';
@@ -52,12 +51,12 @@ import {
   showHomeFootMenu,
 } from '../searchBox/index.js';
 
-import { setUserInfo } from '../index.js';
 import { popWindow } from '../popWindow.js';
 import pagination from '../../../js/plugins/pagination/index.js';
 import toolTip from '../../../js/plugins/tooltip/index.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl } from '../../../js/utils/template.js';
+import _path from '../../../js/utils/path.js';
 
 const $asideBtn = $('.aside_btn'),
   $asideWrap = $('.aside_wrap'),
@@ -297,7 +296,7 @@ function hdAsideListItemLogo() {
     );
 
     if (logo) {
-      logo = normalizePath(`/api/pub/${logo}`);
+      logo = _path.normalize(`/api/pub/${logo}`);
     } else {
       logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
     }
@@ -1053,19 +1052,15 @@ function asideListMenu(e, obj, el) {
 
 // 上传书签logo
 function upBmLogo(obj) {
-  upLogo((purl) => {
-    reqBmkChangeLogo({
-      id: obj.id,
-      logo: `/logo/${setUserInfo().account}/${purl}`,
-    }).then((result) => {
-      if (result.code === 1) {
-        _msg.success(result.codeText);
-        getBookMarkList();
-        getHomeBmList();
-        return;
-      }
-    });
-  });
+  upLogo(
+    'bookmark',
+    (result) => {
+      _msg.success(result.codeText);
+      getBookMarkList();
+      getHomeBmList();
+    },
+    obj.id
+  );
 }
 
 // 编辑书签
@@ -1213,7 +1208,7 @@ function setBmLogo(e, obj, isHome) {
           },
           (type) => {
             if (type === 'confirm') {
-              reqBmkChangeLogo({ id: obj.id })
+              reqBmkDeleteLogo({ id: obj.id })
                 .then((res) => {
                   if (res.code === 1) {
                     close(1);

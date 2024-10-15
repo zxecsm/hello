@@ -7,7 +7,6 @@ import {
   _setData,
   _getData,
   _setTimeout,
-  getSuffix,
   throttle,
   debounce,
   _getTarget,
@@ -138,6 +137,7 @@ import { hideIframeMask, showIframeMask } from '../iframe.js';
 import { _tpl, deepClone } from '../../../js/utils/template.js';
 import notifyMusicControlPanel from './notifyMusicControlPanel.js';
 import md5 from '../../../js/utils/md5.js';
+import _path from '../../../js/utils/path.js';
 const $musicPlayerBox = $('.music_player_box'),
   $musicFootProgress = $musicPlayerBox.find('.music_foot_progress'),
   $musicPlayerBg = $musicPlayerBox.find('.music_palyer_bg'),
@@ -1643,7 +1643,7 @@ function songMenu(e, idx, sobj) {
       } else if (id === '7') {
         close();
         const fname = `${sobj.artist}-${sobj.title}`;
-        downloadFile(sobj.uurl, `${fname}.${getSuffix(sobj.url)[1]}`);
+        downloadFile(sobj.uurl, `${fname}.${_path.extname(sobj.url)[2]}`);
       } else if (id === '6') {
         moveSongToList(e, 'all', [sobj.id]);
       } else if (id === '2') {
@@ -1850,7 +1850,7 @@ $msuicContentBox
       const fname = `${item.artist}-${item.title}`;
       downloadFile(
         getFilePath(`/music/${item.url}`),
-        `${fname}.${getSuffix(item.url)[1]}`
+        `${fname}.${_path.extname(item.url)[2]}`
       );
     });
     switchSongChecked();

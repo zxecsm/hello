@@ -34,12 +34,10 @@ import {
   _position,
   getTextImg,
   formatDate,
-  getSuffix,
   getFilePath,
   enterPassCode,
   _getDataTem,
   _setDataTem,
-  normalizePath,
   userLogoMenu,
   LazyLoad,
   hdOnce,
@@ -65,6 +63,7 @@ import changeDark from '../../js/utils/changeDark';
 import { _tpl, deepClone } from '../../js/utils/template';
 import { initRainCodeSleep } from '../../js/common/codeRain';
 import notifyMusicControlPanel from '../home/player/notifyMusicControlPanel';
+import _path from '../../js/utils/path';
 const urlparmes = queryURLParams(myOpen()),
   HASH = urlparmes.HASH,
   $myAudio = $(new Audio()),
@@ -114,7 +113,7 @@ function getShareData(close) {
         defaultShareTitle = title;
         userInfo = { account, username, email };
         logo = logo
-          ? normalizePath(`/api/pub/logo/${account}/${logo}`)
+          ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
           : getTextImg(username);
         $userInfo.find('.from').text(username);
         $userInfo.find('.title').text(title);
@@ -1065,7 +1064,7 @@ $lrcMenuWrap
           let fname = `${playingSongInfo.artist}-${playingSongInfo.title}`;
           downloadFile(
             playingSongInfo.uurl,
-            `${fname}.${getSuffix(playingSongInfo.url)[1]}`
+            `${fname}.${_path.extname(playingSongInfo.url)[2]}`
           );
         }
       },

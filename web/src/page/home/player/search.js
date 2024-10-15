@@ -1,6 +1,5 @@
 import $ from 'jquery';
 import {
-  getSuffix,
   throttle,
   debounce,
   _getTarget,
@@ -47,6 +46,7 @@ import toolTip from '../../../js/plugins/tooltip/index.js';
 import { showSongInfo } from '../../../js/utils/showinfo.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl } from '../../../js/utils/template.js';
+import _path from '../../../js/utils/path.js';
 const $searchMusicWrap = $('.music_player_box .search_music_wrap');
 let searchMusicList = [];
 let searchMusicPageNo = 1;
@@ -245,7 +245,7 @@ function searchListSongSetting(e, sobj) {
       } else if (id === '7') {
         close();
         let fname = `${sobj.artist} - ${sobj.title}`;
-        downloadFile(sobj.uurl, `${fname}.${getSuffix(sobj.url)[1]}`);
+        downloadFile(sobj.uurl, `${fname}.${_path.extname(sobj.url)[2]}`);
       } else if (id === '6') {
         moveSongToList(e, 'all', [sobj.id]);
       } else if (id === '2') {

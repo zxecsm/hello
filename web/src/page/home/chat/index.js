@@ -32,11 +32,9 @@ import {
   isMobile,
   getTextImg,
   getFiles,
-  getPathFilename,
   getFilePath,
   _getDataTem,
   _setDataTem,
-  normalizePath,
   LazyLoad,
   mailTo,
   isRoot,
@@ -79,6 +77,7 @@ import toolTip from '../../../js/plugins/tooltip/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import { verifyDate } from '../count_down/index.js';
 import md5 from '../../../js/utils/md5.js';
+import _path from '../../../js/utils/path.js';
 const $document = $(document),
   $chatRoomWrap = $('.chat_room_wrap'),
   $userListBox = $chatRoomWrap.find('.user_list_box'),
@@ -283,7 +282,7 @@ function lazyLoadChatLogo() {
       des = '',
     } = getUserItem($item.parent().data('account'));
     logo = logo
-      ? normalizePath(`/api/pub/logo/${account}/${logo}`)
+      ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
       : getTextImg(des || username);
     if (account === 'hello') {
       logo = imgHelloLogo;
@@ -555,7 +554,7 @@ export function chatimgLoad() {
       _from,
     } = getChatItem($item.parent().parent().data('id'));
     logo = logo
-      ? normalizePath(`/api/pub/logo/${_from}/${logo}`)
+      ? _path.normalize(`/api/pub/logo/${_from}/${logo}`)
       : getTextImg(des || username);
     if (_from === 'hello') {
       logo = imgHelloLogo;
@@ -601,7 +600,7 @@ export function chatMessageNotification(name, data, from, to, logo) {
     1
   );
   logo = logo
-    ? normalizePath(`/api/pub/logo/${from}/${logo}`)
+    ? _path.normalize(`/api/pub/logo/${from}/${logo}`)
     : getTextImg(name);
   if (from === 'hello') {
     logo = imgHelloLogo;
@@ -790,7 +789,7 @@ function userMenu(e, msgObj, isUserList) {
         close();
         openInIframe(`/bmk?acc=${_from}`, (des || username) + '的书签夹');
       } else if (id === '5') {
-        imgPreview([{ u1: normalizePath(`/api/pub/logo/${_from}/${logo}`) }]);
+        imgPreview([{ u1: _path.normalize(`/api/pub/logo/${_from}/${logo}`) }]);
         close();
       }
     },
@@ -1125,7 +1124,7 @@ function chatMsgMenu(e, cobj) {
 // 播放语音
 function playVoice(a, _this) {
   const pflag = $chatAudio.playflag,
-    _flag = getPathFilename(a)[1];
+    _flag = _path.basename(a)[1];
   $chatAudio[0].pause();
   $chatListBox.find('.c_voice_msg_box i').css('animation', 'none');
   if (pflag === _flag) {

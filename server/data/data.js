@@ -3,12 +3,15 @@ import configObj from './config.js';
 
 import _f from '../utils/f.js';
 import { getDirname } from '../utils/utils.js';
+import _path from '../utils/path.js';
 
 const __dirname = getDirname(import.meta);
 
 const configPath = resolve(__dirname, 'config.json');
 
-const dataConfigPath = `${configObj.filepath}/data/config.json`;
+const dataConfigPath = _path.normalize(
+  `${configObj.filepath}/data/config.json`
+);
 
 // 加载默认配置
 let config = loadConfig(configPath);
@@ -44,7 +47,7 @@ function loadConfig(path) {
  * 保存配置文件
  */
 function saveConfig() {
-  const dataDir = `${configObj.filepath}/data`;
+  const dataDir = _path.normalize(`${configObj.filepath}/data`);
   _f.fs.mkdirSync(dataDir, { recursive: true });
   _f.fs.writeFileSync(dataConfigPath, JSON.stringify(_d, null, 2));
 }

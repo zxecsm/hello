@@ -34,7 +34,7 @@ import 'ace-builds/src-noconflict/mode-sh';
 import 'ace-builds/src-noconflict/snippets/sh.js';
 import 'ace-builds/src-noconflict/mode-css';
 import 'ace-builds/src-noconflict/snippets/css.js';
-import { copyText, hdOnce } from './utils';
+import { _getData, copyText, hdOnce } from './utils';
 
 export default function createEditer(el) {
   const editor = ace.edit(el, {
@@ -51,22 +51,25 @@ export default function createEditer(el) {
   editor.setOption('copyWithEmptySelection', true);
   // 空格代替制表符
   editor.setOption('useSoftTabs', true);
+  const editorOption = _getData('editorOption');
   // 启用滚动动画
-  editor.setOption('animatedScroll', true);
+  editor.setOption('animatedScroll', editorOption.animatedScroll);
   // 显示不可见字符（例如空格、制表符、换行符）。
-  // editor.setOption('showInvisibles', true);
+  editor.setOption('showInvisibles', editorOption.showInvisibles);
   // 控制折叠部件（如代码折叠标记）是否淡入淡出
-  editor.setOption('fadeFoldWidgets', true);
+  editor.setOption('fadeFoldWidgets', editorOption.fadeFoldWidgets);
   // 控制换行符的模式
-  editor.session.setOption('newLineMode', 'unix');
+  editor.session.setOption('newLineMode', editorOption.newLineMode);
+  // 关闭行号
+  editor.setOption('showGutter', editorOption.showGutter);
+  // 自动换行
+  editor.session.setUseWrapMode(editorOption.useWrapMode);
+  // 光标
+  editor.setOption('cursorStyle', editorOption.cursorStyle); // 设置为平滑光标
   // 控制是否启用 Web Worker 来处理代码分析、语法检查等后台任务
   editor.session.setOption('useWorker', true);
   // 打印边距
   editor.setShowPrintMargin(false);
-  // 关闭行号
-  // editor.setOption('showGutter',false)
-  // 自动换行
-  // editor.session.setUseWrapMode(true);
   // 行高亮
   // editor.setHighlightActiveLine(false);
   // 语法检查
@@ -120,5 +123,6 @@ export default function createEditer(el) {
       editor.undo();
     },
   });
+
   return editor;
 }

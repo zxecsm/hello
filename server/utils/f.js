@@ -38,6 +38,30 @@ async function del(path) {
     await fsp.unlink(path);
   }
 }
-const _f = { fsp, fs, del, mkdir, cp };
+
+// 是否文本文件
+function isTextFile(path, length = 1000) {
+  try {
+    let res = true;
+    const fd = fs.openSync(path, 'r');
+    for (let i = 0; i < length; i++) {
+      const buf = new Buffer.alloc(1);
+      const bytes = fs.readSync(fd, buf, 0, 1, i);
+      const char = buf.toString().charCodeAt();
+      if (bytes === 0) {
+        break;
+      } else if (bytes === 1 && char === 0) {
+        res = false;
+        break;
+      }
+    }
+    fs.closeSync(fd);
+    return res;
+  } catch {
+    return false;
+  }
+}
+
+const _f = { fsp, fs, del, mkdir, cp, isTextFile };
 
 export default _f;

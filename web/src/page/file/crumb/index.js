@@ -1,6 +1,7 @@
 import bus from '../../../js/utils/bus';
+import _path from '../../../js/utils/path';
 import { _tpl } from '../../../js/utils/template';
-import { _mySlide, normalizePath } from '../../../js/utils/utils';
+import { _mySlide } from '../../../js/utils/utils';
 import './index.less';
 
 let historyList = [];
@@ -138,7 +139,7 @@ function getPath() {
 }
 
 function arrToPath(arr) {
-  return normalizePath('/' + arr.join('/'));
+  return _path.normalize('/' + arr.join('/'));
 }
 
 function pathToArr(path) {

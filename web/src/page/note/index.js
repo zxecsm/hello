@@ -26,7 +26,6 @@ import {
   percentToValue,
   getTextImg,
   wrapInput,
-  normalizePath,
   userLogoMenu,
   noteReadInfo,
   formatDate,
@@ -48,6 +47,7 @@ import MdWorker from '../../js/utils/md.worker.js';
 import loadingPage from '../../js/plugins/loading/index.js';
 import changeDark from '../../js/utils/changeDark.js';
 import { _tpl } from '../../js/utils/template.js';
+import _path from '../../js/utils/path.js';
 const mdWorker = new MdWorker();
 let urlparmes = queryURLParams(myOpen()),
   HASH = urlparmes.HASH;
@@ -224,7 +224,7 @@ if (urlparmes.v) {
           });
         }
         const logoUrl = logo
-          ? normalizePath(`/api/pub/logo/${account}/${logo}`)
+          ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
           : getTextImg(username);
         imgjz(
           logoUrl,

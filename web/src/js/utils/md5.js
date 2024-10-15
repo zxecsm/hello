@@ -1,13 +1,14 @@
 import sparkMd5 from 'spark-md5';
 import FileWorker from './fileSlice.worker.js';
-import { getFileReader, getSuffix } from './utils.js';
+import { getFileReader } from './utils.js';
+import _path from './path.js';
 
 // 切片文件
 function fileSlice(file, callback) {
   return new Promise(async (resolve, reject) => {
     const chunkSize = getChunkSize(file);
 
-    const [filename, suffix] = getSuffix(file.name || '');
+    const [filename, , suffix] = _path.extname(file.name || '');
     const count = Math.ceil(file.size / chunkSize);
     const chunks = createFileChunks(file, chunkSize, count);
 

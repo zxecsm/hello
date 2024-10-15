@@ -25,7 +25,6 @@ import {
   downloadText,
   getTextImg,
   getFiles,
-  normalizePath,
   isInteger,
   _delDataTem,
   myDrag,
@@ -51,8 +50,8 @@ import {
   reqUserBindEmail,
   reqUserBindEmailCode,
   reqUserChangPd,
-  reqUserChangeLogo,
   reqUserDailyChangeBg,
+  reqUserDeleteLogo,
   reqUserFontList,
   reqUserGetVerify,
   reqUserHideState,
@@ -87,6 +86,7 @@ import changeDark from '../../../js/utils/changeDark.js';
 import { reqChatForwardMsgLink } from '../../../api/chat.js';
 import md5 from '../../../js/utils/md5.js';
 import { _tpl } from '../../../js/utils/template.js';
+import _path from '../../../js/utils/path.js';
 // local数据
 let dark = _getData('dark'),
   pageGrayscale = _getData('pageGrayscale'),
@@ -261,7 +261,7 @@ export function hideUserInfo() {
   toHide($userInfoWrap[0], { to: 'bottom', scale: 'small' });
 }
 // 上传头像
-export async function upLogo(cb) {
+export async function upLogo(type, cb, id) {
   try {
     const files = await getFiles({
       accept: '.jpg,.jpeg,.png,.ico,.svg,.webp,.gif',
@@ -269,26 +269,29 @@ export async function upLogo(cb) {
     if (files.length === 0) return;
     const file = files[0];
     if (!isImgFile(file.name)) {
-      _msg.error(`头像格式错误`);
+      _msg.error(`图片格式错误`);
       return;
     }
     const pro = new UpProgress(file.name);
     if (file.size <= 0 || file.size >= 5 * 1024 * 1024) {
       pro.fail();
-      _msg.error(`头像限制0-5M`);
+      _msg.error(`图片限制0-5M`);
       return;
     }
     const { HASH } = await md5.fileSlice(file, (percent) => {
       pro.loading(percent);
     });
-    reqUserUpLogo({ HASH, name: file.name }, file, function (percent) {
-      pro.update(percent);
-    })
+    reqUserUpLogo(
+      { HASH, name: file.name, type, id },
+      file,
+      function (percent) {
+        pro.update(percent);
+      }
+    )
       .then((result) => {
         if (result.code === 1) {
           pro.close();
-          const logo = result.data.logo;
-          cb && cb(logo);
+          cb && cb(result);
           return;
         }
         return Promise.reject();
@@ -327,22 +330,18 @@ function hdUserLogo(e) {
     data,
     ({ e, id, close }) => {
       if (id === '1') {
-        upLogo((logo) => {
+        upLogo('userlogo', () => {
           close();
-          reqUserChangeLogo({ logo }).then((res) => {
-            if (res.code === 1) {
-              if (!chatRoomWrapIsHide()) {
-                openFriend(setCurChatAccount(), true);
-              }
-              updateUserInfo();
-            }
-          });
+          if (!chatRoomWrapIsHide()) {
+            openFriend(setCurChatAccount(), true);
+          }
+          updateUserInfo();
         });
       } else if (id === '2') {
         close();
         imgPreview([
           {
-            u1: normalizePath(
+            u1: _path.normalize(
               `/api/pub/logo/${setUserInfo().account}/${setUserInfo().logo}`
             ),
           },
@@ -356,7 +355,7 @@ function hdUserLogo(e) {
           },
           (type) => {
             if (type === 'confirm') {
-              reqUserChangeLogo().then((res) => {
+              reqUserDeleteLogo().then((res) => {
                 if (res.code === 1) {
                   close();
                   updateUserInfo();
@@ -621,7 +620,7 @@ export function renderUserinfo() {
   );
   $userInfoWrap.find('.user_list').html(html);
   logo = logo
-    ? normalizePath(`/api/pub/logo/${account}/${logo}`)
+    ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
     : getTextImg(username);
   imgjz(
     logo,

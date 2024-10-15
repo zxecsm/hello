@@ -2,7 +2,6 @@ export const fieldLenght = {
   id: 50,
   title: 200,
   url: 2000,
-  logo: 100,
   filename: 255,
   sharePass: 20,
   shareFlag: 70,

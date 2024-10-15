@@ -529,7 +529,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
             if (id) {
               const sData = selectItem[id - 1];
               items[key].value = sData.value;
-              sBox.innerText = sData.text;
+              sBox.querySelector('span').innerText = sData.text;
               close();
             }
           },

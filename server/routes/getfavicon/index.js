@@ -21,6 +21,7 @@ import timedTask from '../../utils/timedTask.js';
 import { _delDir, readMenu } from '../file/file.js';
 import { compressionImg } from '../../utils/img.js';
 import md5 from '../../utils/md5.js';
+import _path from '../../utils/path.js';
 
 const route = express.Router();
 
@@ -34,7 +35,9 @@ timedTask.add(async (flag) => {
 
     const threshold = now - 7 * 24 * 60 * 60 * 1000;
 
-    const fList = await readMenu(`${configObj.filepath}/favicon`);
+    const fList = await readMenu(
+      _path.normalize(`${configObj.filepath}/favicon`)
+    );
 
     let num = 0;
 
@@ -75,7 +78,9 @@ route.get('/', async (req, res) => {
   try {
     const u = new URL(req.query.u);
 
-    p = `${configObj.filepath}/favicon/${md5.getStringHash(u.host)}.png`;
+    p = _path.normalize(
+      `${configObj.filepath}/favicon/${md5.getStringHash(u.host)}.png`
+    );
 
     miss = `${p}.miss`;
 
@@ -91,7 +96,7 @@ route.get('/', async (req, res) => {
 
     const prefix = `${u.protocol}//${u.host}`;
 
-    await _f.mkdir(`${configObj.filepath}/favicon`);
+    await _f.mkdir(_path.dirname(p));
 
     const result = await axios({
       method: 'get',

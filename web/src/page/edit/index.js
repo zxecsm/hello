@@ -17,7 +17,6 @@ import {
   isIframe,
   wrapInput,
   getFiles,
-  getSuffix,
   _progressBar,
   percentToValue,
   _getDataTem,
@@ -33,6 +32,7 @@ import {
   copyText,
   getMinIndex,
   getScreenSize,
+  _myOpen,
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
@@ -47,6 +47,8 @@ import MdWorker from '../../js/utils/md.worker.js';
 import changeDark from '../../js/utils/changeDark.js';
 import _d from '../../js/common/config.js';
 import md5 from '../../js/utils/md5.js';
+import _path from '../../js/utils/path.js';
+import { setEditor } from './setEditor.js';
 const mdWorker = new MdWorker();
 const $contentWrap = $('.content_wrap'),
   $headBtns = $contentWrap.find('.head_btns'),
@@ -56,9 +58,7 @@ const $contentWrap = $('.content_wrap'),
   $previewBox = $editWrap.find('.preview_box'),
   $resize = $previewBox.find('.resize');
 
-let editNoteCodeNum = _getData('editNoteCodeNum');
 let editNoteFontSize = _getData('editNoteFontSize');
-let editNoteTextLineFeed = _getData('editNoteTextLineFeed');
 // 更改主题
 function changeTheme(dark) {
   if (dark === 'y') {
@@ -82,7 +82,6 @@ window.changeTheme = changeTheme;
 const editor = createEditer($editBox[0]);
 editor.getSession().setMode('ace/mode/markdown');
 changeTheme(_getData('dark'));
-editor.session.setUseWrapMode(editNoteTextLineFeed);
 // 快捷键
 editor.getSession().on(
   'change',
@@ -476,7 +475,7 @@ async function hdUpFile(files) {
         pro.close('文件已存在');
         const { url } = isrepeat.data;
         fData.push({
-          filename: getSuffix(name)[0],
+          filename: _path.extname(name)[0],
           url: `/api/pub/picture/${url}`,
         });
         //文件已经存在操作
@@ -495,7 +494,7 @@ async function hdUpFile(files) {
       if (result.code === 1) {
         const { url } = result.data;
         fData.push({
-          filename: getSuffix(name)[0],
+          filename: _path.extname(name)[0],
           url: `/api/pub/picture/${url}`,
         });
         pro.close();
@@ -552,10 +551,6 @@ function setNoteFontSize() {
   });
 }
 setNoteFontSize();
-function changeCodeNum() {
-  editor.setOption('showGutter', editNoteCodeNum);
-}
-changeCodeNum();
 // 设置
 function settingEdit(e) {
   const data = [
@@ -565,48 +560,23 @@ function settingEdit(e) {
       text: '字体大小',
     },
     {
-      id: 'lineFeed',
-      text: '自动换行',
-      beforeIcon: 'iconfont icon-wenzihuanhang',
-      afterIcon: editNoteTextLineFeed
-        ? 'iconfont icon-kaiguan-kai1'
-        : 'iconfont icon-kaiguan-guan',
-    },
-    {
-      id: 'num',
-      text: '行号',
-      beforeIcon: 'iconfont icon-bianhao',
-      afterIcon: editNoteCodeNum
-        ? 'iconfont icon-kaiguan-kai1'
-        : 'iconfont icon-kaiguan-guan',
+      id: 'setEditor',
+      text: '编辑器配置',
+      beforeIcon: 'iconfont icon-liebiao',
     },
   ];
   rMenu.selectMenu(
     e,
     data,
-    ({ e, resetMenu, id }) => {
+    ({ e, id }) => {
       if (id === 'size') {
         _progressBar(e, editNoteFontSize, (percent) => {
           editNoteFontSize = percent;
           setNoteFontSize();
           _setData('editNoteFontSize', editNoteFontSize);
         });
-      } else if (id === 'num') {
-        editNoteCodeNum = !editNoteCodeNum;
-        _setData('editNoteCodeNum', editNoteCodeNum);
-        data[2].afterIcon = editNoteCodeNum
-          ? 'iconfont icon-kaiguan-kai1'
-          : 'iconfont icon-kaiguan-guan';
-        resetMenu(data);
-        changeCodeNum();
-      } else if (id === 'lineFeed') {
-        editNoteTextLineFeed = !editNoteTextLineFeed;
-        _setData('editNoteTextLineFeed', editNoteTextLineFeed);
-        data[1].afterIcon = editNoteTextLineFeed
-          ? 'iconfont icon-kaiguan-kai1'
-          : 'iconfont icon-kaiguan-guan';
-        resetMenu(data);
-        editor.session.setUseWrapMode(editNoteTextLineFeed);
+      } else if (id === 'setEditor') {
+        setEditor(e, editor);
       }
     },
     '设置'
@@ -643,6 +613,14 @@ function previewState() {
 const hdClickSaveBtn = throttle(saveNote, 1000);
 $headBtns
   .on('click', '.setting_btn', settingEdit)
+  .on('click', '.history_btn', () => {
+    if (!isLogin()) {
+      toLogin();
+      return;
+    }
+    _setData('curFileDirPath', `/.noteHistory/${HASH}`);
+    _myOpen(`/file/`, '文件管理');
+  })
   .on('click', '.table_btn', createTable)
   .on('click', '.code_btn', createCodeBlock)
   .on('click', '.link_btn', createLink)

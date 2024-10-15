@@ -15,7 +15,6 @@ import {
   enterPassCode,
   _getDataTem,
   _setDataTem,
-  normalizePath,
   debounce,
   userLogoMenu,
   LazyLoad,
@@ -38,6 +37,7 @@ import rMenu from '../../js/plugins/rightMenu';
 import { showBmkInfo } from '../../js/utils/showinfo';
 import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
+import _path from '../../js/utils/path';
 
 const urlparmes = queryURLParams(myOpen()),
   HASH = urlparmes.HASH;
@@ -160,7 +160,7 @@ function getShareData(close) {
         defaultTitle = title;
 
         logo = logo
-          ? normalizePath(`/api/pub/logo/${account}/${logo}`)
+          ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
           : getTextImg(username);
 
         imgjz(

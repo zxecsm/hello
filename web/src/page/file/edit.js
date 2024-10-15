@@ -7,8 +7,6 @@ import {
   _progressBar,
   _setData,
   darkMode,
-  getSuffix,
-  normalizePath,
   isDarkMode,
   isIframe,
   percentToValue,
@@ -21,20 +19,19 @@ import { reqFileSaveFile } from '../../api/file';
 import bus from '../../js/utils/bus';
 import rMenu from '../../js/plugins/rightMenu';
 import changeDark from '../../js/utils/changeDark';
+import _path from '../../js/utils/path';
+import { setEditor } from '../edit/setEditor';
 const $editFile = $('.edit_file');
 const $container = $('.container');
 let oText = '';
 let originText = '';
 let readOnly = false;
 const editor = createEditer($editFile.find('.editor')[0]);
-let fileEditCodeNum = _getData('fileEditCodeNum');
 let fileFontSize = _getData('fileFontSize');
-let fileTextLineFeed = _getData('fileTextLineFeed');
 export function editFileIsHiden() {
   return $editFile.is(':hidden');
 }
 changeTheme(_getData('dark'));
-editor.session.setUseWrapMode(fileTextLineFeed);
 // 切换黑暗模式
 function changeTheme(dark) {
   if (dark === 'y') {
@@ -59,13 +56,13 @@ export function setReadOnly(val) {
 }
 // 编辑文件
 export function openFile(text, path) {
-  path = normalizePath(path);
+  path = _path.normalize(path);
   hideContainer();
   filePath = path;
   $editFile.css('display', 'flex');
   document.documentElement.classList.add('notScroll');
   renderTitle(path);
-  currentCodeType = setTextType(getSuffix(path)[1]);
+  currentCodeType = setTextType(_path.extname(path)[2]);
   originText = oText = text;
   editor.setValue(text);
   editor.gotoLine(1);
@@ -165,11 +162,6 @@ function hideContainer() {
 function showContainer() {
   $container.css('visibility', 'visible');
 }
-// 行号
-function changeCodeNum() {
-  editor.setOption('showGutter', fileEditCodeNum);
-}
-changeCodeNum();
 const editTitleContentScroll = new ContentScroll(
   $editFile.find('.head_btn .text .scroll_text')[0]
 );
@@ -178,27 +170,16 @@ function settingMenu(e) {
   const data = [
     { id: 'size', text: '字体大小', beforeIcon: 'iconfont icon-font-size' },
     {
-      id: 'lineFeed',
-      text: '自动换行',
-      beforeIcon: 'iconfont icon-wenzihuanhang',
-      afterIcon: fileTextLineFeed
-        ? 'iconfont icon-kaiguan-kai1'
-        : 'iconfont icon-kaiguan-guan',
-    },
-    {
-      id: 'num',
-      text: '行号',
-      beforeIcon: 'iconfont icon-bianhao',
-      afterIcon: fileEditCodeNum
-        ? 'iconfont icon-kaiguan-kai1'
-        : 'iconfont icon-kaiguan-guan',
+      id: 'setEditor',
+      text: '编辑器配置',
+      beforeIcon: 'iconfont icon-liebiao',
     },
     { id: 'code', text: '语言', beforeIcon: 'iconfont icon-daimakuai' },
   ];
   rMenu.selectMenu(
     e,
     data,
-    ({ e, resetMenu, id }) => {
+    ({ e, id }) => {
       if (id === 'size') {
         _progressBar(e, fileFontSize, (percent) => {
           $editFile.find('.editor').css({
@@ -207,14 +188,8 @@ function settingMenu(e) {
           fileFontSize = percent;
           _setData('fileFontSize', fileFontSize);
         });
-      } else if (id === 'num') {
-        fileEditCodeNum = !fileEditCodeNum;
-        _setData('fileEditCodeNum', fileEditCodeNum);
-        data[2].afterIcon = fileEditCodeNum
-          ? 'iconfont icon-kaiguan-kai1'
-          : 'iconfont icon-kaiguan-guan';
-        resetMenu(data);
-        changeCodeNum();
+      } else if (id === 'setEditor') {
+        setEditor(e, editor);
       } else if (id === 'code') {
         function fn() {
           let data = [];
@@ -239,14 +214,6 @@ function settingMenu(e) {
           },
           '选择语言'
         );
-      } else if (id === 'lineFeed') {
-        fileTextLineFeed = !fileTextLineFeed;
-        _setData('fileTextLineFeed', fileTextLineFeed);
-        data[1].afterIcon = fileTextLineFeed
-          ? 'iconfont icon-kaiguan-kai1'
-          : 'iconfont icon-kaiguan-guan';
-        resetMenu(data);
-        editor.session.setUseWrapMode(fileTextLineFeed);
       }
     },
     '设置'

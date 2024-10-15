@@ -16,7 +16,6 @@ import {
   hdTitleHighlight,
   getIn,
   getWordCount,
-  normalizePath,
   LazyLoad,
   copyText,
   throttle,
@@ -44,6 +43,7 @@ import toolTip from '../../../js/plugins/tooltip/index.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { showBmk, showHistory } from '../rightSetting/index.js';
 import { _tpl } from '../../../js/utils/template.js';
+import _path from '../../../js/utils/path.js';
 const $searchBoxMask = $('.search_box_mask'),
   $searchLogo = $searchBoxMask.find('.search_logo'),
   $searchInpWrap = $searchBoxMask.find('.search_inp_wrap'),
@@ -177,7 +177,7 @@ function lazyLoadHomeBmLogo() {
       let { logo, link } = getHomeBmData($item.attr('data-id'));
       const $homeBmLogo = $item.find('.home_bm_logo');
       if (logo) {
-        logo = normalizePath(`/api/pub/${logo}`);
+        logo = _path.normalize(`/api/pub/${logo}`);
       } else {
         logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
       }

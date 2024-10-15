@@ -35,12 +35,13 @@ import {
   uLog,
 } from '../../utils/utils.js';
 
-import { normalizePath, _delDir, getSuffix } from '../file/file.js';
+import { _delDir } from '../file/file.js';
 
 import { getRandowBg } from './bg.js';
 
 import { getImgInfo } from '../../utils/img.js';
 import { fieldLenght } from '../config.js';
+import _path from '../../utils/path.js';
 
 const route = express.Router();
 
@@ -64,7 +65,7 @@ route.get('/r', async (req, res) => {
     }
 
     // 获取壁纸 URL 并返回
-    const url = normalizePath(`${configObj.filepath}/bg/${bgData.url}`);
+    const url = _path.normalize(`${configObj.filepath}/bg/${bgData.url}`);
     res.sendFile(url);
   } catch (error) {
     _err(res)(req, error);
@@ -224,7 +225,7 @@ route.post('/delete', async (req, res) => {
 
     await concurrencyTasks(dels, 5, async (del) => {
       const { url } = del;
-      await _delDir(`${configObj.filepath}/bg/${url}`);
+      await _delDir(_path.normalize(`${configObj.filepath}/bg/${url}`));
       await uLog(req, `删除壁纸(${url})`);
     });
 
@@ -256,11 +257,11 @@ route.post('/up', async (req, res) => {
       return;
     }
 
-    const [title, suffix] = getSuffix(name);
+    const [title, , suffix] = _path.extname(name);
 
     const timePath = getTimePath(Date.now());
 
-    const tDir = `${configObj.filepath}/bg/${timePath}`;
+    const tDir = _path.normalize(`${configObj.filepath}/bg/${timePath}`);
     const tName = `${HASH}.${suffix}`;
 
     await _f.mkdir(tDir);
@@ -270,7 +271,7 @@ route.post('/up', async (req, res) => {
     const { width, height } = await getImgInfo(`${tDir}/${tName}`);
     const type = width < height ? 'bgxs' : 'bg';
 
-    const url = `${timePath}/${tName}`;
+    const url = _path.normalize(`${timePath}/${tName}`);
 
     await insertData('bg', [
       {
@@ -300,7 +301,9 @@ route.post('/repeat', async (req, res) => {
     const bg = (await queryData('bg', 'url,id', `WHERE hash = ?`, [HASH]))[0];
 
     if (bg) {
-      if (_f.fs.existsSync(`${configObj.filepath}/bg/${bg.url}`)) {
+      if (
+        _f.fs.existsSync(_path.normalize(`${configObj.filepath}/bg/${bg.url}`))
+      ) {
         _success(res);
         return;
       }

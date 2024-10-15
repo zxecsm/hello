@@ -34,16 +34,10 @@ import { cleanUpload } from '../chat/chat.js';
 
 import { fieldLenght } from '../config.js';
 
-import {
-  _delDir,
-  delEmptyFolder,
-  getPathFilename,
-  getAllFile,
-  getSuffix,
-  readMenu,
-} from '../file/file.js';
+import { _delDir, delEmptyFolder, getAllFile, readMenu } from '../file/file.js';
 
 import { deleteUser } from '../user/user.js';
+import _path from '../../utils/path.js';
 
 const route = express.Router();
 
@@ -206,7 +200,7 @@ route.post('/delete-account', async (req, res) => {
 // 清理歌曲文件
 route.get('/clean-music-file', async (req, res) => {
   try {
-    const musicDir = `${configObj.filepath}/music`;
+    const musicDir = _path.normalize(`${configObj.filepath}/music`);
 
     if (_f.fs.existsSync(musicDir)) {
       const songs = await queryData('songs', 'url');
@@ -215,8 +209,10 @@ route.get('/clean-music-file', async (req, res) => {
       await concurrencyTasks(allMusicFile, 5, async (item) => {
         const { path, name } = item;
 
-        const url = `${path.slice(musicDir.length + 1)}/${getSuffix(name)[0]}`;
-        if (!songs.some((item) => getSuffix(item.url)[0] === url)) {
+        const url = `${path.slice(musicDir.length + 1)}/${
+          _path.extname(name)[0]
+        }`;
+        if (!songs.some((item) => _path.extname(item.url)[0] === url)) {
           await _delDir(`${path}/${name}`);
         }
       });
@@ -232,7 +228,7 @@ route.get('/clean-music-file', async (req, res) => {
 // 清理壁纸文件
 route.get('/clean-bg-file', async (req, res) => {
   try {
-    const bgDir = `${configObj.filepath}/bg`;
+    const bgDir = _path.normalize(`${configObj.filepath}/bg`);
 
     if (_f.fs.existsSync(bgDir)) {
       const bgs = await queryData('bg', '*');
@@ -257,7 +253,7 @@ route.get('/clean-bg-file', async (req, res) => {
 // 清理图床文件
 route.get('/clean-pic-file', async (req, res) => {
   try {
-    const picDir = `${configObj.filepath}/pic`;
+    const picDir = _path.normalize(`${configObj.filepath}/pic`);
 
     if (_f.fs.existsSync(picDir)) {
       const pics = await queryData('pic', '*');
@@ -292,8 +288,8 @@ route.get('/clean-thumb-file', async (req, res) => {
 
     const delP =
       type === 'all'
-        ? `${configObj.filepath}/thumb`
-        : `${configObj.filepath}/thumb/${type}`;
+        ? _path.normalize(`${configObj.filepath}/thumb`)
+        : _path.normalize(`${configObj.filepath}/thumb/${type}`);
 
     await _delDir(delP);
 
@@ -360,7 +356,11 @@ route.get('/log', async (req, res) => {
       return;
     }
 
-    const log = (await _f.fsp.readFile(`${configObj.filepath}/log/${name}`))
+    const log = (
+      await _f.fsp.readFile(
+        _path.normalize(`${configObj.filepath}/log/${name}`)
+      )
+    )
       .toString()
       .split('\n');
 
@@ -376,9 +376,9 @@ route.get('/log', async (req, res) => {
 // 日志文件列表
 route.get('/log-list', async (req, res) => {
   try {
-    const list = (await readMenu(`${configObj.filepath}/log`)).filter(
-      (f) => f.type === 'file'
-    );
+    const list = (
+      await readMenu(_path.normalize(`${configObj.filepath}/log`))
+    ).filter((f) => f.type === 'file');
 
     list.sort((a, b) => b.time - a.time);
     _success(res, 'ok', list);
@@ -403,9 +403,9 @@ route.post('/delete-log', async (req, res) => {
     }
 
     if (name === 'all') {
-      await _delDir(`${configObj.filepath}/log`);
+      await _delDir(_path.normalize(`${configObj.filepath}/log`));
     } else {
-      await _delDir(`${configObj.filepath}/log/${name}`);
+      await _delDir(_path.normalize(`${configObj.filepath}/log/${name}`));
     }
 
     _success(res, '删除日志成功')(req, name, 1);
@@ -458,13 +458,15 @@ route.post('/clean-database', async (req, res) => {
 route.get('/clean-logo-file', async (req, res) => {
   try {
     let bmk = await queryData('bmk', 'logo', `WHERE logo != ?`, ['']);
-    bmk = bmk.map((item) => getPathFilename(item.logo)[0]);
+    bmk = bmk.map((item) => _path.basename(item.logo)[0]);
 
     let user = await queryData('user', 'logo', `WHERE logo != ?`, ['']);
-    user = user.map((item) => getPathFilename(item.logo)[0]);
+    user = user.map((item) => _path.basename(item.logo)[0]);
 
     const logos = [...bmk, ...user];
-    const logoFiles = await getAllFile(`${configObj.filepath}/logo`);
+    const dir = _path.normalize(`${configObj.filepath}/logo`);
+
+    const logoFiles = await getAllFile(dir);
 
     await concurrencyTasks(logoFiles, 5, async (item) => {
       const { name, path } = item;
@@ -474,7 +476,7 @@ route.get('/clean-logo-file', async (req, res) => {
       }
     });
 
-    await delEmptyFolder(`${configObj.filepath}/logo`);
+    await delEmptyFolder(dir);
     _success(res, '清理LOGO文件成功')(req);
   } catch (error) {
     _err(res)(req, error);
@@ -491,7 +493,7 @@ route.post('/custom-code', async (req, res) => {
       return;
     }
 
-    const u = `${configObj.filepath}/custom`;
+    const u = _path.normalize(`${configObj.filepath}/custom`);
 
     await _f.mkdir(u);
     await _f.fsp.writeFile(`${u}/custom.js`, js);

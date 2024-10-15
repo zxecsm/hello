@@ -33,7 +33,8 @@ import {
 
 import { fieldLenght } from '../config.js';
 
-import { _delDir, getSuffix } from '../file/file.js';
+import { _delDir } from '../file/file.js';
+import _path from '../../utils/path.js';
 
 const route = express.Router();
 
@@ -67,11 +68,11 @@ route.post('/up', async (req, res) => {
       return;
     }
 
-    const [title, suffix] = getSuffix(name);
+    const [title, , suffix] = _path.extname(name);
 
     const timePath = getTimePath(Date.now());
 
-    const tDir = `${configObj.filepath}/pic/${timePath}`;
+    const tDir = _path.normalize(`${configObj.filepath}/pic/${timePath}`);
     const tName = `${HASH}.${suffix}`;
 
     await _f.mkdir(tDir);
@@ -81,7 +82,7 @@ route.post('/up', async (req, res) => {
 
     const obj = {
       hash: HASH,
-      url: `${timePath}/${tName}`,
+      url: _path.normalize(`${timePath}/${tName}`),
       title,
     };
 
@@ -106,7 +107,11 @@ route.post('/repeat', async (req, res) => {
     const pic = (await queryData('pic', 'id,url', `WHERE hash = ?`, [HASH]))[0];
 
     if (pic) {
-      if (_f.fs.existsSync(`${configObj.filepath}/pic/${pic.url}`)) {
+      if (
+        _f.fs.existsSync(
+          _path.normalize(`${configObj.filepath}/pic/${pic.url}`)
+        )
+      ) {
         _success(res, 'ok', pic);
         return;
       }
@@ -194,7 +199,7 @@ route.post('/delete', async (req, res) => {
     await concurrencyTasks(dels, 5, async (del) => {
       const { url } = del;
 
-      await _delDir(`${configObj.filepath}/pic/${url}`);
+      await _delDir(_path.normalize(`${configObj.filepath}/pic/${url}`));
 
       await uLog(req, `删除图片(${url})`);
     });

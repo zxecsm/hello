@@ -15,7 +15,6 @@ import {
   isMobile,
   getFiles,
   isBigScreen,
-  getPathFilename,
   getFilePath,
   LazyLoad,
   isRoot,
@@ -39,6 +38,7 @@ import { popWindow, setZidx } from '../popWindow.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import md5 from '../../../js/utils/md5.js';
+import _path from '../../../js/utils/path.js';
 const $allBgWrap = $('.all_bg_wrap'),
   $bgList = $allBgWrap.find('.bg_list'),
   $bgFooter = $allBgWrap.find('.bg_footer');
@@ -192,10 +192,7 @@ function bgItemMenu(e, obj, el) {
         }
       } else if (id === '2') {
         close();
-        downloadFile(
-          getFilePath(`/bg/${obj.url}`),
-          getPathFilename(obj.url)[0]
-        );
+        downloadFile(getFilePath(`/bg/${obj.url}`), _path.basename(obj.url)[0]);
       } else if (id === '3') {
         close();
         $bgList.find('.check_level').css('display', 'block');

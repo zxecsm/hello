@@ -23,10 +23,8 @@ import {
   pageScrollTop,
   getPaging,
   getScreenSize,
-  getSuffix,
   getWordCount,
   hdFilename,
-  normalizePath,
   imgPreview,
   imgjz,
   isFilename,
@@ -34,7 +32,6 @@ import {
   isImgFile,
   isLogin,
   isMobile,
-  isParentDir,
   isRoot,
   isVideoFile,
   longPress,
@@ -79,6 +76,7 @@ import rMenu from '../../js/plugins/rightMenu';
 import realtime from '../../js/plugins/realtime';
 import { _tpl } from '../../js/utils/template';
 import md5 from '../../js/utils/md5';
+import _path from '../../js/utils/path';
 _d.isFilePage = true;
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
@@ -217,7 +215,7 @@ async function renderList(top) {
       },
       computeSize,
       getText(name, type) {
-        let [a, b] = getSuffix(name);
+        let [a, , b] = _path.extname(name);
         if (type === 'file') {
           b = b ? '.' + b : '';
         } else {
@@ -625,7 +623,7 @@ function rightList(e, obj, el) {
       beforeIcon: 'iconfont icon-jiandao',
     },
   ];
-  if (getSuffix(obj.name)[1].toLowerCase() === 'zip') {
+  if (_path.extname(obj.name)[2].toLowerCase() === 'zip') {
     data.push({
       id: 'decompress',
       text: '解压',
@@ -708,7 +706,7 @@ function rightList(e, obj, el) {
       } else if (id === 'mode') {
         editFileMode(e, obj);
       } else if (id === 'copyPath') {
-        copyText(normalizePath(`/${obj.path}/${obj.name}`));
+        copyText(_path.normalize(`/${obj.path}/${obj.name}`));
         close();
       }
     },
@@ -902,7 +900,7 @@ async function hdUp(files) {
     } else {
       path = `${path}/${name}`;
     }
-    path = normalizePath(path);
+    path = _path.normalize(path);
     const pro = new UpProgress(name);
     if (size === 0) {
       pro.fail();
@@ -1258,9 +1256,9 @@ async function hdCopy(e, data, cb) {
       if (
         !data.every((item) => {
           const { path, name } = item;
-          const f = normalizePath(`${path}/${name}`);
-          const t = normalizePath(`${curFileDirPath}/${name}`);
-          return !isParentDir(f, t);
+          const f = _path.normalize(`${path}/${name}`);
+          const t = _path.normalize(`${curFileDirPath}/${name}`);
+          return !_path.isPathWithin(f, t);
         })
       ) {
         _msg.error('无效操作');
@@ -1288,9 +1286,9 @@ async function hdCut(e, data, cb) {
       if (
         !data.every((item) => {
           const { path, name } = item;
-          const f = normalizePath(`${path}/${name}`);
-          const t = normalizePath(`${curFileDirPath}/${name}`);
-          return f !== t && !isParentDir(f, t);
+          const f = _path.normalize(`${path}/${name}`);
+          const t = _path.normalize(`${curFileDirPath}/${name}`);
+          return f !== t && !_path.isPathWithin(f, t);
         })
       ) {
         _msg.error('无效操作');
@@ -1376,7 +1374,7 @@ function renderFoot() {
       items,
       len,
       isZip() {
-        return getSuffix(checkData[0].name)[1].toLowerCase() === 'zip';
+        return _path.extname(checkData[0].name)[2].toLowerCase() === 'zip';
       },
       checkIsFile() {
         return checkData.every((item) => item.type === 'file');

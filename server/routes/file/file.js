@@ -6,15 +6,12 @@ import _f from '../../utils/f.js';
 
 import { concurrencyTasks, writelog } from '../../utils/utils.js';
 
+import _path from '../../utils/path.js';
+
 import compressing from 'compressing';
 
-// 规范化路径
-export function normalizePath(path) {
-  return path.replace(/(\/){2,}/g, '/');
-}
-
 export function getCurPath(acc, p) {
-  return normalizePath(getRootDir(acc) + '/' + p);
+  return _path.normalize(getRootDir(acc) + '/' + p);
 }
 
 // 用户根目录
@@ -24,49 +21,12 @@ export function getRootDir(acc) {
   if (acc !== 'root') {
     path = `${configObj.userFileP}/${acc}`;
   }
-  return normalizePath(path);
+  return _path.normalize(path);
 }
 
 // 获取回收站目录
 export function getTrashDir(account) {
-  return normalizePath(`${getRootDir(account)}/.trash`);
-}
-
-// 判断是否父目录
-export function isParentDir(parentP, childP) {
-  if (childP === parentP) return false;
-  return parentP === childP.slice(0, parentP.length);
-}
-
-// 文件所在目录
-export function getFileDir(path) {
-  return path.substring(0, path.lastIndexOf('/')) || '/';
-}
-
-// 获取扩展名
-export function getSuffix(str) {
-  const idx = str.lastIndexOf('.');
-  return idx === -1 ? [str, ''] : [str.slice(0, idx), str.slice(idx + 1)];
-}
-
-// 文件随机后缀
-export function getRandomName(str) {
-  const r = '_' + Math.random().toString().slice(-6),
-    [a, b] = getSuffix(str);
-
-  if (a) {
-    return a + r + (b === '' ? '' : `.${b}`);
-  }
-
-  return (b === '' ? '' : `.${b}`) + r;
-}
-
-// path获取文件名
-export function getPathFilename(path) {
-  const filename = path.substring(path.lastIndexOf('/') + 1);
-  const [name, extension] = getSuffix(filename);
-
-  return [filename, name, extension];
+  return _path.normalize(`${getRootDir(account)}/.trash`);
 }
 
 // 删除站点文件
@@ -78,18 +38,18 @@ export async function _delDir(path) {
 
     if (
       path === trashDir ||
-      isParentDir(path, trashDir) ||
-      isParentDir(trashDir, path)
+      _path.isPathWithin(path, trashDir) ||
+      _path.isPathWithin(trashDir, path)
     ) {
       return _f.del(path);
     }
 
     await _f.mkdir(trashDir);
 
-    let fname = getPathFilename(path)[0];
+    let fname = _path.basename(path)[0];
 
     if (_f.fs.existsSync(`${trashDir}/${fname}`)) {
-      fname = getRandomName(fname);
+      fname = _path.randomFilenameSuffix(fname);
     }
 
     try {
@@ -149,8 +109,8 @@ export async function getAllFile(path) {
           });
         } else {
           arr.push({
-            name: getPathFilename(path)[0],
-            path: getFileDir(path),
+            name: _path.basename(path)[0],
+            path: _path.dirname(path),
             size: s.size,
             atime: s.atimeMs, //最近一次访问文件的时间戳
             ctime: s.ctimeMs, //最近一次文件状态的修改的时间戳

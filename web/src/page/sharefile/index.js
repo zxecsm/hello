@@ -21,11 +21,9 @@ import {
   getFilePath,
   getPaging,
   getScreenSize,
-  getSuffix,
   getTextImg,
   getWordCount,
   hdOnce,
-  normalizePath,
   imgPreview,
   imgjz,
   isImgFile,
@@ -57,6 +55,7 @@ import toolTip from '../../js/plugins/tooltip';
 import { showFileInfo } from '../../js/utils/showinfo';
 import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';
+import _path from '../../js/utils/path';
 _d.isFilePage = true;
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
@@ -95,7 +94,7 @@ function getShareData(close) {
         uObj = { username, account, email };
         shareObj = data;
         logo = logo
-          ? normalizePath(`/api/pub/logo/${account}/${logo}`)
+          ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
           : getTextImg(username);
         imgjz(
           logo,
@@ -124,7 +123,7 @@ function getShareData(close) {
           $curmbBox.remove();
           $search.remove();
           $header.remove();
-          const [a, b] = getSuffix(data.name);
+          const [a, , b] = _path.extname(data.name);
           $fileBox.find('.name').html(
             _tpl(
               `
@@ -268,7 +267,7 @@ async function renderList(top) {
         return logo;
       },
       getText(name, type) {
-        let [a, b] = getSuffix(name);
+        let [a, , b] = _path.extname(name);
         if (type === 'file') {
           if (b) {
             b = '.' + b;

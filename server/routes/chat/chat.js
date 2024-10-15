@@ -27,7 +27,8 @@ import { getUserInfo } from '../user/user.js';
 import { _d } from '../../data/data.js';
 import configObj from '../../data/config.js';
 import _f from '../../utils/f.js';
-import { normalizePath, _delDir, delEmptyFolder } from '../file/file.js';
+import { _delDir, delEmptyFolder } from '../file/file.js';
+import _path from '../../utils/path.js';
 
 // 获取好友备注
 export async function getFriendDes(mAcc, fAcc) {
@@ -484,7 +485,7 @@ export function getChatUserList(account, pageSize, offset) {
 // 清理到期聊天文件
 export async function cleanUpload() {
   if (_d.uploadSaveDay > 0) {
-    const uploadDir = `${configObj.filepath}/upload`;
+    const uploadDir = _path.normalize(`${configObj.filepath}/upload`);
 
     if (!_f.fs.existsSync(uploadDir)) return;
 
@@ -509,7 +510,7 @@ export async function cleanUpload() {
 
       await concurrencyTasks(list, 5, async (item) => {
         const { url } = item;
-        const path = normalizePath(`${uploadDir}/${url}`);
+        const path = _path.normalize(`${uploadDir}/${url}`);
         await _delDir(path);
       });
 

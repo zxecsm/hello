@@ -26,7 +26,6 @@ import {
   _nothing,
   errLog,
   syncUpdateData,
-  isImgFile,
   createPagingData,
   uLog,
   writelog,
@@ -52,6 +51,7 @@ import { fieldLenght } from '../config.js';
 import { validShareAddUserState, validShareState } from '../user/user.js';
 import { getFriendDes } from '../chat/chat.js';
 import md5 from '../../utils/md5.js';
+import _path from '../../utils/path.js';
 
 const route = express.Router();
 // 分享
@@ -287,7 +287,9 @@ timedTask.add(async (flag) => {
     const now = Date.now();
     const threshold = now - 7 * 24 * 60 * 60 * 1000;
 
-    const sList = await readMenu(`${configObj.filepath}/siteinfo`);
+    const sList = await readMenu(
+      _path.normalize(`${configObj.filepath}/siteinfo`)
+    );
 
     let num = 0;
 
@@ -324,7 +326,9 @@ route.get('/parse-site-info', async (req, res) => {
 
     await uLog(req, `获取网站信息(${url})`);
 
-    p = `${configObj.filepath}/siteinfo/${md5.getStringHash(url)}.json`;
+    p = _path.normalize(
+      `${configObj.filepath}/siteinfo/${md5.getStringHash(url)}.json`
+    );
 
     miss = p + '.miss';
 
@@ -338,7 +342,7 @@ route.get('/parse-site-info', async (req, res) => {
       return;
     }
 
-    await _f.mkdir(`${configObj.filepath}/siteinfo`);
+    await _f.mkdir(_path.normalize(`${configObj.filepath}/siteinfo`));
 
     const result = await axios({
       method: 'get',
@@ -533,15 +537,11 @@ route.post('/group-share-state', async (req, res) => {
 });
 
 // 书签logo
-route.post('/change-logo', async (req, res) => {
+route.get('/delete-logo', async (req, res) => {
   try {
-    const { id, logo = '' } = req.body;
+    const { id } = req.query;
 
-    if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
-      !validaString(logo, 0, fieldLenght.logo) ||
-      (logo && !isImgFile(logo))
-    ) {
+    if (!validaString(id, 1, fieldLenght.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -550,14 +550,14 @@ route.post('/change-logo', async (req, res) => {
 
     await updateData(
       'bmk',
-      { logo },
+      { logo: '' },
       `WHERE account = ? AND id = ? AND state = ?`,
       [account, id, 1]
     );
 
     syncUpdateData(req, 'bookmark');
 
-    _success(res, '更新书签LOGO成功')(req, id, 1);
+    _success(res, '删除书签LOGO成功')(req, id, 1);
   } catch (error) {
     _err(res)(req, error);
   }

@@ -13,6 +13,7 @@ import configObj from '../../data/config.js';
 import _f from '../../utils/f.js';
 
 import { _delDir } from '../file/file.js';
+import _path from '../../utils/path.js';
 
 const route = express.Router();
 
@@ -28,7 +29,7 @@ route.get('/', async (req, res) => {
 
     let note = '';
 
-    const p = `${configObj.filepath}/notepad/${k}.md`;
+    const p = _path.normalize(`${configObj.filepath}/notepad/${k}.md`);
 
     if (_f.fs.existsSync(p)) {
       note = (await _f.fsp.readFile(p)).toString();
@@ -50,11 +51,11 @@ route.post('/', async (req, res) => {
       return;
     }
 
-    const p = `${configObj.filepath}/notepad/${k}.md`;
+    const p = _path.normalize(`${configObj.filepath}/notepad/${k}.md`);
 
     if (data) {
       if (!_f.fs.existsSync(p)) {
-        await _f.mkdir(`${configObj.filepath}/notepad`);
+        await _f.mkdir(_path.dirname(p));
       }
 
       await _f.fsp.writeFile(p, data);

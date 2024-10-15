@@ -14,6 +14,7 @@ import { _delDir } from '../file/file.js';
 
 import shareVerify from '../../utils/shareVerify.js';
 import { isValidShare, errLog, getDirname } from '../../utils/utils.js';
+import _path from '../../utils/path.js';
 
 const __dirname = getDirname(import.meta);
 
@@ -34,9 +35,9 @@ export function encryption(str) {
 
 // 获取外部播放器配置
 export async function playInConfig() {
-  const p = `${configObj.filepath}/data/playIn.json`;
+  const p = _path.normalize(`${configObj.filepath}/data/playIn.json`);
 
-  const logop = `${configObj.filepath}/playerlogo`;
+  const logop = _path.normalize(`${configObj.filepath}/playerlogo`);
 
   if (!_f.fs.existsSync(logop)) {
     await _f.cp(resolve(__dirname, `../../img/playerlogo`), logop);
@@ -85,7 +86,7 @@ export async function deleteUser(account) {
 
   await batchDeleteData('todo', 'id', `WHERE account = ?`, [account]);
 
-  await _delDir(`${configObj.filepath}/logo/${account}`);
+  await _delDir(_path.normalize(`${configObj.filepath}/logo/${account}`));
 }
 
 // 验证分享

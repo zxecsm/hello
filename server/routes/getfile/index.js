@@ -16,16 +16,12 @@ import _f from '../../utils/f.js';
 
 import fileKey from '../../utils/fileKey.js';
 
-import {
-  normalizePath,
-  getCurPath,
-  getPathFilename,
-  getRootDir,
-} from '../file/file.js';
+import { getCurPath, getRootDir } from '../file/file.js';
 
 import { getCompressionSize, compressionImg } from '../../utils/img.js';
 import { validShareState } from '../user/user.js';
 import { fieldLenght } from '../config.js';
+import _path from '../../utils/path.js';
 
 const route = express.Router();
 
@@ -55,7 +51,7 @@ route.get('/', async (req, res) => {
       }
     }
 
-    const url = normalizePath('/' + p);
+    const url = _path.normalize('/' + p);
 
     // 获取访问目录
     const pArr = url.split('/').filter((item) => item);
@@ -91,7 +87,7 @@ route.get('/', async (req, res) => {
         msg.url &&
         (msg.flag === 'chang' || msg.flag.includes(account))
       ) {
-        path = normalizePath(`${configObj.filepath}/upload/${msg.url}`);
+        path = `${configObj.filepath}/upload/${msg.url}`;
       } else {
         _err(res, '无权访问')(req, `${dir}-${id}`, 1);
         return;
@@ -112,14 +108,13 @@ route.get('/', async (req, res) => {
 
         const { name, type } = obj;
 
-        const rootP = normalizePath(
-          getRootDir(share.data.account) + '/' + obj.path + '/' + name
-        );
+        const rootP =
+          getRootDir(share.data.account) + '/' + obj.path + '/' + name;
 
         if (type === 'file') {
           path = rootP;
         } else if (type === 'dir') {
-          path = normalizePath(`${rootP}/${pArr.slice(2).join('/')}`);
+          path = `${rootP}/${pArr.slice(2).join('/')}`;
         }
       }
     } else if (dir === 'sharemusic') {
@@ -143,7 +138,7 @@ route.get('/', async (req, res) => {
     } else {
       path = configObj.filepath + url;
     }
-    path = normalizePath(path);
+    path = _path.normalize(path);
 
     if (!_f.fs.existsSync(path)) {
       _err(res, '文件不存在')(req, path, 1);
@@ -178,21 +173,24 @@ route.get('/', async (req, res) => {
         if (dir === 'sharemusic') {
           dir = 'music';
         }
-        const thumbP = `${configObj.filepath}/thumb/${dir}`;
 
-        const tp = `${thumbP}/${getPathFilename(url)[1]}_${stat.size}.png`;
+        const thumbP = _path.normalize(
+          `${configObj.filepath}/thumb/${dir}/${_path.basename(url)[1]}_${
+            stat.size
+          }.png`
+        );
 
-        if (!_f.fs.existsSync(tp)) {
-          await _f.mkdir(thumbP);
+        if (!_f.fs.existsSync(thumbP)) {
+          await _f.mkdir(_path.dirname(thumbP));
 
           const { x, y } = getCompressionSize(dir);
 
           const buf = await compressionImg(path, x, y, 20);
 
-          await _f.fsp.writeFile(tp, buf);
+          await _f.fsp.writeFile(thumbP, buf);
         }
 
-        path = tp;
+        path = thumbP;
       }
     } catch {}
     res.sendFile(path);

@@ -13,6 +13,7 @@ import getCity from './getCity.js';
 
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import _path from './path.js';
 
 // 获取模块目录
 export function getDirname(meta) {
@@ -33,7 +34,7 @@ export async function writelog(req, str, flag = 'hello') {
 
     if (str.trim() === '') return;
 
-    const date = formatDate({ template: '{0}-{1}-{2} {3}:{4}' });
+    const date = formatDate({ template: '{0}-{1}-{2} {3}:{4}:{5}' });
 
     if (req) {
       const { country, province, city, isp } = getCity(req._hello.ip);
@@ -48,9 +49,11 @@ export async function writelog(req, str, flag = 'hello') {
     } else {
       str = `[${date}] - ${str}\n`;
     }
-    await _f.mkdir(`${configObj.filepath}/log`);
 
-    const hp = `${configObj.filepath}/log/${flag}.log`;
+    const hp = _path.normalize(`${configObj.filepath}/log/${flag}.log`);
+
+    await _f.mkdir(_path.dirname(hp));
+
     // console.log(str);
     _f.fs.appendFileSync(hp, str);
 
@@ -59,9 +62,11 @@ export async function writelog(req, str, flag = 'hello') {
     if (s.size > 10 * 1024 * 1024) {
       await _f.fsp.rename(
         hp,
-        `${configObj.filepath}/log/${formatDate({
-          template: '{0}{1}{2}_{3}{4}{5}',
-        })}_${flag}.log`
+        _path.normalize(
+          `${configObj.filepath}/log/${formatDate({
+            template: '{0}{1}{2}_{3}{4}{5}',
+          })}_${flag}.log`
+        )
       );
     }
   } catch {}
@@ -253,8 +258,10 @@ export function receiveFiles(req, path, filename, maxFileSize = 5) {
       if (err) {
         reject(err);
       } else {
-        let newPath = `${path}/${files.attrname[0].newFilename}`,
-          originalPath = `${path}/${hdFilename(filename)}`;
+        const newPath = _path.normalize(
+            `${path}/${files.attrname[0].newFilename}`
+          ),
+          originalPath = _path.normalize(`${path}/${hdFilename(filename)}`);
 
         _f.fs.rename(newPath, originalPath, function (err) {
           if (err) {
@@ -285,7 +292,7 @@ export async function mergefile(count, from, to) {
   const temFile = `${to}_${nanoid()}`;
 
   for (let i = 0; i < list.length; i++) {
-    const u = `${from}/${list[i]}`;
+    const u = _path.normalize(`${from}/${list[i]}`);
     const f = await _f.fsp.readFile(u);
     await _f.fsp.appendFile(temFile, f);
     await _f.del(u);
@@ -633,29 +640,6 @@ export function tplReplace(tpl, data) {
       ) || ''
     );
   });
-}
-
-// 检查文件是否文本文件
-export function isTextFile(filepath, length = 1000) {
-  try {
-    let res = true;
-    const fd = _f.fs.openSync(filepath, 'r');
-    for (let i = 0; i < length; i++) {
-      const buf = new Buffer.alloc(1);
-      const bytes = _f.fs.readSync(fd, buf, 0, 1, i);
-      const char = buf.toString().charCodeAt();
-      if (bytes === 0) {
-        break;
-      } else if (bytes === 1 && char === 0) {
-        res = false;
-        break;
-      }
-    }
-    _f.fs.closeSync(fd);
-    return res;
-  } catch {
-    return false;
-  }
 }
 
 // 整数

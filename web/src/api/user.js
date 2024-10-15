@@ -19,9 +19,9 @@ export function reqUserDailyChangeBg() {
 export function reqUserHideState() {
   return _getAjax('/user/hide-state');
 }
-// 更换头像
-export function reqUserChangeLogo(data) {
-  return _postAjax('/user/change-logo', data);
+// 删除头像
+export function reqUserDeleteLogo() {
+  return _getAjax('/user/delete-logo');
 }
 // 字体列表
 export function reqUserFontList() {

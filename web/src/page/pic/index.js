@@ -17,10 +17,8 @@ import {
   getFiles,
   isIframe,
   myOpen,
-  getSuffix,
   getFilePath,
   getPreUrl,
-  normalizePath,
   LazyLoad,
   isRoot,
   isLogin,
@@ -45,6 +43,7 @@ import rMenu from '../../js/plugins/rightMenu';
 import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import md5 from '../../js/utils/md5';
+import _path from '../../js/utils/path';
 if (!isLogin()) {
   toLogin();
 }
@@ -80,8 +79,8 @@ async function hdUpFile(files) {
         pro.close('文件已存在');
         const { url } = isrepeat.data;
         fData.push({
-          filename: getSuffix(name)[0],
-          url: getPreUrl() + normalizePath(`/api/pub/picture/${url}`),
+          filename: _path.extname(name)[0],
+          url: getPreUrl() + _path.normalize(`/api/pub/picture/${url}`),
         });
         //文件已经存在操作
         return;
@@ -99,8 +98,8 @@ async function hdUpFile(files) {
       if (result.code === 1) {
         const { url } = result.data;
         fData.push({
-          filename: getSuffix(name)[0],
-          url: getPreUrl() + normalizePath(`/api/pub/picture/${url}`),
+          filename: _path.extname(name)[0],
+          url: getPreUrl() + _path.normalize(`/api/pub/picture/${url}`),
         });
         pro.close();
       } else {
@@ -278,7 +277,7 @@ const pgnt = pagination($imgList[0], {
 function copyLink(e, pobj) {
   const data = [];
   const obj = {
-    url: getPreUrl() + normalizePath(`/api/pub/picture/${pobj.url}`),
+    url: getPreUrl() + _path.normalize(`/api/pub/picture/${pobj.url}`),
     filename: pobj.hash,
   };
   typeTemplateArr.forEach((item, idx) => {

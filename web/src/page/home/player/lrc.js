@@ -3,7 +3,6 @@ import {
   _setData,
   _getData,
   _setTimeout,
-  getSuffix,
   throttle,
   debounce,
   myShuffle,
@@ -69,6 +68,7 @@ import { showSongInfo } from '../../../js/utils/showinfo.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl, deepClone } from '../../../js/utils/template.js';
 import notifyMusicControlPanel from './notifyMusicControlPanel.js';
+import _path from '../../../js/utils/path.js';
 const $myAudio = $(new Audio()),
   $musicLrcWrap = $('.music_player_box .music_lrc_wrap'),
   $lrcBg = $musicLrcWrap.find('.lrc_bg'),
@@ -882,7 +882,7 @@ $lrcMenuWrap
           let fname = `${playingSongInfo.artist}-${playingSongInfo.title}`;
           downloadFile(
             playingSongInfo.uurl,
-            `${fname}.${getSuffix(playingSongInfo.url)[1]}`
+            `${fname}.${_path.extname(playingSongInfo.url)[2]}`
           );
         }
       },

@@ -26,11 +26,9 @@ import {
   hdOnce,
   isBigScreen,
   getIn,
-  getPathFilename,
   getFilePath,
   _getDataTem,
   _setDataTem,
-  normalizePath,
   myShuffle,
   isLogin,
   isRoot,
@@ -147,6 +145,7 @@ import {
 } from './count_down/index.js';
 import { reqCountList } from '../../api/count.js';
 import { deepClone } from '../../js/utils/template.js';
+import _path from '../../js/utils/path.js';
 const $pageBg = $('.page_bg'),
   $document = $(document),
   $userLogoBtn = $('.user_logo_btn'),
@@ -414,7 +413,7 @@ export function updateUserInfo(cb) {
         updateRightBoxUsername(username);
         // 更新头像
         logo = logo
-          ? normalizePath(`/api/pub/logo/${account}/${logo}`)
+          ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
           : getTextImg(username);
         imgjz(
           logo,
@@ -590,10 +589,7 @@ function hdHomeBgBtn(e, obj) {
         ]);
       } else if (id === '3') {
         close();
-        downloadFile(
-          getFilePath(`/bg/${obj.url}`),
-          getPathFilename(obj.url)[0]
-        );
+        downloadFile(getFilePath(`/bg/${obj.url}`), _path.basename(obj.url)[0]);
       }
     },
     '壁纸选项'

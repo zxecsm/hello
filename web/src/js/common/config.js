@@ -115,17 +115,13 @@ const _d = {
     fontType: 'default', // 字体类型
     notePageSize: 20, // 笔记每页显示
     editNoteFontSize: 0.22, // 编辑笔记输入框字体大小
-    editNoteTextLineFeed: false, // 编辑笔记自动换行
-    editNoteCodeNum: true, // 编辑笔记显示行号
     bmPageSize: 20, // 书签每页显示
     filesPageSize: 20, // 文件列表每页显示
     curFileDirPath: '/', // 文件路径
     fileKeys: [], // 临时文件直链
     fileSort: { type: 'time', isDes: true }, // 文件排序
     fileFontSize: 0.22, // 文件编辑文本大小
-    fileTextLineFeed: false, // 文件编辑文字自动换行
     fileShowGrid: false, // 文件列表块状显示
-    fileEditCodeNum: true, // 编辑文件显示行号
     newNote: '', // 未保存的新笔记
     historyPageSize: 20, // 历史记录每页显示
     searchengine: 0, // 搜索引擎
@@ -142,6 +138,15 @@ const _d = {
     noteFontSize: 0.22, // 笔记文本大小
     tipsFlag: 0, // tips标识
     toolTip: true, // 提示工具
+    editorOption: {
+      animatedScroll: true, // 滚动动画
+      showInvisibles: false, // 显示不可见字符（例如空格、制表符、换行符）
+      fadeFoldWidgets: true, // 控制折叠部件（如代码折叠标记）是否淡入淡出
+      newLineMode: 'auto', // 控制换行符的模式 "unix", "windows" 或 "auto"
+      showGutter: true, // 显示行号
+      useWrapMode: false, // 自动换行
+      cursorStyle: 'ace', // 光标 "ace", "slim", "smooth", 或 "wide"
+    },
   },
 };
 export default _d;

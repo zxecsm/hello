@@ -33,8 +33,9 @@ CREATE TABLE IF NOT EXISTS bg (
 )
 `,
   `
-CREATE INDEX idx_bg_create_at ON bg (
-    create_at
+CREATE INDEX idx_bg_create_at_type ON bg (
+    create_at,
+    type
 );
 `,
   `
@@ -128,11 +129,12 @@ CREATE TABLE IF NOT EXISTS chat (
 )
 `,
   `
-CREATE INDEX idx_chat_content_create_at_from_to ON chat (
+CREATE INDEX idx_chat_content_create_at_from_to_flag ON chat (
     content,
     create_at,
     _from,
-    _to
+    _to,
+    flag
 );
 `,
   `
@@ -208,9 +210,10 @@ CREATE TABLE IF NOT EXISTS friends (
 );
 `,
   `
-CREATE INDEX idx_friends_account_friend ON friends (
+CREATE INDEX idx_friends_account_friend_read ON friends (
     account,
-    friend
+    friend,
+    read
 );
 `,
   `
@@ -226,10 +229,11 @@ CREATE TABLE IF NOT EXISTS history (
 )
 `,
   `
-CREATE INDEX idx_history_create_at_content_account ON history (
+CREATE INDEX idx_history_create_at_content_account_state ON history (
     create_at,
     content,
-    account
+    account,
+    state
 );
 `,
   `
@@ -271,13 +275,14 @@ CREATE TABLE IF NOT EXISTS note (
 )
 `,
   `
-CREATE INDEX idx_note_create_at_account_title_top_share_state ON note (
+CREATE INDEX idx_note_create_at_account_title_top_share_state_content ON note (
     create_at,
     account,
     title,
     top,
     share,
-    state
+    state,
+    content
 );
 `,
   `
@@ -513,11 +518,13 @@ CREATE TABLE IF NOT EXISTS user (
 )
 `,
   `
-CREATE INDEX idx_user_update_at_username_state_email ON user (
+CREATE INDEX idx_user_update_at_username_state_email_receive_chat_state_forward_msg_state ON user (
     update_at,
     username,
     state,
-    email
+    email,
+    receive_chat_state,
+    forward_msg_state
 );
 `,
 ];

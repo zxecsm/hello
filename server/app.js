@@ -45,6 +45,7 @@ import rootRoute from './routes/root/index.js';
 import searchRoute from './routes/search/index.js';
 import todoRoute from './routes/todo/index.js';
 import userRoute from './routes/user/index.js';
+import _path from './utils/path.js';
 
 const __dirname = getDirname(import.meta);
 
@@ -113,27 +114,39 @@ app.use(async (req, res, next) => {
 
 app.use(
   '/api/pub/font',
-  express.static(`${configObj.filepath}/font`, { maxAge: 2592000000 })
+  express.static(_path.normalize(`${configObj.filepath}/font`), {
+    maxAge: 2592000000,
+  })
 );
 app.use(
   '/api/pub/share',
-  express.static(`${configObj.filepath}/share`, { maxAge: 2592000000 })
+  express.static(_path.normalize(`${configObj.filepath}/share`), {
+    maxAge: 2592000000,
+  })
 );
 app.use(
   '/api/pub/logo',
-  express.static(`${configObj.filepath}/logo`, { maxAge: 2592000000 })
+  express.static(_path.normalize(`${configObj.filepath}/logo`), {
+    maxAge: 2592000000,
+  })
 );
 app.use(
   '/api/pub/picture',
-  express.static(`${configObj.filepath}/pic`, { maxAge: 2592000000 })
+  express.static(_path.normalize(`${configObj.filepath}/pic`), {
+    maxAge: 2592000000,
+  })
 );
 app.use(
   '/api/pub/searchlogo',
-  express.static(`${configObj.filepath}/searchlogo`, { maxAge: 2592000000 })
+  express.static(_path.normalize(`${configObj.filepath}/searchlogo`), {
+    maxAge: 2592000000,
+  })
 );
 app.use(
   '/api/pub/playerlogo',
-  express.static(`${configObj.filepath}/playerlogo`, { maxAge: 2592000000 })
+  express.static(_path.normalize(`${configObj.filepath}/playerlogo`), {
+    maxAge: 2592000000,
+  })
 );
 app.use('/api/getfavicon', getfaviconRoute);
 
