@@ -89,17 +89,30 @@ export default function createEditer(el) {
     name: 'cutCurrentLine',
     bindKey: { win: 'Ctrl-X', mac: 'Command-X' }, // Windows 使用 Ctrl-X，Mac 使用 Command-X
     exec: async function (editor) {
-      const cursorPosition = editor.getCursorPosition();
-      const lineNumber = cursorPosition.row;
+      if (!editor.selection.isEmpty()) {
+        const selectionRange = editor.getSelectionRange();
+        // 如果有选中内容，剪切选中的内容
+        const selectedText = editor.getSelectedText();
+        if (selectedText) {
+          // 将选中内容复制到剪贴板
+          await copyText(selectedText, { stopMsg: true });
 
-      // 获取当前行的内容
-      const line = editor.session.getLine(lineNumber);
-      if (line) {
-        // 将当前行内容剪切到剪贴板
-        await copyText(line, { stopMsg: true });
+          // 删除选中的内容
+          editor.session.replace(selectionRange, '');
+        }
+      } else {
+        // 如果没有选中内容，剪切当前行
+        const cursorPosition = editor.getCursorPosition();
+        const lineNumber = cursorPosition.row;
+
+        // 获取当前行的内容
+        const line = editor.session.getLine(lineNumber) || '\n';
+
+        // 将当前行内容复制到剪贴板
+        await copyText(line || '\n', { stopMsg: true });
+        // 删除当前行
+        editor.session.removeFullLines(lineNumber, lineNumber);
       }
-      // 删除当前行
-      editor.session.removeFullLines(lineNumber, lineNumber);
     },
   });
   let initialContent = '';

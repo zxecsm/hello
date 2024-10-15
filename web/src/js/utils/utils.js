@@ -771,15 +771,6 @@ export async function copyText(
   content,
   { success = '复制成功', error = '复制失败', stopMsg = false } = {}
 ) {
-  content = content.trim();
-
-  if (!content) {
-    if (!stopMsg) {
-      _msg.error(error || '内容为空，复制失败');
-    }
-    return;
-  }
-
   try {
     // 使用 Clipboard API
     if (navigator.clipboard) {
