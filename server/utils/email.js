@@ -1,7 +1,8 @@
 import nodemailer from 'nodemailer';
 import { _d } from '../data/data.js';
+import { CacheByExpire } from './cache.js';
 
-const temData = {};
+const cache = new CacheByExpire(10 * 60 * 1000, 20 * 60 * 1000);
 
 function sendMail(to, title, html) {
   return new Promise((resolve, reject) => {
@@ -42,27 +43,15 @@ function sendMail(to, title, html) {
 async function sendCode(to, code) {
   const html = `验证码 <span style="font-size:40px;color:#409eff;">${code}</span> 十分钟内有效，请勿泄露与转发。如非本人操作，请忽略此邮件。`;
   await sendMail(to, 'Hello账号验证邮件', html);
-  temData['email' + to] = { t: Date.now(), code };
-}
-
-function clean() {
-  const now = Date.now();
-  Object.keys(temData).forEach((item) => {
-    const { t } = item;
-    if (now - t > 10 * 60 * 1000) {
-      delete temData[item];
-    }
-  });
+  cache.set(to, code);
 }
 
 function get(email) {
-  clean();
-  const obj = temData['email' + email];
-  return obj ? obj.code : '';
+  return cache.get(email) || '';
 }
 
 function del(email) {
-  delete temData['email' + email];
+  cache.delete(email);
 }
 
 const mailer = {

@@ -315,7 +315,7 @@ export async function hdForwardToLink(req, list, fArr, text) {
       const f = fArr.find((y) => y.account === account);
 
       const des = f ? f.des : '';
-      const msg = `来自Hello-${des || username}：${text}`;
+      const msg = `${des || username}：${text}`;
 
       link = tplReplace(link, { msg: encodeURIComponent(msg) });
       body = replaceObjectValue(body, msg);
