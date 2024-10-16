@@ -487,7 +487,7 @@ export async function cleanUpload() {
   if (_d.uploadSaveDay > 0) {
     const uploadDir = _path.normalize(`${configObj.filepath}/upload`);
 
-    if (!_f.fs.existsSync(uploadDir)) return;
+    if (!(await _f.exists(uploadDir))) return;
 
     const now = Date.now();
     const exp = now - _d.uploadSaveDay * 24 * 60 * 60 * 1000;

@@ -14,6 +14,7 @@ import getCity from './getCity.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import _path from './path.js';
+import Lock from './lock.js';
 
 // 获取模块目录
 export function getDirname(meta) {
@@ -25,8 +26,12 @@ export function getFilename(meta) {
   return fileURLToPath(meta.url);
 }
 
+const lock = new Lock();
+
 // 记录日志
 export async function writelog(req, str, flag = 'hello') {
+  const unLock = await lock.acquire();
+
   try {
     str = str + '';
 
@@ -50,18 +55,18 @@ export async function writelog(req, str, flag = 'hello') {
       str = `[${date}] - ${str}\n`;
     }
 
-    const hp = _path.normalize(`${configObj.filepath}/log/${flag}.log`);
+    const targetPath = _path.normalize(`${configObj.filepath}/log/${flag}.log`);
 
-    await _f.mkdir(_path.dirname(hp));
+    await _f.mkdir(_path.dirname(targetPath));
 
     // console.log(str);
-    _f.fs.appendFileSync(hp, str);
+    await _f.fsp.appendFile(targetPath, str);
 
-    const s = await _f.fsp.stat(hp);
+    const s = await _f.fsp.stat(targetPath);
 
     if (s.size > 10 * 1024 * 1024) {
       await _f.fsp.rename(
-        hp,
+        targetPath,
         _path.normalize(
           `${configObj.filepath}/log/${formatDate({
             template: '{0}{1}{2}_{3}{4}{5}',
@@ -69,7 +74,9 @@ export async function writelog(req, str, flag = 'hello') {
         )
       );
     }
-  } catch {}
+  } finally {
+    unLock();
+  }
 }
 
 // 操作日志

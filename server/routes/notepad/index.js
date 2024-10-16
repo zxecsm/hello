@@ -31,7 +31,7 @@ route.get('/', async (req, res) => {
 
     const p = _path.normalize(`${configObj.filepath}/notepad/${k}.md`);
 
-    if (_f.fs.existsSync(p)) {
+    if (await _f.exists(p)) {
       note = (await _f.fsp.readFile(p)).toString();
     }
 
@@ -54,7 +54,7 @@ route.post('/', async (req, res) => {
     const p = _path.normalize(`${configObj.filepath}/notepad/${k}.md`);
 
     if (data) {
-      if (!_f.fs.existsSync(p)) {
+      if (!(await _f.exists(p))) {
         await _f.mkdir(_path.dirname(p));
       }
 
@@ -62,7 +62,7 @@ route.post('/', async (req, res) => {
 
       await uLog(req, `更新便条成功(${k})`);
     } else {
-      if (_f.fs.existsSync(p)) {
+      if (await _f.exists(p)) {
         await _delDir(p);
 
         await uLog(req, `删除便条成功(${k})`);

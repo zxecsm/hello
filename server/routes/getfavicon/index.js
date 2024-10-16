@@ -46,7 +46,7 @@ timedTask.add(async (flag) => {
 
       if (type === 'file') {
         if (time < threshold) {
-          await _delDir(`${path}/${name}`);
+          await _delDir(_path.normalize(`${path}/${name}`));
           num++;
         }
       }
@@ -84,12 +84,12 @@ route.get('/', async (req, res) => {
 
     miss = `${p}.miss`;
 
-    if (_f.fs.existsSync(p)) {
+    if (await _f.exists(p)) {
       res.sendFile(p);
       return;
     }
 
-    if (_f.fs.existsSync(miss)) {
+    if (await _f.exists(miss)) {
       res.sendFile(defaultIcon);
       return;
     }
@@ -150,7 +150,7 @@ route.get('/', async (req, res) => {
     }
 
     await downFile(iconUrl, p);
-    if (_f.fs.existsSync(p)) {
+    if (await _f.exists(p)) {
       try {
         const buf = await compressionImg(p);
 

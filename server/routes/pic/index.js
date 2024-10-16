@@ -78,7 +78,7 @@ route.post('/up', async (req, res) => {
     await _f.mkdir(tDir);
     await receiveFiles(req, tDir, tName, 5);
 
-    await getImgInfo(`${tDir}/${tName}`);
+    await getImgInfo(_path.normalize(`${tDir}/${tName}`));
 
     const obj = {
       hash: HASH,
@@ -108,9 +108,7 @@ route.post('/repeat', async (req, res) => {
 
     if (pic) {
       if (
-        _f.fs.existsSync(
-          _path.normalize(`${configObj.filepath}/pic/${pic.url}`)
-        )
+        await _f.exists(_path.normalize(`${configObj.filepath}/pic/${pic.url}`))
       ) {
         _success(res, 'ok', pic);
         return;

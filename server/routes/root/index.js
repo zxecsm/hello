@@ -202,7 +202,7 @@ route.get('/clean-music-file', async (req, res) => {
   try {
     const musicDir = _path.normalize(`${configObj.filepath}/music`);
 
-    if (_f.fs.existsSync(musicDir)) {
+    if (await _f.exists(musicDir)) {
       const songs = await queryData('songs', 'url');
       const allMusicFile = await getAllFile(musicDir);
 
@@ -213,7 +213,7 @@ route.get('/clean-music-file', async (req, res) => {
           _path.extname(name)[0]
         }`;
         if (!songs.some((item) => _path.extname(item.url)[0] === url)) {
-          await _delDir(`${path}/${name}`);
+          await _delDir(_path.normalize(`${path}/${name}`));
         }
       });
 
@@ -230,15 +230,15 @@ route.get('/clean-bg-file', async (req, res) => {
   try {
     const bgDir = _path.normalize(`${configObj.filepath}/bg`);
 
-    if (_f.fs.existsSync(bgDir)) {
+    if (await _f.exists(bgDir)) {
       const bgs = await queryData('bg', '*');
       const allBgFile = await getAllFile(bgDir);
 
       await concurrencyTasks(allBgFile, 5, async (item) => {
         const { path, name } = item;
-        const url = `${path.slice(bgDir.length + 1)}/${name}`;
+        const url = _path.normalize(`${path.slice(bgDir.length + 1)}/${name}`);
         if (!bgs.some((item) => item.url === url)) {
-          await _delDir(`${path}/${name}`);
+          await _delDir(_path.normalize(`${path}/${name}`));
         }
       });
 
@@ -255,15 +255,15 @@ route.get('/clean-pic-file', async (req, res) => {
   try {
     const picDir = _path.normalize(`${configObj.filepath}/pic`);
 
-    if (_f.fs.existsSync(picDir)) {
+    if (await _f.exists(picDir)) {
       const pics = await queryData('pic', '*');
       const allPicFile = await getAllFile(picDir);
 
       await concurrencyTasks(allPicFile, 5, async (item) => {
         const { path, name } = item;
-        const url = `${path.slice(picDir.length + 1)}/${name}`;
+        const url = _path.normalize(`${path.slice(picDir.length + 1)}/${name}`);
         if (!pics.some((item) => item.url === url)) {
-          await _delDir(`${path}/${name}`);
+          await _delDir(_path.normalize(`${path}/${name}`));
         }
       });
 
@@ -470,7 +470,7 @@ route.get('/clean-logo-file', async (req, res) => {
 
     await concurrencyTasks(logoFiles, 5, async (item) => {
       const { name, path } = item;
-      const p = `${path}/${name}`;
+      const p = _path.normalize(`${path}/${name}`);
       if (!logos.some((item) => item === name)) {
         await _delDir(p);
       }
@@ -496,8 +496,8 @@ route.post('/custom-code', async (req, res) => {
     const u = _path.normalize(`${configObj.filepath}/custom`);
 
     await _f.mkdir(u);
-    await _f.fsp.writeFile(`${u}/custom.js`, js);
-    await _f.fsp.writeFile(`${u}/custom.css`, css);
+    await _f.fsp.writeFile(_path.normalize(`${u}/custom.js`), js);
+    await _f.fsp.writeFile(_path.normalize(`${u}/custom.css`), css);
 
     _success(res, '添加自定义代码成功')(req);
   } catch (error) {

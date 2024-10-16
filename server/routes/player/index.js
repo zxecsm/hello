@@ -138,7 +138,7 @@ route.get('/lrc', async (req, res) => {
 
     const url = _path.normalize(`${configObj.filepath}/music/${songInfo.lrc}`);
 
-    if (_f.fs.existsSync(url)) {
+    if (await _f.exists(url)) {
       const str = (await _f.fsp.readFile(url)).toString(),
         lrcList = parseLrc(str);
 
@@ -1297,7 +1297,7 @@ route.get('/read-lrc', async (req, res) => {
 
     const url = _path.normalize(`${configObj.filepath}/music/${musicinfo.lrc}`);
 
-    if (_f.fs.existsSync(url)) {
+    if (await _f.exists(url)) {
       const str = (await _f.fsp.readFile(url)).toString();
       _success(res, 'ok', str);
     } else {
@@ -1481,7 +1481,7 @@ route.post('/up', async (req, res) => {
 
       await receiveFiles(req, tDir, tName, 30);
 
-      const songInfo = await getSongInfo(`${tDir}/${tName}`);
+      const songInfo = await getSongInfo(_path.normalize(`${tDir}/${tName}`));
 
       let {
         album = '',
@@ -1496,7 +1496,7 @@ route.post('/up', async (req, res) => {
 
       if (pic) {
         await _f.fsp.writeFile(
-          `${tDir}/${songId}.${_path.basename(picFormat)[0]}`,
+          _path.normalize(`${tDir}/${songId}.${_path.basename(picFormat)[0]}`),
           pic
         );
         pic = _path.normalize(
@@ -1504,7 +1504,7 @@ route.post('/up', async (req, res) => {
         );
       }
 
-      await _f.fsp.writeFile(`${tDir}/${songId}.lrc`, lrc);
+      await _f.fsp.writeFile(_path.normalize(`${tDir}/${songId}.lrc`), lrc);
 
       await insertData('songs', [
         {
@@ -1562,7 +1562,7 @@ route.post('/up', async (req, res) => {
 
       if (_path.basename(pic)[0] !== tName) {
         if (pic) {
-          await _delDir(`${tDir}/${_path.basename(pic)[0]}`);
+          await _delDir(_path.normalize(`${tDir}/${_path.basename(pic)[0]}`));
         }
       }
 
@@ -1579,7 +1579,9 @@ route.post('/up', async (req, res) => {
                 id: 3,
                 name: 'front cover',
               },
-              imageBuffer: await _f.fsp.readFile(`${tDir}/${tName}`),
+              imageBuffer: await _f.fsp.readFile(
+                _path.normalize(`${tDir}/${tName}`)
+              ),
             },
           },
           songUrl
@@ -1642,7 +1644,7 @@ route.post('/up', async (req, res) => {
 
       if (_path.basename(mv)[0] != tName) {
         if (mv) {
-          await _delDir(`${tDir}/${_path.basename(mv)[0]}`);
+          await _delDir(_path.normalize(`${tDir}/${_path.basename(mv)[0]}`));
         }
 
         await updateData(
@@ -1678,7 +1680,7 @@ route.post('/repeat', async (req, res) => {
         `${configObj.filepath}/music/${songInfo.url}`
       );
 
-      if (_f.fs.existsSync(url)) {
+      if (await _f.exists(url)) {
         _success(res);
         return;
       }

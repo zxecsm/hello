@@ -268,7 +268,9 @@ route.post('/up', async (req, res) => {
 
     await receiveFiles(req, tDir, tName, 10);
 
-    const { width, height } = await getImgInfo(`${tDir}/${tName}`);
+    const { width, height } = await getImgInfo(
+      _path.normalize(`${tDir}/${tName}`)
+    );
     const type = width < height ? 'bgxs' : 'bg';
 
     const url = _path.normalize(`${timePath}/${tName}`);
@@ -302,7 +304,7 @@ route.post('/repeat', async (req, res) => {
 
     if (bg) {
       if (
-        _f.fs.existsSync(_path.normalize(`${configObj.filepath}/bg/${bg.url}`))
+        await _f.exists(_path.normalize(`${configObj.filepath}/bg/${bg.url}`))
       ) {
         _success(res);
         return;

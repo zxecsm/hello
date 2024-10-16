@@ -103,12 +103,16 @@ route.get('/custom-code', async (req, res) => {
 
     const u = _path.normalize(`${configObj.filepath}/custom`);
 
-    if (_f.fs.existsSync(`${u}/custom.css`)) {
-      obj.css = (await _f.fsp.readFile(`${u}/custom.css`)).toString();
+    if (await _f.exists(_path.normalize(`${u}/custom.css`))) {
+      obj.css = (
+        await _f.fsp.readFile(_path.normalize(`${u}/custom.css`))
+      ).toString();
     }
 
-    if (_f.fs.existsSync(`${u}/custom.js`)) {
-      obj.js = (await _f.fsp.readFile(`${u}/custom.js`)).toString();
+    if (await _f.exists(_path.normalize(`${u}/custom.js`))) {
+      obj.js = (
+        await _f.fsp.readFile(_path.normalize(`${u}/custom.js`))
+      ).toString();
     }
 
     _success(res, 'ok', obj);
@@ -551,7 +555,7 @@ route.get('/font-list', async (req, res) => {
 
     const p = _path.normalize(`${configObj.filepath}/font`);
 
-    if (_f.fs.existsSync(p)) {
+    if (await _f.exists(p)) {
       list = await _f.fsp.readdir(p);
     }
 

@@ -298,7 +298,7 @@ timedTask.add(async (flag) => {
 
       if (type === 'file') {
         if (time < threshold) {
-          await _delDir(`${path}/${name}`);
+          await _delDir(_path.normalize(`${path}/${name}`));
           num++;
         }
       }
@@ -332,12 +332,12 @@ route.get('/parse-site-info', async (req, res) => {
 
     miss = p + '.miss';
 
-    if (_f.fs.existsSync(p)) {
+    if (await _f.exists(p)) {
       _success(res, 'ok', JSON.parse(await _f.fsp.readFile(p)));
       return;
     }
 
-    if (_f.fs.existsSync(miss)) {
+    if (await _f.exists(miss)) {
       _success(res, 'ok', obj);
       return;
     }

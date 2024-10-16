@@ -13,6 +13,8 @@ export function getNoteHistoryDir(account, noteId) {
 // 保存笔记历史
 export async function saveNoteHistory(req, noteId, content) {
   try {
+    if (!content) return;
+
     const { account } = req._hello.userinfo;
 
     const noteDir = getNoteHistoryDir(account, noteId);

@@ -39,11 +39,11 @@ export async function playInConfig() {
 
   const logop = _path.normalize(`${configObj.filepath}/playerlogo`);
 
-  if (!_f.fs.existsSync(logop)) {
+  if (!(await _f.exists(logop))) {
     await _f.cp(resolve(__dirname, `../../img/playerlogo`), logop);
   }
 
-  if (!_f.fs.existsSync(p)) {
+  if (!(await _f.exists(p))) {
     await _f.cp(resolve(__dirname, `../../data/playIn.json`), p);
   }
 

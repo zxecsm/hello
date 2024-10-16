@@ -87,7 +87,7 @@ route.get('/', async (req, res) => {
         msg.url &&
         (msg.flag === 'chang' || msg.flag.includes(account))
       ) {
-        path = `${configObj.filepath}/upload/${msg.url}`;
+        path = _path.normalize(`${configObj.filepath}/upload/${msg.url}`);
       } else {
         _err(res, '无权访问')(req, `${dir}-${id}`, 1);
         return;
@@ -108,18 +108,21 @@ route.get('/', async (req, res) => {
 
         const { name, type } = obj;
 
-        const rootP =
-          getRootDir(share.data.account) + '/' + obj.path + '/' + name;
+        const rootP = _path.normalize(
+          `${getRootDir(share.data.account)}/${obj.path}/${name}`
+        );
 
         if (type === 'file') {
           path = rootP;
         } else if (type === 'dir') {
-          path = `${rootP}/${pArr.slice(2).join('/')}`;
+          path = _path.normalize(`${rootP}/${pArr.slice(2).join('/')}`);
         }
       }
     } else if (dir === 'sharemusic') {
       if (account) {
-        path = `${configObj.filepath}/music/${pArr.slice(3).join('/')}`;
+        path = _path.normalize(
+          `${configObj.filepath}/music/${pArr.slice(3).join('/')}`
+        );
       } else {
         const id = pArr[1];
         const mid = pArr[2];
@@ -131,16 +134,17 @@ route.get('/', async (req, res) => {
         }
         if (share.state === 1) {
           if (share.data.data.some((item) => item === mid)) {
-            path = `${configObj.filepath}/music/${pArr.slice(3).join('/')}`;
+            path = _path.normalize(
+              `${configObj.filepath}/music/${pArr.slice(3).join('/')}`
+            );
           }
         }
       }
     } else {
-      path = configObj.filepath + url;
+      path = _path.normalize(`${configObj.filepath}${url}`);
     }
-    path = _path.normalize(path);
 
-    if (!_f.fs.existsSync(path)) {
+    if (!path || !(await _f.exists(path))) {
       _err(res, '文件不存在')(req, path, 1);
       return;
     }
@@ -180,7 +184,7 @@ route.get('/', async (req, res) => {
           }.png`
         );
 
-        if (!_f.fs.existsSync(thumbP)) {
+        if (!(await _f.exists(thumbP))) {
           await _f.mkdir(_path.dirname(thumbP));
 
           const { x, y } = getCompressionSize(dir);

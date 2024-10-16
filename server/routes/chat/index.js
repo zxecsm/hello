@@ -357,7 +357,7 @@ route.get('/expired', async (req, res) => {
     if (file) {
       const u = _path.normalize(`${configObj.filepath}/upload/${file.url}`);
 
-      if (_f.fs.existsSync(u)) {
+      if (await _f.exists(u)) {
         _success(res, 'ok', {
           isText: _f.isTextFile(u),
         });
@@ -770,7 +770,7 @@ route.post('/up-voice', async (req, res) => {
       update_at: time,
     };
 
-    const { duration } = await getSongInfo(`${tDir}/${tName}`);
+    const { duration } = await getSongInfo(_path.normalize(`${tDir}/${tName}`));
 
     const obj = {
       _to: to,
@@ -849,10 +849,12 @@ route.post('/merge', async (req, res) => {
     const tName = `${HASH}${suffix ? `.${suffix}` : ''}`;
 
     await _f.mkdir(tDir);
+    const targetPath = _path.normalize(`${tDir}/${tName}`);
+
     await mergefile(
       count,
       _path.normalize(`${configObj.filepath}/tem/${account}_${HASH}`),
-      `${tDir}/${tName}`
+      targetPath
     );
 
     const fobj = {
@@ -861,7 +863,7 @@ route.post('/merge', async (req, res) => {
       update_at: time,
     };
 
-    const stat = await _f.fsp.stat(`${tDir}/${tName}`);
+    const stat = await _f.fsp.stat(targetPath);
 
     const obj = {
       _to: to,
@@ -922,7 +924,7 @@ route.post('/breakpoint', async (req, res) => {
     let path = _path.normalize(`${configObj.filepath}/tem/${account}_${HASH}`),
       arr = [];
 
-    if (_f.fs.existsSync(path)) {
+    if (await _f.exists(path)) {
       arr = await _f.fsp.readdir(path);
     }
 
@@ -954,7 +956,7 @@ route.post('/repeat', async (req, res) => {
     if (upload) {
       const p = _path.normalize(`${configObj.filepath}/upload/${upload.url}`);
 
-      if (_f.fs.existsSync(p)) {
+      if (await _f.exists(p)) {
         let log = to;
         if (to !== 'chang' && to !== 'hello') {
           const user = await getUserInfo(to, 'account,username');

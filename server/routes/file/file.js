@@ -31,7 +31,7 @@ export function getTrashDir(account) {
 
 // 删除站点文件
 export async function _delDir(path) {
-  if (!_f.fs.existsSync(path)) return;
+  if (!(await _f.exists(path))) return;
 
   if (_d.trashState) {
     const trashDir = getTrashDir('root');
@@ -46,16 +46,16 @@ export async function _delDir(path) {
 
     await _f.mkdir(trashDir);
 
-    let fname = _path.basename(path)[0];
+    let targetPath = _path.normalize(`${trashDir}/${_path.basename(path)[0]}`);
 
-    if (_f.fs.existsSync(`${trashDir}/${fname}`)) {
-      fname = _path.randomFilenameSuffix(fname);
+    if (await _f.exists(targetPath)) {
+      targetPath = await getUniqueFilename(targetPath);
     }
 
     try {
-      await _f.fsp.rename(path, `${trashDir}/${fname}`);
+      await _f.fsp.rename(path, targetPath);
     } catch {
-      await _f.cp(path, `${trashDir}/${fname}`);
+      await _f.cp(path, targetPath);
       await _f.del(path);
     }
   } else {
@@ -71,7 +71,7 @@ export async function delEmptyFolder(path) {
     const list = await _f.fsp.readdir(path);
 
     await concurrencyTasks(list, 5, async (item) => {
-      await delEmptyFolder(`${path}/${item}`);
+      await delEmptyFolder(_path.normalize(`${path}/${item}`));
     });
 
     // 清除空文件夹
@@ -105,7 +105,7 @@ export async function getAllFile(path) {
           const list = await _f.fsp.readdir(path);
 
           await concurrencyTasks(list, 5, async (item) => {
-            await getFile(`${path}/${item}`);
+            await getFile(_path.normalize(`${path}/${item}`));
           });
         } else {
           arr.push({
@@ -153,7 +153,7 @@ export async function readMenu(path) {
 
     await concurrencyTasks(list, 5, async (name) => {
       try {
-        const f = `${path}/${name}`;
+        const f = _path.normalize(`${path}/${name}`);
 
         const s = await _f.fsp.stat(f);
 
@@ -227,4 +227,26 @@ export function getPermissions(stats) {
     return (a += b.split('').reduce((c, d) => parseInt(c) + parseInt(d), 0));
   }, '');
   return permissions + ' ' + num;
+}
+
+// 生成唯一文件名
+export function getUniqueFilename(path) {
+  return new Promise((resolve) => {
+    const dir = _path.dirname(path);
+    const filename = _path.basename(path)[0];
+
+    const ensureUniqueFileName = async (newPath) => {
+      if (await _f.exists(newPath)) {
+        await ensureUniqueFileName(
+          _path.normalize(`${dir}/${_path.randomFilenameSuffix(filename)}`)
+        );
+      } else {
+        resolve(newPath);
+      }
+    };
+
+    ensureUniqueFileName(
+      _path.normalize(`${dir}/${_path.randomFilenameSuffix(filename)}`)
+    );
+  });
 }

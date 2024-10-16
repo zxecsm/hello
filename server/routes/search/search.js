@@ -9,10 +9,10 @@ const __dirname = getDirname(import.meta);
 export async function getSearchConfig() {
   const p = _path.normalize(`${configObj.filepath}/data/searchConfig.json`);
   const logop = _path.normalize(`${configObj.filepath}/searchlogo`);
-  if (!_f.fs.existsSync(logop)) {
+  if (!(await _f.exists(logop))) {
     await _f.cp(resolve(__dirname, `../../img/searchlogo`), logop);
   }
-  if (!_f.fs.existsSync(p)) {
+  if (!(await _f.exists(p))) {
     await _f.cp(resolve(__dirname, `../../data/searchConfig.json`), p);
   }
   return JSON.parse(await _f.fsp.readFile(p));

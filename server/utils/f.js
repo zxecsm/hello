@@ -29,7 +29,7 @@ async function deldir(folderPath) {
 }
 
 async function del(path) {
-  if (!fs.existsSync(path)) return;
+  if (!(await exists(path))) return;
 
   const s = await fsp.stat(path);
   if (s.isDirectory()) {
@@ -62,6 +62,16 @@ function isTextFile(path, length = 1000) {
   }
 }
 
-const _f = { fsp, fs, del, mkdir, cp, isTextFile };
+// 文件或文件夹是否存在
+async function exists(path) {
+  try {
+    await fsp.access(path, fs.constants.F_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const _f = { fsp, fs, del, mkdir, cp, isTextFile, exists };
 
 export default _f;

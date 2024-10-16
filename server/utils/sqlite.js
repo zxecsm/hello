@@ -5,13 +5,16 @@ import configObj from '../data/config.js';
 import _f from './f.js';
 
 import { batchTask, nanoid } from './utils.js';
+import _path from './path.js';
 
 // 如果目录不存在则创建目录
-_f.fs.mkdirSync(`${configObj.filepath}/data/db`, { recursive: true });
+_f.fs.mkdirSync(_path.normalize(`${configObj.filepath}/data/db`), {
+  recursive: true,
+});
 
 // 初始化数据库连接
 const db = new sqlite3.Database(
-  `${configObj.filepath}/data/db/hello.db`,
+  _path.normalize(`${configObj.filepath}/data/db/hello.db`),
   (err) => {
     if (err) {
       // eslint-disable-next-line no-console
