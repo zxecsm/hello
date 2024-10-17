@@ -981,32 +981,47 @@ export function _position(el, relativeToHTML) {
 // 懒加载
 export class LazyLoad {
   constructor() {
-    this.obs = null;
+    this.options = {
+      root: null, //根元素
+      rootMargin: '0px', //传值形式类似于css的margin 传一个值则四个边都为0
+      threshold: 0.1, //触发条件 表示目标元素刚进入根元素时触发
+    };
   }
   bind(els, cb) {
     this.unBind();
-    this.obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((item) => {
-          if (item.isIntersecting) {
-            this.obs.unobserve(item.target);
-            cb && cb(item.target);
-          }
-        });
-      },
-      {
-        root: document.querySelector('#root'), //根元素
-        rootMargin: '0px', //传值形式类似于css的margin 传一个值则四个边都为0
-        threshold: 0, //触发条件 表示目标元素刚进入根元素时触发
-      }
+    this.visibilityObs = new IntersectionObserver(
+      debounce(() => {
+        this.load(els, cb);
+      }, 100),
+      this.options
     );
+
+    this.observeElements(this.visibilityObs, els);
+  }
+  load(els, cb) {
+    this.loadObs = new IntersectionObserver((entries) => {
+      entries.forEach((item) => {
+        if (item.isIntersecting) {
+          this.loadObs.unobserve(item.target);
+          cb && cb(item.target);
+        }
+      });
+
+      this.loadObs && this.loadObs.disconnect();
+    }, this.options);
+
+    this.observeElements(this.loadObs, els);
+  }
+  observeElements(obs, els) {
     for (let i = 0; i < els.length; i++) {
-      this.obs.observe(els[i]);
+      obs.observe(els[i]);
     }
   }
   unBind() {
-    this.obs && this.obs.disconnect();
-    this.obs = null;
+    this.visibilityObs && this.visibilityObs.disconnect();
+    this.visibilityObs = null;
+    this.loadObs && this.loadObs.disconnect();
+    this.loadObs = null;
   }
 }
 // 位置
