@@ -26,7 +26,6 @@ import {
   getTimePath,
   validaString,
   createPagingData,
-  isRoot,
   concurrencyTasks,
   uLog,
 } from '../../utils/utils.js';
@@ -35,10 +34,11 @@ import { fieldLenght } from '../config.js';
 
 import { _delDir } from '../file/file.js';
 import _path from '../../utils/path.js';
+import { isRoot } from '../user/user.js';
 
 const route = express.Router();
 
-//拦截器
+// 验证登录态
 route.use((req, res, next) => {
   if (req._hello.userinfo.account) {
     next();

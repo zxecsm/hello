@@ -176,12 +176,7 @@ const todoPgnt = pagination($todoList[0], {
     _msg.botMsg(`第 ${todoPageNo} 页`);
   },
   toTop() {
-    $todoList.stop().animate(
-      {
-        scrollTop: 0,
-      },
-      _d.speed
-    );
+    $todoList.stop().scrollTop(0);
   },
 });
 // 获取todo数据

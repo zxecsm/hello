@@ -43,6 +43,7 @@ route.get('/', async (req, res) => {
     let { account } = req._hello.userinfo;
 
     if (!account) {
+      // 如果没有登录，有文件key使用文件key
       const fKey = fileKey.get(sign);
 
       if (fKey) {
@@ -59,7 +60,7 @@ route.get('/', async (req, res) => {
     let dir = pArr[0];
 
     const publicArr = ['pic', 'sharemusic', 'sharefile'];
-    const verifyArr = ['bg', 'upload', 'file', 'music'];
+    const verifyArr = ['bg', 'upload', 'file', 'music']; // 目录需要登录态
 
     if (publicArr.includes(dir)) {
     } else if (verifyArr.includes(dir)) {
@@ -87,6 +88,7 @@ route.get('/', async (req, res) => {
         msg.url &&
         (msg.flag === 'chang' || msg.flag.includes(account))
       ) {
+        // 消息文件存在，并且是群和自己发送或收到的消息
         path = _path.normalize(`${configObj.filepath}/upload/${msg.url}`);
       } else {
         _err(res, '无权访问')(req, `${dir}-${id}`, 1);
@@ -156,6 +158,7 @@ route.get('/', async (req, res) => {
     }
 
     try {
+      // 生成缩略图
       if (
         stat.isFile() &&
         isImgFile(path) &&

@@ -29,6 +29,7 @@ const __dirname = getDirname(import.meta);
 
 const defaultIcon = resolve(__dirname, '../../img/default-icon.png');
 
+// 定期清理缓存图标
 timedTask.add(async (flag) => {
   if (flag.slice(-6) === '001000') {
     const now = Date.now();
@@ -58,6 +59,7 @@ timedTask.add(async (flag) => {
   }
 });
 
+// 下载图标
 async function downFile(url, path) {
   const res = await axios({
     method: 'get',

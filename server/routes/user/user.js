@@ -207,3 +207,8 @@ export function splitShareFlag(str) {
 
   return [a, b];
 }
+
+// 验证管理员身份
+export function isRoot(req) {
+  return req._hello.userinfo.account === 'root';
+}

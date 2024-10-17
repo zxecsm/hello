@@ -92,10 +92,7 @@ $setBtnsWrap
     _myOpen(`/edit/#${encodeURIComponent(urlparmes.v)}`, titleName);
   })
   .on('click', '.to_top_btn', function () {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
+    pageScrollTop(0);
   })
   .on('click', '.show_search_wrap', () => {
     showSearchBox();
@@ -466,10 +463,7 @@ function highlightPosition(num) {
   $highlightWords.removeClass('active').eq(num).addClass('active');
   if (_top > pageTop && _top < pageTop + DH) {
   } else {
-    window.scrollTo({
-      top: _top - 60,
-      behavior: 'smooth',
-    });
+    pageScrollTop(_top - 60);
   }
 }
 $contentWrap.css({

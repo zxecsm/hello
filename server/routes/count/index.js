@@ -38,7 +38,7 @@ import { computerDay } from './count.js';
 
 const route = express.Router();
 
-//拦截器
+// 验证登录态
 route.use((req, res, next) => {
   if (req._hello.userinfo.account) {
     next();
@@ -47,6 +47,7 @@ route.use((req, res, next) => {
   }
 });
 
+// 定时通知是否有未完成代办事项和倒计时到期
 let countNum = 0;
 timedTask.add(async () => {
   countNum++;
@@ -55,6 +56,7 @@ timedTask.add(async () => {
 
     const obj = {};
 
+    // 倒计时剩下两天时通知
     const t = Date.now() + 2 * 1000 * 60 * 60 * 24;
 
     await batchTask(async (offset, limit) => {
@@ -173,6 +175,7 @@ route.get('/list', async (req, res) => {
       expireCount = 0;
 
     if (total > 0) {
+      // 剩下不到两天的数量
       expireCount = await getTableRowCount(
         'count_down',
         `WHERE account = ? AND state = ? AND end < ?`,

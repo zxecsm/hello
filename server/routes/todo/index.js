@@ -25,7 +25,7 @@ import { fieldLenght } from '../config.js';
 
 const route = express.Router();
 
-//拦截器
+// 验证登录态
 route.use((req, res, next) => {
   if (req._hello.userinfo.account) {
     next();
@@ -64,6 +64,7 @@ route.get('/list', async (req, res) => {
       undoneCount = 0;
 
     if (total > 0) {
+      // 未完成代办数
       undoneCount = await getTableRowCount(
         'todo',
         `WHERE account = ? AND state = ?`,

@@ -133,9 +133,7 @@ const pgnt = pagination($shareList[0], {
     _msg.botMsg(`第 ${pageNo} 页`);
   },
   toTop() {
-    $shareList.stop().animate({
-      scrollTop: 0,
-    });
+    $shareList.scrollTop(0);
   },
 });
 // 获取分享数据

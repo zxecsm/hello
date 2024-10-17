@@ -116,10 +116,7 @@ const pgnt = pagination($paginationBox[0], {
     _msg.botMsg(`第 ${pageNo} 页`);
   },
   toTop() {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
+    pageScrollTop(0);
   },
 });
 // 获取用户列表

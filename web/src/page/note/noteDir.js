@@ -91,11 +91,7 @@ export function createNoteDir($box) {
     const id = $this.attr('data-id'),
       $curH = $box.find(`#${id}`),
       _top = _position($curH[0], true).top + pageScrollTop();
-    // pageScrollTop(_top - 60);
-    window.scrollTo({
-      top: _top - 60,
-      behavior: 'smooth',
-    });
+    pageScrollTop(_top - 60);
     const $ul = $this.next();
     const isShow = $ul.attr('data-show');
     if (!isShow) return;

@@ -40,7 +40,7 @@ function basename(path) {
 
 // 获取目录名
 function dirname(path) {
-  return path.substring(0, path.lastIndexOf('/')) || '/';
+  return normalize(path.substring(0, path.lastIndexOf('/')) || '/');
 }
 
 // 合并路径

@@ -313,12 +313,7 @@ const bgPgnt = pagination($bgList[0], {
     _msg.botMsg(`第 ${bgpage} 页`);
   },
   toTop() {
-    $bgList.stop().animate(
-      {
-        scrollTop: 0,
-      },
-      _d.speed
-    );
+    $bgList.scrollTop(0);
   },
 });
 // 预览

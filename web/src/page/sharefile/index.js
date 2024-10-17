@@ -336,10 +336,7 @@ const pgnt = pagination($pagination.find('.container')[0], {
     _setData('filesPageSize', pageSize);
   },
   toTop() {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
+    pageScrollTop(0);
   },
 });
 // 排序

@@ -1638,7 +1638,11 @@ export function pageScrollTop(top) {
     );
   }
   // 通用设置滚动位置，适用于所有浏览器
-  window.scrollTo(0, top);
+  window.scrollTo({
+    top, // 垂直方向滚动的像素数
+    left: 0, // 水平方向滚动的像素数
+    behavior: 'auto', // 滚动行为'auto' | 'smooth'
+  });
 }
 // 404
 export function pageErr() {

@@ -219,10 +219,7 @@ const pgnt = pagination($foot[0], {
     _msg.botMsg(`第 ${$main.pageNo} 页`);
   },
   toTop() {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
+    pageScrollTop(0);
   },
 });
 const _hdRender = debounce(hdRender, 1000);

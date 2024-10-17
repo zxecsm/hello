@@ -29,7 +29,6 @@ import {
   paramErr,
   getTimePath,
   syncUpdateData,
-  isRoot,
   concurrencyTasks,
   createPagingData,
   uLog,
@@ -42,6 +41,7 @@ import { getRandowBg } from './bg.js';
 import { getImgInfo } from '../../utils/img.js';
 import { fieldLenght } from '../config.js';
 import _path from '../../utils/path.js';
+import { isRoot } from '../user/user.js';
 
 const route = express.Router();
 
@@ -72,7 +72,7 @@ route.get('/r', async (req, res) => {
   }
 });
 
-//拦截器
+// 验证登录态
 route.use((req, res, next) => {
   if (req._hello.userinfo.account) {
     next();
@@ -199,8 +199,9 @@ route.post('/delete', async (req, res) => {
   try {
     const ids = req.body;
 
+    // 验证管理员
     if (!isRoot(req)) {
-      _err(res, '无权操作')(req, ids.length, 1);
+      _err(res, '无权操作')(req);
       return;
     }
 
@@ -253,7 +254,7 @@ route.post('/up', async (req, res) => {
 
     const bg = (await queryData('bg', 'url', `WHERE hash = ?`, [HASH]))[0];
     if (bg) {
-      _err(res, '壁纸已存在')(req, HASH, 1);
+      _err(res, '壁纸已存在')(req, `${name}-${HASH}`, 1);
       return;
     }
 
@@ -268,6 +269,7 @@ route.post('/up', async (req, res) => {
 
     await receiveFiles(req, tDir, tName, 10);
 
+    // 获取壁纸尺寸进行分类
     const { width, height } = await getImgInfo(
       _path.normalize(`${tDir}/${tName}`)
     );
@@ -310,6 +312,7 @@ route.post('/repeat', async (req, res) => {
         return;
       }
 
+      // 壁纸文件丢失，删除数据，重新上传
       await deleteData('bg', `WHERE id = ?`, [bg.id]);
     }
 

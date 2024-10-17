@@ -73,6 +73,7 @@ route.get('/read', async (req, res) => {
 
       const { account } = req._hello.userinfo;
 
+      // 公开并且未删除 或 是自己的
       if ((share === 1 && state === 1) || acc === account) {
         if (account && note.account !== account) {
           const des = await getFriendDes(account, acc);
@@ -145,11 +146,13 @@ route.get('/search', async (req, res) => {
     const valArr = [1, acc || account];
 
     if (acc && acc !== account) {
+      // 非自己只能访问公开的
       where += ` AND share = ?`;
       valArr.push(1);
     }
 
     if (category.length > 0) {
+      // 分类
       const categorySql = createSearchSql(
         category,
         category.map(() => 'category')
@@ -163,6 +166,7 @@ route.get('/search', async (req, res) => {
     let splitWord = [];
 
     if (word) {
+      // 搜索
       splitWord = getSplitWord(word);
 
       const curSplit = splitWord.slice(0, 10);
@@ -217,6 +221,7 @@ route.get('/search', async (req, res) => {
 
           let con = [];
 
+          // 提取关键词
           const wc = getWordContent(splitWord, content);
 
           let idx = wc.findIndex(
@@ -289,7 +294,7 @@ route.get('/category', async (req, res) => {
   }
 });
 
-//拦截器
+// 验证登录态
 route.use((req, res, next) => {
   if (req._hello.userinfo.account) {
     next();
@@ -350,7 +355,7 @@ route.post('/delete', async (req, res) => {
       return;
     }
 
-    ids = ids.filter((item) => !['about', 'tips'].includes(item));
+    ids = ids.filter((item) => !['about', 'tips'].includes(item)); // 过滤关于和tips
 
     const { account } = req._hello.userinfo;
 
@@ -397,6 +402,7 @@ route.post('/edit', async (req, res) => {
     )[0];
 
     if (note) {
+      // 保存笔记历史版本
       await saveNoteHistory(req, id, note.content);
 
       await updateData(

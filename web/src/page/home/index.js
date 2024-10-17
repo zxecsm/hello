@@ -744,7 +744,7 @@ window.addEventListener(
 );
 // 处理聊天数据
 function hdChatType(resData) {
-  const { flag, from, to, tt, msgData } = resData;
+  const { flag, from, to, msgData } = resData;
   const chatAccount = setCurChatAccount(); //当前聊天框
   // 新消息处理
   if (flag === 'addmsg') {
@@ -853,7 +853,7 @@ function hdChatType(resData) {
         (chatAccount === 'chang' && to === 'chang') ||
         (from.account === userInfo.account && chatAccount === to)
       ) {
-        const $chatItem = $chatListBox.find(`[data-id=${tt}]`);
+        const $chatItem = $chatListBox.find(`[data-id=${msgData.msgId}]`);
         if ($chatItem.length > 0) {
           $chatItem.stop().slideUp(_d.speed, () => {
             const $prev = $chatItem.prev();

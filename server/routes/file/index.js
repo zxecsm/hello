@@ -15,7 +15,6 @@ import {
   syncUpdateData,
   isFilename,
   uLog,
-  isRoot,
   concurrencyTasks,
   errorNotifyMsg,
   nanoid,
@@ -51,6 +50,7 @@ import {
   validShareState,
   validShareAddUserState,
   splitShareFlag,
+  isRoot,
 } from '../user/user.js';
 
 import _path from '../../utils/path.js';
@@ -138,6 +138,7 @@ route.get('/read-dir', async (req, res) => {
     let rootP = '';
 
     if (flag) {
+      // 分享
       const [id, pass] = splitShareFlag(flag);
 
       const share = await validShareState(req, ['dir'], id, pass);
@@ -151,9 +152,8 @@ route.get('/read-dir', async (req, res) => {
 
       const { name } = data;
 
-      rootP = _path.normalize(
-        getRootDir(account) + '/' + data.path + '/' + name
-      );
+      // 用户根目录
+      rootP = _path.normalize(`${getRootDir(account)}/${data.path}/${name}`);
 
       p = _path.normalize(`${rootP}/${path}`);
     } else {
@@ -179,6 +179,7 @@ route.get('/read-dir', async (req, res) => {
         };
 
         if (item.type === 'dir') {
+          // 读取缓存目录大小
           obj.size = fileSize.get(fullPath);
         }
 
@@ -256,6 +257,7 @@ route.get('/read-dir-size', async (req, res) => {
       clearTimeout(timer);
       timer = null;
     } else {
+      // 超时未处理完，完成后直接推送更新
       req._hello.temid = nanoid();
       syncUpdateData(req, 'file');
     }
@@ -310,7 +312,7 @@ route.get('/read-file', async (req, res) => {
       const { name, type } = data;
 
       const rootP = _path.normalize(
-        getRootDir(account) + '/' + data.path + '/' + name
+        `${getRootDir(account)}/${data.path}/${name}`
       );
 
       if (type === 'file') {
@@ -334,6 +336,7 @@ route.get('/read-file', async (req, res) => {
       return;
     }
 
+    // 文本文件直接返回
     if (stat.isFile() && _f.isTextFile(p)) {
       //文本文件
       _success(res, 'ok', {
@@ -350,7 +353,7 @@ route.get('/read-file', async (req, res) => {
   }
 });
 
-// 拦截器
+// 验证登录态
 route.use((req, res, next) => {
   if (req._hello.userinfo.account) {
     next();
@@ -382,6 +385,7 @@ route.post('/create-file', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
+    // 过滤回收站
     if ((await _f.exists(fpath)) || getTrashDir(account) === fpath) {
       _err(res, '已存在重名文件')(req, fpath, 1);
       return;
@@ -554,6 +558,7 @@ route.post('/copy', async (req, res) => {
 
       if (_path.isPathWithin(f, to) || !name) return;
 
+      // 已存在添加后缀
       if ((await _f.exists(to)) || to === trashDir) {
         to = await getUniqueFilename(to);
       }
@@ -784,7 +789,7 @@ route.post('/unzip', async (req, res) => {
 
       await uncompress(f, t);
     } else {
-      await uncompress(f, _path.normalize(_path.normalize(`${t}/`)));
+      await uncompress(f, _path.normalize(`${t}/`));
     }
 
     await uLog(req, `解压文件(${f}=>${t})`);
@@ -863,6 +868,7 @@ route.post('/delete', async (req, res) => {
         }
 
         try {
+          // 移动失败则复制然后删除
           await _f.fsp.rename(p, targetPath);
         } catch {
           await _f.cp(p, targetPath);
@@ -1126,6 +1132,7 @@ route.post('/merge', async (req, res) => {
       targetPath = await getUniqueFilename(targetPath);
     }
 
+    // 存在先删除
     if (await _f.exists(targetPath)) {
       await _f.del(targetPath);
     } else {

@@ -23,7 +23,6 @@ import {
   isImgFile,
   createPagingData,
   isEmail,
-  isRoot,
   getSplitWord,
   batchTask,
 } from '../../utils/utils.js';
@@ -59,7 +58,13 @@ import {
   parseForwardMsgLink,
 } from '../chat/chat.js';
 
-import { encryption, playInConfig, getUserInfo, deleteUser } from './user.js';
+import {
+  encryption,
+  playInConfig,
+  getUserInfo,
+  deleteUser,
+  isRoot,
+} from './user.js';
 
 import { setCookie } from '../../utils/jwt.js';
 import { fieldLenght } from '../config.js';
@@ -79,7 +84,7 @@ route.post('/error', async (req, res) => {
       return;
     }
 
-    await writelog(req, `[ ${err.slice(0, 1000)} ]`, 'error');
+    await writelog(req, `[ ${err.slice(0, 1000)} ]`, 'panel_error');
 
     _success(res);
   } catch (error) {
@@ -87,7 +92,7 @@ route.post('/error', async (req, res) => {
   }
 });
 
-// playIn配置
+// 外部播放配置
 route.get('/player-config', async (req, res) => {
   try {
     _success(res, 'ok', await playInConfig());
@@ -216,6 +221,7 @@ route.post('/code-login', async (req, res) => {
       return;
     }
 
+    // 轮询请求一直到key被赋值，获取账号信息并删除记录，种下cookie
     const { account, username } = codeObj[key];
 
     delete codeObj[key];
@@ -258,9 +264,8 @@ route.post('/login', async (req, res) => {
       return;
     }
 
-    // 过滤登录密码三次错误的登录IP地址
+    // ip登录错误次数是否超限制
     if (loginVerifyLimit.verify(ip, account)) {
-      //验证用户名和账号是否存在
       const userinfo = (
         await queryData(
           'user',
@@ -277,8 +282,10 @@ route.post('/login', async (req, res) => {
 
       const { verify, account: acc, username } = userinfo;
 
+      // 验证密码，如果未设置密码或密码正确
       if (!userinfo.password || userinfo.password === encryption(password)) {
         if (verify) {
+          // 如果开启两部验证，则继续验证身份
           _success(res, '账号密码验证成功，请完成两步验证', {
             account: acc,
             verify: true,
@@ -334,6 +341,7 @@ route.post('/verify-login', async (req, res) => {
 
     const ip = req._hello.ip;
 
+    // 限制验证次数
     if (towfaVerify.verify(ip, acc)) {
       const user = await getUserInfo(acc, 'account,username,verify,password');
 
@@ -344,6 +352,7 @@ route.post('/verify-login', async (req, res) => {
 
       const { account, username, verify, password: pd } = user;
 
+      // 验证密码和验证码
       if (
         (!pd || pd === encryption(password)) &&
         verify &&
@@ -416,6 +425,7 @@ route.get('/mail-code', async (req, res) => {
     }
 
     if (mailer.get(email)) {
+      // 如果有缓存
       _success(res, '验证码已发送', { account, email })(
         req,
         `${username}-${account}`,
@@ -474,6 +484,7 @@ route.post('/reset-pass', async (req, res) => {
       const { username } = userinfo;
 
       if (mailer.get(email) === code) {
+        // 清除密码和两部验证token
         await updateData(
           'user',
           {
@@ -490,6 +501,7 @@ route.post('/reset-pass', async (req, res) => {
           username,
         });
 
+        // 删除验证码缓存
         mailer.del(email);
 
         _success(res, '已重置密码为空，请尽快修改密码', { account, username })(
@@ -510,7 +522,7 @@ route.post('/reset-pass', async (req, res) => {
   }
 });
 
-//拦截器
+// 验证登录态
 route.use((req, res, next) => {
   if (req._hello.userinfo.account) {
     next();
@@ -519,7 +531,7 @@ route.use((req, res, next) => {
   }
 });
 
-// 获取文件key
+// 获取文件key，用来验证未登录用户访问指定文件的临时权限
 route.get('/file-key', async (req, res) => {
   try {
     const { p } = req.query;
@@ -529,6 +541,7 @@ route.get('/file-key', async (req, res) => {
       return;
     }
 
+    // 获取key并缓存
     const key = fileKey.add(req._hello.userinfo.account, p);
 
     _success(res, '获取fileKey成功', key)(req, key, 1);
@@ -678,7 +691,7 @@ route.post('/bind-email', async (req, res) => {
   }
 });
 
-// 获取verifyToken
+// 获取临时两部验证token
 route.get('/verify', async (req, res) => {
   try {
     const { account } = req._hello.userinfo;
@@ -689,7 +702,7 @@ route.get('/verify', async (req, res) => {
   }
 });
 
-// 设置verify
+// 设置两部验证
 route.post('/verify', async (req, res) => {
   try {
     const { token, password } = req.body;
@@ -726,6 +739,7 @@ route.post('/verify', async (req, res) => {
 
     const verify = _2fa.create(account);
 
+    // 验证token
     if (_2fa.verify(verify, token)) {
       await updateData('user', { verify }, `WHERE account = ?  AND state = ?`, [
         account,
@@ -734,7 +748,7 @@ route.post('/verify', async (req, res) => {
 
       syncUpdateData(req, 'userinfo');
 
-      _2fa.del(account);
+      _2fa.del(account); // 成功后删除token缓存
 
       _success(res, '开启两步验证成功')(req);
     } else {
@@ -766,6 +780,7 @@ route.post('/allow-code-login', async (req, res) => {
 
     const key = `hello_${code}`;
 
+    // 登录码冲突则中断验证
     if (codeObj.hasOwnProperty(key)) {
       _err(res, '登录码冲突，请刷新登录码再试')(req);
       return;
@@ -773,6 +788,7 @@ route.post('/allow-code-login', async (req, res) => {
 
     const { account, username } = req._hello.userinfo;
 
+    // 设置账号信息，等待登录端获取
     codeObj[key] = {
       account,
       username,
@@ -784,6 +800,7 @@ route.post('/allow-code-login', async (req, res) => {
         clearInterval(timer);
         timer = null;
 
+        // 超时未获取则删除信息
         delete codeObj[key];
 
         _err(res, '批准登录超时')(req);
@@ -802,7 +819,7 @@ route.post('/allow-code-login', async (req, res) => {
   }
 });
 
-// 更新token
+// 延长登录态
 route.get('/update-token', async (req, res) => {
   try {
     const { account, username } = req._hello.userinfo;
@@ -946,7 +963,7 @@ route.post('/account-state', async (req, res) => {
       return;
     }
 
-    if (isRoot(req)) {
+    if (isRoot(req) || account === 'hello') {
       _err(res, '无权操作')(req);
     } else {
       await deleteUser(account);
@@ -1099,7 +1116,7 @@ route.post('/up-logo', async (req, res) => {
   }
 });
 
-//每日更换壁纸
+// 每日更换壁纸
 route.get('/daily-change-bg', async (req, res) => {
   try {
     const { account, daily_change_bg } = req._hello.userinfo;
@@ -1159,7 +1176,7 @@ route.get('/hide-state', async (req, res) => {
     if (tem === 1) {
       _success(res, '成功开启')(req, '开启隐身');
     } else {
-      onlineMsg(req, 1);
+      onlineMsg(req, 1); // 通知上线
 
       _success(res, '成功关闭')(req, '关闭隐身');
     }
@@ -1202,7 +1219,7 @@ function getMsgs(con, id, flag) {
   return msgs.map((item) => item.data);
 }
 
-// 数据同步
+// 获取推送消息
 route.get('/real-time', async (req, res) => {
   try {
     const { account } = req._hello.userinfo;
@@ -1221,6 +1238,7 @@ route.get('/real-time', async (req, res) => {
     }
 
     if (page === 'home') {
+      // 主页才通知在线
       onlineMsg(req);
     }
 
@@ -1235,10 +1253,12 @@ route.get('/real-time', async (req, res) => {
 
     function cb() {
       msgs = getMsgs(con, id, flag);
+      // 验证标识和是否有推送消息
       if (con.flag === flag || msgs.length === 0) return;
       stop(1);
     }
 
+    // 超时断开连接
     let timer = setTimeout(stop, 20000);
 
     cb();
@@ -1320,7 +1340,7 @@ route.post('/real-time', async (req, res) => {
       _success(res);
     }
 
-    // 播放
+    // 远程播放歌曲
     else if (type === 'play') {
       if (!validationValue(data.state, [1, 0])) {
         paramErr(res, req);
@@ -1340,7 +1360,7 @@ route.post('/real-time', async (req, res) => {
 
       _success(res);
     }
-    // 播放状态
+    // 控制播放模式
     else if (type === 'playmode') {
       if (!validationValue(data.state, ['random', 'loop', 'order'])) {
         paramErr(res, req);
@@ -1353,7 +1373,7 @@ route.post('/real-time', async (req, res) => {
 
       _success(res);
     }
-    // 音量
+    // 控制音量
     else if (type === 'vol') {
       data.value = +data.value;
 
@@ -1368,7 +1388,7 @@ route.post('/real-time', async (req, res) => {
 
       _success(res);
     }
-    // 进度
+    // 控制播放进度
     else if (type === 'progress') {
       data.value = +data.value;
 
@@ -1393,25 +1413,19 @@ route.post('/real-time', async (req, res) => {
         return;
       }
 
-      // 撤回、清空操作
-      if (data.flag === 'del' || data.flag === 'clear') {
-        if (data.flag === 'del') {
-          if (!validaString(data.tt, 1, fieldLenght.id, 1)) {
-            paramErr(res, req);
-            return;
-          }
+      // 撤回、清空、发送新消息操作
+
+      // 如果是删除验证消息id
+      if (data.flag === 'del') {
+        if (!validaString(data.msgData.msgId, 1, fieldLenght.id, 1)) {
+          paramErr(res, req);
+          return;
         }
-
-        await sendNotifyMsg(req, data.to, data.flag, data.tt);
-
-        _success(res);
-        return;
       }
-      // 发送新消息
-      if (data.flag === 'addmsg') {
-        await sendNotifyMsg(req, data.to, data.flag, data.msgData);
-        _success(res);
-      }
+
+      await sendNotifyMsg(req, data.to, data.flag, data.msgData);
+
+      _success(res);
     }
     // 文件粘贴数据
     else if (type === 'pastefiledata') {
@@ -1535,7 +1549,8 @@ route.post('/edit-share', async (req, res) => {
       !validaString(id, 1, fieldLenght.id, 1) ||
       !validaString(title, 1, fieldLenght.title) ||
       !validaString(pass, 0, fieldLenght.sharePass) ||
-      isNaN(expireTime)
+      isNaN(expireTime) ||
+      expireTime > fieldLenght.expTime
     ) {
       paramErr(res, req);
       return;
@@ -1670,6 +1685,7 @@ route.post('/delete-trash', async (req, res) => {
       [...ids, account, 0]
     );
 
+    // 删除分组，则删除分组下的所有书签
     if (type === 'bmk_group') {
       await batchTask(async (offset, limit) => {
         const list = ids.slice(offset, offset + limit);

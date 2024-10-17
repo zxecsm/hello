@@ -54,6 +54,7 @@ import md5 from '../../utils/md5.js';
 import _path from '../../utils/path.js';
 
 const route = express.Router();
+
 // 分享
 route.get('/share', async (req, res) => {
   try {
@@ -67,6 +68,7 @@ route.get('/share', async (req, res) => {
       return;
     }
 
+    // 验证分享状态，获取分享数据
     const share = await validShareAddUserState(req, ['bookmk'], id, pass);
 
     if (share.state === 0) {
@@ -91,8 +93,10 @@ route.get('/share', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
+    // 如果非自己的分享
     if (account && account != acc) {
       const des = await getFriendDes(account, acc);
+      // 有设置备注则返回备注
       username = des || username;
     }
 
@@ -152,6 +156,7 @@ route.get('/search', async (req, res) => {
     let where = 'WHERE group_state = ? AND state = ? AND account = ?';
 
     if (acc && acc !== account) {
+      // 非本人只能获取公开的分组书签
       where += ` AND group_share = ?`;
       valArr.push(1);
     }
@@ -273,7 +278,7 @@ route.get('/list', async (req, res) => {
   }
 });
 
-// 拦截器
+// 验证登录态
 route.use((req, res, next) => {
   if (req._hello.userinfo.account) {
     next();
@@ -282,6 +287,7 @@ route.use((req, res, next) => {
   }
 });
 
+// 删除超7天网址缓存信息
 timedTask.add(async (flag) => {
   if (flag.slice(-6) === '000030') {
     const now = Date.now();
@@ -332,6 +338,7 @@ route.get('/parse-site-info', async (req, res) => {
 
     miss = p + '.miss';
 
+    // 缓存存在，则使用缓存
     if (await _f.exists(p)) {
       _success(res, 'ok', JSON.parse(await _f.fsp.readFile(p)));
       return;
@@ -483,6 +490,7 @@ route.post('/delete-group', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
+    // 放入回收站
     await updateData(
       'bmk_group',
       { state: 0 },
@@ -536,7 +544,7 @@ route.post('/group-share-state', async (req, res) => {
   }
 });
 
-// 书签logo
+// 删除自定义书签logo
 route.get('/delete-logo', async (req, res) => {
   try {
     const { id } = req.query;
@@ -623,13 +631,10 @@ route.post('/add-bmk', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    if (groupId !== 'home') {
-      const hasg = await bmkGroupExist(account, groupId);
-
-      if (!hasg) {
-        paramErr(res, req);
-        return;
-      }
+    // 添加书签的分组必须存在
+    if (groupId !== 'home' && !(await bmkGroupExist(account, groupId))) {
+      paramErr(res, req);
+      return;
     }
 
     const total = await getTableRowCount(
@@ -638,6 +643,7 @@ route.post('/add-bmk', async (req, res) => {
       [groupId, account, 1]
     );
 
+    // 计算添加的书签和现有的书签
     if (total + bms.length > fieldLenght.bmk) {
       return _err(res, `分组书签限制${fieldLenght.bmk}个`)(req);
     }
@@ -718,13 +724,10 @@ route.post('/bmk-to-group', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    if (groupId !== 'home') {
-      const hasList = await bmkGroupExist(account, groupId);
-
-      if (!hasList) {
-        paramErr(res, req);
-        return;
-      }
+    // 移动到的分组需要存在
+    if (groupId !== 'home' && !(await bmkGroupExist(account, groupId))) {
+      paramErr(res, req);
+      return;
     }
 
     const total = await getTableRowCount(
@@ -733,6 +736,7 @@ route.post('/bmk-to-group', async (req, res) => {
       [groupId, account, 1]
     );
 
+    // 计算分组书签数量
     if (total + ids.length > fieldLenght.bmk) {
       return _err(res, `分组书签限制${fieldLenght.bmk}个`)(req);
     }

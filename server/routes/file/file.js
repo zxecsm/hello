@@ -49,6 +49,7 @@ export async function _delDir(path) {
     let targetPath = _path.normalize(`${trashDir}/${_path.basename(path)[0]}`);
 
     if (await _f.exists(targetPath)) {
+      // 已存在添加随机后缀
       targetPath = await getUniqueFilename(targetPath);
     }
 
@@ -236,6 +237,7 @@ export function getUniqueFilename(path) {
     const filename = _path.basename(path)[0];
 
     const ensureUniqueFileName = async (newPath) => {
+      // 如果还存在一直递归到不存在为止
       if (await _f.exists(newPath)) {
         await ensureUniqueFileName(
           _path.normalize(`${dir}/${_path.randomFilenameSuffix(filename)}`)

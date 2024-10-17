@@ -1984,24 +1984,13 @@ $msuicContentBox
   })
   .on('click', '.sort_songs', hdSongsSort)
   .on('click', '.to_top', function () {
-    $msuicContentBox.find('.list_items_wrap').stop().animate(
-      {
-        scrollTop: 0,
-      },
-      _d.speed
-    );
+    $msuicContentBox.find('.list_items_wrap').scrollTop(0);
   })
   .on('click', '.to_bot', function () {
     $msuicContentBox
       .find('.list_items_wrap')
-      .stop()
-      .animate(
-        {
-          scrollTop: $msuicContentBox
-            .find('.list_items_wrap')
-            .prop('scrollHeight'),
-        },
-        _d.speed
+      .scrollTop(
+        $msuicContentBox.find('.list_items_wrap').prop('scrollHeight')
       );
   })
   .on('click', '.get_location', function () {
@@ -2203,12 +2192,7 @@ export function highlightPlayingSong(isPosition) {
           $msuicContentBox.find('.list_items_wrap').scrollTop() +
           $songs.eq(idx).position().top -
           100;
-        $msuicContentBox.find('.list_items_wrap').stop().animate(
-          {
-            scrollTop: sp,
-          },
-          _d.speed
-        );
+        $msuicContentBox.find('.list_items_wrap').scrollTop(sp);
       }
       $songs.eq(idx).addClass('active').find('.play_gif').addClass('show');
     }

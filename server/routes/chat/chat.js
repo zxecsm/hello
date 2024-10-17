@@ -53,8 +53,10 @@ export async function markAsRead(mAcc, fAcc) {
     [fAcc, mAcc]
   );
 
+  // 不是好友，变为好友
   if (change.changes === 0) {
     if (fAcc === 'chang') {
+      // 群
       await insertData('friends', [
         {
           account: mAcc,
@@ -66,8 +68,8 @@ export async function markAsRead(mAcc, fAcc) {
       if (fAcc === 'hello' || mAcc === fAcc) {
         await becomeFriends(mAcc, fAcc);
       } else {
-        const user = await getUserInfo(fAcc, 'account');
-        if (user) {
+        // 好友是否存在
+        if (await getUserInfo(fAcc, 'account')) {
           await becomeFriends(mAcc, fAcc);
         }
       }
@@ -75,7 +77,7 @@ export async function markAsRead(mAcc, fAcc) {
   }
 }
 
-// 助手消息
+// 助手回复响应消息
 export async function hdHelloMsg(req, data, type) {
   let { receive_chat_state, chat_id, account } = req._hello.userinfo;
 
@@ -141,8 +143,8 @@ export async function saveChatMsg(account, obj) {
   return obj;
 }
 
-// 发送通知
-export async function sendNotifyMsg(req, to, flag, tt) {
+// 推送通知
+export async function sendNotifyMsg(req, to, flag, msgData) {
   const { account, logo, username } = req._hello.userinfo;
 
   const notifyObj = {
@@ -158,17 +160,15 @@ export async function sendNotifyMsg(req, to, flag, tt) {
     },
   };
 
-  if (flag === 'addmsg') {
-    notifyObj.data.msgData = tt;
-  } else {
-    notifyObj.data.tt = tt;
-  }
+  // flag === 'del'  msgData = { msgId: 'xxx' }
+  notifyObj.data.msgData = msgData;
 
   const t = Date.now();
 
   if (notifyObj.data.to === 'chang') {
     //群消息
     if (flag === 'addmsg') {
+      // 给所有人标记群消息为未读
       await batchUpdateData(
         'friends',
         'account',
@@ -180,11 +180,13 @@ export async function sendNotifyMsg(req, to, flag, tt) {
 
     const accs = Object.keys(_connect.getConnects());
 
+    // 分批推送
     await batchTask(async (offset, limit) => {
       const list = accs.slice(offset, offset + limit);
 
       if (list.length === 0) return false;
 
+      // 获取我被好友设置的备注
       const fArr = await queryData(
         'friends',
         'des,account',
@@ -215,6 +217,7 @@ export async function sendNotifyMsg(req, to, flag, tt) {
     }, 200);
   } else {
     if (flag === 'addmsg' && notifyObj.data.to !== account) {
+      // 标记消息为未读
       const change = await updateData(
         'friends',
         { read: 0, update_at: t },
@@ -222,12 +225,14 @@ export async function sendNotifyMsg(req, to, flag, tt) {
         [notifyObj.data.to, account]
       );
 
+      // 如果不是好友，成为好友
       if (change.changes === 0) {
         await becomeFriends(account, notifyObj.data.to, 1, 0);
       }
     }
 
     if (notifyObj.data.to === account) {
+      // 推送给自己所有在线终端
       _connect.send(account, nanoid(), notifyObj);
     } else {
       let des = '';
@@ -249,6 +254,7 @@ export async function sendNotifyMsg(req, to, flag, tt) {
 
       _connect.send(notifyObj.data.to, req._hello.temid, notifyObj);
 
+      // 如果是抖动，不推送给自己
       if (flag !== 'shake') {
         _connect.send(account, nanoid(), notifyObj);
       }
@@ -256,11 +262,12 @@ export async function sendNotifyMsg(req, to, flag, tt) {
   }
 }
 
-// 转发消息
+// 发送消息到自定义地址
 export async function sendNotificationsToCustomAddresses(req, obj) {
-  if (obj._from === obj._to || obj._to === 'hello') return;
+  if (obj._from === obj._to || obj._to === 'hello') return; // 文件传输和给助手发的消息不发送
 
   if (obj._to === 'chang') {
+    // 群，发送给所有配置了自定义地址的用户
     await batchTask(async (offset, limit) => {
       const list = await queryData(
         'user',
@@ -303,6 +310,7 @@ export async function sendNotificationsToCustomAddresses(req, obj) {
   }
 }
 
+// 处理转发到自定义地址
 export async function hdForwardToLink(req, list, fArr, text) {
   if (list.length > 0) {
     const { username } = req._hello.userinfo;
@@ -345,8 +353,9 @@ export async function hdForwardToLink(req, list, fArr, text) {
 export async function onlineMsg(req, pass) {
   const { account, hide, username } = req._hello.userinfo;
 
-  const con = _connect.getConnects();
+  const con = _connect.getConnects(); // 获取所有在线
 
+  // 已经在线、隐身或跳过的不通知
   if ((!con.hasOwnProperty(account) && hide === 0) || pass) {
     const accs = Object.keys(con);
 

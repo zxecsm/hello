@@ -26,7 +26,6 @@ import {
   paramErr,
   getTimePath,
   createPagingData,
-  isRoot,
   errLog,
   isurl,
   _type,
@@ -37,7 +36,7 @@ import {
 } from '../../utils/utils.js';
 import { fieldLenght } from '../config.js';
 
-import { getUserInfo } from '../user/user.js';
+import { getUserInfo, isRoot } from '../user/user.js';
 
 import {
   getFriendDes,
@@ -104,7 +103,7 @@ route.all('/:chat_id/sendMessage', async (req, res) => {
   }
 });
 
-//拦截器
+// 验证登录态
 route.use((req, res, next) => {
   if (req._hello.userinfo.account) {
     next();
@@ -129,6 +128,7 @@ route.post('/setdes', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
+    // 过滤群和自己
     if (account === acc || acc === 'chang') {
       _err(res, '设置备注失败')(req, acc, 1);
       return;
@@ -142,9 +142,7 @@ route.post('/setdes', async (req, res) => {
     );
 
     if (change.changes === 0) {
-      const user = await getUserInfo(acc, 'account');
-
-      if (user) {
+      if (await getUserInfo(acc, 'account')) {
         await becomeFriends(account, acc);
       } else {
         _err(res, '用户不存在')(req, acc, 1);
@@ -242,6 +240,7 @@ route.get('/read-msg', async (req, res) => {
     const offsetValArr = [flag];
 
     if (acc === 'chang') {
+      // 群
       where += ` flag = ?`;
       offsetWhere += ` flag = ?`;
       valArr.push('chang');
@@ -256,6 +255,7 @@ route.get('/read-msg', async (req, res) => {
     let splitWord = [];
 
     if (word) {
+      // 关键词搜索
       splitWord = getSplitWord(word);
 
       const curSplit = splitWord.slice(0, 10);
@@ -270,6 +270,7 @@ route.get('/read-msg', async (req, res) => {
     }
 
     if (start && end) {
+      // 日期过滤
       const sTime = new Date(start + ' 00:00:00').getTime();
       const eTime = new Date(end + ' 00:00:00').getTime();
 
@@ -284,6 +285,7 @@ route.get('/read-msg', async (req, res) => {
 
     let offset = 0;
     if (flag) {
+      // 获取顶部或底部消息的位置
       offsetWhere += ' ORDER BY create_at ASC';
       offset = await getTableRowCount(
         'chat_user_view',
@@ -297,13 +299,13 @@ route.get('/read-msg', async (req, res) => {
 
     const fields = `logo,email,username,_from,_to,id,create_at,content,hash,size,type,flag`;
     if (type === 0 || (type === 2 && offset <= 0)) {
-      //打开聊天框
+      // 打开聊天框或接受第一条消息
       where += ` ORDER BY create_at DESC LIMIT ?`;
       valArr.push(pageSize);
       list = await queryData('chat_user_view', fields, where, valArr);
       list.reverse();
     } else if (type === 1) {
-      //向上滚动
+      // 向上滚动
       if (offset <= 0) {
         list = [];
       } else {
@@ -313,12 +315,13 @@ route.get('/read-msg', async (req, res) => {
         list = await queryData('chat_user_view', fields, where, valArr);
       }
     } else if (type === 2) {
-      //新消息
+      // 新消息
       where += ` ORDER BY create_at ASC LIMIT ? OFFSET ?`;
       valArr.push(pageSize, offset + 1);
       list = await queryData('chat_user_view', fields, where, valArr);
     }
 
+    // 添加备注信息
     const accIds = unique(list.map((item) => item._from));
     const friends = await queryData(
       'friends',
@@ -359,7 +362,7 @@ route.get('/expired', async (req, res) => {
 
       if (await _f.exists(u)) {
         _success(res, 'ok', {
-          isText: _f.isTextFile(u),
+          isText: _f.isTextFile(u), // 判断是否文本文件
         });
         return;
       }
@@ -392,6 +395,7 @@ route.post('/send-msg', async (req, res) => {
     }
 
     let log = to;
+    // 非群非助手验证用户是否存在
     if (to !== 'chang' && to !== 'hello') {
       const user = await getUserInfo(to, 'account,username');
 
@@ -411,10 +415,12 @@ route.post('/send-msg', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
+    // 保存并推送消息
     const msg = await saveChatMsg(account, obj);
     await sendNotifyMsg(req, obj._to, 'addmsg', obj);
 
     if (to === 'hello') {
+      // 如果发送给助手，处理响应
       await hdHelloMsg(req, content, obj.type);
     }
 
@@ -468,21 +474,26 @@ route.post('/forward', async (req, res) => {
 
     const { flag, hash } = chat;
 
+    // 只能转发群和发送给自己的或自己发送的消息
     if (flag !== 'chang' && !flag.includes(account)) {
       _err(res, '无权转发')(req, id, 1);
       return;
     }
 
+    // 更换发送目标
     chat._to = to;
 
+    // 更新时间
     delete chat.create_at;
 
+    // 文件消息，更新时间，避免被清理
     if (hash) {
       await updateData('upload', { update_at: Date.now() }, `WHERE id = ?`, [
         hash,
       ]);
     }
 
+    // 重新生成id
     delete chat.id;
 
     const msg = await saveChatMsg(account, chat);
@@ -557,11 +568,12 @@ route.post('/delete-msg', async (req, res) => {
 
     if (id) {
       await deleteData('chat', `WHERE id = ? AND _from = ?`, [id, account]);
-      await sendNotifyMsg(req, to, 'del', id);
+      await sendNotifyMsg(req, to, 'del', { msgId: id });
 
       _success(res, '撤回消息成功')(req, `${id}=>${log}`, 1);
     } else {
       if (to === 'chang') {
+        // 群消息只能管理员清空
         if (isRoot(req)) {
           await batchDeleteData('chat', 'id', `WHERE _to = ?`, ['chang']);
 
@@ -673,7 +685,7 @@ route.get('/user-list', async (req, res) => {
         online: 1,
         des: des === null ? '' : des,
         email,
-        os: con ? con.onlines.map((item) => item.os) : [],
+        os: con ? con.onlines.map((item) => item.os) : [], // 展示登录设备信息
         read: read === null ? 1 : read,
       };
 
@@ -954,6 +966,7 @@ route.post('/repeat', async (req, res) => {
     )[0];
 
     if (upload) {
+      // 文件已存在则，跳过上传
       const p = _path.normalize(`${configObj.filepath}/upload/${upload.url}`);
 
       if (await _f.exists(p)) {
@@ -1019,7 +1032,7 @@ route.post('/repeat', async (req, res) => {
   }
 });
 
-// 配置转发消息接口
+// 配置自定义转发地址接口
 route.post('/forward-msg-link', async (req, res) => {
   try {
     const { state, type, link = '', header = {}, body = {} } = req.body;

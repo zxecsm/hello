@@ -724,10 +724,6 @@ export function isValidDate(dateString) {
   return date.toISOString().startsWith(dateString);
 }
 
-export function isRoot(req) {
-  return req._hello.userinfo.account === 'root';
-}
-
 export function myShuffle(arr) {
   let m = arr.length,
     t,

@@ -29,7 +29,7 @@ import { getSearchConfig } from './search.js';
 
 const route = express.Router();
 
-//拦截器
+// 验证登录态
 route.use((req, res, next) => {
   if (req._hello.userinfo.account) {
     next();
@@ -140,6 +140,7 @@ route.post('/save', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
+    // 删除重复历史记录
     await deleteData('history', `WHERE account = ? AND content = ?`, [
       account,
       content,
@@ -173,6 +174,7 @@ route.get('/list', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     if (!word) {
+      // 没有输入返回历史记录最新10条
       const list = await queryData(
         'history',
         'id,content',
@@ -213,6 +215,7 @@ route.get('/list', async (req, res) => {
       bValArr = [1, account],
       nValArr = [1, account];
 
+    // 关键词搜索
     const hSearchSql = createSearchSql(curSplit, ['content']);
     const bSearchSql = createSearchSql(curSplit, ['title', 'link', 'des']);
     const nSearchSql = createSearchSql(curSplit, ['title']);
@@ -267,6 +270,7 @@ route.get('/list', async (req, res) => {
       groupObj[item.id] = item;
     });
 
+    // 添加分组信息
     bmkList.forEach((item) => {
       const { title, link, des, group_id, id } = item,
         n = `${title}${link}${des}`;

@@ -1270,12 +1270,7 @@ $chatFootBox
     }
   })
   .on('click', '.scroll_to_bot_btn', function () {
-    $chatListBox.animate(
-      {
-        scrollTop: $chatListBox[0].scrollHeight,
-      },
-      _d.speed
-    );
+    $chatListBox.scrollTop($chatListBox[0].scrollHeight);
   })
   .find('.c_text_content')[0]
   // 粘贴发送文件

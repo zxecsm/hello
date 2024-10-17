@@ -6,6 +6,7 @@ import _path from '../../utils/path.js';
 
 const __dirname = getDirname(import.meta);
 
+// 获取搜索引擎和翻译接口配置
 export async function getSearchConfig() {
   const p = _path.normalize(`${configObj.filepath}/data/searchConfig.json`);
   const logop = _path.normalize(`${configObj.filepath}/searchlogo`);

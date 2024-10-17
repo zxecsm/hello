@@ -29,6 +29,7 @@ export async function bookListMoveLocation(account, fromId, toId) {
       },
     ];
 
+    // 批量更新对应的位置
     await batchDiffUpdateData(
       'bmk_group',
       data,

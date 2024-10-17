@@ -265,12 +265,7 @@ const pgnt = pagination($imgList[0], {
     _msg.botMsg(`第 ${picPageNo} 页`);
   },
   toTop() {
-    $imgList.stop().animate(
-      {
-        scrollTop: 0,
-      },
-      _d.speed
-    );
+    $imgList.scrollTop(0);
   },
 });
 // 复制

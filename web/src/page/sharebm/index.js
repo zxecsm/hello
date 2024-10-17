@@ -126,10 +126,7 @@ const pgnt = pagination($paginationBox[0], {
     renderList();
   },
   toTop() {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
+    pageScrollTop(0);
   },
 });
 

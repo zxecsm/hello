@@ -26,7 +26,6 @@ import {
   createPagingData,
   nanoid,
   isEmail,
-  isRoot,
   concurrencyTasks,
 } from '../../utils/utils.js';
 
@@ -36,12 +35,12 @@ import { fieldLenght } from '../config.js';
 
 import { _delDir, delEmptyFolder, getAllFile, readMenu } from '../file/file.js';
 
-import { deleteUser } from '../user/user.js';
+import { deleteUser, isRoot } from '../user/user.js';
 import _path from '../../utils/path.js';
 
 const route = express.Router();
 
-//拦截器
+// 验证管理员
 route.use((req, res, next) => {
   if (!isRoot(req)) {
     _err(res, '无权操作')(req);
@@ -189,7 +188,7 @@ route.post('/delete-account', async (req, res) => {
       return;
     }
 
-    await deleteUser(account);
+    await deleteUser(account); // 删除账号数据
 
     _success(res, '销毁账号成功')(req, account, 1);
   } catch (error) {
@@ -582,6 +581,7 @@ route.post('/test-tfa', async (req, res) => {
   }
 });
 
+// 定期清理聊天过期文件
 timedTask.add(async (flag) => {
   if (flag.slice(-6) === '001030') {
     await cleanUpload();

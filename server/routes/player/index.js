@@ -34,10 +34,10 @@ import {
   syncUpdateData,
   createPagingData,
   uLog,
-  isRoot,
   concurrencyTasks,
   getSplitWord,
   tplReplace,
+  myShuffle,
 } from '../../utils/utils.js';
 
 import { _d } from '../../data/data.js';
@@ -67,6 +67,7 @@ import {
   validShareState,
   validShareAddUserState,
   splitShareFlag,
+  isRoot,
 } from '../user/user.js';
 
 import { fieldLenght } from '../config.js';
@@ -134,6 +135,7 @@ route.get('/lrc', async (req, res) => {
 
     await uLog(req, `获取歌词(${songInfo.artist}-${songInfo.title})`);
 
+    // 自增播放次数
     await incrementField('songs', { play_count: 1 }, `where id = ?`, [id]);
 
     const url = _path.normalize(`${configObj.filepath}/music/${songInfo.lrc}`);
@@ -252,6 +254,7 @@ route.get('/share', async (req, res) => {
       data,
     } = share.data;
 
+    // 通过id分批读取音乐信息并策略化
     const mObj = await batchGetMusics(data);
 
     for (let i = 0; i < data.length; i++) {
@@ -290,7 +293,7 @@ route.get('/share', async (req, res) => {
   }
 });
 
-// 拦截器
+// 验证登录态
 route.use((req, res, next) => {
   if (req._hello.userinfo.account) {
     next();
@@ -374,7 +377,7 @@ route.get('/list', async (req, res) => {
 
     let songList = await getMusicList(account);
 
-    let ids = [];
+    let ids = []; // 需要获取歌曲信息的ids
 
     songList.forEach((list) => {
       const { item, id: listid } = list;
@@ -388,6 +391,7 @@ route.get('/list', async (req, res) => {
       }
     });
 
+    // 通过id分批读取音乐信息并策略化
     const musicsObj = await batchGetMusics(ids);
 
     let hasChange = false;
@@ -416,6 +420,7 @@ route.get('/list', async (req, res) => {
       }
     });
 
+    // 如果有已删除的歌曲，则删除并更新列表数据
     if (hasChange) {
       const list = deepClone(songList);
 
@@ -426,6 +431,7 @@ route.get('/list', async (req, res) => {
       await updateSongList(account, list);
     }
 
+    // 所有歌曲歌单获取最新一首用来读取封面
     const newSong = await queryData(
       'songs',
       '*',
@@ -435,13 +441,16 @@ route.get('/list', async (req, res) => {
 
     songList.splice(2, 0, { id: 'all', item: newSong });
 
+    // 更新默认歌单列表信息
     for (let i = 0; i < 3; i++) {
       songList[i].name = _d.songList[i].name;
       songList[i].des = _d.songList[i].des;
     }
 
+    // 更新歌单封面
     songList = handleMusicList(songList);
 
+    // 歌单id没有默认为收藏歌单
     id ? null : (id = songList[1].id);
 
     for (let i = 0; i < songList.length; i++) {
@@ -450,9 +459,11 @@ route.get('/list', async (req, res) => {
       item.num = i;
 
       if (item.id !== id && i != 1) {
+        // 过滤非选择的歌单
         delete item.item;
       } else {
         if (item.id === 'all') {
+          // 如果是所有歌曲歌单，则在服务端分页处理
           const total = await getTableRowCount('songs');
 
           let list = [];
@@ -460,7 +471,7 @@ route.get('/list', async (req, res) => {
           if (total > 0) {
             let offset = (pageNo - 1) * pageSize;
 
-            // 排序后获取offset
+            // 排序后获取当前播放歌曲位置offset
             const template = `WITH OrderedUsers AS (
                                 SELECT id, {{field}}, ROW_NUMBER() OVER ({{order}}) AS row_num
                                 FROM songs
@@ -473,6 +484,7 @@ route.get('/list', async (req, res) => {
 
             let offsetWhere = '';
 
+            // 排序
             if (sort === 'artist') {
               const order = 'ORDER BY artist ASC';
 
@@ -515,6 +527,7 @@ route.get('/list', async (req, res) => {
             }
 
             if (playId) {
+              // 定位到正则播放歌曲所在页
               const row = await allSqlite(offsetWhere, [playId]);
               if (row[0]) {
                 pageNo = Math.ceil(row[0].row_num / pageSize);
@@ -669,6 +682,7 @@ route.get('/random-list', async (req, res) => {
 
     let offset = 0;
 
+    // 计算随机偏移
     if (total > limit) {
       total -= limit;
       offset = Math.floor(Math.random() * total);
@@ -679,7 +693,7 @@ route.get('/random-list', async (req, res) => {
       offset,
     ]);
 
-    _success(res, 'ok', list);
+    _success(res, 'ok', myShuffle(list));
   } catch (error) {
     _err(res)(req, error);
   }
@@ -802,6 +816,7 @@ route.post('/delete-list', async (req, res) => {
 
     const idx = list.findIndex((item) => item.id === id);
 
+    // 过滤默认歌单
     if (idx > 1) {
       const songListTitle = list.splice(idx, 1)[0].name;
 
@@ -937,6 +952,7 @@ route.post('/edit-song', async (req, res) => {
         songUrl
       );
 
+      // 重新计算歌曲HASH
       newHASH = await md5.getFileMD5Hash(songUrl);
     } catch {
       await errLog(
@@ -1056,6 +1072,7 @@ route.post('/collect-song', async (req, res) => {
 
     const add = ids.map((item) => ({ id: item }));
 
+    // 去重并限制歌单大小
     list[1].item = unique([...add, ...list[1].item], ['id']).slice(
       0,
       maxSonglistCount
@@ -1063,6 +1080,7 @@ route.post('/collect-song', async (req, res) => {
 
     await updateSongList(account, list);
 
+    // 更新歌曲收藏记录
     await incrementField(
       'songs',
       { collect_count: 1 },
@@ -1175,7 +1193,7 @@ route.post('/delete-song', async (req, res) => {
   }
 });
 
-// 音乐移动目录
+// 音乐移动到歌单
 route.post('/song-to-list', async (req, res) => {
   try {
     let { fromId, toId, ids } = req.body;
@@ -1205,6 +1223,7 @@ route.post('/song-to-list', async (req, res) => {
       (fromId === 'all' && tIdx > 1 && fromId !== toId) ||
       (fIdx >= 0 && fIdx < 2 && tIdx > 1)
     ) {
+      // 从所有歌曲歌单和默认歌单添加到非默认歌单
       list[tIdx].item = unique([...ids, ...list[tIdx].item], ['id']).slice(
         0,
         maxSonglistCount
@@ -1217,7 +1236,8 @@ route.post('/song-to-list', async (req, res) => {
       _success(res, '添加歌曲成功')(req, `${ids.length}=>${toId}`, 1);
       return;
     }
-    if ((fIdx > 1 && tIdx > 1, fromId !== toId)) {
+    if (fIdx > 1 && tIdx > 1 && fromId !== toId) {
+      // 从非默认歌单移动到非默认歌单
       list[fIdx].item = list[fIdx].item.filter(
         (item) => !ids.some((y) => y.id === item.id)
       );
@@ -1481,6 +1501,7 @@ route.post('/up', async (req, res) => {
 
       await receiveFiles(req, tDir, tName, 30);
 
+      // 读取歌曲元数据
       const songInfo = await getSongInfo(_path.normalize(`${tDir}/${tName}`));
 
       let {
@@ -1495,6 +1516,7 @@ route.post('/up', async (req, res) => {
       } = songInfo;
 
       if (pic) {
+        // 提取封面
         await _f.fsp.writeFile(
           _path.normalize(`${tDir}/${songId}.${_path.basename(picFormat)[0]}`),
           pic
@@ -1560,6 +1582,7 @@ route.post('/up', async (req, res) => {
 
       await receiveFiles(req, tDir, tName, 5);
 
+      // 如果上传封面文件和现有的封面文件名不同，删除现有的
       if (_path.basename(pic)[0] !== tName) {
         if (pic) {
           await _delDir(_path.normalize(`${tDir}/${_path.basename(pic)[0]}`));
@@ -1643,6 +1666,7 @@ route.post('/up', async (req, res) => {
       await receiveFiles(req, tDir, tName, 200);
 
       if (_path.basename(mv)[0] != tName) {
+        // 上传和现有文件名不同上传现有的
         if (mv) {
           await _delDir(_path.normalize(`${tDir}/${_path.basename(mv)[0]}`));
         }
@@ -1684,6 +1708,8 @@ route.post('/repeat', async (req, res) => {
         _success(res);
         return;
       }
+
+      // 歌曲不存在删除数据和歌曲目录，重新上传
       await deleteData('songs', `WHERE id = ?`, [songInfo.id]);
 
       await _delDir(_path.dirname(url));

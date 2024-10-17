@@ -212,12 +212,7 @@ const countPgnt = pagination($countList[0], {
     _msg.botMsg(`第 ${countPageNo} 页`);
   },
   toTop() {
-    $countList.stop().animate(
-      {
-        scrollTop: 0,
-      },
-      _d.speed
-    );
+    $countList.scrollTop(0);
   },
 });
 // 获取数据
