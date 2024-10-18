@@ -1003,6 +1003,7 @@ export class LazyLoad {
       entries.forEach((item) => {
         if (item.isIntersecting) {
           this.loadObs.unobserve(item.target);
+          item.target.dataset.loaded = true;
           cb && cb(item.target);
         }
       });
@@ -1013,9 +1014,11 @@ export class LazyLoad {
     this.observeElements(this.loadObs, els);
   }
   observeElements(obs, els) {
-    for (let i = 0; i < els.length; i++) {
-      obs.observe(els[i]);
-    }
+    els.forEach((el) => {
+      if (!el.dataset.loaded) {
+        obs.observe(el);
+      }
+    });
   }
   unBind() {
     this.visibilityObs && this.visibilityObs.disconnect();
