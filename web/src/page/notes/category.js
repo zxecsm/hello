@@ -76,9 +76,9 @@ function addCategory(e) {
           placeholder: '标题',
           beforeText: '标题：',
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入分类标题';
-            } else if (val.trim().length > _d.fieldLenght.noteCategoryTitle) {
+            } else if (val.length > _d.fieldLenght.noteCategoryTitle) {
               return `请输入${_d.fieldLenght.noteCategoryTitle}字以内`;
             }
           },
@@ -116,9 +116,9 @@ function editCategory(e, obj) {
           beforeText: '标题：',
           value: obj.title,
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入分类标题';
-            } else if (val.trim().length > _d.fieldLenght.noteCategoryTitle) {
+            } else if (val.length > _d.fieldLenght.noteCategoryTitle) {
               return `请输入${_d.fieldLenght.noteCategoryTitle}字以内`;
             }
           },

@@ -105,7 +105,6 @@ export function setNoteCategoryList(val) {
 // 搜索
 const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
   change(val) {
-    val = val.trim();
     if (val === '') {
       $headWrap.find('.inp_box i').css('display', 'none');
     } else {
@@ -356,7 +355,6 @@ function toTop(e, obj) {
           inputType: 'number',
           placeholder: '0：取消；数值越大越靠前',
           verify(val) {
-            val = val.trim();
             if (val === '') {
               return '请输入权重数';
             } else if (
@@ -456,9 +454,9 @@ function editNoteInfo(e, obj) {
           beforeText: '标题：',
           value: obj.title,
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入标题';
-            } else if (val.trim().length > _d.fieldLenght.title) {
+            } else if (val.length > _d.fieldLenght.title) {
               return '标题内容过长';
             }
           },

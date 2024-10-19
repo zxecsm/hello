@@ -201,7 +201,6 @@ let fileSort = _getData('fileSort');
 // 搜索
 const wInput = wrapInput($search.find('.inp_box input')[0], {
   change(val) {
-    val = val.trim();
     if (val === '') {
       $search.find('.inp_box i').css('display', 'none');
     } else {

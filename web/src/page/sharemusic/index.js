@@ -805,9 +805,9 @@ $pMusicListBox.on('click', '.save_playing_list', function (e) {
           placeholder: '歌单名称',
           value: defaultShareTitle,
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入名称';
-            } else if (val.trim().length > _d.fieldLenght.title) {
+            } else if (val.length > _d.fieldLenght.title) {
               return '名称过长';
             }
           },

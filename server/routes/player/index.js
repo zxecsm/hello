@@ -1341,7 +1341,10 @@ route.post('/edit-lrc', async (req, res) => {
       return;
     }
 
-    if (!validaString(id, 1, fieldLenght.id, 1) || !validaString(text)) {
+    if (
+      !validaString(id, 1, fieldLenght.id, 1) ||
+      !validaString(text, 0, 0, 0, 1)
+    ) {
       paramErr(res, req);
       return;
     }

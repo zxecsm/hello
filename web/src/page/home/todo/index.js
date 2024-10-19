@@ -228,9 +228,9 @@ function addTodo(e) {
           type: 'textarea',
           placeholder: '待办内容',
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入待办内容';
-            } else if (val.trim().length > _d.fieldLenght.todoContent) {
+            } else if (val.length > _d.fieldLenght.todoContent) {
               return '待办内容过长';
             }
           },
@@ -310,9 +310,9 @@ function editTodo(e, todo) {
           placeholder: '待办内容',
           value: todo.content,
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入待办内容';
-            } else if (val.trim().length > _d.fieldLenght.todoContent) {
+            } else if (val.length > _d.fieldLenght.todoContent) {
               return '待办内容过长';
             }
           },

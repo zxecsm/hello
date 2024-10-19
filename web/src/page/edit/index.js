@@ -199,7 +199,6 @@ $previewBox.find('.content').on('scroll', debounce(syncScrollFromPreview, 200));
 // 标题
 const wInput = wrapInput($headBtns.find('.note_title input')[0], {
   change(val) {
-    val = val.trim();
     if (val === '') {
       $headBtns.find('.note_title i').css('display', 'none');
     } else {

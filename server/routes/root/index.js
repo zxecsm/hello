@@ -487,7 +487,7 @@ route.post('/custom-code', async (req, res) => {
   try {
     const { js = '', css = '' } = req.body;
 
-    if (!validaString(js, 0) || !validaString(css, 0)) {
+    if (!validaString(js, 0, 0, 0, 1) || !validaString(css, 0, 0, 0, 1)) {
       paramErr(res, req);
       return;
     }

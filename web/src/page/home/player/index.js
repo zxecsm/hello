@@ -381,11 +381,14 @@ const musicSearchInput = wrapInput(
     },
     change(val) {
       if (val.trim() === '') {
-        $musicHeadWrap.find('.search_music_inp i').css('display', 'none');
         hideMusicSearchList();
       } else {
-        $musicHeadWrap.find('.search_music_inp i').css('display', 'block');
         showMusicSearchList();
+      }
+      if (val === '') {
+        $musicHeadWrap.find('.search_music_inp i').css('display', 'none');
+      } else {
+        $musicHeadWrap.find('.search_music_inp i').css('display', 'block');
       }
       _getSearchSongs();
     },
@@ -404,7 +407,7 @@ $musicHeadWrap
   .on('click', '.top', switchPlayerTop)
   .on('click', '.search_btn', () => {
     musicSearchInput.target.parentNode.style.display = 'flex';
-    musicSearchInput.focus();
+    musicSearchInput.setValue('').focus();
   })
   .on('click', '.search_music_inp i', function () {
     musicSearchInput.setValue('').focus();
@@ -542,9 +545,9 @@ export function editSongInfo(e, sobj) {
           beforeText: '歌手名：',
           placeholder: '歌手名',
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入歌手名';
-            } else if (val.trim().length > _d.fieldLenght.title) {
+            } else if (val.length > _d.fieldLenght.title) {
               return '歌手名过长';
             }
           },
@@ -554,9 +557,9 @@ export function editSongInfo(e, sobj) {
           beforeText: '歌曲名：',
           placeholder: '歌曲名',
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入歌曲名';
-            } else if (val.trim().length > _d.fieldLenght.title) {
+            } else if (val.length > _d.fieldLenght.title) {
               return '歌曲名过长';
             }
           },
@@ -566,9 +569,9 @@ export function editSongInfo(e, sobj) {
           placeholder: '专辑',
           beforeText: '专辑：',
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入专辑名';
-            } else if (val.trim().length > _d.fieldLenght.title) {
+            } else if (val.length > _d.fieldLenght.title) {
               return '专辑名过长';
             }
           },
@@ -579,7 +582,7 @@ export function editSongInfo(e, sobj) {
           beforeText: '年份：',
           inputType: 'number',
           verify(val) {
-            if (val.trim().length > 10) {
+            if (val.length > 10) {
               return '年份过长';
             }
           },
@@ -591,7 +594,7 @@ export function editSongInfo(e, sobj) {
           inputType: 'number',
           verify(val) {
             const num = parseFloat(val);
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入时长';
             } else if (isNaN(num) || num < 0) {
               return '请输入正整数';
@@ -605,7 +608,7 @@ export function editSongInfo(e, sobj) {
           inputType: 'number',
           verify(val) {
             const num = parseInt(val);
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入播放量';
             } else if (isNaN(num) || num < 0) {
               return '请输入正整数';
@@ -619,7 +622,7 @@ export function editSongInfo(e, sobj) {
           inputType: 'number',
           verify(val) {
             const num = parseInt(val);
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入收藏量';
             } else if (isNaN(num) || num < 0) {
               return '请输入正整数';
@@ -1072,9 +1075,9 @@ function addSongList(e) {
           placeholder: '标题',
           beforeText: '标题：',
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入标题';
-            } else if (val.trim().length > _d.fieldLenght.title) {
+            } else if (val.length > _d.fieldLenght.title) {
               return '标题过长';
             }
           },
@@ -1084,7 +1087,7 @@ function addSongList(e) {
           beforeText: '描述：',
           placeholder: '描述',
           verify(val) {
-            if (val.trim().length > _d.fieldLenght.des) {
+            if (val.length > _d.fieldLenght.des) {
               return '描述过长';
             }
           },
@@ -1245,7 +1248,7 @@ function editSongList(e, obj, sid) {
         placeholder: '序号',
         value: obj.num + 1,
         verify(val) {
-          let value = parseFloat(val.trim());
+          let value = parseFloat(val);
           if (!isInteger(value) || value <= 0) {
             return '请输正整数';
           }
@@ -1256,9 +1259,9 @@ function editSongList(e, obj, sid) {
         placeholder: '标题',
         value: name,
         verify(val) {
-          if (val.trim() === '') {
+          if (val === '') {
             return '请输入标题';
-          } else if (val.trim().length > _d.fieldLenght.title) {
+          } else if (val.length > _d.fieldLenght.title) {
             return '标题过长';
           }
         },
@@ -1269,7 +1272,7 @@ function editSongList(e, obj, sid) {
         placeholder: '描述',
         value: des || '',
         verify(val) {
-          if (val.trim().length > _d.fieldLenght.des) {
+          if (val.length > _d.fieldLenght.des) {
             return '描述过长';
           }
         },

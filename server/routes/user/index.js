@@ -79,7 +79,7 @@ route.post('/error', async (req, res) => {
   try {
     const { err } = req.body;
 
-    if (!validaString(err, 1)) {
+    if (!validaString(err, 1, 0, 0, 1)) {
       paramErr(res, req);
       return;
     }
@@ -536,7 +536,7 @@ route.get('/file-key', async (req, res) => {
   try {
     const { p } = req.query;
 
-    if (!validaString(p, 1, 1000)) {
+    if (!validaString(p, 1, fieldLenght.url)) {
       paramErr(res, req);
       return;
     }
@@ -1440,8 +1440,8 @@ route.post('/real-time', async (req, res) => {
           !d.every(
             (item) =>
               _type.isObject(item) &&
-              validaString(item.name, 1) &&
-              validaString(item.path, 1)
+              validaString(item.name, 1, fieldLenght.filename) &&
+              validaString(item.path, 1, fieldLenght.url)
           )
         ) {
           paramErr(res, req);

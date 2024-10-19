@@ -46,7 +46,7 @@ route.post('/', async (req, res) => {
   try {
     const { k, data = '' } = req.body;
 
-    if (!validaString(k, 1, 20, 1) || !validaString(data)) {
+    if (!validaString(k, 1, 20, 1) || !validaString(data, 0, 0, 0, 1)) {
       paramErr(res, req);
       return;
     }

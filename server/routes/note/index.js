@@ -384,7 +384,7 @@ route.post('/edit', async (req, res) => {
     if (
       !validaString(id, 1, fieldLenght.id, 1) ||
       !validaString(title, 1, fieldLenght.title) ||
-      !validaString(content)
+      !validaString(content, 0, 0, 0, 1)
     ) {
       paramErr(res, req);
       return;

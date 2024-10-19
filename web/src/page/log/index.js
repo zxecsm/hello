@@ -45,7 +45,6 @@ window.addEventListener('load', () => {
 // 搜索
 const wInput = wrapInput($head.find('.inp_box input')[0], {
   change(val) {
-    val = val.trim();
     if (val === '') {
       $head.find('.inp_box i').css('display', 'none');
     } else {

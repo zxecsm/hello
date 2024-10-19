@@ -264,9 +264,9 @@ function addCount(e) {
         title: {
           beforeText: '标题：',
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入标题';
-            } else if (val.trim().length > _d.fieldLenght.countTitle) {
+            } else if (val.length > _d.fieldLenght.countTitle) {
               return '标题内容过长';
             }
           },
@@ -275,7 +275,7 @@ function addCount(e) {
           beforeText: '链接：',
           placeholder: 'https://',
           verify(val) {
-            val = val.trim();
+            val = val;
             if (!val) return;
             if (val.length > _d.fieldLenght.url) {
               return '链接过长';
@@ -381,9 +381,9 @@ function editCount(e, count) {
           beforeText: '标题：',
           value: count.title,
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入标题';
-            } else if (val.trim().length > _d.fieldLenght.countTitle) {
+            } else if (val.length > _d.fieldLenght.countTitle) {
               return '标题内容过长';
             }
           },
@@ -393,7 +393,7 @@ function editCount(e, count) {
           placeholder: 'https://',
           value: count.link,
           verify(val) {
-            val = val.trim();
+            val = val;
             if (!val) return;
             if (val.length > _d.fieldLenght.url) {
               return '链接过长';
@@ -524,7 +524,6 @@ function toTop(e, obj) {
           inputType: 'number',
           placeholder: '0：取消；数值越大越靠前',
           verify(val) {
-            val = val.trim();
             if (val === '') {
               return '请输入权重数';
             } else if (

@@ -381,12 +381,12 @@ const searchInp = wrapInput($pageSearchWrap.find('.inp_box .search_inp')[0], {
     $pageSearchWrap.find('.inp_box').removeClass('focus');
   },
   change(val) {
-    val = val.trim();
     if (val) {
       $pageSearchWrap.find('.inp_box .clear').css('display', 'block');
     } else {
       $pageSearchWrap.find('.inp_box .clear').css('display', 'none');
     }
+    val = val.trim();
     myOpen(`#${val ? encodeURIComponent(val) : ''}`);
     hdSearchWord();
   },

@@ -361,9 +361,9 @@ function addBmList(e) {
         text: {
           placeholder: '标题',
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入标题';
-            } else if (val.trim().length > _d.fieldLenght.title) {
+            } else if (val.length > _d.fieldLenght.title) {
               return '标题过长';
             }
           },
@@ -738,7 +738,7 @@ export function addBookMark(e, pid) {
           beforeText: '网址：',
           placeholder: 'https://',
           verify(val) {
-            if (val.trim().length > _d.fieldLenght.url) {
+            if (val.length > _d.fieldLenght.url) {
               return '网址过长';
             } else if (!isurl(val)) {
               return '请输入正确的网址';
@@ -765,9 +765,9 @@ export function addBookMark(e, pid) {
                       beforeText: '标题：',
                       value: title,
                       verify(val) {
-                        if (val.trim() === '') {
+                        if (val === '') {
                           return '请输入书签标题';
-                        } else if (val.trim().length > _d.fieldLenght.title) {
+                        } else if (val.length > _d.fieldLenght.title) {
                           return '标题过长';
                         }
                       },
@@ -777,7 +777,7 @@ export function addBookMark(e, pid) {
                       placeholder: 'https://',
                       value: u,
                       verify(val) {
-                        if (val.trim().length > _d.fieldLenght.url) {
+                        if (val.length > _d.fieldLenght.url) {
                           return '网址过长';
                         } else if (!isurl(val)) {
                           return '请输入正确的网址';
@@ -790,7 +790,7 @@ export function addBookMark(e, pid) {
                       type: 'textarea',
                       placeholder: '描述',
                       verify(val) {
-                        if (val.trim().length > _d.fieldLenght.des) {
+                        if (val.length > _d.fieldLenght.des) {
                           return '描述过长';
                         }
                       },
@@ -855,7 +855,7 @@ function editBmList(e, obj) {
           placeholder: '序号',
           value: obj.num + 1,
           verify(val) {
-            const value = parseFloat(val.trim());
+            const value = parseFloat(val);
             if (!isInteger(value) || value <= 0) {
               return '请输正整数';
             }
@@ -866,9 +866,9 @@ function editBmList(e, obj) {
           placeholder: '标题',
           value: obj.title,
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入标题';
-            } else if (val.trim().length > _d.fieldLenght.title) {
+            } else if (val.length > _d.fieldLenght.title) {
               return '标题过长';
             }
           },
@@ -1076,7 +1076,7 @@ function editBm(e, obj, isHome) {
           beforeText: '序号：',
           value: obj.num + 1,
           verify(val) {
-            const value = parseFloat(val.trim());
+            const value = parseFloat(val);
             if (!isInteger(value) || value <= 0) {
               return '请输正整数';
             }
@@ -1087,9 +1087,9 @@ function editBm(e, obj, isHome) {
           beforeText: '标题：',
           value: obj.title,
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入书签标题';
-            } else if (val.trim().length > _d.fieldLenght.title) {
+            } else if (val.length > _d.fieldLenght.title) {
               return '标题过长';
             }
           },
@@ -1099,7 +1099,7 @@ function editBm(e, obj, isHome) {
           placeholder: 'https://',
           value: obj.link,
           verify(val) {
-            if (val.trim().length > _d.fieldLenght.url) {
+            if (val.length > _d.fieldLenght.url) {
               return '网址过长';
             } else if (!isurl(val)) {
               return '请输入正确的网址';
@@ -1112,7 +1112,7 @@ function editBm(e, obj, isHome) {
           placeholder: '描述',
           value: obj.des,
           verify(val) {
-            if (val.trim().length > _d.fieldLenght.des) {
+            if (val.length > _d.fieldLenght.des) {
               return '描述过长';
             }
           },

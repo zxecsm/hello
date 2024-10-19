@@ -82,13 +82,13 @@ class RightM {
     }
     this.searchInpWrap = wrapInput(this.searchInp, {
       change: (val) => {
-        val = val.trim();
         if (val === '') {
           this.clearSearchText.style.display = 'none';
         } else {
           this.clearSearchText.style.display = 'block';
         }
-        this.opt.searchCallback && this.opt.searchCallback('change', val);
+        this.opt.searchCallback &&
+          this.opt.searchCallback('change', val.trim());
       },
       focus: (target) => {
         target.parentNode.classList.add('focus');
@@ -335,6 +335,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       selectItem = [],
       inputType = 'text',
       beforeText = '',
+      trimValue = true,
     } = items[item];
     value += '';
     items[item] = {
@@ -345,6 +346,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       selectItem,
       inputType,
       beforeText,
+      trimValue,
     };
   });
   const html = _tpl(
@@ -354,8 +356,8 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
           <div v-if="beforeText" class="title">{{beforeText}}</div>
           <div class="inp_box">
             <input class='inp' :data-flag="key" autocomplete="off" :placeholder="placeholder" :value="value" :type="inputType"/>
-            <i v-if="inputType === 'password'" v-show="value.trim() !== ''" cursor="y" class="show_pass_btn iconfont icon-kejian"></i>
-            <i cursor="y" class="clean_btn iconfont icon-guanbi {{value.trim() === '' ? '' : 'show'}}"></i>
+            <i v-if="inputType === 'password'" v-show="value !== ''" cursor="y" class="show_pass_btn iconfont icon-kejian"></i>
+            <i cursor="y" class="clean_btn iconfont icon-guanbi {{value === '' ? '' : 'show'}}"></i>
           </div>
           <p class='err'></p>
         </div>
@@ -363,7 +365,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
         <div v-if="beforeText" class="title">{{beforeText}}</div>
         <div class='texta_box'>
           <textarea title='Ctrl+Enter {{subText}}' class='texta' :data-flag="key" autocomplete="off" :placeholder="placeholder">{{value}}</textarea>
-          <i cursor="y" class="clean_btn iconfont icon-15qingkong-1 {{value.trim() === '' ? '' : 'show'}}"></i>
+          <i cursor="y" class="clean_btn iconfont icon-15qingkong-1 {{value === '' ? '' : 'show'}}"></i>
         </div>
         <p class='err'></p>
       </div>
@@ -418,7 +420,6 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
         const err = inpItem.querySelector('.err');
         const wInput = wrapInput(item, {
           change(val) {
-            val = val.trim();
             if (showPassBtn) {
               showPassBtn.style.display = val === '' ? 'none' : 'block';
             }
@@ -427,7 +428,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
             } else {
               cleanBtn.classList.add('show');
             }
-            items[key].value = val;
+            items[key].value = items[key].trimValue ? val.trim() : val;
           },
           focus() {
             inpBox.classList.add('focus');
@@ -436,7 +437,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
             inpBox.classList.remove('focus');
             let errText = '';
             if (verify) {
-              errText = verify(wInput.getValue(), items) || '';
+              errText = verify(items[key].value, items) || '';
             }
             err.innerText = errText;
           },

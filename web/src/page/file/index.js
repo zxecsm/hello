@@ -143,7 +143,6 @@ let fileSort = _getData('fileSort');
 // 搜索
 const wInput = wrapInput($search.find('.inp_box input')[0], {
   change(val) {
-    val = val.trim();
     if (val === '') {
       $search.find('.inp_box i').css('display', 'none');
     } else {
@@ -972,11 +971,11 @@ function createFile(e) {
         name: {
           placeholder: '文件名',
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入名称';
-            } else if (val.trim().length > _d.fieldLenght.filename) {
+            } else if (val.length > _d.fieldLenght.filename) {
               return '名称过长';
-            } else if (!isFilename(val.trim())) {
+            } else if (!isFilename(val)) {
               return '名称包含了不允许的特殊字符';
             }
           },
@@ -1015,11 +1014,11 @@ function createDir(e) {
         name: {
           placeholder: '文件夹名',
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入名称';
-            } else if (val.trim().length > _d.fieldLenght.filename) {
+            } else if (val.length > _d.fieldLenght.filename) {
               return '名称过长';
-            } else if (!isFilename(val.trim())) {
+            } else if (!isFilename(val)) {
               return '名称包含了不允许的特殊字符';
             }
           },
@@ -1499,11 +1498,11 @@ function hdRename(e, obj, cb) {
           placeholder: `${obj.type === 'file' ? '文件名' : '文件夹名'}`,
           value: obj.name,
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入名称';
-            } else if (val.trim().length > _d.fieldLenght.filename) {
+            } else if (val.length > _d.fieldLenght.filename) {
               return '名称过长';
-            } else if (!isFilename(val.trim())) {
+            } else if (!isFilename(val)) {
               return '名称包含了不允许的特殊字符';
             }
           },

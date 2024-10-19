@@ -195,10 +195,7 @@ function changeUsername(e) {
           placeholder: '用户名',
           value: setUserInfo().username,
           verify(val) {
-            if (
-              val.trim().length < 1 ||
-              val.trim().length > _d.fieldLenght.username
-            ) {
+            if (val.length < 1 || val.length > _d.fieldLenght.username) {
               return `限制1-${_d.fieldLenght.username}位`;
             }
           },
@@ -450,7 +447,6 @@ function bindEmail(e) {
                         beforeText: '邮箱验证码：',
                         inputType: 'number',
                         verify(val) {
-                          val = val.trim();
                           if (val === '') {
                             return '请输入验证码';
                           } else if (
@@ -645,6 +641,7 @@ function setGentlemanLock(e) {
         text: {
           inputType: 'password',
           value: _getData('gentlemanLockPd'),
+          trimValue: false,
           placeholder: '为空则取消',
           beforeText: '设置密码：',
         },
@@ -1033,7 +1030,7 @@ function createQrCode(e) {
         text: {
           type: 'textarea',
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入需要生成字符';
             }
           },
@@ -1243,7 +1240,6 @@ function allowLogin(e) {
           beforeText: '登录码：',
           inputType: 'number',
           verify(val) {
-            val = val.trim();
             if (val === '') {
               return '请输入登录码';
             } else if (val.length !== 6 || !isInteger(+val) || val < 0) {
@@ -1437,7 +1433,6 @@ async function hdVerifyLogin(e, verify, account) {
                 beforeText: '验证码：',
                 inputType: 'number',
                 verify(val) {
-                  val = val.trim();
                   if (val === '') {
                     return '请输入验证码';
                   } else if (val.length !== 6 || !isInteger(+val) || val < 0) {

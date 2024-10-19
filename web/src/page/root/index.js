@@ -548,7 +548,6 @@ function setEmail(e) {
           placeholder: 'smtp.qq.com',
           verify(val, items) {
             if (items.state.value === 'y') {
-              val = val.trim();
               if (val === '') {
                 return '请输入SMTP服务器地址';
               } else if (val.length > _d.fieldLenght.email) {
@@ -634,11 +633,13 @@ function customCssJs(e) {
           beforeText: 'js代码：',
           value: customCode.js,
           type: 'textarea',
+          trimValue: false,
         },
         css: {
           beforeText: 'css代码：',
           value: customCode.css,
           type: 'textarea',
+          trimValue: false,
         },
       },
     },
@@ -674,7 +675,6 @@ function testEmail(e) {
           beforeText: '收件人邮箱：',
           value: _getData('testEmail') || '',
           verify(val) {
-            val = val.trim();
             if (!isEmail(val)) {
               return '邮箱格式错误';
             } else if (val.length > _d.fieldLenght.email) {
@@ -713,7 +713,6 @@ function testTFA(e) {
           inputType: 'number',
           value: _getData('testCode') || '',
           verify(val) {
-            val = val.trim();
             if (val === '') {
               return '请输入验证码';
             } else if (val.length !== 6 || !isInteger(+val) || val < 0) {

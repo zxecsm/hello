@@ -56,7 +56,6 @@ if (_getData('account')) {
 }
 const accInp = wrapInput($account[0], {
   change(val) {
-    val = val.trim();
     if (val === '') {
       $account.next().css('display', 'none');
     } else {
@@ -73,7 +72,6 @@ const accInp = wrapInput($account[0], {
 });
 const pdInp = wrapInput($password[0], {
   change(val) {
-    val = val.trim();
     if (val === '') {
       $password.next().css('display', 'none');
     } else {
@@ -90,7 +88,6 @@ const pdInp = wrapInput($password[0], {
 });
 const rePdInp = wrapInput($repassword[0], {
   change(val) {
-    val = val.trim();
     if (val === '') {
       $repassword.next().css('display', 'none');
     } else {
@@ -162,7 +159,6 @@ function resetPassword(e) {
                     beforeText: '邮箱验证码：',
                     inputType: 'number',
                     verify(val) {
-                      val = val.trim();
                       if (val === '') {
                         return '请输入验证码';
                       } else if (
@@ -335,7 +331,6 @@ function hdLogin(obj) {
                       beforeText: '验证码：',
                       inputType: 'number',
                       verify(val) {
-                        val = val.trim();
                         if (val === '') {
                           return '请输入验证码';
                         } else if (

@@ -208,7 +208,6 @@ if (!k || !/^[\w]+$/.test(k)) {
           placeholder: '请输入便条Key',
           beforeText: '便条Key：',
           verify(val) {
-            val = val.trim();
             if (val === '') {
               return '请输入便条Key';
             } else if (val.length > 20) {
@@ -579,7 +578,6 @@ function openNotepad(e) {
           placeholder: '请输入便条Key',
           beforeText: '便条Key：',
           verify(val) {
-            val = val.trim();
             if (val === '') {
               return '请输入便条Key';
             } else if (val.length > 20) {

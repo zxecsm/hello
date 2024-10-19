@@ -409,13 +409,16 @@ function isSearchOpenPop() {
 const searchInput = wrapInput($searchInpWrap.find('.inp_box input')[0], {
   change(val) {
     if (val.trim() === '') {
-      $searchInpWrap.find('.inp_box i').css('display', 'none');
       $searchInpWrap.find('.translate_btn').css('display', 'none');
       $searchInpWrap.find('.search_submit').css('display', 'none');
     } else {
-      $searchInpWrap.find('.inp_box i').css('display', 'block');
       $searchInpWrap.find('.translate_btn').css('display', 'block');
       $searchInpWrap.find('.search_submit').css('display', 'block');
+    }
+    if (val === '') {
+      $searchInpWrap.find('.inp_box i').css('display', 'none');
+    } else {
+      $searchInpWrap.find('.inp_box i').css('display', 'block');
     }
   },
   focus() {

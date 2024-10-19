@@ -572,10 +572,26 @@ export function validationValue(target, arr) {
   return arr.includes(target);
 }
 
+// 是否空格开头或结尾
+export function hasLeadingOrTrailingSpaces(str) {
+  return str.startsWith(' ') || str.endsWith(' ');
+}
+
 // 字符限制
-export function validaString(target, min = 0, max = 0, isAlphanumeric = false) {
+export function validaString(
+  target,
+  min = 0,
+  max = 0,
+  isAlphanumeric = false, // 由数字字母下划线组成
+  allowWhitespace = false // 允许空格
+) {
   // 验证输入类型
-  if (!_type.isString(target) || !_type.isNumber(min) || !_type.isNumber(max))
+  if (
+    !_type.isString(target) ||
+    !_type.isNumber(min) ||
+    !_type.isNumber(max) ||
+    (!allowWhitespace && hasLeadingOrTrailingSpaces(target))
+  )
     return false;
 
   const length = target.length;

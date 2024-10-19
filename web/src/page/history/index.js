@@ -60,7 +60,6 @@ realtime.init().add((res) => {
 // 搜索
 const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
   change(val) {
-    val = val.trim();
     if (val === '') {
       $headWrap.find('.inp_box i').css('display', 'none');
     } else {
@@ -300,9 +299,9 @@ function addHistory(e) {
         text: {
           type: 'textarea',
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入需要添加的内容';
-            } else if (val.trim().length > _d.fieldLenght.searchHistory) {
+            } else if (val.length > _d.fieldLenght.searchHistory) {
               return '内容过长';
             }
           },

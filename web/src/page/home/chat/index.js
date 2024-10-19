@@ -132,7 +132,6 @@ const chatSearchInput = wrapInput(
   $chatHeadBtns.find('.search_msg_inp input')[0],
   {
     change(val) {
-      val = val.trim();
       if (val === '') {
         $chatHeadBtns.find('.search_msg_inp i').css('display', 'none');
       } else {
@@ -744,7 +743,7 @@ function userMenu(e, msgObj, isUserList) {
                       placeholder: '备注',
                       value: des,
                       verify(val) {
-                        if (val.trim().length > _d.fieldLenght.chatDes) {
+                        if (val.length > _d.fieldLenght.chatDes) {
                           return `限制1-${_d.fieldLenght.chatDes}位`;
                         }
                       },
@@ -1194,19 +1193,22 @@ const chatMsgInp = wrapInput(
       _setDataTem('temChatMsg', temChatMsg);
       switchShakeBtn();
       if (val.trim() === '') {
-        $chatFootBox.find('.clean').removeClass('show');
         $chatFootBox
           .find('.c_sent_msg_btn')
           .attr('x', 1)
           .children('i')
           .attr('class', 'iconfont icon-jiahao');
       } else {
-        $chatFootBox.find('.clean').addClass('show');
         $chatFootBox
           .find('.c_sent_msg_btn')
           .attr('x', 2)
           .children('i')
           .attr('class', 'iconfont icon-huaban');
+      }
+      if (val === '') {
+        $chatFootBox.find('.clean').removeClass('show');
+      } else {
+        $chatFootBox.find('.clean').addClass('show');
       }
     },
     focus(target) {

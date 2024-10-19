@@ -2704,9 +2704,9 @@ export function createShare(e, opt, cb) {
           inputType: 'text',
           beforeText: '分享名称：',
           verify(val) {
-            if (val.trim() === '') {
+            if (val === '') {
               return '请输入名称';
-            } else if (val.trim().length > _d.fieldLenght.title) {
+            } else if (val.length > _d.fieldLenght.title) {
               return '名称过长';
             }
           },
@@ -2729,7 +2729,7 @@ export function createShare(e, opt, cb) {
           beforeText: '提取码：',
           placeholder: '为空则不设置提取码',
           verify(val) {
-            if (val.trim().length > _d.fieldLenght.sharePass) {
+            if (val.length > _d.fieldLenght.sharePass) {
               return '提取码过长';
             }
           },
@@ -2773,7 +2773,6 @@ export function enterPassCode(cb) {
           beforeText: '提取码：',
           inputType: 'password',
           verify(val) {
-            val = val.trim();
             if (val.length === 0) {
               return '请输入提取码';
             } else if (val.length > _d.fieldLenght.sharePass) {

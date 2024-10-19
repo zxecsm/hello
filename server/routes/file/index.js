@@ -461,7 +461,10 @@ route.post('/save-file', async (req, res) => {
   try {
     const { path, text = '' } = req.body;
 
-    if (!validaString(path, 1, fieldLenght.url) || !validaString(text)) {
+    if (
+      !validaString(path, 1, fieldLenght.url) ||
+      !validaString(text, 0, 0, 0, 1)
+    ) {
       paramErr(res, req);
       return;
     }
@@ -521,7 +524,7 @@ route.post('/copy', async (req, res) => {
     const { path, data } = req.body;
 
     if (
-      !validaString(path, 1) ||
+      !validaString(path, 1, fieldLenght.url) ||
       !_type.isArray(data) ||
       data.length === 0 ||
       data.length > fieldLenght.maxPagesize ||
@@ -601,7 +604,7 @@ route.post('/move', async (req, res) => {
     const { path, data } = req.body;
 
     if (
-      !validaString(path, 1) ||
+      !validaString(path, 1, fieldLenght.url) ||
       !_type.isArray(data) ||
       data.length === 0 ||
       data.length > fieldLenght.maxPagesize ||
@@ -1196,7 +1199,7 @@ route.post('/repeat', async (req, res) => {
   try {
     const { path } = req.body;
 
-    if (!validaString(path, 1)) {
+    if (!validaString(path, 1, fieldLenght.url)) {
       paramErr(res, req);
       return;
     }
