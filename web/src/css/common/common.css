@@ -310,7 +310,7 @@ textarea:-ms-input-placeholder {
 }
 .inp_box input {
   padding-left: 10px;
-  line-height: 1;
+  line-height: 1.5;
 }
 .inp_box i:hover {
   color: var(--text-hover-color);
