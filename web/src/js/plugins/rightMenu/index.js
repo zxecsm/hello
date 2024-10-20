@@ -49,7 +49,7 @@ class RightM {
     this.head.className = 'head';
     if (!this.opt.hideCloseBtn) {
       this.hClose = document.createElement('div');
-      this.hClose.className = `iconfont icon-guanbi close`;
+      this.hClose.className = `iconfont icon-close-bold close`;
       this.hClose.setAttribute('cursor', '');
       this.head.appendChild(this.hClose);
     }
@@ -63,7 +63,7 @@ class RightM {
     this.searchInp.setAttribute('autocomplete', 'off');
     this.searchBox.appendChild(this.searchInp);
     this.clearSearchText = document.createElement('i');
-    this.clearSearchText.className = 'iconfont icon-guanbi';
+    this.clearSearchText.className = 'iconfont icon-close-bold';
     this.clearSearchText.setAttribute('cursor', 'y');
     this.searchBox.appendChild(this.clearSearchText);
     this.head.appendChild(this.searchBox);
@@ -357,7 +357,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
           <div class="inp_box">
             <input class='inp' :data-flag="key" autocomplete="off" :placeholder="placeholder" :value="value" :type="inputType"/>
             <i v-if="inputType === 'password'" v-show="value !== ''" cursor="y" class="show_pass_btn iconfont icon-kejian"></i>
-            <i cursor="y" class="clean_btn iconfont icon-guanbi {{value === '' ? '' : 'show'}}"></i>
+            <i cursor="y" class="clean_btn iconfont icon-close-bold {{value === '' ? '' : 'show'}}"></i>
           </div>
           <p class='err'></p>
         </div>

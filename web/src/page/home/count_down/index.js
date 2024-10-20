@@ -471,7 +471,7 @@ function countMenu(e) {
       id: 'state',
       text: count.state === 1 ? '关闭' : '开启',
       beforeIcon: `iconfont ${
-        count.state === 1 ? 'icon-shibai' : 'icon-zhengque_chenggong_shibai'
+        count.state === 1 ? 'icon-shibai' : 'icon-chenggong'
       }`,
     },
     {

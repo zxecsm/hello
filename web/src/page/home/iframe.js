@@ -92,9 +92,9 @@ class CreateIframe {
     const html = _tpl(
       `
       <div class="i_head_btns">
-        <div cursor="y" class="i_close_btn iconfont icon-guanbi"></div>
+        <div cursor="y" class="i_close_btn iconfont icon-close-bold"></div>
         <div cursor="y" class="i_to_max_btn iconfont icon-xuanzeweixuanze"></div>
-        <div cursor="y" class="i_hide_btn iconfont icon-jianhao"></div>
+        <div cursor="y" class="i_hide_btn iconfont icon-minus-bold"></div>
         <div cursor="y" class="i_top iconfont icon-zhiding"></div>
         <div class="i_title_text"><p class="scroll_text"></p></div>
         <div cursor="y" title="刷新" class="i_refresh_btn iconfont icon-suijibofang"></div>
@@ -343,7 +343,7 @@ function addHideBox(iframeBox) {
   box.setAttribute('cursor', '');
 
   const close = document.createElement('span');
-  close.className = 'close_btn iconfont icon-guanbi';
+  close.className = 'close_btn iconfont icon-close-bold';
   const title = document.createElement('span');
   title.className = 'title';
   title.innerText = iframeBox.name;
@@ -423,12 +423,12 @@ function handleHideBox(e, _this) {
     {
       id: '2',
       text: '隐藏所有窗口',
-      beforeIcon: 'iconfont icon-jianhao',
+      beforeIcon: 'iconfont icon-minus-bold',
     },
     {
       id: '3',
       text: '关闭所有窗口',
-      beforeIcon: 'iconfont icon-guanbi1',
+      beforeIcon: 'iconfont icon-shibai',
     },
   ];
   rMenu.selectMenu(

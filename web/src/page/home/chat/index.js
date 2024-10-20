@@ -526,10 +526,9 @@ const cUserLogoLoad = new LazyLoad();
 export function chatimgLoad() {
   cImgLoad.bind($chatListBox[0].querySelectorAll('.c_img'), (item) => {
     const $v = $(item);
-    const url = getFilePath(
-      `/upload/${$v.parent().parent().parent().data('id')}`,
-      1
-    );
+    const id = $v.parent().parent().parent().data('id');
+    const msgObj = getChatItem(id);
+    const url = getFilePath(`/upload/${id}/${msgObj.hash}`, 1);
     imgjz(
       url,
       () => {
@@ -839,7 +838,7 @@ function openChatImg() {
         imgPreview([
           {
             u1: getFilePath(`/upload/${id}`),
-            u2: getFilePath(`/upload/${id}`, 1),
+            u2: getFilePath(`/upload/${id}/${obj.hash}`, 1),
           },
         ]);
         return;
@@ -1037,7 +1036,7 @@ function chatMsgMenu(e, cobj) {
       {
         id: '3',
         text: '下载',
-        beforeIcon: 'iconfont icon-xiazai1',
+        beforeIcon: 'iconfont icon-download',
       },
     ];
   }
@@ -1159,7 +1158,7 @@ function sendTextMsg() {
     .find('.c_sent_msg_btn')
     .attr('x', 1)
     .children('i')
-    .attr('class', 'iconfont icon-jiahao');
+    .attr('class', 'iconfont icon-tianjia');
   chatMsgInp.setValue('').focus();
   if (content === '') return;
   reqChatSendMsg({
@@ -1197,7 +1196,7 @@ const chatMsgInp = wrapInput(
           .find('.c_sent_msg_btn')
           .attr('x', 1)
           .children('i')
-          .attr('class', 'iconfont icon-jiahao');
+          .attr('class', 'iconfont icon-tianjia');
       } else {
         $chatFootBox
           .find('.c_sent_msg_btn')
@@ -1256,7 +1255,7 @@ $chatFootBox
         .find('.c_sent_msg_btn')
         .attr('x', 1)
         .children('i')
-        .attr('class', 'iconfont icon-jiahao');
+        .attr('class', 'iconfont icon-tianjia');
     } else {
       $chatFootBox.find('.c_get_voice_btn').css('display', 'none');
       $chatFootBox.find('.c_text_msg').css('display', 'block');

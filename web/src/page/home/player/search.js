@@ -193,19 +193,19 @@ function searchListSongSetting(e, sobj) {
     {
       id: '7',
       text: '下载',
-      beforeIcon: 'iconfont icon-xiazai1',
+      beforeIcon: 'iconfont icon-download',
     },
   ];
   if (isRoot()) {
     data.push({
       id: '11',
       text: '上传封面',
-      beforeIcon: 'iconfont icon-shangchuan1',
+      beforeIcon: 'iconfont icon-upload',
     });
     data.push({
       id: '12',
       text: '上传 MV',
-      beforeIcon: 'iconfont icon-shangchuan1',
+      beforeIcon: 'iconfont icon-upload',
     });
     data.push({
       id: '8',

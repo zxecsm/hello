@@ -307,7 +307,7 @@ function hdUserLogo(e) {
     {
       id: '1',
       text: '上传头像',
-      beforeIcon: 'iconfont icon-shangchuan1',
+      beforeIcon: 'iconfont icon-upload',
     },
   ];
   if (setUserInfo().logo) {
@@ -777,7 +777,7 @@ export function settingMenu(e, isMain) {
     {
       id: '5',
       text: '叉叉靠右',
-      beforeIcon: `iconfont icon-guanbi`,
+      beforeIcon: `iconfont icon-close-bold`,
       afterIcon:
         'iconfont ' +
         (headBtnToRight ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
@@ -795,12 +795,12 @@ export function settingMenu(e, isMain) {
       {
         id: '7',
         text: '隐藏所有窗口',
-        beforeIcon: 'iconfont icon-jianhao',
+        beforeIcon: 'iconfont icon-minus-bold',
       },
       {
         id: '8',
         text: '关闭所有窗口',
-        beforeIcon: 'iconfont icon-guanbi1',
+        beforeIcon: 'iconfont icon-shibai',
       },
     ];
   }
@@ -1093,12 +1093,12 @@ function hdTools(e) {
           {
             id: '1',
             text: '导入书签',
-            beforeIcon: 'iconfont icon-shangchuan_huaban',
+            beforeIcon: 'iconfont icon-upload',
           },
           {
             id: '2',
             text: '导出书签',
-            beforeIcon: 'iconfont icon-xiazai',
+            beforeIcon: 'iconfont icon-download',
           },
         ];
         rMenu.selectMenu(

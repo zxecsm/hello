@@ -63,7 +63,7 @@ class Msg {
     this.progress = document.createElement('div');
     this.progress.className = 'progress';
     this.oClose = document.createElement('i');
-    this.oClose.className = 'close iconfont icon-guanbi';
+    this.oClose.className = 'close iconfont icon-close-bold';
     this.oClose.setAttribute('cursor', '');
     if (this.opt.icon) {
       this.el.appendChild(this.oIcon);
@@ -243,7 +243,7 @@ function success(message = '操作成功', callback, duration = 3000) {
     message,
     type: 'success',
     duration,
-    icon: 'iconfont icon-zhengque_chenggong_shibai',
+    icon: 'iconfont icon-chenggong',
   };
   if (document.visibilityState === 'hidden') {
     addCache({ opt, callback });

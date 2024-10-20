@@ -741,7 +741,7 @@ function renderPlayList() {
         <span class="artist_name"><i class="artist_name_text">{{artist}}</i></span>
       </div>
       <div v-if="mv" class="play_mv iconfont icon-shipin2"></div>
-      <div cursor="y" class="del iconfont icon-guanbi"></div>
+      <div cursor="y" class="del iconfont icon-close-bold"></div>
     </li>
     <div v-html="getPaging()" style="padding:20px 0;text-align:center;" class="playing_list_paging jzxz"></div>
     `,
@@ -1006,7 +1006,7 @@ $lrcMenuWrap
       {
         id: '10',
         text: '下载',
-        beforeIcon: 'iconfont icon-xiazai1',
+        beforeIcon: 'iconfont icon-download',
       },
     ];
     rMenu.selectMenu(

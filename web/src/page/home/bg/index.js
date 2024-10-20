@@ -158,7 +158,7 @@ function bgItemMenu(e, obj, el) {
     {
       id: '2',
       text: '下载',
-      beforeIcon: 'iconfont icon-xiazai1',
+      beforeIcon: 'iconfont icon-download',
     },
   ];
   if (isRoot()) {

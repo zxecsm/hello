@@ -200,6 +200,7 @@ route.get('/', async (req, res) => {
         path = thumbP;
       }
     } catch {}
+    res.setHeader('X-File-Size', stat.size);
     res.sendFile(path);
   } catch (error) {
     _err(res)(req, error);

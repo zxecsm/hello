@@ -212,7 +212,7 @@ function renderAsideList(p, delayScroll = 0) {
         </template>
       </ul>
     </template>
-    <div cursor="y" title="添加分组" class="add_list_btn iconfont icon-jiajian1"></div>
+    <div cursor="y" title="添加分组" class="add_list_btn iconfont icon-tianjia"></div>
     `,
     {
       _nav,

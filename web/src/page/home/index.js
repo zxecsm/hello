@@ -560,7 +560,7 @@ function hdHomeBgBtn(e, obj) {
     {
       id: '3',
       text: '下载壁纸',
-      beforeIcon: 'iconfont icon-xiazai1',
+      beforeIcon: 'iconfont icon-download',
     },
   ];
   if (isRoot()) {

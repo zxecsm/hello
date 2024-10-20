@@ -16,14 +16,17 @@ upProgressbox.style.cssText = `
 document.body.appendChild(upProgressbox);
 
 export class UpProgress {
-  constructor(name) {
-    this.loadnum = 0;
+  constructor(name, iconfont = 'iconfont icon-upload') {
     this.name = name;
+    this.iconfont = iconfont;
     this.create();
   }
   create() {
     this.box = document.createElement('div');
     this.box1 = document.createElement('div');
+    this.icon = document.createElement('span');
+    this.icon.className = this.iconfont;
+    this.title = document.createElement('span');
     this.box2 = document.createElement('div');
     this.box.style.cssText = `
                   position: relative;
@@ -35,13 +38,25 @@ export class UpProgress {
                   overflow: hidden;`;
     this.box1.style.cssText = `
                   position: relative;
+                  display: flex;
                   width: 100%;
                   height: 40px;
                   line-height: 40px;
-                  text-indent: 10px;
+                  `;
+    this.icon.style.cssText = `
+                  flex: none;
+                  width: 30px;
+                  text-align: center;
+                  font-size: 20px;
+                  color: var(--icon-color);
+                  
+    `;
+    this.title.style.cssText = `
+                  flex: auto;
                   text-overflow: ellipsis;
                   overflow: hidden;
-                  white-space: nowrap;`;
+                  white-space: nowrap;
+    `;
     this.box2.style.cssText = `
                   position: absolute;
                   height: 100%;
@@ -54,7 +69,9 @@ export class UpProgress {
                   white-space: nowrap; 
                   color: #fff;
                   `;
-    this.box1.innerText = this.name;
+    this.title.innerText = this.name;
+    this.box1.append(this.icon);
+    this.box1.append(this.title);
     this.box.appendChild(this.box2);
     this.box.appendChild(this.box1);
     upProgressbox.appendChild(this.box);
@@ -62,15 +79,15 @@ export class UpProgress {
   }
   update(percent) {
     //上传进度
-    this.box1.innerText = this.name;
+    this.title.innerText = this.name;
     this.box2.style.backgroundColor = 'var(--color7)';
     this.box2.style.width = percent * 100 + '%';
   }
   loading(percent) {
-    this.box1.innerText = `加载中...${parseInt(percent * 100)}%`;
+    this.title.innerText = `加载中...${parseInt(percent * 100)}%`;
   }
   close(title) {
-    this.box1.innerText = this.name;
+    this.title.innerText = this.name;
     this.box2.style.width = 100 + '%';
     this.box2.style.backgroundColor = 'green';
     this.box2.style.opacity = '0.8';
@@ -87,7 +104,7 @@ export class UpProgress {
     }, 3000);
   }
   fail(title) {
-    this.box1.innerText = this.name;
+    this.title.innerText = this.name;
     this.box2.style.width = 100 + '%';
     this.box2.style.backgroundColor = 'red';
     this.box2.style.opacity = '0.8';

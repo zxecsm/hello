@@ -591,7 +591,7 @@ function rightList(e, obj, el) {
     data.push({
       id: 'download',
       text: '下载',
-      beforeIcon: 'iconfont icon-xiazai1',
+      beforeIcon: 'iconfont icon-download',
     });
   }
   if ($footer.is(':hidden')) {
@@ -1409,12 +1409,13 @@ $footer
     switchCheckAll(this);
   })
   .on('click', '.f_download', function () {
-    getCheckDatas().forEach((item) => {
+    concurrencyTasks(getCheckDatas(), 3, async (item) => {
       const { name, path, type } = item;
       if (type === 'file') {
-        downloadFile(getFilePath(`/file/${path}/${name}`), name);
+        await downloadFile(getFilePath(`/file/${path}/${name}`), name);
       }
     });
+    closeCheck();
   })
   .on('click', '.f_copy', function () {
     waitObj = {
@@ -1536,7 +1537,7 @@ function showPaste() {
       _tpl(
         `<span cursor="y" class="type iconfont {{waitObj.type==='copy'?'icon-fuzhi':'icon-jiandao'}}"></span>
         <span cursor="y" class="text">粘贴({{waitObj.data.length}})</span>
-        <span cursor="y" class="close iconfont icon-guanbi"></span>`,
+        <span cursor="y" class="close iconfont icon-close-bold"></span>`,
         { waitObj }
       )
     )

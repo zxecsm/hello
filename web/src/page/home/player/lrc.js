@@ -798,7 +798,7 @@ $lrcMenuWrap
       {
         id: '10',
         text: '下载',
-        beforeIcon: 'iconfont icon-xiazai1',
+        beforeIcon: 'iconfont icon-download',
       },
     ];
     if (isRoot()) {

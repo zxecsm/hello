@@ -10,6 +10,7 @@ import rMenu from '../plugins/rightMenu';
 import { reqUserFileKey } from '../../api/user';
 import { _tpl } from './template';
 import _path from './path';
+import { UpProgress } from '../plugins/UpProgress';
 // 解析url
 export function queryURLParams(url) {
   const obj = {};
@@ -1254,16 +1255,64 @@ export function fileLogoType(fname) {
     return 'icon-24gl-fileText';
   }
 }
+
 // 下载文件
-export function downloadFile(url, fileName) {
-  const a = document.createElement('a');
-  a.href = url;
-  if (fileName) {
-    a.download = fileName;
-  }
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+export function downloadFile(fileUrl, filename) {
+  return new Promise((resolve) => {
+    filename = filename || _path.basename(fileUrl);
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', fileUrl, true);
+    xhr.responseType = 'blob'; // 设置响应类型为 Blob
+
+    const pro = new UpProgress(filename, 'iconfont icon-download');
+
+    function unbindXHREvents() {
+      xhr.onload = null;
+      xhr.onerror = null;
+      xhr.onprogress = null;
+    }
+    // 监听进度事件
+    xhr.onprogress = function (event) {
+      let percentComplete = 0;
+      if (event.lengthComputable) {
+        percentComplete = event.loaded / event.total;
+      } else {
+        // 如果总长度不可计算，则尝试从自定义头部获取文件大小
+        const fileSize = xhr.getResponseHeader('X-File-Size');
+        if (fileSize) {
+          percentComplete = event.loaded / +fileSize;
+        }
+      }
+      pro.update(percentComplete);
+    };
+
+    xhr.onload = function () {
+      if (xhr.status === 200) {
+        const blob = xhr.response;
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename; // 设置下载文件名
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url); // 释放 URL 对象
+        unbindXHREvents();
+        pro.close('下载完成');
+      } else {
+        pro.fail('下载失败');
+      }
+      resolve();
+    };
+
+    xhr.onerror = function () {
+      unbindXHREvents();
+      pro.fail('下载失败');
+      resolve();
+    };
+
+    xhr.send();
+  });
 }
 // 预览图片
 export function imgPreview(arr, idx = 0) {
@@ -1368,7 +1417,7 @@ export function imgPreview(arr, idx = 0) {
   transition: opacity .5s ease-in-out;
   z-index: 2;
   `;
-  close.className = 'iconfont icon-guanbi';
+  close.className = 'iconfont icon-close-bold';
   pre.className = 'iconfont icon-zuo';
   next.className = 'iconfont icon-you';
   pre.setAttribute('cursor', '');

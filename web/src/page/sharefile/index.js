@@ -576,7 +576,7 @@ function rightList(e, obj) {
       {
         id: 'download',
         text: '下载',
-        beforeIcon: 'iconfont icon-xiazai1',
+        beforeIcon: 'iconfont icon-download',
       },
       {
         id: 'copy',

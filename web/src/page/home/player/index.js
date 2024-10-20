@@ -978,7 +978,7 @@ function renderSongs(gao) {
       </div>
       <div v-if="listId === 'all'" cursor="y" class="random_song_list_btn"><i class="iconfont icon-suiji"></i></div>
       <div v-if="ind > 2 || isRoot()" cursor="y" class="edit_song_list_btn"><i class="iconfont icon-bianji"></i></div>
-      <div v-if="ind === 2" cursor="y" class="upload_song_btn"><i class="iconfont icon-shangchuan1"></i></div>
+      <div v-if="ind === 2" cursor="y" class="upload_song_btn"><i class="iconfont icon-upload"></i></div>
       <div v-else cursor="y" class="share_song_list_btn"><i class="iconfont icon-fenxiang_2"></i></div>
       <div cursor="y" class="checked_song_btn"><i class="iconfont icon-duoxuan"></i></div>
       <div v-if="ind > 0" cursor="y" class="sort_songs"><i class="iconfont icon-paixu"></i></div>
@@ -1196,7 +1196,7 @@ function songListMenu(e, sid) {
     {
       id: '2',
       text: '移除歌单',
-      beforeIcon: 'iconfont icon-guanbi1',
+      beforeIcon: 'iconfont icon-shibai',
     },
   ];
   if (isRoot()) {
@@ -1574,18 +1574,18 @@ function songMenu(e, idx, sobj) {
   data.push({
     id: '7',
     text: '下载',
-    beforeIcon: 'iconfont icon-xiazai1',
+    beforeIcon: 'iconfont icon-download',
   });
   if (isRoot()) {
     data.push({
       id: '12',
       text: '上传封面',
-      beforeIcon: 'iconfont icon-shangchuan1',
+      beforeIcon: 'iconfont icon-upload',
     });
     data.push({
       id: '13',
       text: '上传 MV',
-      beforeIcon: 'iconfont icon-shangchuan1',
+      beforeIcon: 'iconfont icon-upload',
     });
     data.push({
       id: '8',
@@ -1604,7 +1604,7 @@ function songMenu(e, idx, sobj) {
     data.push({
       id: '15',
       text: '移除',
-      beforeIcon: 'iconfont icon-guanbi1',
+      beforeIcon: 'iconfont icon-shibai',
     });
   }
   if (isRoot()) {
@@ -1849,9 +1849,9 @@ $msuicContentBox
   .on('click', '.download_song_btn', function () {
     const arr = getCheckSongs();
     if (arr.length === 0) return;
-    arr.forEach((item) => {
+    concurrencyTasks(arr, 3, async (item) => {
       const fname = `${item.artist}-${item.title}`;
-      downloadFile(
+      await downloadFile(
         getFilePath(`/music/${item.url}`),
         `${fname}.${_path.extname(item.url)[2]}`
       );
