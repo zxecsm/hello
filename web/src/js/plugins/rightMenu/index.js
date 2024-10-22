@@ -81,7 +81,7 @@ class RightM {
       this.searchBtn.remove();
     }
     this.searchInpWrap = wrapInput(this.searchInp, {
-      change: (val) => {
+      update: (val) => {
         if (val === '') {
           this.clearSearchText.style.display = 'none';
         } else {
@@ -90,18 +90,18 @@ class RightM {
         this.opt.searchCallback &&
           this.opt.searchCallback('change', val.trim());
       },
-      focus: (target) => {
-        target.parentNode.classList.add('focus');
+      focus: (e) => {
+        e.target.parentNode.classList.add('focus');
         this.searchBtn.style.display = 'none';
-        this.opt.searchCallback && this.opt.searchCallback('focus', target);
+        this.opt.searchCallback && this.opt.searchCallback('focus', e.target);
       },
-      blur: (target) => {
-        target.parentNode.classList.remove('focus');
+      blur: (e) => {
+        e.target.parentNode.classList.remove('focus');
         if (this.searchInpWrap.getValue().trim() === '') {
           this.searchBox.style.display = 'none';
           this.searchBtn.style.display = 'block';
         }
-        this.opt.searchCallback && this.opt.searchCallback('blur', target);
+        this.opt.searchCallback && this.opt.searchCallback('blur', e.target);
       },
     });
     // 标题滚动
@@ -200,7 +200,7 @@ class RightM {
       this.close();
     } else if (e.target === this.searchBtn) {
       this.searchBox.style.display = 'flex';
-      this.searchInpWrap.focus();
+      this.searchInpWrap.setValue('').focus();
     } else if (e.target === this.clearSearchText) {
       this.searchInpWrap.setValue('').focus();
     } else {
@@ -419,7 +419,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
         const showPassBtn = inpItem.querySelector('.show_pass_btn');
         const err = inpItem.querySelector('.err');
         const wInput = wrapInput(item, {
-          change(val) {
+          update(val) {
             if (showPassBtn) {
               showPassBtn.style.display = val === '' ? 'none' : 'block';
             }

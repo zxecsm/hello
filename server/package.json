@@ -20,6 +20,7 @@
     "music-metadata": "^10.5.0",
     "node-id3": "^0.2.6",
     "nodemailer": "^6.9.15",
+    "pinyin": "4.0.0-alpha.2",
     "sharp": "^0.33.5",
     "speakeasy": "^2.0.0",
     "sqlite3": "^5.1.7",

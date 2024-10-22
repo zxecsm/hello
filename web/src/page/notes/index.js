@@ -104,20 +104,24 @@ export function setNoteCategoryList(val) {
 }
 // 搜索
 const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
-  change(val) {
+  update(val) {
     if (val === '') {
-      $headWrap.find('.inp_box i').css('display', 'none');
+      $headWrap.find('.inp_box .clean_btn').css('display', 'none');
     } else {
-      $headWrap.find('.inp_box i').css('display', 'block');
+      $headWrap.find('.inp_box .clean_btn').css('display', 'block');
     }
-    $contentWrap.pagenum = 1;
-    _renderList(true);
   },
-  focus(target) {
-    $(target).parent().addClass('focus');
+  focus(e) {
+    $(e.target).parent().addClass('focus');
   },
-  blur(target) {
-    $(target).parent().removeClass('focus');
+  blur(e) {
+    $(e.target).parent().removeClass('focus');
+  },
+  keyup(e) {
+    if (e.key === 'Enter') {
+      $contentWrap.pagenum = 1;
+      renderList(true);
+    }
   },
 });
 function updataCategory() {
@@ -177,7 +181,6 @@ $contentWrap.pagenum = 1;
 let notePageSize = _getData('notePageSize');
 let noteList = [];
 // 生成列表
-const _renderList = debounce(renderList, 1000);
 function renderList(y) {
   let pagenum = $contentWrap.pagenum,
     word = wInput.getValue().trim();
@@ -210,7 +213,7 @@ function renderList(y) {
         $contentWrap.pagenum = pageNo;
         const html = _tpl(
           `
-          <p v-if="data.length === 0" style='text-align: center;'>{{_d.emptyList}}</p>
+          <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
             <template v-for="{title,share,id,con,top} in data">
               <ul class="item_box" :data-id="id">
@@ -227,6 +230,7 @@ function renderList(y) {
           </template>
           `,
           {
+            total,
             data,
             word,
             splitWord,
@@ -708,8 +712,14 @@ $headWrap
     _myOpen('/edit/#new', '新笔记');
   })
   .on('click', '.h_check_item_btn', hdCheckItemBtn)
-  .on('click', '.inp_box i', function () {
+  .on('click', '.inp_box .clean_btn', function () {
     wInput.setValue('').focus();
+    $contentWrap.pagenum = 1;
+    renderList(true);
+  })
+  .on('click', '.inp_box .search_btn', function () {
+    $contentWrap.pagenum = 1;
+    renderList(true);
   });
 // 获取选中项
 function getCheckItems() {

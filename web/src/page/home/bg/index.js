@@ -243,7 +243,7 @@ export function renderBgList(y) {
         bgList = data;
         const html = _tpl(
           `
-          <p v-if="data.length === 0" style='text-align: center;'>{{_d.emptyList}}</p>
+          <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
             <div v-for="{id, url} in data" class="bg_item" :data-id="id">
               <div check="n" class="check_level"></div>
@@ -254,6 +254,7 @@ export function renderBgList(y) {
           </template>
           `,
           {
+            total,
             data,
             _d,
             getFilePath,

@@ -1513,11 +1513,13 @@ route.get('/share-list', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const offset = (pageNo - 1) * pageSize;
-
     const total = await getTableRowCount('share', `WHERE account = ?`, [
       account,
     ]);
+
+    const result = createPagingData(Array(total), pageSize, pageNo);
+
+    const offset = (result.pageNo - 1) * pageSize;
 
     let data = [];
 
@@ -1531,7 +1533,7 @@ route.get('/share-list', async (req, res) => {
     }
 
     _success(res, 'ok', {
-      ...createPagingData([...Array(total)], pageSize, pageNo),
+      ...result,
       data,
     });
   } catch (error) {
@@ -1608,8 +1610,6 @@ route.get('/trash-list', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const offset = (pageNo - 1) * pageSize;
-
     let where = 'WHERE account = ? AND state = ?';
     const valArr = [account, 0];
 
@@ -1641,6 +1641,10 @@ route.get('/trash-list', async (req, res) => {
 
     const total = await getTableRowCount(type, where, valArr);
 
+    const result = createPagingData(Array(total), pageSize, pageNo);
+
+    const offset = (result.pageNo - 1) * pageSize;
+
     let data = [];
 
     if (total > 0) {
@@ -1652,7 +1656,7 @@ route.get('/trash-list', async (req, res) => {
     }
 
     _success(res, 'ok', {
-      ...createPagingData([...Array(total)], pageSize, pageNo),
+      ...result,
       data,
       splitWord,
     });

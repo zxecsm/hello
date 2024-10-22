@@ -44,20 +44,24 @@ window.addEventListener('load', () => {
 });
 // 搜索
 const wInput = wrapInput($head.find('.inp_box input')[0], {
-  change(val) {
+  update(val) {
     if (val === '') {
-      $head.find('.inp_box i').css('display', 'none');
+      $head.find('.inp_box .clean_btn').css('display', 'none');
     } else {
-      $head.find('.inp_box i').css('display', 'block');
+      $head.find('.inp_box .clean_btn').css('display', 'block');
     }
-    $main.pageNo = 1;
-    _hdRender();
   },
-  focus(target) {
-    $(target).parent().addClass('focus');
+  focus(e) {
+    $(e.target).parent().addClass('focus');
   },
-  blur(target) {
-    $(target).parent().removeClass('focus');
+  blur(e) {
+    $(e.target).parent().removeClass('focus');
+  },
+  keyup(e) {
+    if (e.key === 'Enter') {
+      $main.pageNo = 1;
+      hdRender();
+    }
   },
 });
 (() => {
@@ -105,6 +109,9 @@ function getLogList(e) {
 }
 function getLogData(name) {
   loadingImg($main[0]);
+  if (curName !== name) {
+    wInput.setValue('');
+  }
   reqRootLog({ name })
     .then((res) => {
       if (res.code === 1) {
@@ -134,15 +141,21 @@ $head
       getLogData(curName);
     }
   })
-  .on('click', '.clean_btn', function (e) {
+  .on('click', '.clean_log', function (e) {
     dellog(e, 'all');
   })
   .on('click', '.h_go_home', function () {
     myOpen('/');
   })
   .on('click', '.select_btn', getLogList)
-  .on('click', '.inp_box i', function () {
+  .on('click', '.inp_box .clean_btn', function () {
     wInput.setValue('').focus();
+    $main.pageNo = 1;
+    hdRender();
+  })
+  .on('click', '.inp_box .search_btn', function () {
+    $main.pageNo = 1;
+    hdRender();
   });
 $stat.list = [];
 $stat.pageNo = 1;
@@ -191,6 +204,8 @@ function renderStat() {
 }
 $stat.on('click', '.ip', function () {
   wInput.setValue(this.innerText);
+  $main.pageNo = 1;
+  hdRender();
 });
 window.addEventListener(
   'scroll',
@@ -221,7 +236,6 @@ const pgnt = pagination($foot[0], {
     pageScrollTop(0);
   },
 });
-const _hdRender = debounce(hdRender, 1000);
 // 生成日志列表
 async function hdRender() {
   const word = wInput.getValue().trim();

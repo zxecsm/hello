@@ -195,7 +195,7 @@ function renderImgList(y) {
         $imgList.list = data;
         const html = _tpl(
           `
-          <p v-if="data.length === 0" style='text-align: center;'>{{_d.emptyList}}</p>
+          <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
             <div v-for="{id} in data" class="img_item" :data-id="id">
               <div check="n" class="check_level"></div>
@@ -206,6 +206,7 @@ function renderImgList(y) {
           </template>
           `,
           {
+            total,
             data,
             _d,
             getPaging() {

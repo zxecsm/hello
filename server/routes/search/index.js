@@ -84,8 +84,6 @@ route.get('/history-list', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const offset = (pageNo - 1) * pageSize;
-
     let where = `WHERE account = ? AND state = ?`;
 
     const valArr = [account, 1];
@@ -109,6 +107,10 @@ route.get('/history-list', async (req, res) => {
 
     const total = await getTableRowCount('history', where, valArr);
 
+    const result = createPagingData(Array(total), pageSize, pageNo);
+
+    const offset = (result.pageNo - 1) * pageSize;
+
     let data = [];
     if (total > 0) {
       where += ` LIMIT ? OFFSET ?`;
@@ -119,7 +121,7 @@ route.get('/history-list', async (req, res) => {
     }
 
     _success(res, 'ok', {
-      ...createPagingData([...Array(total)], pageSize, pageNo),
+      ...result,
       data,
       splitWord,
     });

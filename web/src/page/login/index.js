@@ -54,53 +54,61 @@ $about.on('click', function () {
 if (_getData('account')) {
   myOpen('/');
 }
+function hdKeyUp(e) {
+  if (e.key === 'Enter') {
+    hdSubmit();
+  }
+}
 const accInp = wrapInput($account[0], {
-  change(val) {
+  update(val) {
     if (val === '') {
       $account.next().css('display', 'none');
     } else {
       $account.next().css('display', 'block');
     }
   },
-  focus(target) {
-    $(target).parent().addClass('focus');
+  focus(e) {
+    $(e.target).parent().addClass('focus');
   },
-  blur(target) {
+  blur(e) {
     checkUserName();
-    $(target).parent().removeClass('focus');
+    $(e.target).parent().removeClass('focus');
   },
+  keyup: hdKeyUp,
 });
 const pdInp = wrapInput($password[0], {
-  change(val) {
+  update(val) {
     if (val === '') {
       $password.next().css('display', 'none');
     } else {
       $password.next().css('display', 'block');
     }
   },
-  focus(target) {
-    $(target).parent().addClass('focus');
+  focus(e) {
+    $(e.target).parent().addClass('focus');
   },
-  blur(target) {
+  blur(e) {
     checkPassword();
-    $(target).parent().removeClass('focus');
+    $(e.target).parent().removeClass('focus');
   },
+  keyup: hdKeyUp,
 });
 const rePdInp = wrapInput($repassword[0], {
-  change(val) {
+  update(val) {
     if (val === '') {
       $repassword.next().css('display', 'none');
     } else {
       $repassword.next().css('display', 'block');
     }
   },
-  focus(target) {
-    $(target).parent().addClass('focus');
+  focus(e) {
+    $(e.target).parent().addClass('focus');
   },
-  blur(target) {
+  blur(e) {
     checkPassword();
-    $(target).parent().removeClass('focus');
+    $(e.target).parent().removeClass('focus');
   },
+  keyup: hdKeyUp,
 });
 let code = '';
 // 免密登录
@@ -291,11 +299,6 @@ function changeTheme(flag) {
 }
 window.changeTheme = changeTheme;
 changeTheme(dark);
-$box.on('keyup', function (e) {
-  if (e.key === 'Enter') {
-    $submit.click();
-  }
-});
 
 $account.next().on('click', function () {
   accInp.setValue('').focus();
@@ -421,7 +424,8 @@ function hdRegister(obj) {
   });
 }
 let _flag = true;
-$submit.on('click', function () {
+$submit.on('click', hdSubmit);
+function hdSubmit() {
   const account = accInp.getValue().trim(),
     password = pdInp.getValue().trim();
   if (isLoginState) {
@@ -435,7 +439,7 @@ $submit.on('click', function () {
       password: md5.getStringHash(password),
     });
   }
-});
+}
 // 验证密码
 function checkPassword() {
   if (isLoginState) return true;

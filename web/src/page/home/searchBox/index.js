@@ -407,7 +407,7 @@ function isSearchOpenPop() {
 }
 // 搜索框处理
 const searchInput = wrapInput($searchInpWrap.find('.inp_box input')[0], {
-  change(val) {
+  update(val) {
     if (val.trim() === '') {
       $searchInpWrap.find('.translate_btn').css('display', 'none');
       $searchInpWrap.find('.search_submit').css('display', 'none');
@@ -424,8 +424,21 @@ const searchInput = wrapInput($searchInpWrap.find('.inp_box input')[0], {
   focus() {
     $searchInpWrap.find('.search_list_box').css('display', 'block');
     $searchInpWrap.find('.content').addClass('active');
-    let val = searchInput.getValue();
-    hdSearchBoxInput(val);
+    hdSearchBoxInput(searchInput.getValue());
+  },
+  keyup(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    const key = e.key;
+    if (key === 'Enter') {
+      toSearch(searchInput.getValue().trim());
+    }
+  },
+  input() {
+    _hdSearchBoxInput(searchInput.getValue());
+  },
+  keydown(e) {
+    selectSearchItem(e);
   },
 });
 // 获取搜索引擎
@@ -558,20 +571,6 @@ $searchInpWrap
     toSearch(val);
   })
   .on('click', '.translate_btn', toTranslator)
-  .on('keyup', '.inp_box input', function (e) {
-    e.stopPropagation();
-    e.preventDefault();
-    const key = e.key;
-    if (key === 'Enter') {
-      const val = searchInput.getValue().trim();
-      toSearch(val);
-    }
-  })
-  .on('keydown', '.inp_box input', selectSearchItem)
-  .on('input', '.inp_box input', function () {
-    let val = searchInput.getValue();
-    _hdSearchBoxInput(val);
-  })
   .on('click', '.inp_box i', function () {
     searchInput.setValue('').focus();
   })

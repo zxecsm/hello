@@ -132,7 +132,7 @@ function renderCountList(total, toTop) {
       <button v-if="hasRemain(countList)" cursor="y" class="clear_btn btn btn_danger">清除已到期</button>
       <button v-if="countList.length > 0" cursor="y" class="clear_all_btn btn btn_danger">清空</button>
     </div>
-    <p v-if="countList.length <= 0" style="padding: 20px 0;pointer-events: none;text-align: center;">暂无倒计时项</p>
+    <p v-if="total <= 0" style="padding: 20px 0;pointer-events: none;text-align: center;">暂无倒计时项</p>
     <template v-else>
       <div v-for="{id, title, total, past, remain, link, state, top} in countList" :data-id="id" class="item_box {{state === 0 ? 'close' : ''}}">
         <div class="title">
@@ -152,6 +152,7 @@ function renderCountList(total, toTop) {
     </template>
     `,
     {
+      total,
       readableTime,
       countList,
       hasRemain(countList) {

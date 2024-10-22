@@ -36,6 +36,7 @@ import pagination from '../../../js/plugins/pagination/index.js';
 import toolTip from '../../../js/plugins/tooltip/index.js';
 import { showSongInfo } from '../../../js/utils/showinfo.js';
 import { _tpl, deepClone } from '../../../js/utils/template.js';
+import { getSearchSongs } from './search.js';
 const $playingListWrap = $('.music_player_box .playing_list_mask'),
   $pMusicListBox = $playingListWrap.find('.p_music_list_wrap');
 let playingList = [];
@@ -362,6 +363,7 @@ $pMusicListBox
   .on('click', '.artist_name_text', function (e) {
     e.stopPropagation();
     setSearchMusicInputValue(this.innerText);
+    getSearchSongs();
     $pMusicListBox.css('display', 'none').find('.p_foot').html('');
     $playingListWrap.css('display', 'none');
   })

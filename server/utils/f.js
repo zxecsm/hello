@@ -8,6 +8,7 @@ function mkdir(path) {
 
 // 复制
 function cp(from, to) {
+  if (from === to) return;
   return fsp.cp(from, to, { recursive: true });
 }
 

@@ -23,6 +23,20 @@ body {
       display: flex;
       align-items: center;
       flex-flow: row wrap;
+      .check_box {
+        display: flex;
+        align-items: center;
+        flex: none;
+        margin-right: 10px;
+        i {
+          color: var(--color3);
+          margin-right: 5px;
+        }
+        span {
+          font-size: 14px;
+          color: var(--color4);
+        }
+      }
       .inp_box {
         display: flex;
         width: 0;
@@ -51,6 +65,9 @@ body {
         i {
           display: none;
           flex: none;
+        }
+        .search_btn {
+          display: block;
         }
       }
     }

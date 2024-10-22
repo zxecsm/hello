@@ -21,9 +21,7 @@ import {
   getFilePath,
   getFiles,
   pageScrollTop,
-  getPaging,
   getScreenSize,
-  getWordCount,
   hdFilename,
   imgPreview,
   imgjz,
@@ -35,10 +33,10 @@ import {
   isRoot,
   isVideoFile,
   longPress,
-  mixedSort,
   myOpen,
   toLogin,
   wrapInput,
+  getDuplicates,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
@@ -65,6 +63,7 @@ import {
   reqFileReadFile,
   reqFileRename,
   reqFileRepeat,
+  reqFileSameName,
   reqFileShare,
   reqFileUnZip,
   reqFileUp,
@@ -87,6 +86,9 @@ const $footer = $('.footer');
 let pageSize = _getData('filesPageSize');
 let curFileDirPath = _getData('curFileDirPath');
 let fileShowGrid = _getData('fileShowGrid');
+let fileSort = _getData('fileSort');
+let subDir = _getData('searchFileSubDir'); // 搜索子目录
+let skipUpSameNameFiles = _getData('skipUpSameNameFiles'); // 上传略过同名文件
 // 更改显示模式
 function changeListShowModel() {
   $header
@@ -134,33 +136,57 @@ curmb.bind($curmbBox.find('.container')[0], (path, param) => {
   if (param.pageNo) {
     pageNo = param.pageNo;
   }
-  curFileDirPath = path;
+  if (path !== curFileDirPath) {
+    curFileDirPath = path;
+    // 打开新的目录，清空搜索框
+    wInput.setValue('');
+  }
   openDir(curFileDirPath, param.top);
 });
-$contentWrap.list = [];
-$contentWrap.originList = [];
-let fileSort = _getData('fileSort');
+// 选定搜索子目录状态
+function changeSubDirState() {
+  const $check = $search.find('.check_box i');
+  if (subDir) {
+    $check.attr('class', 'iconfont icon-xuanzeyixuanze');
+  } else {
+    $check.attr('class', 'iconfont icon-xuanzeweixuanze');
+  }
+}
+changeSubDirState();
 // 搜索
 const wInput = wrapInput($search.find('.inp_box input')[0], {
-  change(val) {
+  update(val) {
     if (val === '') {
-      $search.find('.inp_box i').css('display', 'none');
+      $search.find('.inp_box .clean_btn').css('display', 'none');
     } else {
-      $search.find('.inp_box i').css('display', 'block');
+      $search.find('.inp_box .clean_btn').css('display', 'block');
     }
-    pageNo = 1;
-    renderList(0);
   },
-  focus(target) {
-    $(target).parent().addClass('focus');
+  focus(e) {
+    $(e.target).parent().addClass('focus');
   },
-  blur(target) {
-    $(target).parent().removeClass('focus');
+  blur(e) {
+    $(e.target).parent().removeClass('focus');
+  },
+  keyup(e) {
+    if (e.key === 'Enter') {
+      curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
+    }
   },
 });
-$search.on('click', '.inp_box i', function () {
-  wInput.setValue('').focus();
-});
+$search
+  .on('click', '.inp_box .clean_btn', function () {
+    wInput.setValue('').focus();
+    curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
+  })
+  .on('click', '.inp_box .search_btn', function () {
+    curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
+  })
+  .on('click', '.check_box', () => {
+    subDir = !subDir;
+    changeSubDirState();
+    _setData('searchFileSubDir', subDir);
+  });
 // 显示搜索
 function openSearch() {
   $search.stop().slideDown(_d.speed, () => {
@@ -171,19 +197,16 @@ function openSearch() {
 function closeSearch() {
   if (wInput.getValue()) {
     wInput.setValue('');
+    updateCurPage();
   }
   $search.stop().slideUp(_d.speed);
 }
 // 生成列表
 async function renderList(top) {
   closeCheck();
-  $contentWrap.list = await hdSort($contentWrap.originList);
-  const paging = getPaging($contentWrap.list, pageNo, pageSize);
-  const totalPage = paging.totalPage;
-  pageNo = paging.pageNo;
   const html = _tpl(
     `
-    <template v-if="list.length > 0">
+    <template v-if="total > 0">
       <ul v-for="{type, name, size, time, id} in list" draggable="true" class="file_item" :data-id="id">
         <li class="check_state" check="n"></li>
         <li cursor="y" class="logo iconfont {{hdLogo(name,type) || 'is_img'}}"></li>
@@ -199,8 +222,9 @@ async function renderList(top) {
     <p v-else>{{_d.emptyList}}</p>
     `,
     {
+      total: fileListData.total,
       formatDate,
-      list: paging.list,
+      list: fileListData.data,
       hdLogo(name, type) {
         let logo = '';
         if (!isImgFile(name)) {
@@ -226,13 +250,15 @@ async function renderList(top) {
       _d,
     }
   );
-  if (paging.list.length > 0) {
+
+  if (fileListData.total > 0) {
+    pageNo = fileListData.pageNo;
+
     $pagination.css('display', 'block');
     pgnt.render({
       pageNo,
-      pageTotal: totalPage,
       pageSize,
-      total: $contentWrap.list.length,
+      total: fileListData.total,
       small: getScreenSize().w <= _d.screen,
     });
   } else {
@@ -280,16 +306,45 @@ const lazyImg = new LazyLoad();
         if (fromId !== toId && toData.type === 'dir') {
           _pop(
             { e, text: `${data[0].name} 移动到：${toData.name}？` },
-            (type) => {
+            async (type) => {
               if (type === 'confirm') {
-                reqFileMove({ data, path: `${curFileDirPath}/${toData.name}` })
-                  .then((res) => {
+                try {
+                  const same = await reqFileSameName({
+                    data,
+                    path: `${curFileDirPath}/${toData.name}`,
+                  });
+
+                  if (same.code === 1) {
+                    const { hasSameName } = same.data;
+                    let rename = 0;
+
+                    // 有重名文件
+                    if (hasSameName) {
+                      const type = await _pop.p({
+                        top: true,
+                        text: '如何处理同名文件？',
+                        cancel: { text: '重命名' },
+                        confirm: { text: '覆盖' },
+                      });
+                      if (type === 'close') return;
+                      if (type === 'confirm') {
+                        rename = 0;
+                      } else {
+                        rename = 1;
+                      }
+                    }
+
+                    const res = await reqFileMove({
+                      data,
+                      path: `${curFileDirPath}/${toData.name}`,
+                      rename,
+                    });
                     if (res.code === 1) {
                       _msg.success(res.codeText);
                       updateCurPage();
                     }
-                  })
-                  .catch(() => {});
+                  }
+                } catch {}
               }
             }
           );
@@ -304,14 +359,12 @@ const lazyImg = new LazyLoad();
 // 分页
 const pgnt = pagination($pagination.find('.container')[0], {
   change(val) {
-    pageNo = val;
-    renderList(0);
+    curmb.toGo(curFileDirPath, { pageNo: val, top: 0 });
     _msg.botMsg(`第 ${pageNo} 页`);
   },
   changeSize(val) {
     pageSize = val;
-    pageNo = 1;
-    renderList(0);
+    curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
     _msg.botMsg(`第 ${pageNo} 页`);
     _setData('filesPageSize', pageSize);
   },
@@ -319,46 +372,6 @@ const pgnt = pagination($pagination.find('.container')[0], {
     pageScrollTop(0);
   },
 });
-// 排序
-async function hdSort(list) {
-  list = [...list];
-  const { type, isDes } = fileSort;
-  const val = wInput.getValue().trim();
-  if (val) {
-    list = list.filter((item) => {
-      return getWordCount([val], item.name) > 0;
-    });
-  }
-  list.sort((a, b) => {
-    if (type === 'time' || type === 'type') {
-      if (isDes || type === 'type') {
-        return b.time - a.time;
-      }
-      return a.time - b.time;
-    } else if (type === 'name') {
-      if (isDes) {
-        return mixedSort(b.name, a.name);
-      }
-      return mixedSort(a.name, b.name);
-    } else if (type === 'size') {
-      if (isDes) {
-        return b.size - a.size;
-      }
-      return a.size - b.size;
-    }
-  });
-  if (type === 'type') {
-    const files = list.filter((item) => item.type === 'file');
-    const dirs = list.filter((item) => item.type === 'dir');
-    if (isDes) {
-      list = [...files, ...dirs];
-    } else {
-      list = [...dirs, ...files];
-    }
-  }
-  return list;
-}
-
 function updateCurPage() {
   curmb.toGo(curFileDirPath);
 }
@@ -369,6 +382,7 @@ function updatePageInfo() {
   bus.emit('setPageInfo', { pageNo, top: pageScrollTop() });
 }
 updateCurPage();
+let fileListData = { data: [] };
 // 打开目录
 async function openDir(path, top) {
   try {
@@ -381,23 +395,28 @@ async function openDir(path, top) {
     }
 
     _setData('curFileDirPath', path);
-    const res = await reqFileReadDir({ path });
+    const res = await reqFileReadDir({
+      path,
+      pageNo,
+      pageSize,
+      sortType: fileSort.type,
+      isDesc: fileSort.isDes ? 1 : 0,
+      subDir: subDir ? 1 : 0,
+      word: wInput.getValue().trim(),
+    });
     if (res.code === 1) {
-      $contentWrap.originList = res.data.map((item, idx) => ({
+      fileListData = res.data;
+      fileListData.data = fileListData.data.map((item, idx) => ({
         id: idx + 1 + '',
         ...item,
       }));
-      if (top === 0 && wInput.getValue()) {
-        wInput.setValue('');
-      } else {
-        renderList(top);
-      }
+      renderList(top);
     }
   } catch {}
 }
 // 获取文件信息
 function getFileItem(id) {
-  return $contentWrap.list.find((item) => item.id === id + '');
+  return fileListData.data.find((item) => item.id === id + '');
 }
 // 读取文件和目录
 async function readFileAndDir(obj) {
@@ -411,11 +430,13 @@ async function readFileAndDir(obj) {
       const res = await reqFileReadFile({ path: p });
       if (res.code === 1) {
         if (res.data.type === 'text') {
+          // 文本
           openFile(res.data.data, p);
         } else if (res.data.type === 'other') {
           const fPath = getFilePath(`/file/${p}`);
+          // 图片
           if (isImgFile(p)) {
-            const list = $contentWrap.list.filter(
+            const list = fileListData.data.filter(
               (item) => item.type === 'file' && isImgFile(item.name)
             );
             const arr = list.map((item) => {
@@ -431,10 +452,13 @@ async function readFileAndDir(obj) {
               list.findIndex((item) => item.id === obj.id)
             );
           } else if (isVideoFile(p)) {
+            // 视频
             _myOpen(`/videoplay/#${encodeURIComponent(fPath)}`, obj.name);
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(p)) {
+            // 音频
             _myOpen(fPath, obj.name);
           } else {
+            // 其他下载
             downloadFile(fPath, name);
           }
         }
@@ -459,14 +483,12 @@ $contentWrap
     reqFileReadDirSize({ path: p })
       .then((res) => {
         if (res.code === 1) {
-          this.innerText = computeSize(res.data.size);
+          if (this) {
+            this.innerText = computeSize(res.data.size);
+          }
         }
       })
-      .catch((error) => {
-        if (error.statusText === 'timeout') {
-          _msg.success(`文件夹文件较多后台计算中`);
-        }
-      });
+      .catch(() => {});
   })
   .on('click', '.name', function (e) {
     const id = this.parentNode.dataset.id;
@@ -511,26 +533,16 @@ $contentWrap
   });
 function hdContextMenu(e) {
   const data = [
-    { id: 'select', text: '选中', beforeIcon: 'iconfont icon-duoxuan' },
+    { id: 'select', text: '多选', beforeIcon: 'iconfont icon-duoxuan' },
     {
-      id: 'createfile',
-      text: '新建文件',
-      beforeIcon: 'iconfont icon-24gl-fileText',
+      id: 'create',
+      text: '新建',
+      beforeIcon: 'iconfont icon-tianjia',
     },
     {
-      id: 'createdir',
-      text: '新建文件夹',
-      beforeIcon: 'iconfont icon-24gl-folder',
-    },
-    {
-      id: 'upfile',
-      text: '上传文件',
-      beforeIcon: 'iconfont icon-24gl-fileText',
-    },
-    {
-      id: 'updir',
-      text: '上传文件夹',
-      beforeIcon: 'iconfont icon-24gl-folder',
+      id: 'up',
+      text: '上传',
+      beforeIcon: 'iconfont icon-upload',
     },
   ];
   rMenu.selectMenu(e, data, async ({ e, close, id }) => {
@@ -539,24 +551,10 @@ function hdContextMenu(e) {
       if (!isChecking) {
         startCheck();
       }
-    } else if (id === 'createfile') {
-      createFile(e);
-    } else if (id === 'createdir') {
-      createDir(e);
-    } else if (id === 'upfile') {
-      const files = await getFiles({
-        multiple: true,
-      });
-      if (files.length === 0) return;
-      hdUp(files);
-      close(1);
-    } else if (id === 'updir') {
-      const files = await getFiles({
-        webkitdirectory: true,
-      });
-      if (files.length === 0) return;
-      hdUp(files);
-      close(1);
+    } else if (id === 'create') {
+      createFileAndDir(e);
+    } else if (id === 'up') {
+      upFileAndDir(e);
     }
   });
 }
@@ -864,29 +862,6 @@ if (isIframe()) {
 }
 // 上传
 async function hdUp(files) {
-  let hasSameName = false;
-  for (let i = 0; i < files.length; i++) {
-    const { name } = files[i];
-    if ($contentWrap.originList.some((item) => item.name === name)) {
-      hasSameName = true;
-      break;
-    }
-  }
-  let rep = false;
-  if (hasSameName) {
-    const type = await _pop.p({
-      top: true,
-      text: '如何处理同名文件？',
-      cancel: { text: '略过' },
-      confirm: { text: '覆盖' },
-    });
-    if (type === 'close') return;
-    if (type === 'confirm') {
-      rep = true;
-    } else {
-      rep = false;
-    }
-  }
   maskLoading.start();
   await concurrencyTasks(files, 5, async (file) => {
     const { name, size, webkitRelativePath } = file;
@@ -908,7 +883,7 @@ async function hdUp(files) {
       _msg.error(`上传文件限制0-4.8G`);
       return;
     }
-    if (!rep) {
+    if (skipUpSameNameFiles) {
       const res = await reqFileRepeat({ path });
       if (res.code === 1) {
         pro.close('略过同名文件');
@@ -1074,60 +1049,8 @@ $header
       closeCheck();
     }
   })
-  .on('click', '.h_upload_btn', function (e) {
-    let data = [
-      { id: '1', text: '上传文件', beforeIcon: 'iconfont icon-24gl-fileText' },
-      {
-        id: '2',
-        text: '上传文件夹',
-        beforeIcon: 'iconfont icon-24gl-folder',
-      },
-    ];
-    rMenu.selectMenu(
-      e,
-      data,
-      async ({ close, id }) => {
-        if (id === '1') {
-          const files = await getFiles({
-            multiple: true,
-          });
-          if (files.length === 0) return;
-          hdUp(files);
-          close();
-        } else if (id === '2') {
-          const files = await getFiles({
-            webkitdirectory: true,
-          });
-          if (files.length === 0) return;
-          hdUp(files);
-          close();
-        }
-      },
-      '上传选项'
-    );
-  })
-  .on('click', '.h_add_item_btn', function (e) {
-    let data = [
-      { id: '1', text: '新建文本', beforeIcon: 'iconfont icon-24gl-fileText' },
-      {
-        id: '2',
-        text: '新建文件夹',
-        beforeIcon: 'iconfont icon-24gl-folder',
-      },
-    ];
-    rMenu.selectMenu(
-      e,
-      data,
-      async ({ e, id }) => {
-        if (id === '1') {
-          createFile(e);
-        } else if (id === '2') {
-          createDir(e);
-        }
-      },
-      '新建选项'
-    );
-  })
+  .on('click', '.h_upload_btn', upFileAndDir)
+  .on('click', '.h_add_item_btn', createFileAndDir)
   .on('click', '.h_sort_btn', hdFileSort)
   .on('click', '.paste_btn .text', hdPaste)
   .on('click', '.paste_btn .type', hdPaste)
@@ -1151,6 +1074,82 @@ $header
   .on('mouseleave', '.paste_btn', function () {
     toolTip.hide();
   });
+function upFileAndDir(e) {
+  const data = [
+    { id: '1', text: '上传文件', beforeIcon: 'iconfont icon-24gl-fileText' },
+    {
+      id: '2',
+      text: '上传文件夹',
+      beforeIcon: 'iconfont icon-24gl-folder',
+    },
+    {
+      id: '3',
+      text: '忽略同名文件',
+      beforeIcon: 'iconfont icon-hulve',
+      afterIcon:
+        'iconfont ' +
+        (skipUpSameNameFiles ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+      param: { value: skipUpSameNameFiles },
+    },
+  ];
+  rMenu.selectMenu(
+    e,
+    data,
+    async ({ close, id, param, resetMenu }) => {
+      if (id === '1') {
+        const files = await getFiles({
+          multiple: true,
+        });
+        if (files.length === 0) return;
+        hdUp(files);
+        close(1);
+      } else if (id === '2') {
+        const files = await getFiles({
+          webkitdirectory: true,
+        });
+        if (files.length === 0) return;
+        hdUp(files);
+        close(1);
+      } else if (id === '3') {
+        if (param.value) {
+          data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
+          data[id - 1].param.value = false;
+          skipUpSameNameFiles = false;
+          _setData('skipUpSameNameFiles', false);
+        } else {
+          data[id - 1].afterIcon = 'iconfont icon-kaiguan-kai1';
+          data[id - 1].param.value = true;
+          skipUpSameNameFiles = true;
+          _setData('skipUpSameNameFiles', true);
+        }
+        resetMenu(data);
+      }
+    },
+    '上传选项'
+  );
+}
+function createFileAndDir(e) {
+  const data = [
+    { id: '1', text: '新建文本', beforeIcon: 'iconfont icon-24gl-fileText' },
+    {
+      id: '2',
+      text: '新建文件夹',
+      beforeIcon: 'iconfont icon-24gl-folder',
+    },
+  ];
+  rMenu.selectMenu(
+    e,
+    data,
+    async ({ e, id }) => {
+      if (id === '1') {
+        createFile(e);
+      } else if (id === '2') {
+        createDir(e);
+      }
+    },
+    '新建选项'
+  );
+}
 // 处理粘贴
 function hdPaste(e) {
   const { type, data } = waitObj;
@@ -1236,8 +1235,7 @@ function hdFileSort(e) {
           fileSort.isDes = param.value;
         }
         close();
-        pageNo = 1;
-        renderList(0);
+        curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
         _setData('fileSort', fileSort);
       }
     },
@@ -1249,6 +1247,11 @@ async function hdCopy(e, data, cb) {
   const type = await _pop.p({ e, text: '确认粘贴？' });
   if (type === 'confirm') {
     try {
+      if (getDuplicates(data, ['name']).length > 0) {
+        _msg.error('复制项中存在同名文件或文件夹');
+        return;
+      }
+
       if (
         !data.every((item) => {
           const { path, name } = item;
@@ -1257,14 +1260,41 @@ async function hdCopy(e, data, cb) {
           return !_path.isPathWithin(f, t);
         })
       ) {
-        _msg.error('无效操作');
+        _msg.error('发现错误，不能复制到子目录中');
         return;
       }
-      const res = await reqFileCopy({ data, path: curFileDirPath });
-      if (res.code === 1) {
-        _msg.success(res.codeText);
-        updateCurPage();
-        cb && cb();
+
+      const same = await reqFileSameName({ data, path: curFileDirPath });
+
+      if (same.code === 1) {
+        const { hasSameName } = same.data;
+        let rename = 0;
+
+        // 有重名文件
+        if (hasSameName) {
+          const type = await _pop.p({
+            top: true,
+            text: '如何处理同名文件？',
+            cancel: { text: '重命名' },
+            confirm: { text: '覆盖' },
+          });
+          if (type === 'close') return;
+          if (type === 'confirm') {
+            rename = 0;
+          } else {
+            rename = 1;
+          }
+        }
+        const res = await reqFileCopy({
+          data,
+          path: curFileDirPath,
+          rename,
+        });
+        if (res.code === 1) {
+          _msg.success(res.codeText);
+          updateCurPage();
+          cb && cb();
+        }
       }
     } catch (error) {
       if (error.statusText === 'timeout') {
@@ -1279,6 +1309,11 @@ async function hdCut(e, data, cb) {
   const type = await _pop.p({ e, text: '确认粘贴？' });
   if (type === 'confirm') {
     try {
+      if (getDuplicates(data, ['name']).length > 0) {
+        _msg.error('剪切项中存在同名文件或文件夹');
+        return;
+      }
+
       if (
         !data.every((item) => {
           const { path, name } = item;
@@ -1287,17 +1322,41 @@ async function hdCut(e, data, cb) {
           return f !== t && !_path.isPathWithin(f, t);
         })
       ) {
-        _msg.error('无效操作');
+        _msg.error('发现错误，不能剪切到子目录和当前目录中');
         return;
       }
-      const res = await reqFileMove({ data, path: curFileDirPath });
-      if (res.code === 1) {
-        _msg.success(res.codeText);
-        updateCurPage();
-        waitObj = {};
-        realtime.send({ type: 'pastefiledata', data: waitObj });
-        hidePaste();
-        cb && cb();
+
+      const same = await reqFileSameName({ data, path: curFileDirPath });
+
+      if (same.code === 1) {
+        const { hasSameName } = same.data;
+        let rename = 0;
+
+        // 有重名文件
+        if (hasSameName) {
+          const type = await _pop.p({
+            top: true,
+            text: '如何处理同名文件？',
+            cancel: { text: '重命名' },
+            confirm: { text: '覆盖' },
+          });
+          if (type === 'close') return;
+          if (type === 'confirm') {
+            rename = 0;
+          } else {
+            rename = 1;
+          }
+        }
+
+        const res = await reqFileMove({ data, path: curFileDirPath, rename });
+        if (res.code === 1) {
+          _msg.success(res.codeText);
+          updateCurPage();
+          waitObj = {};
+          realtime.send({ type: 'pastefiledata', data: waitObj });
+          hidePaste();
+          cb && cb();
+        }
       }
     } catch (error) {
       if (error.statusText === 'timeout') {

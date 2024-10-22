@@ -306,13 +306,14 @@ textarea:-ms-input-placeholder {
 }
 .inp_box i {
   font-size: 1.1em;
-  padding: 0 5px;
+  padding: 0 6px;
 }
 .inp_box input {
   padding-left: 10px;
   line-height: 1.5;
 }
 .inp_box i:hover {
+  transform: scale(1.2);
   color: var(--text-hover-color);
 }
 .shake {

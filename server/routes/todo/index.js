@@ -54,11 +54,13 @@ route.get('/list', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const offset = (pageNo - 1) * pageSize;
-
     const total = await getTableRowCount('todo', `WHERE account = ?`, [
       account,
     ]);
+
+    const result = createPagingData(Array(total), pageSize, pageNo);
+
+    const offset = (result.pageNo - 1) * pageSize;
 
     let data = [],
       undoneCount = 0;
@@ -80,7 +82,7 @@ route.get('/list', async (req, res) => {
     }
 
     _success(res, 'ok', {
-      ...createPagingData([...Array(total)], pageSize, pageNo),
+      ...result,
       data,
       undoneCount,
     });

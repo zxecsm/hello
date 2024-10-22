@@ -2551,32 +2551,42 @@ export function isIframe() {
 }
 // 包装input
 export function wrapInput(target, opt) {
-  const { change, focus, blur } = opt;
-  target.addEventListener('input', hdInput);
-  target.addEventListener('focus', hdFocus);
-  target.addEventListener('blur', hdBlur);
-  function hdInput() {
-    change && change(target.value);
-  }
-  function hdFocus() {
-    focus && focus(target);
-  }
-  function hdBlur() {
-    blur && blur(target);
-  }
+  const { change, focus, blur, keyup, keydown, input, update } = opt;
+
+  const eventHandlers = {
+    input: (e) => {
+      input?.(e);
+      update?.(target.value);
+    },
+    change: (e) => change?.(e),
+    focus: (e) => focus?.(e),
+    blur: (e) => blur?.(e),
+    keyup: (e) => keyup?.(e),
+    keydown: (e) => keydown?.(e),
+  };
+
+  // 绑定事件，input 必须绑定，其他事件根据是否传递回调函数来绑定
+  Object.keys(eventHandlers).forEach((event) => {
+    if (event === 'input' || opt[event]) {
+      target.addEventListener(event, eventHandlers[event]);
+    }
+  });
+
   return {
     setValue(val) {
       target.value = val;
-      hdInput();
+      update?.(target.value);
       return this;
     },
     getValue() {
       return target.value;
     },
     unBind() {
-      target.removeEventListener('input', hdInput);
-      target.removeEventListener('focus', hdFocus);
-      target.removeEventListener('blur', hdBlur);
+      Object.keys(eventHandlers).forEach((event) => {
+        if (event === 'input' || opt[event]) {
+          target.removeEventListener(event, eventHandlers[event]);
+        }
+      });
     },
     target,
     focus() {
@@ -2589,6 +2599,7 @@ export function wrapInput(target, opt) {
     },
   };
 }
+
 // 解析书签
 export function parseBookmark(node) {
   const res = [];
@@ -3191,4 +3202,17 @@ export function findLastIndex(array, predicate) {
     }
   }
   return -1; // 如果没有找到则返回 -1
+}
+
+// 获取数组相同项
+export function getDuplicates(arr, keys) {
+  const seen = new Set();
+  return arr.filter((item) => {
+    if (keys) {
+      keys.forEach((key) => (item = item[key]));
+    }
+    if (seen.has(item)) return true;
+    seen.add(item);
+    return false;
+  });
 }

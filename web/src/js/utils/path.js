@@ -50,11 +50,11 @@ function join(...paths) {
 
 // 是否包含在另一个路径
 function isPathWithin(parentP, childP) {
-  const normalizedParent = normalize(parentP);
-  const normalizedChild = normalize(childP);
+  const normalizedParent = normalize(parentP).replace(/\/$/, '');
+  const normalizedChild = normalize(childP).replace(/\/$/, '');
 
   return (
-    normalizedChild.startsWith(normalizedParent) &&
+    normalizedChild.startsWith(normalizedParent + '/') &&
     normalizedChild !== normalizedParent
   );
 }

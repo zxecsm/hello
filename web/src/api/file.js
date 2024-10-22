@@ -65,6 +65,10 @@ export function reqFileCopy(data) {
     timeout: _d.fieldLenght.operationTimeout,
   });
 }
+// 是否存在同名文件
+export function reqFileSameName(data) {
+  return _postAjax('/file/same-name', data);
+}
 // 移动
 export function reqFileMove(data) {
   return _postAjax('/file/move', data, {
@@ -95,7 +99,5 @@ export function reqFileGetShare(data) {
 }
 // 读取目录大小
 export function reqFileReadDirSize(data) {
-  return _getAjax('/file/read-dir-size', data, {
-    timeout: _d.fieldLenght.operationTimeout,
-  });
+  return _getAjax('/file/read-dir-size', data);
 }

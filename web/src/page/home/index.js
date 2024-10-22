@@ -367,8 +367,7 @@ const onceInit = hdOnce(function () {
       myOpen('/');
       return;
     }
-    setCurChatAccount(urlParmes.c);
-    showChatRoom();
+    showChatRoom(urlParmes.c);
   }
   // 打开播放器
   if (urlParmes.p) {
@@ -976,8 +975,7 @@ function handleOnlineMsg(data) {
   const { text, account } = data;
   _msg.online(text, (type) => {
     if (type === 'click') {
-      setCurChatAccount(account);
-      showChatRoom();
+      showChatRoom(account);
     }
   });
 }

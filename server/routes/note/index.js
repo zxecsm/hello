@@ -184,9 +184,11 @@ route.get('/search', async (req, res) => {
 
     const total = await getTableRowCount('note', where, valArr);
 
+    const result = createPagingData(Array(total), pageSize, pageNo);
+
     let list = [];
     if (total > 0) {
-      const offset = (pageNo - 1) * pageSize;
+      const offset = (result.pageNo - 1) * pageSize;
 
       where += ` LIMIT ? OFFSET ?`;
 
@@ -260,7 +262,7 @@ route.get('/search', async (req, res) => {
     }
 
     _success(res, 'ok', {
-      ...createPagingData([...Array(total)], pageSize, pageNo),
+      ...result,
       data: list,
       splitWord,
     });

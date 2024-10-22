@@ -76,13 +76,15 @@ function getSearchSongItemData(id) {
 }
 $searchMusicWrap.splitWord = [];
 // 获取搜索列表
-export const _getSearchSongs = debounce(getSearchSongs, 1000);
 export function getSearchSongs(update) {
   const word = setSearchMusicInputValue();
   if (word !== '') {
     if (word.length > 100) {
       _msg.error('搜索内容过长');
       return;
+    }
+    if (!update) {
+      showMusicSearchList();
     }
     reqPlayerSearch({ word })
       .then((result) => {
@@ -364,11 +366,13 @@ $searchMusicWrap
 $searchMusicWrap.on('click', function (e) {
   if (_getTarget(this, e, '.search_music_wrap', 1)) {
     setSearchMusicInputValue('');
+    hideMusicSearchList();
   }
 });
 _mySlide({
   el: '.search_music_wrap',
   right() {
     setSearchMusicInputValue('');
+    hideMusicSearchList();
   },
 });

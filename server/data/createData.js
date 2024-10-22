@@ -423,6 +423,10 @@ CREATE TABLE IF NOT EXISTS songs (
                           NOT NULL,
     play_count    INTEGER DEFAULT (0) 
                           NOT NULL,
+    title_pinyin  TEXT    DEFAULT ('') 
+                          NOT NULL,
+    artist_pinyin TEXT    DEFAULT ('') 
+                          NOT NULL,
     album         TEXT    NOT NULL
                           DEFAULT (''),
     year          TEXT    NOT NULL
@@ -435,15 +439,17 @@ CREATE TABLE IF NOT EXISTS songs (
                           DEFAULT (''),
     lrc           TEXT    DEFAULT ('') 
                           NOT NULL
-)
+);
 `,
   `
-CREATE INDEX idx_songs_create_at_title_artist_collect_count_play_count ON songs (
+CREATE INDEX idx_songs_create_at_title_artist_collect_count_play_count_title_pinyin_artist_pinyin ON songs (
     create_at,
     title,
     artist,
     collect_count,
-    play_count
+    play_count,
+    title_pinyin,
+    artist_pinyin,
 );
 `,
   `

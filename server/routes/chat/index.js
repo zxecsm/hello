@@ -657,7 +657,9 @@ route.get('/user-list', async (req, res) => {
 
     const total = await getTableRowCount('user', `WHERE state = ?`, [1]);
 
-    const offset = (pageNo - 1) * pageSize;
+    const result = createPagingData(Array(total), pageSize, pageNo);
+
+    const offset = (result.pageNo - 1) * pageSize;
 
     const users = await getChatUserList(account, pageSize, offset);
 
@@ -701,7 +703,7 @@ route.get('/user-list', async (req, res) => {
     });
 
     _success(res, 'ok', {
-      ...createPagingData([...Array(total)], pageSize, pageNo),
+      ...result,
       data: list,
     });
   } catch (error) {

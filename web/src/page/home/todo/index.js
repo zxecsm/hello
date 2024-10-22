@@ -126,7 +126,7 @@ function renderTodoList(total, toTop) {
       <button v-if="hasFinish()" cursor="y" class="clear_btn btn btn_danger">清除已完成</button>
       <button v-if="todoList.length > 0" cursor="y" class="clear_all_btn btn btn_danger">清空</button>
     </div>
-    <p v-if="todoList.length === 0" style="padding: 20px 0;pointer-events: none;text-align: center;">暂无待办事项</p>
+    <p v-if="total === 0" style="padding: 20px 0;pointer-events: none;text-align: center;">暂无待办事项</p>
     <template v-else>
       <ul v-for="{id, content, state, update_at} in todoList" :data-id="id">
         <li cursor="y" class="todo_state iconfont {{state === 1 ? 'icon-xuanzeweixuanze' : 'icon-xuanzeyixuanze'}}"></li>
@@ -140,6 +140,7 @@ function renderTodoList(total, toTop) {
     </template>
     `,
     {
+      total,
       todoList,
       hasFinish() {
         return todoList.some((item) => item.state === 0);

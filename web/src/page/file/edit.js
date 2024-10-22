@@ -66,7 +66,9 @@ export function openFile(text, path) {
   originText = oText = text;
   editor.setValue(text);
   editor.gotoLine(1);
-  // editor.focus();
+  if (text === '') {
+    editor.focus();
+  }
 }
 // 生成标题
 function renderTitle(path) {

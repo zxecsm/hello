@@ -131,49 +131,36 @@ const temChatMsg = _getDataTem('temChatMsg') || {};
 const chatSearchInput = wrapInput(
   $chatHeadBtns.find('.search_msg_inp input')[0],
   {
-    change(val) {
+    update(val) {
       if (val === '') {
-        $chatHeadBtns.find('.search_msg_inp i').css('display', 'none');
+        $chatHeadBtns.find('.search_msg_inp .clean_btn').css('display', 'none');
       } else {
-        $chatHeadBtns.find('.search_msg_inp i').css('display', 'block');
+        $chatHeadBtns
+          .find('.search_msg_inp .clean_btn')
+          .css('display', 'block');
       }
     },
-    focus(target) {
-      $(target).parent().addClass('focus');
+    focus(e) {
+      $(e.target).parent().addClass('focus');
       $chatHeadBtns.find('.search_btn').css('display', 'none');
     },
-    blur(target) {
-      const $inpBox = $(target).parent();
+    blur(e) {
+      const $inpBox = $(e.target).parent();
       $inpBox.removeClass('focus');
       if (chatSearchInput.getValue().trim() === '') {
-        $inpBox.css('display', 'none');
-        $chatHeadBtns.find('.search_btn').css('display', 'block');
+        $inpBox.fadeOut(300, () => {
+          $chatHeadBtns.find('.search_btn').slideDown(_d.speed);
+        });
+        chatSearchInput.setValue('');
+      }
+    },
+    keyup(e) {
+      if (e.key === 'Enter') {
+        openFriend(curChatAccount);
       }
     },
   }
 );
-// 搜索消息
-const hdChatSearchInput = debounce(function () {
-  const val = chatSearchInput.getValue().trim();
-  if (val.length > 100) {
-    _msg.error('搜索内容过长');
-    return;
-  }
-  const acc = curChatAccount;
-  loadingImg($chatListBox.find('.chat_list')[0]);
-  const { start = '', end = '' } = searchDateLimit;
-  reqChatReadMsg({ type: 0, account: acc, word: val, start, end })
-    .then((result) => {
-      if (result.code === 1) {
-        if (chatRoomWrapIsHide()) return;
-        const html = renderMsgList(result.data);
-        $chatListBox.find('.chat_list').html(html);
-        $chatListBox[0].scrollTop = $chatListBox[0].scrollHeight;
-        chatimgLoad();
-      }
-    })
-    .catch(() => {});
-}, 1000);
 let userPageNo = 1,
   userPageSize = 50,
   isForward = false, // 转发状态
@@ -311,9 +298,6 @@ export function closeChatRoom() {
     popWindow.remove('chat');
     chatTitleScroll.close();
     $chatListBox.find('.chat_list').html('');
-    chatSearchInput.setValue('').focus();
-    searchDateLimit = {};
-    changeDateSearchState();
     cImgLoad.unBind();
     cUserListLoad.unBind();
     cUserLogoLoad.unBind();
@@ -387,12 +371,12 @@ $chatHeadBtns
       openFriend('chang');
     }, 2000)
   )
-  .on('input', '.search_msg_inp input', function () {
-    hdChatSearchInput();
-  })
-  .on('click', '.search_msg_inp i', function () {
+  .on('click', '.search_msg_inp .clean_btn', function () {
     chatSearchInput.setValue('').focus();
-    hdChatSearchInput();
+    openFriend(curChatAccount);
+  })
+  .on('click', '.search_msg_inp .inp_search_btn', function () {
+    openFriend(curChatAccount);
   })
   .on(
     'click',
@@ -588,11 +572,7 @@ export function chatMessageNotification(name, data, from, to, logo) {
     },
     (type) => {
       if (type === 'click') {
-        curChatAccount = to === 'chang' ? to : from;
-        chatSearchInput.setValue('').focus();
-        searchDateLimit = {};
-        changeDateSearchState();
-        showChatRoom();
+        showChatRoom(to === 'chang' ? to : from);
       }
     },
     1
@@ -612,18 +592,13 @@ export function chatMessageNotification(name, data, from, to, logo) {
         icon: logo,
       },
       () => {
-        curChatAccount = to === 'chang' ? to : from;
-        chatSearchInput.setValue('').focus();
-        searchDateLimit = {};
-        changeDateSearchState();
-        showChatRoom();
+        showChatRoom(to === 'chang' ? to : from);
       }
     );
   }
 }
 //打开聊天窗
-export function showChatRoom() {
-  const chatAcc = curChatAccount;
+export function showChatRoom(chatAcc = curChatAccount) {
   $showChatRoomBtn.attr('class', 'show_chat_room_btn iconfont icon-liaotian');
   setZidx($chatRoomWrap[0], 'chat', closeChatRoom, chatIsTop);
   //隐藏主页消息提示
@@ -654,7 +629,16 @@ export function showChatRoom() {
     toCenter($chatRoomWrap[0]);
   }
 }
-$showChatRoomBtn.on('click', debounce(showChatRoom, 500, true));
+$showChatRoomBtn.on(
+  'click',
+  debounce(
+    () => {
+      showChatRoom();
+    },
+    500,
+    true
+  )
+);
 // 用户菜单
 function userMenu(e, msgObj, isUserList) {
   const { _from, username, des, logo, email } = msgObj;
@@ -975,7 +959,7 @@ function hdDateSearchChat(e) {
         if (!verifyDate(inp)) return;
         searchDateLimit = inp;
         changeDateSearchState();
-        hdChatSearchInput();
+        openFriend(curChatAccount);
         close();
       },
       1000,
@@ -1006,7 +990,7 @@ $chatRoomWrap
   .on('click', '.date_search .date_close', () => {
     searchDateLimit = {};
     changeDateSearchState();
-    hdChatSearchInput();
+    openFriend(curChatAccount);
   });
 // 消息菜单
 function chatMsgMenu(e, cobj) {
@@ -1179,11 +1163,11 @@ function switchShakeBtn() {
     $shakeBtn.css('display', 'block');
   }
 }
-// 搜索消息框
+// 消息编辑框
 const chatMsgInp = wrapInput(
   $chatFootBox.find('.c_text_msg .c_text_content')[0],
   {
-    change(val) {
+    update(val) {
       if (val.length > 2500) {
         val = val.slice(0, 2500);
       }
@@ -1210,11 +1194,11 @@ const chatMsgInp = wrapInput(
         $chatFootBox.find('.clean').addClass('show');
       }
     },
-    focus(target) {
-      $(target).addClass('focus');
+    focus(e) {
+      $(e.target).addClass('focus');
     },
-    blur(target) {
-      $(target).removeClass('focus');
+    blur(e) {
+      $(e.target).removeClass('focus');
     },
   }
 );
@@ -1593,7 +1577,12 @@ function userListLoading() {
 }
 // 打开消息
 export function openFriend(acc, noHideUserList, cb) {
-  curChatAccount = acc;
+  if (curChatAccount !== acc) {
+    chatSearchInput.setValue('').focus();
+    searchDateLimit = {};
+    changeDateSearchState();
+    curChatAccount = acc;
+  }
   setChatTitle(acc);
   switchShakeBtn();
   if (acc === 'chang') {
@@ -1605,16 +1594,19 @@ export function openFriend(acc, noHideUserList, cb) {
   } else {
     $chatHeadBtns.find('.clear_msg_btn').stop().fadeIn(_d.speed);
   }
-  chatSearchInput.setValue('').focus();
-  searchDateLimit = {};
-  changeDateSearchState();
   chatMsgInp.setValue(temChatMsg[acc] || '');
   if (!noHideUserList) {
     $userListBox.css('display', 'none');
     $userListBox.html('');
   }
+  const val = chatSearchInput.getValue().trim();
+  if (val.length > 100) {
+    _msg.error('搜索内容过长');
+    return;
+  }
   loadingImg($chatListBox.find('.chat_list')[0]);
-  reqChatReadMsg({ account: acc, type: 0 })
+  const { start = '', end = '' } = searchDateLimit;
+  reqChatReadMsg({ account: acc, type: 0, word: val, start, end })
     .then((result) => {
       if (result.code === 1) {
         if (chatRoomWrapIsHide()) return;

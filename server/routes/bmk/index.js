@@ -150,8 +150,6 @@ route.get('/search', async (req, res) => {
       return;
     }
 
-    const offset = (pageNo - 1) * pageSize;
-
     const valArr = [1, 1, acc || account];
     let where = 'WHERE group_state = ? AND state = ? AND account = ?';
 
@@ -187,6 +185,10 @@ route.get('/search', async (req, res) => {
     // 匹配结果数
     const total = await getTableRowCount('bmk_bmk_group_view', where, valArr);
 
+    const result = createPagingData(Array(total), pageSize, pageNo);
+
+    const offset = (result.pageNo - 1) * pageSize;
+
     let data = [];
     if (total > 0) {
       // 分页
@@ -203,7 +205,7 @@ route.get('/search', async (req, res) => {
     }
 
     _success(res, 'ok', {
-      ...createPagingData([...Array(total)], pageSize, pageNo),
+      ...result,
       splitWord,
       data,
     });

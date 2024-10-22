@@ -112,11 +112,9 @@ import {
   updateSongProgress,
 } from './lrc.js';
 import {
-  _getSearchSongs,
   hideMusicSearchList,
   getSearchSongs,
   searchWrapIsHide,
-  showMusicSearchList,
   unBindSearchListLazyImg,
 } from './search.js';
 import {
@@ -322,6 +320,7 @@ export function setCurOpenSongListId(val) {
 function musicBackBtn() {
   if (!searchWrapIsHide()) {
     musicSearchInput.setValue('').focus();
+    hideMusicSearchList();
   } else if (!lrcWrapIsHide()) {
     hideLrcBox();
   } else if (
@@ -367,30 +366,35 @@ function adjustVolume(e) {
 const musicSearchInput = wrapInput(
   $musicHeadWrap.find('.search_music_inp input')[0],
   {
-    focus(target) {
-      $(target).parent().addClass('focus');
+    focus(e) {
+      $(e.target).parent().addClass('focus');
       $musicHeadWrap.find('.search_btn').css('display', 'none');
     },
-    blur(target) {
-      const $inpBox = $(target).parent();
+    blur(e) {
+      const $inpBox = $(e.target).parent();
       $inpBox.removeClass('focus');
       if (musicSearchInput.getValue().trim() === '') {
-        $inpBox.css('display', 'none');
-        $musicHeadWrap.find('.search_btn').css('display', 'block');
+        $inpBox.fadeOut(300, () => {
+          $musicHeadWrap.find('.search_btn').slideDown(_d.speed);
+        });
+        hideMusicSearchList();
       }
     },
-    change(val) {
-      if (val.trim() === '') {
-        hideMusicSearchList();
-      } else {
-        showMusicSearchList();
-      }
+    update(val) {
       if (val === '') {
-        $musicHeadWrap.find('.search_music_inp i').css('display', 'none');
+        $musicHeadWrap
+          .find('.search_music_inp .clean_btn')
+          .css('display', 'none');
       } else {
-        $musicHeadWrap.find('.search_music_inp i').css('display', 'block');
+        $musicHeadWrap
+          .find('.search_music_inp .clean_btn')
+          .css('display', 'block');
       }
-      _getSearchSongs();
+    },
+    keyup(e) {
+      if (e.key === 'Enter') {
+        getSearchSongs();
+      }
     },
   }
 );
@@ -409,8 +413,12 @@ $musicHeadWrap
     musicSearchInput.target.parentNode.style.display = 'flex';
     musicSearchInput.setValue('').focus();
   })
-  .on('click', '.search_music_inp i', function () {
+  .on('click', '.search_music_inp .clean_btn', function () {
     musicSearchInput.setValue('').focus();
+    hideMusicSearchList();
+  })
+  .on('click', '.search_music_inp .inp_search_btn', function () {
+    getSearchSongs();
   })
   .on('click', '.volume', adjustVolume);
 // 获取收藏歌曲
@@ -917,9 +925,9 @@ function renderSongs(gao) {
   if (listId !== 'all' && ind > 0) {
     // 排序
     if (curSongListSort === 'artist') {
-      songListInfo.item = arrSortMinToMax(songListInfo.item, 'artist');
+      songListInfo.item = arrSortMinToMax(songListInfo.item, 'artist_pinyin');
     } else if (curSongListSort === 'title') {
-      songListInfo.item = arrSortMinToMax(songListInfo.item, 'title');
+      songListInfo.item = arrSortMinToMax(songListInfo.item, 'title_pinyin');
     } else if (curSongListSort === 'playCount') {
       songListInfo.item.sort((a, b) => {
         return b.play_count - a.play_count;
@@ -1934,6 +1942,7 @@ $msuicContentBox
   .on('click', '.artist_name_text', function (e) {
     e.stopPropagation();
     musicSearchInput.setValue(this.innerText).focus();
+    getSearchSongs();
   })
   .on('click', '.song_logo_box', function () {
     const $this = $(this).parent();

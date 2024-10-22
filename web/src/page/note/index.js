@@ -380,7 +380,7 @@ const searchInp = wrapInput($pageSearchWrap.find('.inp_box .search_inp')[0], {
   blur() {
     $pageSearchWrap.find('.inp_box').removeClass('focus');
   },
-  change(val) {
+  update(val) {
     if (val) {
       $pageSearchWrap.find('.inp_box .clear').css('display', 'block');
     } else {
@@ -389,6 +389,13 @@ const searchInp = wrapInput($pageSearchWrap.find('.inp_box .search_inp')[0], {
     val = val.trim();
     myOpen(`#${val ? encodeURIComponent(val) : ''}`);
     hdSearchWord();
+  },
+  keydown(e) {
+    const key = e.key;
+    if (key === 'Enter') {
+      nextPrevSearch(1);
+      e.preventDefault();
+    }
   },
 });
 // 搜索高亮
@@ -431,13 +438,6 @@ $pageSearchWrap
   })
   .on('mouseenter', '.search_inp', function () {
     this.focus();
-  })
-  .on('keydown', '.search_inp', function (e) {
-    const key = e.key;
-    if (key === 'Enter') {
-      nextPrevSearch(1);
-      e.preventDefault();
-    }
   });
 function nextPrevSearch(isNext) {
   const _length = $highlightWords.length;

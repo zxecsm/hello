@@ -57,7 +57,7 @@ let sPageSize = 10;
 function renderShareList(total, pageNo, top) {
   const html = _tpl(
     `
-    <p v-if="sList.length === 0">{{_d.emptyList}}</p>
+    <p v-if="total === 0">{{_d.emptyList}}</p>
     <template v-else>
       <li v-for="{id,type,title,pass,exp_time} in sList" :data-id="id" :data-url="getUrlAndLogo(type,id).url">
         <div cursor="y" class="item_type_logo iconfont {{getUrlAndLogo(type,id).logo}}"></div>
@@ -70,6 +70,7 @@ function renderShareList(total, pageNo, top) {
     </template>
     `,
     {
+      total,
       _d,
       sList,
       getUrlAndLogo(type, id) {

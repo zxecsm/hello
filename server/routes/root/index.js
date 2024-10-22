@@ -102,11 +102,13 @@ route.get('/user-list', async (req, res) => {
       return;
     }
 
-    const offset = (pageNo - 1) * pageSize;
-
     const total = await getTableRowCount('user', `WHERE account != ?`, [
       'hello',
     ]);
+
+    const result = createPagingData(Array(total), pageSize, pageNo);
+
+    const offset = (result.pageNo - 1) * pageSize;
 
     let list = await queryData(
       'user',
@@ -127,12 +129,12 @@ route.get('/user-list', async (req, res) => {
     });
 
     _success(res, 'ok', {
+      ...result,
       uploadSaveDay: _d.uploadSaveDay,
       registerState: _d.registerState,
       trashState: _d.trashState,
       randomBgApi: _d.randomBgApi,
       email: _d.email,
-      ...createPagingData([...Array(total)], pageSize, pageNo),
       data: list,
     });
   } catch (error) {

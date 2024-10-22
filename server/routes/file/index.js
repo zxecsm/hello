@@ -20,6 +20,8 @@ import {
   nanoid,
   formatDate,
   errLog,
+  createPagingData,
+  getDuplicates,
 } from '../../utils/utils.js';
 
 import configObj from '../../data/config.js';
@@ -36,12 +38,13 @@ import {
   getRootDir,
   getTrashDir,
   getCurPath,
-  getDirSize,
   compressDir,
   compressFile,
   uncompress,
   readMenu,
   getUniqueFilename,
+  sortFileList,
+  hasSameNameFile,
 } from './file.js';
 
 import { fieldLenght } from '../config.js';
@@ -117,11 +120,33 @@ route.get('/share', async (req, res) => {
 //读取目录
 route.get('/read-dir', async (req, res) => {
   try {
-    const { path, flag = '' } = req.query;
+    let {
+      path,
+      pageNo,
+      pageSize,
+      sortType = 'time',
+      isDesc = 1,
+      subDir = 0,
+      word = '',
+      flag = '',
+    } = req.query;
+    pageNo = parseInt(pageNo);
+    pageSize = parseInt(pageSize);
+    subDir = parseInt(subDir);
+    isDesc = parseInt(isDesc);
 
     if (
       !validaString(path, 1, fieldLenght.url) ||
-      !validaString(flag, 0, fieldLenght.shareFlag)
+      !validaString(flag, 0, fieldLenght.shareFlag) ||
+      isNaN(pageNo) ||
+      isNaN(pageSize) ||
+      pageNo < 1 ||
+      pageSize < 1 ||
+      pageSize > fieldLenght.maxPagesize ||
+      !validationValue(subDir, [1, 0]) ||
+      !validationValue(isDesc, [1, 0]) ||
+      !validaString(word, 0, fieldLenght.searchWord) ||
+      !validationValue(sortType, ['name', 'time', 'size', 'type'])
     ) {
       paramErr(res, req);
       return;
@@ -162,33 +187,73 @@ route.get('/read-dir', async (req, res) => {
     }
 
     if (await _f.exists(p)) {
-      const arr = [];
+      let arr = [];
 
-      (await readMenu(p)).forEach((item) => {
-        const fullPath = _path.normalize(`${item.path}/${item.name}`);
+      // 超时取消
+      let timer = setTimeout(() => {
+        clearTimeout(timer);
+        timer = null;
+        _err(res, `文件和目录过多，${word ? '搜索' : '读取'}失败`)(req, p, 1);
+      }, fieldLenght.operationTimeout);
 
-        // 隐藏回收站目录
-        if (account && item.type === 'dir' && getTrashDir(account) === fullPath)
-          return;
+      async function readDir(p) {
+        if (!timer) return;
 
-        const path = _path.normalize('/' + item.path.slice(rootP.length));
+        const list = await readMenu(p);
 
-        const obj = {
-          ...item,
-          path,
-        };
+        await concurrencyTasks(list, 5, async (item) => {
+          if (!timer) return;
 
-        if (item.type === 'dir') {
-          // 读取缓存目录大小
-          obj.size = fileSize.get(fullPath);
-        }
+          const fullPath = _path.normalize(`${item.path}/${item.name}`);
+          // 隐藏回收站目录
+          if (
+            account &&
+            item.type === 'dir' &&
+            getTrashDir(account) === fullPath
+          )
+            return;
 
-        arr.push(obj);
-      });
+          // 递归获取子目录
+          if (item.type === 'dir' && subDir === 1 && word) {
+            await readDir(fullPath);
+          }
 
-      _success(res, 'ok', arr);
+          // 去除路径前缀
+          const path = _path.normalize('/' + item.path.slice(rootP.length));
+
+          const obj = {
+            ...item,
+            path,
+          };
+
+          if (item.type === 'dir') {
+            // 读取缓存目录大小
+            obj.size = fileSize.get(fullPath);
+          }
+
+          // 关键词过滤
+          if (
+            !word ||
+            (word && obj.name.toLowerCase().includes(word.toLowerCase()))
+          ) {
+            arr.push(obj);
+          }
+        });
+      }
+
+      await readDir(p);
+
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+
+        // 排序
+        arr = sortFileList(arr, sortType, isDesc);
+
+        _success(res, 'ok', createPagingData(arr, pageSize, pageNo));
+      }
     } else {
-      _success(res, 'ok', []);
+      _success(res, 'ok', createPagingData([], pageSize, pageNo));
     }
   } catch (error) {
     _err(res)(req, error);
@@ -197,11 +262,6 @@ route.get('/read-dir', async (req, res) => {
 
 // 读取目录大小
 route.get('/read-dir-size', async (req, res) => {
-  let timer = setTimeout(() => {
-    clearTimeout(timer);
-    timer = null;
-  }, fieldLenght.operationTimeout);
-
   try {
     const { path, flag = '' } = req.query;
 
@@ -247,30 +307,41 @@ route.get('/read-dir-size', async (req, res) => {
 
     let size = 0;
 
+    let timer = setTimeout(() => {
+      clearTimeout(timer);
+      timer = null;
+      _err(res, `文件和目录过多，读取文件夹大小失败`)(req, p, 1);
+    }, fieldLenght.operationTimeout);
+
     if (await _f.exists(p)) {
-      size = await getDirSize(p);
+      async function readDirSize(p) {
+        if (!timer) return;
 
-      fileSize.add(p, size);
+        const list = await readMenu(p);
+
+        await concurrencyTasks(list, 5, async (item) => {
+          if (!timer) return;
+
+          if (item.type === 'dir') {
+            await readDirSize(_path.normalize(`${item.path}/${item.name}`));
+          } else {
+            size += item.size;
+          }
+        });
+      }
+
+      await readDirSize(p);
     }
 
     if (timer) {
       clearTimeout(timer);
       timer = null;
-    } else {
-      // 超时未处理完，完成后直接推送更新
-      req._hello.temid = nanoid();
-      syncUpdateData(req, 'file');
-    }
 
-    _success(res, '读取文件夹大小成功', { size })(req, p, 1);
+      fileSize.add(p, size); // 添加到缓存
+
+      _success(res, '读取文件夹大小成功', { size })(req, p, 1);
+    }
   } catch (error) {
-    if (timer) {
-      clearTimeout(timer);
-      timer = null;
-    } else {
-      errorNotifyMsg(req, `读取文件夹大小失败`);
-    }
-
     _err(res)(req, error);
   }
 });
@@ -521,13 +592,15 @@ route.post('/copy', async (req, res) => {
   }, fieldLenght.operationTimeout);
 
   try {
-    const { path, data } = req.body;
+    const { path, data, rename } = req.body;
 
     if (
       !validaString(path, 1, fieldLenght.url) ||
       !_type.isArray(data) ||
       data.length === 0 ||
       data.length > fieldLenght.maxPagesize ||
+      getDuplicates(data, ['name']).length > 0 || // 不能有同名文件或文件夹
+      !validationValue(rename, [1, 0]) ||
       !data.every(
         (item) =>
           _type.isObject(item) &&
@@ -562,9 +635,11 @@ route.post('/copy', async (req, res) => {
       if (_path.isPathWithin(f, to) || !name) return;
 
       // 已存在添加后缀
-      if ((await _f.exists(to)) || to === trashDir) {
+      if (((await _f.exists(to)) && rename === 1) || to === trashDir) {
         to = await getUniqueFilename(to);
       }
+
+      if (f === to) return;
 
       await _f.cp(f, to);
 
@@ -593,13 +668,8 @@ route.post('/copy', async (req, res) => {
   }
 });
 
-// 移动
-route.post('/move', async (req, res) => {
-  let timer = setTimeout(() => {
-    clearTimeout(timer);
-    timer = null;
-  }, fieldLenght.operationTimeout);
-
+// 是否存在同名文件
+route.post('/same-name', async (req, res) => {
   try {
     const { path, data } = req.body;
 
@@ -608,6 +678,50 @@ route.post('/move', async (req, res) => {
       !_type.isArray(data) ||
       data.length === 0 ||
       data.length > fieldLenght.maxPagesize ||
+      !data.every(
+        (item) =>
+          _type.isObject(item) &&
+          validaString(item.name, 1, fieldLenght.filename) &&
+          validaString(item.path, 1, fieldLenght.url) &&
+          validationValue(item.type, ['dir', 'file'])
+      )
+    ) {
+      paramErr(res, req);
+      return;
+    }
+
+    const { account } = req._hello.userinfo;
+
+    const p = getCurPath(account, path);
+
+    if (!(await _f.exists(p))) {
+      _err(res, '目标文件夹不存在')(req, p, 1);
+      return;
+    }
+
+    _success(res, 'ok', { hasSameName: await hasSameNameFile(p, data) });
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 移动
+route.post('/move', async (req, res) => {
+  let timer = setTimeout(() => {
+    clearTimeout(timer);
+    timer = null;
+  }, fieldLenght.operationTimeout);
+
+  try {
+    const { path, data, rename } = req.body;
+
+    if (
+      !validaString(path, 1, fieldLenght.url) ||
+      !_type.isArray(data) ||
+      data.length === 0 ||
+      data.length > fieldLenght.maxPagesize ||
+      getDuplicates(data, ['name']).length > 0 ||
+      !validationValue(rename, [1, 0]) ||
       !data.every(
         (item) =>
           _type.isObject(item) &&
@@ -641,7 +755,7 @@ route.post('/move', async (req, res) => {
 
       if (f === t || _path.isPathWithin(f, t) || !name) return;
 
-      if ((await _f.exists(t)) || t === trashDir) {
+      if (((await _f.exists(t)) && rename === 1) || t === trashDir) {
         t = await getUniqueFilename(t);
       }
 

@@ -69,6 +69,7 @@ import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl, deepClone } from '../../../js/utils/template.js';
 import notifyMusicControlPanel from './notifyMusicControlPanel.js';
 import _path from '../../../js/utils/path.js';
+import { getSearchSongs } from './search.js';
 const $myAudio = $(new Audio()),
   $musicLrcWrap = $('.music_player_box .music_lrc_wrap'),
   $lrcBg = $musicLrcWrap.find('.lrc_bg'),
@@ -536,6 +537,7 @@ $lrcHead
   .on('click', '.artist_name_text', function (e) {
     e.stopPropagation();
     setSearchMusicInputValue(playingSongInfo.artist);
+    getSearchSongs();
   });
 // 处理歌曲数据
 export function hdSongInfo(obj) {

@@ -464,6 +464,19 @@ export function unique(arr, keys) {
   });
 }
 
+// 获取数组相同项
+export function getDuplicates(arr, keys) {
+  const seen = new Set();
+  return arr.filter((item) => {
+    if (keys) {
+      keys.forEach((key) => (item = item[key]));
+    }
+    if (seen.has(item)) return true;
+    seen.add(item);
+    return false;
+  });
+}
+
 // 分词
 export function getSplitWord(str) {
   let words = [];
@@ -706,10 +719,16 @@ export function isFilename(name) {
   return !/[?\\\\/<>*|]/g.test(name);
 }
 
+// 规范化pageNo
+export function normalizePageNo(total, pageSize, pageNo) {
+  const totalPage = Math.ceil(total / pageSize) || 1;
+  return pageNo > totalPage ? totalPage : pageNo <= 0 ? 1 : pageNo;
+}
+
 // 处理分页
 export function createPagingData(list, pageSize, pageNo) {
   const totalPage = Math.ceil(list.length / pageSize) || 1;
-  pageNo > totalPage ? (pageNo = totalPage) : pageNo <= 0 ? (pageNo = 1) : null;
+  pageNo = normalizePageNo(list.length, pageSize, pageNo);
   const data = list.slice(pageSize * (pageNo - 1), pageSize * pageNo);
   return {
     total: list.length,
@@ -819,4 +838,28 @@ export async function batchTask(callback, limit = 1000) {
   }
 
   await processBatch();
+}
+
+// 混合排序
+export function mixedSort(a, b) {
+  if (/^\d+/.test(a) && /^\d+/.test(b)) {
+    return /^\d+/.exec(a) - /^\d+/.exec(b);
+  } else if (isChinese(a) && isChinese(b)) {
+    return a.localeCompare(b, 'zh-CN');
+  } else {
+    return a.localeCompare(b, 'en');
+  }
+}
+
+// 是否汉字
+export function isChinese(str) {
+  if (
+    /^[\u4E00-\u9FCC\u3400-\u4DB5\uFA0E\uFA0F\uFA11\uFA13\uFA14\uFA1F\uFA21\uFA23\uFA24\uFA27-\uFA29]|[\ud840-\ud868][\udc00-\udfff]|\ud869[\udc00-\uded6\udf00-\udfff]|[\ud86a-\ud86c][\udc00-\udfff]|\ud86d[\udc00-\udf34\udf40-\udfff]|\ud86e[\udc00-\udc1d]+/.test(
+      str
+    )
+  ) {
+    return true;
+  } else {
+    return false;
+  }
 }

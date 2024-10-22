@@ -151,9 +151,11 @@ route.get('/list', async (req, res) => {
 
     const total = await getTableRowCount('pic');
 
+    const result = createPagingData(Array(total), pageSize, pageNo);
+
     let list = [];
     if (total > 0) {
-      const offset = (pageNo - 1) * pageSize;
+      const offset = (result.pageNo - 1) * pageSize;
 
       list = await queryData(
         'pic',
@@ -164,7 +166,7 @@ route.get('/list', async (req, res) => {
     }
 
     _success(res, 'ok', {
-      ...createPagingData([...Array(total)], pageSize, pageNo),
+      ...result,
       data: list,
     });
   } catch (error) {

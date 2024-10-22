@@ -19,10 +19,8 @@ import {
   fileLogoType,
   formatDate,
   getFilePath,
-  getPaging,
   getScreenSize,
   getTextImg,
-  getWordCount,
   hdOnce,
   imgPreview,
   imgjz,
@@ -30,7 +28,6 @@ import {
   isMobile,
   isVideoFile,
   longPress,
-  mixedSort,
   myOpen,
   pageErr,
   queryURLParams,
@@ -67,6 +64,8 @@ const $fileBox = $('.file_box');
 let pageSize = _getData('filesPageSize');
 let curFileDirPath = _getDataTem('curFileDirPath') || '/';
 let fileShowGrid = _getData('fileShowGrid');
+let fileSort = _getData('fileSort'); // 排序
+let subDir = _getData('searchFileSubDir'); // 搜索子目录
 let urlparmes = queryURLParams(myOpen()),
   HASH = urlparmes.HASH;
 if (!HASH) {
@@ -75,7 +74,7 @@ if (!HASH) {
 let passCode = _getDataTem('passCode', HASH) || '';
 let shareObj = {};
 let uObj = {};
-setReadOnly(true);
+setReadOnly(true); // 只读
 const verifyCode = hdOnce(() => {
   enterPassCode(({ close, val }) => {
     passCode = val;
@@ -87,7 +86,7 @@ function getShareData(close) {
   reqFileGetShare({ id: HASH, pass: passCode })
     .then((res) => {
       if (res.code === 1) {
-        _setDataTem('passCode', passCode, HASH);
+        _setDataTem('passCode', passCode, HASH); // 缓存
         close && close();
         let { username, logo, account, data, exp_time, title, email } =
           res.data;
@@ -192,33 +191,56 @@ curmb.bind($curmbBox.find('.container')[0], (path, param) => {
   if (param.pageNo) {
     pageNo = param.pageNo;
   }
-  curFileDirPath = path;
+  if (path !== curFileDirPath) {
+    curFileDirPath = path;
+    wInput.setValue('');
+  }
   openDir(curFileDirPath, param.top);
 });
-$contentWrap.list = [];
-$contentWrap.originList = [];
-let fileSort = _getData('fileSort');
+// 搜索子目录状态
+function changeSubDirState() {
+  const $check = $search.find('.check_box i');
+  if (subDir) {
+    $check.attr('class', 'iconfont icon-xuanzeyixuanze');
+  } else {
+    $check.attr('class', 'iconfont icon-xuanzeweixuanze');
+  }
+}
+changeSubDirState();
 // 搜索
 const wInput = wrapInput($search.find('.inp_box input')[0], {
-  change(val) {
+  update(val) {
     if (val === '') {
-      $search.find('.inp_box i').css('display', 'none');
+      $search.find('.inp_box .clean_btn').css('display', 'none');
     } else {
-      $search.find('.inp_box i').css('display', 'block');
+      $search.find('.inp_box .clean_btn').css('display', 'block');
     }
-    pageNo = 1;
-    renderList(0);
   },
-  focus(target) {
-    $(target).parent().addClass('focus');
+  focus(e) {
+    $(e.target).parent().addClass('focus');
   },
-  blur(target) {
-    $(target).parent().removeClass('focus');
+  blur(e) {
+    $(e.target).parent().removeClass('focus');
+  },
+  keyup(e) {
+    if (e.key === 'Enter') {
+      curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
+    }
   },
 });
-$search.on('click', '.inp_box i', function () {
-  wInput.setValue('').focus();
-});
+$search
+  .on('click', '.inp_box .clean_btn', function () {
+    wInput.setValue('').focus();
+    curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
+  })
+  .on('click', '.inp_box .search_btn', function () {
+    curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
+  })
+  .on('click', '.check_box', () => {
+    subDir = !subDir;
+    changeSubDirState();
+    _setData('searchFileSubDir', subDir);
+  });
 function openSearch() {
   $search.stop().slideDown(_d.speed, () => {
     wInput.focus();
@@ -227,17 +249,15 @@ function openSearch() {
 function closeSearch() {
   if (wInput.getValue()) {
     wInput.setValue('');
+    updateCurPage();
   }
   $search.stop().slideUp(_d.speed);
 }
 // 生成列表
 async function renderList(top) {
-  $contentWrap.list = await hdSort($contentWrap.originList);
-  const paging = getPaging($contentWrap.list, pageNo, pageSize);
-  pageNo = paging.pageNo;
   const html = _tpl(
     `
-    <template v-if="paging.list.length > 0">
+    <template v-if="total > 0">
       <ul v-for="{type,name,size,time,id} in paging.list" class="file_item" :data-id="id">
         <li class="check_state" check="n"></li>
         <li cursor="y" class="logo iconfont {{getLogo(name,type) || 'is_img'}}"></li>
@@ -250,8 +270,9 @@ async function renderList(top) {
     <p v-else>{{_d.emptyList}}</p>
     `,
     {
+      total: fileListData.total,
       _d,
-      paging,
+      paging: { list: fileListData.data },
       formatDate,
       computeSize,
       getLogo(name, type) {
@@ -279,12 +300,13 @@ async function renderList(top) {
       },
     }
   );
-  if (paging.list.length > 0) {
+  if (fileListData.total > 0) {
+    pageNo = fileListData.pageNo;
     $pagination.css('display', 'block');
     pgnt.render({
       pageNo,
       pageSize,
-      total: $contentWrap.list.length,
+      total: fileListData.total,
       small: getScreenSize().w <= _d.screen,
     });
   } else {
@@ -323,14 +345,12 @@ const lazyImg = new LazyLoad();
 // 分页
 const pgnt = pagination($pagination.find('.container')[0], {
   change(val) {
-    pageNo = val;
-    renderList(0);
+    curmb.toGo(curFileDirPath, { pageNo: val, top: 0 });
     _msg.botMsg(`第 ${pageNo} 页`);
   },
   changeSize(val) {
     pageSize = val;
-    pageNo = 1;
-    renderList(0);
+    curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
     _msg.botMsg(`第 ${pageNo} 页`);
     _setData('filesPageSize', pageSize);
   },
@@ -338,46 +358,6 @@ const pgnt = pagination($pagination.find('.container')[0], {
     pageScrollTop(0);
   },
 });
-// 排序
-async function hdSort(list) {
-  list = [...list];
-  const { type, isDes } = fileSort;
-  const val = wInput.getValue().trim();
-  if (val) {
-    list = list.filter((item) => {
-      return getWordCount([val], item.name) > 0;
-    });
-  }
-  list.sort((a, b) => {
-    if (type === 'time' || type === 'type') {
-      if (isDes || type === 'type') {
-        return b.time - a.time;
-      }
-      return a.time - b.time;
-    } else if (type === 'name') {
-      if (isDes) {
-        return mixedSort(b.name, a.name);
-      }
-      return mixedSort(a.name, b.name);
-    } else if (type === 'size') {
-      if (isDes) {
-        return b.size - a.size;
-      }
-      return a.size - b.size;
-    }
-  });
-  if (type === 'type') {
-    const files = list.filter((item) => item.type === 'file');
-    const dirs = list.filter((item) => item.type === 'dir');
-    if (isDes) {
-      list = [...files, ...dirs];
-    } else {
-      list = [...dirs, ...files];
-    }
-  }
-  return list;
-}
-
 function updateCurPage() {
   curmb.toGo(curFileDirPath);
 }
@@ -387,29 +367,33 @@ bus.on('getPageInfo', updatePageInfo).on('refreshList', updateCurPage);
 function updatePageInfo() {
   bus.emit('setPageInfo', { pageNo, top: pageScrollTop() });
 }
+let fileListData = { data: [] };
 // 打开目录
 async function openDir(path, top) {
   try {
     _setDataTem('curFileDirPath', path);
     const res = await reqFileReadDir({
       path,
+      pageNo,
+      pageSize,
+      sortType: fileSort.type,
+      isDesc: fileSort.isDes ? 1 : 0,
+      subDir: subDir ? 1 : 0,
+      word: wInput.getValue().trim(),
       flag: `${HASH}/${passCode}`,
     });
     if (res.code === 1) {
-      $contentWrap.originList = res.data.map((item, idx) => ({
+      fileListData = res.data;
+      fileListData.data = fileListData.data.map((item, idx) => ({
         id: idx + 1 + '',
         ...item,
       }));
-      if (top === 0 && wInput.getValue()) {
-        wInput.setValue('');
-      } else {
-        renderList(top);
-      }
+      renderList(top);
     }
   } catch {}
 }
 function getFileItem(id) {
-  return $contentWrap.list.find((item) => item.id === id + '');
+  return fileListData.data.find((item) => item.id === id + '');
 }
 async function readFileAndDir(obj) {
   const { type, name, path } = obj;
@@ -527,14 +511,12 @@ $contentWrap
     reqFileReadDirSize({ path: p, flag: `${HASH}/${passCode}` })
       .then((res) => {
         if (res.code === 1) {
-          this.innerText = computeSize(res.data.size);
+          if (this) {
+            this.innerText = computeSize(res.data.size);
+          }
         }
       })
-      .catch((error) => {
-        if (error.statusText === 'timeout') {
-          _msg.success(`文件夹文件较多后台计算中`);
-        }
-      });
+      .catch(() => {});
   })
   .on('click', '.name', function (e) {
     const id = this.parentNode.dataset.id;
@@ -675,8 +657,7 @@ function hdFileSort(e) {
           fileSort.isDes = param.value;
         }
         close();
-        pageNo = 1;
-        renderList(0);
+        curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
         _setData('fileSort', fileSort);
       }
     },

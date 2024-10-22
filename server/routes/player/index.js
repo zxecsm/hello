@@ -38,6 +38,7 @@ import {
   getSplitWord,
   tplReplace,
   myShuffle,
+  normalizePageNo,
 } from '../../utils/utils.js';
 
 import { _d } from '../../data/data.js';
@@ -72,7 +73,7 @@ import {
 
 import { fieldLenght } from '../config.js';
 import _path from '../../utils/path.js';
-
+import pinyin from '../../utils/pinyin.js';
 const maxSonglistCount = 2000;
 
 const route = express.Router();
@@ -466,6 +467,8 @@ route.get('/list', async (req, res) => {
           // 如果是所有歌曲歌单，则在服务端分页处理
           const total = await getTableRowCount('songs');
 
+          pageNo = normalizePageNo(total, pageSize, pageNo);
+
           let list = [];
 
           if (total > 0) {
@@ -486,13 +489,13 @@ route.get('/list', async (req, res) => {
 
             // 排序
             if (sort === 'artist') {
-              const order = 'ORDER BY artist ASC';
+              const order = 'ORDER BY artist_pinyin ASC';
 
               offsetWhere = tplReplace(template, { field: 'artist', order });
 
               where += order;
             } else if (sort === 'title') {
-              const order = `ORDER BY title ASC`;
+              const order = `ORDER BY title_pinyin ASC`;
 
               offsetWhere = tplReplace(template, { field: 'title', order });
 
@@ -540,7 +543,7 @@ route.get('/list', async (req, res) => {
             list = await queryData('songs', '*', where, [pageSize, offset]);
           }
 
-          const obj = createPagingData([...Array(total)], pageSize, pageNo);
+          const obj = createPagingData(Array(total), pageSize, pageNo);
 
           item.item = list;
           item.totalPage = obj.totalPage;
@@ -965,7 +968,9 @@ route.post('/edit-song', async (req, res) => {
       'songs',
       {
         title,
+        title_pinyin: pinyin(title),
         artist,
+        artist_pinyin: pinyin(artist),
         album,
         year,
         duration,
@@ -1535,7 +1540,9 @@ route.post('/up', async (req, res) => {
         {
           id: songId,
           artist,
+          artist_pinyin: pinyin(artist),
           title,
+          title_pinyin: pinyin(title),
           duration,
           album,
           year,

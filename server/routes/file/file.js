@@ -4,7 +4,7 @@ import { _d } from '../../data/data.js';
 
 import _f from '../../utils/f.js';
 
-import { concurrencyTasks, writelog } from '../../utils/utils.js';
+import { concurrencyTasks, mixedSort, writelog } from '../../utils/utils.js';
 
 import _path from '../../utils/path.js';
 
@@ -82,17 +82,6 @@ export async function delEmptyFolder(path) {
   }
 }
 
-// 读取目录大小
-export async function getDirSize(path) {
-  let size = 0;
-
-  (await getAllFile(path)).forEach((item) => {
-    size += item.size;
-  });
-
-  return size;
-}
-
 // 获取所有文件
 export async function getAllFile(path) {
   try {
@@ -132,14 +121,48 @@ export async function getAllFile(path) {
   }
 }
 
+// 文件列表排序
+export function sortFileList(list, type, isDesc) {
+  list.sort((a, b) => {
+    if (type === 'time' || type === 'type') {
+      if (isDesc || type === 'type') {
+        return b.time - a.time;
+      }
+      return a.time - b.time;
+    } else if (type === 'name') {
+      if (isDesc) {
+        return mixedSort(b.name, a.name);
+      }
+      return mixedSort(a.name, b.name);
+    } else if (type === 'size') {
+      if (isDesc) {
+        return b.size - a.size;
+      }
+      return a.size - b.size;
+    }
+  });
+  if (type === 'type') {
+    const files = list.filter((item) => item.type === 'file');
+    const dirs = list.filter((item) => item.type === 'dir');
+    if (isDesc) {
+      list = [...files, ...dirs];
+    } else {
+      list = [...dirs, ...files];
+    }
+  }
+  return list;
+}
+
 // 压缩文件
 export function compressFile(p1, p2) {
   return compressing.zip.compressFile(p1, p2);
 }
+
 // 压缩目录
 export function compressDir(p1, p2) {
   return compressing.zip.compressDir(p1, p2);
 }
+
 // 解压
 export function uncompress(p1, p2) {
   return compressing.zip.uncompress(p1, p2);
@@ -251,4 +274,10 @@ export function getUniqueFilename(path) {
       _path.normalize(`${dir}/${_path.randomFilenameSuffix(filename)}`)
     );
   });
+}
+
+// 是否有同名文件
+export async function hasSameNameFile(targetPath, list) {
+  const targetList = await readMenu(targetPath);
+  return targetList.some(({ name }) => list.some((item) => item.name === name));
 }

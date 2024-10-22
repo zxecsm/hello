@@ -83,20 +83,24 @@ if (urlParams.acc && urlParams.acc !== _getData('account')) {
 
 // 搜索书签
 const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
-  change(val) {
+  update(val) {
     if (val === '') {
-      $headWrap.find('.inp_box i').css('display', 'none');
+      $headWrap.find('.inp_box .clean_btn').css('display', 'none');
     } else {
-      $headWrap.find('.inp_box i').css('display', 'block');
+      $headWrap.find('.inp_box .clean_btn').css('display', 'block');
     }
-    bmksPageNo = 1;
-    _renderList(true);
   },
-  focus(target) {
-    $(target).parent().addClass('focus');
+  focus(e) {
+    $(e.target).parent().addClass('focus');
   },
-  blur(target) {
-    $(target).parent().removeClass('focus');
+  blur(e) {
+    $(e.target).parent().removeClass('focus');
+  },
+  keyup(e) {
+    if (e.key === 'Enter') {
+      bmksPageNo = 1;
+      renderList(true);
+    }
   },
 });
 
@@ -201,7 +205,6 @@ function listLoading() {
 let bmksPageNo = 1;
 let bmPageSize = _getData('bmPageSize');
 
-const _renderList = debounce(renderList, 1000);
 $contentWrap.list = [];
 $contentWrap.groupList = [];
 
@@ -262,7 +265,7 @@ function renderList(y) {
         bmksPageNo = pageNo;
         const html = _tpl(
           `
-          <p v-if="data.length === 0" style='text-align: center;'>{{_d.emptyList}}</p>
+          <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
             <ul v-for="{id,link,title} in data" class="item_box" :data-id="id">
               <div cursor="y" check="n" class="check_state"></div>
@@ -274,6 +277,7 @@ function renderList(y) {
           </template>
           `,
           {
+            total,
             data,
             hdTitleHighlight,
             splitWord,
@@ -608,12 +612,18 @@ function hdGoHome() {
 // 清空搜索框
 function hdClearSearch() {
   wInput.setValue('').focus();
+  bmksPageNo = 1;
+  renderList(true);
 }
 
 $headWrap
   .on('click', '.h_check_item_btn', checkedItemBtn)
   .on('click', '.h_go_home', hdGoHome)
-  .on('click', '.inp_box i', hdClearSearch);
+  .on('click', '.inp_box .clean_btn', hdClearSearch)
+  .on('click', '.inp_box .search_btn', () => {
+    bmksPageNo = 1;
+    renderList(true);
+  });
 
 // 获取选中项
 function getSelectItem() {

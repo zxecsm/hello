@@ -59,20 +59,24 @@ realtime.init().add((res) => {
 });
 // 搜索
 const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
-  change(val) {
+  update(val) {
     if (val === '') {
-      $headWrap.find('.inp_box i').css('display', 'none');
+      $headWrap.find('.inp_box .clean_btn').css('display', 'none');
     } else {
-      $headWrap.find('.inp_box i').css('display', 'block');
+      $headWrap.find('.inp_box .clean_btn').css('display', 'block');
     }
-    $contentWrap.pagenum = 1;
-    _renderList(true);
   },
-  focus(target) {
-    $(target).parent().addClass('focus');
+  focus(e) {
+    $(e.target).parent().addClass('focus');
   },
-  blur(target) {
-    $(target).parent().removeClass('focus');
+  blur(e) {
+    $(e.target).parent().removeClass('focus');
+  },
+  keyup(e) {
+    if (e.key === 'Enter') {
+      $contentWrap.pagenum = 1;
+      renderList(true);
+    }
   },
 });
 // 加载
@@ -90,7 +94,6 @@ $contentWrap.pagenum = 1;
 function getItemInfo(id) {
   return hList.find((item) => item.id === id);
 }
-const _renderList = debounce(renderList, 1000);
 function renderList(y) {
   const pagenum = $contentWrap.pagenum,
     word = wInput.getValue().trim();
@@ -114,7 +117,7 @@ function renderList(y) {
         $contentWrap.pagenum = pageNo;
         const html = _tpl(
           `
-          <p v-if="list.length === 0" style='text-align: center;'>{{_d.emptyList}}</p>
+          <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
             <ul v-for="{id, content} in list" class="item_box" :data-id="id">
               <div cursor="y" check="n" class="check_state"></div>
@@ -126,6 +129,7 @@ function renderList(y) {
           </template>
           `,
           {
+            total,
             list: data,
             _d,
             hdTitleHighlight,
@@ -334,8 +338,14 @@ $headWrap
     myOpen('/');
   })
   .on('click', '.h_add_item_btn', addHistory)
-  .on('click', '.inp_box i', function () {
+  .on('click', '.inp_box .clean_btn', function () {
     wInput.setValue('').focus();
+    $contentWrap.pagenum = 1;
+    renderList(true);
+  })
+  .on('click', '.inp_box .search_btn', function () {
+    $contentWrap.pagenum = 1;
+    renderList(true);
   });
 
 $footer
