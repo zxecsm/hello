@@ -61,7 +61,7 @@ export function reqUserGetRealTime(data) {
 }
 // 发送指令
 export function reqUserRealTime(data) {
-  return _postAjax('/user/real-time', data, { load: false });
+  return _postAjax('/user/real-time', data, { load: false, parallel: true });
 }
 // 免密登录
 export function reqUserCodeLogin(data) {

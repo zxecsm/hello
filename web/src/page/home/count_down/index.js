@@ -134,14 +134,14 @@ function renderCountList(total, toTop) {
     </div>
     <p v-if="total <= 0" style="padding: 20px 0;pointer-events: none;text-align: center;">暂无倒计时项</p>
     <template v-else>
-      <div v-for="{id, title, total, past, remain, link, state, top} in countList" :data-id="id" class="item_box {{state === 0 ? 'close' : ''}}">
+      <div v-for="{id, title, total:tt, past, remain, link, state, top} in countList" :data-id="id" class="item_box {{state === 0 ? 'close' : ''}}">
         <div class="title">
           <span :cursor="link?'y':''" class="iconfont {{link?'icon-link1':'icon-shalou'}} icon"></span>
           <span class="text">{{title}}</span>
           <span v-if="top != 0" class="top_btn iconfont icon-zhiding"></span>
           <span cursor="y" class="set_btn iconfont icon-icon"></span>
         </div>
-        <div class="info">{{readableTime(total)}} - {{readableTime(past)}} = <span style="padding-left:4px;" :style="remain<0?'color:var(--btn-danger-color);':''">{{readableTime(remain)}}</span></div>
+        <div class="info">{{readableTime(tt)}} - {{readableTime(past)}} = <span style="padding-left:4px;" :style="remain<0?'color:var(--btn-danger-color);':''">{{readableTime(remain)}}</span></div>
         <div class="pro">
           <div class="bar">
             <div class="num"></div>

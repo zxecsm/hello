@@ -4,7 +4,6 @@ import loadingImg from '../../../images/img/loading.svg';
 class LoadingBar {
   constructor(options) {
     this.num = 0;
-    this.timer = null;
     this.init(options);
   }
   init(options) {
@@ -35,17 +34,13 @@ class LoadingBar {
     document.body.appendChild(this.el);
   }
   start() {
-    if (this.timer) {
-      clearTimeout(this.timer);
-      this.timer = null;
-    }
     this.num++;
     if (this.num === 1) {
       this.el.style.transition = '0s';
       this.el.style.width = '0';
       this.el.clientHeight;
-      this.el.style.transition = '20s ease-in-out';
-      this.el.style.width = '90%';
+      this.el.style.transition = '10s ease-in-out';
+      this.el.style.width = '99%';
       this.options.setStart && this.options.setStart();
     }
   }

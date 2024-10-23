@@ -1,3 +1,4 @@
+import _d from '../js/common/config';
 import { _getAjax, _postAjax, _upFile } from '../js/utils/utils';
 
 // 获取通知
@@ -22,7 +23,7 @@ export function reqChatSetDes(data) {
 }
 // 获取备注
 export function reqChatGetDes(data) {
-  return _getAjax('/chat/getdes', data);
+  return _getAjax('/chat/getdes', data, { load: false, stopErrorMsg: true });
 }
 // 文件过期
 export function reqChatExpired(data) {
@@ -42,7 +43,10 @@ export function reqChatUpVoice(data, file, cb) {
 }
 // 合并文件
 export function reqChatMerge(data) {
-  return _postAjax('/chat/merge', data, { timeout: 5000, parallel: true });
+  return _postAjax('/chat/merge', data, {
+    timeout: _d.fieldLenght.operationTimeout,
+    parallel: true,
+  });
 }
 // 断点
 export function reqChatBreakpoint(data) {
