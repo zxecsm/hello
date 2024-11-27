@@ -147,7 +147,7 @@ route.post('/clear-cache', async (req, res) => {
     let acc = '';
 
     if (token) {
-      const share = await validShareState(token);
+      const share = await validShareState(token, 'file');
 
       if (share.state === 0) {
         _err(res, share.text)(req);
@@ -168,6 +168,18 @@ route.post('/clear-cache', async (req, res) => {
 });
 
 //读取目录
+function fileListSortAndCacheSize(list, rootP, sortType, isDesc) {
+  list.forEach((item) => {
+    const fullPath = _path.normalize(`${rootP}/${item.path}/${item.name}`);
+
+    if (item.type === 'dir') {
+      // 读取缓存目录大小
+      item.size = fileSize.get(fullPath);
+    }
+  });
+
+  return sortFileList(list, sortType, isDesc);
+}
 route.get('/read-dir', async (req, res) => {
   try {
     let {
@@ -214,9 +226,10 @@ route.get('/read-dir', async (req, res) => {
 
     let p = '';
     let rootP = '';
+    const acc = token ? temid : account;
 
     if (token) {
-      const share = await validShareState(token);
+      const share = await validShareState(token, 'file');
 
       if (share.state === 0) {
         _err(res, share.text)(req);
@@ -236,90 +249,121 @@ route.get('/read-dir', async (req, res) => {
       rootP = getRootDir(account);
     }
 
-    if (await _f.exists(p)) {
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const hdType = word ? '搜索文件' : '读取文件列表';
+    const taskKey = taskState.add(acc, `${hdType}...0`, controller);
+
+    const cacheList = fileList.get(acc, `${p}_${word}`);
+
+    // 有缓存则返回缓存
+    if (cacheList) {
+      taskState.delete(taskKey);
+
+      _success(
+        res,
+        'ok',
+        createPagingData(
+          fileListSortAndCacheSize(cacheList, rootP, sortType, isDesc),
+          pageSize,
+          pageNo
+        )
+      );
+
+      return;
+    }
+
+    // 3秒获取不到则当任务处理
+    let timer = setTimeout(() => {
+      clearTimeout(timer);
+      timer = null;
+
+      _success(res, 'ok', { key: taskKey });
+    }, 3000);
+
+    try {
       let arr = [];
+      let count = 0;
 
-      // 超时取消
-      let timer = setTimeout(() => {
-        clearTimeout(timer);
-        timer = null;
-        _err(res, `文件和目录过多，${word ? '搜索' : '读取'}失败`)(req, p, 1);
-      }, fieldLenght.operationTimeout);
+      if (await _f.exists(p)) {
+        const trashDir = getTrashDir(account);
 
-      async function readDir(p) {
-        if (!timer) return;
+        async function readDir(p) {
+          if (signal.aborted) return;
 
-        const list = await readMenu(p);
+          const list = await readMenu(p);
 
-        await concurrencyTasks(list, 5, async (item) => {
-          if (!timer) return;
+          for (const item of list) {
+            if (signal.aborted) return;
 
-          const fullPath = _path.normalize(`${item.path}/${item.name}`);
-          // 隐藏回收站目录
-          if (
-            account &&
-            item.type === 'dir' &&
-            getTrashDir(account) === fullPath
-          )
-            return;
+            count++;
+            taskState.update(taskKey, `${hdType}...${count}`);
 
-          // 递归获取子目录
-          if (item.type === 'dir' && subDir === 1 && word) {
-            await readDir(fullPath);
+            const fullPath = _path.normalize(`${item.path}/${item.name}`);
+            // 隐藏回收站目录
+            if (account && item.type === 'dir' && trashDir === fullPath)
+              continue;
+
+            // 递归获取子目录
+            if (item.type === 'dir' && subDir === 1 && word) {
+              await readDir(fullPath);
+            }
+
+            // 去除路径前缀
+            const path = _path.normalize('/' + item.path.slice(rootP.length));
+
+            const obj = {
+              ...item,
+              path,
+            };
+
+            // 关键词过滤
+            if (
+              !word ||
+              (word && obj.name.toLowerCase().includes(word.toLowerCase()))
+            ) {
+              arr.push(obj);
+            }
           }
+        }
 
-          // 去除路径前缀
-          const path = _path.normalize('/' + item.path.slice(rootP.length));
-
-          const obj = {
-            ...item,
-            path,
-          };
-
-          // 关键词过滤
-          if (
-            !word ||
-            (word && obj.name.toLowerCase().includes(word.toLowerCase()))
-          ) {
-            arr.push(obj);
-          }
-        });
-      }
-
-      const acc = token ? temid : account;
-
-      const cacheList = fileList.get(acc, `${p}_${word}`);
-
-      if (cacheList) {
-        arr = cacheList;
-      } else {
         await readDir(p);
-        // 缓存结果
-        fileList.add(acc, `${p}_${word}`, arr);
       }
 
+      // 缓存结果
+      fileList.add(acc, `${p}_${word}`, arr);
+
+      taskState.delete(taskKey);
+
+      // 未超过3秒，关闭定时器直接返回结果
       if (timer) {
         clearTimeout(timer);
         timer = null;
 
-        arr.forEach((item) => {
-          const fullPath = _path.normalize(
-            `${rootP}/${item.path}/${item.name}`
-          );
-
-          if (item.type === 'dir') {
-            // 读取缓存目录大小
-            item.size = fileSize.get(fullPath);
-          }
-        });
-
-        // 排序
-        arr = sortFileList(arr, sortType, isDesc);
-
-        _success(res, 'ok', createPagingData(arr, pageSize, pageNo));
+        _success(
+          res,
+          'ok',
+          createPagingData(
+            fileListSortAndCacheSize(arr, rootP, sortType, isDesc),
+            pageSize,
+            pageNo
+          )
+        );
       }
-    } else {
-      _success(res, 'ok', createPagingData([], pageSize, pageNo));
+    } catch (error) {
+      taskState.delete(taskKey);
+
+      // 未超过3秒直接返回失败
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+        _err(res, `${hdType}失败`)(req, error, 1);
+      } else {
+        await errLog(req, `${hdType}失败(${error})`);
+        if (account) {
+          errorNotifyMsg(req, `${hdType}失败`);
+        }
+      }
     }
   } catch (error) {
     _err(res)(req, error);
@@ -349,7 +393,7 @@ route.get('/read-file', async (req, res) => {
     let p = '';
 
     if (token) {
-      const share = await validShareState(token);
+      const share = await validShareState(token, 'file');
 
       if (share.state === 0) {
         _err(res, share.text)(req);
@@ -438,6 +482,7 @@ route.get('/read-dir-size', async (req, res) => {
     try {
       let size = 0;
       let count = 0;
+
       if (await _f.exists(p)) {
         async function readDirSize(p) {
           if (signal.aborted) return;
@@ -458,10 +503,10 @@ route.get('/read-dir-size', async (req, res) => {
 
         await readDirSize(p);
       }
+
       taskState.delete(taskKey);
       if (!signal.aborted) {
         fileSize.add(p, size);
-        req._hello.temid = nanoid();
         syncUpdateData(req, 'file');
       }
     } catch (error) {
@@ -702,7 +747,6 @@ route.post('/copy', async (req, res) => {
       });
 
       taskState.delete(taskKey);
-      req._hello.temid = nanoid();
       syncUpdateData(req, 'file');
     } catch (error) {
       taskState.delete(taskKey);
@@ -827,7 +871,6 @@ route.post('/move', async (req, res) => {
       });
 
       taskState.delete(taskKey);
-      req._hello.temid = nanoid();
       syncUpdateData(req, 'file');
     } catch (error) {
       taskState.delete(taskKey);
@@ -891,7 +934,6 @@ route.post('/zip', async (req, res) => {
       await uLog(req, `压缩${type === 'dir' ? '文件夹' : '文件'}(${f}=>${t})`);
 
       taskState.delete(taskKey);
-      req._hello.temid = nanoid();
       syncUpdateData(req, 'file');
     } catch (error) {
       taskState.delete(taskKey);
@@ -956,7 +998,6 @@ route.post('/unzip', async (req, res) => {
       await uLog(req, `解压文件(${f}=>${t})`);
 
       taskState.delete(taskKey);
-      req._hello.temid = nanoid();
       syncUpdateData(req, 'file');
     } catch (error) {
       taskState.delete(taskKey);
@@ -1053,7 +1094,6 @@ route.post('/delete', async (req, res) => {
       });
 
       taskState.delete(taskKey);
-      req._hello.temid = nanoid();
       syncUpdateData(req, 'file');
     } catch (error) {
       taskState.delete(taskKey);
@@ -1102,7 +1142,6 @@ route.get('/clear-trash', async (req, res) => {
 
       await uLog(req, `清空回收站成功`);
       taskState.delete(taskKey);
-      req._hello.temid = nanoid();
       syncUpdateData(req, 'file');
     } catch (error) {
       taskState.delete(taskKey);

@@ -94,7 +94,7 @@ route.get('/', async (req, res) => {
     } else if (dir === 'file') {
       path = getCurPath(account, pArr.join('/'));
     } else if (dir === 'sharefile') {
-      const share = await validShareState(token);
+      const share = await validShareState(token, 'file');
 
       if (share.state === 0) {
         _err(res, share.text)(req, dir, 1);
@@ -124,7 +124,7 @@ route.get('/', async (req, res) => {
       } else {
         const sid = pArr[0];
 
-        const share = await validShareState(token);
+        const share = await validShareState(token, 'music');
         if (share.state === 0) {
           _err(res, share.text)(req, dir, 1);
           return;

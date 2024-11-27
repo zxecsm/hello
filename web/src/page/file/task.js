@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import { reqTaskCancel, reqTaskInfo, reqTaskList } from '../../api/task';
+import { reqTaskCancel, reqTaskInfo } from '../../api/task';
 import { _setTimeout } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 
@@ -37,14 +37,16 @@ $zoomBtn.on('click', () => {
   }
 });
 
-let tastList = [];
+let taskList = [];
 
 class CreateTask {
-  constructor(key) {
+  constructor(key, cb, token) {
     this.key = key;
+    this.cb = cb;
+    this.token = token;
     this.init();
     this.updateProgress();
-    tastList.push({ key, task: this });
+    taskList.push({ key, task: this });
   }
   init() {
     this.task = document.createElement('div');
@@ -64,12 +66,13 @@ class CreateTask {
     if (!this.key) return;
 
     try {
-      const res = await reqTaskInfo({ key: this.key });
+      const res = await reqTaskInfo({ key: this.key, token: this.token });
 
       if (res.code === 1) {
         if (res.data.text) {
           this.progress.innerText = res.data.text;
         } else {
+          if (!this.key) return;
           this.cancel();
         }
       }
@@ -81,40 +84,29 @@ class CreateTask {
     }
   }
   cancel() {
-    tastList = tastList.filter((item) => item.key !== this.key);
+    taskList = taskList.filter((item) => item.key !== this.key);
     this.key = '';
     this.task.remove();
-    if (tastList.length === 0) {
+    this.cb && this.cb();
+    if (taskList.length === 0) {
       hideTask();
     }
   }
 }
-
-export function addTask(key) {
+export function addTask(key, cb, token = '') {
   showTask();
-  const task = new CreateTask(key);
+  const task = new CreateTask(key, cb, token);
   $container.append(task.task);
 }
 
-// 刷新继续显示任务
-reqTaskList()
-  .then((res) => {
-    if (res.code === 1) {
-      res.data.forEach((key) => {
-        addTask(key);
-      });
-    }
-  })
-  .catch(() => {});
-
 $taskBox.on('click', '.cancel_task', async (e) => {
   const key = e.target.dataset.key;
-  const task = tastList.find((item) => item.key === key);
+  const item = taskList.find((item) => item.key === key);
   try {
-    const res = await reqTaskCancel({ key });
+    const res = await reqTaskCancel({ key, token: item.task.token });
 
     if (res.code === 1) {
-      task.cancel();
+      item.task.cancel();
     }
   } catch {}
 });

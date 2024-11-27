@@ -8,32 +8,51 @@ import {
 } from '../../utils/utils.js';
 import { fieldLenght } from '../config.js';
 import taskState from '../../utils/taskState.js';
+import { validShareState } from '../user/user.js';
 const route = express.Router();
-
-// 验证登录态
-route.use((req, res, next) => {
-  if (req._hello.userinfo.account) {
-    next();
-  } else {
-    _nologin(res);
-  }
-});
 
 // 获取任务信息
 route.get('/info', async (req, res) => {
   try {
-    const { key } = req.query;
-    const { account } = req._hello.userinfo;
+    const { key, token = '' } = req.query;
+
+    let {
+      temid,
+      userinfo: { account },
+    } = req._hello;
 
     if (
       !validaString(key, 1, fieldLenght.id * 2, 1) ||
-      !key.startsWith(`${account}_`)
+      !validaString(token, 0, fieldLenght.url) ||
+      !validaString(temid, 1, fieldLenght.id, 1)
     ) {
       paramErr(res, req);
       return;
     }
 
+    if (!token && !account) {
+      _nologin(res);
+      return;
+    }
+
+    if (token) {
+      const share = await validShareState(token, 'file');
+
+      if (share.state === 0) {
+        _err(res, share.text)(req);
+        return;
+      }
+
+      account = temid;
+    }
+
+    if (!key.startsWith(`${account}_`)) {
+      paramErr(res, req);
+      return;
+    }
+
     const task = taskState.get(key);
+
     _success(res, 'ok', { text: task ? task.text : '' });
   } catch (error) {
     _err(res)(req, error);
@@ -43,13 +62,39 @@ route.get('/info', async (req, res) => {
 // 取消任务
 route.post('/cancel', async (req, res) => {
   try {
-    const { key } = req.body;
-    const { account } = req._hello.userinfo;
+    const { key, token = '' } = req.body;
+
+    let {
+      temid,
+      userinfo: { account },
+    } = req._hello;
 
     if (
       !validaString(key, 1, fieldLenght.id * 2, 1) ||
-      !key.startsWith(`${account}_`)
+      !validaString(token, 0, fieldLenght.url) ||
+      !validaString(temid, 1, fieldLenght.id, 1)
     ) {
+      paramErr(res, req);
+      return;
+    }
+
+    if (!token && !account) {
+      _nologin(res);
+      return;
+    }
+
+    if (token) {
+      const share = await validShareState(token, 'file');
+
+      if (share.state === 0) {
+        _err(res, share.text)(req);
+        return;
+      }
+
+      account = temid;
+    }
+
+    if (!key.startsWith(`${account}_`)) {
       paramErr(res, req);
       return;
     }
@@ -69,7 +114,36 @@ route.post('/cancel', async (req, res) => {
 // 获取任务列表
 route.get('/list', async (req, res) => {
   try {
-    const { account } = req._hello.userinfo;
+    const { token = '' } = req.query;
+
+    let {
+      temid,
+      userinfo: { account },
+    } = req._hello;
+
+    if (
+      !validaString(token, 0, fieldLenght.url) ||
+      !validaString(temid, 1, fieldLenght.id, 1)
+    ) {
+      paramErr(res, req);
+      return;
+    }
+
+    if (!token && !account) {
+      _nologin(res);
+      return;
+    }
+
+    if (token) {
+      const share = await validShareState(token, 'file');
+
+      if (share.state === 0) {
+        _err(res, share.text)(req);
+        return;
+      }
+
+      account = temid;
+    }
 
     _success(res, 'ok', taskState.getTaskList(account));
   } catch (error) {

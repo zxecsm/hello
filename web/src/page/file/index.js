@@ -76,6 +76,7 @@ import { _tpl } from '../../js/utils/template';
 import md5 from '../../js/utils/md5';
 import _path from '../../js/utils/path';
 import { addTask } from './task';
+import { reqTaskList } from '../../api/task';
 _d.isFilePage = true;
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
@@ -340,7 +341,7 @@ const lazyImg = new LazyLoad();
                       rename,
                     });
                     if (res.code === 1) {
-                      addTask(res.data.key);
+                      addTask(res.data.key, updateCurPage);
                       waitObj = {};
                       realtime.send({ type: 'pastefiledata', data: waitObj });
                       hidePaste();
@@ -418,12 +419,17 @@ async function openDir(path, top) {
       word: wInput.getValue().trim(),
     });
     if (res.code === 1) {
-      fileListData = res.data;
-      fileListData.data = fileListData.data.map((item, idx) => ({
-        id: idx + 1 + '',
-        ...item,
-      }));
-      renderList(top);
+      const taskKey = res.data.key;
+      if (taskKey) {
+        addTask(taskKey, updateCurPage);
+      } else {
+        fileListData = res.data;
+        fileListData.data = fileListData.data.map((item, idx) => ({
+          id: idx + 1 + '',
+          ...item,
+        }));
+        renderList(top);
+      }
     }
   } catch {}
 }
@@ -431,6 +437,16 @@ async function openDir(path, top) {
 function getFileItem(id) {
   return fileListData.data.find((item) => item.id === id + '');
 }
+// 刷新继续显示任务
+reqTaskList()
+  .then((res) => {
+    if (res.code === 1) {
+      res.data.forEach((key) => {
+        addTask(key, updateCurPage);
+      });
+    }
+  })
+  .catch(() => {});
 // 读取文件和目录
 async function readFileAndDir(obj) {
   const { type, name, path } = obj;
@@ -496,7 +512,7 @@ $contentWrap
     reqFileReadDirSize({ path: p })
       .then((res) => {
         if (res.code === 1) {
-          addTask(res.data.key);
+          addTask(res.data.key, updateCurPage);
         }
       })
       .catch(() => {});
@@ -839,7 +855,7 @@ async function hdDeCompress(e, obj, cb, loading) {
           const res = await reqFileUnZip({ data: obj });
           loading.end();
           if (res.code === 1) {
-            addTask(res.data.key);
+            addTask(res.data.key, updateCurPage);
             cb && cb();
           }
         } catch (error) {
@@ -867,7 +883,7 @@ async function hdCompress(e, obj, cb, loading = { start() {}, end() {} }) {
           const res = await reqFileZip({ data: obj });
           loading.end();
           if (res.code === 1) {
-            addTask(res.data.key);
+            addTask(res.data.key, updateCurPage);
             cb && cb();
           }
         } catch (error) {
@@ -1202,7 +1218,7 @@ function hdClearTrash(e) {
         reqFileClearTrash()
           .then((res) => {
             if (res.code === 1) {
-              addTask(res.data.key);
+              addTask(res.data.key, updateCurPage);
             }
           })
           .catch((error) => {
@@ -1325,7 +1341,7 @@ async function hdCopy(e, data, cb) {
           rename,
         });
         if (res.code === 1) {
-          addTask(res.data.key);
+          addTask(res.data.key, updateCurPage);
           waitObj = {};
           realtime.send({ type: 'pastefiledata', data: waitObj });
           hidePaste();
@@ -1386,7 +1402,7 @@ async function hdCut(e, data, cb) {
 
         const res = await reqFileMove({ data, path: curFileDirPath, rename });
         if (res.code === 1) {
-          addTask(res.data.key);
+          addTask(res.data.key, updateCurPage);
           waitObj = {};
           realtime.send({ type: 'pastefiledata', data: waitObj });
           hidePaste();
@@ -1575,7 +1591,7 @@ function hdDel(e, arr, cb, loading = { start() {}, end() {} }) {
         const res = await reqFileDelete({ data: arr, force });
         loading.end();
         if (res.code === 1) {
-          addTask(res.data.key);
+          addTask(res.data.key, updateCurPage);
           cb && cb();
         }
       } catch (error) {

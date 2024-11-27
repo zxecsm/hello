@@ -86,10 +86,10 @@ export async function deleteUser(account) {
 }
 
 // 验证分享
-export async function validShareState(shareToken) {
+export async function validShareState(shareToken, t) {
   const { id, types, type } = jwtde(shareToken).data || {};
 
-  if (type !== 'share' || !id || !types) {
+  if (type !== 'share' || !id || !types || !types.includes(t)) {
     return {
       state: 0,
       text: '访问令牌已过期',

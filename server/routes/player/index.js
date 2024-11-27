@@ -105,7 +105,7 @@ route.get('/lrc', async (req, res) => {
         return;
       }
 
-      const share = await validShareState(token);
+      const share = await validShareState(token, 'music');
 
       if (share.state === 0) {
         errData[0].p = share.text;
@@ -182,7 +182,7 @@ route.get('/song-info', async (req, res) => {
         return;
       }
 
-      const share = await validShareState(token);
+      const share = await validShareState(token, 'music');
 
       if (share.state === 0) {
         _err(res, share.text)(req, id, 1);
@@ -1748,7 +1748,7 @@ route.post('/save-share', async function (req, res) {
 
     const { account } = req._hello.userinfo;
 
-    const share = await validShareState(token);
+    const share = await validShareState(token, 'music');
 
     if (share.state === 0) {
       _err(res, share.text)(req);

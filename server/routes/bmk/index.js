@@ -887,7 +887,7 @@ route.post('/save-share', async (req, res) => {
       return;
     }
 
-    const share = await validShareState(token);
+    const share = await validShareState(token, 'bookmk');
 
     if (share.state === 0) {
       _err(res, share.text)(req);

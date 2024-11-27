@@ -53,6 +53,7 @@ import { showFileInfo } from '../../js/utils/showinfo';
 import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';
 import _path from '../../js/utils/path';
+import { addTask } from '../file/task';
 _d.isFilePage = true;
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
@@ -401,12 +402,17 @@ async function openDir(path, top) {
       token: shareToken,
     });
     if (res.code === 1) {
-      fileListData = res.data;
-      fileListData.data = fileListData.data.map((item, idx) => ({
-        id: idx + 1 + '',
-        ...item,
-      }));
-      renderList(top);
+      const taskKey = res.data.key;
+      if (taskKey) {
+        addTask(taskKey, updateCurPage, shareToken);
+      } else {
+        fileListData = res.data;
+        fileListData.data = fileListData.data.map((item, idx) => ({
+          id: idx + 1 + '',
+          ...item,
+        }));
+        renderList(top);
+      }
     }
   } catch {}
 }

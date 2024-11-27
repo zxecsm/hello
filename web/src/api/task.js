@@ -9,8 +9,8 @@ export function reqTaskInfo(data) {
   });
 }
 // 获取任务列表
-export function reqTaskList() {
-  return _getAjax('/task/list');
+export function reqTaskList(data) {
+  return _getAjax('/task/list', data);
 }
 // 取消任务
 export function reqTaskCancel(data) {
