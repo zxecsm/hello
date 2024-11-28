@@ -248,7 +248,12 @@ function searchListSongSetting(e, sobj) {
       } else if (id === '7') {
         close();
         let fname = `${sobj.artist} - ${sobj.title}`;
-        downloadFile(sobj.uurl, `${fname}.${_path.extname(sobj.url)[2]}`);
+        downloadFile([
+          {
+            fileUrl: sobj.uurl,
+            filename: `${fname}.${_path.extname(sobj.url)[2]}`,
+          },
+        ]);
       } else if (id === '6') {
         moveSongToList(e, 'all', [sobj.id]);
       } else if (id === '2') {

@@ -34,12 +34,12 @@ export function reqChatSendMsg(data) {
   return _postAjax('/chat/send-msg', data);
 }
 // 发送文件
-export function reqChatUp(data, file, cb) {
-  return _upFile(`/chat/up`, data, file, cb);
+export function reqChatUp(data, file, cb, signal) {
+  return _upFile(`/chat/up`, data, file, cb, signal);
 }
 // 发送语音
-export function reqChatUpVoice(data, file, cb) {
-  return _upFile(`/chat/up-voice`, data, file, cb);
+export function reqChatUpVoice(data, file, cb, signal) {
+  return _upFile(`/chat/up-voice`, data, file, cb, signal);
 }
 // 合并文件
 export function reqChatMerge(data) {

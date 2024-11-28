@@ -9,8 +9,8 @@ export function reqChangeBg(data) {
   return _postAjax('/bg/change', data);
 }
 // 上传壁纸
-export function reqBgUp(data, file, cb) {
-  return _upFile(`/bg/up`, data, file, cb);
+export function reqBgUp(data, file, cb, signal) {
+  return _upFile(`/bg/up`, data, file, cb, signal);
 }
 // 重复
 export function reqBgRepeat(data) {

@@ -53,9 +53,16 @@ const $contentWrap = $('.content_wrap'),
 // 上传
 async function hdUpFile(files) {
   const fData = [];
+  const controller = new AbortController();
+  const signal = controller.signal;
+
+  const upPro = new UpProgress(() => {
+    controller.abort();
+  });
   await concurrencyTasks(files, 5, async (file) => {
+    if (signal.aborted) return;
     const { name, size } = file;
-    const pro = new UpProgress(name);
+    const pro = upPro.add(name);
     if (!isImgFile(name)) {
       pro.fail();
       _msg.error(`图片格式错误`);
@@ -68,9 +75,13 @@ async function hdUpFile(files) {
     }
     try {
       //文件切片
-      let { HASH } = await md5.fileSlice(file, (percent) => {
-        pro.loading(percent);
-      });
+      let { HASH } = await md5.fileSlice(
+        file,
+        (percent) => {
+          pro.loading(percent);
+        },
+        signal
+      );
       const isrepeat = await reqPicRepeat({
         HASH,
       }); //是否已经存在文件
@@ -93,7 +104,8 @@ async function hdUpFile(files) {
         file,
         (percent) => {
           pro.update(percent);
-        }
+        },
+        signal
       );
       if (result.code === 1) {
         const { url } = result.data;

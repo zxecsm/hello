@@ -1374,8 +1374,14 @@ export async function updateSongCover(obj) {
     });
     if (files.length === 0) return;
     const file = files[0];
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const upPro = new UpProgress(() => {
+      controller.abort();
+    });
     const { name, size } = file;
-    const pro = new UpProgress(file.name);
+    const pro = upPro.add(file.name);
     if (!isImgFile(name)) {
       pro.fail();
       _msg.error(`封面格式错误`);
@@ -1395,7 +1401,8 @@ export async function updateSongCover(obj) {
       file,
       function (percent) {
         pro.update(percent);
-      }
+      },
+      signal
     );
     if (result.code === 1) {
       pro.close();
@@ -1416,7 +1423,13 @@ export async function upMv(obj) {
   if (files.length === 0) return;
   const file = files[0];
   const { name, size } = file;
-  const pro = new UpProgress(name);
+  const controller = new AbortController();
+  const signal = controller.signal;
+
+  const upPro = new UpProgress(() => {
+    controller.abort();
+  });
+  const pro = upPro.add(name);
   if (!/\.(mp4)$/i.test(name)) {
     pro.fail();
     _msg.error(`MV 格式错误`);
@@ -1437,7 +1450,8 @@ export async function upMv(obj) {
       file,
       (percent) => {
         pro.update(percent);
-      }
+      },
+      signal
     );
     if (result.code === 1) {
       pro.close();
@@ -1457,9 +1471,16 @@ async function upSong() {
     accept: '.mp3',
   });
   if (files.length === 0) return;
+  const controller = new AbortController();
+  const signal = controller.signal;
+
+  const upPro = new UpProgress(() => {
+    controller.abort();
+  });
   await concurrencyTasks(files, 5, async (file) => {
+    if (signal.aborted) return;
     const { name, size } = file;
-    const pro = new UpProgress(name);
+    const pro = upPro.add(name);
     if (!isMusicFile(name)) {
       pro.fail();
       _msg.error(`歌曲格式错误`);
@@ -1472,9 +1493,13 @@ async function upSong() {
     }
     try {
       //文件切片
-      let { HASH } = await md5.fileSlice(file, (percent) => {
-        pro.loading(percent);
-      });
+      let { HASH } = await md5.fileSlice(
+        file,
+        (percent) => {
+          pro.loading(percent);
+        },
+        signal
+      );
       let isrepeat = await reqPlayerRepeat({ HASH }); //是否已经存在文件
 
       if (isrepeat.code === 1) {
@@ -1491,7 +1516,8 @@ async function upSong() {
         file,
         (percent) => {
           pro.update(percent);
-        }
+        },
+        signal
       );
       if (result.code === 1) {
         pro.close();
@@ -1695,7 +1721,12 @@ function songMenu(e, idx, sobj) {
       } else if (id === '7') {
         close();
         const fname = `${sobj.artist}-${sobj.title}`;
-        downloadFile(sobj.uurl, `${fname}.${_path.extname(sobj.url)[2]}`);
+        downloadFile([
+          {
+            fileUrl: sobj.uurl,
+            filename: `${fname}.${_path.extname(sobj.url)[2]}`,
+          },
+        ]);
       } else if (id === '6') {
         moveSongToList(e, 'all', [sobj.id]);
       } else if (id === '2') {
@@ -1899,13 +1930,16 @@ $msuicContentBox
   .on('click', '.download_song_btn', function () {
     const arr = getCheckSongs();
     if (arr.length === 0) return;
-    concurrencyTasks(arr, 3, async (item) => {
-      const fname = `${item.artist}-${item.title}`;
-      await downloadFile(
-        getFilePath(`/music/${item.url}`),
-        `${fname}.${_path.extname(item.url)[2]}`
-      );
-    });
+    downloadFile(
+      arr.reduce((pre, cur) => {
+        const fname = `${cur.artist}-${cur.title}`;
+        pre.push({
+          fileUrl: getFilePath(`/music/${cur.url}`),
+          filename: `${fname}.${_path.extname(cur.url)[2]}`,
+        });
+        return pre;
+      }, [])
+    );
     switchSongChecked();
   })
   .on(

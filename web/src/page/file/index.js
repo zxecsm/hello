@@ -43,7 +43,6 @@ import curmb from './crumb/index';
 import { editFileIsHiden, openFile } from './edit';
 import { UpProgress } from '../../js/plugins/UpProgress';
 import _pop from '../../js/plugins/popConfirm';
-import { maskLoading } from '../../js/plugins/loadingBar';
 import bus from '../../js/utils/bus';
 import loadfailImg from '../../images/img/loadfail.png';
 import {
@@ -77,7 +76,6 @@ import md5 from '../../js/utils/md5';
 import _path from '../../js/utils/path';
 import { addTask } from './task';
 import { reqTaskList } from '../../api/task';
-_d.isFilePage = true;
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
 const $curmbBox = $('.crumb_box');
@@ -488,7 +486,7 @@ async function readFileAndDir(obj) {
             _myOpen(fPath, obj.name);
           } else {
             // 其他下载
-            downloadFile(fPath, name);
+            downloadFile([{ fileUrl: fPath, filename: name }]);
           }
         }
       }
@@ -681,7 +679,12 @@ function rightList(e, obj, el) {
       // 编辑列表
       if (id === 'download') {
         close();
-        downloadFile(getFilePath(`/file/${obj.path}/${obj.name}`), obj.name);
+        downloadFile([
+          {
+            fileUrl: getFilePath(`/file/${obj.path}/${obj.name}`),
+            filename: obj.name,
+          },
+        ]);
       } else if (id === 'share') {
         hdShare(e, obj);
       } else if (id === 'rename') {
@@ -912,8 +915,15 @@ if (isIframe()) {
 }
 // 上传
 async function hdUp(files) {
-  maskLoading.start();
+  const controller = new AbortController();
+  const signal = controller.signal;
+
+  const upPro = new UpProgress(() => {
+    controller.abort();
+  });
+
   await concurrencyTasks(files, 5, async (file) => {
+    if (signal.aborted) return;
     const { name, size, webkitRelativePath } = file;
     let path = curFileDirPath;
     if (webkitRelativePath) {
@@ -922,7 +932,7 @@ async function hdUp(files) {
       path = `${path}/${name}`;
     }
     path = _path.normalize(path);
-    const pro = new UpProgress(name);
+    const pro = upPro.add(name);
     if (size === 0) {
       pro.fail();
       _msg.error(`不能上传空文件`);
@@ -943,9 +953,13 @@ async function hdUp(files) {
 
     try {
       //文件切片
-      const { chunks, count, HASH } = await md5.fileSlice(file, (percent) => {
-        pro.loading(percent);
-      });
+      const { chunks, count, HASH } = await md5.fileSlice(
+        file,
+        (percent) => {
+          pro.loading(percent);
+        },
+        signal
+      );
       const breakpointarr = (await reqFileBreakpoint({ HASH })).data; //断点续传
 
       function compale(index) {
@@ -954,12 +968,14 @@ async function hdUp(files) {
       let index = breakpointarr.length;
       compale(index);
       await concurrencyTasks(chunks, 5, async (chunk) => {
+        if (signal.aborted) return;
         const { filename, file } = chunk;
         if (breakpointarr.includes(filename)) return;
-        await reqFileUp({ name: filename, HASH }, file);
+        await reqFileUp({ name: filename, HASH }, file, false, signal);
         index++;
         compale(index);
       });
+      if (signal.aborted) return;
       try {
         const mergeRes = await reqFileMerge({
           HASH,
@@ -982,7 +998,6 @@ async function hdUp(files) {
       pro.fail();
     }
   });
-  maskLoading.end();
   realtime.send({ type: 'updatedata', data: { flag: 'file' } });
   updateCurPage();
 }
@@ -1519,12 +1534,18 @@ $footer
     switchCheckAll(this);
   })
   .on('click', '.f_download', function () {
-    concurrencyTasks(getCheckDatas(), 3, async (item) => {
-      const { name, path, type } = item;
-      if (type === 'file') {
-        await downloadFile(getFilePath(`/file/${path}/${name}`), name);
-      }
-    });
+    downloadFile(
+      getCheckDatas().reduce((pre, cur) => {
+        const { name, path, type } = cur;
+        if (type === 'file') {
+          pre.push({
+            fileUrl: getFilePath(`/file/${path}/${name}`),
+            filename: name,
+          });
+        }
+        return pre;
+      }, [])
+    );
     closeCheck();
   })
   .on('click', '.f_copy', function () {

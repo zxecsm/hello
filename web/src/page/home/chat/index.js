@@ -790,7 +790,9 @@ function openChatFile() {
       if (result.code === 1) {
         const { isText } = result.data;
         if (isText) {
-          downloadFile(getFilePath(`/upload/${msgId}`), content);
+          downloadFile([
+            { fileUrl: getFilePath(`/upload/${msgId}`), filename: content },
+          ]);
         } else {
           if (isVideoFile(content)) {
             openInIframe(
@@ -802,7 +804,9 @@ function openChatFile() {
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(content)) {
             openInIframe(getFilePath(`/upload/${msgId}`), content);
           } else {
-            downloadFile(getFilePath(`/upload/${msgId}`), content);
+            downloadFile([
+              { fileUrl: getFilePath(`/upload/${msgId}`), filename: content },
+            ]);
           }
         }
         return;
@@ -1082,7 +1086,9 @@ function chatMsgMenu(e, cobj) {
             loading.end();
             if (result.code === 1) {
               close();
-              downloadFile(getFilePath(`/upload/${tt}`), z);
+              downloadFile([
+                { fileUrl: getFilePath(`/upload/${tt}`), filename: z },
+              ]);
               return;
             }
             _msg.error(`${flag}已过期`);
@@ -1296,9 +1302,16 @@ $chatFootBox
 })();
 // 发送文件
 async function sendfile(files, chatAcc) {
+  const controller = new AbortController();
+  const signal = controller.signal;
+
+  const upPro = new UpProgress(() => {
+    controller.abort();
+  });
   await concurrencyTasks(files, 5, async (file) => {
+    if (signal.aborted) return;
     const { name, size } = file;
-    const pro = new UpProgress(name);
+    const pro = upPro.add(name);
     if (size === 0) {
       pro.fail('发送失败');
       _msg.error(`不能发送空文件`);
@@ -1311,9 +1324,13 @@ async function sendfile(files, chatAcc) {
     }
     const type = isImgFile(name) ? 'image' : 'file';
     try {
-      const { chunks, count, HASH } = await md5.fileSlice(file, (percent) => {
-        pro.loading(percent);
-      });
+      const { chunks, count, HASH } = await md5.fileSlice(
+        file,
+        (percent) => {
+          pro.loading(percent);
+        },
+        signal
+      );
 
       const isrepeat = await reqChatRepeat({
         HASH,
@@ -1337,6 +1354,7 @@ async function sendfile(files, chatAcc) {
       let index = breakpointarr.length;
       compale(index);
       await concurrencyTasks(chunks, 5, async (chunk) => {
+        if (signal.aborted) return;
         const { filename, file } = chunk;
         if (breakpointarr.includes(filename)) return;
         await reqChatUp(
@@ -1344,11 +1362,14 @@ async function sendfile(files, chatAcc) {
             name: filename,
             HASH,
           },
-          file
+          file,
+          false,
+          signal
         );
         index++;
         compale(index);
       });
+      if (signal.aborted) return;
       try {
         const mergeRes = await reqChatMerge({
           HASH,
@@ -1385,11 +1406,21 @@ function upVoice(blob, duration) {
     return;
   }
   const chatAcc = curChatAccount;
-  const pro = new UpProgress(`语音`);
+  const controller = new AbortController();
+  const signal = controller.signal;
+
+  const upPro = new UpProgress(() => {
+    controller.abort();
+  });
+  const pro = upPro.add(`语音`);
   md5
-    .fileSlice(blob, function (percent) {
-      pro.update(percent);
-    })
+    .fileSlice(
+      blob,
+      function (percent) {
+        pro.update(percent);
+      },
+      signal
+    )
     .then((buf) => {
       const { HASH } = buf;
       reqChatUpVoice(
@@ -1401,7 +1432,8 @@ function upVoice(blob, duration) {
         blob,
         (percent) => {
           pro.update(percent);
-        }
+        },
+        signal
       )
         .then((res) => {
           if (res.code === 1) {

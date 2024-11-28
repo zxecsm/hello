@@ -73,8 +73,8 @@ export function reqPlayerEditList(data) {
   return _postAjax('/player/edit-list', data);
 }
 // 上传
-export function reqPlayerUp(data, file, cb) {
-  return _upFile(`/player/up`, data, file, cb);
+export function reqPlayerUp(data, file, cb, signal) {
+  return _upFile(`/player/up`, data, file, cb, signal);
 }
 // 重复
 export function reqPlayerRepeat(data) {

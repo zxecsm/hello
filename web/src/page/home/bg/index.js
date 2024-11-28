@@ -45,9 +45,16 @@ const $allBgWrap = $('.all_bg_wrap'),
 let bgList = [];
 // 上传壁纸
 async function hdUpBg(files) {
+  const controller = new AbortController();
+  const signal = controller.signal;
+
+  const upPro = new UpProgress(() => {
+    controller.abort();
+  });
   await concurrencyTasks(files, 5, async (file) => {
+    if (signal.aborted) return;
     const { name, size } = file;
-    const pro = new UpProgress(name);
+    const pro = upPro.add(name);
     if (!isImgFile(name)) {
       pro.fail();
       _msg.error(`壁纸格式错误`);
@@ -60,9 +67,13 @@ async function hdUpBg(files) {
     }
     try {
       //文件切片
-      const { HASH } = await md5.fileSlice(file, (percent) => {
-        pro.loading(percent);
-      });
+      const { HASH } = await md5.fileSlice(
+        file,
+        (percent) => {
+          pro.loading(percent);
+        },
+        signal
+      );
       const isrepeat = await reqBgRepeat({
         HASH,
       }); //是否已经存在文件
@@ -72,9 +83,14 @@ async function hdUpBg(files) {
         //文件已经存在操作
         return;
       }
-      const result = await reqBgUp({ name, HASH }, file, (percent) => {
-        pro.update(percent);
-      });
+      const result = await reqBgUp(
+        { name, HASH },
+        file,
+        (percent) => {
+          pro.update(percent);
+        },
+        signal
+      );
       if (result.code === 1) {
         pro.close();
       } else {
@@ -199,7 +215,12 @@ function bgItemMenu(e, obj, el) {
         }
       } else if (id === '2') {
         close();
-        downloadFile(getFilePath(`/bg/${obj.url}`), _path.basename(obj.url)[0]);
+        downloadFile([
+          {
+            fileUrl: getFilePath(`/bg/${obj.url}`),
+            filename: _path.basename(obj.url)[0],
+          },
+        ]);
       } else if (id === '3') {
         close();
         $bgList.find('.check_level').css('display', 'block');

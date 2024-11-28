@@ -883,10 +883,12 @@ $lrcMenuWrap
         } else if (id === '10') {
           close();
           let fname = `${playingSongInfo.artist}-${playingSongInfo.title}`;
-          downloadFile(
-            playingSongInfo.uurl,
-            `${fname}.${_path.extname(playingSongInfo.url)[2]}`
-          );
+          downloadFile([
+            {
+              fileUrl: playingSongInfo.uurl,
+              filename: `${fname}.${_path.extname(playingSongInfo.url)[2]}`,
+            },
+          ]);
         }
       },
       `${playingSongInfo.artist} - ${playingSongInfo.title}`

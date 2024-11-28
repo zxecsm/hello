@@ -627,7 +627,7 @@ export function _getAjax(url, data = {}, opt = {}) {
   });
 }
 // 上传文件
-export function _upFile(url, data = {}, file, callback) {
+export function _upFile(url, data = {}, file, callback, signal) {
   url = `${_d.serverURL}${url}/?${qs.stringify(data)}`;
   return new Promise((resolve, reject) => {
     const formData = new FormData();
@@ -647,6 +647,10 @@ export function _upFile(url, data = {}, file, callback) {
       xhr: function () {
         const xhr = new XMLHttpRequest();
         xhr.upload.addEventListener('progress', function (e) {
+          if (signal && signal.aborted) {
+            xhr.abort();
+            return;
+          }
           //loaded代表上传了多少
           //total代表总数为多少
           const pes = e.loaded / e.total;
@@ -666,7 +670,6 @@ export function _upFile(url, data = {}, file, callback) {
         resolve(data);
       },
       error: () => {
-        _msg.error(`连接失败!( ╯□╰ )`);
         reject();
       },
     });
@@ -1265,61 +1268,78 @@ export function fileLogoType(fname) {
 }
 
 // 下载文件
-export function downloadFile(fileUrl, filename) {
-  return new Promise((resolve) => {
-    filename = filename || _path.basename(fileUrl);
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', fileUrl, true);
-    xhr.responseType = 'blob'; // 设置响应类型为 Blob
+export function downloadFile(tasks) {
+  const controller = new AbortController();
+  const signal = controller.signal;
 
-    const pro = new UpProgress(filename, 'iconfont icon-download');
+  const upPro = new UpProgress(() => {
+    controller.abort();
+  });
+  return concurrencyTasks(tasks, 3, async (task) => {
+    if (signal.aborted) return;
 
-    function unbindXHREvents() {
-      xhr.onload = null;
-      xhr.onerror = null;
-      xhr.onprogress = null;
-    }
-    // 监听进度事件
-    xhr.onprogress = function (event) {
-      let percentComplete = 0;
-      if (event.lengthComputable) {
-        percentComplete = event.loaded / event.total;
-      } else {
-        // 如果总长度不可计算，则尝试从自定义头部获取文件大小
-        const fileSize = xhr.getResponseHeader('X-File-Size');
-        if (fileSize) {
-          percentComplete = event.loaded / +fileSize;
+    let { fileUrl, filename } = task;
+
+    await new Promise((resolve) => {
+      filename = filename || _path.basename(fileUrl);
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', fileUrl, true);
+      xhr.responseType = 'blob'; // 设置响应类型为 Blob
+
+      const pro = upPro.add(filename, 'iconfont icon-download');
+
+      function unbindXHREvents() {
+        xhr.onload = null;
+        xhr.onerror = null;
+        xhr.onprogress = null;
+      }
+      // 监听进度事件
+      xhr.onprogress = function (event) {
+        if (signal.aborted) {
+          unbindXHREvents();
+          xhr.abort();
+          return;
         }
-      }
-      pro.update(percentComplete);
-    };
+        let percentComplete = 0;
+        if (event.lengthComputable) {
+          percentComplete = event.loaded / event.total;
+        } else {
+          // 如果总长度不可计算，则尝试从自定义头部获取文件大小
+          const fileSize = xhr.getResponseHeader('X-File-Size');
+          if (fileSize) {
+            percentComplete = event.loaded / +fileSize;
+          }
+        }
+        pro.update(percentComplete);
+      };
 
-    xhr.onload = function () {
-      if (xhr.status === 200) {
-        const blob = xhr.response;
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename; // 设置下载文件名
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url); // 释放 URL 对象
+      xhr.onload = function () {
+        if (xhr.status === 200) {
+          const blob = xhr.response;
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename; // 设置下载文件名
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url); // 释放 URL 对象
+          unbindXHREvents();
+          pro.close('下载完成');
+        } else {
+          pro.fail('下载失败');
+        }
+        resolve();
+      };
+
+      xhr.onerror = function () {
         unbindXHREvents();
-        pro.close('下载完成');
-      } else {
         pro.fail('下载失败');
-      }
-      resolve();
-    };
+        resolve();
+      };
 
-    xhr.onerror = function () {
-      unbindXHREvents();
-      pro.fail('下载失败');
-      resolve();
-    };
-
-    xhr.send();
+      xhr.send();
+    });
   });
 }
 // 预览图片

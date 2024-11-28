@@ -37,8 +37,8 @@ export function reqFileBreakpoint(data) {
   return _postAjax('/file/breakpoint', data, { parallel: true });
 }
 // 上传
-export function reqFileUp(data, file, cb) {
-  return _upFile(`/file/up`, data, file, cb);
+export function reqFileUp(data, file, cb, signal) {
+  return _upFile(`/file/up`, data, file, cb, signal);
 }
 // 合并
 export function reqFileMerge(data) {

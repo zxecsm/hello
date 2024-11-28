@@ -442,16 +442,24 @@ function pasteImg(e) {
   $resize[0].addEventListener('mousedown', hdDown);
   $resize[0].addEventListener('touchstart', hdDown);
 })();
-// 删除图片
+// 上传图片
 async function hdUpFile(files) {
   if (!isLogin()) {
     toLogin();
     return;
   }
+  const controller = new AbortController();
+  const signal = controller.signal;
+
+  const upPro = new UpProgress(() => {
+    controller.abort();
+  });
   const fData = [];
   await concurrencyTasks(files, 5, async (file) => {
+    if (signal.aborted) return;
+
     const { name, size } = file;
-    const pro = new UpProgress(name);
+    const pro = upPro.add(name);
     if (!isImgFile(name)) {
       pro.fail();
       _msg.error(`图片格式错误`);
@@ -464,15 +472,19 @@ async function hdUpFile(files) {
     }
     try {
       //文件切片
-      const { HASH } = await md5.fileSlice(file, (percent) => {
-        pro.loading(percent);
-      });
+      const { HASH } = await md5.fileSlice(
+        file,
+        (percent) => {
+          pro.loading(percent);
+        },
+        signal
+      );
       const isrepeat = await reqPicRepeat({
         HASH,
       }); //是否已经存在文件
 
-      if (parseInt(isrepeat.code) === 0) {
-        pro.close('文件已存在');
+      if (isrepeat.code === 1) {
+        pro.close('图片已存在');
         const { url } = isrepeat.data;
         fData.push({
           filename: _path.extname(name)[0],
@@ -489,7 +501,8 @@ async function hdUpFile(files) {
         file,
         (percent) => {
           pro.update(percent);
-        }
+        },
+        signal
       );
       if (result.code === 1) {
         const { url } = result.data;

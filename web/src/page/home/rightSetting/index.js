@@ -268,22 +268,33 @@ export async function upLogo(type, cb, id, loading = { start() {}, end() {} }) {
       _msg.error(`图片格式错误`);
       return;
     }
-    const pro = new UpProgress(file.name);
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const upPro = new UpProgress(() => {
+      controller.abort();
+    });
+    const pro = upPro.add(file.name);
     if (file.size <= 0 || file.size >= 5 * 1024 * 1024) {
       pro.fail();
       _msg.error(`图片限制0-5M`);
       return;
     }
-    const { HASH } = await md5.fileSlice(file, (percent) => {
-      pro.loading(percent);
-    });
+    const { HASH } = await md5.fileSlice(
+      file,
+      (percent) => {
+        pro.loading(percent);
+      },
+      signal
+    );
     loading.start();
     reqUserUpLogo(
       { HASH, name: file.name, type, id },
       file,
       function (percent) {
         pro.update(percent);
-      }
+      },
+      signal
     )
       .then((result) => {
         loading.end();

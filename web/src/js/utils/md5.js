@@ -4,7 +4,7 @@ import { getFileReader } from './utils.js';
 import _path from './path.js';
 
 // 切片文件
-function fileSlice(file, callback) {
+function fileSlice(file, callback, signal) {
   return new Promise(async (resolve, reject) => {
     const chunkSize = getChunkSize(file);
 
@@ -17,6 +17,8 @@ function fileSlice(file, callback) {
       const list = [];
 
       for (let i = 0; i < chunks; i++) {
+        if (signal && signal.aborted) break;
+
         const chunk = chunks[i];
         const buf = await getFileReader(chunk);
         spark.append(buf);
@@ -44,6 +46,12 @@ function fileSlice(file, callback) {
     w.postMessage({ chunks });
 
     w.onmessage = (e) => {
+      if (signal && signal.aborted) {
+        cleanUpWorker(w);
+        w.terminate();
+        return;
+      }
+
       const { type, value, HASH } = e.data;
       if (type === 'progress') {
         callback && callback(value);

@@ -44,8 +44,8 @@ export function reqUserUpdateTime() {
   return _getAjax('/user/update-time', {}, { load: 0, stopErrorMsg: 1 });
 }
 // 上传logo
-export function reqUserUpLogo(data, file, cb) {
-  return _upFile(`/user/up-logo`, data, file, cb);
+export function reqUserUpLogo(data, file, cb, signal) {
+  return _upFile(`/user/up-logo`, data, file, cb, signal);
 }
 // 同步
 export function reqUserGetRealTime(data) {

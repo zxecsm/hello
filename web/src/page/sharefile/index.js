@@ -54,7 +54,6 @@ import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';
 import _path from '../../js/utils/path';
 import { addTask } from '../file/task';
-_d.isFilePage = true;
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
 const $curmbBox = $('.crumb_box');
@@ -466,7 +465,7 @@ async function readFileAndDir(obj) {
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(p)) {
             _myOpen(fPath, obj.name);
           } else {
-            downloadFile(fPath, name);
+            downloadFile([{ fileUrl: fPath, filename: name }]);
           }
         }
       }
@@ -479,7 +478,7 @@ $fileBox
   .on('click', '.download', function () {
     const p = `/sharefile/`;
     const fPath = getFilePath(p) + '&token=' + encodeURIComponent(shareToken);
-    downloadFile(fPath, shareObj.name);
+    downloadFile([{ fileUrl: fPath, filename: shareObj.name }]);
   });
 // 读取文件
 async function readFile() {
@@ -511,7 +510,7 @@ async function readFile() {
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(shareObj.name)) {
             _myOpen(fPath, shareObj.name);
           } else {
-            downloadFile(fPath, shareObj.name);
+            downloadFile([{ fileUrl: fPath, filename: shareObj.name }]);
           }
         }
       }
@@ -594,12 +593,15 @@ function rightList(e, obj) {
         );
       } else if (id === 'download') {
         close();
-        downloadFile(
-          getFilePath(`/sharefile/${obj.path}/${obj.name}`) +
-            '&token=' +
-            encodeURIComponent(shareToken),
-          obj.name
-        );
+        downloadFile([
+          {
+            fileUrl:
+              getFilePath(`/sharefile/${obj.path}/${obj.name}`) +
+              '&token=' +
+              encodeURIComponent(shareToken),
+            filename: obj.name,
+          },
+        ]);
       } else if (id === 'info') {
         showFileInfo(e, obj);
       }

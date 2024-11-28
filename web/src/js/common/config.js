@@ -80,7 +80,6 @@ const _d = {
   title: 'Hello', // 标题
   emptyList: 'List is empty', // 空列表显示
   isHome: false, // 是否在主页
-  isFilePage: false, // 是否是文件管理页
   maxSongList: 2000,
   // local数据默认值
   localStorageDefaultData: {

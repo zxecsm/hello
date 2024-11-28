@@ -1,81 +1,55 @@
 import _d from '../../common/config';
+import { _tpl } from '../../utils/template';
+import './index.less';
 
-// 上传进度
-const upProgressbox = document.createElement('div');
-upProgressbox.style.cssText = `
-  position: fixed;
-  top: 60px;
-  right: 20px;
-  transform: translateX(100%);
-  width: 80%;
-  max-width: 400px;
-  pointer-events: none;
-  transition: transform 0.5s ease-in-out;
-  z-index: ${_d.levelObj.upProgressbox};
-  `;
-document.body.appendChild(upProgressbox);
+const progressBox = _tpl.getDom(
+  `
+<div id="progress_box" style="z-index: {{_d.levelObj.upProgressbox}};">
+  <div cursor="y" class="left_btn iconfont icon-you"></div>
+  <div class="list"></div>
+</div>
+`,
+  { _d }
+)[0];
+document.body.appendChild(progressBox);
 
-export class UpProgress {
-  constructor(name, iconfont = 'iconfont icon-upload') {
+const oLeftBtn = progressBox.querySelector('.left_btn');
+const oList = progressBox.querySelector('.list');
+
+oLeftBtn.addEventListener('click', function () {
+  if (oLeftBtn.classList.contains('icon-you')) {
+    oLeftBtn.className = 'left_btn iconfont icon-zuo';
+    progressBox.classList.add('hide');
+  } else {
+    oLeftBtn.className = 'left_btn iconfont icon-you';
+    progressBox.classList.remove('hide');
+  }
+});
+
+class Progress {
+  constructor(name, iconfont = 'iconfont icon-upload', upProgress) {
     this.name = name;
+    this.upProgress = upProgress;
     this.iconfont = iconfont;
     this.create();
   }
   create() {
     this.box = document.createElement('div');
+    this.box.className = 'pro_box';
     this.box1 = document.createElement('div');
+    this.box1.className = 'box1';
     this.icon = document.createElement('span');
-    this.icon.className = this.iconfont;
+    this.icon.className = `icon ${this.iconfont}`;
     this.title = document.createElement('span');
+    this.title.className = 'title';
     this.box2 = document.createElement('div');
-    this.box.style.cssText = `
-                  position: relative;
-                  background-color: var(--color10);
-                  margin-bottom: 5px;
-                  border-radius: 5px;
-                  opacity: 0.9;
-                  border: 1px solid var(--color9);
-                  overflow: hidden;`;
-    this.box1.style.cssText = `
-                  position: relative;
-                  display: flex;
-                  width: 100%;
-                  height: 40px;
-                  line-height: 40px;
-                  `;
-    this.icon.style.cssText = `
-                  flex: none;
-                  width: 30px;
-                  text-align: center;
-                  font-size: 20px;
-                  color: var(--icon-color);
-                  
-    `;
-    this.title.style.cssText = `
-                  flex: auto;
-                  text-overflow: ellipsis;
-                  overflow: hidden;
-                  white-space: nowrap;
-    `;
-    this.box2.style.cssText = `
-                  position: absolute;
-                  height: 100%;
-                  line-height: 40px;
-                  text-align: center;
-                  width: 0;
-                  transition: width 0.5s ease-in-out;
-                  text-overflow: ellipsis;
-                  overflow: hidden;
-                  white-space: nowrap; 
-                  color: #fff;
-                  `;
+    this.box2.className = 'box2';
     this.title.innerText = this.name;
-    this.box1.append(this.icon);
-    this.box1.append(this.title);
+    this.box1.appendChild(this.icon);
+    this.box1.appendChild(this.title);
     this.box.appendChild(this.box2);
     this.box.appendChild(this.box1);
-    upProgressbox.appendChild(this.box);
-    upProgressbox.style.transform = 'none';
+    this.upProgress.proList.appendChild(this.box);
   }
   update(percent) {
     //上传进度
@@ -129,9 +103,45 @@ export class UpProgress {
       clearTimeout(timer);
       timer = null;
       this.box.remove();
-      if (upProgressbox.innerHTML === '') {
-        upProgressbox.style.transform = `translateX(100%)`;
+      if (this.upProgress.proList.innerHTML === '') {
+        this.upProgress.cancel();
       }
     }, 500);
+  }
+}
+export class UpProgress {
+  constructor(cb) {
+    this.cb = cb;
+    this.create();
+    this.bindEvent();
+  }
+  create() {
+    this.item = document.createElement('div');
+    this.item.className = 'item';
+    this.proList = document.createElement('div');
+    this.proList.className = 'pro_list';
+    this.closeBtn = document.createElement('div');
+    this.closeBtn.className = `close_btn iconfont icon-close-bold`;
+    this.closeBtn.setAttribute('cursor', 'y');
+
+    this.item.appendChild(this.proList);
+    this.item.appendChild(this.closeBtn);
+    oList.appendChild(this.item);
+  }
+  cancel() {
+    this.closeBtn.removeEventListener('click', this.cancel);
+    this.item.remove();
+    if (oList.innerHTML === '') {
+      progressBox.style.display = 'none';
+    }
+    this.cb && this.cb();
+  }
+  bindEvent() {
+    this.cancel = this.cancel.bind(this);
+    this.closeBtn.addEventListener('click', this.cancel);
+  }
+  add(name, iconfont = 'iconfont icon-upload') {
+    progressBox.style.display = 'block';
+    return new Progress(name, iconfont, this);
   }
 }
