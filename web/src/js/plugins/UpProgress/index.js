@@ -124,8 +124,8 @@ export class UpProgress {
     this.closeBtn.className = `close_btn iconfont icon-close-bold`;
     this.closeBtn.setAttribute('cursor', 'y');
 
-    this.item.appendChild(this.proList);
     this.item.appendChild(this.closeBtn);
+    this.item.appendChild(this.proList);
     oList.appendChild(this.item);
   }
   cancel() {
