@@ -1,11 +1,11 @@
 import $ from 'jquery';
 import { reqTaskCancel, reqTaskInfo } from '../../api/task';
-import { _setTimeout } from '../../js/utils/utils';
+import { _mySlide, _setTimeout } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 
 const $taskBox = $('.task_box'),
   $zoomBtn = $taskBox.find('.zoom_btn'),
-  $container = $taskBox.find('.container');
+  $list = $taskBox.find('.list');
 
 // 显示任务框
 function showTask() {
@@ -19,18 +19,26 @@ function hideTask() {
 
 // 显示任务列表
 function showTasksList() {
-  $container.stop().slideDown(_d.speed);
+  $list.stop().slideDown(_d.speed);
   $zoomBtn.attr('class', 'zoom_btn iconfont icon-xiala');
 }
 
 // 显示任务列表
 function hideTasksList() {
-  $container.stop().slideUp(_d.speed);
+  $list.stop().slideUp(_d.speed);
   $zoomBtn.attr('class', 'zoom_btn iconfont icon-shang');
 }
 
+// 手势
+_mySlide({
+  el: $taskBox[0],
+  right() {
+    hideTasksList();
+  },
+});
+
 $zoomBtn.on('click', () => {
-  if ($container.is(':hidden')) {
+  if ($list.is(':hidden')) {
     showTasksList();
   } else {
     hideTasksList();
@@ -96,7 +104,7 @@ class CreateTask {
 export function addTask(key, cb, token = '') {
   showTask();
   const task = new CreateTask(key, cb, token);
-  $container.append(task.task);
+  $list.append(task.task);
 }
 
 $taskBox.on('click', '.cancel_task', async (e) => {

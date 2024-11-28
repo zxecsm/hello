@@ -387,9 +387,9 @@ body {
   bottom: 0;
   right: 0;
   box-sizing: border-box;
-  padding: 0 10px;
   border: 1px solid var(--color9);
   border-radius: 4px;
+  overflow: hidden;
   .zoom_btn {
     flex: none;
     height: 30px;
@@ -400,9 +400,12 @@ body {
       transform: scale(1.2);
     }
   }
-  .container {
+  .list {
     flex: auto;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 10px;
+    box-sizing: border-box;
     .task {
       display: flex;
       flex-flow: row nowrap;

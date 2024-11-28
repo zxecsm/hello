@@ -1,5 +1,6 @@
 import _d from '../../common/config';
 import { _tpl } from '../../utils/template';
+import { _mySlide } from '../../utils/utils';
 import './index.less';
 
 const progressBox = _tpl.getDom(
@@ -24,6 +25,15 @@ oLeftBtn.addEventListener('click', function () {
     oLeftBtn.className = 'left_btn iconfont icon-you';
     progressBox.classList.remove('hide');
   }
+});
+
+// 手势
+_mySlide({
+  el: progressBox,
+  right() {
+    oLeftBtn.className = 'left_btn iconfont icon-zuo';
+    progressBox.classList.add('hide');
+  },
 });
 
 class Progress {
