@@ -122,7 +122,7 @@ editor.commands.addCommand({
     }
     const files = await getFiles({
       multiple: true,
-      accept: '.jpg,.jpeg,.png,.ico,.svg,.webp,.gif',
+      accept: 'image/*',
     });
     if (files.length === 0) return;
     hdUpFile(files);
@@ -455,7 +455,7 @@ async function hdUpFile(files) {
     controller.abort();
   });
   const fData = [];
-  await concurrencyTasks(files, 5, async (file) => {
+  await concurrencyTasks(files, 3, async (file) => {
     if (signal.aborted) return;
 
     const { name, size } = file;
@@ -644,7 +644,7 @@ $headBtns
     }
     const files = await getFiles({
       multiple: true,
-      accept: '.jpg,.jpeg,.png,.ico,.svg,.webp,.gif',
+      accept: 'image/*',
     });
     if (files.length === 0) return;
     hdUpFile(files);

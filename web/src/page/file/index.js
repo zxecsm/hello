@@ -922,7 +922,7 @@ async function hdUp(files) {
     controller.abort();
   });
 
-  await concurrencyTasks(files, 5, async (file) => {
+  await concurrencyTasks(files, 3, async (file) => {
     if (signal.aborted) return;
     const { name, size, webkitRelativePath } = file;
     let path = curFileDirPath;
@@ -967,7 +967,7 @@ async function hdUp(files) {
       }
       let index = breakpointarr.length;
       compale(index);
-      await concurrencyTasks(chunks, 5, async (chunk) => {
+      await concurrencyTasks(chunks, 3, async (chunk) => {
         if (signal.aborted) return;
         const { filename, file } = chunk;
         if (breakpointarr.includes(filename)) return;

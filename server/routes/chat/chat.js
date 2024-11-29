@@ -297,7 +297,7 @@ export async function hdForwardToLink(req, list, fArr, text) {
   if (list.length > 0) {
     const { username } = req._hello.userinfo;
 
-    await concurrencyTasks(list, 5, async (item) => {
+    await concurrencyTasks(list, 3, async (item) => {
       const { forward_msg_link, account } = item;
       let { link, type, header, body } = parseForwardMsgLink(forward_msg_link);
 

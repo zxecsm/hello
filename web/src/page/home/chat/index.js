@@ -1308,7 +1308,7 @@ async function sendfile(files, chatAcc) {
   const upPro = new UpProgress(() => {
     controller.abort();
   });
-  await concurrencyTasks(files, 5, async (file) => {
+  await concurrencyTasks(files, 3, async (file) => {
     if (signal.aborted) return;
     const { name, size } = file;
     const pro = upPro.add(name);
@@ -1353,7 +1353,7 @@ async function sendfile(files, chatAcc) {
 
       let index = breakpointarr.length;
       compale(index);
-      await concurrencyTasks(chunks, 5, async (chunk) => {
+      await concurrencyTasks(chunks, 3, async (chunk) => {
         if (signal.aborted) return;
         const { filename, file } = chunk;
         if (breakpointarr.includes(filename)) return;

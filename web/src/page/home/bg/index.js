@@ -51,7 +51,7 @@ async function hdUpBg(files) {
   const upPro = new UpProgress(() => {
     controller.abort();
   });
-  await concurrencyTasks(files, 5, async (file) => {
+  await concurrencyTasks(files, 3, async (file) => {
     if (signal.aborted) return;
     const { name, size } = file;
     const pro = upPro.add(name);
@@ -116,7 +116,7 @@ $allBgWrap
   .on('click', '.upload_bg', async function () {
     const files = await getFiles({
       multiple: true,
-      accept: '.jpg,.jpeg,.png,.ico,.svg,.webp,.gif',
+      accept: 'image/*',
     });
     if (files.length === 0) return;
     hdUpBg(files);

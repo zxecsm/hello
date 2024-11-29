@@ -260,7 +260,7 @@ export function hideUserInfo() {
 export async function upLogo(type, cb, id, loading = { start() {}, end() {} }) {
   try {
     const files = await getFiles({
-      accept: '.jpg,.jpeg,.png,.ico,.svg,.webp,.gif',
+      accept: 'image/*',
     });
     if (files.length === 0) return;
     const file = files[0];

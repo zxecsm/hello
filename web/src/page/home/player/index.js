@@ -1366,11 +1366,11 @@ function editSongList(e, obj, sid) {
     '编辑歌单'
   );
 }
-// 删除歌曲封面
+// 上传歌曲封面
 export async function updateSongCover(obj) {
   try {
     const files = await getFiles({
-      accept: '.jpg,.jpeg,.png',
+      accept: 'image/*',
     });
     if (files.length === 0) return;
     const file = files[0];
@@ -1418,7 +1418,7 @@ export async function updateSongCover(obj) {
 // 上传MV
 export async function upMv(obj) {
   const files = await getFiles({
-    accept: '.mp4',
+    accept: 'video/*',
   });
   if (files.length === 0) return;
   const file = files[0];
@@ -1468,7 +1468,7 @@ export async function upMv(obj) {
 async function upSong() {
   const files = await getFiles({
     multiple: true,
-    accept: '.mp3',
+    accept: 'audio/*',
   });
   if (files.length === 0) return;
   const controller = new AbortController();
@@ -1477,7 +1477,7 @@ async function upSong() {
   const upPro = new UpProgress(() => {
     controller.abort();
   });
-  await concurrencyTasks(files, 5, async (file) => {
+  await concurrencyTasks(files, 3, async (file) => {
     if (signal.aborted) return;
     const { name, size } = file;
     const pro = upPro.add(name);
