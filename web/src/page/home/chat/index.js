@@ -911,20 +911,20 @@ $chatListBox
     );
   })
   .on('click', '.c_img', openChatImg)
-  .on('scroll', function () {
-    if (
-      $chatListBox.find('.chat_list').outerHeight() -
-        $chatListBox.scrollTop() -
-        $chatListBox.outerHeight() >
-      200
-    ) {
-      $chatFootBox.find('.scroll_to_bot_btn').css('display', 'block');
-    } else {
-      $chatFootBox.find('.scroll_to_bot_btn').css('display', 'none');
-    }
-  })
+  .on('scroll', switchScrollToBottom)
   .on('scroll', debounce(scrollTopMsg, 200));
-
+function switchScrollToBottom() {
+  if (
+    $chatListBox.find('.chat_list').outerHeight() -
+      $chatListBox.scrollTop() -
+      $chatListBox.outerHeight() >
+    200
+  ) {
+    $chatFootBox.find('.scroll_to_bot_btn').css('display', 'block');
+  } else {
+    $chatFootBox.find('.scroll_to_bot_btn').css('display', 'none');
+  }
+}
 let searchDateLimit = {};
 function hdDateSearchChat(e) {
   const { start = '', end = '' } = searchDateLimit;
@@ -1630,6 +1630,7 @@ export function openFriend(acc, noHideUserList, cb) {
     return;
   }
   loadingImg($chatListBox.find('.chat_list')[0]);
+  switchScrollToBottom();
   const { start = '', end = '' } = searchDateLimit;
   reqChatReadMsg({ account: acc, type: 0, word: val, start, end })
     .then((result) => {
