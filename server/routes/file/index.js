@@ -121,52 +121,6 @@ route.get('/share', async (req, res) => {
   }
 });
 
-// 清除缓存刷新
-route.post('/clear-cache', async (req, res) => {
-  try {
-    const { token = '' } = req.body;
-
-    const {
-      temid,
-      userinfo: { account },
-    } = req._hello;
-
-    if (
-      !validaString(token, 0, fieldLenght.url) ||
-      !validaString(temid, 1, fieldLenght.id, 1)
-    ) {
-      paramErr(res, req);
-      return;
-    }
-
-    if (!token && !account) {
-      _nologin(res);
-      return;
-    }
-
-    let acc = '';
-
-    if (token) {
-      const share = await validShareState(token, 'file');
-
-      if (share.state === 0) {
-        _err(res, share.text)(req);
-        return;
-      }
-
-      acc = temid;
-    } else {
-      acc = account;
-    }
-
-    fileList.clear(acc);
-
-    _success(res);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
 //读取目录
 function fileListSortAndCacheSize(list, rootP, sortType, isDesc) {
   list.forEach((item) => {
@@ -189,6 +143,7 @@ route.get('/read-dir', async (req, res) => {
       sortType = 'time',
       isDesc = 1,
       subDir = 0,
+      update = 0,
       word = '',
       token = '',
     } = req.query;
@@ -196,6 +151,7 @@ route.get('/read-dir', async (req, res) => {
     pageSize = parseInt(pageSize);
     subDir = parseInt(subDir);
     isDesc = parseInt(isDesc);
+    update = parseInt(update);
 
     const temid = req._hello.temid;
 
@@ -209,6 +165,7 @@ route.get('/read-dir', async (req, res) => {
       pageSize > fieldLenght.maxPagesize ||
       !validationValue(subDir, [1, 0]) ||
       !validationValue(isDesc, [1, 0]) ||
+      !validationValue(update, [1, 0]) ||
       !validaString(word, 0, fieldLenght.searchWord) ||
       !validationValue(sortType, ['name', 'time', 'size', 'type']) ||
       !validaString(temid, 1, fieldLenght.id, 1)
@@ -257,7 +214,7 @@ route.get('/read-dir', async (req, res) => {
     const cacheList = fileList.get(acc, `${p}_${word}`);
 
     // 有缓存则返回缓存
-    if (cacheList) {
+    if (update === 0 && cacheList) {
       taskState.delete(taskKey);
 
       _success(
@@ -273,13 +230,13 @@ route.get('/read-dir', async (req, res) => {
       return;
     }
 
-    // 3秒获取不到则当任务处理
+    // 超时获取不到则当任务处理
     let timer = setTimeout(() => {
       clearTimeout(timer);
       timer = null;
 
       _success(res, 'ok', { key: taskKey });
-    }, 3000);
+    }, 1000);
 
     try {
       let arr = [];
@@ -330,12 +287,9 @@ route.get('/read-dir', async (req, res) => {
         await readDir(p);
       }
 
-      // 缓存结果
-      fileList.add(acc, `${p}_${word}`, arr);
-
       taskState.delete(taskKey);
 
-      // 未超过3秒，关闭定时器直接返回结果
+      // 未超时直接返回结果
       if (timer) {
         clearTimeout(timer);
         timer = null;
@@ -349,11 +303,14 @@ route.get('/read-dir', async (req, res) => {
             pageNo
           )
         );
+      } else {
+        // 超时缓存结果
+        fileList.add(acc, `${p}_${word}`, arr);
       }
     } catch (error) {
       taskState.delete(taskKey);
 
-      // 未超过3秒直接返回失败
+      // 未超时直接返回失败
       if (timer) {
         clearTimeout(timer);
         timer = null;

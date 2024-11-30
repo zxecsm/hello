@@ -47,7 +47,6 @@ import bus from '../../js/utils/bus';
 import loadfailImg from '../../images/img/loadfail.png';
 import {
   reqFileBreakpoint,
-  reqFileClearCache,
   reqFileClearTrash,
   reqFileCopy,
   reqFileCreateDir,
@@ -140,7 +139,7 @@ curmb.bind($curmbBox.find('.container')[0], (path, param) => {
     // 打开新的目录，清空搜索框
     wInput.setValue('');
   }
-  openDir(curFileDirPath, param.top);
+  openDir(curFileDirPath, param.top, param.update);
 });
 // 选定搜索子目录状态
 function changeSubDirState() {
@@ -376,19 +375,7 @@ const pgnt = pagination($pagination.find('.container')[0], {
 function updateCurPage() {
   curmb.toGo(curFileDirPath);
 }
-function refrashCache() {
-  reqFileClearCache()
-    .then((res) => {
-      if (res.code === 1) {
-        curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
-      }
-    })
-    .catch(() => {});
-}
-bus
-  .on('getPageInfo', updatePageInfo)
-  .on('refreshList', updateCurPage)
-  .on('refreshCache', refrashCache);
+bus.on('getPageInfo', updatePageInfo).on('refreshList', updateCurPage);
 
 function updatePageInfo() {
   bus.emit('setPageInfo', { pageNo, top: pageScrollTop() });
@@ -396,7 +383,7 @@ function updatePageInfo() {
 updateCurPage();
 let fileListData = { data: [] };
 // 打开目录
-async function openDir(path, top) {
+async function openDir(path, top, update = 0) {
   try {
     const $clearTrashBtn = $header.find('.clear_trash_btn');
 
@@ -414,6 +401,7 @@ async function openDir(path, top) {
       sortType: fileSort.type,
       isDesc: fileSort.isDes ? 1 : 0,
       subDir: subDir ? 1 : 0,
+      update,
       word: wInput.getValue().trim(),
     });
     if (res.code === 1) {

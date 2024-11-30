@@ -79,10 +79,6 @@ export function reqFileClearTrash() {
 export function reqFileRename(data) {
   return _postAjax('/file/rename', data);
 }
-// 清理缓存刷新
-export function reqFileClearCache(data) {
-  return _postAjax('/file/clear-cache', data);
-}
 // 获取分享数据
 export function reqFileGetShare(data) {
   return _getAjax('/file/share', data);

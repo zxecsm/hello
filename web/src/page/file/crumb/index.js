@@ -83,7 +83,7 @@ function hdClick(e) {
       if (className.includes('back')) {
         toBack();
       } else if (className.includes('refresh')) {
-        bus.emit('refreshCache');
+        toGo(pathArr.slice(0), { pageNo: 1, top: 0, update: 1 });
       }
     } else if (tag === 'span') {
       let p = [];
