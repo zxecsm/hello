@@ -589,7 +589,7 @@ function changeSiteInfoSaveTime(e) {
       subText: '提交',
       items: {
         text: {
-          value: dataObj.uploadSaveDay,
+          value: dataObj.siteInfoCache,
           placeholder: '0: 无限制',
           inputType: 'number',
           verify(val) {
