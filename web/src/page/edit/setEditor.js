@@ -1,7 +1,7 @@
 import rMenu from '../../js/plugins/rightMenu';
 import { _setData } from '../../js/utils/utils';
 
-export function setEditor(e, editor) {
+export function setEditor(e, editor, cb) {
   let editorOption = {
     animatedScroll: editor.getAnimatedScroll(), // 获取是否启用滚动动画
     showInvisibles: editor.getShowInvisibles(), // 获取是否显示不可见字符
@@ -110,6 +110,7 @@ export function setEditor(e, editor) {
       // 自动换行
       editor.session.setUseWrapMode(editorOption.useWrapMode);
       editor.setOption('cursorStyle', editorOption.cursorStyle); // 设置为平滑光标
+      cb && cb();
     },
     '编辑器配置'
   );

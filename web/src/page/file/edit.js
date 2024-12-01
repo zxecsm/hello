@@ -194,7 +194,9 @@ function settingMenu(e) {
           _setData('fileFontSize', fileFontSize);
         });
       } else if (id === 'setEditor') {
-        setEditor(e, editor);
+        setEditor(e, editor, () => {
+          saveState();
+        });
       } else if (id === 'code') {
         function fn() {
           let data = [];

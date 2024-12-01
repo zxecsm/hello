@@ -589,7 +589,9 @@ function settingEdit(e) {
           _setData('editNoteFontSize', editNoteFontSize);
         });
       } else if (id === 'setEditor') {
-        setEditor(e, editor);
+        setEditor(e, editor, () => {
+          handleSave();
+        });
       }
     },
     '设置'
