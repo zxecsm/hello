@@ -32,9 +32,11 @@ import {
   reqRootCleanBgFile,
   reqRootCleanChatFile,
   reqRootCleanDatabase,
+  reqRootCleanFavicon,
   reqRootCleanLogoFile,
   reqRootCleanMusicFile,
   reqRootCleanPicFile,
+  reqRootCleanSiteInfo,
   reqRootCleanThumbFile,
   reqRootCustomCode,
   reqRootDeleteAccount,
@@ -124,8 +126,14 @@ function getUserList(top) {
   reqRootUserList({ pageNo, pageSize: uPageSize })
     .then((result) => {
       if (result.code === 1) {
-        const { registerState, uploadSaveDay, data, total } = (dataObj =
-          result.data);
+        const {
+          registerState,
+          uploadSaveDay,
+          faviconCache,
+          siteInfoCache,
+          data,
+          total,
+        } = (dataObj = result.data);
         pageNo = result.data.pageNo;
         userList = data;
         $headBtns
@@ -143,6 +151,24 @@ function getUserList(top) {
               uploadSaveDay <= 0
                 ? '聊天室文件保存时间: 无限制'
                 : `聊天室文件保存时间: ${uploadSaveDay}天`
+            }`
+          );
+        $headBtns
+          .find('.favicon_save_day')
+          .text(
+            `${
+              faviconCache <= 0
+                ? '网址图标缓存时间: 无限制'
+                : `网址图标缓存时间: ${faviconCache}天`
+            }`
+          );
+        $headBtns
+          .find('.site_info_save_day')
+          .text(
+            `${
+              siteInfoCache <= 0
+                ? '网址描述缓存时间: 无限制'
+                : `网址描述缓存时间: ${siteInfoCache}天`
             }`
           );
         renderUserList(pageNo, total, top);
@@ -472,12 +498,8 @@ function changeChatFileSaveTime(e) {
           inputType: 'number',
           verify(val) {
             val = parseFloat(val);
-            if (
-              !isInteger(val) ||
-              val < 0 ||
-              val > _d.fieldLenght.chatFileExpire
-            ) {
-              return `最大限制${_d.fieldLenght.chatFileExpire}`;
+            if (!isInteger(val) || val < 0 || val > _d.fieldLenght.expTime) {
+              return `限制0-${_d.fieldLenght.expTime}`;
             }
           },
         },
@@ -509,6 +531,102 @@ function changeChatFileSaveTime(e) {
         });
     },
     '设置聊天室文件保存时间（天）'
+  );
+}
+// 修改favicon缓存时间
+function changeFaviconSaveTime(e) {
+  rMenu.inpMenu(
+    e,
+    {
+      subText: '提交',
+      items: {
+        text: {
+          value: dataObj.faviconCache,
+          placeholder: '0: 无限制',
+          inputType: 'number',
+          verify(val) {
+            val = parseFloat(val);
+            if (!isInteger(val) || val < 0 || val > _d.fieldLenght.expTime) {
+              return `限制0-${_d.fieldLenght.expTime}`;
+            }
+          },
+        },
+      },
+    },
+    function ({ close, inp, loading }) {
+      const day = parseInt(inp.text);
+      loading.start();
+      reqRootCleanFavicon({ day })
+        .then((res) => {
+          loading.end();
+          if (res.code === 1) {
+            close();
+            dataObj.faviconCache = day;
+            $headBtns
+              .find('.favicon_save_day')
+              .text(
+                `${
+                  dataObj.faviconCache <= 0
+                    ? '网址图标缓存时间: 无限制'
+                    : `网址图标缓存时间: ${dataObj.faviconCache}天`
+                }`
+              );
+            _msg.success(res.codeText);
+          }
+        })
+        .catch(() => {
+          loading.end();
+        });
+    },
+    '设置网址图标缓存时间（天）'
+  );
+}
+// 修改siteInfo缓存时间
+function changeSiteInfoSaveTime(e) {
+  rMenu.inpMenu(
+    e,
+    {
+      subText: '提交',
+      items: {
+        text: {
+          value: dataObj.uploadSaveDay,
+          placeholder: '0: 无限制',
+          inputType: 'number',
+          verify(val) {
+            val = parseFloat(val);
+            if (!isInteger(val) || val < 0 || val > _d.fieldLenght.expTime) {
+              return `限制0-${_d.fieldLenght.expTime}`;
+            }
+          },
+        },
+      },
+    },
+    function ({ close, inp, loading }) {
+      const day = parseInt(inp.text);
+      loading.start();
+      reqRootCleanSiteInfo({ day })
+        .then((res) => {
+          loading.end();
+          if (res.code === 1) {
+            close();
+            dataObj.siteInfoCache = day;
+            $headBtns
+              .find('.site_info_save_day')
+              .text(
+                `${
+                  dataObj.siteInfoCache <= 0
+                    ? '网址描述缓存时间: 无限制'
+                    : `网址描述缓存时间: ${dataObj.siteInfoCache}天`
+                }`
+              );
+            _msg.success(res.codeText);
+          }
+        })
+        .catch(() => {
+          loading.end();
+        });
+    },
+    '设置网址描述缓存时间（天）'
   );
 }
 // 更新token Key
@@ -902,6 +1020,8 @@ $headBtns
   .on('click', '.trash_state', changeTrashState)
   .on('click', '.clear_file', handleClearFile)
   .on('click', '.upload_save_day', changeChatFileSaveTime)
+  .on('click', '.favicon_save_day', changeFaviconSaveTime)
+  .on('click', '.site_info_save_day', changeSiteInfoSaveTime)
   .on('click', '.set_token_key', updateTokenKey)
   .on('click', '.email_btn', setEmail)
   .on('click', '.custom_btn', customCssJs)

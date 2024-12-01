@@ -37,6 +37,7 @@ import { _delDir, delEmptyFolder, getAllFile, readMenu } from '../file/file.js';
 
 import { deleteUser, isRoot } from '../user/user.js';
 import _path from '../../utils/path.js';
+import { cleanFavicon, cleanSiteInfo } from '../bmk/bmk.js';
 
 const route = express.Router();
 
@@ -131,6 +132,8 @@ route.get('/user-list', async (req, res) => {
     _success(res, 'ok', {
       ...result,
       uploadSaveDay: _d.uploadSaveDay,
+      faviconCache: _d.faviconCache,
+      siteInfoCache: _d.siteInfoCache,
       registerState: _d.registerState,
       trashState: _d.trashState,
       randomBgApi: _d.randomBgApi,
@@ -332,7 +335,7 @@ route.post('/clean-chat-file', async (req, res) => {
     let { day } = req.body;
     day = parseInt(day);
 
-    if (isNaN(day) || day < 0 || day > 999) {
+    if (isNaN(day) || day < 0 || day > fieldLenght.expTime) {
       paramErr(res, req);
       return;
     }
@@ -342,6 +345,48 @@ route.post('/clean-chat-file', async (req, res) => {
     await cleanUpload();
 
     _success(res, '设置聊天文件过期时间成功')(req, _d.uploadSaveDay, 1);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 定时清理缓存favicon
+route.post('/clean-favicon', async (req, res) => {
+  try {
+    let { day } = req.body;
+    day = parseInt(day);
+
+    if (isNaN(day) || day < 0 || day > fieldLenght.expTime) {
+      paramErr(res, req);
+      return;
+    }
+
+    _d.faviconCache = day;
+
+    await cleanFavicon(req);
+
+    _success(res, '设置缓存favicon过期时间成功')(req, _d.faviconCache, 1);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 定时清理缓存siteInfo
+route.post('/clean-site-info', async (req, res) => {
+  try {
+    let { day } = req.body;
+    day = parseInt(day);
+
+    if (isNaN(day) || day < 0 || day > fieldLenght.expTime) {
+      paramErr(res, req);
+      return;
+    }
+
+    _d.siteInfoCache = day;
+
+    await cleanSiteInfo(req);
+
+    _success(res, '设置缓存siteInfo过期时间成功')(req, _d.siteInfoCache, 1);
   } catch (error) {
     _err(res)(req, error);
   }

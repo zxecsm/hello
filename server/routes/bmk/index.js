@@ -28,8 +28,6 @@ import {
   syncUpdateData,
   createPagingData,
   uLog,
-  writelog,
-  concurrencyTasks,
   getSplitWord,
 } from '../../utils/utils.js';
 
@@ -44,9 +42,9 @@ import {
   bookListMoveLocation,
   bookmarkMoveLocation,
   bmkGroupExist,
+  cleanSiteInfo,
 } from './bmk.js';
 
-import { _delDir, readMenu } from '../file/file.js';
 import { fieldLenght } from '../config.js';
 import { validShareAddUserState, validShareState } from '../user/user.js';
 import { getFriendDes } from '../chat/chat.js';
@@ -294,32 +292,10 @@ route.use((req, res, next) => {
   }
 });
 
-// 删除超7天网址缓存信息
+// 删除网址描述缓存信息
 timedTask.add(async (flag) => {
   if (flag.slice(-6) === '000030') {
-    const now = Date.now();
-    const threshold = now - 7 * 24 * 60 * 60 * 1000;
-
-    const sList = await readMenu(
-      _path.normalize(`${configObj.filepath}/siteinfo`)
-    );
-
-    let num = 0;
-
-    await concurrencyTasks(sList, 5, async (item) => {
-      const { name, path, time, type } = item;
-
-      if (type === 'file') {
-        if (time < threshold) {
-          await _delDir(_path.normalize(`${path}/${name}`));
-          num++;
-        }
-      }
-    });
-
-    if (num) {
-      await writelog(false, `删除过期网站信息：${num}`, 'user');
-    }
+    await cleanSiteInfo();
   }
 });
 

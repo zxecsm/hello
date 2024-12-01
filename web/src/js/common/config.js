@@ -56,7 +56,6 @@ const fieldLenght = {
   email: 255, // 邮箱
   todoContent: 500, // 代办内容
   noteCategoryTitle: 30, // 笔记分类标题
-  chatFileExpire: 999, // 聊天文件过期时间
   operationTimeout: 10000, // 操作超时时间
   rainCodeSleep: 60 * 5, // 代码雨触发等待时间
   maxFileSize: 1024 * 1024 * 5000, // 最大切片

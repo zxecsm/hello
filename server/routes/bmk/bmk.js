@@ -1,8 +1,13 @@
+import configObj from '../../data/config.js';
+import { _d } from '../../data/data.js';
+import _path from '../../utils/path.js';
 import {
   queryData,
   batchDiffUpdateData,
   fillString,
 } from '../../utils/sqlite.js';
+import { concurrencyTasks, writelog } from '../../utils/utils.js';
+import { _delDir, readMenu } from '../file/file.js';
 
 // 移动分组位置
 export async function bookListMoveLocation(account, fromId, toId) {
@@ -82,4 +87,64 @@ export async function bmkGroupExist(account, groupId) {
   );
 
   return list.length > 0;
+}
+
+// 清理缓存siteInfo
+export async function cleanSiteInfo(req = false) {
+  if (_d.siteInfoCache > 0) {
+    const now = Date.now();
+
+    const threshold = now - _d.siteInfoCache * 24 * 60 * 60 * 1000;
+
+    const sList = await readMenu(
+      _path.normalize(`${configObj.filepath}/siteinfo`)
+    );
+
+    let num = 0;
+
+    await concurrencyTasks(sList, 5, async (item) => {
+      const { name, path, time, type } = item;
+
+      if (type === 'file') {
+        if (time < threshold) {
+          await _delDir(_path.normalize(`${path}/${name}`));
+          num++;
+        }
+      }
+    });
+
+    if (num) {
+      await writelog(req, `删除过期网站描述信息缓存：${num}`, 'user');
+    }
+  }
+}
+
+// 清理缓存favicon
+export async function cleanFavicon(req = false) {
+  if (_d.faviconCache > 0) {
+    const now = Date.now();
+
+    const threshold = now - _d.faviconCache * 24 * 60 * 60 * 1000;
+
+    const fList = await readMenu(
+      _path.normalize(`${configObj.filepath}/favicon`)
+    );
+
+    let num = 0;
+
+    await concurrencyTasks(fList, 5, async (item) => {
+      const { name, path, time, type } = item;
+
+      if (type === 'file') {
+        if (time < threshold) {
+          await _delDir(_path.normalize(`${path}/${name}`));
+          num++;
+        }
+      }
+    });
+
+    if (num) {
+      await writelog(req, `删除过期缓存图标：${num}`, 'user');
+    }
+  }
 }

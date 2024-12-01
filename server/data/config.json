@@ -5,6 +5,8 @@
   "tokenKey": "xxxxxxxxxxxxxxxxxx",
   "uploadSaveDay": 0,
   "tipsFlag": 0,
+  "faviconCache": 0,
+  "siteInfoCache": 0,
   "songList": [
     {
       "name": "播放历史",

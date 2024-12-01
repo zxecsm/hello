@@ -617,7 +617,7 @@ function rightList(e, obj, el) {
     {
       id: 'rename',
       text: '重命名',
-      beforeIcon: 'iconfont icon-bianji',
+      beforeIcon: 'iconfont icon-24gl-rename',
     },
     {
       id: 'copy',
@@ -1129,11 +1129,11 @@ $header
   });
 function upFileAndDir(e) {
   const data = [
-    { id: '1', text: '上传文件', beforeIcon: 'iconfont icon-24gl-fileText' },
+    { id: '1', text: '上传文件', beforeIcon: 'iconfont icon-24gl-fileEmpty' },
     {
       id: '2',
       text: '上传文件夹',
-      beforeIcon: 'iconfont icon-24gl-folder',
+      beforeIcon: 'iconfont icon-24gl-folderPlus',
     },
     {
       id: '3',
@@ -1183,11 +1183,11 @@ function upFileAndDir(e) {
 }
 function createFileAndDir(e) {
   const data = [
-    { id: '1', text: '新建文本', beforeIcon: 'iconfont icon-24gl-fileText' },
+    { id: '1', text: '新建文本', beforeIcon: 'iconfont icon-24gl-fileEmpty' },
     {
       id: '2',
       text: '新建文件夹',
-      beforeIcon: 'iconfont icon-24gl-folder',
+      beforeIcon: 'iconfont icon-24gl-folderPlus',
     },
   ];
   rMenu.selectMenu(

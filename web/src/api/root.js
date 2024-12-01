@@ -59,6 +59,14 @@ export function reqRootRandomBgState() {
 export function reqRootCleanChatFile(data) {
   return _postAjax('/root/clean-chat-file', data);
 }
+// favicon缓存时间
+export function reqRootCleanFavicon(data) {
+  return _postAjax('/root/clean-favicon', data);
+}
+// siteInfo缓存时间
+export function reqRootCleanSiteInfo(data) {
+  return _postAjax('/root/clean-site-info', data);
+}
 // 更新token Key
 export function reqRootUpdateTokenKey() {
   return _postAjax('/root/update-tokenkey');

@@ -1,8 +1,8 @@
 @font-face {
   font-family: "iconfont"; /* Project id 2809795 */
-  src: url('iconfont.woff2?t=1731833718577') format('woff2'),
-       url('iconfont.woff?t=1731833718577') format('woff'),
-       url('iconfont.ttf?t=1731833718577') format('truetype');
+  src: url('iconfont.woff2?t=1733024108036') format('woff2'),
+       url('iconfont.woff?t=1733024108036') format('woff'),
+       url('iconfont.ttf?t=1733024108036') format('truetype');
 }
 
 .iconfont {
@@ -11,6 +11,30 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-24gl-folderPlus:before {
+  content: "\eac0";
+}
+
+.icon-24gl-fileEmpty:before {
+  content: "\eac1";
+}
+
+.icon-24gl-rename:before {
+  content: "\eb09";
+}
+
+.icon-shuangxianshangjiantou:before {
+  content: "\ee31";
+}
+
+.icon-shuangxianxiajiantou:before {
+  content: "\ee32";
+}
+
+.icon-shuangxianzuojiantou:before {
+  content: "\ee33";
 }
 
 .icon-24gl-volumeZero:before {

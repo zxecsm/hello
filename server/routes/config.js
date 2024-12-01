@@ -19,7 +19,6 @@ export const fieldLenght = {
   noteCategoryTitle: 30, // 笔记分类标题
   noteSize: 300 * 1024, // 笔记大小
   maxNoteCategory: 200, // 笔记分类个数
-  chatFileExpire: 999, // 聊天文件过期时间
   maxPagesize: 200, // 分页条数
   bmkGroup: 200, // 书签分组
   bmk: 300, // 分组书签个数

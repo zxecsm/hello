@@ -69,10 +69,16 @@ const accInp = wrapInput($account[0], {
   },
   focus(e) {
     $(e.target).parent().addClass('focus');
+    $title
+      .find('.iconfont')
+      .attr('class', 'iconfont icon-shuangxianxiajiantou');
   },
   blur(e) {
     checkUserName();
     $(e.target).parent().removeClass('focus');
+    $title
+      .find('.iconfont')
+      .attr('class', 'iconfont icon-shuangxianyoujiantou');
   },
   keyup: hdKeyUp,
 });
@@ -86,10 +92,16 @@ const pdInp = wrapInput($password[0], {
   },
   focus(e) {
     $(e.target).parent().addClass('focus');
+    $title
+      .find('.iconfont')
+      .attr('class', 'iconfont icon-shuangxianxiajiantou');
   },
   blur(e) {
     checkPassword();
     $(e.target).parent().removeClass('focus');
+    $title
+      .find('.iconfont')
+      .attr('class', 'iconfont icon-shuangxianyoujiantou');
   },
   keyup: hdKeyUp,
 });
@@ -103,10 +115,16 @@ const rePdInp = wrapInput($repassword[0], {
   },
   focus(e) {
     $(e.target).parent().addClass('focus');
+    $title
+      .find('.iconfont')
+      .attr('class', 'iconfont icon-shuangxianxiajiantou');
   },
   blur(e) {
     checkPassword();
     $(e.target).parent().removeClass('focus');
+    $title
+      .find('.iconfont')
+      .attr('class', 'iconfont icon-shuangxianyoujiantou');
   },
   keyup: hdKeyUp,
 });

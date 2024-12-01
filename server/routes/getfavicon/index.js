@@ -6,22 +6,17 @@ import cheerio from '../bmk/cheerio.js';
 
 import axios from 'axios';
 
-import {
-  errLog,
-  writelog,
-  concurrencyTasks,
-  getDirname,
-} from '../../utils/utils.js';
+import { errLog, getDirname } from '../../utils/utils.js';
 
 import configObj from '../../data/config.js';
 
 import _f from '../../utils/f.js';
 
 import timedTask from '../../utils/timedTask.js';
-import { _delDir, readMenu } from '../file/file.js';
 import { compressionImg } from '../../utils/img.js';
 import _crypto from '../../utils/crypto.js';
 import _path from '../../utils/path.js';
+import { cleanFavicon } from '../bmk/bmk.js';
 
 const route = express.Router();
 
@@ -29,33 +24,10 @@ const __dirname = getDirname(import.meta);
 
 const defaultIcon = resolve(__dirname, '../../img/default-icon.png');
 
-// 定期清理缓存图标
+// 定期清理图标缓存
 timedTask.add(async (flag) => {
   if (flag.slice(-6) === '001000') {
-    const now = Date.now();
-
-    const threshold = now - 7 * 24 * 60 * 60 * 1000;
-
-    const fList = await readMenu(
-      _path.normalize(`${configObj.filepath}/favicon`)
-    );
-
-    let num = 0;
-
-    await concurrencyTasks(fList, 5, async (item) => {
-      const { name, path, time, type } = item;
-
-      if (type === 'file') {
-        if (time < threshold) {
-          await _delDir(_path.normalize(`${path}/${name}`));
-          num++;
-        }
-      }
-    });
-
-    if (num) {
-      await writelog(false, `删除过期图标：${num}`, 'user');
-    }
+    await cleanFavicon();
   }
 });
 
