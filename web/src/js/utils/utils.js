@@ -2037,27 +2037,28 @@ export function scrollState(target, cb) {
 // 窗口居中
 export function toCenter(el, obj) {
   if (el.style.display === 'none' || el.style.visibility === 'hidden') return;
+
+  const { w, h } = getScreenSize(),
+    cw = el.offsetWidth,
+    ch = el.offsetHeight;
+
+  let x = (w - cw) / 2,
+    y = (h - ch) / 2;
+
   if (obj) {
     const { left, top } = obj;
-    el.style.left = left + 'px';
-    el.style.top = top + 'px';
-    el._op = {
-      x: left,
-      y: top,
-    };
-  } else {
-    const { w, h } = getScreenSize(),
-      cw = el.offsetWidth,
-      ch = el.offsetHeight,
-      x = (w - cw) / 2,
-      y = (h - ch) / 2;
-    el.style.left = x + 'px';
-    el.style.top = y + 'px';
-    el._op = {
-      x,
-      y,
-    };
+    if (left < w && top < h) {
+      x = left;
+      y = top;
+    }
   }
+
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  el._op = {
+    x,
+    y,
+  };
 }
 // 窗口尺寸
 export function getScreenSize() {
