@@ -6,11 +6,11 @@ import {
   _position,
   _setTimeout,
   debounce,
-  findLastIndex,
   hdTextMsg,
   imgjz,
   myDrag,
   myResize,
+  myToRest,
   toCenter,
   wrapInput,
 } from '../../utils/utils';
@@ -120,15 +120,12 @@ class RightM {
         target.style.transition = '0s';
       },
       up({ target, x, y }) {
-        target.style.transition = 'left 0.5s ease-in-out,top 0.5s ease-in-out';
         let h = window.innerHeight;
         if (y <= 0 || y >= h) {
-          // toCenter(target);
-          const { x, y } = target._op;
-          target.style.top = y + 'px';
-          target.style.left = x + 'px';
+          myToRest(target);
         } else {
-          target._op = { x, y };
+          target.dataset.x = x;
+          target.dataset.y = y;
         }
       },
     });
@@ -140,10 +137,8 @@ class RightM {
           target.style.transition = '0s';
         },
         up: (target) => {
-          target._os = {
-            w: target.offsetWidth,
-            h: target.offsetHeight,
-          };
+          target.dataset.w = target.offsetWidth;
+          target.dataset.h = target.offsetHeight;
         },
       },
       200,
@@ -185,7 +180,9 @@ class RightM {
     rh > maxH ? (rh = maxH) : null;
     this.rightBox.style.width = rw + 'px';
     this.rightBox.style.height = rh + 'px';
-    this.rightBox._os = { w: rw, h: rh };
+    this.rightBox.dataset.w = rw;
+    this.rightBox.dataset.h = rh;
+
     if (!e) {
       toCenter(this.rightBox);
       return;
@@ -198,7 +195,8 @@ class RightM {
     y < 0 ? (y = 0) : y + rh > h ? (y = h - rh) : null;
     this.rightBox.style.top = y + 'px';
     this.rightBox.style.left = x + 'px';
-    this.rightBox._op = { x, y };
+    this.rightBox.dataset.x = x;
+    this.rightBox.dataset.y = y;
   }
   hdClick(e) {
     const close = this.close.bind(this);
@@ -226,24 +224,19 @@ class RightM {
   }
   close(all, e) {
     if (all) {
-      let idx = -1;
       if (e) {
-        const x = e.clientX,
-          y = e.clientY;
-        idx = findLastIndex(rightBoxList, (item) => {
-          const rBox = item.rightBox,
-            op = rBox._op,
-            os = rBox._os,
-            xMax = op.x + os.w,
-            yMax = op.y + os.h;
-          return x >= op.x && x <= xMax && y >= op.y && y <= yMax;
-        });
-      }
-      rightBoxList.forEach((item, index) => {
-        if (index > idx) {
+        const ex = e.clientX,
+          ey = e.clientY;
+
+        for (let i = rightBoxList.length - 1; i >= 0; i--) {
+          const item = rightBoxList[i];
+          const { x, y, w, h } = item.rightBox.dataset;
+          const maxX = +x + +w;
+          const maxY = +y + +h;
+          if (ex >= x && ex <= maxX && ey >= y && ey <= maxY) break;
           item.close();
         }
-      });
+      }
       return;
     }
     this.opt.beforeClose && this.opt.beforeClose.call(this);

@@ -56,6 +56,13 @@ let miniPlayerCoord = _getData('miniPlayerCoord'),
 // 显示/隐藏迷你播放器
 export function showMiniPlayer() {
   $miniPlayer.stop().show(_d.speed);
+  const { left, top } = miniPlayerCoord;
+  const { w, h } = getScreenSize();
+  // 超出屏幕恢复默认
+  if (left > w || top > h) {
+    $miniPlayer[0].style.left = '';
+    $miniPlayer[0].style.top = '';
+  }
   setZidx($miniPlayer[0], 0, 0, miniPlayerCoord.isTop);
 }
 function switchMiniPlayerTopState() {
@@ -108,6 +115,14 @@ export function mvIspaused() {
 export function showMiniLrcBox(once) {
   if (once && $miniLrcWrap._isone) return;
   $miniLrcWrap.stop().fadeIn(_d.speed);
+  const { left, top } = miniLrcCoord;
+  const { w, h } = getScreenSize();
+  // 超出屏幕恢复默认
+  if (left > w || top > h) {
+    miniLrcCoord = _d.localStorageDefaultData.miniLrcCoord;
+    $miniLrcWrap[0].style.left = miniLrcCoord.left + 'px';
+    $miniLrcWrap[0].style.top = miniLrcCoord.top + 'px';
+  }
   setZidx($miniLrcWrap[0], 0, 0, miniLrcCoord.isTop);
 }
 export function hideMiniLrcBox() {
@@ -284,6 +299,8 @@ export function showEditLrc(sobj) {
     $editLrcWrap._once = true;
     toSetSize($editLrcWrap[0], 800, 800);
     toCenter($editLrcWrap[0]);
+  } else {
+    myToRest($editLrcWrap[0]);
   }
 }
 // 暂停视频
@@ -322,6 +339,8 @@ export function playMv(obj) {
     $musicMvWrap.once = true;
     toSetSize($musicMvWrap[0], 600, 600);
     toCenter($musicMvWrap[0]);
+  } else {
+    myToRest($musicMvWrap[0]);
   }
   musicMvContentScroll.init(
     `${setPlayingSongInfo().artist} - ${setPlayingSongInfo().title}`
@@ -395,7 +414,8 @@ myDrag({
     if (y <= 0 || y >= h) {
       myToMax(target);
     } else {
-      target._op = { x, y };
+      target.dataset.x = x;
+      target.dataset.y = y;
       myToRest(target, pointerX);
     }
   },
@@ -408,10 +428,8 @@ myResize({
   },
   up(target) {
     hideIframeMask();
-    target._os = {
-      w: target.offsetWidth,
-      h: target.offsetHeight,
-    };
+    target.dataset.w = target.offsetWidth;
+    target.dataset.h = target.offsetHeight;
   },
 });
 myDrag({
@@ -434,7 +452,8 @@ myDrag({
     if (y <= 0 || y >= h) {
       myToMax(target);
     } else {
-      target._op = { x, y };
+      target.dataset.x = x;
+      target.dataset.y = y;
       myToRest(target, pointerX);
     }
   },
@@ -447,10 +466,8 @@ myResize({
   },
   up(target) {
     hideIframeMask();
-    target._os = {
-      w: target.offsetWidth,
-      h: target.offsetHeight,
-    };
+    target.dataset.w = target.offsetWidth;
+    target.dataset.h = target.offsetHeight;
   },
 });
 // 层级

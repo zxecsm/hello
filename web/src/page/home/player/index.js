@@ -2428,6 +2428,8 @@ export function showMusicPlayerBox(cb) {
     toSetSize($musicPlayerBox[0], 600, 800);
     toCenter($musicPlayerBox[0]);
     setPlayVolume();
+  } else {
+    myToRest($musicPlayerBox[0]);
   }
   setZidx($musicPlayerBox[0], 'music', hideMusicPlayBox, playerIsTop);
 }
@@ -2494,7 +2496,8 @@ myDrag({
     if (y <= 0 || y >= h) {
       myToMax(target);
     } else {
-      target._op = { x, y };
+      target.dataset.x = x;
+      target.dataset.y = y;
       myToRest(target, pointerX);
     }
   },
@@ -2507,10 +2510,8 @@ myResize({
   },
   up(target) {
     hideIframeMask();
-    target._os = {
-      w: target.offsetWidth,
-      h: target.offsetHeight,
-    };
+    target.dataset.w = target.offsetWidth;
+    target.dataset.h = target.offsetHeight;
   },
 });
 // 歌单

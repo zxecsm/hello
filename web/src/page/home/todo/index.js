@@ -195,6 +195,8 @@ export function showTodoBox() {
     $todoBox._once = true;
     toSetSize($todoBox[0], 800, 800);
     toCenter($todoBox[0]);
+  } else {
+    myToRest($todoBox[0]);
   }
 }
 // 关闭todo
@@ -451,7 +453,8 @@ myDrag({
     if (y <= 0 || y >= h) {
       myToMax(target);
     } else {
-      target._op = { x, y };
+      target.dataset.x = x;
+      target.dataset.y = y;
       myToRest(target, pointerX);
     }
   },
@@ -465,10 +468,8 @@ myResize({
   },
   up(target) {
     hideIframeMask();
-    target._os = {
-      w: target.offsetWidth,
-      h: target.offsetHeight,
-    };
+    target.dataset.w = target.offsetWidth;
+    target.dataset.h = target.offsetHeight;
   },
 });
 // 手势关闭

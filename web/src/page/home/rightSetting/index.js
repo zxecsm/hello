@@ -1733,11 +1733,12 @@ myDrag({
     target.style.transition = 'top 0.5s ease-in-out, left 0.5s ease-in-out';
     const h = window.innerHeight;
     if (y <= 0 || y >= h) {
-      const { x, y } = target._op;
+      const { x, y } = target.dataset;
       target.style.top = y + 'px';
       target.style.left = x + 'px';
     } else {
-      target._op = { x, y };
+      target.dataset.x = x;
+      target.dataset.y = y;
     }
   },
 });

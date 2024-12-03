@@ -1171,7 +1171,8 @@ export function _progressBar(e, percent, callback) {
     y < 0 ? (y = 0) : y + mth > h ? (y = h - mth) : null;
     proBox.style.top = y + 'px';
     proBox.style.left = x + 'px';
-    proBox._op = { x, y };
+    proBox.dataset.x = x;
+    proBox.dataset.y = y;
   }
   calculationPosition(percent);
   // 计算进度位置
@@ -2053,12 +2054,13 @@ export function toCenter(el, obj) {
     }
   }
 
+  x < 0 ? (x = 0) : null;
+  y < 0 ? (y = 0) : null;
+
   el.style.left = x + 'px';
   el.style.top = y + 'px';
-  el._op = {
-    x,
-    y,
-  };
+  el.dataset.x = x;
+  el.dataset.y = y;
 }
 // 窗口尺寸
 export function getScreenSize() {
@@ -2084,7 +2086,8 @@ export function toSetSize(target, maxW = 900, maxH = 800) {
   }
   target.style.width = w + 'px';
   target.style.height = h + 'px';
-  target._os = { w, h };
+  target.dataset.w = w;
+  target.dataset.h = h;
 }
 // 窗口全屏
 export function myToMax(target) {
@@ -2105,15 +2108,20 @@ export function isFullScreen(target) {
 }
 // 重置位置
 export function myToRest(target, pointerX) {
-  let { x = 0, y = 0 } = target._op;
-  let { w = 0, h = 0 } = target._os;
+  let { x = 0, y = 0, w = 0, h = 0 } = target.dataset;
+  const screen = getScreenSize();
   target.style.transition =
     'left 0.5s ease-in-out, top 0.5s ease-in-out, width 0.5s ease-in-out, height 0.5s ease-in-out';
   // 如果是全屏
   if (pointerX && isFullScreen(target)) {
     let pes = (pointerX - x) / target.offsetWidth;
     x = pointerX - w * pes;
-    target._op.x = x;
+    target.dataset.x = x;
+  }
+  // 超出屏幕居中
+  if (x > screen.w || y > screen.h) {
+    toCenter(target);
+    return;
   }
   target.style.top = y + 'px';
   target.style.left = x + 'px';

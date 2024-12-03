@@ -160,10 +160,8 @@ class CreateIframe {
       },
       up(target) {
         hideIframeMask();
-        target._os = {
-          w: target.offsetWidth,
-          h: target.offsetHeight,
-        };
+        target.dataset.w = target.offsetWidth;
+        target.dataset.h = target.offsetHeight;
       },
     });
     // 拖动窗口
@@ -187,10 +185,8 @@ class CreateIframe {
         if (y <= 0 || y >= h) {
           this.toMax();
         } else {
-          target._op = {
-            x,
-            y,
-          };
+          target.dataset.x = x;
+          target.dataset.y = y;
           this.toRest(pointerX);
         }
       },
@@ -229,8 +225,8 @@ class CreateIframe {
   }
   // 退出全屏
   toRest(pointerX) {
-    let { x = 0, y = 0 } = this.box._op;
-    const { w = 0, h = 0 } = this.box._os;
+    const screen = getScreenSize();
+    let { x = 0, y = 0, w = 0, h = 0 } = this.box.dataset;
     this.box.style.transition =
       'top 0.5s ease-in-out, left 0.5s ease-in-out, width 0.5s ease-in-out, height 0.5s ease-in-out';
     if (pointerX) {
@@ -238,8 +234,13 @@ class CreateIframe {
       if (isFullScreen(this.box)) {
         let percent = (pointerX - x) / this.box.offsetWidth;
         x = pointerX - w * percent;
-        this.box._op.x = x;
+        this.box.dataset.x = x;
       }
+    }
+    // 超出屏幕则居中
+    if (x > screen.w || y > screen.h) {
+      toCenter(this.box);
+      return;
     }
     this.box.style.top = y + 'px';
     this.box.style.left = x + 'px';

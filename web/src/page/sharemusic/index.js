@@ -363,6 +363,8 @@ function playMv(obj) {
     $musicMvWrap.once = true;
     toSetSize($musicMvWrap[0], 600, 600);
     toCenter($musicMvWrap[0]);
+  } else {
+    myToRest($musicMvWrap[0]);
   }
   musicMvContentScroll.init(
     `${playingSongInfo.artist} - ${playingSongInfo.title}`
@@ -935,7 +937,8 @@ myDrag({
     if (y <= 0 || y >= h) {
       myToMax(target);
     } else {
-      target._op = { x, y };
+      target.dataset.x = x;
+      target.dataset.y = y;
       myToRest(target, pointerX);
     }
   },
@@ -946,10 +949,8 @@ myResize({
     target.style.transition = '0s';
   },
   up(target) {
-    target._os = {
-      w: target.offsetWidth,
-      h: target.offsetHeight,
-    };
+    target.dataset.w = target.offsetWidth;
+    target.dataset.h = target.offsetHeight;
   },
 });
 $lrcMenuWrap

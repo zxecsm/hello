@@ -3,12 +3,14 @@ import {
   _getTarget,
   _progressBar,
   _setData,
+  getScreenSize,
   isMobile,
   myDrag,
   percentToValue,
 } from '../../js/utils/utils';
 import { setZidx } from './popWindow';
 import { hideIframeMask, showIframeMask } from './iframe';
+import _d from '../../js/common/config';
 const _head = document.querySelector('head'),
   _style = document.createElement('style');
 _style.type = 'text/css';
@@ -123,6 +125,13 @@ myDrag({
   trigger: clock,
   border: true,
   create({ target }) {
+    const { left, top } = clockData.coord;
+    const { w, h } = getScreenSize();
+    // 超出屏幕恢复默认
+    if (left > w || top > h) {
+      clockData.coord = _d.localStorageDefaultData.clockData.coord;
+    }
+
     target.style.left = clockData.coord.left + 'px';
     target.style.top = clockData.coord.top + 'px';
   },
