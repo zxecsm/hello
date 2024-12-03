@@ -122,6 +122,7 @@ const _d = {
     fileSort: { type: 'time', isDes: true }, // 文件排序
     fileFontSize: 0.22, // 文件编辑文本大小
     fileShowGrid: false, // 文件列表块状显示
+    hiddenFile: false, // 隐藏隐藏文件
     searchFileSubDir: false, // 搜索子目录
     skipUpSameNameFiles: false, // 略过同名文件
     newNote: '', // 未保存的新笔记

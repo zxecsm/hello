@@ -63,6 +63,7 @@ const $fileBox = $('.file_box');
 let pageSize = _getData('filesPageSize');
 let curFileDirPath = _getDataTem('curFileDirPath') || '/';
 let fileShowGrid = _getData('fileShowGrid');
+let hiddenFile = _getData('hiddenFile');
 let fileSort = _getData('fileSort'); // 排序
 let subDir = _getData('searchFileSubDir'); // 搜索子目录
 let urlparmes = queryURLParams(myOpen()),
@@ -175,6 +176,18 @@ function getShareData(close, loading = { start() {}, end() {} }) {
     });
 }
 getShareData();
+// 更改显示隐藏文件模式
+function changeHiddenFileModel() {
+  $header
+    .find('.h_hidden_file_btn')
+    .attr(
+      'class',
+      `h_btn h_hidden_file_btn iconfont ${
+        hiddenFile ? 'icon-kejian' : 'icon-bukejian'
+      }`
+    );
+}
+changeHiddenFileModel();
 // 显示模式
 function changeListShowModel() {
   $header
@@ -200,7 +213,7 @@ curmb.bind($curmbBox.find('.container')[0], (path, param) => {
     curFileDirPath = path;
     wInput.setValue('');
   }
-  openDir(curFileDirPath, param.top, param.update);
+  openDir(curFileDirPath, param);
 });
 // 搜索子目录状态
 function changeSubDirState() {
@@ -373,7 +386,7 @@ function updatePageInfo() {
 }
 let fileListData = { data: [] };
 // 打开目录
-async function openDir(path, top, update = 0) {
+async function openDir(path, { top, update = 0 }) {
   try {
     _setDataTem('curFileDirPath', path);
     const res = await reqFileReadDir({
@@ -386,6 +399,7 @@ async function openDir(path, top, update = 0) {
       word: wInput.getValue().trim(),
       token: shareToken,
       update,
+      hidden: hiddenFile ? 1 : 0,
     });
     if (res.code === 1) {
       const taskKey = res.data.key;
@@ -510,13 +524,13 @@ $contentWrap
     if (fileShowGrid) {
       readFileAndDir(getFileItem(id));
     } else {
-      showFileInfo(e, getFileItem(id));
+      rightList(e, getFileItem(id));
     }
   })
   .on('click', '.name', function (e) {
     const id = this.parentNode.dataset.id;
     if (fileShowGrid) {
-      showFileInfo(e, getFileItem(id));
+      rightList(e, getFileItem(id));
     } else {
       readFileAndDir(getFileItem(id));
     }
@@ -667,6 +681,12 @@ $header
     fileShowGrid = !fileShowGrid;
     _setData('fileShowGrid', fileShowGrid);
     changeListShowModel();
+  })
+  .on('click', '.h_hidden_file_btn', function () {
+    hiddenFile = !hiddenFile;
+    _setData('hiddenFile', hiddenFile);
+    changeHiddenFileModel();
+    curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
   })
   .on('click', '.h_search_btn', function () {
     if ($search.is(':hidden')) {

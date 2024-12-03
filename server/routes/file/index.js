@@ -121,16 +121,23 @@ route.get('/share', async (req, res) => {
   }
 });
 
-//读取目录
-function fileListSortAndCacheSize(list, rootP, sortType, isDesc) {
-  list.forEach((item) => {
-    const fullPath = _path.normalize(`${rootP}/${item.path}/${item.name}`);
+// 读取目录
+function fileListSortAndCacheSize(list, rootP, sortType, isDesc, hidden) {
+  list = list.reduce((pre, cur) => {
+    const fullPath = _path.normalize(`${rootP}/${cur.path}/${cur.name}`);
 
-    if (item.type === 'dir') {
+    // 隐藏隐藏文件
+    if (hidden === 1 && cur.name.startsWith('.')) return pre;
+
+    if (cur.type === 'dir') {
       // 读取缓存目录大小
-      item.size = fileSize.get(fullPath);
+      cur.size = fileSize.get(fullPath);
     }
-  });
+
+    pre.push(cur);
+
+    return pre;
+  }, []);
 
   return sortFileList(list, sortType, isDesc);
 }
@@ -146,12 +153,14 @@ route.get('/read-dir', async (req, res) => {
       update = 0,
       word = '',
       token = '',
+      hidden = 0,
     } = req.query;
     pageNo = parseInt(pageNo);
     pageSize = parseInt(pageSize);
     subDir = parseInt(subDir);
     isDesc = parseInt(isDesc);
     update = parseInt(update);
+    hidden = parseInt(hidden);
 
     const temid = req._hello.temid;
 
@@ -166,6 +175,7 @@ route.get('/read-dir', async (req, res) => {
       !validationValue(subDir, [1, 0]) ||
       !validationValue(isDesc, [1, 0]) ||
       !validationValue(update, [1, 0]) ||
+      !validationValue(hidden, [1, 0]) ||
       !validaString(word, 0, fieldLenght.searchWord) ||
       !validationValue(sortType, ['name', 'time', 'size', 'type']) ||
       !validaString(temid, 1, fieldLenght.id, 1)
@@ -221,7 +231,7 @@ route.get('/read-dir', async (req, res) => {
         res,
         'ok',
         createPagingData(
-          fileListSortAndCacheSize(cacheList, rootP, sortType, isDesc),
+          fileListSortAndCacheSize(cacheList, rootP, sortType, isDesc, hidden),
           pageSize,
           pageNo
         )
@@ -298,7 +308,7 @@ route.get('/read-dir', async (req, res) => {
           res,
           'ok',
           createPagingData(
-            fileListSortAndCacheSize(arr, rootP, sortType, isDesc),
+            fileListSortAndCacheSize(arr, rootP, sortType, isDesc, hidden),
             pageSize,
             pageNo
           )

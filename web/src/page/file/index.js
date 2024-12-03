@@ -84,9 +84,22 @@ const $footer = $('.footer');
 let pageSize = _getData('filesPageSize');
 let curFileDirPath = _getData('curFileDirPath');
 let fileShowGrid = _getData('fileShowGrid');
+let hiddenFile = _getData('hiddenFile');
 let fileSort = _getData('fileSort');
 let subDir = _getData('searchFileSubDir'); // 搜索子目录
 let skipUpSameNameFiles = _getData('skipUpSameNameFiles'); // 上传略过同名文件
+// 更改显示隐藏文件模式
+function changeHiddenFileModel() {
+  $header
+    .find('.h_hidden_file_btn')
+    .attr(
+      'class',
+      `h_btn h_hidden_file_btn iconfont ${
+        hiddenFile ? 'icon-kejian' : 'icon-bukejian'
+      }`
+    );
+}
+changeHiddenFileModel();
 // 更改显示模式
 function changeListShowModel() {
   $header
@@ -139,7 +152,7 @@ curmb.bind($curmbBox.find('.container')[0], (path, param) => {
     // 打开新的目录，清空搜索框
     wInput.setValue('');
   }
-  openDir(curFileDirPath, param.top, param.update);
+  openDir(curFileDirPath, param);
 });
 // 选定搜索子目录状态
 function changeSubDirState() {
@@ -383,7 +396,7 @@ function updatePageInfo() {
 updateCurPage();
 let fileListData = { data: [] };
 // 打开目录
-async function openDir(path, top, update = 0) {
+async function openDir(path, { top, update = 0 }) {
   try {
     const $clearTrashBtn = $header.find('.clear_trash_btn');
 
@@ -402,6 +415,7 @@ async function openDir(path, top, update = 0) {
       isDesc: fileSort.isDes ? 1 : 0,
       subDir: subDir ? 1 : 0,
       update,
+      hidden: hiddenFile ? 1 : 0,
       word: wInput.getValue().trim(),
     });
     if (res.code === 1) {
@@ -487,7 +501,11 @@ $contentWrap
     if (fileShowGrid) {
       readFileAndDir(getFileItem(id));
     } else {
-      showFileInfo(e, getFileItem(id));
+      rightList(
+        e,
+        getFileItem(id),
+        this.parentNode.querySelector('.check_state')
+      );
     }
   })
   .on('click', '.size', function () {
@@ -506,7 +524,11 @@ $contentWrap
   .on('click', '.name', function (e) {
     const id = this.parentNode.dataset.id;
     if (fileShowGrid) {
-      showFileInfo(e, getFileItem(id));
+      rightList(
+        e,
+        getFileItem(id),
+        this.parentNode.querySelector('.check_state')
+      );
     } else {
       readFileAndDir(getFileItem(id));
     }
@@ -1079,6 +1101,12 @@ $header
     fileShowGrid = !fileShowGrid;
     _setData('fileShowGrid', fileShowGrid);
     changeListShowModel();
+  })
+  .on('click', '.h_hidden_file_btn', function () {
+    hiddenFile = !hiddenFile;
+    _setData('hiddenFile', hiddenFile);
+    changeHiddenFileModel();
+    curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
   })
   .on('click', '.h_search_btn', function () {
     if ($search.is(':hidden')) {

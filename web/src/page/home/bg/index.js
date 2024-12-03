@@ -106,7 +106,7 @@ async function hdUpBg(files) {
 }
 // 关闭壁纸库
 export function closeBgBox() {
-  $allBgWrap.stop().slideUp(_d.speed, () => {
+  $allBgWrap.stop().fadeOut(_d.speed, () => {
     bglazyImg.unBind();
     popWindow.remove('bg');
     $bgList.html('');
