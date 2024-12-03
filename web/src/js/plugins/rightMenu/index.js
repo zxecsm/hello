@@ -6,6 +6,7 @@ import {
   _position,
   _setTimeout,
   debounce,
+  findLastIndex,
   getScreenSize,
   hdTextMsg,
   imgjz,
@@ -227,19 +228,22 @@ class RightM {
   }
   close(all, e) {
     if (all) {
+      let idx = -1;
       if (e) {
         const ex = e.clientX,
           ey = e.clientY;
-
-        for (let i = rightBoxList.length - 1; i >= 0; i--) {
-          const item = rightBoxList[i];
+        idx = findLastIndex(rightBoxList, (item) => {
           const { x, y, w, h } = item.rightBox.dataset;
           const maxX = +x + +w;
           const maxY = +y + +h;
-          if (ex >= x && ex <= maxX && ey >= y && ey <= maxY) break;
+          return ex >= x && ex <= maxX && ey >= y && ey <= maxY;
+        });
+      }
+      rightBoxList.forEach((item, index) => {
+        if (index > idx) {
           item.close();
         }
-      }
+      });
       return;
     }
     this.opt.beforeClose && this.opt.beforeClose.call(this);
