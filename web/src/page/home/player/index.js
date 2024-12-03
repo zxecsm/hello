@@ -45,6 +45,7 @@ import {
   formatNum,
   isFullScreen,
   concurrencyTasks,
+  getScreenSize,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -2492,8 +2493,8 @@ myDrag({
   },
   up({ target, x, y, pointerX }) {
     hideIframeMask();
-    const h = window.innerHeight;
-    if (y <= 0 || y >= h) {
+    const { h, w } = getScreenSize();
+    if (y <= 0 || y >= h || x > w || 0 - x > target.offsetWidth) {
       myToMax(target);
     } else {
       target.dataset.x = x;
@@ -2504,14 +2505,16 @@ myDrag({
 });
 myResize({
   target: $musicPlayerBox[0],
-  down(target) {
+  down({ target }) {
     target.style.transition = '0s';
     showIframeMask();
   },
-  up(target) {
+  up({ target, x, y }) {
     hideIframeMask();
     target.dataset.w = target.offsetWidth;
     target.dataset.h = target.offsetHeight;
+    target.dataset.x = x;
+    target.dataset.y = y;
   },
 });
 // 歌单

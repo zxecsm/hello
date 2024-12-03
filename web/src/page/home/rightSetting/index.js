@@ -37,6 +37,7 @@ import {
   parseObjectJson,
   changeHeadBtnSort,
   encodeHtml,
+  getScreenSize,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -1731,8 +1732,8 @@ myDrag({
   up({ target, x, y }) {
     hideIframeMask();
     target.style.transition = 'top 0.5s ease-in-out, left 0.5s ease-in-out';
-    const h = window.innerHeight;
-    if (y <= 0 || y >= h) {
+    const { h, w } = getScreenSize();
+    if (y <= 0 || y >= h || x > w || 0 - x > target.offsetWidth) {
       const { x, y } = target.dataset;
       target.style.top = y + 'px';
       target.style.left = x + 'px';

@@ -641,8 +641,8 @@ myDrag({
   },
   up({ target, x, y, pointerX }) {
     hideIframeMask();
-    const h = window.innerHeight;
-    if (y <= 0 || y >= h) {
+    const { h, w } = getScreenSize();
+    if (y <= 0 || y >= h || x > w || 0 - x > target.offsetWidth) {
       myToMax(target);
     } else {
       target.dataset.x = x;
@@ -654,14 +654,16 @@ myDrag({
 // 调整大小
 myResize({
   target: $countBox[0],
-  down(target) {
+  down({ target }) {
     target.style.transition = '0s';
     showIframeMask();
   },
-  up(target) {
+  up({ target, x, y }) {
     hideIframeMask();
     target.dataset.w = target.offsetWidth;
     target.dataset.h = target.offsetHeight;
+    target.dataset.x = x;
+    target.dataset.y = y;
   },
 });
 // 手势关闭

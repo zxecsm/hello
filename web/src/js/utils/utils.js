@@ -978,12 +978,13 @@ export function checkedType(target) {
 }
 // 获取位置
 export function _position(el, relativeToHTML) {
-  let top = el.getBoundingClientRect().top,
-    left = el.getBoundingClientRect().left;
+  let { top, left } = el.getBoundingClientRect();
+
+  // 定位到上一级开启定位的祖先元素
   if (!relativeToHTML) {
-    let p = el.offsetParent;
-    top -= _offset(p).top;
-    left -= _offset(p).left;
+    const pOffset = _offset(el.offsetParent);
+    top -= pOffset.top;
+    left -= pOffset.left;
   }
   return {
     top,
@@ -2119,7 +2120,7 @@ export function myToRest(target, pointerX) {
     target.dataset.x = x;
   }
   // 超出屏幕居中
-  if (x > screen.w || y > screen.h) {
+  if (x > screen.w || y > screen.h || 0 - x > w || y < 0) {
     toCenter(target);
     return;
   }
@@ -2254,7 +2255,7 @@ export function myResize(opt, minW = 200, minH = 200) {
     document.addEventListener('mousemove', hdMove);
     this.addEventListener('touchend', hdUp);
     document.addEventListener('mouseup', hdUp);
-    down && down(target);
+    down && down({ target });
   }
   function hdMove(e) {
     e.preventDefault();
@@ -2326,7 +2327,7 @@ export function myResize(opt, minW = 200, minH = 200) {
     if (h > minH) {
       target.style.height = h + 'px';
     }
-    move && move(target);
+    move && move({ target });
   }
   function hdUp() {
     target.classList.remove('jzxz');
@@ -2334,7 +2335,7 @@ export function myResize(opt, minW = 200, minH = 200) {
     document.removeEventListener('mousemove', hdMove);
     this.removeEventListener('touchend', hdUp);
     document.removeEventListener('mouseup', hdUp);
-    up && up(target);
+    up && up({ target, x: ol, y: ot });
   }
   triggerArr.forEach((item) => {
     item.addEventListener('mousedown', hdDown);

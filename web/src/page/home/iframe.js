@@ -154,14 +154,16 @@ class CreateIframe {
     // 窗口缩放
     this.resizeClose = myResize({
       target: this.box,
-      down(target) {
+      down({ target }) {
         target.style.transition = '0s';
         showIframeMask();
       },
-      up(target) {
+      up({ target, x, y }) {
         hideIframeMask();
         target.dataset.w = target.offsetWidth;
         target.dataset.h = target.offsetHeight;
+        target.dataset.x = x;
+        target.dataset.y = y;
       },
     });
     // 拖动窗口
@@ -181,8 +183,8 @@ class CreateIframe {
       },
       up: ({ target, x, y, pointerX }) => {
         hideIframeMask();
-        const h = window.innerHeight;
-        if (y <= 0 || y >= h) {
+        const { h, w } = getScreenSize();
+        if (y <= 0 || y >= h || x > w || 0 - x > target.offsetWidth) {
           this.toMax();
         } else {
           target.dataset.x = x;
@@ -238,7 +240,7 @@ class CreateIframe {
       }
     }
     // 超出屏幕则居中
-    if (x > screen.w || y > screen.h) {
+    if (x > screen.w || y > screen.h || 0 - x > w || y < 0) {
       toCenter(this.box);
       return;
     }

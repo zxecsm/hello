@@ -6,6 +6,7 @@ import {
   _position,
   _setTimeout,
   debounce,
+  getScreenSize,
   hdTextMsg,
   imgjz,
   myDrag,
@@ -120,8 +121,8 @@ class RightM {
         target.style.transition = '0s';
       },
       up({ target, x, y }) {
-        let h = window.innerHeight;
-        if (y <= 0 || y >= h) {
+        const { h, w } = getScreenSize();
+        if (y <= 0 || y >= h || x > w || 0 - x > target.offsetWidth) {
           myToRest(target);
         } else {
           target.dataset.x = x;
@@ -133,12 +134,14 @@ class RightM {
     this.resizeClose = myResize(
       {
         target: this.rightBox,
-        down: (target) => {
+        down: ({ target }) => {
           target.style.transition = '0s';
         },
-        up: (target) => {
+        up: ({ target, x, y }) => {
           target.dataset.w = target.offsetWidth;
           target.dataset.h = target.offsetHeight;
+          target.dataset.x = x;
+          target.dataset.y = y;
         },
       },
       200,
