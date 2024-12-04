@@ -593,6 +593,7 @@ route.get('/export', async (req, res) => {
       return pre;
     }, []);
 
+    await uLog(req, `导出歌单(${songListObj.name})`);
     res.send(JSON.stringify(list));
   } catch (error) {
     _err(res)(req, error);
@@ -631,7 +632,7 @@ route.post('/import', async (req, res) => {
     );
 
     if (newSongList.length > maxSonglistCount) {
-      _err(res, `歌单限制${maxSonglistCount}首`);
+      _err(res, `歌单限制${maxSonglistCount}首`)(req);
       return;
     }
 
@@ -641,7 +642,7 @@ route.post('/import', async (req, res) => {
 
     syncUpdateData(req, 'music');
 
-    _success(res, '导入歌曲成功')(req);
+    _success(res, '导入歌曲成功')(req, songLists[idx].name, 1);
   } catch (error) {
     _err(res)(req, error);
   }
@@ -1165,7 +1166,7 @@ route.post('/collect-song', async (req, res) => {
     const newSongList = unique([...add, ...list[1].item], ['id']);
 
     if (newSongList.length > maxSonglistCount) {
-      _err(res, `歌单限制${maxSonglistCount}首`);
+      _err(res, `歌单限制${maxSonglistCount}首`)(req);
       return;
     }
 
@@ -1320,7 +1321,7 @@ route.post('/song-to-list', async (req, res) => {
       const newSongList = unique([...ids, ...list[tIdx].item], ['id']);
 
       if (newSongList.length > maxSonglistCount) {
-        _err(res, `歌单限制${maxSonglistCount}首`);
+        _err(res, `歌单限制${maxSonglistCount}首`)(req);
         return;
       }
 
@@ -1338,7 +1339,7 @@ route.post('/song-to-list', async (req, res) => {
       const newSongList = unique([...ids, ...list[tIdx].item], ['id']);
 
       if (newSongList.length > maxSonglistCount) {
-        _err(res, `歌单限制${maxSonglistCount}首`);
+        _err(res, `歌单限制${maxSonglistCount}首`)(req);
         return;
       }
 
