@@ -1505,7 +1505,7 @@ export function showUserInfo() {
 }
 // 导入书签
 function importBm(cb, loading = { start() {}, end() {} }) {
-  upStr()
+  upStr('.html')
     .then((res) => {
       if (!res) return;
       const list = hdImportBm(getbookmark(res));

@@ -7,6 +7,15 @@ export function reqNoteRead(data) {
 export function reqNoteEdit(data) {
   return _postAjax('/note/edit', data);
 }
+// 上传笔记
+export function reqNoteUpNote(data, callback, signal) {
+  return _postAjax(
+    '/note/up-note',
+    data,
+    { signal, load: false, parallel: true },
+    callback
+  );
+}
 // 删除
 export function reqNoteDelete(data) {
   return _postAjax('/note/delete', data);

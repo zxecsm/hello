@@ -563,6 +563,90 @@ route.get('/list', async (req, res) => {
   }
 });
 
+// 导出歌单
+route.get('/export', async (req, res) => {
+  try {
+    const { id } = req.query;
+
+    if (!validaString(id, 1, fieldLenght.id, 1)) {
+      paramErr(res, req);
+      return;
+    }
+
+    const { account } = req._hello.userinfo;
+
+    const songListObj = (await getMusicList(account)).find(
+      (item) => item.id === id
+    );
+
+    if (!songListObj) {
+      _err(res, '歌单不存在')(req, id, 1);
+      return;
+    }
+
+    const musicsObj = await batchGetMusics(songListObj.item.map((m) => m.id));
+
+    const list = songListObj.item.reduce((pre, cur) => {
+      if (!musicsObj.hasOwnProperty(cur.id)) return pre;
+
+      pre.push(musicsObj[cur.id]);
+      return pre;
+    }, []);
+
+    res.send(JSON.stringify(list));
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 导入歌单
+route.post('/import', async (req, res) => {
+  try {
+    const { list, id } = req.body;
+
+    if (
+      !validaString(id, 1, fieldLenght.id, 1) ||
+      !_type.isArray(list) ||
+      list.length > maxSonglistCount ||
+      !list.every((song) => validaString(song.id, 1, fieldLenght.id, 1))
+    ) {
+      paramErr(res, req);
+      return;
+    }
+
+    const { account } = req._hello.userinfo;
+
+    const songLists = await getMusicList(account);
+
+    const idx = songLists.findIndex((item) => item.id === id);
+
+    if (idx < 0) {
+      _err(res, '歌单不存在')(req, id, 1);
+      return;
+    }
+
+    const newSongList = unique(
+      [...list.map((item) => ({ id: item.id })), ...songLists[idx].item],
+      ['id']
+    );
+
+    if (newSongList.length > maxSonglistCount) {
+      _err(res, `歌单限制${maxSonglistCount}首`);
+      return;
+    }
+
+    songLists[idx].item = newSongList;
+
+    await updateSongList(account, songLists);
+
+    syncUpdateData(req, 'music');
+
+    _success(res, '导入歌曲成功')(req);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
 // 最后播放
 route.post('/last-play', async (req, res) => {
   try {
@@ -1078,11 +1162,14 @@ route.post('/collect-song', async (req, res) => {
 
     const add = ids.map((item) => ({ id: item }));
 
-    // 去重并限制歌单大小
-    list[1].item = unique([...add, ...list[1].item], ['id']).slice(
-      0,
-      maxSonglistCount
-    );
+    const newSongList = unique([...add, ...list[1].item], ['id']);
+
+    if (newSongList.length > maxSonglistCount) {
+      _err(res, `歌单限制${maxSonglistCount}首`);
+      return;
+    }
+
+    list[1].item = newSongList;
 
     await updateSongList(account, list);
 
@@ -1230,10 +1317,14 @@ route.post('/song-to-list', async (req, res) => {
       (fIdx >= 0 && fIdx < 2 && tIdx > 1)
     ) {
       // 从所有歌曲歌单和默认歌单添加到非默认歌单
-      list[tIdx].item = unique([...ids, ...list[tIdx].item], ['id']).slice(
-        0,
-        maxSonglistCount
-      );
+      const newSongList = unique([...ids, ...list[tIdx].item], ['id']);
+
+      if (newSongList.length > maxSonglistCount) {
+        _err(res, `歌单限制${maxSonglistCount}首`);
+        return;
+      }
+
+      list[tIdx].item = newSongList;
 
       await updateSongList(account, list);
 
@@ -1244,14 +1335,19 @@ route.post('/song-to-list', async (req, res) => {
     }
     if (fIdx > 1 && tIdx > 1 && fromId !== toId) {
       // 从非默认歌单移动到非默认歌单
+      const newSongList = unique([...ids, ...list[tIdx].item], ['id']);
+
+      if (newSongList.length > maxSonglistCount) {
+        _err(res, `歌单限制${maxSonglistCount}首`);
+        return;
+      }
+
+      // 原歌单删除选中歌曲
       list[fIdx].item = list[fIdx].item.filter(
         (item) => !ids.some((y) => y.id === item.id)
       );
 
-      list[tIdx].item = unique([...ids, ...list[tIdx].item], ['id']).slice(
-        0,
-        maxSonglistCount
-      );
+      list[tIdx].item = newSongList;
 
       await updateSongList(account, list);
 

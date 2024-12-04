@@ -108,3 +108,11 @@ export function reqPlayerSaveShare(data) {
 export function reqPlayerRandomList() {
   return _getAjax('/player/random-list');
 }
+// 导入歌曲
+export function reqPlayerImport(data) {
+  return _postAjax('/player/import', data);
+}
+// 导出歌单
+export function reqPlayerExport(data) {
+  return _postAjax('/player/export', data);
+}

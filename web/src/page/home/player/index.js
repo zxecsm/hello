@@ -46,6 +46,7 @@ import {
   isFullScreen,
   concurrencyTasks,
   getScreenSize,
+  upStr,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -72,6 +73,7 @@ import {
   reqPlayerSongToList,
   reqPlayerUp,
   reqPlayerRandomList,
+  reqPlayerImport,
 } from '../../../api/player.js';
 import {
   changeMiniPlayerBg,
@@ -1235,32 +1237,79 @@ function deleteSongList(e, name, id, cb, loading = { start() {}, end() {} }) {
 function songListMenu(e, sid) {
   const index = musicList.findIndex((item) => item.id === sid);
   const { des, name, num } = musicList[index];
-  const data = [
-    {
+  const data = [];
+
+  if (isRoot() || index > 2) {
+    data.push({
       id: '1',
       text: '编辑',
       beforeIcon: 'iconfont icon-bianji',
-    },
-    {
-      id: '2',
+    });
+  }
+  if (index !== 2) {
+    data.push(
+      {
+        id: '2',
+        text: '导入歌曲',
+        beforeIcon: 'iconfont icon-upload',
+      },
+      {
+        id: '3',
+        text: '导出歌曲',
+        beforeIcon: 'iconfont icon-download',
+      }
+    );
+  }
+  if (index > 2) {
+    data.push({
+      id: '4',
       text: '移除歌单',
       beforeIcon: 'iconfont icon-shibai',
-    },
-  ];
-  if (isRoot()) {
-    if (index < 3) {
-      data.splice(1, 1);
-    }
-  } else {
-    if (index < 3) return;
+    });
   }
+  if (data.length === 0) return;
+
   rMenu.selectMenu(
     e,
     data,
-    ({ e, close, id, loading }) => {
+    async ({ e, close, id, loading }) => {
       if (id === '1') {
         editSongList(e, { name, des, num }, sid);
       } else if (id === '2') {
+        close();
+        try {
+          const text = await upStr('.json');
+          if (text) {
+            const list = JSON.parse(text);
+            const res = await reqPlayerImport({ id: sid, list });
+
+            if (res.code === 1) {
+              _msg.success(res.codeText);
+              getSongList();
+            }
+          }
+        } catch {
+          _msg.error();
+        }
+      } else if (id === '3') {
+        _pop(
+          {
+            e,
+            text: '确认导出？',
+          },
+          async (type) => {
+            if (type === 'confirm') {
+              downloadFile([
+                {
+                  fileUrl: `/api/player/export/?id=${sid}`,
+                  filename: `${name}.json`,
+                },
+              ]);
+              close();
+            }
+          }
+        );
+      } else if (id === '4') {
         deleteSongList(e, name, sid, close, loading);
       }
     },

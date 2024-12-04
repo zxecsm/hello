@@ -494,12 +494,13 @@ const reqObj = {
   },
 };
 // 请求
-export function _postAjax(url, data = {}, opt = {}) {
+export function _postAjax(url, data = {}, opt = {}, callback) {
   const {
     load = true,
     timeout = 0,
     stopErrorMsg = false,
     parallel = false,
+    signal = false,
   } = opt;
   if (load) {
     _loadingBar.start();
@@ -520,6 +521,20 @@ export function _postAjax(url, data = {}, opt = {}) {
       },
       xhrFields: {
         withCredentials: true,
+      },
+      xhr: function () {
+        const xhr = new XMLHttpRequest();
+        xhr.upload.addEventListener('progress', function (e) {
+          if (signal && signal.aborted) {
+            xhr.abort();
+            return;
+          }
+          //loaded代表上传了多少
+          //total代表总数为多少
+          const pes = e.loaded / e.total;
+          callback && callback(pes);
+        });
+        return xhr;
       },
       success: (data) => {
         if (!parallel) {
@@ -2707,8 +2722,8 @@ export function getTextImg(name, size = 400) {
   return cvs.toDataURL('image/png', 1);
 }
 // 上传配置
-export async function upStr() {
-  const files = await getFiles();
+export async function upStr(accept = '') {
+  const files = await getFiles({ accept });
   if (files.length === 0) return '';
   const file = files[0];
   const text = await getFileReader(file, 'text');

@@ -29,6 +29,10 @@ import {
   isValidDate,
   formatNum,
   darkMode,
+  downloadFile,
+  getFileReader,
+  getFiles,
+  concurrencyTasks,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -44,6 +48,7 @@ import {
   reqNoteSetCategory,
   reqNoteState,
   reqNoteTop,
+  reqNoteUpNote,
 } from '../../api/note';
 import { CreateTabs } from './tabs';
 import {
@@ -56,6 +61,7 @@ import rMenu from '../../js/plugins/rightMenu';
 import { showNoteInfo } from '../../js/utils/showinfo';
 import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
+import { UpProgress } from '../../js/plugins/UpProgress';
 const $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
   $categoryTag = $('.category_tag'),
@@ -709,6 +715,60 @@ function hdCheckItemBtn() {
     check: 'n',
   });
 }
+// 上传笔记
+async function upNote() {
+  const files = await getFiles({ multiple: 'multiple', accept: '.md' });
+  if (files.length === 0) return;
+
+  const controller = new AbortController();
+  const signal = controller.signal;
+
+  const upPro = new UpProgress(() => {
+    controller.abort();
+  });
+
+  await concurrencyTasks(files, 3, async (file) => {
+    if (signal.aborted) return;
+    const { name, size } = file;
+    const pro = upPro.add(name);
+
+    if (!/\.md$/i.test(name)) {
+      pro.fail();
+      _msg.error(`笔记文件格式错误`);
+      return;
+    }
+
+    if (size > _d.fieldLenght.noteSize) {
+      pro.fail();
+      _msg.error(`笔记内容过长`);
+      return;
+    }
+
+    try {
+      const content = await getFileReader(file, 'text');
+
+      const res = await reqNoteUpNote(
+        { title: name.slice(0, -3), content },
+        (percent) => {
+          pro.update(percent);
+        },
+        signal
+      );
+
+      if (res.code === 1) {
+        pro.close();
+      } else {
+        pro.fail();
+      }
+    } catch {
+      pro.fail();
+    }
+  });
+
+  realtime.send({ type: 'updatedata', data: { flag: 'note' } });
+  $contentWrap.pagenum = 1;
+  renderList(true);
+}
 $headWrap
   .on('click', '.h_go_home', function () {
     myOpen('/');
@@ -716,7 +776,18 @@ $headWrap
   .on('click', '.h_add_item_btn', function (e) {
     if (runState !== 'own') return;
     e.stopPropagation();
-    _myOpen('/edit/#new', '新笔记');
+    const data = [
+      { id: 'add', text: '新建笔记', beforeIcon: 'iconfont icon-tianjia' },
+      { id: 'up', text: '上传笔记', beforeIcon: 'iconfont icon-upload' },
+    ];
+    rMenu.selectMenu(e, data, ({ close, id }) => {
+      close();
+      if (id === 'add') {
+        _myOpen('/edit/#new', '新笔记');
+      } else if (id === 'up') {
+        upNote();
+      }
+    });
   })
   .on('click', '.h_check_item_btn', hdCheckItemBtn)
   .on('click', '.inp_box .clean_btn', function () {
@@ -747,6 +818,17 @@ $footer
     if (ids.length === 0) return;
     deleteNote(e, ids);
   })
+  .on('click', '.f_download', function () {
+    const ids = getCheckItems();
+    if (ids.length === 0) return;
+    downloadFile(
+      ids.map((id) => ({
+        fileUrl: `/api/note/read/?v=${id}&download=1`,
+        filename: getNoteInfo(id).title + '.md',
+      }))
+    );
+    closeCheck();
+  })
   .on('click', '.f_clock', function () {
     if (runState !== 'own') return;
     const ids = getCheckItems();
@@ -761,16 +843,19 @@ $footer
   })
   .on('click', '.f_close', function () {
     if (runState !== 'own') return;
-    const $itemBox = $contentWrap.find('.item_box');
-    $itemBox
-      .find('.check_state')
-      .css('display', 'none')
-      .attr('check', 'n')
-      .css('background-color', 'transparent');
-    $headWrap._checkState = false;
-    $footer.stop().slideUp(_d.speed);
+    closeCheck();
   })
   .on('click', 'span', switchCheckAll);
+function closeCheck() {
+  const $itemBox = $contentWrap.find('.item_box');
+  $itemBox
+    .find('.check_state')
+    .css('display', 'none')
+    .attr('check', 'n')
+    .css('background-color', 'transparent');
+  $headWrap._checkState = false;
+  $footer.stop().slideUp(_d.speed);
+}
 function switchCheckAll() {
   if (runState !== 'own') return;
   const $checkBtn = $footer.find('span');

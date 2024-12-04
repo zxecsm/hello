@@ -27,6 +27,7 @@ import {
   getSplitWord,
   nanoid,
   getTextSize,
+  uLog,
 } from '../../utils/utils.js';
 
 import { getFriendDes } from '../chat/chat.js';
@@ -38,9 +39,13 @@ const route = express.Router();
 // 读取笔记
 route.get('/read', async (req, res) => {
   try {
-    const { v: id } = req.query;
+    let { v: id, download = 0 } = req.query;
+    download = parseInt(download);
 
-    if (!validaString(id, 1, fieldLenght.id, 1)) {
+    if (
+      !validaString(id, 1, fieldLenght.id, 1) ||
+      !validationValue(download, [0, 1])
+    ) {
       paramErr(res, req);
       return;
     }
@@ -82,18 +87,23 @@ route.get('/read', async (req, res) => {
           username = des || username;
         }
 
-        _success(res, '读取笔记成功', {
-          username,
-          title,
-          content,
-          visit_count,
-          account: acc,
-          create_at,
-          update_at,
-          logo,
-          email,
-          category,
-        })(req, id, 1);
+        if (download === 1) {
+          res.send(content);
+          uLog(req, `下载笔记成功(${id})`);
+        } else {
+          _success(res, '读取笔记成功', {
+            username,
+            title,
+            content,
+            visit_count,
+            account: acc,
+            create_at,
+            update_at,
+            logo,
+            email,
+            category,
+          })(req, id, 1);
+        }
       } else {
         _err(res, '笔记未公开')(req, id, 1);
       }
@@ -374,6 +384,37 @@ route.post('/delete', async (req, res) => {
     syncUpdateData(req, 'trash');
 
     _success(res, '删除笔记成功')(req, ids.length, 1);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 上传笔记
+route.post('/up-note', async (req, res) => {
+  try {
+    let { title, content = '' } = req.body;
+
+    if (
+      !validaString(title, 1, fieldLenght.title) ||
+      !validaString(content, 0, 0, 0, 1) ||
+      getTextSize(content) > fieldLenght.noteSize
+    ) {
+      paramErr(res, req);
+      return;
+    }
+
+    const { account } = req._hello.userinfo;
+
+    await insertData('note', [
+      {
+        title,
+        content,
+        update_at: Date.now(),
+        account,
+      },
+    ]);
+
+    _success(res, '上传笔记成功')(req, title, 1);
   } catch (error) {
     _err(res)(req, error);
   }
