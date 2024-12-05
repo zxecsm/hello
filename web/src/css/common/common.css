@@ -156,6 +156,12 @@ html.dark {
 ::-webkit-scrollbar-track {
   background-color: transparent; /* 滚动条轨道背景颜色 */
 }
+/* 全局设置 box-sizing */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 /* 火狐 */
 @-moz-document url-prefix() {
   * {

@@ -157,21 +157,26 @@ export function getSelectText() {
 export function _getTarget(target, e, selector, stopPropagation) {
   return getTriggerTarget(e, { target, selector }, stopPropagation);
 }
-export function getTriggerTarget(e, opt, stopPropagation) {
+function getTriggerTarget(e, opt = {}, stopPropagation = false) {
   const { target = document, selector } = opt;
+  if (!selector) return null;
+
   let oTarget = e.target;
   const triggers = [...document.querySelectorAll(selector)];
   if (triggers.length === 0) return null;
+
   if (stopPropagation) {
-    return triggers.find((item) => item === oTarget) || null;
+    return triggers.includes(oTarget) ? oTarget : null;
   }
-  while (oTarget && !triggers.find((item) => item === oTarget)) {
+
+  while (oTarget && !triggers.includes(oTarget)) {
     if (oTarget === target) {
       oTarget = null;
-    } else {
-      oTarget = oTarget.parentNode;
+      break;
     }
+    oTarget = oTarget.parentNode;
   }
+
   return oTarget;
 }
 // 随机排列数组
@@ -991,16 +996,36 @@ export function compressionImg(file, x = 400, y = 400) {
 export function checkedType(target) {
   return Object.prototype.toString.call(target).slice(8, -1);
 }
+// 获取开启定位的父元素
+export function getPositionParent(element) {
+  if (!element) return null;
+
+  let parent = element.parentElement;
+
+  while (parent) {
+    const style = window.getComputedStyle(parent);
+    if (style.position !== 'static') {
+      return parent; // 找到具有 position 的父元素
+    }
+    parent = parent.parentElement;
+  }
+
+  return null; // 如果没有找到，返回 null
+}
 // 获取位置
-export function _position(el, relativeToHTML) {
+export function _position(el, relativeToViewport) {
   let { top, left } = el.getBoundingClientRect();
 
-  // 定位到上一级开启定位的祖先元素
-  if (!relativeToHTML) {
-    const pOffset = _offset(el.offsetParent);
-    top -= pOffset.top;
-    left -= pOffset.left;
+  // 如果相对于视口计算位置，则直接返回
+  if (!relativeToViewport) {
+    const relativeParent = getPositionParent(el);
+    if (relativeParent) {
+      const rect = relativeParent.getBoundingClientRect();
+      top -= rect.top;
+      left -= rect.left;
+    }
   }
+
   return {
     top,
     left,
@@ -1055,22 +1080,6 @@ export class LazyLoad {
     this.loadObs = null;
   }
 }
-// 位置
-export function _offset(el) {
-  let top = 0,
-    left = 0;
-  if (el) {
-    while (el.nodeName !== 'BODY') {
-      top += el.offsetTop;
-      left += el.offsetLeft;
-      el = el.parentNode;
-    }
-  }
-  return {
-    top,
-    left,
-  };
-}
 // 跳转
 export function _myOpen(url, name) {
   // 在iframe中显示
@@ -1109,7 +1118,6 @@ export function _progressBar(e, percent, callback) {
     border-radius: 5px;
     display: flex;
     padding: 10px 30px 30px 30px;
-    box-sizing: border-box;
     align-items: center;
     justify-content: center;
     flex-flow: column;
@@ -2077,6 +2085,16 @@ export function toCenter(el, obj) {
   el.style.top = y + 'px';
   el.dataset.x = x;
   el.dataset.y = y;
+
+  switchBorderRadius(el);
+}
+export function switchBorderRadius(target) {
+  const { top, left } = _position(target, true);
+  if (isFullScreen(target) && top === 0 && left === 0) {
+    target.style.borderRadius = 0;
+  } else {
+    target.style.borderRadius = '';
+  }
 }
 // 窗口尺寸
 export function getScreenSize() {
@@ -2114,13 +2132,16 @@ export function myToMax(target) {
   target.style.left = 0 + 'px';
   target.style.width = w + 'px';
   target.style.height = h + 'px';
+  _setTimeout(() => {
+    switchBorderRadius(target);
+  }, 550);
 }
-// 全屏状态
+// 全屏大小状态
 export function isFullScreen(target) {
   const { w, h } = getScreenSize();
   const fw = target.offsetWidth,
     fh = target.offsetHeight;
-  return w <= fw && h <= fh;
+  return w === fw && h === fh;
 }
 // 重置位置
 export function myToRest(target, pointerX) {
@@ -2143,6 +2164,9 @@ export function myToRest(target, pointerX) {
   target.style.left = x + 'px';
   target.style.width = w + 'px';
   target.style.height = h + 'px';
+  _setTimeout(() => {
+    switchBorderRadius(target);
+  }, 550);
 }
 // 调整窗口大小
 export function myResize(opt, minW = 200, minH = 200) {
@@ -3242,4 +3266,11 @@ export function getTextSize(text) {
   const encoder = new TextEncoder();
   const byteArray = encoder.encode(text);
   return byteArray.length; // 返回字节数
+}
+// 绑定事件
+export function bindEvent(el, type, callback) {
+  el.addEventListener(type, callback);
+  return function () {
+    el.removeEventListener(type, callback);
+  };
 }

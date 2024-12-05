@@ -181,7 +181,6 @@ const botMsg = (function () {
       position: fixed;
       top: 20px;
       padding: 0 20px;
-      box-sizing: border-box;
       transform: translateY(-100%);
       font-size: 18px;
       opacity: 0;
@@ -193,7 +192,6 @@ const botMsg = (function () {
       line-height: 1.5;
       overflow: hidden;
       font-weight: bold;
-      box-sizing: border-box;
       padding: 10px;
       border-radius: 10px;
       color: var(--color1);

@@ -937,7 +937,7 @@ function songsLoading() {
         <div style="background-color:var(--color8);background-image:none" class="song_list_cover"></div>
         <div style="background-color:var(--color8); height: 40px;width: 100px;margin: 30px;" class="song_list_info"></div>
       </div>
-      <div style="pointer-events: none; height: 40px;width: 100%;box-sizing: border-box;padding: 0 5px;overflow:hidden;">
+      <div style="pointer-events: none; height: 40px;width: 100%;padding: 0 5px;overflow:hidden;">
           <div style="background-color:var(--color8);height: 40px;width:50%;float:left;"></div>
           <div style="background-color:var(--color8);height: 40px;width:30%;float:right;"></div>
       </div>`;

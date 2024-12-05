@@ -3,6 +3,7 @@ import {
   ContentScroll,
   _getTarget,
   _position,
+  _setTimeout,
   getScreenSize,
   imgjz,
   isFullScreen,
@@ -12,6 +13,7 @@ import {
   myOpen,
   myResize,
   nanoid,
+  switchBorderRadius,
   toCenter,
   toHide,
   toSetSize,
@@ -140,7 +142,7 @@ class CreateIframe {
             )
             .slice(-1)[0];
           if (lastIframe) {
-            const { left, top } = _position(lastIframe.target);
+            const { left, top } = _position(lastIframe.target, 1);
             toCenter(this.box, { left: left + 40, top: top + 40 });
           } else {
             toCenter(this.box);
@@ -224,6 +226,9 @@ class CreateIframe {
     this.box.style.left = 0 + 'px';
     this.box.style.width = w + 'px';
     this.box.style.height = h + 'px';
+    _setTimeout(() => {
+      switchBorderRadius(this.box);
+    }, 550);
   }
   // 退出全屏
   toRest(pointerX) {
@@ -248,6 +253,9 @@ class CreateIframe {
     this.box.style.left = x + 'px';
     this.box.style.width = w + 'px';
     this.box.style.height = h + 'px';
+    _setTimeout(() => {
+      switchBorderRadius(this.box);
+    }, 550);
   }
   bandEvent() {
     this.hdClick = this.hdClick.bind(this);

@@ -42,7 +42,6 @@ class Pop {
         opacity: 0;
         transform: translateY(-20px);
         transition: transform .5s ease-in-out,opacity .5s ease-in-out;
-        box-sizing: border-box;
         background-color: var(--color10);
         box-shadow: var(--color5) 0px 0px 5px;
         user-select: none;`;

@@ -66,7 +66,6 @@ class Validate {
       border-radius: 10px;
       place-items: center;
       width: 96%;
-      box-sizing: border-box;
       max-width: 600px;
     `;
     const content = createElement('div');
