@@ -2086,7 +2086,9 @@ export function toCenter(el, obj) {
   el.dataset.x = x;
   el.dataset.y = y;
 
-  switchBorderRadius(el);
+  _setTimeout(() => {
+    switchBorderRadius(el);
+  }, 550);
 }
 export function switchBorderRadius(target) {
   const { top, left } = _position(target, true);
