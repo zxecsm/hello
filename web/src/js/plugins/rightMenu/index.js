@@ -21,6 +21,7 @@ import './index.less';
 import loadFailImg from '../../../images/img/loadfail.png';
 import { CreateTabs } from '../../../page/notes/tabs';
 import { _tpl, deepClone } from '../../utils/template';
+import { imgCache } from '../../utils/imgCache';
 // 右键菜单
 let rightBoxList = [];
 class RightM {
@@ -702,12 +703,21 @@ function rightMenu(e, html, callback, title = '') {
       loadImg.unBind();
     },
     afterRender() {
-      loadImg.bind(this.content.querySelectorAll('img'), (item) => {
+      const imgs = [...this.content.querySelectorAll('img')].filter((item) => {
+        const url = item.getAttribute('data-src');
+        const cache = imgCache.get(url);
+        if (cache) {
+          item.src = cache;
+        }
+        return !cache;
+      });
+      loadImg.bind(imgs, (item) => {
         const url = item.getAttribute('data-src');
         imgjz(
           url,
           () => {
             item.src = url;
+            imgCache.add(url, url);
           },
           () => {
             item.src = loadFailImg;

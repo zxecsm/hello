@@ -57,6 +57,7 @@ import toolTip from '../../../js/plugins/tooltip/index.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import _path from '../../../js/utils/path.js';
+import { imgCache } from '../../../js/utils/imgCache.js';
 
 const $asideBtn = $('.aside_btn'),
   $asideWrap = $('.aside_wrap'),
@@ -287,7 +288,26 @@ const asideLoadImg = new LazyLoad();
 // 加载logo
 function hdAsideListItemLogo() {
   if ($asideBtn.activeId === 'hide') return;
-  asideLoadImg.bind($aside[0].querySelectorAll('.bm_item'), (item) => {
+  const bmLogos = [...$aside[0].querySelectorAll('.bm_item')].filter((item) => {
+    const $item = $(item);
+    let { logo, link } = getBmItemData(
+      $asideBtn.activeId,
+      $item.attr('data-id')
+    );
+
+    if (logo) {
+      logo = _path.normalize(`/api/pub/${logo}`);
+    } else {
+      logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
+    }
+    let $bm_logo = $item.find('.bm_logo');
+    const cache = imgCache.get(logo);
+    if (cache) {
+      $bm_logo.css('background-image', `url(${cache})`).addClass('load');
+    }
+    return !cache;
+  });
+  asideLoadImg.bind(bmLogos, (item) => {
     const $item = $(item);
     let { logo, link } = getBmItemData(
       $asideBtn.activeId,
@@ -305,6 +325,7 @@ function hdAsideListItemLogo() {
       logo,
       () => {
         $bm_logo.css('background-image', `url(${logo})`).addClass('load');
+        imgCache.add(logo, logo);
       },
       () => {
         $bm_logo.css('background-image', `url(${imgMrLogo})`).addClass('load');

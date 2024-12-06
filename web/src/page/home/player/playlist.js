@@ -15,6 +15,7 @@ import _msg from '../../../js/plugins/message';
 import {
   changePlayingAnimate,
   getCollectSongs,
+  hdMusicImgCache,
   moveSongToList,
   musicLoadImg,
   setCurPlayingList,
@@ -174,7 +175,9 @@ export function renderPlayingList() {
   );
   $pMusicListBox.find('.p_foot').html(html);
   playListLazyImg.bind(
-    $pMusicListBox.find('.p_foot')[0].querySelectorAll('.logo'),
+    hdMusicImgCache(
+      $pMusicListBox.find('.p_foot')[0].querySelectorAll('.logo')
+    ),
     musicLoadImg
   );
 }

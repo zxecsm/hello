@@ -50,6 +50,7 @@ import _d from '../../js/common/config.js';
 import md5 from '../../js/utils/md5.js';
 import _path from '../../js/utils/path.js';
 import { setEditor } from './setEditor.js';
+import { imgCache } from '../../js/utils/imgCache.js';
 const mdWorker = new MdWorker();
 const $contentWrap = $('.content_wrap'),
   $headBtns = $contentWrap.find('.head_btns'),
@@ -302,21 +303,29 @@ function rende() {
 mdWorker.addEventListener('message', (event) => {
   $previewBox.find('.content').html(event.data);
   previewLines = [...$previewBox[0].querySelectorAll(`[data-line]`)];
-  imgLazy.bind(
-    $previewBox.find('.content')[0].querySelectorAll('img'),
-    (item) => {
-      const url = item.getAttribute('data-src');
-      imgjz(
-        url,
-        () => {
-          item.src = url;
-        },
-        () => {
-          item.src = gqImg;
-        }
-      );
+  const imgs = [
+    ...$previewBox.find('.content')[0].querySelectorAll('img'),
+  ].filter((item) => {
+    const url = item.getAttribute('data-src');
+    const cache = imgCache.get(url);
+    if (cache) {
+      item.src = cache;
     }
-  );
+    return !cache;
+  });
+  imgLazy.bind(imgs, (item) => {
+    const url = item.getAttribute('data-src');
+    imgjz(
+      url,
+      () => {
+        item.src = url;
+        imgCache.add(url, url);
+      },
+      () => {
+        item.src = gqImg;
+      }
+    );
+  });
   syncScrollFromEditor(1);
 });
 const imgLazy = new LazyLoad();

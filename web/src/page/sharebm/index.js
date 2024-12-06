@@ -37,6 +37,7 @@ import { showBmkInfo } from '../../js/utils/showinfo';
 import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import _path from '../../js/utils/path';
+import { imgCache } from '../../js/utils/imgCache';
 
 const urlparmes = queryURLParams(myOpen()),
   HASH = urlparmes.HASH;
@@ -84,7 +85,23 @@ function renderList() {
   $head.addClass('open');
   $paginationBox.addClass('open');
 
-  bmLoadImg.bind($box[0].querySelectorAll('.bm_item'), (item) => {
+  const bmItems = [...$box[0].querySelectorAll('.bm_item')].filter((item) => {
+    const $item = $(item),
+      { link } = getBmInfo($item.attr('data-id')),
+      url = `/api/getfavicon?u=${encodeURIComponent(link)}`;
+
+    const cache = imgCache.get(url);
+    if (cache) {
+      const $img = $item.find('.logo');
+      $img
+        .css({
+          'background-image': `url(${cache})`,
+        })
+        .addClass('load');
+    }
+    return !cache;
+  });
+  bmLoadImg.bind(bmItems, (item) => {
     const $item = $(item),
       { link } = getBmInfo($item.attr('data-id')),
       url = `/api/getfavicon?u=${encodeURIComponent(link)}`;
@@ -99,6 +116,7 @@ function renderList() {
             'background-image': `url(${url})`,
           })
           .addClass('load');
+        imgCache.add(url, url);
       },
       () => {
         $img

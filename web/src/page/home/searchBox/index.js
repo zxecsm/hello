@@ -44,6 +44,7 @@ import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { showBmk, showHistory } from '../rightSetting/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import _path from '../../../js/utils/path.js';
+import { imgCache } from '../../../js/utils/imgCache.js';
 const $searchBoxMask = $('.search_box_mask'),
   $searchLogo = $searchBoxMask.find('.search_logo'),
   $searchInpWrap = $searchBoxMask.find('.search_inp_wrap'),
@@ -168,38 +169,59 @@ function renderHomeBmList() {
 // 加载logo
 const homeLoadImg = new LazyLoad();
 function lazyLoadHomeBmLogo() {
-  homeLoadImg.bind(
-    $homeBmWrap.find('ul')[0].querySelectorAll('.home_bm_item'),
-    (item) => {
-      const $item = $(item);
-      const flag = $item.find('.home_bm_logo').attr('x');
-      if (flag === 'add') return;
-      let { logo, link } = getHomeBmData($item.attr('data-id'));
-      const $homeBmLogo = $item.find('.home_bm_logo');
-      if (logo) {
-        logo = _path.normalize(`/api/pub/${logo}`);
-      } else {
-        logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
-      }
-      imgjz(
-        logo,
-        () => {
-          $homeBmLogo
-            .css({
-              'background-image': `url(${logo})`,
-            })
-            .addClass('load');
-        },
-        () => {
-          $homeBmLogo
-            .css({
-              'background-image': `url(${imgMrLogo})`,
-            })
-            .addClass('load');
-        }
-      );
+  const logos = [
+    ...$homeBmWrap.find('ul')[0].querySelectorAll('.home_bm_item'),
+  ].filter((item) => {
+    const $item = $(item);
+    const flag = $item.find('.home_bm_logo').attr('x');
+    if (flag === 'add') return;
+    let { logo, link } = getHomeBmData($item.attr('data-id'));
+    const $homeBmLogo = $item.find('.home_bm_logo');
+    if (logo) {
+      logo = _path.normalize(`/api/pub/${logo}`);
+    } else {
+      logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
     }
-  );
+    const cache = imgCache.get(logo);
+    if (cache) {
+      $homeBmLogo
+        .css({
+          'background-image': `url(${cache})`,
+        })
+        .addClass('load');
+    }
+    return !cache;
+  });
+  homeLoadImg.bind(logos, (item) => {
+    const $item = $(item);
+    const flag = $item.find('.home_bm_logo').attr('x');
+    if (flag === 'add') return;
+    let { logo, link } = getHomeBmData($item.attr('data-id'));
+    const $homeBmLogo = $item.find('.home_bm_logo');
+    if (logo) {
+      logo = _path.normalize(`/api/pub/${logo}`);
+    } else {
+      logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
+    }
+    imgjz(
+      logo,
+      () => {
+        $homeBmLogo
+          .css({
+            'background-image': `url(${logo})`,
+          })
+          .addClass('load');
+        imgCache.add(logo, logo);
+      },
+      () => {
+        $homeBmLogo
+          .css({
+            'background-image': `url(${imgMrLogo})`,
+          })
+          .addClass('load');
+      }
+    );
+  });
 }
 $searchBoxMask
   .on('click', '.home_bm_logo', function (e) {

@@ -65,6 +65,7 @@ import { _tpl, deepClone } from '../../js/utils/template';
 import { initRainCodeSleep } from '../../js/common/codeRain';
 import notifyMusicControlPanel from '../home/player/notifyMusicControlPanel';
 import _path from '../../js/utils/path';
+import { imgCache } from '../../js/utils/imgCache';
 const urlparmes = queryURLParams(myOpen()),
   HASH = urlparmes.HASH,
   $myAudio = $(new Audio()),
@@ -772,22 +773,31 @@ function renderPlayList() {
     }
   );
   $pMusicListBox.find('.p_foot').html(html);
-  lazyImg.bind(
-    $pMusicListBox.find('.p_foot')[0].querySelectorAll('.logo'),
-    (item) => {
-      const $img = $(item);
-      const u = $img.attr('data-src');
-      imgjz(
-        u,
-        () => {
-          $img.css('background-image', `url(${u})`).addClass('load');
-        },
-        () => {
-          $img.css('background-image', `url(${imgMusic})`).addClass('load');
-        }
-      );
+  const logos = [
+    ...$pMusicListBox.find('.p_foot')[0].querySelectorAll('.logo'),
+  ].filter((item) => {
+    const $img = $(item);
+    const u = $img.attr('data-src');
+    const cache = imgCache.get(u);
+    if (cache) {
+      $img.css('background-image', `url(${cache})`).addClass('load');
     }
-  );
+    return !cache;
+  });
+  lazyImg.bind(logos, (item) => {
+    const $img = $(item);
+    const u = $img.attr('data-src');
+    imgjz(
+      u,
+      () => {
+        $img.css('background-image', `url(${u})`).addClass('load');
+        imgCache.add(u, u);
+      },
+      () => {
+        $img.css('background-image', `url(${imgMusic})`).addClass('load');
+      }
+    );
+  });
 }
 // 分页
 const pgnt = pagination($pMusicListBox[0], {

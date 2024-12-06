@@ -75,6 +75,7 @@ import md5 from '../../js/utils/md5';
 import _path from '../../js/utils/path';
 import { addTask } from './task';
 import { reqTaskList } from '../../api/task';
+import { imgCache } from '../../js/utils/imgCache';
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
 const $curmbBox = $('.crumb_box');
@@ -280,7 +281,22 @@ async function renderList(top) {
   $pagination.addClass('open');
   $header.addClass('open');
   $curmbBox.addClass('open');
-  lazyImg.bind($contentWrap[0].querySelectorAll('.logo.is_img'), (item) => {
+  const logoImgs = [...$contentWrap[0].querySelectorAll('.logo.is_img')].filter(
+    (item) => {
+      const $item = $(item);
+      const { path, name } = getFileItem($item.parent().data('id'));
+      if (isImgFile(name)) {
+        const url = getFilePath(`/file/${path}/${name}`, 1);
+        const cache = imgCache.get(url);
+        if (cache) {
+          $item.css('background-image', `url(${cache})`);
+        }
+        return !cache;
+      }
+      return false;
+    }
+  );
+  lazyImg.bind(logoImgs, (item) => {
     const $item = $(item);
     const { path, name } = getFileItem($item.parent().data('id'));
     if (isImgFile(name)) {
@@ -289,6 +305,7 @@ async function renderList(top) {
         url,
         () => {
           $item.css('background-image', `url(${url})`);
+          imgCache.add(url, url);
         },
         () => {
           $item.css('background-image', `url(${loadfailImg})`);

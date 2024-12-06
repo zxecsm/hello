@@ -44,6 +44,7 @@ import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import md5 from '../../js/utils/md5';
 import _path from '../../js/utils/path';
+import { imgCache } from '../../js/utils/imgCache';
 if (!isLogin()) {
   toLogin();
 }
@@ -236,8 +237,26 @@ function renderImgList(y) {
         if (y) {
           $imgList.scrollTop(0);
         }
-        bglazyImg.bind($imgList[0].querySelectorAll('.img'), (item) => {
-          let $img = $(item);
+        const imgs = [...$imgList[0].querySelectorAll('.img')].filter(
+          (item) => {
+            const $img = $(item);
+            const obj = getPicItem($img.parent().attr('data-id'));
+            if (!obj) return;
+            const url = getFilePath(`/pic/${obj.url}`, 1);
+            const cache = imgCache.get(url);
+            if (cache) {
+              item.src = cache;
+              $img
+                .css({
+                  'background-image': `url(${cache})`,
+                })
+                .addClass('load');
+            }
+            return !cache;
+          }
+        );
+        bglazyImg.bind(imgs, (item) => {
+          const $img = $(item);
           const obj = getPicItem($img.parent().attr('data-id'));
           if (!obj) return;
           const url = getFilePath(`/pic/${obj.url}`, 1);
@@ -249,6 +268,7 @@ function renderImgList(y) {
                   'background-image': `url(${url})`,
                 })
                 .addClass('load');
+              imgCache.add(url, url);
             },
             () => {
               $img.css({

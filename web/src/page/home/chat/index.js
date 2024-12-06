@@ -79,6 +79,7 @@ import { _tpl } from '../../../js/utils/template.js';
 import { verifyDate } from '../count_down/index.js';
 import md5 from '../../../js/utils/md5.js';
 import _path from '../../../js/utils/path.js';
+import { imgCache } from '../../../js/utils/imgCache.js';
 const $document = $(document),
   $chatRoomWrap = $('.chat_room_wrap'),
   $userListBox = $chatRoomWrap.find('.user_list_box'),
@@ -260,7 +261,33 @@ const pgnt = pagination($userListBox[0], {
 });
 // 懒加载图片
 function lazyLoadChatLogo() {
-  cUserListLoad.bind($userListBox[0].querySelectorAll('.user_logo'), (item) => {
+  const userLogos = [...$userListBox[0].querySelectorAll('.user_logo')].filter(
+    (item) => {
+      const $item = $(item);
+      let {
+        username,
+        account,
+        logo,
+        des = '',
+      } = getUserItem($item.parent().data('account'));
+      logo = logo
+        ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
+        : getTextImg(des || username);
+      if (account === 'hello') {
+        logo = imgHelloLogo;
+      }
+      const cache = imgCache.get(logo);
+      if (cache) {
+        $item
+          .css({
+            'background-image': `url(${cache})`,
+          })
+          .addClass('load');
+      }
+      return !cache;
+    }
+  );
+  cUserListLoad.bind(userLogos, (item) => {
     const $item = $(item);
     let {
       username,
@@ -268,6 +295,7 @@ function lazyLoadChatLogo() {
       logo,
       des = '',
     } = getUserItem($item.parent().data('account'));
+
     logo = logo
       ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
       : getTextImg(des || username);
@@ -282,6 +310,7 @@ function lazyLoadChatLogo() {
             'background-image': `url(${logo})`,
           })
           .addClass('load');
+        imgCache.add(logo, logo);
       },
       () => {
         $item
@@ -509,7 +538,22 @@ export function renderMsgList(carr, isAdd, isPush) {
 const cImgLoad = new LazyLoad();
 const cUserLogoLoad = new LazyLoad();
 export function chatimgLoad() {
-  cImgLoad.bind($chatListBox[0].querySelectorAll('.c_img'), (item) => {
+  const cimgs = [...$chatListBox[0].querySelectorAll('.c_img')].filter(
+    (item) => {
+      const $v = $(item);
+      const id = $v.parent().parent().parent().data('id');
+      const msgObj = getChatItem(id);
+      const url = getFilePath(`/upload/${id}/${msgObj.hash}`, 1);
+      const cache = imgCache.get(url);
+      if (cache) {
+        $v.css({
+          'background-image': `url(${cache})`,
+        }).addClass('load');
+      }
+      return !cache;
+    }
+  );
+  cImgLoad.bind(cimgs, (item) => {
     const $v = $(item);
     const id = $v.parent().parent().parent().data('id');
     const msgObj = getChatItem(id);
@@ -520,6 +564,7 @@ export function chatimgLoad() {
         $v.css({
           'background-image': `url(${url})`,
         }).addClass('load');
+        imgCache.add(url, url);
       },
       () => {
         $v.css({
@@ -528,7 +573,33 @@ export function chatimgLoad() {
       }
     );
   });
-  cUserLogoLoad.bind($chatListBox[0].querySelectorAll('.c_logo'), (item) => {
+  const clogos = [...$chatListBox[0].querySelectorAll('.c_logo')].filter(
+    (item) => {
+      const $item = $(item);
+      let {
+        des = '',
+        username,
+        logo,
+        _from,
+      } = getChatItem($item.parent().parent().data('id'));
+      logo = logo
+        ? _path.normalize(`/api/pub/logo/${_from}/${logo}`)
+        : getTextImg(des || username);
+      if (_from === 'hello') {
+        logo = imgHelloLogo;
+      }
+      const cache = imgCache.get(logo);
+      if (cache) {
+        $item
+          .css({
+            'background-image': `url(${cache})`,
+          })
+          .addClass('load');
+      }
+      return !cache;
+    }
+  );
+  cUserLogoLoad.bind(clogos, (item) => {
     const $item = $(item);
     let {
       des = '',
@@ -550,6 +621,7 @@ export function chatimgLoad() {
             'background-image': `url(${logo})`,
           })
           .addClass('load');
+        imgCache.add(logo, logo);
       },
       () => {
         $item

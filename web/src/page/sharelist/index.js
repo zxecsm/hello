@@ -52,7 +52,7 @@ const $contentWrap = $('.content_wrap'),
   $shareList = $contentWrap.find('.share_list');
 let pageNo = 1;
 let sList = [];
-let sPageSize = 10;
+let sPageSize = 20;
 // 生成列表
 function renderShareList(total, pageNo, top) {
   const html = _tpl(

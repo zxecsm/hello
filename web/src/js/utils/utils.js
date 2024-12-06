@@ -1859,8 +1859,12 @@ export class ContentScroll {
     this.timer = null;
   }
   init(text) {
-    this.text = text ? text.trim().replace(/[\n\r]+/g, ' ') : '';
-    this.start();
+    text = text ? text.trim().replace(/[\n\r]+/g, ' ') : '';
+
+    if (!this.timer || this.text !== text) {
+      this.text = text;
+      this.start();
+    }
   }
   start() {
     this.close();
@@ -2472,7 +2476,7 @@ export function getMinIndex(arr) {
 const oImg = (function () {
   const oImg = document.createElement('img');
   oImg.src = loadSvg;
-  oImg.style.cssText = `width: 40px;padding: 10px;pointer-events: none;`;
+  oImg.style.cssText = `width: 40px;margin: 10px;pointer-events: none;`;
   return oImg;
 })();
 export function loadingImg(el) {

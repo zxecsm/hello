@@ -139,6 +139,7 @@ import { _tpl, deepClone } from '../../../js/utils/template.js';
 import notifyMusicControlPanel from './notifyMusicControlPanel.js';
 import md5 from '../../../js/utils/md5.js';
 import _path from '../../../js/utils/path.js';
+import { imgCache } from '../../../js/utils/imgCache.js';
 const $musicPlayerBox = $('.music_player_box'),
   $musicFootProgress = $musicPlayerBox.find('.music_foot_progress'),
   $musicPlayerBg = $musicPlayerBox.find('.music_palyer_bg'),
@@ -206,6 +207,17 @@ export function setCurPlayingList(val) {
 // 歌曲封面懒加载
 const songListLazyImg = new LazyLoad();
 const songsLazyImg = new LazyLoad();
+export function hdMusicImgCache(list) {
+  return [...list].filter((item) => {
+    const $img = $(item);
+    const u = $img.attr('data-src');
+    const cache = imgCache.get(u);
+    if (cache) {
+      $img.css('background-image', `url(${cache})`).addClass('load');
+    }
+    return !cache;
+  });
+}
 export function musicLoadImg(item) {
   const $img = $(item);
   const u = $img.attr('data-src');
@@ -213,6 +225,7 @@ export function musicLoadImg(item) {
     u,
     () => {
       $img.css('background-image', `url(${u})`).addClass('load');
+      imgCache.add(u, u);
     },
     () => {
       $img.css('background-image', `url(${imgMusic})`).addClass('load');
@@ -903,7 +916,11 @@ function renderSongList() {
     }
   );
   $songListUl.html(html);
-  songListLazyImg.bind($songListUl[0].querySelectorAll('.logo'), musicLoadImg);
+
+  songListLazyImg.bind(
+    hdMusicImgCache($songListUl[0].querySelectorAll('.logo')),
+    musicLoadImg
+  );
   if (!$songListWrap.listId) return;
   renderSongs();
 }
@@ -1091,7 +1108,9 @@ function renderSongs(gao) {
   }
   $msuicContentBox.find('.list_items_wrap').scroll();
   songsLazyImg.bind(
-    $msuicContentBox.find('.list_items_wrap')[0].querySelectorAll('.logo'),
+    hdMusicImgCache(
+      $msuicContentBox.find('.list_items_wrap')[0].querySelectorAll('.logo')
+    ),
     musicLoadImg
   );
 }

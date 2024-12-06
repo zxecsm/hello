@@ -39,6 +39,7 @@ import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import md5 from '../../../js/utils/md5.js';
 import _path from '../../../js/utils/path.js';
+import { imgCache } from '../../../js/utils/imgCache.js';
 const $allBgWrap = $('.all_bg_wrap'),
   $bgList = $allBgWrap.find('.bg_list'),
   $bgFooter = $allBgWrap.find('.bg_footer');
@@ -301,7 +302,22 @@ export function renderBgList(y) {
         if (y) {
           $bgList.scrollTop(0);
         }
-        bglazyImg.bind($bgList[0].querySelectorAll('.bg_img'), (item) => {
+        const bgImgs = [...$bgList[0].querySelectorAll('.bg_img')].filter(
+          (item) => {
+            const $img = $(item);
+            const url = $img.attr('data-src') + '&t=1';
+            const cache = imgCache.get(url);
+            if (cache) {
+              $img
+                .css({
+                  'background-image': `url(${cache})`,
+                })
+                .addClass('load');
+            }
+            return !cache;
+          }
+        );
+        bglazyImg.bind(bgImgs, (item) => {
           const $img = $(item);
           const url = $img.attr('data-src') + '&t=1';
           imgjz(
@@ -312,6 +328,7 @@ export function renderBgList(y) {
                   'background-image': `url(${url})`,
                 })
                 .addClass('load');
+              imgCache.add(url, url);
             },
             () => {
               $img.css({

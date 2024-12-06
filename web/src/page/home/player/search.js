@@ -22,6 +22,7 @@ import {
   delSong,
   editSongInfo,
   getCollectSongs,
+  hdMusicImgCache,
   moveSongToList,
   musicLoadImg,
   musicPlayerIsHide,
@@ -154,7 +155,7 @@ function renderSearchSongs(list, update) {
     $searchMusicWrap.find('ul').append(html);
   }
   searchListLazyImg.bind(
-    $searchMusicWrap.find('ul')[0].querySelectorAll('.logo'),
+    hdMusicImgCache($searchMusicWrap.find('ul')[0].querySelectorAll('.logo')),
     musicLoadImg
   );
 }

@@ -53,6 +53,7 @@ import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';
 import _path from '../../js/utils/path';
 import { addTask } from '../file/task';
+import { imgCache } from '../../js/utils/imgCache';
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
 const $curmbBox = $('.crumb_box');
@@ -336,7 +337,25 @@ async function renderList(top) {
   $pagination.addClass('open');
   $curmbBox.addClass('open');
   $header.addClass('open');
-  lazyImg.bind($contentWrap[0].querySelectorAll('.logo.is_img'), (item) => {
+  const logos = [...$contentWrap[0].querySelectorAll('.logo.is_img')].filter(
+    (item) => {
+      const $item = $(item);
+      const { path, name } = getFileItem($item.parent().data('id'));
+      if (isImgFile(name)) {
+        const url =
+          getFilePath(`/sharefile/${path}/${name}`, 1) +
+          '&token=' +
+          encodeURIComponent(shareToken);
+        const cache = imgCache.get(url);
+        if (cache) {
+          $item.css('background-image', `url(${url})`);
+        }
+        return !cache;
+      }
+      return false;
+    }
+  );
+  lazyImg.bind(logos, (item) => {
     const $item = $(item);
     const { path, name } = getFileItem($item.parent().data('id'));
     if (isImgFile(name)) {
@@ -348,6 +367,7 @@ async function renderList(top) {
         url,
         () => {
           $item.css('background-image', `url(${url})`);
+          imgCache.add(url, url);
         },
         () => {
           $item.css('background-image', `url(${loadfailImg})`);
