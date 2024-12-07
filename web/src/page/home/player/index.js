@@ -413,7 +413,7 @@ const musicSearchInput = wrapInput(
     },
     keyup(e) {
       if (e.key === 'Enter') {
-        getSearchSongs();
+        getSearchSongs(1, 1);
       }
     },
   }
@@ -438,7 +438,7 @@ $musicHeadWrap
     hideMusicSearchList();
   })
   .on('click', '.search_music_inp .inp_search_btn', function () {
-    getSearchSongs();
+    getSearchSongs(1, 1);
   })
   .on('click', '.volume', adjustVolume);
 // 获取收藏歌曲
@@ -855,7 +855,7 @@ export function getSongList(cb) {
               renderPlayingList();
               playingListHighlight();
               renderSongList();
-              getSearchSongs(1);
+              getSearchSongs();
               return;
             }
           })
@@ -2091,7 +2091,7 @@ $msuicContentBox
   .on('click', '.artist_name_text', function (e) {
     e.stopPropagation();
     musicSearchInput.setValue(this.innerText).focus();
-    getSearchSongs();
+    getSearchSongs(1, 1);
   })
   .on('click', '.song_logo_box', function () {
     const $this = $(this).parent();

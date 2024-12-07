@@ -1045,7 +1045,7 @@ export class LazyLoad {
     this.visibilityObs = new IntersectionObserver(
       debounce(() => {
         this.load(els, cb);
-      }, 200),
+      }, 100),
       this.options
     );
 

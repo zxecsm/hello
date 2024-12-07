@@ -1,7 +1,6 @@
 import $ from 'jquery';
 import {
   throttle,
-  debounce,
   _getTarget,
   copyText,
   downloadFile,
@@ -48,9 +47,9 @@ import { showSongInfo } from '../../../js/utils/showinfo.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import _path from '../../../js/utils/path.js';
+import pagination from '../../../js/plugins/pagination/index.js';
 const $searchMusicWrap = $('.music_player_box .search_music_wrap');
 let searchMusicList = [];
-let searchMusicPageNo = 1;
 // 搜索列表是隐藏
 export function searchWrapIsHide() {
   return $searchMusicWrap.is(':hidden');
@@ -65,100 +64,93 @@ export function hideMusicSearchList() {
   $searchMusicWrap.css('display', 'none').find('ul').html('');
   unBindSearchListLazyImg();
 }
-// 显示搜索列表
-export function showMusicSearchList() {
-  $searchMusicWrap.css('display', 'block');
-  searchMusicPageNo = 1;
-  loadingImg($searchMusicWrap.find('ul')[0]);
-}
 const searchListLazyImg = new LazyLoad();
 function getSearchSongItemData(id) {
   return searchMusicList.find((item) => item.id === id);
 }
-$searchMusicWrap.splitWord = [];
+let searchMusicPageNo = 1;
 // 获取搜索列表
-export function getSearchSongs(update) {
+export function getSearchSongs(top, pageNo = searchMusicPageNo) {
   const word = setSearchMusicInputValue();
   if (word !== '') {
     if (word.length > 100) {
       _msg.error('搜索内容过长');
       return;
     }
-    if (!update) {
-      showMusicSearchList();
+    $searchMusicWrap.css('display', 'block');
+    if (top) {
+      loadingImg($searchMusicWrap.find('ul')[0]);
     }
-    reqPlayerSearch({ word })
+    reqPlayerSearch({ word, pageNo })
       .then((result) => {
         if (result.code === 1) {
-          const { list: arr, splitWord } = result.data;
-          searchMusicList = arr;
-          $searchMusicWrap.splitWord = splitWord;
-          if (arr.length > 0) {
-            if (!update) {
-              $searchMusicWrap.find('ul').html('');
+          const { splitWord, total, totalPage, pageNo, data } = result.data;
+          searchMusicPageNo = pageNo;
+          searchMusicList = data;
+          if (musicPlayerIsHide() || searchWrapIsHide()) return;
+          const scObj = getCollectSongs();
+          const html = _tpl(
+            `
+            <p v-if="total === 0" style="padding: 20px 0;text-align: center;pointer-events: none;">${_d.emptyList}</p>
+            <template v-else>
+              <li v-for="{artist,title,mv,id,pic} in searchMusicList" class="song_item" :data-id="id" :data-issc="issc(id)" cursor="y">
+                <div class="add_palying_list iconfont icon-icon-test"></div>
+                <div class="logo_wrap">
+                  <div class="logo" :data-src="getFilePath('/music/'+pic, 1)"></div>
+                </div>
+                <div class="song_info_wrap">
+                  <span v-html="hdTitleHighlight(splitWord, title)" class="song_name"></span>
+                  <span v-html="hdTitleHighlight(splitWord, artist)" class="artist_name"></span>
+                </div>
+                <div v-if="mv" class="play_mv iconfont icon-shipin2"></div>
+                <div class="like_hear iconfont {{issc(id) ? 'icon-hear-full active' : 'icon-hear'}}"></div>
+                <div class="set_menu iconfont icon-icon"></div>
+              </li>
+              <div v-if="totalPage > 1" v-html="getPaging()" style="padding:20px 0;text-align:center;line-height: 26px;" class="playing_list_paging jzxz"></div>
+            </template>`,
+            {
+              _d,
+              searchMusicList,
+              issc(id) {
+                return scObj.hasOwnProperty(id);
+              },
+              getFilePath,
+              totalPage,
+              total,
+              hdTitleHighlight,
+              splitWord,
+              getPaging() {
+                return pgnt.getHTML({
+                  pageNo,
+                  total,
+                });
+              },
             }
-            renderSearchSongs(arr, update);
-          } else {
-            $searchMusicWrap
-              .find('ul')
-              .html(
-                `<p style="padding: 20px 0;text-align: center;pointer-events: none;">${_d.emptyList}</p>`
-              );
-          }
+          );
+          $searchMusicWrap.find('ul').html(html);
+          searchListLazyImg.bind(
+            hdMusicImgCache(
+              $searchMusicWrap.find('ul')[0].querySelectorAll('.logo')
+            ),
+            musicLoadImg
+          );
           return;
         }
       })
       .catch(() => {});
   }
 }
-// 生成搜索列表
-function renderSearchSongs(list, update) {
-  const val = $searchMusicWrap.splitWord;
-  let arr = [];
-  if (update) {
-    arr = list.slice(0, searchMusicPageNo * 50);
-  } else {
-    arr = list.slice((searchMusicPageNo - 1) * 50, searchMusicPageNo * 50);
-  }
-  if (arr.length === 0) return;
-  if (musicPlayerIsHide() || searchWrapIsHide()) return;
-  const scObj = getCollectSongs();
-  const html = _tpl(
-    `
-    <li v-for="{artist,title,mv,id,pic} in arr" class="song_item" :data-id="id" :data-issc="issc(id)" cursor="y">
-      <div class="add_palying_list iconfont icon-icon-test"></div>
-      <div class="logo_wrap">
-        <div class="logo" :data-src="getFilePath('/music/'+pic, 1)"></div>
-      </div>
-      <div class="song_info_wrap">
-        <span v-html="hdTitleHighlight(val, title)" class="song_name"></span>
-        <span v-html="hdTitleHighlight(val, artist)" class="artist_name"></span>
-      </div>
-      <div v-if="mv" class="play_mv iconfont icon-shipin2"></div>
-      <div class="like_hear iconfont {{issc(id) ? 'icon-hear-full active' : 'icon-hear'}}"></div>
-      <div class="set_menu iconfont icon-icon"></div>
-    </li>
-    `,
-    {
-      arr,
-      issc(id) {
-        return scObj.hasOwnProperty(id);
-      },
-      getFilePath,
-      hdTitleHighlight,
-      val,
-    }
-  );
-  if (update) {
-    $searchMusicWrap.find('ul').html(html);
-  } else {
-    $searchMusicWrap.find('ul').append(html);
-  }
-  searchListLazyImg.bind(
-    hdMusicImgCache($searchMusicWrap.find('ul')[0].querySelectorAll('.logo')),
-    musicLoadImg
-  );
-}
+// 分页
+const pgnt = pagination($searchMusicWrap[0], {
+  pageSize: 100,
+  small: true,
+  showTotal: false,
+  select: [],
+  toTop: false,
+  change(val) {
+    getSearchSongs(1, val);
+  },
+});
 // 歌曲菜单
 function searchListSongSetting(e, sobj) {
   sobj = hdSongInfo(sobj);
@@ -312,18 +304,6 @@ function playSearchList(id, e) {
 }
 $searchMusicWrap
   .find('ul')
-  .on(
-    'scroll',
-    debounce(function () {
-      if (
-        searchMusicList.length > 0 &&
-        this.clientHeight + this.scrollTop > this.scrollHeight - 50
-      ) {
-        searchMusicPageNo++;
-        renderSearchSongs(searchMusicList);
-      }
-    }, 500)
-  )
   .on('click', '.song_info_wrap', function (e) {
     const $this = $(this).parent();
     playSearchList($this.attr('data-id'), e);

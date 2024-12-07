@@ -537,7 +537,7 @@ $lrcHead
   .on('click', '.artist_name_text', function (e) {
     e.stopPropagation();
     setSearchMusicInputValue(playingSongInfo.artist);
-    getSearchSongs();
+    getSearchSongs(1, 1);
   });
 // 处理歌曲数据
 export function hdSongInfo(obj) {

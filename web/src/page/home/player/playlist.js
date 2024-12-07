@@ -366,7 +366,7 @@ $pMusicListBox
   .on('click', '.artist_name_text', function (e) {
     e.stopPropagation();
     setSearchMusicInputValue(this.innerText);
-    getSearchSongs();
+    getSearchSongs(1, 1);
     $pMusicListBox.css('display', 'none').find('.p_foot').html('');
     $playingListWrap.css('display', 'none');
   })

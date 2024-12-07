@@ -307,12 +307,19 @@ route.use((req, res, next) => {
 // 搜索
 route.get('/search', async (req, res) => {
   try {
-    const { word } = req.query;
+    let { word, pageNo = 1 } = req.query;
+    pageNo = parseInt(pageNo);
 
-    if (!validaString(word, 1, fieldLenght.searchWord)) {
+    if (
+      !validaString(word, 1, fieldLenght.searchWord) ||
+      isNaN(pageNo) ||
+      pageNo < 1
+    ) {
       paramErr(res, req);
       return;
     }
+
+    const pageSize = 100;
 
     const splitWord = getSplitWord(word);
 
@@ -321,14 +328,29 @@ route.get('/search', async (req, res) => {
     const searchSql = createSearchSql(curSplit, ['title', 'artist']);
     const scoreSql = createScoreSql(curSplit, ['title', 'artist']);
 
-    let where = `WHERE (${searchSql.sql}) ${scoreSql.sql} LIMIT ?`;
+    let where = `WHERE (${searchSql.sql}) ${scoreSql.sql}`;
 
-    const valArr = [...searchSql.valArr, ...scoreSql.valArr, maxSonglistCount];
+    const valArr = [...searchSql.valArr, ...scoreSql.valArr];
 
-    const list = await queryData('songs', '*', where, valArr);
+    const total = await getTableRowCount('songs', where, valArr);
+
+    const result = createPagingData(Array(total), pageSize, pageNo);
+
+    let list = [];
+
+    if (total > 0) {
+      const offset = (result.pageNo - 1) * pageSize;
+
+      where += ` LIMIT ? OFFSET ?`;
+
+      valArr.push(pageSize, offset);
+
+      list = await queryData('songs', '*', where, valArr);
+    }
 
     _success(res, 'ok', {
-      list,
+      ...result,
+      data: list,
       splitWord,
     });
   } catch (error) {
