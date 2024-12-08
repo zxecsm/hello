@@ -302,24 +302,21 @@ function lazyLoadChatLogo() {
     if (account === 'hello') {
       logo = imgHelloLogo;
     }
-    imgjz(
-      logo,
-      () => {
+    imgjz(logo)
+      .then((cache) => {
         $item
           .css({
-            'background-image': `url(${logo})`,
+            'background-image': `url(${cache})`,
           })
           .addClass('load');
-        imgCache.add(logo, logo);
-      },
-      () => {
+      })
+      .catch(() => {
         $item
           .css({
             'background-image': `url(${getTextImg(des || username)})`,
           })
           .addClass('load');
-      }
-    );
+      });
   });
 }
 // 关闭聊天室
@@ -543,19 +540,17 @@ export function chatimgLoad() {
     const id = $v.parent().parent().parent().data('id');
     const msgObj = getChatItem(id);
     const url = getFilePath(`/upload/${id}/${msgObj.hash}`, 1);
-    imgjz(
-      url,
-      () => {
+    imgjz(url)
+      .then((cache) => {
         $v.css({
-          'background-image': `url(${url})`,
+          'background-image': `url(${cache})`,
         }).addClass('load');
-      },
-      () => {
+      })
+      .catch(() => {
         $v.css({
           'background-image': `url(${imgGqImg})`,
         }).addClass('load');
-      }
-    );
+      });
   });
   cUserLogoLoad.bind($chatListBox[0].querySelectorAll('.c_logo'), (item) => {
     const $item = $(item);
@@ -571,23 +566,21 @@ export function chatimgLoad() {
     if (_from === 'hello') {
       logo = imgHelloLogo;
     }
-    imgjz(
-      logo,
-      () => {
+    imgjz(logo)
+      .then((cache) => {
         $item
           .css({
-            'background-image': `url(${logo})`,
+            'background-image': `url(${cache})`,
           })
           .addClass('load');
-      },
-      () => {
+      })
+      .catch(() => {
         $item
           .css({
             'background-image': `url(${getTextImg(des || username)})`,
           })
           .addClass('load');
-      }
-    );
+      });
   });
 }
 

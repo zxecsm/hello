@@ -296,21 +296,18 @@ async function renderList(top) {
       return false;
     }
   );
-  lazyImg.bind(logoImgs, (item) => {
+  lazyImg.bind(logoImgs, async (item) => {
     const $item = $(item);
     const { path, name } = getFileItem($item.parent().data('id'));
     if (isImgFile(name)) {
       const url = getFilePath(`/file/${path}/${name}`, 1);
-      imgjz(
-        url,
-        () => {
-          $item.css('background-image', `url(${url})`);
-          imgCache.add(url, url);
-        },
-        () => {
+      imgjz(url)
+        .then((cache) => {
+          $item.css('background-image', `url(${cache})`);
+        })
+        .catch(() => {
           $item.css('background-image', `url(${loadfailImg})`);
-        }
-      );
+        });
     }
   });
   if (top !== undefined) {

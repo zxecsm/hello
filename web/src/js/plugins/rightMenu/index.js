@@ -711,18 +711,14 @@ function rightMenu(e, html, callback, title = '') {
         }
         return !cache;
       });
-      loadImg.bind(imgs, (item) => {
-        const url = item.getAttribute('data-src');
-        imgjz(
-          url,
-          () => {
-            item.src = url;
-            imgCache.add(url, url);
-          },
-          () => {
+      loadImg.bind(imgs, async (item) => {
+        imgjz(item.getAttribute('data-src'))
+          .then((cache) => {
+            item.src = cache;
+          })
+          .catch(() => {
             item.src = loadFailImg;
-          }
-        );
+          });
       });
       if (isOnce) return;
       isOnce = true;

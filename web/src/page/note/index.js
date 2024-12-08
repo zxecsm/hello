@@ -223,21 +223,19 @@ if (urlparmes.v) {
         const logoUrl = logo
           ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
           : getTextImg(username);
-        imgjz(
-          logoUrl,
-          () => {
+        imgjz(logoUrl)
+          .then((cache) => {
             $authorInfo
               .find('.logo')
               .attr('title', username)
-              .css('background-image', `url(${logoUrl})`);
-          },
-          () => {
+              .css('background-image', `url(${cache})`);
+          })
+          .catch(() => {
             $authorInfo
               .find('.logo')
               .attr('title', username)
               .css('background-image', `url(${getTextImg(username)})`);
-          }
-        );
+          });
         mdWorker.postMessage(content);
         $noteInfo.find('h1').text(title);
         document.title = title;
@@ -311,15 +309,13 @@ mdWorker.addEventListener('message', (event) => {
   }
   imgLazy.bind($noteBox[0].querySelectorAll('img'), (item) => {
     const url = item.getAttribute('data-src');
-    imgjz(
-      url,
-      () => {
-        item.src = url;
-      },
-      () => {
+    imgjz(url)
+      .then((cache) => {
+        item.src = cache;
+      })
+      .catch(() => {
         item.src = gqImg;
-      }
-    );
+      });
   });
 });
 const imgLazy = new LazyLoad();

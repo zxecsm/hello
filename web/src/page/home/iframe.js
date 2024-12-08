@@ -366,15 +366,13 @@ function addHideBox(iframeBox) {
   }`;
   if (isOuterLink) {
     const u = `/api/getfavicon?u=${encodeURIComponent(iframeBox.url)}`;
-    imgjz(
-      u,
-      () => {
-        logo.style.backgroundImage = `url(${u})`;
-      },
-      () => {
+    imgjz(u)
+      .then((cache) => {
+        logo.style.backgroundImage = `url(${cache})`;
+      })
+      .catch(() => {
         logo.style.backgroundImage = `url(${imgMrLogo})`;
-      }
-    );
+      });
   }
   box.appendChild(logo);
   box.appendChild(title);

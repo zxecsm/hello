@@ -140,6 +140,7 @@ import notifyMusicControlPanel from './notifyMusicControlPanel.js';
 import md5 from '../../../js/utils/md5.js';
 import _path from '../../../js/utils/path.js';
 import { imgCache } from '../../../js/utils/imgCache.js';
+import cacheFile from '../../../js/utils/cacheFile.js';
 const $musicPlayerBox = $('.music_player_box'),
   $musicFootProgress = $musicPlayerBox.find('.music_foot_progress'),
   $musicPlayerBg = $musicPlayerBox.find('.music_palyer_bg'),
@@ -220,17 +221,14 @@ export function hdMusicImgCache(list) {
 }
 export function musicLoadImg(item) {
   const $img = $(item);
-  const u = $img.attr('data-src');
-  imgjz(
-    u,
-    () => {
-      $img.css('background-image', `url(${u})`).addClass('load');
-      imgCache.add(u, u);
-    },
-    () => {
+  let u = $img.attr('data-src');
+  imgjz(u)
+    .then((cache) => {
+      $img.css('background-image', `url(${cache})`).addClass('load');
+    })
+    .catch(() => {
       $img.css('background-image', `url(${imgMusic})`).addClass('load');
-    }
-  );
+    });
 }
 // 分享歌曲
 export function shareSongList(e, arr, cb) {
@@ -1475,6 +1473,13 @@ export async function updateSongCover(obj) {
     );
     if (result.code === 1) {
       pro.close();
+      [
+        getFilePath(`/music/${obj.pic}`),
+        getFilePath(`/music/${obj.pic}`, 1),
+      ].forEach((item) => {
+        imgCache.delete(item);
+        cacheFile.delete(item);
+      });
       getSongList();
     } else {
       pro.fail();
@@ -2400,27 +2405,26 @@ function closeMusicTitleScroll() {
   closeLrcHeadContentScrollName();
 }
 // 更新歌曲信息
-export function updateSongInfo() {
+export async function updateSongInfo() {
   if (!musicPlayerIsHide()) {
     initMusicTitleScroll();
   }
   const songInfo = setPlayingSongInfo();
   const id = songInfo.id;
-  setAudioSrc(songInfo.uurl);
+  await setAudioSrc(songInfo.uurl);
   $playingSongLogo
     .css('background-image', `url(${loadSvg})`)
     .removeClass('load');
-  imgjz(
-    songInfo.ppic,
-    () => {
+  imgjz(songInfo.ppic)
+    .then((cache) => {
       if (setPlayingSongInfo().id !== id) return;
       $playingSongLogo
-        .css('background-image', `url(${songInfo.ppic})`)
+        .css('background-image', `url(${cache})`)
         .addClass('load');
-      setLrcBg(songInfo.ppic);
-      changeMiniPlayerBg(songInfo.ppic);
+      setLrcBg(cache);
+      changeMiniPlayerBg(cache);
       $musicPlayerBg
-        .css('background-image', `url("${songInfo.ppic}")`)
+        .css('background-image', `url("${cache}")`)
         .removeClass('lrcbgss');
       _setTimeout(() => {
         if (setPlayingSongInfo().id !== id) return;
@@ -2428,11 +2432,11 @@ export function updateSongInfo() {
           title: songInfo.title,
           artist: songInfo.artist,
           album: songInfo.album,
-          artwork: [{ src: songInfo.ppic }],
+          artwork: [{ src: cache }],
         });
       }, 1000);
-    },
-    () => {
+    })
+    .catch(() => {
       if (setPlayingSongInfo().id !== id) return;
       $playingSongLogo
         .css('background-image', `url(${imgMusic})`)
@@ -2451,8 +2455,7 @@ export function updateSongInfo() {
           artwork: [{ src: imgMusic }],
         });
       }, 1000);
-    }
-  );
+    });
 }
 // 背景透明
 export function musicPlayBgOpacity() {

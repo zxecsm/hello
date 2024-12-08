@@ -34,6 +34,7 @@ import {
   pageScrollTop,
   userLogoMenu,
   wrapInput,
+  loadImg,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
@@ -100,17 +101,15 @@ function getShareData(close, loading = { start() {}, end() {} }) {
         logo = logo
           ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
           : getTextImg(username);
-        imgjz(
-          logo,
-          () => {
-            $shareInfo.find('.logo').css('background-image', `url(${logo})`);
-          },
-          () => {
+        imgjz(logo)
+          .then((cache) => {
+            $shareInfo.find('.logo').css('background-image', `url(${cache})`);
+          })
+          .catch(() => {
             $shareInfo
               .find('.logo')
               .css('background-image', `url(${getTextImg(username)})`);
-          }
-        );
+          });
         $shareInfo.find('.from').text(username);
         $shareInfo.find('.title').text(title);
         $shareInfo.find('.valid').text(
@@ -144,16 +143,14 @@ function getShareData(close, loading = { start() {}, end() {} }) {
               getFilePath(`/sharefile/`, 1) +
               '&token=' +
               encodeURIComponent(shareToken);
-            imgjz(
-              url,
-              (img) => {
+            loadImg(url)
+              .then((img) => {
                 $fileBox.find('.logo').html(img);
-              },
-              (img) => {
+              })
+              .catch((img) => {
                 img.src = loadfailImg;
                 $fileBox.find('.logo').html(img);
-              }
-            );
+              });
           } else {
             $fileBox
               .find('.logo')
@@ -348,14 +345,14 @@ async function renderList(top) {
           encodeURIComponent(shareToken);
         const cache = imgCache.get(url);
         if (cache) {
-          $item.css('background-image', `url(${url})`);
+          $item.css('background-image', `url(${cache})`);
         }
         return !cache;
       }
       return false;
     }
   );
-  lazyImg.bind(logos, (item) => {
+  lazyImg.bind(logos, async (item) => {
     const $item = $(item);
     const { path, name } = getFileItem($item.parent().data('id'));
     if (isImgFile(name)) {
@@ -363,16 +360,14 @@ async function renderList(top) {
         getFilePath(`/sharefile/${path}/${name}`, 1) +
         '&token=' +
         encodeURIComponent(shareToken);
-      imgjz(
-        url,
-        () => {
+      loadImg(url)
+        .then(() => {
           $item.css('background-image', `url(${url})`);
           imgCache.add(url, url);
-        },
-        () => {
+        })
+        .catch(() => {
           $item.css('background-image', `url(${loadfailImg})`);
-        }
-      );
+        });
     }
   });
   if (top !== undefined) {

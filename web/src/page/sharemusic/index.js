@@ -47,6 +47,7 @@ import {
   wave,
   darkMode,
   getScreenSize,
+  loadImg,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -132,17 +133,17 @@ function getShareData(close, loading = { start() {}, end() {} }) {
                 timestamp: exp_time,
               })
         );
-        imgjz(
-          logo,
-          () => {
-            $lrcHead.find('.user_logo').css('background-image', `url(${logo})`);
-          },
-          () => {
+        imgjz(logo)
+          .then((cache) => {
+            $lrcHead
+              .find('.user_logo')
+              .css('background-image', `url(${cache})`);
+          })
+          .catch(() => {
             $lrcHead
               .find('.user_logo')
               .css('background-image', `url(${getTextImg(username)})`);
-          }
-        );
+          });
         playingList = resObj.data.data;
         curPlayingList = deepClone(playingList);
         playingSongInfo = initSongInfo(
@@ -193,15 +194,14 @@ function initSongInfo(obj) {
   return obj;
 }
 // 更新音乐信息
-function updateSongInfo() {
+async function updateSongInfo() {
   if (!playingSongInfo) return;
   const id = playingSongInfo.id;
   lrcHeadContentScrollName.init(playingSongInfo.title);
   lrcHeadContentScrollArtist.init(playingSongInfo.artist);
   $myAudio.attr('src', playingSongInfo.uurl);
-  imgjz(
-    playingSongInfo.ppic,
-    () => {
+  loadImg(playingSongInfo.ppic)
+    .then(() => {
       if (id !== playingSongInfo.id) return;
       $lrcBg
         .css('background-image', `url("${playingSongInfo.ppic}")`)
@@ -215,8 +215,8 @@ function updateSongInfo() {
           artwork: [{ src: playingSongInfo.ppic }],
         });
       }, 1000);
-    },
-    () => {
+    })
+    .catch(() => {
       if (id !== playingSongInfo.id) return;
       $lrcBg.css('background-image', `url(${imgMusic})`).removeClass('lrcbgss');
       _setTimeout(() => {
@@ -228,8 +228,7 @@ function updateSongInfo() {
           artwork: [{ src: imgMusic }],
         });
       }, 1000);
-    }
-  );
+    });
 }
 // 初始歌词
 function lrcInit() {
@@ -411,14 +410,13 @@ function playSong() {
   document.title = `\xa0\xa0\xa0♪正在播放：${playingSongInfo.artist} - ${playingSongInfo.title}`;
   $myAudio[0].play();
   if ($myAudio._lrcList.length === 0) {
-    _musiclrc();
+    musiclrc();
   }
   //保持播放速度
   $myAudio[0].playbackRate = curPlaySpeed[1];
 }
 //歌词处理
 $myAudio._lrcList = [];
-const _musiclrc = debounce(musiclrc, 1000);
 function musiclrc() {
   if (!playingSongInfo) return;
   const id = playingSongInfo.id;
@@ -787,16 +785,14 @@ function renderPlayList() {
   lazyImg.bind(logos, (item) => {
     const $img = $(item);
     const u = $img.attr('data-src');
-    imgjz(
-      u,
-      () => {
+    loadImg(u)
+      .then(() => {
         $img.css('background-image', `url(${u})`).addClass('load');
         imgCache.add(u, u);
-      },
-      () => {
+      })
+      .catch(() => {
         $img.css('background-image', `url(${imgMusic})`).addClass('load');
-      }
-    );
+      });
   });
 }
 // 分页

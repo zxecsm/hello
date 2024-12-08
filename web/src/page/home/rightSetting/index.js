@@ -87,6 +87,8 @@ import { reqChatForwardMsgLink } from '../../../api/chat.js';
 import md5 from '../../../js/utils/md5.js';
 import { _tpl } from '../../../js/utils/template.js';
 import _path from '../../../js/utils/path.js';
+import cacheFile from '../../../js/utils/cacheFile.js';
+import { imgCache } from '../../../js/utils/imgCache.js';
 // local数据
 let dark = _getData('dark'),
   pageGrayscale = _getData('pageGrayscale'),
@@ -643,19 +645,17 @@ export function renderUserinfo() {
   logo = logo
     ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
     : getTextImg(username);
-  imgjz(
-    logo,
-    () => {
+  imgjz(logo)
+    .then((cache) => {
       $userInfoWrap
         .find('.user_logo div')
-        .css('background-image', `url(${logo})`);
-    },
-    () => {
+        .css('background-image', `url(${cache})`);
+    })
+    .catch(() => {
       $userInfoWrap
         .find('.user_logo div')
         .css('background-image', `url(${getTextImg(username)})`);
-    }
-  );
+    });
 }
 // 设置君子锁
 function setGentlemanLock(e) {
@@ -814,22 +814,27 @@ export function settingMenu(e, isMain) {
         (headBtnToRight ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
       param: { value: headBtnToRight },
     },
+    {
+      id: '6',
+      text: '清理缓存',
+      beforeIcon: `iconfont icon-15qingkong-1`,
+    },
   ];
   if (isMain) {
     data = [
       ...data,
       {
-        id: '6',
+        id: '7',
         text: '新建笔记',
         beforeIcon: 'iconfont icon-jilu',
       },
       {
-        id: '7',
+        id: '8',
         text: '隐藏所有窗口',
         beforeIcon: 'iconfont icon-minus-bold',
       },
       {
-        id: '8',
+        id: '9',
         text: '关闭所有窗口',
         beforeIcon: 'iconfont icon-shibai',
       },
@@ -838,7 +843,7 @@ export function settingMenu(e, isMain) {
   rMenu.selectMenu(
     e,
     data,
-    ({ e, resetMenu, close, id, param }) => {
+    async ({ e, resetMenu, close, id, param, loading }) => {
       if (id === '1') {
         close();
         showBgBox();
@@ -1004,17 +1009,35 @@ export function settingMenu(e, isMain) {
           _setData('headBtnToRight', true);
         }
         resetMenu(data);
-      } else if (id === '7') {
+      } else if (id === '8') {
         close();
         // 隐藏所有窗口
         hideAllwindow(1);
-      } else if (id === '8') {
+      } else if (id === '9') {
         close();
         // 关闭所有窗口
         closeAllwindow(1);
-      } else if (id === '6') {
+      } else if (id === '7') {
         close();
         openInIframe('/edit/#new', '新笔记');
+      } else if (id === '6') {
+        const size = await cacheFile.size();
+        _pop(
+          {
+            e,
+            text: `确认清空：缓存？${size}`,
+          },
+          async (type) => {
+            if (type === 'confirm') {
+              loading.start();
+              await cacheFile.clear();
+              imgCache.clear();
+              loading.end();
+              _msg.success();
+              close();
+            }
+          }
+        );
       }
     },
     '设置'

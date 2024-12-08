@@ -245,7 +245,6 @@ function renderImgList(y) {
             const url = getFilePath(`/pic/${obj.url}`, 1);
             const cache = imgCache.get(url);
             if (cache) {
-              item.src = cache;
               $img
                 .css({
                   'background-image': `url(${cache})`,
@@ -255,27 +254,24 @@ function renderImgList(y) {
             return !cache;
           }
         );
-        bglazyImg.bind(imgs, (item) => {
+        bglazyImg.bind(imgs, async (item) => {
           const $img = $(item);
           const obj = getPicItem($img.parent().attr('data-id'));
           if (!obj) return;
           const url = getFilePath(`/pic/${obj.url}`, 1);
-          imgjz(
-            url,
-            () => {
+          imgjz(url)
+            .then((cache) => {
               $img
                 .css({
-                  'background-image': `url(${url})`,
+                  'background-image': `url(${cache})`,
                 })
                 .addClass('load');
-              imgCache.add(url, url);
-            },
-            () => {
+            })
+            .catch(() => {
               $img.css({
                 'background-image': `url(${loadfailImg})`,
               });
-            }
-          );
+            });
         });
       }
     })

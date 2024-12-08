@@ -4,6 +4,7 @@ const fs = require('fs');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const { GenerateSW } = require('workbox-webpack-plugin');
 // css link方式引入
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const includePage = [];
@@ -56,6 +57,23 @@ function getPlugins(isDev) {
           {
             from: resolve(__dirname, '..', 'src/manifest.json'),
             to: resolve(__dirname, '../../server/static'),
+          },
+        ],
+      }),
+      new GenerateSW({
+        clientsClaim: true,
+        skipWaiting: true,
+        runtimeCaching: [
+          {
+            urlPattern: /\.(?:html|css|js|png|jpg|jpeg|svg|woff2?)$/,
+            handler: 'CacheFirst', // 使用缓存优先策略
+            options: {
+              cacheName: 'static-resources',
+              expiration: {
+                maxEntries: 50, // 最大缓存条目
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 缓存30天
+              },
+            },
           },
         ],
       }),

@@ -43,6 +43,7 @@ import { updateLastPlay } from '../timer';
 import { hideIframeMask, showIframeMask } from '../iframe';
 import { _tpl, deepClone } from '../../../js/utils/template';
 import { initRainCodeSleep } from '../../../js/common/codeRain';
+import cacheFile from '../../../js/utils/cacheFile';
 
 const $miniPlayer = $('.mini_player'),
   $miniLrcWrap = $('.mini_lrc_wrap'),
@@ -258,6 +259,7 @@ function saveLrc() {
       if (result.code === 1) {
         $editLrcWrap._val = val;
         _msg.success(result.codeText);
+        cacheFile.delete($editLrcWrap._mobj.id);
         return;
       }
     })
@@ -328,11 +330,18 @@ const musicMvContentScroll = new ContentScroll(
   $musicMvWrap.find('.m_top_space p')[0]
 );
 // MV播放函数
-export function playMv(obj) {
+export async function playMv(obj) {
   setPlayingSongInfo(hdSongInfo(obj));
   updateSongInfo();
   pauseSong();
-  $myVideo.attr('src', setPlayingSongInfo().mmv);
+  let url = setPlayingSongInfo().mmv;
+  const cache = await cacheFile.read(url);
+  if (cache) {
+    url = cache;
+  } else {
+    cacheFile.add(url);
+  }
+  $myVideo.attr('src', url);
   playVideo();
   $musicMvWrap.stop().fadeIn(_d.speed).css('display', 'flex');
   if (!$musicMvWrap.once) {

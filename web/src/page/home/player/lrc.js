@@ -4,7 +4,6 @@ import {
   _getData,
   _setTimeout,
   throttle,
-  debounce,
   myShuffle,
   copyText,
   _position,
@@ -70,6 +69,7 @@ import { _tpl, deepClone } from '../../../js/utils/template.js';
 import notifyMusicControlPanel from './notifyMusicControlPanel.js';
 import _path from '../../../js/utils/path.js';
 import { getSearchSongs } from './search.js';
+import cacheFile from '../../../js/utils/cacheFile.js';
 const $myAudio = $(new Audio()),
   $musicLrcWrap = $('.music_player_box .music_lrc_wrap'),
   $lrcBg = $musicLrcWrap.find('.lrc_bg'),
@@ -139,7 +139,13 @@ export function updatePlayingSongTotalTime(val) {
   $lrcProgressBar.find('.total_time').text(formartSongTime(val));
 }
 // 歌曲路径
-export function setAudioSrc(val) {
+export async function setAudioSrc(val) {
+  const cache = await cacheFile.read(val);
+  if (cache) {
+    val = cache;
+  } else {
+    cacheFile.add(val);
+  }
   $myAudio.attr('src', val);
 }
 // 背景
@@ -274,63 +280,68 @@ function playSong() {
   } else {
     document.title = `\xa0\xa0\xa0♪正在播放：${playingSongInfo.artist} - ${playingSongInfo.title}`;
     $myAudio[0].play();
-    _renderLrc();
+    renderLrc();
   }
   //保持播放速度
   $myAudio[0].playbackRate = curPlaySpeed[1];
 }
 
-// 生成歌词列表
-const _renderLrc = debounce(renderLrc, 1000);
 //歌词处理
-function renderLrc() {
+async function renderLrc() {
   if (!playingSongInfo.id || lrcList.length > 0) return;
   const id = playingSongInfo.id;
-  reqPlayerLrc({
-    id,
-  })
-    .then((result) => {
-      if (result.code === 1) {
-        let list = result.data;
-        if (id !== playingSongInfo.id) return;
-        list = list.map((item, idx) => {
-          item.idx = idx;
-          return item;
-        });
-        lrcList = list;
-        const hasfy = !list.every((item) => item.fy === '');
-        if (hasfy) {
-          $lrcMenuWrap.find('.lrc_translate_btn').stop().show(_d.speed);
-        } else {
-          $lrcMenuWrap.find('.lrc_translate_btn').stop().hide(_d.speed);
-        }
-        const showFy = _getData('showSongTranslation') && hasfy ? true : false;
-        const html = _tpl(
-          `
+  const cache = await cacheFile.readText(id);
+  let list = [];
+  if (cache) {
+    list = JSON.parse(cache);
+  } else {
+    const result = await reqPlayerLrc({
+      id,
+    });
+
+    if (result.code === 1) {
+      list = result.data;
+      cacheFile.addText(id, JSON.stringify(list));
+    } else {
+      lrcList = [];
+      return;
+    }
+  }
+
+  if (id !== playingSongInfo.id) return;
+  list = list.map((item, idx) => {
+    item.idx = idx;
+    return item;
+  });
+  lrcList = list;
+  const hasfy = !list.every((item) => item.fy === '');
+  if (hasfy) {
+    $lrcMenuWrap.find('.lrc_translate_btn').stop().show(_d.speed);
+  } else {
+    $lrcMenuWrap.find('.lrc_translate_btn').stop().hide(_d.speed);
+  }
+  const showFy = _getData('showSongTranslation') && hasfy ? true : false;
+  const html = _tpl(
+    `
           <div v-for="{p,fy} in list">
             <p class="elrc">{{p}}</p>
             <p v-show="showFy" class="lrcfy">{{fy}}</p>
           </div>
           `,
-          {
-            list,
-            showFy,
-          }
-        );
-        $lrcListWrap
-          .find('.lrc_items')
-          .css({
-            'text-align': lrcState.position,
-            'font-size': percentToValue(14, 30, lrcState.size),
-          })
-          .html(html);
-        computeLrcIndex();
-        lrcScroll(true);
-      }
+    {
+      list,
+      showFy,
+    }
+  );
+  $lrcListWrap
+    .find('.lrc_items')
+    .css({
+      'text-align': lrcState.position,
+      'font-size': percentToValue(14, 30, lrcState.size),
     })
-    .catch(() => {
-      lrcList = [];
-    });
+    .html(html);
+  computeLrcIndex();
+  lrcScroll(true);
 }
 // 计算歌词索引
 function computeLrcIndex() {
@@ -577,7 +588,7 @@ export function musicPlay(obj) {
   $lrcBg.addClass('lrcbgss'); //背景透明
   musicPlayBgOpacity();
   resetPlayingSongLogo();
-  updateSongInfo();
+  updateSongInfo().then(playSong);
   initMusicLrc();
   toggleLrcMenuWrapBtnsState();
   // 高亮显示正在播放歌曲
@@ -591,7 +602,6 @@ export function musicPlay(obj) {
       }
     }
   });
-  playSong();
   playtimer = setTimeout(() => {
     clearTimeout(playtimer);
     playtimer = null;

@@ -107,25 +107,21 @@ function renderList() {
       url = `/api/getfavicon?u=${encodeURIComponent(link)}`;
 
     const $img = $item.find('.logo');
-
-    imgjz(
-      url,
-      () => {
+    imgjz(url)
+      .then((cache) => {
         $img
           .css({
-            'background-image': `url(${url})`,
+            'background-image': `url(${cache})`,
           })
           .addClass('load');
-        imgCache.add(url, url);
-      },
-      () => {
+      })
+      .catch(() => {
         $img
           .css({
             'background-image': `url(${imgMrLogo})`,
           })
           .addClass('load');
-      }
-    );
+      });
   });
 
   pageScrollTop(0);
@@ -180,18 +176,15 @@ function getShareData(close, loading = { start() {}, end() {} }) {
         logo = logo
           ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
           : getTextImg(username);
-
-        imgjz(
-          logo,
-          () => {
-            $head.find('.logo').css('background-image', `url(${logo})`);
-          },
-          () => {
+        imgjz(logo)
+          .then((cache) => {
+            $head.find('.logo').css('background-image', `url(${cache})`);
+          })
+          .catch(() => {
             $head
               .find('.logo')
               .css('background-image', `url(${getTextImg(username)})`);
-          }
-        );
+          });
 
         $head.find('.from').text(username);
         $head.find('.title').text(title);

@@ -317,25 +317,22 @@ export function renderBgList(y) {
             return !cache;
           }
         );
-        bglazyImg.bind(bgImgs, (item) => {
+        bglazyImg.bind(bgImgs, async (item) => {
           const $img = $(item);
           const url = $img.attr('data-src') + '&t=1';
-          imgjz(
-            url,
-            () => {
+          imgjz(url)
+            .then((cache) => {
               $img
                 .css({
-                  'background-image': `url(${url})`,
+                  'background-image': `url(${cache})`,
                 })
                 .addClass('load');
-              imgCache.add(url, url);
-            },
-            () => {
+            })
+            .catch(() => {
               $img.css({
                 'background-image': `url(${loadfailImg})`,
               });
-            }
-          );
+            });
         });
         return;
       }

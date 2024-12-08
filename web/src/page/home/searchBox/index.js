@@ -203,24 +203,21 @@ function lazyLoadHomeBmLogo() {
     } else {
       logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
     }
-    imgjz(
-      logo,
-      () => {
+    imgjz(logo)
+      .then((cache) => {
         $homeBmLogo
           .css({
-            'background-image': `url(${logo})`,
+            'background-image': `url(${cache})`,
           })
           .addClass('load');
-        imgCache.add(logo, logo);
-      },
-      () => {
+      })
+      .catch(() => {
         $homeBmLogo
           .css({
             'background-image': `url(${imgMrLogo})`,
           })
           .addClass('load');
-      }
-    );
+      });
   });
 }
 $searchBoxMask
@@ -858,25 +855,23 @@ function selectSearch(e) {
         const xi = $(_this).attr('xi'),
           { logo } = _d.searchEngineData[xi];
         loading.start();
-        imgjz(
-          logo,
-          () => {
+        imgjz(logo)
+          .then(() => {
             curSearchIdx = xi;
             switchSearchEngine();
             _setData('searchengine', xi);
             _msg.success('切换成功');
             loading.end();
             close(true);
-          },
-          () => {
+          })
+          .catch(() => {
             curSearchIdx = xi;
             switchSearchEngine();
             _setData('searchengine', xi);
             _msg.success('切换成功');
             loading.end();
             close(true);
-          }
-        );
+          });
       }
     },
     '选择搜索引擎'

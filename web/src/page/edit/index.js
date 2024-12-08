@@ -313,18 +313,14 @@ mdWorker.addEventListener('message', (event) => {
     }
     return !cache;
   });
-  imgLazy.bind(imgs, (item) => {
-    const url = item.getAttribute('data-src');
-    imgjz(
-      url,
-      () => {
-        item.src = url;
-        imgCache.add(url, url);
-      },
-      () => {
+  imgLazy.bind(imgs, async (item) => {
+    imgjz(item.getAttribute('data-src'))
+      .then((cache) => {
+        item.src = cache;
+      })
+      .catch(() => {
         item.src = gqImg;
-      }
-    );
+      });
   });
   syncScrollFromEditor(1);
 });

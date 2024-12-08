@@ -8,4 +8,10 @@ export const imgCache = {
   get(url) {
     return this.cache.get(url);
   },
+  delete(url) {
+    this.cache.delete(url);
+  },
+  clear() {
+    this.cache.clear();
+  },
 };

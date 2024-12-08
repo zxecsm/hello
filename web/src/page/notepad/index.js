@@ -279,18 +279,15 @@ mdWorker.addEventListener('message', (event) => {
     }
     return !cache;
   });
-  imgLazy.bind(imgs, (item) => {
+  imgLazy.bind(imgs, async (item) => {
     const url = item.getAttribute('data-src');
-    imgjz(
-      url,
-      () => {
-        item.src = url;
-        imgCache.add(url, url);
-      },
-      () => {
+    imgjz(url)
+      .then((cache) => {
+        item.src = cache;
+      })
+      .catch(() => {
         item.src = gqImg;
-      }
-    );
+      });
   });
   syncScrollFromEditor(1);
 });

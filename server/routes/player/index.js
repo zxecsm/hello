@@ -124,19 +124,12 @@ route.get('/lrc', async (req, res) => {
       }
     }
 
-    const songInfo = (
-      await queryData('songs', 'lrc,title,artist', `WHERE id = ?`, [id])
-    )[0];
+    const songInfo = (await queryData('songs', 'lrc', `WHERE id = ?`, [id]))[0];
 
     if (!songInfo) {
       _success(res, 'ok', errData);
       return;
     }
-
-    await uLog(req, `获取歌词(${songInfo.artist}-${songInfo.title})`);
-
-    // 自增播放次数
-    await incrementField('songs', { play_count: 1 }, `where id = ?`, [id]);
 
     const url = _path.normalize(`${configObj.filepath}/music/${songInfo.lrc}`);
 
@@ -720,6 +713,11 @@ route.post('/last-play', async (req, res) => {
 
     // 增加播放历史记录
     if (history === 1) {
+      // 自增播放次数
+      await incrementField('songs', { play_count: 1 }, `where id = ?`, [
+        lastplay.id,
+      ]);
+
       const list = await getMusicList(account);
 
       list[0].item.unshift({ id: lastplay.id });

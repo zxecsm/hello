@@ -319,18 +319,14 @@ function hdAsideListItemLogo() {
     } else {
       logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
     }
-    let $bm_logo = $item.find('.bm_logo');
-
-    imgjz(
-      logo,
-      () => {
-        $bm_logo.css('background-image', `url(${logo})`).addClass('load');
-        imgCache.add(logo, logo);
-      },
-      () => {
+    const $bm_logo = $item.find('.bm_logo');
+    imgjz(logo)
+      .then((cache) => {
+        $bm_logo.css('background-image', `url(${cache})`).addClass('load');
+      })
+      .catch(() => {
         $bm_logo.css('background-image', `url(${imgMrLogo})`).addClass('load');
-      }
-    );
+      });
   });
 }
 

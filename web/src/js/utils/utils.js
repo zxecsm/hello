@@ -10,6 +10,8 @@ import rMenu from '../plugins/rightMenu';
 import { _tpl } from './template';
 import _path from './path';
 import { UpProgress } from '../plugins/UpProgress';
+import { imgCache } from './imgCache';
+import cacheFile from './cacheFile';
 // 解析url
 export function queryURLParams(url) {
   const obj = {};
@@ -212,14 +214,21 @@ export function loadImg(url) {
   });
 }
 // 图片加载
-export function imgjz(url, fn, fnn) {
-  loadImg(url)
-    .then((img) => {
-      fn && fn(img);
-    })
-    .catch((img) => {
-      fnn && fnn(img);
-    });
+export async function imgjz(url) {
+  const cache = imgCache.get(url);
+  if (cache) return cache;
+  const ca = await cacheFile.add(url);
+  if (ca) {
+    try {
+      await loadImg(ca);
+      imgCache.add(url, ca);
+      return ca;
+    } catch (error) {
+      throw error;
+    }
+  } else {
+    throw '';
+  }
 }
 // 检查是否为有效的 HTTP/HTTPS URL
 export function isurl(url) {
@@ -1304,7 +1313,10 @@ export function downloadFile(tasks) {
     if (signal.aborted) return;
 
     let { fileUrl, filename } = task;
-
+    const cache = await cacheFile.read(fileUrl);
+    if (cache) {
+      fileUrl = cache;
+    }
     await new Promise((resolve) => {
       filename = filename || _path.basename(fileUrl);
       const xhr = new XMLHttpRequest();
@@ -1493,13 +1505,21 @@ export function imgPreview(arr, idx = 0) {
     image1.style.display = 'none';
     _loadingBar.end();
     load.style.opacity = 1;
-    const { u1, u2 } = arr[idx];
+    let { u1, u2 } = arr[idx];
     _loadingBar.start();
     if (u2) {
+      const ca = imgCache.get(u2);
+      if (ca) u2 = ca;
       image1.src = u2;
       image1.style.display = 'block';
     }
-    image.src = u1;
+    imgjz(u1)
+      .then((cache) => {
+        image.src = cache;
+      })
+      .catch(() => {
+        hdError();
+      });
   }
   cut(idx);
   function hdLoad() {

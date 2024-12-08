@@ -55,7 +55,6 @@ import {
   showHistory,
   showLogPage,
   showNote,
-  showNotepad,
   showPicture,
   showRightMenu,
   showRootPage,
@@ -223,9 +222,8 @@ export function setBg(obj, cb) {
   windmill.start();
   const url = getFilePath(`/bg/${obj.url}`);
   cb && cb();
-  imgjz(
-    url,
-    () => {
+  imgjz(url)
+    .then(() => {
       windmill.stop();
       reqChangeBg({ type: obj.type, id: obj.id })
         .then((result) => {
@@ -236,12 +234,11 @@ export function setBg(obj, cb) {
           }
         })
         .catch(() => {});
-    },
-    () => {
+    })
+    .catch(() => {
       _msg.error('壁纸加载失败');
       windmill.stop();
-    }
-  );
+    });
 }
 // 随机切换背景
 function changeBg() {
@@ -402,18 +399,17 @@ export function updateUserInfo(cb) {
         logo = logo
           ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
           : getTextImg(username);
-        imgjz(
-          logo,
-          () => {
-            $userLogoBtn.css('background-image', `url(${logo})`);
-          },
-          () => {
+        imgjz(logo)
+          .then((cache) => {
+            $userLogoBtn.css('background-image', `url(${cache})`);
+          })
+          .catch(() => {
             $userLogoBtn.css(
               'background-image',
               `url(${getTextImg(username)})`
             );
-          }
-        );
+          });
+
         // 没有壁纸使用默认
         const isBig = isBigScreen();
         if ((isBig && !bg) || (!isBig && !bgxs)) {
@@ -427,17 +423,15 @@ export function updateUserInfo(cb) {
           } else {
             bgUrl = getFilePath(`/bg/${getIn(bgObj, [bgxs, 'url']) || ''}`);
           }
-          imgjz(
-            bgUrl,
-            () => {
-              $pageBg.css('background-image', `url(${bgUrl})`);
+          imgjz(bgUrl)
+            .then((cache) => {
+              $pageBg.css('background-image', `url(${cache})`);
               cb && cb();
-            },
-            () => {
+            })
+            .catch(() => {
               $pageBg.css('background-image', `url(${imgBgSvg})`);
               cb && cb();
-            }
-          );
+            });
         }
         // 更新个人信息
         renderUserinfo();
@@ -620,7 +614,7 @@ function keyboard(e) {
       });
     }
     //音量-
-    if (ctrl && key === 'ArrowDown') {
+    else if (ctrl && key === 'ArrowDown') {
       e.preventDefault();
       let vol = setMediaVolume();
       vol -= 0.1;
@@ -638,7 +632,7 @@ function keyboard(e) {
       });
     }
     //暂停/播放
-    if (key === ' ') {
+    else if (key === ' ') {
       if (musicMvIsHide()) {
         changePlayState();
       } else {
@@ -650,7 +644,7 @@ function keyboard(e) {
       }
     }
     // 迷你切换
-    if (key === 'm') {
+    else if (key === 'm') {
       if (musicPlayerIsHide()) {
         showMusicPlayerBox();
       } else {
@@ -658,15 +652,15 @@ function keyboard(e) {
       }
     }
     // 查看log
-    if (key === 'l') {
+    else if (key === 'l') {
       showLogPage();
     }
     // 用户管理
-    if (key === 'u') {
+    else if (key === 'u') {
       showRootPage();
     }
     // 聊天室
-    if (key === 'c' && !ctrl) {
+    else if (key === 'c' && !ctrl) {
       if (chatRoomWrapIsHide()) {
         showChatRoom();
       } else {
@@ -674,57 +668,57 @@ function keyboard(e) {
       }
     }
     // 关闭所有窗口
-    if (key === 'x' && !ctrl) {
+    else if (key === 'x' && !ctrl) {
       closeAllwindow(1);
     }
     // 隐藏所有窗口
-    if (key === 'q') {
+    else if (key === 'q') {
       hideAllwindow(1);
     }
     // 书签
-    if (key === 's' && !ctrl) {
+    else if (key === 's' && !ctrl) {
       if (searchBoxIsHide()) {
         showSearchBox();
       }
     }
     // 跳到历史记录
-    if (key === 'h') {
+    else if (key === 'h') {
       showHistory();
     }
     // 书签管理
-    if (key === 'b') {
+    else if (key === 'b') {
       showBmk();
     }
     // 文件管理
-    if (key === 'f') {
+    else if (key === 'f') {
       showFileManage();
     }
     // 回收站
-    if (key === 't') {
+    else if (key === 't') {
       showTrash();
     }
     // 跳到笔记
-    if (key === 'n') {
+    else if (key === 'n') {
       showNote();
     }
-    // 打开便条
-    if (key === 'e') {
-      showNotepad();
+    // 新建笔记
+    else if (key === 'e') {
+      openInIframe('/edit/#new', '新笔记');
     }
     // 打开图床
-    if (key === 'p') {
+    else if (key === 'p') {
       showPicture();
     }
     // 侧边栏
-    if (key === 'a' && !ctrl) {
+    else if (key === 'a' && !ctrl) {
       toggleAside();
     }
     // 播放模式
-    if (key === 'r') {
+    else if (key === 'r') {
       switchPlayMode();
     }
     // 停止歌曲并关闭所有音乐窗口
-    if (key === 'o') {
+    else if (key === 'o') {
       closeMusicPlayer();
     }
   }
