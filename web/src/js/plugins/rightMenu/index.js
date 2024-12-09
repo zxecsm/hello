@@ -21,7 +21,7 @@ import './index.less';
 import loadFailImg from '../../../images/img/loadfail.png';
 import { CreateTabs } from '../../../page/notes/tabs';
 import { _tpl, deepClone } from '../../utils/template';
-import { imgCache } from '../../utils/imgCache';
+import cacheFile from '../../utils/cacheFile';
 // 右键菜单
 let rightBoxList = [];
 class RightM {
@@ -705,7 +705,7 @@ function rightMenu(e, html, callback, title = '') {
     afterRender() {
       const imgs = [...this.content.querySelectorAll('img')].filter((item) => {
         const url = item.getAttribute('data-src');
-        const cache = imgCache.get(url);
+        const cache = cacheFile.hasUrl(url, 'image');
         if (cache) {
           item.src = cache;
         }

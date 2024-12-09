@@ -139,7 +139,6 @@ import { _tpl, deepClone } from '../../../js/utils/template.js';
 import notifyMusicControlPanel from './notifyMusicControlPanel.js';
 import md5 from '../../../js/utils/md5.js';
 import _path from '../../../js/utils/path.js';
-import { imgCache } from '../../../js/utils/imgCache.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 const $musicPlayerBox = $('.music_player_box'),
   $musicFootProgress = $musicPlayerBox.find('.music_foot_progress'),
@@ -212,7 +211,7 @@ export function hdMusicImgCache(list) {
   return [...list].filter((item) => {
     const $img = $(item);
     const u = $img.attr('data-src');
-    const cache = imgCache.get(u);
+    const cache = cacheFile.hasUrl(u, 'image');
     if (cache) {
       $img.css('background-image', `url(${cache})`).addClass('load');
     }
@@ -1477,8 +1476,7 @@ export async function updateSongCover(obj) {
         getFilePath(`/music/${obj.pic}`),
         getFilePath(`/music/${obj.pic}`, 1),
       ].forEach((item) => {
-        imgCache.delete(item);
-        cacheFile.delete(item);
+        cacheFile.delete(item, 'image');
       });
       getSongList();
     } else {
@@ -1795,12 +1793,15 @@ function songMenu(e, idx, sobj) {
       } else if (id === '7') {
         close();
         const fname = `${sobj.artist}-${sobj.title}`;
-        downloadFile([
-          {
-            fileUrl: sobj.uurl,
-            filename: `${fname}.${_path.extname(sobj.url)[2]}`,
-          },
-        ]);
+        downloadFile(
+          [
+            {
+              fileUrl: sobj.uurl,
+              filename: `${fname}.${_path.extname(sobj.url)[2]}`,
+            },
+          ],
+          'music'
+        );
       } else if (id === '6') {
         moveSongToList(e, 'all', [sobj.id]);
       } else if (id === '2') {
@@ -2012,7 +2013,8 @@ $msuicContentBox
           filename: `${fname}.${_path.extname(cur.url)[2]}`,
         });
         return pre;
-      }, [])
+      }, []),
+      'music'
     );
     switchSongChecked();
   })

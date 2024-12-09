@@ -88,7 +88,6 @@ import md5 from '../../../js/utils/md5.js';
 import { _tpl } from '../../../js/utils/template.js';
 import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
-import { imgCache } from '../../../js/utils/imgCache.js';
 // local数据
 let dark = _getData('dark'),
   pageGrayscale = _getData('pageGrayscale'),
@@ -843,7 +842,7 @@ export function settingMenu(e, isMain) {
   rMenu.selectMenu(
     e,
     data,
-    async ({ e, resetMenu, close, id, param, loading }) => {
+    async ({ e, resetMenu, close, id, param }) => {
       if (id === '1') {
         close();
         showBgBox();
@@ -1021,22 +1020,49 @@ export function settingMenu(e, isMain) {
         close();
         openInIframe('/edit/#new', '新笔记');
       } else if (id === '6') {
-        const size = await cacheFile.size();
-        _pop(
+        const data = [
           {
-            e,
-            text: `确认清空：缓存？${size}`,
+            id: 'music',
+            text: '歌曲',
+            beforeIcon: 'iconfont icon-yinle1',
+            param: { text: '歌曲', type: 'music' },
           },
-          async (type) => {
-            if (type === 'confirm') {
-              loading.start();
-              await cacheFile.clear();
-              imgCache.clear();
-              loading.end();
-              _msg.success();
-              close();
+          {
+            id: 'image',
+            text: '图片',
+            beforeIcon: 'iconfont icon-tupian',
+            param: { text: '图片', type: 'image' },
+          },
+          {
+            id: 'all',
+            text: '所有',
+            beforeIcon: 'iconfont icon-15qingkong-1',
+            param: { text: '所有', type: '' },
+          },
+        ];
+        rMenu.selectMenu(
+          e,
+          data,
+          async ({ id, e, loading, param }) => {
+            if (id) {
+              const size = await cacheFile.size(param.type);
+              _pop(
+                {
+                  e,
+                  text: `确认清空：${param.text}缓存？${size}`,
+                },
+                async (type) => {
+                  if (type === 'confirm') {
+                    loading.start();
+                    await cacheFile.clear(param.type);
+                    loading.end();
+                    _msg.success();
+                  }
+                }
+              );
             }
-          }
+          },
+          '选择要清除的缓存'
         );
       }
     },

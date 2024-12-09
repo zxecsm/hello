@@ -37,7 +37,7 @@ import { showBmkInfo } from '../../js/utils/showinfo';
 import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import _path from '../../js/utils/path';
-import { imgCache } from '../../js/utils/imgCache';
+import cacheFile from '../../js/utils/cacheFile';
 
 const urlparmes = queryURLParams(myOpen()),
   HASH = urlparmes.HASH;
@@ -90,7 +90,7 @@ function renderList() {
       { link } = getBmInfo($item.attr('data-id')),
       url = `/api/getfavicon?u=${encodeURIComponent(link)}`;
 
-    const cache = imgCache.get(url);
+    const cache = cacheFile.hasUrl(url, 'image');
     if (cache) {
       const $img = $item.find('.logo');
       $img

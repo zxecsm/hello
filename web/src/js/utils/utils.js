@@ -10,7 +10,6 @@ import rMenu from '../plugins/rightMenu';
 import { _tpl } from './template';
 import _path from './path';
 import { UpProgress } from '../plugins/UpProgress';
-import { imgCache } from './imgCache';
 import cacheFile from './cacheFile';
 // 解析url
 export function queryURLParams(url) {
@@ -215,18 +214,16 @@ export function loadImg(url) {
 }
 // 图片加载
 export async function imgjz(url) {
-  const cache = imgCache.get(url);
-  if (cache) return cache;
-  const ca = await cacheFile.add(url);
-  if (ca) {
+  const cache = await cacheFile.add(url, 'image');
+  if (cache) {
     try {
-      await loadImg(ca);
-      imgCache.add(url, ca);
-      return ca;
+      await loadImg(cache);
+      return cache;
     } catch (error) {
       throw error;
     }
   } else {
+    cacheFile.delete(url, 'image');
     throw '';
   }
 }
@@ -923,10 +920,12 @@ export function DownloadJSON(content, filename) {
   eleLink.download = filename || 'hello';
   eleLink.style.display = 'none';
   const blob = new Blob([content]);
-  eleLink.href = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(blob);
+  eleLink.href = url;
   document.body.appendChild(eleLink);
   eleLink.click();
   document.body.removeChild(eleLink);
+  URL.revokeObjectURL(url);
 }
 // id生成
 export function nanoid() {
@@ -1302,7 +1301,7 @@ export function fileLogoType(fname) {
 }
 
 // 下载文件
-export function downloadFile(tasks) {
+export function downloadFile(tasks, type) {
   const controller = new AbortController();
   const signal = controller.signal;
 
@@ -1313,9 +1312,11 @@ export function downloadFile(tasks) {
     if (signal.aborted) return;
 
     let { fileUrl, filename } = task;
-    const cache = await cacheFile.read(fileUrl);
-    if (cache) {
-      fileUrl = cache;
+    if (type) {
+      const cache = await cacheFile.read(fileUrl, type);
+      if (cache) {
+        fileUrl = cache;
+      }
     }
     await new Promise((resolve) => {
       filename = filename || _path.basename(fileUrl);
@@ -1508,7 +1509,7 @@ export function imgPreview(arr, idx = 0) {
     let { u1, u2 } = arr[idx];
     _loadingBar.start();
     if (u2) {
-      const ca = imgCache.get(u2);
+      const ca = cacheFile.hasUrl(u2, 'image');
       if (ca) u2 = ca;
       image1.src = u2;
       image1.style.display = 'block';
@@ -1794,9 +1795,11 @@ export function getDuration(file) {
     const url = URL.createObjectURL(file);
     const audioElement = new Audio(url);
     audioElement.onloadeddata = function () {
+      URL.revokeObjectURL(url);
       resolve(audioElement.duration);
     };
     audioElement.onerror = function () {
+      URL.revokeObjectURL(url);
       reject();
     };
   });
@@ -2786,12 +2789,14 @@ export function downloadText(content, filename) {
   eleLink.style.display = 'none';
   // 字符内容转变成blob地址
   const blob = new Blob([content]);
-  eleLink.href = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(blob);
+  eleLink.href = url;
   // 触发点击
   document.body.appendChild(eleLink);
   eleLink.click();
   // 然后移除
   document.body.removeChild(eleLink);
+  URL.revokeObjectURL(url);
 }
 // 切换分页
 export function creatSelect(e, opt, callback) {

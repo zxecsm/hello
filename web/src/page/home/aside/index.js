@@ -57,7 +57,7 @@ import toolTip from '../../../js/plugins/tooltip/index.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import _path from '../../../js/utils/path.js';
-import { imgCache } from '../../../js/utils/imgCache.js';
+import cacheFile from '../../../js/utils/cacheFile.js';
 
 const $asideBtn = $('.aside_btn'),
   $asideWrap = $('.aside_wrap'),
@@ -301,7 +301,7 @@ function hdAsideListItemLogo() {
       logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
     }
     let $bm_logo = $item.find('.bm_logo');
-    const cache = imgCache.get(logo);
+    const cache = cacheFile.hasUrl(logo, 'image');
     if (cache) {
       $bm_logo.css('background-image', `url(${cache})`).addClass('load');
     }

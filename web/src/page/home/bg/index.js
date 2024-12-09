@@ -39,7 +39,7 @@ import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import md5 from '../../../js/utils/md5.js';
 import _path from '../../../js/utils/path.js';
-import { imgCache } from '../../../js/utils/imgCache.js';
+import cacheFile from '../../../js/utils/cacheFile.js';
 const $allBgWrap = $('.all_bg_wrap'),
   $bgList = $allBgWrap.find('.bg_list'),
   $bgFooter = $allBgWrap.find('.bg_footer');
@@ -216,12 +216,15 @@ function bgItemMenu(e, obj, el) {
         }
       } else if (id === '2') {
         close();
-        downloadFile([
-          {
-            fileUrl: getFilePath(`/bg/${obj.url}`),
-            filename: _path.basename(obj.url)[0],
-          },
-        ]);
+        downloadFile(
+          [
+            {
+              fileUrl: getFilePath(`/bg/${obj.url}`),
+              filename: _path.basename(obj.url)[0],
+            },
+          ],
+          'image'
+        );
       } else if (id === '3') {
         close();
         $bgList.find('.check_level').css('display', 'block');
@@ -306,7 +309,7 @@ export function renderBgList(y) {
           (item) => {
             const $img = $(item);
             const url = $img.attr('data-src') + '&t=1';
-            const cache = imgCache.get(url);
+            const cache = cacheFile.hasUrl(url, 'image');
             if (cache) {
               $img
                 .css({

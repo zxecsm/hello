@@ -50,7 +50,7 @@ import _d from '../../js/common/config.js';
 import md5 from '../../js/utils/md5.js';
 import _path from '../../js/utils/path.js';
 import { setEditor } from './setEditor.js';
-import { imgCache } from '../../js/utils/imgCache.js';
+import cacheFile from '../../js/utils/cacheFile.js';
 const mdWorker = new MdWorker();
 const $contentWrap = $('.content_wrap'),
   $headBtns = $contentWrap.find('.head_btns'),
@@ -307,7 +307,7 @@ mdWorker.addEventListener('message', (event) => {
     ...$previewBox.find('.content')[0].querySelectorAll('img'),
   ].filter((item) => {
     const url = item.getAttribute('data-src');
-    const cache = imgCache.get(url);
+    const cache = cacheFile.hasUrl(url, 'image');
     if (cache) {
       item.src = cache;
     }

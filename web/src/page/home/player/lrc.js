@@ -18,6 +18,7 @@ import {
   _mySlide,
   _getTarget,
   isRoot,
+  getFileReader,
 } from '../../../js/utils/utils.js';
 import _msg from '../../../js/plugins/message/index.js';
 import realtime from '../../../js/plugins/realtime/index.js';
@@ -140,11 +141,9 @@ export function updatePlayingSongTotalTime(val) {
 }
 // 歌曲路径
 export async function setAudioSrc(val) {
-  const cache = await cacheFile.read(val);
+  const cache = await cacheFile.read(val, 'music');
   if (cache) {
     val = cache;
-  } else {
-    cacheFile.add(val);
   }
   $myAudio.attr('src', val);
 }
@@ -290,19 +289,31 @@ function playSong() {
 async function renderLrc() {
   if (!playingSongInfo.id || lrcList.length > 0) return;
   const id = playingSongInfo.id;
-  const cache = await cacheFile.readText(id);
+  const cache = await cacheFile.read(id, 'music');
   let list = [];
   if (cache) {
-    list = JSON.parse(cache);
+    try {
+      const response = await fetch(cache);
+      const blob = await response.blob();
+      list = JSON.parse(await getFileReader(blob, 'text'));
+    } catch {
+      cacheFile.delete(id, 'music');
+      lrcList = [];
+      return;
+    }
   } else {
-    const result = await reqPlayerLrc({
-      id,
-    });
+    try {
+      const result = await reqPlayerLrc({
+        id,
+      });
 
-    if (result.code === 1) {
-      list = result.data;
-      cacheFile.addText(id, JSON.stringify(list));
-    } else {
+      if (result.code === 1) {
+        list = result.data;
+        cacheFile.add(id, 'music', new Blob([JSON.stringify(list)]));
+      } else {
+        throw '';
+      }
+    } catch {
       lrcList = [];
       return;
     }
@@ -424,15 +435,22 @@ function songStartPlaying() {
 // 更新播放时间
 function songTimeUpdate() {
   const curPlayTime = Math.round(this.currentTime);
+  // 播放50%以上缓存歌曲
+  if (this.currentTime / playingSongInfo.duration > 0.5) {
+    if ($myAudio._songid !== playingSongInfo.id) {
+      $myAudio._songid = playingSongInfo.id;
+      cacheFile.add(playingSongInfo.uurl, 'music');
+    }
+  }
   updateSongProgress();
-  if ($myAudio[0]._flag === curPlayTime) return;
+  if ($myAudio._flag === curPlayTime) return;
   const list = lrcList || [];
   list
     .filter((item) => item.t === curPlayTime)
     // 多句同时间排队执行，100ms执行一次
     .forEach((item) => {
       lrcCount++;
-      $myAudio[0]._flag = curPlayTime;
+      $myAudio._flag = curPlayTime;
       _setTimeout(() => {
         activeLrcIndex = item.idx;
         lrcCount--;
@@ -453,6 +471,8 @@ $myAudio
   .on('waiting', songLoading)
   .on('playing', songStartPlaying)
   .on('error', function () {
+    const url = playingSongInfo.uurl;
+    cacheFile.delete(url, 'music');
     _msg.error('歌曲加载失败');
     pauseSong();
   })
@@ -892,13 +912,16 @@ $lrcMenuWrap
           showSongInfo(e, playingSongInfo, '', loading);
         } else if (id === '10') {
           close();
-          let fname = `${playingSongInfo.artist}-${playingSongInfo.title}`;
-          downloadFile([
-            {
-              fileUrl: playingSongInfo.uurl,
-              filename: `${fname}.${_path.extname(playingSongInfo.url)[2]}`,
-            },
-          ]);
+          const fname = `${playingSongInfo.artist}-${playingSongInfo.title}`;
+          downloadFile(
+            [
+              {
+                fileUrl: playingSongInfo.uurl,
+                filename: `${fname}.${_path.extname(playingSongInfo.url)[2]}`,
+              },
+            ],
+            'music'
+          );
         }
       },
       `${playingSongInfo.artist} - ${playingSongInfo.title}`

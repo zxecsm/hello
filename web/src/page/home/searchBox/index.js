@@ -44,7 +44,7 @@ import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { showBmk, showHistory } from '../rightSetting/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import _path from '../../../js/utils/path.js';
-import { imgCache } from '../../../js/utils/imgCache.js';
+import cacheFile from '../../../js/utils/cacheFile.js';
 const $searchBoxMask = $('.search_box_mask'),
   $searchLogo = $searchBoxMask.find('.search_logo'),
   $searchInpWrap = $searchBoxMask.find('.search_inp_wrap'),
@@ -182,7 +182,7 @@ function lazyLoadHomeBmLogo() {
     } else {
       logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
     }
-    const cache = imgCache.get(logo);
+    const cache = cacheFile.hasUrl(logo, 'image');
     if (cache) {
       $homeBmLogo
         .css({

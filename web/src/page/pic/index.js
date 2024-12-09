@@ -44,7 +44,7 @@ import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import md5 from '../../js/utils/md5';
 import _path from '../../js/utils/path';
-import { imgCache } from '../../js/utils/imgCache';
+import cacheFile from '../../js/utils/cacheFile';
 if (!isLogin()) {
   toLogin();
 }
@@ -243,7 +243,7 @@ function renderImgList(y) {
             const obj = getPicItem($img.parent().attr('data-id'));
             if (!obj) return;
             const url = getFilePath(`/pic/${obj.url}`, 1);
-            const cache = imgCache.get(url);
+            const cache = cacheFile.hasUrl(url, 'image');
             if (cache) {
               $img
                 .css({

@@ -259,7 +259,7 @@ function saveLrc() {
       if (result.code === 1) {
         $editLrcWrap._val = val;
         _msg.success(result.codeText);
-        cacheFile.delete($editLrcWrap._mobj.id);
+        cacheFile.delete($editLrcWrap._mobj.id, 'music');
         return;
       }
     })
@@ -330,16 +330,22 @@ const musicMvContentScroll = new ContentScroll(
   $musicMvWrap.find('.m_top_space p')[0]
 );
 // MV播放函数
+let mvCacheTimer = null;
 export async function playMv(obj) {
   setPlayingSongInfo(hdSongInfo(obj));
   updateSongInfo();
   pauseSong();
   let url = setPlayingSongInfo().mmv;
-  const cache = await cacheFile.read(url);
+  const cache = await cacheFile.read(url, 'music');
   if (cache) {
     url = cache;
   } else {
-    cacheFile.add(url);
+    if (mvCacheTimer) {
+      clearTimeout(mvCacheTimer);
+    }
+    mvCacheTimer = setTimeout(() => {
+      cacheFile.add(url, 'music');
+    }, 30 * 1000);
   }
   $myVideo.attr('src', url);
   playVideo();
@@ -364,6 +370,8 @@ export async function playMv(obj) {
 }
 $myVideo
   .on('error', function () {
+    const url = setPlayingSongInfo().mmv;
+    cacheFile.delete(url, 'music');
     _msg.error(`MV 加载失败`);
   })
   .on('timeupdate', initRainCodeSleep);

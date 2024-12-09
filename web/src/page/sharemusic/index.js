@@ -556,13 +556,13 @@ $myAudio
   .on('timeupdate', function () {
     const curTime = Math.round(this.currentTime);
     upprog();
-    if ($myAudio[0]._flag === curTime) return;
+    if ($myAudio._flag === curTime) return;
     const list = $myAudio._lrcList || [];
     list
       .filter((item) => item.t === curTime)
       .forEach((item) => {
         lrcCount++;
-        $myAudio[0]._flag = curTime;
+        $myAudio._flag = curTime;
         _setTimeout(() => {
           $myAudio.curLrcIdx = item.idx;
           lrcCount--;

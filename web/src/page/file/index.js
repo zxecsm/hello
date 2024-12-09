@@ -75,7 +75,7 @@ import md5 from '../../js/utils/md5';
 import _path from '../../js/utils/path';
 import { addTask } from './task';
 import { reqTaskList } from '../../api/task';
-import { imgCache } from '../../js/utils/imgCache';
+import cacheFile from '../../js/utils/cacheFile';
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
 const $curmbBox = $('.crumb_box');
@@ -287,7 +287,7 @@ async function renderList(top) {
       const { path, name } = getFileItem($item.parent().data('id'));
       if (isImgFile(name)) {
         const url = getFilePath(`/file/${path}/${name}`, 1);
-        const cache = imgCache.get(url);
+        const cache = cacheFile.hasUrl(url, 'image');
         if (cache) {
           $item.css('background-image', `url(${cache})`);
         }
@@ -502,7 +502,7 @@ async function readFileAndDir(obj) {
             _myOpen(fPath, obj.name);
           } else {
             // 其他下载
-            downloadFile([{ fileUrl: fPath, filename: name }]);
+            downloadFile([{ fileUrl: fPath, filename: name }], 'image');
           }
         }
       }
@@ -703,12 +703,15 @@ function rightList(e, obj, el) {
       // 编辑列表
       if (id === 'download') {
         close();
-        downloadFile([
-          {
-            fileUrl: getFilePath(`/file/${obj.path}/${obj.name}`),
-            filename: obj.name,
-          },
-        ]);
+        downloadFile(
+          [
+            {
+              fileUrl: getFilePath(`/file/${obj.path}/${obj.name}`),
+              filename: obj.name,
+            },
+          ],
+          'image'
+        );
       } else if (id === 'share') {
         hdShare(e, obj);
       } else if (id === 'rename') {
@@ -1574,7 +1577,8 @@ $footer
           });
         }
         return pre;
-      }, [])
+      }, []),
+      'image'
     );
     closeCheck();
   })

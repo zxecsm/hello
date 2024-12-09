@@ -576,12 +576,15 @@ function hdHomeBgBtn(e, obj) {
         ]);
       } else if (id === '3') {
         close();
-        downloadFile([
-          {
-            fileUrl: getFilePath(`/bg/${obj.url}`),
-            filename: _path.basename(obj.url)[0],
-          },
-        ]);
+        downloadFile(
+          [
+            {
+              fileUrl: getFilePath(`/bg/${obj.url}`),
+              filename: _path.basename(obj.url)[0],
+            },
+          ],
+          'image'
+        );
       }
     },
     '壁纸选项'

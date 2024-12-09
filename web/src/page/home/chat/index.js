@@ -79,7 +79,7 @@ import { _tpl } from '../../../js/utils/template.js';
 import { verifyDate } from '../count_down/index.js';
 import md5 from '../../../js/utils/md5.js';
 import _path from '../../../js/utils/path.js';
-import { imgCache } from '../../../js/utils/imgCache.js';
+import cacheFile from '../../../js/utils/cacheFile.js';
 const $document = $(document),
   $chatRoomWrap = $('.chat_room_wrap'),
   $userListBox = $chatRoomWrap.find('.user_list_box'),
@@ -276,7 +276,7 @@ function lazyLoadChatLogo() {
       if (account === 'hello') {
         logo = imgHelloLogo;
       }
-      const cache = imgCache.get(logo);
+      const cache = cacheFile.hasUrl(logo, 'image');
       if (cache) {
         $item
           .css({
@@ -829,9 +829,10 @@ function openChatFile() {
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(content)) {
             openInIframe(getFilePath(`/upload/${msgId}`), content);
           } else {
-            downloadFile([
-              { fileUrl: getFilePath(`/upload/${msgId}`), filename: content },
-            ]);
+            downloadFile(
+              [{ fileUrl: getFilePath(`/upload/${msgId}`), filename: content }],
+              'image'
+            );
           }
         }
         return;
@@ -1111,9 +1112,10 @@ function chatMsgMenu(e, cobj) {
             loading.end();
             if (result.code === 1) {
               close();
-              downloadFile([
-                { fileUrl: getFilePath(`/upload/${tt}`), filename: z },
-              ]);
+              downloadFile(
+                [{ fileUrl: getFilePath(`/upload/${tt}`), filename: z }],
+                'image'
+              );
               return;
             }
             _msg.error(`${flag}已过期`);
