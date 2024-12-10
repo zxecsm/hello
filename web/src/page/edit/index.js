@@ -19,8 +19,6 @@ import {
   getFiles,
   _progressBar,
   percentToValue,
-  _getDataTem,
-  _setDataTem,
   _setTimeout,
   LazyLoad,
   imgjz,
@@ -234,8 +232,6 @@ if (!HASH) {
   HASH = 'new';
   myOpen(`/edit/#new`);
 }
-// 临时草稿
-let temNoteObj = _getDataTem('temNote') || {};
 function updateIframeTitle(title) {
   if (isIframe()) {
     try {
@@ -245,11 +241,13 @@ function updateIframeTitle(title) {
   }
 }
 if (HASH === 'new') {
-  //新增笔记
-  initValue({
-    title: formatDate({ template: '{0}-{1}-{2} {3}:{4}' }),
-    content: _getData('newNote'),
+  cacheFile.getData('newNote').then((text) => {
+    initValue({
+      title: formatDate({ template: '{0}-{1}-{2} {3}:{4}' }),
+      content: text,
+    });
   });
+  //新增笔记
   $headBtns.addClass('open');
   $editWrap.addClass('open');
 } else {
@@ -258,7 +256,7 @@ if (HASH === 'new') {
     toLogin();
   } else {
     reqNoteRead({ v: HASH })
-      .then((result) => {
+      .then(async (result) => {
         if (result.code === 1) {
           orginData = result.data;
           initValue(result.data);
@@ -267,11 +265,15 @@ if (HASH === 'new') {
           }, 1000);
           $headBtns.addClass('open');
           $editWrap.addClass('open');
+          const temNoteObj = (await cacheFile.getData('temNote')) || {};
           if (temNoteObj[HASH] && temNoteObj[HASH] != result.data.content) {
             _pop({ text: '恢复：未保存的笔记？' }, (type) => {
               if (type === 'confirm') {
                 editor.setValue(temNoteObj[HASH]);
                 editor.gotoLine(1);
+              } else if (type === 'cancel') {
+                delete temNoteObj[HASH];
+                cacheFile.setData('temNote', temNoteObj);
               }
             });
           }
@@ -281,21 +283,26 @@ if (HASH === 'new') {
   }
 }
 // 渲染转换显示
-function rende() {
+async function rende() {
   let text = editor.getValue();
   if (HASH === 'new') {
     // 新笔记未上传则保存在本地
-    _setData('newNote', text);
+    cacheFile.setData('newNote', text);
   } else {
     if ($editBox.flag) {
+      const temNoteObj = (await cacheFile.getData('temNote')) || {};
       temNoteObj[HASH] = text;
-      _setDataTem('temNote', temNoteObj);
+      await cacheFile.setData('temNote', temNoteObj);
     }
     $editBox.flag = true;
   }
   if ($previewBox.is(':hidden')) return;
   if (text.trim() === '') {
     $previewBox.find('.content').html('');
+    return;
+  }
+  if (getTextSize(text) > _d.fieldLenght.noteSize) {
+    $previewBox.find('.content').html(`<h1>笔记内容过长</h1>`);
     return;
   }
   mdWorker.postMessage(text);
@@ -692,7 +699,7 @@ function saveNote() {
   }
   if (title === orginData.title && content === orginData.content) return;
   reqNoteEdit({ id: HASH, title, content })
-    .then((result) => {
+    .then(async (result) => {
       if (result.code === 1) {
         orginData.content = content;
         orginData.title = title;
@@ -702,15 +709,16 @@ function saveNote() {
           // 新建笔记成功
           if (HASH === 'new') {
             // 新笔记,则清除本地保存内容
-            _setData('newNote', '');
+            cacheFile.setData('newNote', '');
           }
           HASH = result.data.id;
           myOpen(`/edit/#${encodeURIComponent(HASH)}`);
           _msg.success(result.codeText);
           return;
         }
+        const temNoteObj = (await cacheFile.getData('temNote')) || {};
         delete temNoteObj[HASH];
-        _setDataTem('temNote', temNoteObj);
+        await cacheFile.setData('temNote', temNoteObj);
         // 更新笔记成功
         _msg.success(result.codeText);
       }

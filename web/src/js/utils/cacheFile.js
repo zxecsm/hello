@@ -1,6 +1,6 @@
 import { CacheByExpire } from './cache';
 import md5 from './md5';
-import { computeSize } from './utils';
+import { _getData, _setData } from './utils';
 
 const cacheFile = {
   urlCache: new CacheByExpire(30 * 60 * 1000, 40 * 60 * 1000, {
@@ -11,14 +11,38 @@ const cacheFile = {
       }
     },
   }),
+  getHash(key, type) {
+    return `${type}_${md5.getStringHash(key)}`;
+  },
+  async setData(key, value, type = 'hello') {
+    const hash = this.getHash(key, type);
+
+    const data = encodeURIComponent(JSON.stringify({ data: value }));
+
+    // 无法储存则存到localStorage
+    if (!(await this.writeCache(hash, data))) {
+      _setData(key, data);
+    }
+  },
+  async getData(key, type = 'hello') {
+    try {
+      const hash = this.getHash(key, type);
+      const file = await this.readCache(hash);
+      if (!file) throw '';
+      const text = await file.text();
+      return JSON.parse(decodeURIComponent(text)).data;
+    } catch {
+      return _getData(key);
+    }
+  },
   hasUrl(url, type) {
-    const hash = `${type}_${md5.getStringHash(url)}`;
+    const hash = this.getHash(url, type);
 
     return this.urlCache.get(hash);
   },
   async read(url, type = 'hello') {
     try {
-      const hash = `${type}_${md5.getStringHash(url)}`;
+      const hash = this.getHash(url, type);
 
       const cache = this.urlCache.get(hash);
       if (cache) {
@@ -26,14 +50,9 @@ const cacheFile = {
       }
 
       // 是否存在缓存
-      const dirHandle = await navigator.storage.getDirectory();
-      const fileHandle = await dirHandle.getFileHandle(hash, {
-        create: false,
-      });
+      const file = await this.readCache(hash);
 
-      if (!fileHandle) return null;
-
-      const file = await fileHandle.getFile();
+      if (!file) return null;
 
       const objectURL = URL.createObjectURL(file);
       this.urlCache.set(hash, objectURL);
@@ -45,7 +64,7 @@ const cacheFile = {
   },
   async add(url, type = 'hello', file) {
     try {
-      const hash = `${type}_${md5.getStringHash(url)}`;
+      const hash = this.getHash(url, type);
 
       const cachedFileHandle = await this.read(url);
 
@@ -62,7 +81,7 @@ const cacheFile = {
 
         objectURL = URL.createObjectURL(data);
 
-        await this.saveCache(hash, data);
+        await this.writeCache(hash, data);
       }
 
       this.urlCache.set(hash, objectURL);
@@ -72,7 +91,21 @@ const cacheFile = {
       return null;
     }
   },
-  async saveCache(hash, data) {
+  async readCache(hash) {
+    try {
+      const dirHandle = await navigator.storage.getDirectory();
+      const fileHandle = await dirHandle.getFileHandle(hash, {
+        create: false,
+      });
+
+      if (!fileHandle) return null;
+
+      return fileHandle.getFile();
+    } catch {
+      return null;
+    }
+  },
+  async writeCache(hash, data) {
     try {
       // 缓存
       const dirHandle = await navigator.storage.getDirectory();
@@ -82,11 +115,14 @@ const cacheFile = {
       const writable = await fileHandle.createWritable();
       await writable.write(data);
       await writable.close();
-    } catch {}
+      return true;
+    } catch {
+      return false;
+    }
   },
   async delete(url, type = 'hello') {
     try {
-      const hash = `${type}_${md5.getStringHash(url)}`;
+      const hash = this.getHash(url, type);
       const u = this.urlCache.get(hash);
       this.urlCache.delete(hash, u);
       const dirHandle = await navigator.storage.getDirectory();
@@ -108,8 +144,8 @@ const cacheFile = {
     } catch {}
   },
   async size(type) {
+    let total = 0;
     try {
-      let total = 0;
       if (type) {
         const dirHandle = await navigator.storage.getDirectory();
         for await (const entry of dirHandle.values()) {
@@ -124,10 +160,8 @@ const cacheFile = {
         const estimate = await navigator.storage.estimate();
         total = estimate.usage;
       }
-      return '大约：' + computeSize(total);
-    } catch {
-      return '';
-    }
+    } catch {}
+    return total;
   },
 };
 

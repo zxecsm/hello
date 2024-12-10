@@ -33,8 +33,6 @@ import {
   getTextImg,
   getFiles,
   getFilePath,
-  _getDataTem,
-  _setDataTem,
   LazyLoad,
   mailTo,
   isRoot,
@@ -127,8 +125,6 @@ export function setCurChatAccount(val) {
 export function chatRoomWrapIsHide() {
   return $chatRoomWrap.is(':hidden');
 }
-// 临时保存草稿
-const temChatMsg = _getDataTem('temChatMsg') || {};
 // 搜索消息框
 const chatSearchInput = wrapInput(
   $chatHeadBtns.find('.search_msg_inp input')[0],
@@ -1200,6 +1196,11 @@ function switchShakeBtn() {
     $shakeBtn.css('display', 'block');
   }
 }
+const saveTemChatMsg = debounce(async (val) => {
+  const temChatMsg = (await cacheFile.getData('temChatMsg')) || {};
+  temChatMsg[curChatAccount] = val;
+  await cacheFile.setData('temChatMsg', temChatMsg);
+}, 1000);
 // 消息编辑框
 const chatMsgInp = wrapInput(
   $chatFootBox.find('.c_text_msg .c_text_content')[0],
@@ -1209,8 +1210,7 @@ const chatMsgInp = wrapInput(
         val = val.slice(0, 2500);
       }
       $chatFootBox.find('.c_text_msg .fill_height').text(val);
-      temChatMsg[curChatAccount] = val;
-      _setDataTem('temChatMsg', temChatMsg);
+      saveTemChatMsg(val);
       switchShakeBtn();
       if (val.trim() === '') {
         $chatFootBox
@@ -1628,7 +1628,7 @@ function setChatTitle(acc) {
   }
 }
 // 打开消息
-export function openFriend(acc, noHideUserList, cb) {
+export async function openFriend(acc, noHideUserList, cb) {
   if (curChatAccount !== acc) {
     chatSearchInput.setValue('').focus();
     searchDateLimit = {};
@@ -1646,6 +1646,7 @@ export function openFriend(acc, noHideUserList, cb) {
   } else {
     $chatHeadBtns.find('.clear_msg_btn').stop().fadeIn(_d.speed);
   }
+  const temChatMsg = (await cacheFile.getData('temChatMsg')) || {};
   chatMsgInp.setValue(temChatMsg[acc] || '');
   if (!noHideUserList) {
     $userListBox.css('display', 'none');

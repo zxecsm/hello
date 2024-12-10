@@ -38,6 +38,8 @@ import {
   changeHeadBtnSort,
   encodeHtml,
   getScreenSize,
+  _getDataSize,
+  computeSize,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -1034,6 +1036,18 @@ export function settingMenu(e, isMain) {
             param: { text: '图片', type: 'image' },
           },
           {
+            id: 'hello',
+            text: '其他',
+            beforeIcon: 'iconfont icon-bangzhu',
+            param: { text: '其他', type: 'hello' },
+          },
+          {
+            id: 'local',
+            text: '本地配置',
+            beforeIcon: 'iconfont icon-xinxi',
+            param: { text: '本地配置', type: 'local' },
+          },
+          {
             id: 'all',
             text: '所有',
             beforeIcon: 'iconfont icon-15qingkong-1',
@@ -1045,16 +1059,33 @@ export function settingMenu(e, isMain) {
           data,
           async ({ id, e, loading, param }) => {
             if (id) {
-              const size = await cacheFile.size(param.type);
+              let size = 0;
+              if (id === 'local') {
+                size = _getDataSize();
+              } else {
+                size = await cacheFile.size(param.type);
+                if (id === 'all') {
+                  size += _getDataSize();
+                }
+              }
               _pop(
                 {
                   e,
-                  text: `确认清空：${param.text}缓存？${size}`,
+                  text: `确认清空：${param.text}缓存？大约：${computeSize(
+                    size
+                  )}`,
                 },
                 async (type) => {
                   if (type === 'confirm') {
                     loading.start();
-                    await cacheFile.clear(param.type);
+                    if (id === 'local') {
+                      _delData();
+                    } else {
+                      await cacheFile.clear(param.type);
+                      if (id === 'all') {
+                        _delData();
+                      }
+                    }
                     loading.end();
                     _msg.success();
                   }

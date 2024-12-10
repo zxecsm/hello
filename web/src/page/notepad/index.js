@@ -264,6 +264,10 @@ function rende() {
     $previewBox.find('.content').html('');
     return;
   }
+  if (getTextSize(text) > _d.fieldLenght.noteSize) {
+    $previewBox.find('.content').html(`<h1>便签内容过长</h1>`);
+    return;
+  }
   mdWorker.postMessage(text);
 }
 mdWorker.addEventListener('message', (event) => {

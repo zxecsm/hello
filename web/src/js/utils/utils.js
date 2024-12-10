@@ -39,6 +39,15 @@ export function _setData(key, data) {
   data = JSON.stringify({ data });
   localStorage.setItem('hello_' + key, encodeURIComponent(data));
 }
+export function _getDataSize() {
+  let size = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i); // 获取当前键名
+    const value = localStorage.getItem(key); // 获取对应的值
+    size += getTextSize(value);
+  }
+  return size;
+}
 export function _setDataTem(key, data, flag = '') {
   data = JSON.stringify({ data });
   sessionStorage.setItem('hello_' + key + flag, encodeURIComponent(data));
