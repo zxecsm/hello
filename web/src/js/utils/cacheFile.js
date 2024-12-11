@@ -2,6 +2,7 @@ import JSZip from 'jszip';
 import { CacheByExpire } from './cache';
 import md5 from './md5';
 import { _getData, _setData, getFiles, getPreUrl } from './utils';
+import _msg from '../plugins/message';
 
 const cacheFile = {
   // URL缓存
@@ -157,6 +158,7 @@ const cacheFile = {
       if (!this.supported) return;
 
       const dirHandle = await this.getDirectory();
+      let count = 0;
       for await (const entry of dirHandle.values()) {
         if (
           entry.kind === 'file' &&
@@ -166,6 +168,8 @@ const cacheFile = {
           if (cachedURL) {
             this.urlCache.delete(entry.name, cachedURL);
           }
+
+          _msg.botMsg(`清理缓存文件：${++count}`, 1);
           await dirHandle.removeEntry(entry.name);
         }
       }
@@ -209,14 +213,17 @@ const cacheFile = {
 
       const dirHandle = await this.getDirectory();
 
+      let count = 0;
       // 遍历目录中的文件并添加到zip
       for await (const [entryName, entryHandle] of dirHandle.entries()) {
         if (entryHandle.kind === 'file') {
           const file = await entryHandle.getFile();
           zip.file(entryName, file);
+          count++;
         }
       }
 
+      _msg.botMsg(`开始压缩 ${count} 个文件`, 1);
       // 生成zip文件并下载
       const content = await zip.generateAsync({
         type: 'blob',
@@ -249,10 +256,14 @@ const cacheFile = {
       const zipContent = await file.arrayBuffer();
       const zipFiles = await zip.loadAsync(zipContent);
 
+      let count = 0;
       // 将zip文件中的内容写入存储目录
       for (const filename in zipFiles.files) {
         const fileData = await zipFiles.files[filename].async('blob');
-        await this.writeCache(filename, fileData);
+        if (!(await this.readCache(filename))) {
+          await this.writeCache(filename, fileData);
+        }
+        _msg.botMsg(`导入文件中：${++count}`, 1);
       }
     } catch (error) {
       throw error;
