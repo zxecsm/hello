@@ -1087,12 +1087,14 @@ export function settingMenu(e, isMain) {
                 data,
                 async ({ id, e, loading, param }) => {
                   if (id) {
+                    loading.start();
                     let size = 0;
                     if (id === 'local') {
                       size = _getDataSize();
                     } else {
                       size = await cacheFile.size(param.type);
                     }
+                    loading.end();
                     _pop(
                       {
                         e,
