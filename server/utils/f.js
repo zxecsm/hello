@@ -129,7 +129,7 @@ async function rename(oldPath, newPath, { signal, progress } = {}) {
     await fsp.rename(oldPath, newPath);
   } catch {
     await cp(oldPath, newPath, { signal, progress });
-    await del(oldPath);
+    await del(oldPath, { signal, progress });
   }
 }
 

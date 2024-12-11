@@ -815,12 +815,14 @@ export function settingMenu(e, isMain) {
         (headBtnToRight ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
       param: { value: headBtnToRight },
     },
-    {
+  ];
+  if (cacheFile.getDirectory) {
+    data.push({
       id: '6',
       text: '清理缓存',
       beforeIcon: `iconfont icon-15qingkong-1`,
-    },
-  ];
+    });
+  }
   if (isMain) {
     data = [
       ...data,
@@ -1022,6 +1024,10 @@ export function settingMenu(e, isMain) {
         close();
         openInIframe('/edit/#new', '新笔记');
       } else if (id === '6') {
+        const { quota } = await cacheFile.getEstimateSize();
+        const titleText = `选择要清除的缓存：剩余空间大约(${computeSize(
+          quota
+        )})`;
         const data = [
           {
             id: 'music',
@@ -1093,7 +1099,7 @@ export function settingMenu(e, isMain) {
               );
             }
           },
-          '选择要清除的缓存'
+          titleText
         );
       }
     },

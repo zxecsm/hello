@@ -330,24 +330,11 @@ const musicMvContentScroll = new ContentScroll(
   $musicMvWrap.find('.m_top_space p')[0]
 );
 // MV播放函数
-let mvCacheTimer = null;
 export async function playMv(obj) {
   setPlayingSongInfo(hdSongInfo(obj));
   updateSongInfo();
   pauseSong();
-  let url = setPlayingSongInfo().mmv;
-  const cache = await cacheFile.read(url, 'music');
-  if (cache) {
-    url = cache;
-  } else {
-    if (mvCacheTimer) {
-      clearTimeout(mvCacheTimer);
-    }
-    mvCacheTimer = setTimeout(() => {
-      cacheFile.add(url, 'music');
-    }, 30 * 1000);
-  }
-  $myVideo.attr('src', url);
+  $myVideo.attr('src', setPlayingSongInfo().mmv);
   playVideo();
   $musicMvWrap.stop().fadeIn(_d.speed).css('display', 'flex');
   if (!$musicMvWrap.once) {

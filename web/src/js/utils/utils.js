@@ -36,50 +36,66 @@ export function myOpen(url, _blank) {
 }
 // 本地储存
 export function _setData(key, data) {
-  data = JSON.stringify({ data });
-  localStorage.setItem('hello_' + key, encodeURIComponent(data));
+  try {
+    data = JSON.stringify({ data });
+    localStorage.setItem('hello_' + key, encodeURIComponent(data));
+  } catch {}
 }
 export function _getDataSize() {
   let size = 0;
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i); // 获取当前键名
-    const value = localStorage.getItem(key); // 获取对应的值
-    size += getTextSize(value);
-  }
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i); // 获取当前键名
+      const value = localStorage.getItem(key); // 获取对应的值
+      size += getTextSize(value);
+    }
+  } catch {}
   return size;
 }
 export function _setDataTem(key, data, flag = '') {
-  data = JSON.stringify({ data });
-  sessionStorage.setItem('hello_' + key + flag, encodeURIComponent(data));
+  try {
+    data = JSON.stringify({ data });
+    sessionStorage.setItem('hello_' + key + flag, encodeURIComponent(data));
+  } catch {}
 }
 //本地读取
 export function _getData(key) {
-  const d = localStorage.getItem('hello_' + key);
+  let d = null;
+  try {
+    d = localStorage.getItem('hello_' + key);
+  } catch {}
   if (d === null) {
     return _d.localStorageDefaultData[key];
   }
   return JSON.parse(decodeURIComponent(d)).data;
 }
 export function _getDataTem(key, flag = '') {
-  const d = sessionStorage.getItem('hello_' + key + flag);
+  let d = null;
+  try {
+    d = sessionStorage.getItem('hello_' + key + flag);
+  } catch {}
   if (d === null) {
     return d;
   }
   return JSON.parse(decodeURIComponent(d)).data;
 }
 export function _delData(key) {
-  if (key) {
-    localStorage.removeItem('hello_' + key);
-  } else {
-    localStorage.clear();
-  }
+  try {
+    if (key) {
+      localStorage.removeItem('hello_' + key);
+    } else {
+      localStorage.clear();
+    }
+  } catch {}
 }
 export function _delDataTem(key) {
-  if (key) {
-    sessionStorage.removeItem('hello_' + key);
-  } else {
-    sessionStorage.clear();
-  }
+  try {
+    if (key) {
+      sessionStorage.removeItem('hello_' + key);
+    } else {
+      sessionStorage.clear();
+    }
+  } catch {}
 }
 // 定时器
 export function _setTimeout(callback, time) {
