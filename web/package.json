@@ -43,6 +43,7 @@
     "highlight.js": "^11.10.0",
     "jquery": "^3.7.1",
     "js-audio-recorder": "^1.0.7",
+    "jszip": "^3.10.1",
     "markdown-it": "^14.1.0",
     "markdown-it-mark": "^4.0.0",
     "markdown-it-sub": "^2.0.0",

@@ -816,11 +816,11 @@ export function settingMenu(e, isMain) {
       param: { value: headBtnToRight },
     },
   ];
-  if (cacheFile.getDirectory) {
+  if (cacheFile.supported) {
     data.push({
       id: '6',
-      text: '清理缓存',
-      beforeIcon: `iconfont icon-15qingkong-1`,
+      text: '缓存管理',
+      beforeIcon: `iconfont icon-yidongyingpan`,
     });
   }
   if (isMain) {
@@ -1024,82 +1024,141 @@ export function settingMenu(e, isMain) {
         close();
         openInIframe('/edit/#new', '新笔记');
       } else if (id === '6') {
-        const { quota } = await cacheFile.getEstimateSize();
-        const titleText = `选择要清除的缓存：剩余空间大约(${computeSize(
-          quota
-        )})`;
         const data = [
           {
-            id: 'music',
-            text: '歌曲',
-            beforeIcon: 'iconfont icon-yinle1',
-            param: { text: '歌曲', type: 'music' },
+            id: '1',
+            text: '清理缓存',
+            beforeIcon: `iconfont icon-15qingkong-1`,
           },
           {
-            id: 'image',
-            text: '图片',
-            beforeIcon: 'iconfont icon-tupian',
-            param: { text: '图片', type: 'image' },
+            id: '2',
+            text: '导入缓存数据',
+            beforeIcon: 'iconfont icon-upload',
           },
           {
-            id: 'hello',
-            text: '其他',
-            beforeIcon: 'iconfont icon-bangzhu',
-            param: { text: '其他', type: 'hello' },
-          },
-          {
-            id: 'local',
-            text: '本地配置',
-            beforeIcon: 'iconfont icon-xinxi',
-            param: { text: '本地配置', type: 'local' },
-          },
-          {
-            id: 'all',
-            text: '所有',
-            beforeIcon: 'iconfont icon-15qingkong-1',
-            param: { text: '所有', type: '' },
+            id: '3',
+            text: '导出缓存数据',
+            beforeIcon: 'iconfont icon-download',
           },
         ];
         rMenu.selectMenu(
           e,
           data,
-          async ({ id, e, loading, param }) => {
-            if (id) {
-              let size = 0;
-              if (id === 'local') {
-                size = _getDataSize();
-              } else {
-                size = await cacheFile.size(param.type);
-                if (id === 'all') {
-                  size += _getDataSize();
-                }
+          async ({ e, id, loading }) => {
+            if (id === '1') {
+              const { quota } = await cacheFile.getEstimateSize();
+              const titleText = `选择要清除的缓存：剩余空间大约(${computeSize(
+                quota
+              )})`;
+              const data = [
+                {
+                  id: 'music',
+                  text: '歌曲',
+                  beforeIcon: 'iconfont icon-yinle1',
+                  param: { text: '歌曲', type: 'music' },
+                },
+                {
+                  id: 'image',
+                  text: '图片',
+                  beforeIcon: 'iconfont icon-tupian',
+                  param: { text: '图片', type: 'image' },
+                },
+                {
+                  id: 'hello',
+                  text: '其他',
+                  beforeIcon: 'iconfont icon-bangzhu',
+                  param: { text: '其他', type: 'hello' },
+                },
+                {
+                  id: 'local',
+                  text: '本地配置',
+                  beforeIcon: 'iconfont icon-xinxi',
+                  param: { text: '本地配置', type: 'local' },
+                },
+                {
+                  id: 'all',
+                  text: '所有',
+                  beforeIcon: 'iconfont icon-15qingkong-1',
+                  param: { text: '所有', type: '' },
+                },
+              ];
+              rMenu.selectMenu(
+                e,
+                data,
+                async ({ id, e, loading, param }) => {
+                  if (id) {
+                    let size = 0;
+                    if (id === 'local') {
+                      size = _getDataSize();
+                    } else {
+                      size = await cacheFile.size(param.type);
+                    }
+                    _pop(
+                      {
+                        e,
+                        text: `确认清空：${param.text}缓存？大约：${computeSize(
+                          size
+                        )}`,
+                      },
+                      async (type) => {
+                        if (type === 'confirm') {
+                          try {
+                            loading.start();
+                            if (id === 'local') {
+                              _delData();
+                            } else {
+                              await cacheFile.clear(param.type);
+                              if (id === 'all') {
+                                _delData();
+                              }
+                            }
+                            loading.end();
+                            _msg.success();
+                          } catch {
+                            loading.end();
+                            _msg.error();
+                          }
+                        }
+                      }
+                    );
+                  }
+                },
+                titleText
+              );
+            } else if (id === '2') {
+              try {
+                loading.start();
+                await cacheFile.importStorage();
+                loading.end();
+                _msg.success();
+              } catch {
+                loading.end();
+                _msg.error();
               }
+            } else if (id === '3') {
+              const size = await cacheFile.size();
               _pop(
                 {
                   e,
-                  text: `确认清空：${param.text}缓存？大约：${computeSize(
-                    size
-                  )}`,
+                  text: `确认导出：缓存？大约：${computeSize(size)}`,
                 },
                 async (type) => {
                   if (type === 'confirm') {
-                    loading.start();
-                    if (id === 'local') {
-                      _delData();
-                    } else {
-                      await cacheFile.clear(param.type);
-                      if (id === 'all') {
-                        _delData();
-                      }
+                    try {
+                      loading.start();
+                      await cacheFile.exportStorage();
+                      loading.end();
+                      _msg.success();
+                    } catch {
+                      loading.end();
+                      _msg.error();
                     }
-                    loading.end();
-                    _msg.success();
                   }
                 }
               );
             }
           },
-          titleText
+          '缓存管理'
         );
       }
     },

@@ -1,6 +1,7 @@
+import JSZip from 'jszip';
 import { CacheByExpire } from './cache';
 import md5 from './md5';
-import { _getData, _setData } from './utils';
+import { _getData, _setData, getFiles, getPreUrl } from './utils';
 
 const cacheFile = {
   // URL缓存
@@ -12,11 +13,14 @@ const cacheFile = {
       }
     },
   }),
-
-  // 保存获取目录句柄的函数引用
-  getDirectory: navigator.storage?.getDirectory || null,
-
+  supported:
+    navigator.storage && typeof navigator.storage.getDirectory === 'function',
+  getDirectory() {
+    return navigator.storage.getDirectory();
+  },
   getHash(key, type) {
+    const side = getPreUrl();
+    key = key.replace(side, '');
     return `${type}_${md5.getStringHash(key)}`;
   },
 
@@ -24,7 +28,7 @@ const cacheFile = {
     const hash = this.getHash(key, type);
     const data = encodeURIComponent(JSON.stringify({ data: value }));
 
-    if (!this.getDirectory) {
+    if (!this.supported) {
       // 浏览器不支持文件系统，则存储到 localStorage
       _setData(key, data);
       return;
@@ -37,7 +41,7 @@ const cacheFile = {
     const hash = this.getHash(key, type);
 
     try {
-      if (!this.getDirectory) throw new Error('No file system access');
+      if (!this.supported) throw new Error('No file system access');
 
       const file = await this.readCache(hash);
       if (!file) throw new Error('Cache not found');
@@ -65,7 +69,7 @@ const cacheFile = {
         return cache;
       }
 
-      if (!this.getDirectory) return null;
+      if (!this.supported) return null;
 
       const file = await this.readCache(hash);
       if (!file) return null;
@@ -94,7 +98,7 @@ const cacheFile = {
 
         objectURL = URL.createObjectURL(data);
 
-        if (this.getDirectory) {
+        if (this.supported) {
           await this.writeCache(hash, data);
         }
       }
@@ -140,15 +144,17 @@ const cacheFile = {
         this.urlCache.delete(hash, cachedURL);
       }
 
-      if (!this.getDirectory) return;
+      if (!this.supported) return;
 
       await (await this.getDirectory()).removeEntry(hash);
-    } catch {}
+    } catch (error) {
+      throw error;
+    }
   },
 
   async clear(type) {
     try {
-      if (!this.getDirectory) return;
+      if (!this.supported) return;
 
       const dirHandle = await this.getDirectory();
       for await (const entry of dirHandle.values()) {
@@ -163,13 +169,15 @@ const cacheFile = {
           await dirHandle.removeEntry(entry.name);
         }
       }
-    } catch {}
+    } catch (error) {
+      throw error;
+    }
   },
 
   async size(type) {
     let total = 0;
     try {
-      if (!this.getDirectory) return total;
+      if (!this.supported) return total;
 
       const dirHandle = await this.getDirectory();
       if (type) {
@@ -180,16 +188,74 @@ const cacheFile = {
           }
         }
       } else {
-        total = await this.getEstimateSize().usage;
+        total = (await this.getEstimateSize()).usage;
       }
     } catch {}
     return total;
   },
-  async getEstimateSize() {
+  getEstimateSize() {
     try {
-      return await navigator.storage.estimate();
+      return navigator.storage.estimate();
     } catch {
       return { quota: 0, usage: 0 };
+    }
+  },
+
+  async exportStorage() {
+    try {
+      if (!this.supported) return;
+
+      const zip = new JSZip();
+
+      const dirHandle = await this.getDirectory();
+
+      // 遍历目录中的文件并添加到zip
+      for await (const [entryName, entryHandle] of dirHandle.entries()) {
+        if (entryHandle.kind === 'file') {
+          const file = await entryHandle.getFile();
+          zip.file(entryName, file);
+        }
+      }
+
+      // 生成zip文件并下载
+      const content = await zip.generateAsync({
+        type: 'blob',
+      });
+
+      // 完成压缩后，下载文件
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(content);
+      link.href = url;
+      link.download = `hello_storage.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  async importStorage() {
+    try {
+      if (!this.supported) return;
+
+      // 选择文件
+      const file = (await getFiles({ accept: '.zip' }))[0];
+      if (!file) return;
+
+      // 解压文件
+      const zip = new JSZip();
+      const zipContent = await file.arrayBuffer();
+      const zipFiles = await zip.loadAsync(zipContent);
+
+      // 将zip文件中的内容写入存储目录
+      for (const filename in zipFiles.files) {
+        const fileData = await zipFiles.files[filename].async('blob');
+        await this.writeCache(filename, fileData);
+      }
+    } catch (error) {
+      throw error;
     }
   },
 };
