@@ -1057,7 +1057,7 @@ async function renderSongs(gao) {
     </div>
     <div v-for="{title,artist,mv,id,pic:picc,isLoaded} in slist" class="song_item" :data-id="id" draggable="true" :data-issc="issc(id)" cursor="y">
       <div cursor="y" check="n" class="check_state"></div>
-      <div v-if="isLoaded" class="downloaded iconfont icon-yixiazai"></div>
+      <div v-if="isLoaded" class="downloaded iconfont icon-jiaobiao"></div>
       <div class="song_logo_box">
         <div class="logo" :data-src="getFilePath('/music/'+picc, 1)"></div>
         <div class="play_gif"></div>

@@ -143,7 +143,7 @@ export async function renderPlayingList() {
     `
     <li v-for="{title,artist,mv,id,pic,isLoaded} in arr" class="song_item" cursor="y" :data-id="id" :data-issc="issc(id)">
       <div cursor="y" check="n" class="check_state"></div>
-      <div v-if="isLoaded" class="downloaded iconfont icon-yixiazai"></div>
+      <div v-if="isLoaded" class="downloaded iconfont icon-jiaobiao"></div>
       <div class="logo_wrap">
         <div class="logo" :data-src="getFilePath('/music/'+pic, 1)">
           <div class="play_gif"></div>

@@ -96,7 +96,7 @@ export function getSearchSongs(top, pageNo = searchMusicPageNo) {
             <p v-if="total === 0" style="padding: 20px 0;text-align: center;pointer-events: none;">${_d.emptyList}</p>
             <template v-else>
               <li v-for="{artist,title,mv,id,pic,isLoaded} in searchMusicList" class="song_item" :data-id="id" :data-issc="issc(id)" cursor="y">
-                <div v-if="isLoaded" class="downloaded iconfont icon-yixiazai"></div>
+                <div v-if="isLoaded" class="downloaded iconfont icon-jiaobiao"></div>
                 <div class="logo_wrap">
                   <div class="logo" :data-src="getFilePath('/music/'+pic, 1)"></div>
                 </div>
