@@ -248,7 +248,7 @@ export async function imgjz(url) {
       throw error;
     }
   } else {
-    cacheFile.delete(url, 'image');
+    await cacheFile.delete(url, 'image');
     throw '';
   }
 }

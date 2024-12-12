@@ -287,7 +287,7 @@ async function rende() {
   let text = editor.getValue();
   if (HASH === 'new') {
     // 新笔记未上传则保存在本地
-    cacheFile.setData('newNote', text);
+    await cacheFile.setData('newNote', text);
   } else {
     if ($editBox.flag) {
       const temNoteObj = (await cacheFile.getData('temNote')) || {};
@@ -709,7 +709,7 @@ function saveNote() {
           // 新建笔记成功
           if (HASH === 'new') {
             // 新笔记,则清除本地保存内容
-            cacheFile.setData('newNote', '');
+            await cacheFile.setData('newNote', '');
           }
           HASH = result.data.id;
           myOpen(`/edit/#${encodeURIComponent(HASH)}`);

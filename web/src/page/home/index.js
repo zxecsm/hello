@@ -925,7 +925,7 @@ function hdUpdatedataType(resData) {
     updateUserInfo();
   } else if (flag === 'playinglist') {
     reqPlayerGetPlayList()
-      .then((result) => {
+      .then(async (result) => {
         if (result.code === 1) {
           setPlayingList(result.data);
           setCurPlayingList(
@@ -933,7 +933,7 @@ function hdUpdatedataType(resData) {
               ? myShuffle(deepClone(setPlayingList()))
               : deepClone(setPlayingList())
           );
-          renderPlayingList();
+          await renderPlayingList();
           playingListHighlight();
         }
       }, true)

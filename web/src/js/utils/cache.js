@@ -33,6 +33,12 @@ export class CacheByExpire {
   set(key, value) {
     if (this.isDestroyed) return;
 
+    const cache = this.get(key);
+
+    if (cache) {
+      this.delete(key, cache);
+    }
+
     const expireTime = Date.now() + this.ttl; // 设置条目的过期时间
     this.cache.set(key, { value, expireTime });
 

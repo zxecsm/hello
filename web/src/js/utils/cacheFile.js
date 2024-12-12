@@ -148,8 +148,27 @@ const cacheFile = {
       if (!this.supported) return;
 
       await (await this.getDirectory()).removeEntry(hash);
-    } catch (error) {
-      throw error;
+    } catch {}
+  },
+
+  async getList(type = 'hello') {
+    const res = [];
+    try {
+      if (!this.supported) return res;
+      const dirHandle = await this.getDirectory();
+
+      for await (const entry of dirHandle.values()) {
+        if (
+          entry.kind === 'file' &&
+          (!type || entry.name.startsWith(`${type}_`))
+        ) {
+          res.push(entry);
+        }
+      }
+
+      return res;
+    } catch {
+      return res;
     }
   },
 
@@ -220,10 +239,11 @@ const cacheFile = {
           const file = await entryHandle.getFile();
           zip.file(entryName, file);
           count++;
+          _msg.botMsg(`添加文件：${count}`, 1);
         }
       }
 
-      _msg.botMsg(`开始压缩 ${count} 个文件`, 1);
+      _msg.botMsg(`开始压缩文件：${count}`, 1);
       // 生成zip文件并下载
       const content = await zip.generateAsync({
         type: 'blob',
@@ -263,7 +283,7 @@ const cacheFile = {
         if (!(await this.readCache(filename))) {
           await this.writeCache(filename, fileData);
         }
-        _msg.botMsg(`导入文件中：${++count}`, 1);
+        _msg.botMsg(`导入文件：${++count}`, 1);
       }
     } catch (error) {
       throw error;

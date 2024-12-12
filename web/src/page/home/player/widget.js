@@ -357,8 +357,6 @@ export async function playMv(obj) {
 }
 $myVideo
   .on('error', function () {
-    const url = setPlayingSongInfo().mmv;
-    cacheFile.delete(url, 'music');
     _msg.error(`MV 加载失败`);
   })
   .on('timeupdate', initRainCodeSleep);

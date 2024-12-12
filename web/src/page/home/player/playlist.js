@@ -15,6 +15,7 @@ import _msg from '../../../js/plugins/message';
 import {
   changePlayingAnimate,
   getCollectSongs,
+  hdLoadedSong,
   hdMusicImgCache,
   moveSongToList,
   musicLoadImg,
@@ -91,7 +92,7 @@ export function updateNewPlayList(list) {
 export function showPlayingList() {
   playingListLoading();
   $playingListWrap.stop().fadeIn(100, () => {
-    $pMusicListBox.stop().slideDown(300, () => {
+    $pMusicListBox.stop().slideDown(300, async () => {
       if (!playingList) {
         playingList = [];
       }
@@ -103,13 +104,13 @@ export function showPlayingList() {
       } else {
         playingPageNo = 1;
       }
-      renderPlayingList();
+      await renderPlayingList();
       playingListHighlight(true);
     });
   });
 }
 // 生成播放列表
-export function renderPlayingList() {
+export async function renderPlayingList() {
   if ($pMusicListBox.is(':hidden')) return;
   $pMusicListBox._checked = true;
   switchPlayingChecked();
@@ -137,10 +138,12 @@ export function renderPlayingList() {
     (playingPageNo - 1) * playingPageSize,
     playingPageNo * playingPageSize
   );
+  arr = await hdLoadedSong(arr);
   const html = _tpl(
     `
-    <li v-for="{title,artist,mv,id,pic} in arr" class="song_item" cursor="y" :data-id="id" :data-issc="issc(id)">
+    <li v-for="{title,artist,mv,id,pic,isLoaded} in arr" class="song_item" cursor="y" :data-id="id" :data-issc="issc(id)">
       <div cursor="y" check="n" class="check_state"></div>
+      <div v-if="isLoaded" class="downloaded iconfont icon-yixiazai"></div>
       <div class="logo_wrap">
         <div class="logo" :data-src="getFilePath('/music/'+pic, 1)">
           <div class="play_gif"></div>
@@ -188,10 +191,10 @@ const pgnt = pagination($pMusicListBox[0], {
   showTotal: false,
   select: [],
   toTop: false,
-  change(val) {
+  async change(val) {
     playingPageNo = val;
     $pMusicListBox.find('.p_foot')[0].scrollTop = 0;
-    renderPlayingList();
+    await renderPlayingList();
     playingListHighlight();
   },
 });
@@ -247,7 +250,7 @@ $pMusicListBox
       .css('background-color', state === 'y' ? _d.checkColor : 'transparent');
     _msg.botMsg(`选中：${state === 'y' ? $item.length : 0}项`);
   })
-  .on('click', '.delete_btn', function () {
+  .on('click', '.delete_btn', async function () {
     const arr = getPlayingListCheck();
     if (arr.length === 0) return;
     const obj = {};
@@ -256,7 +259,7 @@ $pMusicListBox
     });
     playingList = playingList.filter((v) => !obj[v.id]);
     setCurPlayingList(setCurPlayingList().filter((v) => !obj[v.id]));
-    renderPlayingList();
+    await renderPlayingList();
     playingListHighlight();
     updatePlayingList();
   })
@@ -376,13 +379,13 @@ $pMusicListBox
     changePlayingAnimate(e);
     playMv(sobj);
   })
-  .on('click', '.del', function (e) {
+  .on('click', '.del', async function (e) {
     e.stopPropagation();
     const $this = $(this);
     const id = $this.parent().attr('data-id');
     playingList = playingList.filter((v) => v.id !== id);
     setCurPlayingList(setCurPlayingList().filter((v) => v.id !== id));
-    renderPlayingList();
+    await renderPlayingList();
     playingListHighlight();
     updatePlayingList();
   })

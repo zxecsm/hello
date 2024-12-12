@@ -849,8 +849,9 @@ export function getSongList(cb) {
               musicList = result.data;
               cb && cb();
               toggleLrcMenuWrapBtnsState();
-              renderPlayingList();
-              playingListHighlight();
+              renderPlayingList().then(() => {
+                playingListHighlight();
+              });
               renderSongList();
               getSearchSongs();
               return;
@@ -862,11 +863,11 @@ export function getSongList(cb) {
     .catch(() => {});
   if (setPlayingList().length === 0) {
     reqPlayerGetPlayList()
-      .then((result) => {
+      .then(async (result) => {
         if (result.code === 1) {
           setPlayingList(result.data);
           curPlayingList = deepClone(setPlayingList());
-          renderPlayingList();
+          await renderPlayingList();
           playingListHighlight(true);
           return;
         }
@@ -967,8 +968,18 @@ function songsLoading() {
   });
   $songItemsBox.html(str);
 }
+export async function hdLoadedSong(list) {
+  const loadedSongs = await cacheFile.getList('music');
+  return list.map((item) => {
+    const isLoaded = loadedSongs.some(
+      (s) =>
+        s.name === cacheFile.getHash(getFilePath(`/music/${item.url}`), 'music')
+    );
+    return { ...item, isLoaded };
+  });
+}
 // 生成歌曲列表
-function renderSongs(gao) {
+async function renderSongs(gao) {
   const listId = $songListWrap.listId;
   if (!listId) return;
   const ind = musicList.findIndex((item) => item.id === listId);
@@ -1020,6 +1031,7 @@ function renderSongs(gao) {
     );
     total = songListInfo.item.length;
   }
+  slist = await hdLoadedSong(slist);
   const html = _tpl(
     `
     <div class="items_list_top_wrap">
@@ -1043,8 +1055,9 @@ function renderSongs(gao) {
       <div cursor="y" class="checked_song_btn"><i class="iconfont icon-duoxuan"></i></div>
       <div v-if="ind > 0" cursor="y" class="sort_songs"><i class="iconfont icon-paixu"></i></div>
     </div>
-    <div v-for="{title,artist,mv,id,pic:picc} in slist" class="song_item" :data-id="id" draggable="true" :data-issc="issc(id)" cursor="y">
+    <div v-for="{title,artist,mv,id,pic:picc,isLoaded} in slist" class="song_item" :data-id="id" draggable="true" :data-issc="issc(id)" cursor="y">
       <div cursor="y" check="n" class="check_state"></div>
+      <div v-if="isLoaded" class="downloaded iconfont icon-yixiazai"></div>
       <div class="song_logo_box">
         <div class="logo" :data-src="getFilePath('/music/'+picc, 1)"></div>
         <div class="play_gif"></div>
@@ -1472,12 +1485,6 @@ export async function updateSongCover(obj) {
     );
     if (result.code === 1) {
       pro.close();
-      [
-        getFilePath(`/music/${obj.pic}`),
-        getFilePath(`/music/${obj.pic}`, 1),
-      ].forEach((item) => {
-        cacheFile.delete(item, 'image');
-      });
       getSongList();
     } else {
       pro.fail();

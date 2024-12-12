@@ -21,6 +21,7 @@ import {
   delSong,
   editSongInfo,
   getCollectSongs,
+  hdLoadedSong,
   hdMusicImgCache,
   moveSongToList,
   musicLoadImg,
@@ -82,19 +83,20 @@ export function getSearchSongs(top, pageNo = searchMusicPageNo) {
       loadingImg($searchMusicWrap.find('ul')[0]);
     }
     reqPlayerSearch({ word, pageNo })
-      .then((result) => {
+      .then(async (result) => {
         if (result.code === 1) {
           const { splitWord, total, totalPage, pageNo, data } = result.data;
           searchMusicPageNo = pageNo;
           searchMusicList = data;
           if (musicPlayerIsHide() || searchWrapIsHide()) return;
           const scObj = getCollectSongs();
+          searchMusicList = await hdLoadedSong(searchMusicList);
           const html = _tpl(
             `
             <p v-if="total === 0" style="padding: 20px 0;text-align: center;pointer-events: none;">${_d.emptyList}</p>
             <template v-else>
-              <li v-for="{artist,title,mv,id,pic} in searchMusicList" class="song_item" :data-id="id" :data-issc="issc(id)" cursor="y">
-                <div class="add_palying_list iconfont icon-icon-test"></div>
+              <li v-for="{artist,title,mv,id,pic,isLoaded} in searchMusicList" class="song_item" :data-id="id" :data-issc="issc(id)" cursor="y">
+                <div v-if="isLoaded" class="downloaded iconfont icon-yixiazai"></div>
                 <div class="logo_wrap">
                   <div class="logo" :data-src="getFilePath('/music/'+pic, 1)"></div>
                 </div>
@@ -102,6 +104,7 @@ export function getSearchSongs(top, pageNo = searchMusicPageNo) {
                   <span v-html="hdTitleHighlight(splitWord, title)" class="song_name"></span>
                   <span v-html="hdTitleHighlight(splitWord, artist)" class="artist_name"></span>
                 </div>
+                <div class="add_palying_list iconfont icon-icon-test"></div>
                 <div v-if="mv" class="play_mv iconfont icon-shipin2"></div>
                 <div class="like_hear iconfont {{issc(id) ? 'icon-hear-full active' : 'icon-hear'}}"></div>
                 <div class="set_menu iconfont icon-icon"></div>

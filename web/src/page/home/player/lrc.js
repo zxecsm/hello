@@ -297,7 +297,7 @@ async function renderLrc() {
       const blob = await response.blob();
       list = JSON.parse(await getFileReader(blob, 'text'));
     } catch {
-      cacheFile.delete(id, 'music');
+      await cacheFile.delete(id, 'music');
       lrcList = [];
       return;
     }
@@ -309,7 +309,7 @@ async function renderLrc() {
 
       if (result.code === 1) {
         list = result.data;
-        cacheFile.add(id, 'music', new Blob([JSON.stringify(list)]));
+        await cacheFile.add(id, 'music', new Blob([JSON.stringify(list)]));
       } else {
         throw '';
       }
