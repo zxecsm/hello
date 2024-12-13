@@ -354,6 +354,7 @@ function hdLogin(obj) {
                     pass: {
                       beforeText: '验证码：',
                       inputType: 'number',
+                      autocomplete: 'one-time-code',
                       verify(val) {
                         if (val === '') {
                           return '请输入验证码';

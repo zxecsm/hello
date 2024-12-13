@@ -404,6 +404,7 @@ function bindEmail(e) {
         items: {
           pd: {
             beforeText: '用户密码：',
+            autocomplete: 'current-password',
             inputType: 'password',
           },
         },
@@ -445,6 +446,7 @@ function bindEmail(e) {
           email: {
             beforeText: '验证邮箱：',
             inputType: 'email',
+            autocomplete: 'email',
             verify(val) {
               if (!isEmail(val)) {
                 return '请输入正确的邮箱';
@@ -470,6 +472,7 @@ function bindEmail(e) {
                   items: {
                     pd: {
                       beforeText: '用户密码：',
+                      autocomplete: 'current-password',
                       inputType: 'password',
                     },
                     code: {
@@ -1308,16 +1311,19 @@ function changeUserPd(e) {
         pass: {
           beforeText: '原密码：',
           placeholder: '原密码',
+          autocomplete: 'current-password',
           inputType: 'password',
         },
         npass: {
           beforeText: '新密码：',
           placeholder: '新密码',
+          autocomplete: 'new-password',
           inputType: 'password',
         },
         rpass: {
           placeholder: '确认密码',
           beforeText: '确认密码：',
+          autocomplete: 'new-password',
           inputType: 'password',
         },
       },
@@ -1365,6 +1371,7 @@ function closeAccount(e) {
         pd: {
           beforeText: '用户密码：',
           inputType: 'password',
+          autocomplete: 'current-password',
         },
       },
     },
@@ -1520,6 +1527,7 @@ function hdAccountManage(e) {
                 pd: {
                   beforeText: '用户密码：',
                   inputType: 'password',
+                  autocomplete: 'current-password',
                 },
               },
             },
@@ -1604,6 +1612,7 @@ async function hdVerifyLogin(e, verify, account) {
               pd: {
                 beforeText: '用户密码：',
                 inputType: 'password',
+                autocomplete: 'current-password',
               },
               text: {
                 beforeText: '验证码：',

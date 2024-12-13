@@ -353,6 +353,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
     let {
       type = 'input',
       placeholder = '',
+      autocomplete = 'off',
       value = '',
       selectItem = [],
       inputType = 'text',
@@ -364,6 +365,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       ...items[item],
       type,
       placeholder,
+      autocomplete,
       value,
       selectItem,
       inputType,
@@ -373,11 +375,11 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
   });
   const html = _tpl(
     `
-    <template v-for="{type,placeholder,value,selectItem,inputType,beforeText},key in items">
+    <template v-for="{type,placeholder,value,selectItem,inputType,beforeText,autocomplete},key in items">
       <div v-if="type === 'input'" class="inp_item">
           <div v-if="beforeText" class="title">{{beforeText}}</div>
           <div class="inp_box">
-            <input class='inp' :data-flag="key" autocomplete="off" :placeholder="placeholder" :value="value" :type="inputType"/>
+            <input class='inp' :data-flag="key" :autocomplete="autocomplete" :placeholder="placeholder" :value="value" :type="inputType"/>
             <i v-if="inputType === 'password'" v-show="value !== ''" cursor="y" class="show_pass_btn iconfont icon-kejian"></i>
             <i cursor="y" class="clean_btn iconfont icon-close-bold {{value === '' ? '' : 'show'}}"></i>
           </div>
@@ -386,7 +388,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       <div v-else-if="type === 'textarea'" class='texta_item'>
         <div v-if="beforeText" class="title">{{beforeText}}</div>
         <div class='texta_box'>
-          <textarea title='Ctrl+Enter {{subText}}' class='texta' :data-flag="key" autocomplete="off" :placeholder="placeholder">{{value}}</textarea>
+          <textarea title='Ctrl+Enter {{subText}}' class='texta' :data-flag="key" :autocomplete="autocomplete" :placeholder="placeholder">{{value}}</textarea>
           <i cursor="y" class="clean_btn iconfont icon-15qingkong-1 {{value === '' ? '' : 'show'}}"></i>
         </div>
         <p class='err'></p>
