@@ -84,6 +84,14 @@ const cacheFile = {
     }
   },
 
+  async loadFile(url) {
+    try {
+      return (await fetch(url)).blob();
+    } catch (error) {
+      throw error;
+    }
+  },
+
   async add(url, type = 'hello', file) {
     try {
       const hash = this.getHash(url, type);
@@ -91,18 +99,14 @@ const cacheFile = {
       const cachedFileHandle = await this.read(url);
       if (cachedFileHandle) return cachedFileHandle;
 
-      let objectURL = null;
-      if (file) {
-        objectURL = URL.createObjectURL(file);
-      } else {
-        const data = await (await fetch(url)).blob();
+      // 没有传文件，加载文件
+      if (!file) file = await this.loadFile(url);
 
-        objectURL = URL.createObjectURL(data);
-
-        if (this.supported) {
-          await this.writeCache(hash, data);
-        }
+      if (this.supported) {
+        await this.writeCache(hash, file);
       }
+
+      const objectURL = URL.createObjectURL(file);
 
       this.urlCache.set(hash, objectURL);
 
