@@ -155,7 +155,7 @@ const cacheFile = {
     } catch {}
   },
 
-  async getList(type = 'hello') {
+  async getList(type) {
     const res = [];
     try {
       if (!this.supported) return res;
@@ -280,12 +280,14 @@ const cacheFile = {
       const zipContent = await file.arrayBuffer();
       const zipFiles = await zip.loadAsync(zipContent);
 
+      const cacheList = await this.getList();
+
       let count = 0;
       // 将zip文件中的内容写入存储目录
       for (const filename in zipFiles.files) {
-        const fileData = await zipFiles.files[filename].async('blob');
         // 不跳过或者不存在
-        if (!skip || !(await this.readCache(filename))) {
+        if (!skip || !cacheList.some((item) => item.name === filename)) {
+          const fileData = await zipFiles.files[filename].async('blob');
           await this.writeCache(filename, fileData);
           _msg.botMsg(`导入文件：${++count}`, 1);
         }
