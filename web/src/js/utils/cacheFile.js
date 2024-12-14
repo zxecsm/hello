@@ -96,7 +96,7 @@ const cacheFile = {
     try {
       const hash = this.getHash(url, type);
 
-      const cachedFileHandle = await this.read(url);
+      const cachedFileHandle = await this.read(url, type);
       if (cachedFileHandle) return cachedFileHandle;
 
       // 没有传文件，加载文件
