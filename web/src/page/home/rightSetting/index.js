@@ -1131,15 +1131,32 @@ export function settingMenu(e, isMain) {
                 titleText
               );
             } else if (id === '2') {
-              try {
-                loading.start();
-                await cacheFile.importStorage();
-                loading.end();
-                _msg.success();
-              } catch {
-                loading.end();
-                _msg.error();
-              }
+              _pop(
+                {
+                  e,
+                  text: `如何处理已存在缓存？`,
+                  cancel: {
+                    text: '覆盖',
+                  },
+                  confirm: {
+                    text: '跳过',
+                  },
+                },
+                async (type) => {
+                  if (type === 'confirm' || type === 'cancel') {
+                    try {
+                      const skip = type === 'confirm';
+                      loading.start();
+                      await cacheFile.importStorage(skip);
+                      loading.end();
+                      _msg.success();
+                    } catch {
+                      loading.end();
+                      _msg.error();
+                    }
+                  }
+                }
+              );
             } else if (id === '3') {
               const size = await cacheFile.size();
               _pop(

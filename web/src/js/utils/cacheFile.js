@@ -178,7 +178,7 @@ const cacheFile = {
 
   async clear(type) {
     try {
-      if (!this.supported) return;
+      if (!this.supported) throw '';
 
       const dirHandle = await this.getDirectory();
       let count = 0;
@@ -230,7 +230,7 @@ const cacheFile = {
 
   async exportStorage() {
     try {
-      if (!this.supported) return;
+      if (!this.supported) throw '';
 
       const zip = new JSZip();
 
@@ -267,13 +267,13 @@ const cacheFile = {
     }
   },
 
-  async importStorage() {
+  async importStorage(skip = true) {
     try {
-      if (!this.supported) return;
+      if (!this.supported) throw '';
 
       // 选择文件
       const file = (await getFiles({ accept: '.zip' }))[0];
-      if (!file) return;
+      if (!file) throw '';
 
       // 解压文件
       const zip = new JSZip();
@@ -284,10 +284,11 @@ const cacheFile = {
       // 将zip文件中的内容写入存储目录
       for (const filename in zipFiles.files) {
         const fileData = await zipFiles.files[filename].async('blob');
-        if (!(await this.readCache(filename))) {
+        // 不跳过或者不存在
+        if (!skip || !(await this.readCache(filename))) {
           await this.writeCache(filename, fileData);
+          _msg.botMsg(`导入文件：${++count}`, 1);
         }
-        _msg.botMsg(`导入文件：${++count}`, 1);
       }
     } catch (error) {
       throw error;
