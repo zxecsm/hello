@@ -1,6 +1,7 @@
 import '../../css/common/reset.css';
 import '../../css/common/common.css';
 import '../../font/iconfont.css';
+import '../home/searchBox/cat.less';
 import './index.less';
 import $ from 'jquery';
 import './coloured.js';
@@ -15,6 +16,7 @@ import {
   debounce,
   _getDataTem,
   wave,
+  throttle,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import validateImg from './validate';
@@ -499,3 +501,10 @@ changeDark.bind((isDark) => {
   const dark = isDark ? 'y' : 'n';
   darkMode(dark);
 });
+window.addEventListener('resize', throttle(setCatSize, 1000));
+function setCatSize() {
+  const $cat = $box.find('.cat');
+  const fontSize = ($box.width() / 2) * (100 / 150);
+  $cat.css('font-size', parseInt(fontSize));
+}
+setCatSize();

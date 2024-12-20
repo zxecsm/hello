@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import './cat.less';
 import imgMrLogo from '../../../images/img/mrlogo.png';
 import imgTianjia from '../../../images/img/tianjia.png';
 import {

@@ -1,0 +1,324 @@
+@keyframes tail {
+  6.6666666667% {
+    transform: rotate(0);
+  }
+  10% {
+    transform: rotate(10deg);
+  }
+  16.6666666667% {
+    transform: rotate(-5deg);
+  }
+  20% {
+    transform: rotate(30deg);
+  }
+  26.6666666667% {
+    transform: rotate(-2deg);
+  }
+  46.6666666667% {
+    transform: rotate(10deg);
+  }
+  53.3333333333% {
+    transform: rotate(-5deg);
+  }
+  56.6666666667% {
+    transform: rotate(10deg);
+  }
+}
+@keyframes body {
+  6.6666666667% {
+    transform: scaleY(1) translateY(0);
+  }
+  10% {
+    transform: scaleY(1.075) translateY(-3.75%);
+  }
+  16.6666666667% {
+    transform: scaleY(1) translateY(0);
+  }
+  20% {
+    transform: scaleY(1.125) translateY(-6.25%);
+  }
+  26.6666666667% {
+    transform: scaleY(1) translateY(0);
+  }
+  46.6666666667% {
+    transform: scaleY(1.075) translateY(-3.75%);
+  }
+  53.3333333333% {
+    transform: scaleY(1) translateY(0);
+  }
+  56.6666666667% {
+    transform: scaleY(1.075) translateY(-3.75%);
+  }
+}
+@keyframes left-whisker {
+  6.6666666667% {
+    transform: rotate(0);
+  }
+  10% {
+    transform: rotate(0deg);
+  }
+  16.6666666667% {
+    transform: rotate(-5deg);
+  }
+  20% {
+    transform: rotate(0deg);
+  }
+  26.6666666667% {
+    transform: rotate(0deg);
+  }
+  46.6666666667% {
+    transform: rotate(10deg);
+  }
+  53.3333333333% {
+    transform: rotate(-5deg);
+  }
+  56.6666666667% {
+    transform: rotate(10deg);
+  }
+}
+@keyframes right-whisker {
+  6.6666666667% {
+    transform: rotate(180deg);
+  }
+  10% {
+    transform: rotate(190deg);
+  }
+  16.6666666667% {
+    transform: rotate(180deg);
+  }
+  20% {
+    transform: rotate(175deg);
+  }
+  26.6666666667% {
+    transform: rotate(190deg);
+  }
+  46.6666666667% {
+    transform: rotate(180deg);
+  }
+  53.3333333333% {
+    transform: rotate(185deg);
+  }
+  56.6666666667% {
+    transform: rotate(175deg);
+  }
+}
+@keyframes left-ear {
+  0% {
+    transform: rotate(-20deg);
+  }
+  6.6666666667% {
+    transform: rotate(-6deg);
+  }
+  13.3333333333% {
+    transform: rotate(-15deg);
+  }
+  26.6666666667% {
+    transform: rotate(-15deg);
+  }
+  33.3333333333% {
+    transform: rotate(-30deg);
+  }
+  40% {
+    transform: rotate(-30deg);
+  }
+  46.6666666667% {
+    transform: rotate(0deg);
+  }
+  53.3333333333% {
+    transform: rotate(0deg);
+  }
+  60% {
+    transform: rotate(-15deg);
+  }
+  80% {
+    transform: rotate(-15deg);
+  }
+  93.3333333333% {
+    transform: rotate(-6deg);
+  }
+  100% {
+    transform: rotateZ(-6deg);
+  }
+}
+@keyframes right-ear {
+  0% {
+    transform: rotateZ(-16deg);
+  }
+  6.6666666667% {
+    transform: rotateZ(-16deg);
+  }
+  13.3333333333% {
+    transform: rotateZ(-19deg);
+  }
+  26.6666666667% {
+    transform: rotateZ(-19deg);
+  }
+  33.3333333333% {
+    transform: rotateZ(-30deg);
+  }
+  36.6666666667% {
+    transform: rotateZ(-19deg);
+  }
+  37.3333333333% {
+    transform: rotateZ(-30deg);
+  }
+  38% {
+    transform: rotateZ(-19deg);
+  }
+  40% {
+    transform: rotateZ(-19deg);
+  }
+  40.6666666667% {
+    transform: rotateZ(-30deg);
+  }
+  41.3333333333% {
+    transform: rotateZ(-19deg);
+  }
+  46.6666666667% {
+    transform: rotateZ(-9deg);
+  }
+  53.3333333333% {
+    transform: rotateZ(-9deg);
+  }
+  60% {
+    transform: rotateZ(-19deg);
+  }
+  60.6666666667% {
+    transform: rotateZ(-30deg);
+  }
+  61.3333333333% {
+    transform: rotateZ(-19deg);
+  }
+  62.6666666667% {
+    transform: rotateZ(-19deg);
+  }
+  63.3333333333% {
+    transform: rotateZ(-30deg);
+  }
+  64% {
+    transform: rotateZ(-19deg);
+  }
+  80% {
+    transform: rotateZ(-19deg);
+  }
+  93.3333333333% {
+    transform: rotateZ(-16deg);
+  }
+  100% {
+    transform: rotateZ(-16deg);
+  }
+}
+.cat {
+  pointer-events: none;
+  background-color: var(--color1);
+  font-size: 100px;
+  width: 1.1em;
+  height: 0.5em;
+  position: absolute;
+  right: -0.14em;
+  top: -0.5em;
+  border-top-left-radius: 1em;
+  border-top-right-radius: 1em;
+  .body {
+    width: 1.1em;
+    height: 0.5em;
+    background-color: var(--color1);
+    position: absolute;
+    border-top-left-radius: 1em;
+    border-top-right-radius: 1em;
+    animation: body 12s none infinite;
+  }
+  .head {
+    content: '';
+    width: 0.7em;
+    height: 0.35em;
+    background-color: var(--color1);
+    position: absolute;
+    bottom: 0;
+    left: -0.4em;
+    border-top-left-radius: 0.8em;
+    border-top-right-radius: 0.8em;
+    .ear {
+      position: absolute;
+      left: 0.04em;
+      top: -0.04em;
+      width: 0;
+      height: 0;
+      border-left: 0.12em solid transparent;
+      border-right: 0.12em solid transparent;
+      border-bottom: 0.2em solid var(--color1);
+      transform: rotate(-30deg);
+      animation: left-ear 12s both infinite;
+    }
+    .ear + .ear {
+      animation: right-ear 12s both infinite;
+      top: -0.12em;
+      left: 0.3em;
+    }
+  }
+  .face {
+    .nose {
+      position: absolute;
+      bottom: 0.1em;
+      left: -0.1em;
+      background-color: #fd6e72;
+      height: 0.05em;
+      width: 0.05em;
+      border-radius: 50%;
+    }
+    .whisker-container {
+      position: absolute;
+      bottom: 0.05em;
+      left: -0.36em;
+      width: 0.2em;
+      height: 0.1em;
+      transform-origin: right;
+      animation: left-whisker 12s both infinite;
+    }
+    .whisker-container:nth-child(2) {
+      left: -0.2em;
+      bottom: 0.12em;
+      transform-origin: right;
+      transform: rotate(180deg);
+      animation: right-whisker 12s both infinite;
+    }
+
+    .whisker {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      border: 0.01em solid var(--color9);
+      transform-origin: 100% 0;
+      transform: rotate(10deg);
+    }
+    .whisker:last-child {
+      top: 0;
+      transform: rotate(-20deg);
+    }
+  }
+  .tail-container {
+    position: absolute;
+    right: 0;
+    bottom: -0.13em;
+    z-index: 3;
+    .tail {
+      position: absolute;
+      height: 0.3em;
+      width: 0.14em;
+      bottom: -0.1em;
+      right: 0;
+      border-bottom-right-radius: 0.05em;
+      background: var(--color1);
+      z-index: 0;
+    }
+    .tail > .tail {
+      animation: tail 12s none infinite;
+      height: 100%;
+      width: 0.14em;
+      transform-origin: left;
+      border-bottom-left-radius: 0.2em 0.2em;
+      border-bottom-right-radius: 0.2em 0.2em;
+      border-top-right-radius: 0.4em;
+    }
+  }
+}
