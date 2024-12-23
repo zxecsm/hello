@@ -1245,7 +1245,7 @@ route.post('/delete-song', async (req, res) => {
       !validaString(listId, 1, fieldLenght.id, 1) ||
       !_type.isArray(ids) ||
       ids.length === 0 ||
-      ids.length > fieldLenght.maxPagesize ||
+      ids.length > maxSonglistCount ||
       !ids.every((item) => validaString(item, 1, fieldLenght.id, 1))
     ) {
       paramErr(res, req);
@@ -1255,6 +1255,12 @@ route.post('/delete-song', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     if (listId === 'all') {
+      // 限制删除数量
+      if (ids.length > fieldLenght.maxPagesize) {
+        paramErr(res, req);
+        return;
+      }
+
       if (!isRoot(req)) {
         _err(res, '无权删除歌曲')(req, `${listId}-${ids.length}`, 1);
         return;
