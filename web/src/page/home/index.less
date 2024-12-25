@@ -1848,7 +1848,7 @@ body {
           width: 70%;
           border: 1px solid var(--color9);
           background-color: var(--bg-color-o1);
-          border-radius: 4px;
+          border-radius: 4px 0px 4px 4px;
           z-index: 6;
           &.active {
             background-color: var(--color10);
@@ -1901,9 +1901,10 @@ body {
           .search_list_box {
             display: none;
             width: 100%;
-            max-height: 410px;
+            max-height: 400px;
             overflow-y: auto;
             font-size: 18px;
+            border-radius: 0 0 4px 4px;
             ol,
             li,
             ul {
