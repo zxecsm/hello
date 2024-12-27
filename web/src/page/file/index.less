@@ -229,13 +229,16 @@ body {
       }
       .fill {
         width: 110px;
+        height: 0;
         pointer-events: none;
       }
       &.grid {
         display: flex;
         flex-flow: row wrap;
         justify-content: space-between;
+        align-content: flex-start;
         .file_item {
+          flex: none;
           display: flex;
           flex-flow: row wrap;
           width: 110px;
