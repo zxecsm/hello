@@ -941,7 +941,7 @@ function handleRandomBg(e) {
         const pre = getPreUrl();
         rMenu.rightInfo(
           e,
-          `大屏：${pre}/api/bg/r/small\n小屏：${pre}/api/bg/r/big`,
+          `大屏：${pre}/api/bg/r/big\n小屏：${pre}/api/bg/r/small`,
           '接口信息'
         );
       } else if (id === 'state') {
