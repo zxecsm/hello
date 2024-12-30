@@ -9,7 +9,6 @@ import {
   _mySlide,
   isImgFile,
   downloadFile,
-  imgPreview,
   getScreenSize,
   longPress,
   isMobile,
@@ -40,6 +39,7 @@ import { _tpl } from '../../../js/utils/template.js';
 import md5 from '../../../js/utils/md5.js';
 import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
+import imgPreview from '../../../js/plugins/imgPreview/index.js';
 const $allBgWrap = $('.all_bg_wrap'),
   $bgList = $allBgWrap.find('.bg_list'),
   $bgFooter = $allBgWrap.find('.bg_footer');

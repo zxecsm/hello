@@ -11,9 +11,7 @@ import {
   imgjz,
   mixedSort,
   _mySlide,
-  _progressBar,
   isImgFile,
-  imgPreview,
   toLogin,
   darkMode,
   toCenter,
@@ -90,6 +88,8 @@ import md5 from '../../../js/utils/md5.js';
 import { _tpl } from '../../../js/utils/template.js';
 import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
+import percentBar from '../../../js/plugins/percentBar/index.js';
+import imgPreview from '../../../js/plugins/imgPreview/index.js';
 // local数据
 let dark = _getData('dark'),
   pageGrayscale = _getData('pageGrayscale'),
@@ -913,7 +913,7 @@ export function settingMenu(e, isMain) {
               resizeBgFilter(e);
             } else if (id === '2') {
               // 黑白
-              _progressBar(
+              percentBar(
                 e,
                 pageGrayscale,
                 throttle(function (per) {

@@ -4,7 +4,7 @@ const levelObj = {
   rightBox: 101, // 右键菜单（静）
   imgPreview: 102, // 图片预览（动）
   msg: 103, // 通知框（静）
-  _progressBar: 104, // 调节器（动）
+  percentBar: 104, // 调节器（动）
   popConfirm: 104, // 确认框（动）
   hechang: 105, // 何畅（静）
   loading: 107, // 加载动画（静）

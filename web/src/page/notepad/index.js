@@ -10,12 +10,10 @@ import {
   _setData,
   _getData,
   debounce,
-  imgPreview,
   isImgFile,
   toLogin,
   isIframe,
   getFiles,
-  _progressBar,
   percentToValue,
   LazyLoad,
   imgjz,
@@ -46,6 +44,8 @@ import md5 from '../../js/utils/md5.js';
 import _path from '../../js/utils/path.js';
 import { setEditor } from '../edit/setEditor.js';
 import cacheFile from '../../js/utils/cacheFile.js';
+import percentBar from '../../js/plugins/percentBar/index.js';
+import imgPreview from '../../js/plugins/imgPreview/index.js';
 const mdWorker = new MdWorker();
 const $contentWrap = $('.content_wrap'),
   $headBtns = $contentWrap.find('.head_btns'),
@@ -526,7 +526,7 @@ function settingEdit(e) {
     data,
     ({ e, id }) => {
       if (id === 'size') {
-        _progressBar(e, editNoteFontSize, (percent) => {
+        percentBar(e, editNoteFontSize, (percent) => {
           $editWrap.css({
             'font-size': percentToValue(12, 30, percent),
           });

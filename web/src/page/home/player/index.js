@@ -15,10 +15,8 @@ import {
   formatDate,
   copyText,
   _position,
-  _progressBar,
   isImgFile,
   downloadFile,
-  imgPreview,
   unique,
   isMusicFile,
   ContentScroll,
@@ -140,6 +138,8 @@ import notifyMusicControlPanel from './notifyMusicControlPanel.js';
 import md5 from '../../../js/utils/md5.js';
 import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
+import percentBar from '../../../js/plugins/percentBar/index.js';
+import imgPreview from '../../../js/plugins/imgPreview/index.js';
 const $musicPlayerBox = $('.music_player_box'),
   $musicFootProgress = $musicPlayerBox.find('.music_foot_progress'),
   $musicPlayerBg = $musicPlayerBox.find('.music_palyer_bg'),
@@ -373,7 +373,7 @@ const handleRemoteVol = debounce(function () {
 }, 500);
 // 音量调节
 function adjustVolume(e) {
-  _progressBar(e, mediaVolume, function (per) {
+  percentBar(e, mediaVolume, function (per) {
     mediaVolume = per;
     setPlayVolume();
     handleRemoteVol(per);

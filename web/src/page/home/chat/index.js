@@ -16,7 +16,6 @@ import {
   isImgFile,
   fileLogoType,
   downloadFile,
-  imgPreview,
   sendNotification,
   ContentScroll,
   myDrag,
@@ -78,6 +77,7 @@ import { verifyDate } from '../count_down/index.js';
 import md5 from '../../../js/utils/md5.js';
 import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
+import imgPreview from '../../../js/plugins/imgPreview/index.js';
 const $document = $(document),
   $chatRoomWrap = $('.chat_room_wrap'),
   $userListBox = $chatRoomWrap.find('.user_list_box'),

@@ -1,4 +1,5 @@
 import _d from '../../common/config';
+import './index.less';
 import { myDrag, toCenter } from '../../utils/utils';
 
 class Pop {
@@ -21,42 +22,15 @@ class Pop {
   }
   init() {
     this.mask = document.createElement('div');
-    this.mask.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        z-index:${this.top ? '9999' : _d.levelObj.popConfirm};`;
+    this.mask.className = 'pop_confirm_mask';
+    this.mask.style.zIndex = this.top ? 9999 : _d.levelObj.popConfirm;
     this.box = document.createElement('div');
-    this.box.style.cssText = `
-        width: 90%;
-        max-width: 250px;
-        max-height: 90%;
-        position: absolute;
-        display: flex;
-        flex-flow: column;
-        border-radius: 5px;
-        padding: 12px;
-        opacity: 0;
-        transform: translateY(-20px);
-        transition: transform .5s ease-in-out,opacity .5s ease-in-out;
-        background-color: var(--color10);
-        box-shadow: var(--color5) 0px 0px 5px;
-        user-select: none;`;
+    this.box.className = 'box';
     this.textBox = document.createElement('div');
-    this.textBox.style.cssText = `
-        flex: auto;
-        font-size: 16px;
-        line-height: 24px;
-        word-break: break-all;`;
+    this.textBox.className = 'text_box';
     this.textBox.innerText = this.text;
     this.btns = document.createElement('div');
-    this.btns.style.cssText = `
-        flex: none;
-        text-align: right;
-        padding-top: 10px;`;
+    this.btns.className = 'btns';
     this.cancelBtn = document.createElement('button');
     this.cancelBtn.className = `btn btn_${this.cancel.type}`;
     this.cancelBtn.setAttribute('cursor', '');

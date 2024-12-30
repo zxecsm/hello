@@ -22,7 +22,6 @@ import {
   getScreenSize,
   getTextImg,
   hdOnce,
-  imgPreview,
   imgjz,
   isImgFile,
   isMobile,
@@ -55,6 +54,7 @@ import { _tpl } from '../../js/utils/template';
 import _path from '../../js/utils/path';
 import { addTask } from '../file/task';
 import { imgCache } from '../../js/utils/imgCache';
+import imgPreview from '../../js/plugins/imgPreview';
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
 const $curmbBox = $('.crumb_box');

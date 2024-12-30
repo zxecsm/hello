@@ -14,7 +14,6 @@ import {
   debounce,
   imgjz,
   _getTarget,
-  imgPreview,
   copyText,
   myShuffle,
   _mySlide,
@@ -29,7 +28,6 @@ import {
   myToRest,
   getMinIndex,
   percentToValue,
-  _progressBar,
   formartSongTime,
   _position,
   getTextImg,
@@ -67,6 +65,8 @@ import { initRainCodeSleep } from '../../js/common/codeRain';
 import notifyMusicControlPanel from '../home/player/notifyMusicControlPanel';
 import _path from '../../js/utils/path';
 import { imgCache } from '../../js/utils/imgCache';
+import percentBar from '../../js/plugins/percentBar';
+import imgPreview from '../../js/plugins/imgPreview';
 const urlparmes = queryURLParams(myOpen()),
   HASH = urlparmes.HASH,
   $myAudio = $(new Audio()),
@@ -1029,7 +1029,7 @@ $lrcMenuWrap
         if (id === '1') {
           close();
           let { size } = lrcState;
-          _progressBar(e, size, (percent) => {
+          percentBar(e, size, (percent) => {
             $lrcListWrap.find('.lrc_items').css({
               'font-size': percentToValue(14, 30, percent) + 'px',
             });

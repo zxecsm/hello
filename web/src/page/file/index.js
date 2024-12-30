@@ -21,7 +21,6 @@ import {
   getFiles,
   pageScrollTop,
   getScreenSize,
-  imgPreview,
   imgjz,
   isFilename,
   isIframe,
@@ -76,6 +75,7 @@ import _path from '../../js/utils/path';
 import { addTask } from './task';
 import { reqTaskList } from '../../api/task';
 import cacheFile from '../../js/utils/cacheFile';
+import imgPreview from '../../js/plugins/imgPreview';
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
 const $curmbBox = $('.crumb_box');

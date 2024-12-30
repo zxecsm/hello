@@ -9,7 +9,6 @@ import {
   imgjz,
   copyText,
   isImgFile,
-  imgPreview,
   toLogin,
   getScreenSize,
   longPress,
@@ -45,6 +44,7 @@ import { _tpl } from '../../js/utils/template';
 import md5 from '../../js/utils/md5';
 import _path from '../../js/utils/path';
 import cacheFile from '../../js/utils/cacheFile';
+import imgPreview from '../../js/plugins/imgPreview';
 if (!isLogin()) {
   toLogin();
 }

@@ -4,7 +4,6 @@ import {
   ContentScroll,
   _getData,
   _myOpen,
-  _progressBar,
   _setData,
   darkMode,
   getTextSize,
@@ -23,6 +22,7 @@ import changeDark from '../../js/utils/changeDark';
 import _path from '../../js/utils/path';
 import { setEditor } from '../edit/setEditor';
 import _d from '../../js/common/config';
+import percentBar from '../../js/plugins/percentBar';
 const $editFile = $('.edit_file');
 const $container = $('#app .container');
 let oText = '';
@@ -186,7 +186,7 @@ function settingMenu(e) {
     data,
     ({ e, id }) => {
       if (id === 'size') {
-        _progressBar(e, fileFontSize, (percent) => {
+        percentBar(e, fileFontSize, (percent) => {
           $editFile.find('.editor').css({
             'font-size': percentToValue(12, 30, percent),
           });

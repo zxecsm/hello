@@ -7,9 +7,7 @@ import {
   myShuffle,
   copyText,
   _position,
-  _progressBar,
   downloadFile,
-  imgPreview,
   ContentScroll,
   getMinIndex,
   percentToValue,
@@ -71,6 +69,8 @@ import notifyMusicControlPanel from './notifyMusicControlPanel.js';
 import _path from '../../../js/utils/path.js';
 import { getSearchSongs } from './search.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
+import percentBar from '../../../js/plugins/percentBar/index.js';
+import imgPreview from '../../../js/plugins/imgPreview/index.js';
 const $myAudio = $(new Audio()),
   $musicLrcWrap = $('.music_player_box .music_lrc_wrap'),
   $lrcBg = $musicLrcWrap.find('.lrc_bg'),
@@ -847,7 +847,7 @@ $lrcMenuWrap
         if (id === '1') {
           close();
           const { size } = lrcState;
-          _progressBar(e, size, (percent) => {
+          percentBar(e, size, (percent) => {
             $lrcListWrap.find('.lrc_items').css({
               'font-size': percentToValue(14, 30, percent) + 'px',
             });

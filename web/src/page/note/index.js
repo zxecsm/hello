@@ -14,7 +14,6 @@ import {
   copyText,
   _position,
   _myOpen,
-  imgPreview,
   pageScrollTop,
   pageErr,
   darkMode,
@@ -22,7 +21,6 @@ import {
   formatNum,
   showQcode,
   isIframe,
-  _progressBar,
   percentToValue,
   getTextImg,
   wrapInput,
@@ -48,6 +46,8 @@ import loadingPage from '../../js/plugins/loading/index.js';
 import changeDark from '../../js/utils/changeDark.js';
 import { _tpl } from '../../js/utils/template.js';
 import _path from '../../js/utils/path.js';
+import percentBar from '../../js/plugins/percentBar/index.js';
+import imgPreview from '../../js/plugins/imgPreview/index.js';
 const mdWorker = new MdWorker();
 let urlparmes = queryURLParams(myOpen()),
   HASH = urlparmes.HASH;
@@ -127,7 +127,7 @@ $setBtnsWrap
     }
   })
   .on('click', '.font_size_btn', (e) => {
-    _progressBar(e, noteFontSize, (percent) => {
+    percentBar(e, noteFontSize, (percent) => {
       $contentWrap.css({
         'font-size': percentToValue(12, 30, percent),
       });

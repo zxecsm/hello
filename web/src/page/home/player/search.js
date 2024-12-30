@@ -4,7 +4,6 @@ import {
   _getTarget,
   copyText,
   downloadFile,
-  imgPreview,
   loadingImg,
   hdTitleHighlight,
   getFilePath,
@@ -49,6 +48,7 @@ import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import _path from '../../../js/utils/path.js';
 import pagination from '../../../js/plugins/pagination/index.js';
+import imgPreview from '../../../js/plugins/imgPreview/index.js';
 const $searchMusicWrap = $('.music_player_box .search_music_wrap');
 let searchMusicList = [];
 // 搜索列表是隐藏

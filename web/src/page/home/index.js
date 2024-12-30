@@ -16,9 +16,7 @@ import {
   _getTarget,
   imgjz,
   _mySlide,
-  _progressBar,
   downloadFile,
-  imgPreview,
   toLogin,
   longPress,
   isMobile,
@@ -147,6 +145,8 @@ import {
 import { reqCountList } from '../../api/count.js';
 import { deepClone } from '../../js/utils/template.js';
 import _path from '../../js/utils/path.js';
+import percentBar from '../../js/plugins/percentBar/index.js';
+import imgPreview from '../../js/plugins/imgPreview/index.js';
 const $pageBg = $('.page_bg'),
   $document = $(document),
   $userLogoBtn = $('.user_logo_btn'),
@@ -200,7 +200,7 @@ function bgFilter(value) {
 bgFilter(curFilterBg);
 // 调节模糊度
 export function resizeBgFilter(e) {
-  _progressBar(
+  percentBar(
     e,
     curFilterBg / 100,
     throttle(function (per) {

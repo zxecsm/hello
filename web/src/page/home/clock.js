@@ -1,7 +1,6 @@
 import {
   _getData,
   _getTarget,
-  _progressBar,
   _setData,
   getScreenSize,
   isMobile,
@@ -11,6 +10,7 @@ import {
 import { setZidx } from './popWindow';
 import { hideIframeMask, showIframeMask } from './iframe';
 import _d from '../../js/common/config';
+import percentBar from '../../js/plugins/percentBar';
 const _head = document.querySelector('head'),
   _style = document.createElement('style');
 _style.type = 'text/css';
@@ -105,7 +105,7 @@ const clockData = _getData('clockData');
 function hdClick(e) {
   clockMove();
   if (e.target.tagName.toLowerCase() === 'i') {
-    _progressBar(e, clockData.size, (percent) => {
+    percentBar(e, clockData.size, (percent) => {
       clock.style.transform = `scale(${percentToValue(0.5, 4, percent)})`;
       clockData.size = percent;
       _setData('clockData', clockData);
