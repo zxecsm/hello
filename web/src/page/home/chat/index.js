@@ -800,8 +800,8 @@ function userMenu(e, msgObj, isUserList) {
   );
 }
 // 打开文件
-function openChatFile() {
-  const $this = $(this).parent().parent();
+function openChatFile(target) {
+  const $this = $(target).parent().parent();
   const obj = getChatItem($this.data('id'));
   const msgId = obj.id,
     content = obj.content;
@@ -838,8 +838,8 @@ function openChatFile() {
     .catch(() => {});
 }
 // 打开图片
-function openChatImg() {
-  const id = $(this).parent().parent().parent().attr('data-id');
+function openChatImg(target) {
+  const id = $(target).parent().parent().parent().attr('data-id');
   const obj = getChatItem(id);
   // 检查图片是否过期
   reqChatExpired({ hash: obj.hash })
@@ -911,7 +911,10 @@ $chatListBox
     }
     userMenu(e, obj);
   })
-  .on('click', '.c_file_msg_box', openChatFile)
+  .on('click', '.c_file_msg_box', function () {
+    if (getSelectText() !== '') return;
+    openChatFile(this);
+  })
   .on('click', '.c_text_msg_box', function (e) {
     if (getSelectText() !== '') return;
     chatMsgMenu(e, getChatItem($(this).parent().parent().data('id')));
@@ -927,12 +930,16 @@ $chatListBox
     chatMsgMenu(e, getChatItem($(this).parent().data('id')));
   })
   .on('click', '.c_voice_msg_box', function () {
+    if (getSelectText() !== '') return;
     playVoice(
       getFilePath(`/upload/${$(this).parent().parent().attr('data-id')}`),
       this
     );
   })
-  .on('click', '.c_img', openChatImg)
+  .on('click', '.c_img', function () {
+    if (getSelectText() !== '') return;
+    openChatImg(this);
+  })
   .on('scroll', switchScrollToBottom)
   .on('scroll', debounce(scrollTopMsg, 200));
 function switchScrollToBottom() {
