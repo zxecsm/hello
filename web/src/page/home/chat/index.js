@@ -1541,7 +1541,6 @@ const chatTitleScroll = new ContentScroll(
   $chatHeadBtns.find('.chat_title .text_box')[0]
 );
 let onlineTimer = null;
-let temChatTitle = '';
 let curChatUserInfo = {};
 $onlineStatus
   .on('mouseenter', function () {
@@ -1565,7 +1564,7 @@ $onlineStatus
   });
 function updateOnlineStatus() {
   updateOnlineStatus.clear();
-  onlineTimer = setInterval(() => {
+  onlineTimer = setTimeout(() => {
     const acc = curChatAccount;
     reqChatGetDes({ account: acc })
       .then((res) => {
@@ -1577,17 +1576,15 @@ function updateOnlineStatus() {
           } else {
             $onlineStatus.removeClass('active');
           }
-          let title = des || username;
-          if (title !== temChatTitle) {
-            temChatTitle = title;
-            chatTitleScroll.init(temChatTitle);
-          }
+          chatTitleScroll.init(des || username);
+        } else {
+          throw '';
         }
       })
       .catch(() => {
-        updateOnlineStatus.clear();
-        $onlineStatus.css('display', 'none');
-      });
+        $onlineStatus.removeClass('active');
+      })
+      .finally(updateOnlineStatus);
   }, 5000);
 }
 updateOnlineStatus.clear = function () {
@@ -1624,13 +1621,13 @@ function setChatTitle(acc) {
           } else {
             $onlineStatus.removeClass('active');
           }
-          temChatTitle = des || username;
-          chatTitleScroll.init(temChatTitle);
+          chatTitleScroll.init(des || username);
+        } else {
+          throw '';
         }
       })
       .catch(() => {
-        updateOnlineStatus.clear();
-        $onlineStatus.css('display', 'none');
+        $onlineStatus.removeClass('active');
       });
   }
 }
