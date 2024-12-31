@@ -1061,7 +1061,7 @@ function chatMsgMenu(e, cobj) {
   rMenu.selectMenu(
     e,
     data,
-    ({ close, id, e, loading }) => {
+    async ({ close, id, e, loading }) => {
       if (id === '4') {
         _pop(
           {
@@ -1129,7 +1129,7 @@ function chatMsgMenu(e, cobj) {
         });
       } else if (id === '6') {
         close();
-        _setData('newNote', z);
+        await cacheFile.setData('newNote', z);
         openInIframe('/edit/#new', '新笔记');
       }
     },

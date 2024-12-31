@@ -24,6 +24,7 @@ import _path from '../../js/utils/path';
 import { setEditor } from '../edit/setEditor';
 import _d from '../../js/common/config';
 import percentBar from '../../js/plugins/percentBar';
+import cacheFile from '../../js/utils/cacheFile';
 const $editFile = $('.edit_file');
 const $container = $('#app .container');
 let oText = '';
@@ -245,13 +246,13 @@ function settingMenu(e) {
 $editFile
   .find('.head_btn')
   .on('click', '.setting', settingMenu)
-  .on('click', '.to_note', () => {
+  .on('click', '.to_note', async () => {
     const text = editor.getValue();
     if (text === '') {
       _msg.error('文本为空');
       return;
     }
-    _setData('newNote', text);
+    await cacheFile.setData('newNote', text);
     _myOpen('/edit/#new', '新笔记');
   })
   .on('click', '.close', function (e) {
