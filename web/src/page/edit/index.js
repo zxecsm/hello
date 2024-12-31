@@ -86,6 +86,16 @@ changeTheme(_getData('dark'));
 editor.getSession().on(
   'change',
   debounce(function () {
+    if (createEditer.hasUndo(editor)) {
+      $headBtns.find('.undo_btn').removeClass('deactive');
+    } else {
+      $headBtns.find('.undo_btn').addClass('deactive');
+    }
+    if (createEditer.hasRedo(editor)) {
+      $headBtns.find('.redo_btn').removeClass('deactive');
+    } else {
+      $headBtns.find('.redo_btn').addClass('deactive');
+    }
     rende();
   }, 1000)
 );
@@ -217,6 +227,7 @@ function initValue(obj) {
   editor.setValue(obj.content);
   wInput.setValue(obj.title);
   editor.gotoLine(1);
+  createEditer.reset(editor);
   if (obj.content === '') {
     editor.focus();
   }
@@ -673,7 +684,13 @@ $headBtns
   .on('click', '.h_go_home', function () {
     myOpen('/');
   })
-  .on('click', '.save_btn', hdClickSaveBtn);
+  .on('click', '.save_btn', hdClickSaveBtn)
+  .on('click', '.undo_btn', function () {
+    editor.undo();
+  })
+  .on('click', '.redo_btn', function () {
+    editor.redo();
+  });
 if (isIframe()) {
   $headBtns.find('.h_go_home').remove();
 }

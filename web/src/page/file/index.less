@@ -327,6 +327,21 @@ body {
       .save {
         display: none;
       }
+      .undo,
+      .redo {
+        -ms-flex: none;
+        flex: none;
+        font-size: 20px;
+        text-align: center;
+        width: 40px;
+        &:hover {
+          color: var(--text-hover-color);
+          transform: scale(1.2);
+        }
+        &.deactive {
+          color: var(--color9);
+        }
+      }
     }
     .editor {
       flex: auto;

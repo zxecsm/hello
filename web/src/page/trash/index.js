@@ -363,7 +363,7 @@ $contentWrap
     }
     data = [
       ...data,
-      { id: '2', text: '恢复', beforeIcon: 'iconfont icon-chexiao' },
+      { id: '2', text: '恢复', beforeIcon: 'iconfont icon-Undo' },
       {
         id: '3',
         text: '删除',

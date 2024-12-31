@@ -1055,7 +1055,7 @@ function chatMsgMenu(e, cobj) {
     data.push({
       id: '4',
       text: '撤回',
-      beforeIcon: 'iconfont icon-chexiao',
+      beforeIcon: 'iconfont icon-Undo',
     });
   }
   rMenu.selectMenu(

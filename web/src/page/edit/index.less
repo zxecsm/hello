@@ -76,6 +76,8 @@ body {
       .img_btn,
       .preview_state,
       .to_max_btn,
+      .undo_btn,
+      .redo_btn,
       .save_btn {
         flex: none;
         height: 30px;
@@ -89,7 +91,10 @@ body {
           transform: scale(1.2);
         }
       }
-
+      .undo_btn.deactive,
+      .redo_btn.deactive {
+        color: var(--color9);
+      }
       .save_btn.active {
         color: var(--icon-color);
       }

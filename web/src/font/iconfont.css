@@ -1,8 +1,8 @@
 @font-face {
   font-family: "iconfont"; /* Project id 2809795 */
-  src: url('iconfont.woff2?t=1733994866331') format('woff2'),
-       url('iconfont.woff?t=1733994866331') format('woff'),
-       url('iconfont.ttf?t=1733994866331') format('truetype');
+  src: url('iconfont.woff2?t=1735609115165') format('woff2'),
+       url('iconfont.woff?t=1735609115165') format('woff'),
+       url('iconfont.ttf?t=1735609115165') format('truetype');
 }
 
 .iconfont {
@@ -11,6 +11,14 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-Redo:before {
+  content: "\e95d";
+}
+
+.icon-Undo:before {
+  content: "\e962";
 }
 
 .icon-jiaobiao:before {
@@ -347,10 +355,6 @@
 
 .icon-zhuxiao:before {
   content: "\e62e";
-}
-
-.icon-chexiao:before {
-  content: "\e641";
 }
 
 .icon-kaiguan-kai1:before {

@@ -6,6 +6,7 @@ import {
   _myOpen,
   _setData,
   darkMode,
+  debounce,
   getTextSize,
   isDarkMode,
   isIframe,
@@ -67,8 +68,8 @@ export function openFile(text, path) {
   currentCodeType = setTextType(_path.extname(path)[2]);
   originText = oText = text;
   editor.setValue(text);
-  createEditer.initValue(text);
   editor.gotoLine(1);
+  createEditer.reset(editor);
   if (text === '') {
     editor.focus();
   }
@@ -157,6 +158,21 @@ function saveState() {
   }
 }
 editor.getSession().on('change', saveState);
+editor.getSession().on(
+  'change',
+  debounce(() => {
+    if (createEditer.hasUndo(editor)) {
+      $editFile.find('.head_btn .undo').removeClass('deactive');
+    } else {
+      $editFile.find('.head_btn .undo').addClass('deactive');
+    }
+    if (createEditer.hasRedo(editor)) {
+      $editFile.find('.head_btn .redo').removeClass('deactive');
+    } else {
+      $editFile.find('.head_btn .redo').addClass('deactive');
+    }
+  }, 1000)
+);
 $editFile.find('.editor').css({
   'font-size': percentToValue(12, 30, fileFontSize),
 });
@@ -259,7 +275,13 @@ $editFile
       hdClose();
     }
   })
-  .on('click', '.save', hdSave);
+  .on('click', '.save', hdSave)
+  .on('click', '.undo', () => {
+    editor.undo();
+  })
+  .on('click', '.redo', () => {
+    editor.redo();
+  });
 // 保存文件
 async function hdSave() {
   if (readOnly) return;

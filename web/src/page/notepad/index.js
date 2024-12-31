@@ -83,6 +83,16 @@ changeTheme(_getData('dark'));
 editor.getSession().on(
   'change',
   debounce(function () {
+    if (createEditer.hasUndo(editor)) {
+      $headBtns.find('.undo_btn').removeClass('deactive');
+    } else {
+      $headBtns.find('.undo_btn').addClass('deactive');
+    }
+    if (createEditer.hasRedo(editor)) {
+      $headBtns.find('.redo_btn').removeClass('deactive');
+    } else {
+      $headBtns.find('.redo_btn').addClass('deactive');
+    }
     rende();
   }, 1000)
 );
@@ -195,6 +205,7 @@ let orginData = {
 function initValue(obj) {
   editor.setValue(obj.data);
   editor.gotoLine(1);
+  createEditer.reset(editor);
   if (obj.data === '') {
     editor.focus();
   }
@@ -595,7 +606,13 @@ $headBtns
   .on('click', '.share_btn', function (e) {
     showQcode(e, myOpen(), '扫码打开便条').catch(() => {});
   })
-  .on('click', '.open_btn', openNotepad);
+  .on('click', '.open_btn', openNotepad)
+  .on('click', '.undo_btn', function () {
+    editor.undo();
+  })
+  .on('click', '.redo_btn', function () {
+    editor.redo();
+  });
 // 切换便条
 function openNotepad(e) {
   rMenu.inpMenu(

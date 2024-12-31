@@ -34,9 +34,8 @@ import 'ace-builds/src-noconflict/mode-sh';
 import 'ace-builds/src-noconflict/snippets/sh.js';
 import 'ace-builds/src-noconflict/mode-css';
 import 'ace-builds/src-noconflict/snippets/css.js';
-import { _getData, copyText, hdOnce } from './utils';
+import { _getData, copyText } from './utils';
 
-let initialContent = '';
 export default function createEditer(el) {
   const editor = ace.edit(el, {
     tabSize: 2,
@@ -116,30 +115,16 @@ export default function createEditer(el) {
       }
     },
   });
-  editor.getSession().on(
-    'change',
-    hdOnce(() => {
-      initialContent = editor.getValue();
-    })
-  );
-  // 监听撤销操作
-  editor.commands.addCommand({
-    name: 'undo',
-    bindKey: { win: 'Ctrl-Z', mac: 'Command-Z' },
-    exec: function (editor) {
-      const currentContent = editor.getValue();
-
-      // 如果当前内容等于初始内容，阻止进一步撤销
-      if (currentContent === initialContent) return;
-
-      // 否则，继续执行默认的撤销操作
-      editor.undo();
-    },
-  });
 
   return editor;
 }
 
-createEditer.initValue = function (value) {
-  initialContent = value;
+createEditer.hasUndo = function (editor) {
+  return editor.getSession().getUndoManager().hasUndo();
+};
+createEditer.hasRedo = function (editor) {
+  return editor.getSession().getUndoManager().hasRedo();
+};
+createEditer.reset = function (editor) {
+  editor.getSession().getUndoManager().reset();
 };

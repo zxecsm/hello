@@ -36,7 +36,7 @@ function getLastHistory() {
 function renderCrumb() {
   const html = _tpl(
     `
-    <i cursor="y" class="back iconfont icon-chexiao"></i>
+    <i cursor="y" class="back iconfont icon-Undo"></i>
     <span :cursor="pathArr.length > 0 ? 'y' : ''" class='home'>主页</span>
     <span v-for="item,idx in pathArr" :cursor="idx + 1 === pathArr.length ? '' : 'y'" :data-idx="idx + 1">{{item}}</span>
     <i cursor="y" class="refresh iconfont icon-suijibofang"></i>
