@@ -71,6 +71,7 @@ export function openFile(text, path) {
   editor.setValue(text);
   editor.gotoLine(1);
   createEditer.reset(editor);
+  switchUndoState();
   if (text === '') {
     editor.focus();
   }
@@ -158,22 +159,20 @@ function saveState() {
     $editFile.find('.head_btn .save').css('display', 'block');
   }
 }
+function switchUndoState() {
+  if (createEditer.hasUndo(editor)) {
+    $editFile.find('.head_btn .undo').removeClass('deactive');
+  } else {
+    $editFile.find('.head_btn .undo').addClass('deactive');
+  }
+  if (createEditer.hasRedo(editor)) {
+    $editFile.find('.head_btn .redo').removeClass('deactive');
+  } else {
+    $editFile.find('.head_btn .redo').addClass('deactive');
+  }
+}
 editor.getSession().on('change', saveState);
-editor.getSession().on(
-  'change',
-  debounce(() => {
-    if (createEditer.hasUndo(editor)) {
-      $editFile.find('.head_btn .undo').removeClass('deactive');
-    } else {
-      $editFile.find('.head_btn .undo').addClass('deactive');
-    }
-    if (createEditer.hasRedo(editor)) {
-      $editFile.find('.head_btn .redo').removeClass('deactive');
-    } else {
-      $editFile.find('.head_btn .redo').addClass('deactive');
-    }
-  }, 1000)
-);
+editor.getSession().on('change', debounce(switchUndoState, 1000));
 $editFile.find('.editor').css({
   'font-size': percentToValue(12, 30, fileFontSize),
 });

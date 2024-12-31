@@ -86,19 +86,22 @@ changeTheme(_getData('dark'));
 editor.getSession().on(
   'change',
   debounce(function () {
-    if (createEditer.hasUndo(editor)) {
-      $headBtns.find('.undo_btn').removeClass('deactive');
-    } else {
-      $headBtns.find('.undo_btn').addClass('deactive');
-    }
-    if (createEditer.hasRedo(editor)) {
-      $headBtns.find('.redo_btn').removeClass('deactive');
-    } else {
-      $headBtns.find('.redo_btn').addClass('deactive');
-    }
+    switchUndoState();
     rende();
   }, 1000)
 );
+function switchUndoState() {
+  if (createEditer.hasUndo(editor)) {
+    $headBtns.find('.undo_btn').removeClass('deactive');
+  } else {
+    $headBtns.find('.undo_btn').addClass('deactive');
+  }
+  if (createEditer.hasRedo(editor)) {
+    $headBtns.find('.redo_btn').removeClass('deactive');
+  } else {
+    $headBtns.find('.redo_btn').addClass('deactive');
+  }
+}
 editor.getSession().on('change', handleSave);
 editor.commands.addCommand({
   name: 'createLink',
@@ -228,6 +231,7 @@ function initValue(obj) {
   wInput.setValue(obj.title);
   editor.gotoLine(1);
   createEditer.reset(editor);
+  switchUndoState();
   if (obj.content === '') {
     editor.focus();
   }

@@ -79,20 +79,23 @@ window.changeTheme = changeTheme;
 const editor = createEditer($editBox[0]);
 editor.getSession().setMode('ace/mode/markdown');
 changeTheme(_getData('dark'));
+function switchUndoState() {
+  if (createEditer.hasUndo(editor)) {
+    $headBtns.find('.undo_btn').removeClass('deactive');
+  } else {
+    $headBtns.find('.undo_btn').addClass('deactive');
+  }
+  if (createEditer.hasRedo(editor)) {
+    $headBtns.find('.redo_btn').removeClass('deactive');
+  } else {
+    $headBtns.find('.redo_btn').addClass('deactive');
+  }
+}
 // 快捷键
 editor.getSession().on(
   'change',
   debounce(function () {
-    if (createEditer.hasUndo(editor)) {
-      $headBtns.find('.undo_btn').removeClass('deactive');
-    } else {
-      $headBtns.find('.undo_btn').addClass('deactive');
-    }
-    if (createEditer.hasRedo(editor)) {
-      $headBtns.find('.redo_btn').removeClass('deactive');
-    } else {
-      $headBtns.find('.redo_btn').addClass('deactive');
-    }
+    switchUndoState();
     rende();
   }, 1000)
 );
@@ -206,6 +209,7 @@ function initValue(obj) {
   editor.setValue(obj.data);
   editor.gotoLine(1);
   createEditer.reset(editor);
+  switchUndoState();
   if (obj.data === '') {
     editor.focus();
   }
