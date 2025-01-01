@@ -220,22 +220,26 @@ if (urlparmes.v) {
             });
           });
         }
-        const logoUrl = logo
-          ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
-          : getTextImg(username);
-        imgjz(logoUrl)
-          .then((cache) => {
-            $authorInfo
-              .find('.logo')
-              .attr('title', username)
-              .css('background-image', `url(${cache})`);
-          })
-          .catch(() => {
-            $authorInfo
-              .find('.logo')
-              .attr('title', username)
-              .css('background-image', `url(${getTextImg(username)})`);
-          });
+        if (logo) {
+          imgjz(_path.normalize(`/api/pub/logo/${account}/${logo}`))
+            .then((cache) => {
+              $authorInfo
+                .find('.logo')
+                .attr('title', username)
+                .css('background-image', `url(${cache})`);
+            })
+            .catch(() => {
+              $authorInfo
+                .find('.logo')
+                .attr('title', username)
+                .css('background-image', `url(${getTextImg(username)})`);
+            });
+        } else {
+          $authorInfo
+            .find('.logo')
+            .attr('title', username)
+            .css('background-image', `url(${getTextImg(username)})`);
+        }
         mdWorker.postMessage(content);
         $noteInfo.find('h1').text(title);
         document.title = title;

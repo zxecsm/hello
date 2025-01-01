@@ -284,9 +284,9 @@ async function renderList(top) {
   const logoImgs = [...$contentWrap[0].querySelectorAll('.logo.is_img')].filter(
     (item) => {
       const $item = $(item);
-      const { path, name } = getFileItem($item.parent().data('id'));
+      const { path, name, size } = getFileItem($item.parent().data('id'));
       if (isImgFile(name)) {
-        const url = getFilePath(`/file/${path}/${name}`, 1);
+        const url = getFilePath(`/file/${path}/${name}`, 1) + `#${size}`;
         const cache = cacheFile.hasUrl(url, 'image');
         if (cache) {
           $item.css('background-image', `url(${cache})`);
@@ -298,9 +298,9 @@ async function renderList(top) {
   );
   lazyImg.bind(logoImgs, async (item) => {
     const $item = $(item);
-    const { path, name } = getFileItem($item.parent().data('id'));
+    const { path, name, size } = getFileItem($item.parent().data('id'));
     if (isImgFile(name)) {
-      const url = getFilePath(`/file/${path}/${name}`, 1);
+      const url = getFilePath(`/file/${path}/${name}`, 1) + `#${size}`;
       imgjz(url)
         .then((cache) => {
           $item.css('background-image', `url(${cache})`);
@@ -463,7 +463,7 @@ reqTaskList()
   .catch(() => {});
 // 读取文件和目录
 async function readFileAndDir(obj) {
-  const { type, name, path } = obj;
+  const { type, name, path, size } = obj;
   const p = `${path}/${name}`;
   if (type === 'dir') {
     updatePageInfo();
@@ -485,8 +485,8 @@ async function readFileAndDir(obj) {
             const arr = list.map((item) => {
               const p = `${item.path}/${item.name}`;
               return {
-                u1: getFilePath(`/file/${p}`),
-                u2: getFilePath(`/file/${p}`, 1),
+                u1: getFilePath(`/file/${p}`) + `#${item.size}`,
+                u2: getFilePath(`/file/${p}`, 1) + `#${item.size}`,
               };
             });
             if (arr.length === 0) return;
@@ -502,7 +502,10 @@ async function readFileAndDir(obj) {
             _myOpen(fPath, obj.name);
           } else {
             // 其他下载
-            downloadFile([{ fileUrl: fPath, filename: name }], 'image');
+            downloadFile(
+              [{ fileUrl: fPath + `#${size}`, filename: name }],
+              'image'
+            );
           }
         }
       }
@@ -706,7 +709,8 @@ function rightList(e, obj, el) {
         downloadFile(
           [
             {
-              fileUrl: getFilePath(`/file/${obj.path}/${obj.name}`),
+              fileUrl:
+                getFilePath(`/file/${obj.path}/${obj.name}`) + `#${obj.size}`,
               filename: obj.name,
             },
           ],
@@ -1569,10 +1573,10 @@ $footer
   .on('click', '.f_download', function () {
     downloadFile(
       getCheckDatas().reduce((pre, cur) => {
-        const { name, path, type } = cur;
+        const { name, path, type, size } = cur;
         if (type === 'file') {
           pre.push({
-            fileUrl: getFilePath(`/file/${path}/${name}`),
+            fileUrl: getFilePath(`/file/${path}/${name}`) + `#${size}`,
             filename: name,
           });
         }

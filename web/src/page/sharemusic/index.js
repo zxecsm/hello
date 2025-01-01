@@ -115,14 +115,28 @@ function getShareData(close, loading = { start() {}, end() {} }) {
       if (resObj.code === 1) {
         _setDataTem('passCode', passCode, HASH);
         close && close();
-        let { account, username, logo, title, exp_time, email, token } =
+        const { account, username, logo, title, exp_time, email, token } =
           resObj.data;
         defaultShareTitle = title;
         shareToken = token;
         userInfo = { account, username, email };
-        logo = logo
-          ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
-          : getTextImg(username);
+        if (logo) {
+          imgjz(_path.normalize(`/api/pub/logo/${account}/${logo}`))
+            .then((cache) => {
+              $lrcHead
+                .find('.user_logo')
+                .css('background-image', `url(${cache})`);
+            })
+            .catch(() => {
+              $lrcHead
+                .find('.user_logo')
+                .css('background-image', `url(${getTextImg(username)})`);
+            });
+        } else {
+          $lrcHead
+            .find('.user_logo')
+            .css('background-image', `url(${getTextImg(username)})`);
+        }
         $userInfo.find('.from').text(username);
         $userInfo.find('.title').text(title);
         $userInfo.find('.valid').text(
@@ -133,17 +147,7 @@ function getShareData(close, loading = { start() {}, end() {} }) {
                 timestamp: exp_time,
               })
         );
-        imgjz(logo)
-          .then((cache) => {
-            $lrcHead
-              .find('.user_logo')
-              .css('background-image', `url(${cache})`);
-          })
-          .catch(() => {
-            $lrcHead
-              .find('.user_logo')
-              .css('background-image', `url(${getTextImg(username)})`);
-          });
+
         playingList = resObj.data.data;
         curPlayingList = deepClone(playingList);
         playingSongInfo = initSongInfo(

@@ -27,15 +27,17 @@ const cacheFile = {
 
   async setData(key, value, type = 'hello') {
     const hash = this.getHash(key, type);
-    const data = encodeURIComponent(JSON.stringify({ data: value }));
 
     if (!this.supported) {
       // 浏览器不支持文件系统，则存储到 localStorage
-      _setData(key, data);
+      _setData(key, value);
       return;
     }
 
-    await this.writeCache(hash, data);
+    await this.writeCache(
+      hash,
+      encodeURIComponent(JSON.stringify({ data: value }))
+    );
   },
 
   async getData(key, type = 'hello') {

@@ -266,13 +266,15 @@ function lazyLoadChatLogo() {
         logo,
         des = '',
       } = getUserItem($item.parent().data('account'));
-      logo = logo
-        ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
-        : getTextImg(des || username);
+      if (logo) {
+        logo = _path.normalize(`/api/pub/logo/${account}/${logo}`);
+      }
       if (account === 'hello') {
         logo = imgHelloLogo;
       }
-      const cache = cacheFile.hasUrl(logo, 'image');
+      const cache = logo
+        ? cacheFile.hasUrl(logo, 'image')
+        : getTextImg(des || username);
       if (cache) {
         $item
           .css({
@@ -291,10 +293,9 @@ function lazyLoadChatLogo() {
       logo,
       des = '',
     } = getUserItem($item.parent().data('account'));
-
-    logo = logo
-      ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
-      : getTextImg(des || username);
+    if (logo) {
+      logo = _path.normalize(`/api/pub/logo/${account}/${logo}`);
+    }
     if (account === 'hello') {
       logo = imgHelloLogo;
     }
@@ -556,27 +557,35 @@ export function chatimgLoad() {
       logo,
       _from,
     } = getChatItem($item.parent().parent().data('id'));
-    logo = logo
-      ? _path.normalize(`/api/pub/logo/${_from}/${logo}`)
-      : getTextImg(des || username);
+    if (logo) {
+      logo = _path.normalize(`/api/pub/logo/${_from}/${logo}`);
+    }
     if (_from === 'hello') {
       logo = imgHelloLogo;
     }
-    imgjz(logo)
-      .then((cache) => {
-        $item
-          .css({
-            'background-image': `url(${cache})`,
-          })
-          .addClass('load');
-      })
-      .catch(() => {
-        $item
-          .css({
-            'background-image': `url(${getTextImg(des || username)})`,
-          })
-          .addClass('load');
-      });
+    if (logo) {
+      imgjz(logo)
+        .then((cache) => {
+          $item
+            .css({
+              'background-image': `url(${cache})`,
+            })
+            .addClass('load');
+        })
+        .catch(() => {
+          $item
+            .css({
+              'background-image': `url(${getTextImg(des || username)})`,
+            })
+            .addClass('load');
+        });
+    } else {
+      $item
+        .css({
+          'background-image': `url(${getTextImg(des || username)})`,
+        })
+        .addClass('load');
+    }
   });
 }
 
@@ -596,24 +605,55 @@ export function chatMessageNotification(name, data, from, to, logo) {
     },
     1
   );
-  logo = logo
-    ? _path.normalize(`/api/pub/logo/${from}/${logo}`)
-    : getTextImg(name);
+  if (logo) {
+    logo = _path.normalize(`/api/pub/logo/${from}/${logo}`);
+  }
   if (from === 'hello') {
     logo = imgHelloLogo;
   }
-  // 页面变为不可见时触发
-  if (document.visibilityState === 'hidden') {
-    sendNotification(
-      {
-        title: name + '：',
-        body: data,
-        icon: logo,
-      },
-      () => {
-        showChatRoom(to === 'chang' ? to : from);
-      }
-    );
+  if (logo) {
+    imgjz(logo)
+      .then((cache) => {
+        if (document.visibilityState === 'hidden') {
+          sendNotification(
+            {
+              title: name + '：',
+              body: data,
+              icon: cache,
+            },
+            () => {
+              showChatRoom(to === 'chang' ? to : from);
+            }
+          );
+        }
+      })
+      .catch(() => {
+        if (document.visibilityState === 'hidden') {
+          sendNotification(
+            {
+              title: name + '：',
+              body: data,
+              icon: getTextImg(name),
+            },
+            () => {
+              showChatRoom(to === 'chang' ? to : from);
+            }
+          );
+        }
+      });
+  } else {
+    if (document.visibilityState === 'hidden') {
+      sendNotification(
+        {
+          title: name + '：',
+          body: data,
+          icon: getTextImg(name),
+        },
+        () => {
+          showChatRoom(to === 'chang' ? to : from);
+        }
+      );
+    }
   }
 }
 //打开聊天窗

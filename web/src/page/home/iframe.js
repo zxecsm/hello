@@ -57,6 +57,8 @@ function getTagFont(type) {
     font += `icon-24gl-folder`;
   } else if (type === 'notepad') {
     font += `icon-jilu`;
+  } else {
+    font += `icon-shoucang`;
   }
   return font;
 }

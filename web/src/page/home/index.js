@@ -386,7 +386,7 @@ export function updateUserInfo(cb) {
       if (result.code === 1) {
         setUserInfo(result.data);
         onceInit();
-        let { logo, username, account, bg, bgxs, bgObj } = userInfo;
+        const { logo, username, account, bg, bgxs, bgObj } = userInfo;
         _setData('username', username);
         // 标题
         _d.title = `Hello ${username}`;
@@ -396,19 +396,20 @@ export function updateUserInfo(cb) {
         // 更新右边设置用户名
         updateRightBoxUsername(username);
         // 更新头像
-        logo = logo
-          ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
-          : getTextImg(username);
-        imgjz(logo)
-          .then((cache) => {
-            $userLogoBtn.css('background-image', `url(${cache})`);
-          })
-          .catch(() => {
-            $userLogoBtn.css(
-              'background-image',
-              `url(${getTextImg(username)})`
-            );
-          });
+        if (logo) {
+          imgjz(_path.normalize(`/api/pub/logo/${account}/${logo}`))
+            .then((cache) => {
+              $userLogoBtn.css('background-image', `url(${cache})`);
+            })
+            .catch(() => {
+              $userLogoBtn.css(
+                'background-image',
+                `url(${getTextImg(username)})`
+              );
+            });
+        } else {
+          $userLogoBtn.css('background-image', `url(${getTextImg(username)})`);
+        }
 
         // 没有壁纸使用默认
         const isBig = isBigScreen();

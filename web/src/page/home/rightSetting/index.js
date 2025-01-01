@@ -631,7 +631,7 @@ $userInfoWrap
   .on('click', '.user_logo div', hdUserLogo);
 // 更新用户信息
 export function renderUserinfo() {
-  let { username, logo, account } = setUserInfo();
+  const { username, logo, account } = setUserInfo();
   const html = _tpl(
     `
     <ul><li>用户</li><li>{{username}}</li><li cursor="y" class="edit_user_name">修改</li></ul>
@@ -646,20 +646,23 @@ export function renderUserinfo() {
     }
   );
   $userInfoWrap.find('.user_list').html(html);
-  logo = logo
-    ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
-    : getTextImg(username);
-  imgjz(logo)
-    .then((cache) => {
-      $userInfoWrap
-        .find('.user_logo div')
-        .css('background-image', `url(${cache})`);
-    })
-    .catch(() => {
-      $userInfoWrap
-        .find('.user_logo div')
-        .css('background-image', `url(${getTextImg(username)})`);
-    });
+  if (logo) {
+    imgjz(_path.normalize(`/api/pub/logo/${account}/${logo}`))
+      .then((cache) => {
+        $userInfoWrap
+          .find('.user_logo div')
+          .css('background-image', `url(${cache})`);
+      })
+      .catch(() => {
+        $userInfoWrap
+          .find('.user_logo div')
+          .css('background-image', `url(${getTextImg(username)})`);
+      });
+  } else {
+    $userInfoWrap
+      .find('.user_logo div')
+      .css('background-image', `url(${getTextImg(username)})`);
+  }
 }
 // 设置君子锁
 function setGentlemanLock(e) {

@@ -93,23 +93,27 @@ function getShareData(close, loading = { start() {}, end() {} }) {
       if (res.code === 1) {
         _setDataTem('passCode', passCode, HASH); // 缓存
         close && close();
-        let { username, logo, account, data, exp_time, title, email, token } =
+        const { username, logo, account, data, exp_time, title, email, token } =
           res.data;
         shareToken = token;
         uObj = { username, account, email };
         shareObj = data;
-        logo = logo
-          ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
-          : getTextImg(username);
-        imgjz(logo)
-          .then((cache) => {
-            $shareInfo.find('.logo').css('background-image', `url(${cache})`);
-          })
-          .catch(() => {
-            $shareInfo
-              .find('.logo')
-              .css('background-image', `url(${getTextImg(username)})`);
-          });
+        if (logo) {
+          imgjz(_path.normalize(`/api/pub/logo/${account}/${logo}`))
+            .then((cache) => {
+              $shareInfo.find('.logo').css('background-image', `url(${cache})`);
+            })
+            .catch(() => {
+              $shareInfo
+                .find('.logo')
+                .css('background-image', `url(${getTextImg(username)})`);
+            });
+        } else {
+          $shareInfo
+            .find('.logo')
+            .css('background-image', `url(${getTextImg(username)})`);
+        }
+
         $shareInfo.find('.from').text(username);
         $shareInfo.find('.title').text(title);
         $shareInfo.find('.valid').text(

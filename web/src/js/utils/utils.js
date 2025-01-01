@@ -245,10 +245,10 @@ export async function imgjz(url) {
       await loadImg(cache);
       return cache;
     } catch (error) {
+      await cacheFile.delete(url, 'image');
       throw error;
     }
   } else {
-    await cacheFile.delete(url, 'image');
     throw '';
   }
 }

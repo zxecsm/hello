@@ -167,24 +167,26 @@ function getShareData(close, loading = { start() {}, end() {} }) {
         _setDataTem('passCode', passCode, HASH);
         close && close();
 
-        let { username, logo, account, data, title, exp_time, email, token } =
+        const { username, logo, account, data, title, exp_time, email, token } =
           res.data;
         shareToken = token;
         $head._uObj = { username, account, email };
         defaultTitle = title;
-
-        logo = logo
-          ? _path.normalize(`/api/pub/logo/${account}/${logo}`)
-          : getTextImg(username);
-        imgjz(logo)
-          .then((cache) => {
-            $head.find('.logo').css('background-image', `url(${cache})`);
-          })
-          .catch(() => {
-            $head
-              .find('.logo')
-              .css('background-image', `url(${getTextImg(username)})`);
-          });
+        if (logo) {
+          imgjz(_path.normalize(`/api/pub/logo/${account}/${logo}`))
+            .then((cache) => {
+              $head.find('.logo').css('background-image', `url(${cache})`);
+            })
+            .catch(() => {
+              $head
+                .find('.logo')
+                .css('background-image', `url(${getTextImg(username)})`);
+            });
+        } else {
+          $head
+            .find('.logo')
+            .css('background-image', `url(${getTextImg(username)})`);
+        }
 
         $head.find('.from').text(username);
         $head.find('.title').text(title);
