@@ -89,7 +89,6 @@ const $document = $(document),
   $chatAudio = $('.chat_ausio');
 let curChatAccount = 'chang',
   userList = [],
-  chatList = [],
   helperInfo = '用于接收提示信息和外部信息(回复任意信息查看收信接口API)',
   chatIsTop = _getData('chatIsTop');
 function switchChatTop() {
@@ -160,7 +159,7 @@ const chatSearchInput = wrapInput(
   }
 );
 let userPageNo = 1,
-  userPageSize = 50,
+  userPageSize = 10,
   isForward = false, // 转发状态
   forwardData = null;
 // 获取用户信息
@@ -418,94 +417,170 @@ $chatHeadBtns
   );
 // 获取消息数据
 function getChatItem(id) {
-  return chatList.find((item) => item.id === id);
+  return chatMsgData.get().find((item) => item.id === id);
 }
-// 生成消息列表
-export function renderMsgList(carr, isAdd, isPush) {
-  if (carr.length === 0) return '';
-  if (isAdd) {
-    carr = carr.filter((item) => !chatList.some((y) => y.id === item.id));
+function sliceChatList(isPush, $item) {
+  const $chatItems = $chatListBox.find('.chat_item');
+  const excessItems = $chatItems.length - _d.fieldLenght.chatPageSize * 2;
+  if (excessItems > 0) {
     if (isPush) {
-      chatList = [...chatList, ...carr];
+      $chatItems.slice(0, excessItems).remove();
     } else {
-      chatList = [...carr, ...chatList];
+      $chatItems.slice(_d.fieldLenght.chatPageSize * 2).remove();
     }
+  }
+  if (isPush) {
+    $chatListBox.scrollTop(
+      $item[0].offsetTop - $chatListBox.height() + $item.height()
+    );
   } else {
-    chatList = carr;
+    $chatListBox.scrollTop($item[0].offsetTop - 20);
   }
-  let flagStr = '';
-  chatList = chatList.map((item) => {
-    const d = formatDate({
-      template: '{0}-{1}-{2}',
-      timestamp: item.create_at,
+}
+export const renderChatMsg = {
+  push(data, lastItem) {
+    if (data.length === 0) return;
+    chatMsgData.push(data);
+    $chatListBox.find('.chat_list').append(renderMsgList(data));
+    sliceChatList(1, lastItem);
+    chatimgLoad();
+  },
+  unshift(data, firstItem) {
+    if (data.length === 0) {
+      $chatListBox
+        .find('.chat_item')
+        .first()
+        .data('nomore', 1)
+        .find('.head')
+        .prepend(
+          '<div class="nomore" style="text-align: center;font-size: 14px;color: var(--text-hover-color);">没有更多了<div>'
+        );
+      return;
+    }
+    chatMsgData.unshift(data);
+    $chatListBox.find('.chat_list').prepend(renderMsgList(data));
+    sliceChatList(0, firstItem);
+    chatimgLoad();
+  },
+  reset(data) {
+    chatMsgData.reset(data);
+    $chatListBox.find('.chat_list').html(renderMsgList(data));
+    $chatListBox.scrollTop($chatListBox[0].scrollHeight);
+    chatimgLoad();
+  },
+};
+export function canToBottom() {
+  const lastItem = $chatListBox.find('.chat_item').last();
+  if (lastItem.length === 0) return false;
+  const chatId = lastItem.data('id');
+  return chatMsgData.last()?.id === chatId;
+}
+export const chatMsgData = {
+  list: [],
+  get() {
+    return this.list;
+  },
+  first() {
+    return this.list[0];
+  },
+  last() {
+    return this.list[this.list.length - 1];
+  },
+  push(data) {
+    data = this.diff(data);
+    this.list = [...this.list, ...data];
+    this.computeDate();
+  },
+  unshift(data) {
+    data = this.diff(data);
+    this.list = [...data, ...this.list];
+    this.computeDate();
+  },
+  reset(data = []) {
+    this.list = data;
+    this.computeDate();
+  },
+  diff(data) {
+    return data.filter((item) => !this.list.some((y) => y.id === item.id));
+  },
+  computeDate() {
+    let flag = '';
+    this.list = this.list.map((item) => {
+      const d = formatDate({
+        template: '{0}-{1}-{2}',
+        timestamp: item.create_at,
+      });
+      if (d === flag) {
+        item.showTime = 'n';
+      } else {
+        item.showTime = 'y';
+      }
+      flag = d;
+      return item;
     });
-    if (d === flagStr) {
-      item.showTime = 'n';
-    } else {
-      item.showTime = 'y';
-    }
-    flagStr = d;
-    return item;
-  });
-  if (isAdd) {
-    if (isPush) {
-      carr = chatList.slice(-carr.length);
-    } else {
-      carr = chatList.slice(0, carr.length);
-    }
-  }
+  },
+};
+// 生成消息列表
+function renderMsgList(list) {
+  if (list.length === 0) return '';
+  const cList = chatMsgData.get();
+  list = list.map((item) => cList.find((c) => c.id === item.id));
   const html = _tpl(
     `
-    <template v-for="{id,content,create_at,_from,_to,username,size,showTime,type,des = ''} in carr">
-      <div v-if="showTime === 'y'" class="chat_time">{{getDate(create_at)[0]}}</div>
+    <template v-for="{id,content,create_at,_from,_to,username,size,showTime,type,des = ''} in list">
       <ul class="chat_item" :data-id="id">
-        <li v-if="isRight(_from)" cursor="y" class="chat_menu_btn iconfont icon-icon"></li>
-        <li v-else cursor="y" class="c_left_logo">
-          <div class="c_logo" style="float: left;"></div>
-        </li>
-        <li class="c_content_box">
-          <span class="c_user_name" style="text-align: {{!isRight(_from) ? 'left' : 'right'}};">
-            {{getUsername(username,des,_to)}} <span>{{getDate(create_at)[1]}}</span>
-          </span>
-          <div v-if="type === 'image'" cursor="y" class="c_img_msg_box" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
-            <div class="c_img"><span>{{computeSize(size)}}</span></div>
-          </div>
-          <div v-else-if="type === 'voice'" cursor="y" 
-            class="c_voice_msg_box {{isRight(_from) ? 'bcolor' : ''}}" 
-            style="float: {{!isRight(_from) ? 'left' : 'right'}};width: {{(size / 30) * 100}}%;text-align:{{isRight(_from) ? 'right' : 'left'}}">
-            <template v-if="isRight(_from)">
-              <span class="c_right_triangle bcolor"></span>
-              <span style="font-size:12px;">{{size.toFixed(2)}}s</span>
-              <i class="iconfont icon-yuyin-cuxiantiao"></i>
-            </template>
-            <template v-else>
-              <span class="c_left_triangle"></span>
-              <i class="iconfont icon-yuyin1"></i>
-              <span style="font-size:12px;">{{size.toFixed(2)}}s</span>
-            </template>
-          </div>
-          <div v-else-if="type === 'file'" :title="content" class="c_file_msg_box" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
-            <div cursor="y" class="c_file_info">
-              <span class="file_name">{{content}}</span>
-              <span class="file_size">{{computeSize(size)}}</span>
+        <div class="head">
+          <div v-if="showTime === 'y'" class="chat_time">{{getDate(create_at)[0]}}</div>
+        </div>
+        <div class="msg_info_wrap">
+          <li v-if="isRight(_from)" cursor="y" class="chat_menu_btn iconfont icon-icon"></li>
+          <li v-else cursor="y" class="c_left_logo">
+            <div class="c_logo" style="float: left;"></div>
+          </li>
+          <li class="c_content_box">
+            <span class="c_user_name" style="text-align: {{!isRight(_from) ? 'left' : 'right'}};">
+              {{getUsername(username,des,_to)}} <span>{{getDate(create_at)[1]}}</span>
+            </span>
+            <div v-if="type === 'image'" cursor="y" class="c_img_msg_box" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
+              <div class="c_img"><span>{{computeSize(size)}}</span></div>
             </div>
-            <div class="file_type iconfont {{fileLogoType(content)}}"></div>
-            <span class="{{isRight(_from) ? 'c_right_triangle' : 'c_left_triangle'}}"></span>
-          </div>
-          <p v-else-if="type === 'text'" class="c_text_msg_box {{isRight(_from) ? 'bcolor' : ''}}" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
-            <div v-html="hdTextMsg(content)"></div>
-            <span class="{{isRight(_from)?'c_right_triangle bcolor':'c_left_triangle'}}"></span>
-          </p>
-        </li>
-        <li v-if="isRight(_from)" cursor="y" class="c_right_logo">
-          <div class="c_logo" style="float: right;"></div>
-        </li>
-        <li v-else cursor="y" class="chat_menu_btn iconfont icon-icon"></li>
+            <div v-else-if="type === 'voice'" cursor="y" 
+              class="c_voice_msg_box {{isRight(_from) ? 'bcolor' : ''}}" 
+              style="float: {{!isRight(_from) ? 'left' : 'right'}};width: {{(size / 30) * 100}}%;text-align:{{isRight(_from) ? 'right' : 'left'}}">
+              <template v-if="isRight(_from)">
+                <span class="c_right_triangle bcolor"></span>
+                <span style="font-size:12px;">{{size.toFixed(2)}}s</span>
+                <i class="iconfont icon-yuyin-cuxiantiao"></i>
+              </template>
+              <template v-else>
+                <span class="c_left_triangle"></span>
+                <i class="iconfont icon-yuyin1"></i>
+                <span style="font-size:12px;">{{size.toFixed(2)}}s</span>
+              </template>
+            </div>
+            <div v-else-if="type === 'file'" :title="content" class="c_file_msg_box" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
+              <div cursor="y" class="c_file_info">
+                <span class="file_name">{{content}}</span>
+                <span class="file_size">{{computeSize(size)}}</span>
+              </div>
+              <div class="file_type iconfont {{fileLogoType(content)}}"></div>
+              <span class="{{isRight(_from) ? 'c_right_triangle' : 'c_left_triangle'}}"></span>
+            </div>
+            <p v-else-if="type === 'text'" class="c_text_msg_box {{isRight(_from) ? 'bcolor' : ''}}" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
+              <div v-html="hdTextMsg(content)"></div>
+              <span class="{{isRight(_from)?'c_right_triangle bcolor':'c_left_triangle'}}"></span>
+            </p>
+          </li>
+          <li v-if="isRight(_from)" cursor="y" class="c_right_logo">
+            <div class="c_logo" style="float: right;"></div>
+          </li>
+          <li v-else cursor="y" class="chat_menu_btn iconfont icon-icon"></li>
+        </div>
       </ul>
     </template>
     `,
     {
-      carr,
+      list,
       getDate(create_at) {
         return formatDate({
           template: '{0}-{1}-{2} {3}:{4}',
@@ -531,10 +606,10 @@ export function renderMsgList(carr, isAdd, isPush) {
 // 聊天图片
 const cImgLoad = new LazyLoad();
 const cUserLogoLoad = new LazyLoad();
-export function chatimgLoad() {
+function chatimgLoad() {
   cImgLoad.bind($chatListBox[0].querySelectorAll('.c_img'), (item) => {
     const $v = $(item);
-    const id = $v.parent().parent().parent().data('id');
+    const id = $v.parent().parent().parent().parent().data('id');
     const msgObj = getChatItem(id);
     const url = getFilePath(`/upload/${id}/${msgObj.hash}`, 1);
     imgjz(url)
@@ -556,7 +631,7 @@ export function chatimgLoad() {
       username,
       logo,
       _from,
-    } = getChatItem($item.parent().parent().data('id'));
+    } = getChatItem($item.parent().parent().parent().data('id'));
     if (logo) {
       logo = _path.normalize(`/api/pub/logo/${_from}/${logo}`);
     }
@@ -841,7 +916,7 @@ function userMenu(e, msgObj, isUserList) {
 }
 // 打开文件
 function openChatFile(target) {
-  const $this = $(target).parent().parent();
+  const $this = $(target).parent().parent().parent();
   const obj = getChatItem($this.data('id'));
   const msgId = obj.id,
     content = obj.content;
@@ -879,7 +954,7 @@ function openChatFile(target) {
 }
 // 打开图片
 function openChatImg(target) {
-  const id = $(target).parent().parent().parent().attr('data-id');
+  const id = $(target).parent().parent().parent().parent().attr('data-id');
   const obj = getChatItem(id);
   // 检查图片是否过期
   reqChatExpired({ hash: obj.hash })
@@ -899,50 +974,70 @@ function openChatImg(target) {
 }
 // 加载顶部消息
 function scrollTopMsg() {
-  //向上滚动获取前面聊天内容
-  const $nomore = $chatListBox.find('.nomore');
-  if (
-    $chatListBox.find('.chat_list').outerHeight() <
-      $chatListBox.outerHeight() ||
-    $nomore.length > 0
-  )
-    return;
-  if (this.scrollTop <= 30) {
-    const $fristEl = $chatListBox.find('.chat_item').eq(0);
-    if ($fristEl.length === 0) return;
-    const flag = $fristEl.attr('data-id');
-    const word = chatSearchInput.getValue().trim();
-    if (word.length > 100) {
-      _msg.error('搜索内容过长');
+  // 向上滚动获取前面聊天内容
+  if (this.scrollTop < 20) {
+    const firstItem = $chatListBox.find('.chat_item').first();
+    if (firstItem.length === 0) return;
+    if (
+      $chatListBox.find('.chat_list').outerHeight() <
+        $chatListBox.outerHeight() ||
+      firstItem.data('nomore') === 1
+    )
       return;
-    }
-    const { start = '', end = '' } = searchDateLimit;
-    reqChatReadMsg({
-      flag,
-      account: curChatAccount,
-      type: 1,
-      word,
-      start,
-      end,
-    })
-      .then((result) => {
-        if (result.code === 1) {
-          if (chatRoomWrapIsHide()) return;
-          let html = renderMsgList(result.data, 1, 0);
-          if (html === '') {
-            html += `<div class="nomore" style="text-align: center;font-size: 14px;color: var(--text-hover-color);">没有更多了<div>`;
-          }
-          $chatListBox.find('.chat_list').prepend(html);
-          $chatListBox.scrollTop($fristEl.position().top - 50);
-          chatimgLoad();
-        }
+    const chatId = firstItem.data('id');
+    const idx = chatMsgData.get().findIndex((item) => item.id === chatId);
+    if (idx < 0) return;
+    if (idx === 0) {
+      const word = chatSearchInput.getValue().trim();
+      if (word.length > 100) {
+        _msg.error('搜索内容过长');
+        return;
+      }
+      const { start = '', end = '' } = searchDateLimit;
+      reqChatReadMsg({
+        flag: chatId,
+        account: curChatAccount,
+        type: 1,
+        word,
+        start,
+        end,
       })
-      .catch(() => {});
+        .then((result) => {
+          if (result.code === 1) {
+            if (chatRoomWrapIsHide()) return;
+            renderChatMsg.unshift(result.data, firstItem);
+          }
+        })
+        .catch(() => {});
+    } else if (idx > 0) {
+      if (chatRoomWrapIsHide()) return;
+      renderChatMsg.unshift(
+        chatMsgData.get().slice(idx - _d.fieldLenght.chatPageSize, idx),
+        firstItem
+      );
+    }
+  }
+}
+function scrollBottomMsg() {
+  // 向下滚动获取后面聊天内容
+  if (this.scrollHeight - this.scrollTop - this.clientHeight < 20) {
+    const lastItem = $chatListBox.find('.chat_item').last();
+    if (lastItem.length === 0) return;
+    const chatId = lastItem.data('id');
+    const list = chatMsgData.get();
+    const idx = list.findIndex((item) => item.id === chatId);
+    if (idx > 0 && idx < list.length - 1) {
+      if (chatRoomWrapIsHide()) return;
+      renderChatMsg.push(
+        list.slice(idx + 1, idx + 1 + _d.fieldLenght.chatPageSize),
+        lastItem
+      );
+    }
   }
 }
 $chatListBox
   .on('click', '.c_logo', function (e) {
-    const $this = $(this).parent().parent();
+    const $this = $(this).parent().parent().parent();
     const obj = getChatItem($this.data('id'));
     const from = obj._from;
     if (from === setUserInfo().account) {
@@ -957,17 +1052,17 @@ $chatListBox
   })
   .on('click', '.c_text_msg_box', function (e) {
     if (getSelectText() !== '') return;
-    chatMsgMenu(e, getChatItem($(this).parent().parent().data('id')));
+    chatMsgMenu(e, getChatItem($(this).parent().parent().parent().data('id')));
   })
   .on('contextmenu', '.c_content_box', function (e) {
     if (getSelectText() !== '') return;
     //操作消息
     e.preventDefault();
     if (isMobile()) return;
-    chatMsgMenu(e, getChatItem($(this).parent().data('id')));
+    chatMsgMenu(e, getChatItem($(this).parent().parent().data('id')));
   })
   .on('click', '.chat_menu_btn', function (e) {
-    chatMsgMenu(e, getChatItem($(this).parent().data('id')));
+    chatMsgMenu(e, getChatItem($(this).parent().parent().data('id')));
   })
   .on('click', '.c_voice_msg_box', function () {
     if (getSelectText() !== '') return;
@@ -981,7 +1076,8 @@ $chatListBox
     openChatImg(this);
   })
   .on('scroll', switchScrollToBottom)
-  .on('scroll', debounce(scrollTopMsg, 200));
+  .on('scroll', debounce(scrollTopMsg, 200))
+  .on('scroll', debounce(scrollBottomMsg, 200));
 function switchScrollToBottom() {
   if (
     $chatListBox.find('.chat_list').outerHeight() -
@@ -1339,7 +1435,13 @@ $chatFootBox
     }
   })
   .on('click', '.scroll_to_bot_btn', function () {
-    $chatListBox.scrollTop($chatListBox[0].scrollHeight);
+    if (canToBottom()) {
+      $chatListBox.scrollTop($chatListBox[0].scrollHeight);
+    } else {
+      renderChatMsg.reset(
+        chatMsgData.get().slice(-_d.fieldLenght.chatPageSize)
+      );
+    }
   })
   .find('.c_text_content')[0]
   // 粘贴发送文件
@@ -1708,10 +1810,7 @@ export async function openFriend(acc, noHideUserList, cb) {
     .then((result) => {
       if (result.code === 1) {
         if (chatRoomWrapIsHide()) return;
-        const html = renderMsgList(result.data);
-        $chatListBox.find('.chat_list').html(html);
-        $chatListBox[0].scrollTop = $chatListBox[0].scrollHeight;
-        chatimgLoad();
+        renderChatMsg.reset(result.data);
         if (acc === 'chang') {
           $chatHeadBtns.find('.c_home_msg_alert').stop().fadeOut(_d.speed);
         }

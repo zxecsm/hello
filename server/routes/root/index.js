@@ -97,7 +97,7 @@ route.get('/user-list', async (req, res) => {
       isNaN(pageSize) ||
       pageNo < 1 ||
       pageSize < 1 ||
-      pageSize > 100
+      pageSize > fieldLenght.userPageSize
     ) {
       paramErr(res, req);
       return;

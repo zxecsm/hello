@@ -62,6 +62,7 @@ const fieldLenght = {
   textFileSize: 10 * 1024 * 1024, // 文本文件编辑大小
   noteSize: 300 * 1024, // 笔记大小
   lrcSize: 20 * 1024, // 歌词大小
+  chatPageSize: 50, // 消息分页
   customCodeSize: 100 * 1024, // 自定义代码大小
 };
 const _d = {

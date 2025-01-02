@@ -286,7 +286,7 @@ route.get('/read-msg', async (req, res) => {
       );
     }
 
-    const pageSize = 100;
+    const pageSize = fieldLenght.chatPageSize;
     let list = [];
 
     const fields = `logo,email,username,_from,_to,id,create_at,content,hash,size,type,flag`;
@@ -639,7 +639,7 @@ route.get('/user-list', async (req, res) => {
       isNaN(pageSize) ||
       pageNo < 1 ||
       pageSize < 1 ||
-      pageSize > fieldLenght.chatPageSize
+      pageSize > fieldLenght.userPageSize
     ) {
       paramErr(res, req);
       return;

@@ -74,12 +74,13 @@ import {
   showSearchBox,
 } from './searchBox/index.js';
 import {
+  canToBottom,
   chatMessageNotification,
+  chatMsgData,
   chatRoomWrapIsHide,
-  chatimgLoad,
   closeChatRoom,
   getSearchDateLimit,
-  renderMsgList,
+  renderChatMsg,
   setCurChatAccount,
   shakeChat,
   showChatRoom,
@@ -779,7 +780,7 @@ function hdChatType(resData) {
             : from.account === userInfo.account && chatAccount === to
             ? to
             : from.account;
-        const flag = $chatListBox.find('.chat_item').last().attr('data-id');
+        const flag = chatMsgData.last()?.id || '';
         const word = $chatHeadBtns.find('.search_msg_inp input').val().trim();
         if (word.length > 100) {
           _msg.error('搜索内容过长');
@@ -798,22 +799,35 @@ function hdChatType(resData) {
             if (result.code === 1) {
               if (chatRoomWrapIsHide()) return;
               const data = result.data;
-              const str = renderMsgList(data, 1, 1);
-              const cH = $chatListBox[0].clientHeight;
-              const toBottom =
-                $chatListBox[0].scrollHeight - $chatListBox[0].scrollTop - cH <
-                cH;
-              // 新增内容
-              $chatListBox.find('.chat_list').append(str);
-              if (toBottom) {
-                $chatListBox.stop().animate(
-                  {
-                    scrollTop: $chatListBox[0].scrollHeight,
-                  },
-                  1000
-                );
+              // 是最后一页
+              if (canToBottom()) {
+                const cH = $chatListBox[0].clientHeight;
+                if (
+                  $chatListBox[0].scrollHeight -
+                    $chatListBox[0].scrollTop -
+                    cH <
+                  cH
+                ) {
+                  renderChatMsg.push(
+                    data,
+                    $chatListBox.find('.chat_item').last()
+                  );
+                  $chatListBox.stop().animate(
+                    {
+                      scrollTop: $chatListBox[0].scrollHeight,
+                    },
+                    1000
+                  );
+                } else {
+                  chatMsgData.push(data);
+                }
+              } else {
+                if ($chatListBox.find('.chat_item').length === 0) {
+                  renderChatMsg.reset(data);
+                } else {
+                  chatMsgData.push(data);
+                }
               }
-              chatimgLoad();
             }
           })
           .catch(() => {});
@@ -852,11 +866,9 @@ function hdChatType(resData) {
       ) {
         const $chatItem = $chatListBox.find(`[data-id=${msgData.msgId}]`);
         if ($chatItem.length > 0) {
+          const list = chatMsgData.get();
+          chatMsgData.reset(list.filter((item) => item.id !== msgData.msgId));
           $chatItem.stop().slideUp(_d.speed, () => {
-            const $prev = $chatItem.prev();
-            if ($prev.hasClass('chat_time')) {
-              $prev.remove();
-            }
             $chatItem.remove();
           });
         }
@@ -880,6 +892,7 @@ function hdChatType(resData) {
         (chatAccount === 'chang' && to === 'chang') ||
         (from.account === userInfo.account && chatAccount === to)
       ) {
+        chatMsgData.reset([]);
         $chatListBox.find('.chat_list').html('');
       }
     }

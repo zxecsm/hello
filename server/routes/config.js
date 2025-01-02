@@ -24,7 +24,8 @@ export const fieldLenght = {
   bmk: 300, // 分组书签个数
   songList: 100, // 歌单数
   bgPageSize: 100, // 壁纸分页
-  chatPageSize: 100, // 消息分页
+  chatPageSize: 50, // 消息分页
+  userPageSize: 100, // 用户分页
   operationTimeout: 10000, // 操作超时时间
   maxFileSlice: 100, // 最大切片
   textFileSize: 10 * 1024 * 1024, // 文本文件编辑大小
