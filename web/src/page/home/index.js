@@ -864,10 +864,10 @@ function hdChatType(resData) {
         (chatAccount === 'chang' && to === 'chang') ||
         (from.account === userInfo.account && chatAccount === to)
       ) {
+        const list = chatMsgData.get();
+        chatMsgData.reset(list.filter((item) => item.id !== msgData.msgId));
         const $chatItem = $chatListBox.find(`[data-id=${msgData.msgId}]`);
         if ($chatItem.length > 0) {
-          const list = chatMsgData.get();
-          chatMsgData.reset(list.filter((item) => item.id !== msgData.msgId));
           $chatItem.stop().slideUp(_d.speed, () => {
             $chatItem.remove();
           });
