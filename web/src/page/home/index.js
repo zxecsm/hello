@@ -864,8 +864,7 @@ function hdChatType(resData) {
         (chatAccount === 'chang' && to === 'chang') ||
         (from.account === userInfo.account && chatAccount === to)
       ) {
-        const list = chatMsgData.get();
-        chatMsgData.reset(list.filter((item) => item.id !== msgData.msgId));
+        chatMsgData.delete(msgData.msgId);
         const $chatItem = $chatListBox.find(`[data-id=${msgData.msgId}]`);
         if ($chatItem.length > 0) {
           $chatItem.stop().slideUp(_d.speed, () => {
@@ -892,7 +891,7 @@ function hdChatType(resData) {
         (chatAccount === 'chang' && to === 'chang') ||
         (from.account === userInfo.account && chatAccount === to)
       ) {
-        chatMsgData.reset([]);
+        chatMsgData.reset();
         $chatListBox.find('.chat_list').html('');
       }
     }

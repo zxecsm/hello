@@ -417,7 +417,7 @@ $chatHeadBtns
   );
 // 获取消息数据
 function getChatItem(id) {
-  return chatMsgData.get().find((item) => item.id === id);
+  return chatMsgData.get(id);
 }
 function sliceChatList(isPush, $item) {
   const $chatItems = $chatListBox.find('.chat_item');
@@ -462,9 +462,18 @@ export const renderChatMsg = {
     sliceChatList(0, firstItem);
     chatimgLoad();
   },
-  reset(data) {
+  reset(data = []) {
     chatMsgData.reset(data);
     $chatListBox.find('.chat_list').html(renderMsgList(data));
+    $chatListBox.scrollTop($chatListBox[0].scrollHeight);
+    chatimgLoad();
+  },
+  toBottom() {
+    $chatListBox
+      .find('.chat_list')
+      .html(
+        renderMsgList(chatMsgData.get().slice(-_d.fieldLenght.chatPageSize))
+      );
     $chatListBox.scrollTop($chatListBox[0].scrollHeight);
     chatimgLoad();
   },
@@ -477,7 +486,10 @@ export function canToBottom() {
 }
 export const chatMsgData = {
   list: [],
-  get() {
+  get(id) {
+    if (id !== undefined) {
+      return this.list.find((item) => item.id === id);
+    }
     return this.list;
   },
   first() {
@@ -488,11 +500,18 @@ export const chatMsgData = {
   },
   push(data) {
     data = this.diff(data);
+    if (data.length === 0) return;
     this.list = [...this.list, ...data];
+    this.computeDate();
+  },
+  delete(id) {
+    if (id === undefined) return;
+    this.list = this.list.filter((item) => item.id !== id);
     this.computeDate();
   },
   unshift(data) {
     data = this.diff(data);
+    if (data.length === 0) return;
     this.list = [...data, ...this.list];
     this.computeDate();
   },
@@ -504,6 +523,7 @@ export const chatMsgData = {
     return data.filter((item) => !this.list.some((y) => y.id === item.id));
   },
   computeDate() {
+    if (this.list.length === 0) return;
     let flag = '';
     this.list = this.list.map((item) => {
       const d = formatDate({
@@ -1438,9 +1458,7 @@ $chatFootBox
     if (canToBottom()) {
       $chatListBox.scrollTop($chatListBox[0].scrollHeight);
     } else {
-      renderChatMsg.reset(
-        chatMsgData.get().slice(-_d.fieldLenght.chatPageSize)
-      );
+      renderChatMsg.toBottom();
     }
   })
   .find('.c_text_content')[0]
