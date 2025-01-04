@@ -1497,7 +1497,7 @@ function hdAccountManage(e) {
     {
       id: '2',
       text: '批准免密登录',
-      beforeIcon: 'iconfont icon-chengyuan',
+      beforeIcon: 'iconfont icon-yuanchengguanli',
     },
     {
       id: '3',
