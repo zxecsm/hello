@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="google" content="notranslate" />
+    <meta
+      name="description"
+      content="一个收藏夹：用于收藏书签、笔记、音乐、图片…… | 文件管理"
+    />
+    <meta name="Keywords" content="收藏夹,文件管理" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-status-bar-style" content="black" />
+    <meta name="mobile-web-app-title" content="assets" />
+    <link rel="stylesheet icon" href="../../images/img/icon1.svg" />
+    <title>文件管理</title>
+  </head>
+
+  <body style="opacity: 0">
+    <div id="app">
+      <div class="search">
+        <div class="container">
+          <div cursor="y" class="check_box">
+            <i class="iconfont icon-xuanzeweixuanze"></i>
+            <span>搜索子目录</span>
+          </div>
+          <div class="inp_box">
+            <input autocomplete="off" placeholder="搜索" type="text" />
+            <i cursor="y" class="clean_btn iconfont icon-close-bold"></i>
+            <i cursor="y" class="search_btn iconfont icon-search"></i>
+          </div>
+        </div>
+      </div>
+      <div class="header">
+        <div class="container">
+          <div cursor="y" class="h_btn h_go_home iconfont icon-zhuye"></div>
+          <div
+            cursor
+            class="h_btn h_check_item_btn iconfont icon-duoxuan"
+          ></div>
+          <div cursor class="h_btn h_upload_btn iconfont icon-upload"></div>
+          <div
+            cursor="y"
+            class="h_btn h_add_item_btn iconfont icon-tianjia"
+          ></div>
+          <div cursor="y" class="h_btn h_sort_btn iconfont icon-paixu"></div>
+          <div
+            cursor="y"
+            class="h_btn h_showmodel_btn iconfont icon-liebiao1"
+          ></div>
+          <div
+            cursor="y"
+            class="h_btn h_hidden_file_btn iconfont icon-bukejian"
+          ></div>
+          <div cursor="y" class="h_btn h_search_btn iconfont icon-search"></div>
+          <div
+            cursor="y"
+            class="h_btn h_trash_btn iconfont icon-huishouzhan"
+          ></div>
+          <div
+            cursor="y"
+            class="h_btn clear_trash_btn iconfont icon-15qingkong-1"
+          ></div>
+          <button class="btn paste_btn btn_primary"></button>
+        </div>
+      </div>
+      <div class="crumb_box">
+        <div class="container"></div>
+      </div>
+      <div class="content_wrap">
+        <div class="container"></div>
+      </div>
+      <div class="pagination">
+        <div class="container"></div>
+      </div>
+      <div class="edit_file">
+        <div class="head_btn">
+          <button cursor="y" class="btn btn_info close">关闭</button>
+          <button cursor="y" class="btn btn_primary save">保存</button>
+          <div class="text"><div class="scroll_text"></div></div>
+          <div class="undo iconfont icon-Undo"></div>
+          <div class="redo iconfont icon-Redo"></div>
+          <button cursor="y" class="btn btn_info to_note">保存到笔记</button>
+          <button cursor="y" class="btn btn_info setting">设置</button>
+        </div>
+        <div class="editor"></div>
+      </div>
+      <div class="footer">
+        <div class="container"></div>
+      </div>
+    </div>
+    <div class="task_box">
+      <div cursor="y" class="zoom_btn iconfont icon-xiala"></div>
+      <div class="list"></div>
+    </div>
+  </body>
+</html>

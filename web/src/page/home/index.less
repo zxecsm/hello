@@ -1,0 +1,4448 @@
+html,
+body {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+.active-window {
+  box-shadow: 0 0 10px var(--text-hover-color) !important;
+}
+#app {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  .clearfix::before,
+  .clearfix::after {
+    content: '';
+    display: table;
+    clear: both;
+  }
+  /* 主页 */
+  #main {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 2;
+  }
+
+  .dandelion {
+    position: absolute;
+    bottom: -10px;
+    left: 60px;
+    pointer-events: none;
+    width: 40px;
+    opacity: 0;
+  }
+
+  .dandelionloading {
+    position: absolute;
+    bottom: 45px;
+    left: 90px;
+    pointer-events: none;
+    width: 90px;
+    opacity: 0;
+  }
+
+  .grass {
+    position: absolute;
+    bottom: 0;
+    left: 100px;
+    pointer-events: none;
+    width: 40px;
+    opacity: 0;
+  }
+
+  .grassp {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    height: 20px;
+    width: 100%;
+    background-image: url(../../images/img/grass.png);
+    background-size: 200px 20px;
+    pointer-events: none;
+    opacity: 0.8;
+  }
+
+  /* 随机壁纸 */
+  .random_change_bg_btn {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    left: 25px;
+    bottom: 10px;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+
+    &.open {
+      width: 40px;
+      height: 40px;
+      left: 20px;
+    }
+
+    div {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 2px;
+      height: 50px;
+      margin-left: -1px;
+      background-color: #383838;
+      z-index: -1;
+    }
+
+    img {
+      animation: rotate360 2s reverse infinite linear;
+      width: 100%;
+
+      &.open {
+        animation: rotate360 0.6s reverse infinite linear;
+      }
+    }
+  }
+
+  /*桌面壁纸*/
+  .page_bg {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center;
+    opacity: 0.9;
+    transition: background-image 0.5s ease-in-out, transform 0.5s ease-in-out,
+      opacity 0.5s ease-in-out;
+    z-index: 1;
+
+    &.mh {
+      transform: scale(1.1);
+    }
+
+    &.sce {
+      opacity: 0.4;
+      transform: scale(1.5);
+    }
+  }
+
+  /* 壁纸 */
+  .all_bg_wrap {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    height: 100%;
+    max-width: 1200px;
+    background-color: var(--color10);
+    box-shadow: 0 0 5px var(--color5);
+    .bg_footer {
+      position: absolute;
+      display: none;
+      background-color: var(--bg-color-o2);
+      bottom: 0;
+      border-top: 1px solid var(--color9);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      width: 100%;
+      z-index: 6;
+
+      div {
+        display: flex;
+        flex-flow: row wrap;
+        margin: 0 auto;
+        width: 95%;
+        max-width: 1200px;
+        padding: 5px 0;
+        align-items: center;
+
+        span {
+          flex: none;
+          font-size: 22px;
+          margin: 5px 10px;
+          width: 25px;
+          text-align: center;
+          line-height: 25px;
+          &:hover {
+            transform: scale(1.2);
+            color: var(--text-hover-color);
+          }
+        }
+
+        button {
+          flex: none;
+        }
+      }
+    }
+
+    .upload_bg,
+    .b_close_btn {
+      width: 30px;
+      height: 30px;
+      line-height: 30px;
+      font-size: 20px;
+      text-align: center;
+      border-radius: 50%;
+      box-shadow: 0 0 5px var(--color5);
+      background-color: var(--color9);
+      position: absolute;
+      top: 10px;
+      left: 20px;
+      z-index: 2;
+
+      &:hover {
+        color: var(--text-hover-color);
+        background-color: var(--color8);
+        transform: scale(1.2);
+      }
+    }
+
+    .upload_bg {
+      top: 10px;
+      left: 60px;
+    }
+
+    .bg_list {
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding: 60px 0;
+
+      .bg_item {
+        float: left;
+        position: relative;
+        width: 23.75%;
+        margin: 0 0 10px 1%;
+        height: 200px;
+        border-radius: 5px;
+        overflow: hidden;
+
+        &:hover {
+          box-shadow: 0 0 5px var(--color5);
+          opacity: 0.8;
+          .menu_btn {
+            transform: scale(1.2);
+            color: var(--text-hover-color);
+          }
+        }
+
+        @media (max-width: 800px) {
+          & {
+            width: 47%;
+            margin: 0 0 10px 2%;
+            height: 400px;
+          }
+        }
+
+        .check_level {
+          display: none;
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          z-index: 2;
+        }
+
+        .menu_btn {
+          position: absolute;
+          top: 0;
+          right: 0;
+          font-size: 20px;
+          width: 40px;
+          height: 40px;
+          line-height: 40px;
+          text-align: center;
+          color: var(--icon-color);
+          z-index: 1;
+        }
+
+        .bg_img {
+          background-color: var(--color9);
+          width: 100%;
+          height: 100%;
+          margin: 0;
+          background-image: url('../../images/img/loading.svg');
+          background-repeat: no-repeat;
+          background-size: 20%;
+          background-position: center;
+          &.load {
+            background-size: cover;
+            background-color: transparent;
+          }
+        }
+      }
+
+      .bg_paging_box {
+        float: left;
+        width: 100%;
+        margin: 30px auto;
+      }
+    }
+  }
+
+  // 最小化盒子
+  .minimize_box {
+    position: fixed;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    width: 80%;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    overflow-y: auto;
+    max-height: 300px;
+    border-radius: 0 0 5px 5px;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+
+    &:hover {
+      z-index: 99999;
+      background-color: var(--bg-color-o1);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    .iframe_tag {
+      background-color: var(--bg-color-o3);
+      float: left;
+      margin: 5px;
+      max-width: 200px;
+      border-radius: 5px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0 5px var(--color5);
+      &.hide {
+        animation: bounceIn 1s;
+      }
+      &:hover {
+        background-color: var(--color10);
+      }
+      .close_btn {
+        flex: none;
+        padding: 0 10px;
+        line-height: 40px;
+        text-align: center;
+        color: var(--icon-color);
+        &:hover {
+          color: var(--text-hover-color);
+          transform: scale(1.2);
+        }
+      }
+      .title {
+        flex: auto;
+        overflow: hidden;
+        white-space: nowrap;
+        // text-overflow: ellipsis;
+        padding: 0 5px;
+        line-height: 40px;
+      }
+      .logo {
+        background-position: 50%;
+        background-repeat: no-repeat;
+        background-size: 80%;
+        color: var(--icon-color);
+        flex: none;
+        font-size: 22px;
+        height: 30px;
+        line-height: 30px;
+        text-align: center;
+        width: 30px;
+        &:hover {
+          color: var(--text-hover-color);
+          transform: scale(1.2);
+        }
+      }
+    }
+  }
+
+  /* 时钟 */
+  .clock {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 200px;
+    height: 200px;
+    border: 4px solid #0fddd22e;
+    border-radius: 50%;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    background-color: rgb(0 0 0 / 6%);
+    ol,
+    li,
+    ul {
+      list-style: none;
+    }
+    i {
+      display: none;
+      position: absolute;
+      top: -30px;
+      left: 83px;
+      font-size: 30px;
+      color: var(--icon-color);
+      &:hover {
+        color: var(--text-hover-color);
+        transform: scale(1.2);
+      }
+    }
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.548);
+    }
+    &:hover i {
+      display: block;
+    }
+    /* 刻度 */
+    .line-hour li,
+    .line-min li {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform-origin: left center;
+    }
+
+    .line-hour li {
+      width: 10px;
+      height: 2px;
+      background-color: #fff;
+    }
+
+    .line-min li {
+      width: 5px;
+      height: 2px;
+      background-color: #1389a7;
+    }
+
+    /* 数字 */
+    .number {
+      position: absolute;
+      height: 150px;
+      width: 150px;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 17px;
+      color: #ffffff;
+
+      li {
+        position: absolute;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    /* 指针 */
+    .pointer {
+      position: absolute;
+      height: 150px;
+      width: 150px;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+
+      li.hour,
+      li.min,
+      li.sec {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(0, -50%);
+        transform-origin: left center;
+        border-radius: 20px;
+      }
+
+      li.hour {
+        width: 50px;
+        height: 2px;
+        background-color: #0f6ce6;
+      }
+
+      li.min {
+        width: 70px;
+        height: 2px;
+        background-color: #d114b2;
+      }
+
+      li.sec {
+        width: 85px;
+        height: 1px;
+        background-color: #f50;
+      }
+
+      li.circle {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 6px;
+        height: 6px;
+        background-color: #f50;
+        border-radius: 50%;
+        border: 1px solid #ccc;
+      }
+    }
+  }
+
+  // 右侧设置
+  .user_logo_btn {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.5s ease-in-out;
+    .alert_flag {
+      background: var(--btn-danger-color);
+      border-radius: 50%;
+      display: none;
+      height: 10px;
+      width: 10px;
+      position: absolute;
+      right: 0;
+      top: 0;
+    }
+    &:hover {
+      box-shadow: 0 0 5px var(--color5);
+      transform: rotate(360deg) scale(1.2);
+    }
+  }
+
+  .right_menu_mask {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    .right_box {
+      position: absolute;
+      right: 10px;
+      transform: translateX(100%);
+      top: 60px;
+      border-radius: 5px;
+      transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+      width: 90%;
+      max-width: 300px;
+      max-height: 80%;
+      overflow-y: auto;
+      background-color: var(--bg-color-o2);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 10px solid transparent;
+      opacity: 0;
+      box-shadow: 0 0 5px var(--color5);
+
+      &.open {
+        transform: none;
+        opacity: 1;
+      }
+
+      span {
+        margin-left: 10px;
+      }
+
+      .user_name {
+        width: 100%;
+        overflow: hidden;
+        color: var(--icon-color);
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        line-height: 40px;
+        text-align: center;
+        font-size: 20px;
+
+        &:hover {
+          color: var(--text-hover-color);
+          text-decoration: var(--text-hover-decoration);
+        }
+      }
+
+      .r_list {
+        padding: 10px 4px 0 0;
+
+        div {
+          display: flex;
+          align-items: center;
+          width: 100%;
+          line-height: 20px;
+          padding: 10px;
+          margin-bottom: 3px;
+          border-radius: 5px;
+          background-color: var(--bg-color-o1);
+
+          &:hover {
+            color: var(--text-hover-color);
+            background-color: var(--bg-color-o2);
+            i {
+              transform: scale(1.2);
+            }
+          }
+
+          i {
+            display: inline-block;
+            font-size: 20px;
+            color: var(--icon-color);
+            width: 26px;
+            height: 26px;
+            line-height: 26px;
+            text-align: center;
+          }
+        }
+      }
+    }
+  }
+
+  // 个人信息
+  .user_info_wrap {
+    display: none;
+    position: fixed;
+    width: 90%;
+    max-width: 500px;
+    background-color: var(--bg-color-o2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 20px 10px 20px 10px;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    border-radius: 5px;
+    box-shadow: 0 0 5px var(--color5);
+
+    .u_close_btn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 30px;
+      line-height: 30px;
+      text-align: center;
+      font-size: 20px;
+
+      &:hover {
+        color: var(--text-hover-color);
+        transform: scale(1.2);
+      }
+    }
+
+    .user_logo {
+      height: 80px;
+      text-align: center;
+      margin-bottom: 10px;
+
+      div {
+        display: inline-block;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        transition: transform 0.2s;
+
+        &:hover {
+          transform: scale(1.1);
+          box-shadow: 0 0 5px var(--color5);
+        }
+      }
+    }
+
+    .user_list {
+      ol,
+      li,
+      ul {
+        list-style: none;
+      }
+      ul {
+        line-height: 40px;
+        height: 40px;
+        background-color: var(--bg-color-o1);
+        margin-bottom: 1px;
+        display: flex;
+        flex-flow: row;
+
+        li {
+          &:nth-child(3),
+          &:nth-child(1) {
+            flex: none;
+            width: 70px;
+            text-align: center;
+            color: var(--color4);
+          }
+
+          &:nth-child(3):hover {
+            color: var(--text-hover-color);
+          }
+
+          &:nth-child(2) {
+            flex: auto;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+          }
+        }
+      }
+    }
+  }
+
+  // 聊天室
+  .show_chat_room_btn {
+    position: absolute;
+    bottom: 20px;
+    right: 25px;
+    font-size: 40px;
+    color: #49a923;
+    animation: shakeY 20s infinite;
+
+    &.run {
+      font-size: 80px;
+      animation: tada 1s infinite;
+    }
+    &:hover {
+      animation: none;
+      color: var(--text-hover-color);
+      transform: scale(1.2);
+    }
+  }
+
+  .chat_room_wrap {
+    max-height: 100%;
+    display: none;
+    position: fixed;
+    overflow: hidden;
+    border-radius: 5px;
+    padding: 2px;
+    background-color: var(--color9);
+    box-shadow: 0 0 5px var(--color5);
+
+    .chat_room_box {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-flow: column;
+
+      .date_search {
+        position: absolute;
+        top: 50px;
+        right: 10px;
+        z-index: 2;
+        opacity: 0.9;
+        display: flex;
+        align-items: center;
+        padding: 4px;
+        border-radius: 6px;
+        &:hover {
+          opacity: 1;
+        }
+        &.active {
+          background-color: var(--color9);
+          & .date_close {
+            display: block;
+          }
+          & .date_text {
+            display: block;
+          }
+          & .date_icon {
+            font-size: 18px;
+          }
+        }
+        .date_close,
+        .date_icon {
+          flex: none;
+          width: 30px;
+          height: 30px;
+          line-height: 30px;
+          text-align: center;
+          font-size: 18px;
+          color: var(--icon-color);
+          &:hover {
+            color: var(--text-hover-color);
+            transform: scale(1.2);
+          }
+        }
+        .date_icon {
+          font-size: 30px;
+        }
+        .date_close {
+          display: none;
+        }
+        .date_text {
+          display: none;
+          flex: auto;
+          word-break: break-all;
+          line-height: 30px;
+          font-size: 14px;
+        }
+      }
+      // 用户列表
+      .user_list_box {
+        display: none;
+        position: absolute;
+        top: 40px;
+        right: 0;
+        width: 100%;
+        height: 70%;
+        overflow-y: auto;
+        border-radius: 0 0 5px 5px;
+        background-color: var(--color9);
+        z-index: 3;
+        .user_list_paging {
+          span:hover {
+            color: var(--text-hover-color);
+          }
+        }
+        ol,
+        li,
+        ul {
+          list-style: none;
+        }
+        .user_item {
+          display: flex;
+          width: 100%;
+          height: 50px;
+          line-height: 50px;
+          position: relative;
+          padding: 5px 10px;
+          border-bottom: 1px solid var(--color8);
+
+          &:hover {
+            background-color: var(--color8);
+            .user_logo {
+              transform: scale(1.2);
+            }
+          }
+
+          .msg_alert {
+            display: none;
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--btn-danger-color);
+            left: 0;
+            top: 0;
+            border-radius: 50%;
+            z-index: 2;
+
+            &[x='n'] {
+              display: block;
+            }
+          }
+
+          .user_logo {
+            flex: none;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            overflow: hidden;
+            border-radius: 5px;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+            background-color: var(--color5);
+            &.load {
+              background-color: transparent;
+            }
+            img {
+              width: 100%;
+              height: 100%;
+              vertical-align: bottom;
+            }
+          }
+
+          .user_name {
+            flex: auto;
+            height: 40px;
+            line-height: 40px;
+            width: 0;
+            padding-left: 10px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            &:hover {
+              color: var(--text-hover-color);
+            }
+          }
+          .online {
+            line-height: 40px;
+            flex: none;
+            color: var(--icon-color);
+            width: 30px;
+            text-align: center;
+            font-size: 20px;
+            &:hover {
+              transform: scale(1.2);
+              color: var(--text-hover-color);
+            }
+          }
+        }
+        .paginationBox {
+          height: auto;
+          padding: 10px 0;
+          button {
+            background-color: transparent;
+            border: none;
+            color: var(--color2);
+          }
+        }
+      }
+
+      // 聊天室头部
+      .c_head_btns {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        flex: none;
+        height: 41px;
+        position: relative;
+        padding: 0 5px;
+        border-bottom: 1px solid var(--color8);
+        background-color: var(--color9);
+        z-index: 1;
+
+        & > div {
+          margin: 0 5px;
+        }
+        .top,
+        .search_btn,
+        .c_close_btn,
+        .clear_msg_btn {
+          flex: none;
+          width: 30px;
+          height: 40px;
+          line-height: 40px;
+          font-size: 20px;
+          text-align: center;
+
+          &:hover {
+            color: var(--text-hover-color);
+            transform: scale(1.2);
+          }
+        }
+        @media (max-width: 800px) {
+          .top {
+            display: none;
+          }
+        }
+        .search_msg_inp {
+          flex: auto;
+          display: none;
+          align-items: center;
+          margin: 0 5px;
+          max-width: 300px;
+          min-width: 100px;
+          width: 0;
+          background-color: var(--bg-color-o2);
+          height: 30px;
+          line-height: 30px;
+          border-radius: 2px;
+
+          &.focus {
+            background-color: var(--color10);
+          }
+
+          input {
+            flex: auto;
+            border: none;
+            outline: 0;
+            font-size: 14px;
+            width: 0;
+            padding-left: 5px;
+            background-color: transparent;
+          }
+
+          i {
+            display: none;
+            flex: none;
+            font-size: 1em;
+            padding: 0 4px;
+          }
+          .inp_search_btn {
+            display: block;
+          }
+        }
+        .title_wrap {
+          margin: 0;
+          flex: auto;
+          display: flex;
+          .online_status {
+            display: none;
+            width: 20px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            font-size: 18px;
+            padding-right: 4px;
+            color: var(--color6);
+
+            &.active {
+              color: #49a923;
+            }
+            &:hover {
+              transform: scale(1.2);
+            }
+          }
+          .chat_title {
+            flex: auto;
+            width: 0;
+            height: 40px;
+            line-height: 40px;
+            font-weight: bold;
+            font-size: 20px;
+            overflow: hidden;
+            .text_box {
+              float: left;
+              white-space: nowrap;
+            }
+          }
+        }
+
+        .chat_home_btn {
+          position: relative;
+          flex: none;
+          width: 30px;
+          height: 40px;
+          color: rgb(73 169 35);
+          line-height: 40px;
+          text-align: center;
+          font-size: 27px;
+
+          &:hover {
+            color: var(--text-hover-color);
+            transform: scale(1.2);
+          }
+
+          .c_home_msg_alert {
+            display: none;
+            width: 7px;
+            height: 7px;
+            position: absolute;
+            top: 9px;
+            background: var(--btn-danger-color);
+            border-radius: 50%;
+            right: 5px;
+          }
+        }
+
+        .c_user_btn {
+          width: 30px;
+          height: 40px;
+          text-align: center;
+          line-height: 40px;
+          font-size: 23px;
+          position: relative;
+          text-align: center;
+
+          &:hover {
+            color: var(--text-hover-color);
+            transform: scale(1.2);
+          }
+
+          .c_msg_alert {
+            display: none;
+            width: 7px;
+            height: 7px;
+            position: absolute;
+            top: 9px;
+            background: var(--btn-danger-color);
+            border-radius: 50%;
+            right: 5px;
+          }
+        }
+      }
+      // 消息列表
+      .chat_list_box {
+        position: relative;
+        width: 100%;
+        flex: 1 1 auto;
+        padding: 10px;
+        background-color: var(--color10);
+        overflow-y: auto;
+
+        .chat_list {
+          ol,
+          li,
+          ul {
+            list-style: none;
+          }
+          .chat_item {
+            .head {
+              .chat_time {
+                text-align: center;
+                color: var(--icon-color);
+                font-size: 14px;
+                padding-top: 10px;
+              }
+            }
+            .msg_info_wrap {
+              display: flex;
+              flex-flow: row;
+              overflow: hidden;
+              &:hover {
+                .chat_menu_btn {
+                  opacity: 1;
+                }
+              }
+              .chat_menu_btn {
+                flex: none;
+                width: 20px;
+                height: 30px;
+                line-height: 30px;
+                text-align: center;
+                font-size: 18px;
+                color: var(--color5);
+                margin-top: 24px;
+                &:hover {
+                  color: var(--text-hover-color);
+                  transform: scale(1.2);
+                }
+              }
+              @media (min-width: 801px) {
+                .chat_menu_btn {
+                  opacity: 0;
+                }
+              }
+              .c_left_logo {
+                flex: none;
+                text-align: left;
+                width: 42px;
+                height: 40px;
+                padding: 8px 0;
+              }
+
+              .c_right_logo {
+                flex: none;
+                text-align: right;
+                width: 42px;
+                height: 40px;
+                padding: 8px 0;
+              }
+
+              .c_left_logo .c_logo,
+              .c_right_logo .c_logo {
+                width: 40px;
+                height: 40px;
+                border-radius: 6px;
+                background-repeat: no-repeat;
+                background-size: cover;
+                background-position: center;
+                background-color: var(--color5);
+                &.load {
+                  background-color: transparent;
+                }
+              }
+
+              .c_content_box {
+                flex: auto;
+                padding: 8px 10px;
+                width: 0;
+
+                .c_user_name {
+                  display: block;
+                  width: 100%;
+                  font-size: 12px;
+                  word-break: break-all;
+                  margin-bottom: 5px;
+
+                  span {
+                    display: inline-block;
+                    color: var(--icon-color);
+                    padding: 0 4px;
+                  }
+                }
+
+                .c_file_msg_box {
+                  position: relative;
+                  padding: 10px;
+                  width: 100%;
+                  max-width: 300px;
+                  height: 70px;
+                  background-color: var(--color8);
+                  border-radius: 6px;
+                  display: flex;
+
+                  .c_file_info {
+                    flex: auto;
+                    width: 0;
+                    height: 100%;
+
+                    span {
+                      display: block;
+                      color: var(--color2);
+                      overflow: hidden;
+                      white-space: nowrap;
+                      text-overflow: ellipsis;
+                    }
+
+                    .file_name {
+                      width: 100%;
+                      height: 30px;
+                      line-height: 30px;
+                    }
+
+                    .file_size {
+                      width: 100%;
+                      height: 20px;
+                      line-height: 20px;
+                      font-size: 14px;
+                    }
+                  }
+
+                  .file_type {
+                    float: left;
+                    width: 50px;
+                    height: 50px;
+                    font-size: 40px;
+                    line-height: 50px;
+                    text-align: center;
+                  }
+                }
+
+                .c_right_triangle {
+                  position: absolute;
+                  top: 4px;
+                  right: -15px;
+                  border: 8px solid var(--color8);
+                  border-top-color: transparent;
+                  border-right-color: transparent;
+                  border-bottom-color: transparent;
+                }
+
+                .c_right_triangle.bcolor {
+                  border-left-color: #91e5b8;
+                }
+
+                .c_left_triangle {
+                  position: absolute;
+                  top: 4px;
+                  left: -15px;
+                  border: 8px solid var(--color8);
+                  border-top-color: transparent;
+                  border-left-color: transparent;
+                  border-bottom-color: transparent;
+                }
+
+                .c_img_msg_box {
+                  position: relative;
+                  width: 100%;
+                  max-width: 200px;
+                  height: 200px;
+                  border-radius: 6px;
+                  overflow: hidden;
+
+                  .c_img {
+                    width: 100%;
+                    height: 100%;
+                    background-color: var(--color8);
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    background-image: url('../../images/img/loading.svg');
+                    background-size: 30%;
+                    &.load {
+                      background-color: transparent;
+                      background-size: cover;
+                    }
+                    span {
+                      position: absolute;
+                      bottom: 10px;
+                      right: 10px;
+                      color: rgb(209 133 20);
+                    }
+                  }
+                }
+
+                .c_voice_msg_box {
+                  position: relative;
+                  max-width: 100%;
+                  min-width: 80px;
+                  padding: 6px;
+                  background-color: var(--color8);
+                  border-radius: 6px;
+
+                  i {
+                    font-size: 22px;
+                  }
+
+                  &.bcolor {
+                    background-color: #91e5b8;
+                    color: rgb(44, 61, 73);
+                  }
+                }
+
+                .c_text_msg_box {
+                  position: relative;
+                  padding: 10px;
+                  margin: 0;
+                  white-space: pre-wrap;
+                  word-break: break-word;
+                  background-color: var(--color8);
+                  border-radius: 6px;
+                  line-height: 1.5;
+                  font-size: 16px;
+
+                  &.bcolor {
+                    background-color: #91e5b8;
+                    color: rgb(44, 61, 73);
+                  }
+                  a {
+                    margin: 0 4px;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .chat_foot_box {
+        position: relative;
+        width: 100%;
+        flex: none;
+        display: flex;
+        flex-flow: row;
+        align-items: flex-end;
+        background-color: var(--color9);
+        border-top: 1px solid var(--color8);
+        z-index: 1;
+        // 回到底部
+        .scroll_to_bot_btn {
+          display: none;
+          position: absolute;
+          width: 30px;
+          height: 30px;
+          line-height: 30px;
+          text-align: center;
+          top: -40px;
+          left: 50%;
+          margin-left: -15px;
+          z-index: 2;
+          background-color: var(--color9);
+          border-radius: 50%;
+          font-size: 16px;
+          box-shadow: 0 0 5px var(--color5);
+          opacity: 0.9;
+          &:hover {
+            opacity: 1;
+            color: var(--text-hover-color);
+            transform: scale(1.2);
+          }
+        }
+        .c_text_msg_box {
+          flex: auto;
+          position: relative;
+          margin: 5px;
+          font-size: 16px;
+          .c_text_msg {
+            position: relative;
+            line-height: 1.5;
+            .clean {
+              display: none;
+              position: absolute;
+              bottom: 0;
+              right: 0;
+              width: 30px;
+              height: 30px;
+              font-size: 20px;
+              line-height: 30px;
+              text-align: center;
+              font-size: 1.1em;
+              z-index: 5;
+              &:hover {
+                color: var(--text-hover-color);
+                transform: scale(1.2);
+              }
+              &.show {
+                display: block;
+              }
+            }
+            .c_text_content {
+              border-radius: 2px;
+              background-color: var(--bg-color-o2);
+              position: absolute;
+              width: 100%;
+              height: 100%;
+              white-space: pre-wrap;
+              word-break: break-word;
+              left: 0;
+              top: 0;
+              outline: none;
+              border: none;
+              padding: 10px 10px 30px 10px;
+              font-size: inherit;
+              line-height: inherit;
+              font-family: inherit;
+              resize: none;
+              margin: 0;
+              &.focus {
+                background-color: var(--color10);
+              }
+            }
+            .fill_height {
+              max-height: 250px;
+              min-height: 70px;
+              padding: 10px 10px 30px 10px;
+              visibility: hidden;
+              width: 100%;
+              white-space: pre-wrap;
+              word-break: break-word;
+            }
+          }
+
+          .c_get_voice_btn {
+            display: none;
+            width: 100%;
+            height: 100%;
+            background-color: var(--color10);
+            text-align: center;
+            line-height: 40px;
+
+            &.gren {
+              background-color: rgb(37, 201, 124);
+              color: var(--color2);
+              font-size: 20px;
+            }
+          }
+        }
+
+        .c_sent_msg_btn,
+        .c_sent_shake_btn,
+        .c_change_btn {
+          flex: none;
+          font-size: 20px;
+          text-align: center;
+          line-height: 50px;
+          width: 50px;
+          height: 50px;
+
+          &:hover {
+            color: var(--text-hover-color);
+            transform: scale(1.2);
+          }
+        }
+        .c_sent_shake_btn {
+          display: none;
+        }
+        .c_sent_msg_btn i {
+          font-size: 28px;
+        }
+        .c_sent_shake_btn i {
+          font-size: 28px;
+        }
+        .c_change_btn i {
+          font-size: 25px;
+        }
+      }
+    }
+  }
+
+  // 侧边栏
+  .aside_btn {
+    position: absolute;
+    top: 25px;
+    left: 15px;
+    font-size: 30px;
+    color: var(--icon-color);
+    padding: 5px;
+    &:hover {
+      color: var(--text-hover-color);
+      transform: scale(1.2);
+    }
+  }
+
+  .aside_wrap {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    transform-origin: left bottom;
+    transform: rotate(-90deg);
+    transition: transform 0.5s ease-in-out;
+    top: 0;
+    left: 0;
+    z-index: 3;
+    &.open {
+      transform: none;
+    }
+    .aside {
+      display: flex;
+      flex-flow: column;
+      position: relative;
+      width: 90%;
+      max-width: 800px;
+      height: 100%;
+      background-color: var(--bg-color-o2);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      overflow: hidden;
+      .list {
+        flex: auto;
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+
+        .list_title {
+          position: relative;
+          display: flex;
+          align-items: center;
+          margin-top: 5px;
+          font-size: 20px;
+          height: 50px;
+
+          &:hover {
+            background-color: var(--bg-color-o2);
+            .em {
+              color: var(--text-hover-color);
+            }
+            i {
+              transform: scale(1.2);
+            }
+          }
+          .check_bmlist {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+          }
+          em {
+            flex: auto;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            line-height: 50px;
+          }
+
+          i {
+            flex: none;
+            display: inline-block;
+            width: 50px;
+            line-height: 50px;
+            text-align: center;
+            font-size: 20px;
+            color: var(--color4);
+            &.active {
+              color: var(--btn-danger-color);
+            }
+          }
+        }
+        ol,
+        li,
+        ul {
+          list-style: none;
+        }
+        ul {
+          overflow: hidden;
+
+          .bm_item {
+            position: relative;
+            width: 30.6%;
+            float: left;
+            font-size: 16px;
+            height: 120px;
+            margin: 5px 0 5px 2%;
+            border-radius: 5px;
+            border: 1px solid var(--color9);
+            background-color: var(--bg-color-o1);
+            overflow: hidden;
+
+            @media (max-width: 800px) {
+              & {
+                width: 47%;
+              }
+            }
+
+            .check_bm {
+              display: none;
+              border-radius: 5px;
+              position: absolute;
+              width: 100%;
+              height: 100%;
+              z-index: 5;
+            }
+
+            &:hover {
+              background-color: var(--bg-color-o2);
+              color: var(--text-hover-color);
+              .bm_logo {
+                transform: scale(1.2);
+              }
+            }
+
+            .bm_logo {
+              position: absolute;
+              top: 5px;
+              left: 0;
+              margin-left: 5px;
+              border-radius: 5px;
+              width: 40px;
+              height: 40px;
+              background-repeat: no-repeat;
+              background-position: center;
+              background-image: url('../../images/img/loading.svg');
+              background-size: 50%;
+              &.load {
+                background-size: cover;
+              }
+            }
+
+            .bm_name {
+              height: 50px;
+              line-height: 50px;
+              padding-left: 50px;
+              font-size: 20px;
+              text-decoration: none;
+              overflow: hidden;
+              white-space: nowrap;
+              text-overflow: ellipsis;
+              border-bottom: 1px solid var(--color9);
+            }
+
+            p {
+              color: var(--color4);
+              font-size: 14px;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              display: -webkit-box;
+              -webkit-line-clamp: 3;
+              -webkit-box-orient: vertical;
+              line-height: 1.5;
+              margin: 4px;
+              word-break: break-all;
+            }
+          }
+          .paginationBox {
+            padding: 10px 0;
+            button {
+              background-color: transparent;
+              border: none;
+              color: var(--color2);
+            }
+          }
+        }
+
+        .add_list_btn {
+          float: right;
+          font-size: 30px;
+          margin: 10px 15px 100px 0;
+          color: var(--icon-color);
+
+          &:hover {
+            color: var(--text-hover-color);
+            transform: scale(1.2);
+          }
+        }
+      }
+
+      .foot_menu {
+        display: none;
+        flex: none;
+        width: 100%;
+        padding: 5px 0;
+        background-color: var(--bg-color-o4);
+        z-index: 5;
+
+        div {
+          display: inline-block;
+          flex: none;
+          font-size: 20px;
+          margin: 5px 5px 5px 10px;
+          text-align: center;
+          width: 25px;
+          height: 25px;
+          line-height: 25px;
+          &:hover {
+            transform: scale(1.2);
+            color: var(--text-hover-color);
+          }
+        }
+        .clock_bm,
+        .open_bm {
+          display: none;
+        }
+        button {
+          flex: none;
+        }
+        &.liststate {
+          .move_bm {
+            display: none;
+          }
+          .clock_bm,
+          .open_bm {
+            display: inline-block;
+          }
+        }
+      }
+    }
+  }
+
+  // 搜索盒子
+  .search_box_btn {
+    display: none;
+    width: 100px;
+    height: 100px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin: -50px 0 0 -50px;
+    background-color: var(--color10);
+    border-radius: 50%;
+    animation: rubberBand 5s ease-in-out infinite;
+    opacity: 0.9;
+    &:hover {
+      opacity: 1;
+      animation: none;
+    }
+  }
+
+  .search_box_mask {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+
+    .search_box_wrap {
+      width: 80%;
+      height: 80%;
+      max-height: 1000px;
+      max-width: 1200px;
+      position: absolute;
+      left: 50%;
+      top: 30%;
+      transform: translate(-50%, -30%);
+      background-color: var(--bg-color-o2);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: 10px;
+      box-shadow: 0 0 5px var(--color5);
+      padding: 10px 0;
+      display: flex;
+      flex-flow: column;
+
+      @media (max-width: 800px) {
+        & {
+          width: 100%;
+          border-radius: 0;
+        }
+      }
+
+      .setting {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        font-size: 30px;
+        line-height: 50px;
+        text-align: center;
+        width: 50px;
+        color: var(--color4);
+        height: 50px;
+
+        &:hover {
+          color: var(--text-hover-color);
+          transform: scale(1.2);
+        }
+      }
+
+      .search_logo {
+        margin: 0 auto;
+        flex: none;
+
+        .logo_box {
+          width: 0px;
+          margin: 0 auto;
+          overflow: hidden;
+
+          &.active {
+            animation: logowidth 1s ease-in-out alternate both;
+            -webkit-animation: logowidth 1s ease-in-out alternate both;
+          }
+
+          @media (max-width: 800px) {
+            &.active {
+              animation: logowidth1 1s ease-in-out alternate both;
+              -webkit-animation: logowidth1 1s ease-in-out alternate both;
+            }
+          }
+
+          @keyframes logowidth {
+            0% {
+              width: 0;
+            }
+
+            100% {
+              width: 220px;
+            }
+          }
+
+          @-webkit-keyframes logowidth {
+            /*针对webkit内核*/
+            0% {
+              width: 0;
+            }
+
+            100% {
+              width: 220px;
+            }
+          }
+
+          @keyframes logowidth1 {
+            0% {
+              width: 0;
+            }
+
+            100% {
+              width: 190px;
+            }
+          }
+
+          @-webkit-keyframes logowidth1 {
+            /*针对webkit内核*/
+            0% {
+              width: 0;
+            }
+
+            100% {
+              width: 190px;
+            }
+          }
+
+          img {
+            width: 220px;
+            height: 88px;
+
+            @media (max-width: 800px) {
+              & {
+                width: 190px;
+                height: 76px;
+              }
+            }
+          }
+        }
+      }
+
+      .search_inp_wrap {
+        flex: none;
+        position: relative;
+        width: 100%;
+        height: 50px;
+        margin: 10px auto;
+        .content {
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 70%;
+          border: 1px solid var(--color9);
+          background-color: var(--bg-color-o1);
+          border-radius: 4px 0px 4px 4px;
+          z-index: 6;
+          &.active {
+            background-color: var(--color10);
+          }
+          @media (max-width: 800px) {
+            & {
+              width: 90%;
+            }
+          }
+          .search_box {
+            height: 50px;
+            line-height: 50px;
+            display: flex;
+            flex-flow: row;
+            .inp_box {
+              flex: auto;
+              display: flex;
+              align-items: center;
+
+              input {
+                flex: auto;
+                width: 0;
+                outline: none;
+                font-size: 20px;
+                line-height: 1.5;
+                background: transparent;
+                border: none;
+              }
+
+              i {
+                display: none;
+              }
+            }
+
+            .search_submit,
+            .translate_btn {
+              display: none;
+              flex: none;
+              width: 40px;
+              text-align: center;
+              font-size: 1.2em;
+              font-family: Consolas, 'codeFont';
+
+              &:hover {
+                color: var(--text-hover-color);
+                transform: scale(1.2);
+              }
+            }
+          }
+          .search_list_box {
+            display: none;
+            width: 100%;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 18px;
+            border-radius: 0 0 4px 4px;
+            ol,
+            li,
+            ul {
+              list-style: none;
+            }
+            ul {
+              li {
+                height: 40px;
+                line-height: 40px;
+                display: flex;
+                align-items: center;
+                border-top: 1px solid var(--color9);
+                overflow: hidden;
+                &:hover,
+                &.active {
+                  color: var(--text-hover-color);
+                  background-color: var(--color9);
+                  .type_logo {
+                    transform: scale(1.2);
+                  }
+                }
+                .text {
+                  flex: auto;
+                  overflow: hidden;
+                  white-space: nowrap;
+                  text-overflow: ellipsis;
+                }
+                .dellss {
+                  flex: none;
+                  width: 36px;
+                  height: 40px;
+                  font-size: 17px;
+                  text-align: center;
+
+                  &:hover {
+                    color: var(--btn-danger-color);
+                    transform: scale(1.2);
+                  }
+                }
+
+                .type_logo {
+                  flex: none;
+                  width: 36px;
+                  height: 40px;
+                  font-size: 16px;
+                  text-align: center;
+                  color: var(--icon-color);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .home_bm_wrap {
+        width: 80%;
+        flex: auto;
+        display: block;
+        margin: 10px auto auto auto;
+        overflow-y: auto;
+
+        @media (max-width: 800px) {
+          & {
+            width: 100%;
+          }
+        }
+        ol,
+        li,
+        ul {
+          list-style: none;
+        }
+        ul {
+          padding: 0;
+
+          .home_bm_item {
+            position: relative;
+            margin: 5px 0;
+            float: left;
+            width: 14.285%;
+            text-align: center;
+
+            @media (max-width: 800px) {
+              & {
+                width: 25%;
+              }
+            }
+
+            &:hover p {
+              color: var(--text-hover-color);
+            }
+
+            .check_home_bm {
+              display: none;
+              position: absolute;
+              top: 0;
+              left: 50%;
+              width: 90%;
+              height: 100%;
+              transform: translateX(-50%);
+              text-align: left;
+              z-index: 5;
+            }
+
+            .home_bm_logo {
+              position: relative;
+              top: 0;
+              margin: 0 auto;
+              width: 45%;
+              padding-top: 45%;
+              border-radius: 8px;
+              overflow: hidden;
+              background-color: var(--bg-color-o1);
+              opacity: 0.8;
+              background-repeat: no-repeat;
+              background-position: center;
+              background-image: url('../../images/img/loading.svg');
+              background-size: 40%;
+              &.load {
+                background-size: cover;
+              }
+              @media (max-width: 800px) {
+                & {
+                  width: 60%;
+                  padding-top: 60%;
+                }
+              }
+
+              &:hover {
+                transform: scale(1.1);
+                opacity: 1;
+                box-shadow: var(--color5) 0 14px 12px -7px;
+              }
+            }
+
+            .home_bm_logo[x='add'] {
+              background-size: cover;
+              background-color: transparent;
+            }
+          }
+
+          p {
+            font-size: 14px;
+            line-height: 1.5;
+            margin-top: 5px;
+            text-align: center;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            &:hover {
+              text-decoration: var(--text-hover-decoration);
+            }
+          }
+        }
+      }
+
+      .home_foot_menu {
+        display: none;
+        flex: none;
+        width: 100%;
+        padding: 5px 0;
+        background-color: var(--bg-color-o1);
+        text-align: center;
+
+        div {
+          flex: none;
+          font-size: 20px;
+          display: inline-block;
+          margin: 5px 10px;
+          width: 25px;
+          text-align: center;
+          line-height: 25px;
+          height: 25px;
+          &:hover {
+            transform: scale(1.2);
+            color: var(--text-hover-color);
+          }
+        }
+
+        button {
+          flex: none;
+        }
+      }
+    }
+  }
+
+  // 迷你播放器
+  .mini_player {
+    display: none;
+    position: fixed;
+    bottom: 100px;
+    left: 100px;
+    height: 100px;
+    width: 100px;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 0 5px var(--color5);
+    border-radius: 5px;
+    background-color: var(--color7);
+    .mask {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #00000080;
+      opacity: 0;
+      pointer-events: none;
+      border-radius: 5px;
+      transition: opacity 0.5s ease-in-out;
+    }
+    @media (min-width: 801px) {
+      &:hover {
+        .mask {
+          opacity: 1;
+        }
+        .top,
+        .next_btn,
+        .show_lrc,
+        .prev_btn,
+        .to_max {
+          display: block;
+          text-shadow: 0 0 5px #000;
+        }
+      }
+
+      .play_btn {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 40px;
+        height: 40px;
+        font-size: 40px;
+        line-height: 40px;
+        margin: auto;
+        text-align: center;
+        color: #fff;
+
+        &:hover {
+          transform: scale(1.2);
+          color: var(--text-hover-color);
+        }
+
+        @keyframes fontcolor {
+          0% {
+            color: #000000;
+          }
+
+          100% {
+            color: #fff;
+          }
+        }
+      }
+      .top {
+        display: none;
+        position: absolute;
+        left: 0;
+        top: 0;
+        font-size: 22px;
+        color: #fff;
+
+        &:hover {
+          transform: scale(1.2);
+          color: var(--text-hover-color);
+        }
+      }
+      .to_max {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 0;
+        font-size: 25px;
+        color: #fff;
+
+        &:hover {
+          transform: scale(1.2);
+          color: var(--text-hover-color);
+        }
+      }
+
+      .show_lrc {
+        display: none;
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        font-size: 24px;
+        color: #fff;
+
+        &:hover {
+          transform: scale(1.2);
+          color: var(--text-hover-color);
+        }
+      }
+
+      .next_btn,
+      .prev_btn {
+        display: none;
+        width: 40px;
+        height: 40px;
+        line-height: 40px;
+        text-align: center;
+        color: #fff;
+        font-size: 30px;
+
+        &:hover {
+          font-size: 40px;
+          color: var(--text-hover-color);
+        }
+      }
+
+      .next_btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: -40px;
+      }
+
+      .prev_btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        left: -40px;
+      }
+    }
+
+    @media (max-width: 800px) {
+      & {
+        display: none;
+      }
+    }
+  }
+
+  /* 迷你歌词 */
+  .mini_lrc_wrap {
+    display: none;
+    width: 700px;
+    font-size: 30px;
+    color: #a1a3a4;
+    position: fixed;
+    top: 100px;
+    left: 50px;
+    border: 1px dotted transparent;
+
+    &:hover {
+      border: 1px dotted #646464;
+      backdrop-filter: blur(4px);
+      background-color: var(--bg-color-o1);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    &:hover {
+      .top,
+      .close {
+        display: block;
+      }
+    }
+
+    .one,
+    .tow {
+      padding: 10px;
+      transition: color 0.3s ease-in-out, letter-spacing 0.3s ease-in-out;
+      line-height: 1.5;
+
+      &.open {
+        color: rgb(25, 216, 222);
+        letter-spacing: 1px;
+      }
+      .fy {
+        color: #a1a3a4;
+        letter-spacing: normal;
+      }
+    }
+
+    .one {
+      text-align: left;
+    }
+
+    .tow {
+      text-align: right;
+    }
+
+    .close {
+      display: none;
+      width: 20px;
+      height: 20px;
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      line-height: 20px;
+      font-weight: bold;
+      text-align: center;
+      color: var(--color1);
+      background-color: var(--color9);
+      border-radius: 50%;
+      font-size: 16px;
+      z-index: 1;
+
+      &:hover {
+        background-color: var(--color10);
+        color: var(--text-hover-color);
+        transform: scale(1.2);
+      }
+    }
+    .top {
+      display: none;
+      width: 20px;
+      height: 20px;
+      position: absolute;
+      top: -10px;
+      left: 16px;
+      line-height: 20px;
+      font-weight: bold;
+      text-align: center;
+      color: var(--color1);
+      background-color: var(--color9);
+      border-radius: 50%;
+      font-size: 16px;
+      z-index: 1;
+
+      &:hover {
+        background-color: var(--color10);
+        color: var(--text-hover-color);
+        transform: scale(1.2);
+      }
+    }
+  }
+
+  // 音乐播放器盒子
+  .music_player_box {
+    max-height: 100%;
+    display: none;
+    position: fixed;
+    overflow: hidden;
+    background-color: var(--color9);
+    border-radius: 5px;
+    box-shadow: 0 0 5px var(--color5);
+    padding: 2px;
+
+    // 底部进度条
+    .music_foot_progress {
+      height: 1px;
+      background-color: var(--icon-color);
+      position: absolute;
+      bottom: 51px;
+      left: 0;
+      z-index: 10;
+    }
+
+    .content_wrap {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      transform: translate(0, 0);
+      overflow: hidden;
+
+      // 背景
+      .music_palyer_bg {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center;
+        background-color: var(--color9);
+        z-index: -1;
+        border-radius: 0 0 5px 5px;
+        opacity: 0.2;
+        filter: blur(10px);
+        transition: opacity 5s ease-in-out;
+      }
+
+      // 头部
+      .head_wrap {
+        width: 100%;
+        flex: none;
+        height: 41px;
+        border-bottom: 1px solid var(--color8);
+        display: flex;
+        align-items: center;
+        padding: 0 5px;
+        overflow: hidden;
+        background-color: var(--color9);
+
+        div {
+          margin: 0 5px;
+        }
+        .top,
+        .close,
+        .hide,
+        .search_btn,
+        .back,
+        .volume {
+          flex: none;
+          width: 30px;
+          height: 40px;
+          line-height: 40px;
+          text-align: center;
+          font-size: 20px;
+
+          &:hover {
+            color: var(--text-hover-color);
+            transform: scale(1.2);
+          }
+        }
+        @media (max-width: 800px) {
+          .top {
+            display: none;
+          }
+        }
+        .back {
+          font-size: 18px;
+        }
+        .hide {
+          @media (max-width: 800px) {
+            & {
+              display: none;
+            }
+          }
+        }
+
+        .song_list_name {
+          flex: auto;
+          height: 40px;
+          line-height: 40px;
+          font-size: 14px;
+          overflow: hidden;
+          white-space: nowrap;
+          text-align: center;
+          text-overflow: ellipsis;
+          transition: opacity 0.5s ease-in-out;
+          user-select: none;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          opacity: 0;
+        }
+
+        .search_music_inp {
+          flex: auto;
+          display: none;
+          max-width: 300px;
+          min-width: 100px;
+          width: 0;
+          background-color: var(--bg-color-o2);
+          height: 30px;
+          line-height: 30px;
+          border-radius: 2px;
+          align-items: center;
+
+          &.focus {
+            background-color: var(--color10);
+          }
+
+          input {
+            flex: auto;
+            width: 0;
+            border: none;
+            outline: none;
+            background-color: transparent;
+            font-size: 14px;
+            padding-left: 5px;
+          }
+
+          i {
+            display: none;
+            flex: none;
+            font-size: 1em;
+            padding: 0 4px;
+          }
+          .inp_search_btn {
+            display: block;
+          }
+        }
+      }
+
+      // 中间
+      .content_box {
+        width: 100%;
+        flex: auto;
+        overflow: hidden;
+        position: relative;
+
+        // 歌单列表
+        .song_list_wrap {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          overflow-y: auto;
+          transition: transform 0.5s ease-in-out;
+
+          &.open {
+            transform: translateX(-100%);
+          }
+          ol,
+          li,
+          ul {
+            list-style: none;
+          }
+          ul {
+            padding: 10px 10px 50px 10px;
+            overflow: hidden;
+
+            // 项
+            .song_list_item {
+              position: relative;
+              width: 20%;
+              float: left;
+              margin-bottom: 10px;
+              text-align: center;
+              font-size: 13px;
+              overflow: hidden;
+
+              @media (max-width: 800px) {
+                & {
+                  width: 25%;
+                  float: left;
+                }
+              }
+
+              &:hover {
+                background-color: var(--color10);
+                border-radius: 5px;
+                box-shadow: 3px 2px 5px var(--color5);
+              }
+
+              &:hover span {
+                color: var(--text-hover-color);
+              }
+
+              &:hover .logo {
+                box-shadow: none;
+              }
+
+              &:hover .list_logo {
+                top: 3px;
+                box-shadow: 3px 3px 5px transparent;
+              }
+
+              .list_logo {
+                position: relative;
+                top: 0;
+                margin: 5px auto;
+                width: 80%;
+                padding-top: 80%;
+                transition: top 0.1s, box-shadow 0.1s;
+                border-radius: 5px;
+                box-shadow: 3px 3px 5px var(--color5);
+
+                .logo {
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  background-image: url('../../images/img/loading.svg');
+                  background-repeat: no-repeat;
+                  background-size: 40%;
+                  background-position: center;
+                  width: 100%;
+                  height: 100%;
+                  border-radius: 5px;
+                  &.load {
+                    background-color: transparent;
+                    background-size: cover;
+                  }
+                }
+              }
+
+              span {
+                display: block;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                height: 28px;
+                line-height: 28px;
+                &:hover {
+                  text-decoration: var(--text-hover-decoration);
+                }
+              }
+            }
+
+            // 添加歌单
+            .add_song_list {
+              width: 20%;
+              float: left;
+              margin-bottom: 10px;
+              text-align: center;
+              opacity: 0.3;
+
+              @media (max-width: 800px) {
+                & {
+                  width: 25%;
+                }
+              }
+
+              &:hover {
+                opacity: 1;
+              }
+
+              img {
+                margin: 5px auto;
+                width: 80%;
+                vertical-align: bottom;
+              }
+            }
+          }
+        }
+
+        // 歌曲列表
+        .list_items_wrap {
+          width: 100%;
+          height: 100%;
+          position: absolute;
+          top: 0;
+          right: 0;
+          transform: translateX(100%);
+          overflow-y: auto;
+          transition: transform 0.5s ease-in-out;
+          padding-top: 5px;
+
+          &.open {
+            transform: none;
+          }
+
+          .items_box {
+            // 批量操作按钮框
+            .check_all_menu_wrap {
+              display: none;
+              position: fixed;
+              right: 10px;
+              top: 50%;
+              transform: translateY(-50%);
+              z-index: 10;
+              font-size: 15px;
+
+              div {
+                line-height: 30px;
+                box-shadow: 0 0 5px var(--color5);
+                background-color: var(--bg-color-o3);
+                padding: 5px;
+                margin-bottom: 8px;
+                border-radius: 5px;
+                text-align: center;
+
+                &:hover {
+                  background-color: var(--bg-color-o4);
+                  color: var(--text-hover-color);
+                }
+              }
+            }
+
+            // 顶部歌单信息框
+            .items_list_top_wrap {
+              height: 100px;
+              margin-bottom: 10px;
+              display: flex;
+              overflow: hidden;
+
+              &.lbxma {
+                margin-bottom: 50px;
+              }
+
+              .song_list_cover {
+                flex: none;
+                width: 100px;
+                height: 100px;
+                margin-left: 5px;
+
+                .logo {
+                  background-image: url('../../images/img/loading.svg');
+                  background-repeat: no-repeat;
+                  background-size: 40%;
+                  background-position: center;
+                  width: 100px;
+                  height: 100%;
+                  border-radius: 5px;
+                  &.load {
+                    background-color: transparent;
+                    background-size: cover;
+                  }
+                }
+              }
+
+              .song_list_info {
+                flex: auto;
+                padding: 0 20px;
+                overflow: hidden;
+                display: flex;
+                justify-content: center;
+                flex-flow: column;
+
+                // 歌单名
+                .song_list_name {
+                  flex: none;
+                  font-size: 22px;
+                  line-height: 40px;
+                  height: 40px;
+                  white-space: nowrap;
+                  text-overflow: ellipsis;
+                  overflow: hidden;
+                  color: var(--icon-color);
+                }
+
+                // 描叙
+                .song_list_des {
+                  flex: auto;
+                  overflow-y: auto;
+                  line-height: 20px;
+                  font-size: 15px;
+                  color: var(--color4);
+                  word-break: break-all;
+                  overscroll-behavior: contain;
+                  -ms-scroll-chaining: contain;
+                }
+              }
+            }
+
+            // 顶部操作按钮框
+            .items_list_top_menu {
+              height: 40px;
+              width: 100%;
+              display: flex;
+              padding: 0 3px;
+              overflow: hidden;
+
+              &.sct {
+                position: fixed;
+                top: 40px;
+                right: 0px;
+                z-index: 10;
+                background-color: var(--color9);
+              }
+
+              // 播放列表按钮
+              .play_list_btn {
+                flex: none;
+                margin: 0 5px;
+                height: 40px;
+                line-height: 40px;
+                color: var(--icon-color);
+                font-size: 20px;
+
+                &:hover {
+                  transform: scale(1.2);
+                }
+              }
+
+              // 列表歌曲数
+              .list_total_num {
+                flex: auto;
+                height: 40px;
+                line-height: 40px;
+                font-size: 15px;
+                overflow: hidden;
+
+                span {
+                  margin-left: 5px;
+                }
+              }
+
+              // 右部操作按钮
+              .checked_song_btn,
+              .upload_song_btn,
+              .share_song_list_btn,
+              .random_song_list_btn,
+              .edit_song_list_btn,
+              .sort_songs {
+                flex: none;
+                height: 40px;
+                width: 40px;
+                text-align: center;
+                line-height: 40px;
+                color: var(--color4);
+
+                i {
+                  font-size: 25px;
+                }
+
+                &:hover {
+                  color: var(--text-hover-color);
+                  transform: scale(1.2);
+                }
+              }
+
+              .share_song_list_btn i,
+              .edit_song_list_btn i {
+                font-size: 22px;
+              }
+            }
+
+            // 歌曲项
+            .song_item {
+              height: 60px;
+              position: relative;
+              display: flex;
+              flex-flow: row;
+              margin: 3px;
+              overflow: hidden;
+
+              &:hover {
+                color: var(--text-hover-color);
+                background-color: var(--bg-color-o1);
+                .song_logo_box {
+                  transform: scale(1.2);
+                }
+              }
+
+              &.active {
+                color: var(--text-hover-color);
+                border-radius: 5px;
+                background-color: var(--bg-color-o2);
+              }
+              .downloaded {
+                position: absolute;
+                top: 0;
+                left: 0;
+                pointer-events: none;
+                opacity: 0.8;
+                color: var(--message-success-color);
+                z-index: 6;
+              }
+              // 选中状态
+              .check_state {
+                display: none;
+                position: absolute;
+                top: 0;
+                left: 0;
+                border-radius: 5px;
+                width: 100%;
+                height: 100%;
+                z-index: 5;
+              }
+
+              // 操作按钮
+              .play_mv,
+              .like_hear,
+              .add_song_playing_btn,
+              .set_song_btn {
+                flex: none;
+                color: var(--color4);
+                line-height: 60px;
+                text-align: center;
+                width: 40px;
+                font-size: 20px;
+              }
+
+              .like_hear {
+                font-size: 18px;
+                color: var(--color4);
+                &:hover {
+                  transform: scale(1.2);
+                }
+              }
+
+              .like_hear.active {
+                color: #fd4747;
+              }
+
+              .play_mv:hover,
+              .add_song_playing_btn:hover,
+              .set_song_btn:hover {
+                color: var(--text-hover-color);
+                transform: scale(1.2);
+              }
+
+              .song_logo_box {
+                position: relative;
+                flex: none;
+                width: 50px;
+                height: 50px;
+                margin: 5px;
+                overflow: hidden;
+                border-radius: 5px;
+
+                .logo {
+                  background-image: url('../../images/img/loading.svg');
+                  background-repeat: no-repeat;
+                  background-size: 50%;
+                  background-position: center;
+                  width: 100%;
+                  height: 100%;
+                  &.load {
+                    background-color: transparent;
+                    background-size: cover;
+                  }
+                }
+                .play_gif {
+                  width: 100%;
+                  height: 100%;
+                  background-image: url(../../images/img/wave.gif);
+                  background-repeat: no-repeat;
+                  background-position: bottom 6px left 6px;
+                  background-size: 14px;
+                  background-color: #00000060;
+                  pointer-events: none;
+                  top: 0;
+                  display: none;
+                  left: 0;
+                  position: absolute;
+
+                  &.show {
+                    display: block;
+                  }
+                }
+              }
+
+              .song_info_wrap {
+                flex: auto;
+                width: 0;
+                height: 60px;
+                padding: 5px;
+                overflow: hidden;
+
+                span {
+                  display: block;
+                  width: 100%;
+                  line-height: 25px;
+                  overflow: hidden;
+                  white-space: nowrap;
+                  text-overflow: ellipsis;
+                }
+
+                .song_name {
+                  font-size: 16px;
+                }
+
+                .artist_name {
+                  font-size: 12px;
+                  color: var(--color4);
+
+                  .viptu {
+                    color: rgb(167, 164, 37);
+                    font-size: 13px;
+                    margin-right: 4px;
+                  }
+
+                  .artist_name_text {
+                    &:hover {
+                      text-decoration: var(--text-hover-decoration);
+                      text-decoration-color: var(--color);
+                    }
+                  }
+                }
+              }
+            }
+
+            .song_list_paging {
+              button {
+                background-color: transparent;
+                border: none;
+                color: var(--color2);
+              }
+            }
+          }
+
+          .position_btn {
+            display: none;
+            width: 30px;
+            position: fixed;
+            bottom: 100px;
+            right: 15px;
+            z-index: 9;
+            border-radius: 10px;
+            box-shadow: 0 0 5px var(--color5);
+            background-color: var(--bg-color-o3);
+            opacity: 0.9;
+            overflow: hidden;
+
+            &:hover {
+              background-color: var(--bg-color-o5);
+            }
+            div {
+              width: 30px;
+              height: 30px;
+              text-align: center;
+              line-height: 30px;
+              font-size: 15px;
+
+              &:hover {
+                color: var(--text-hover-color);
+                transform: scale(1.2);
+              }
+            }
+
+            .get_location {
+              font-size: 17px;
+            }
+          }
+        }
+      }
+
+      .music_foot_box {
+        background-color: var(--color9);
+        display: flex;
+        flex: none;
+        flex-direction: row;
+        height: 51px;
+        border-top: 1px solid var(--color8);
+        overflow: hidden;
+        width: 100%;
+
+        .playing_song_logo {
+          width: 50px;
+          flex: none;
+          height: 50px;
+          position: relative;
+
+          .logo_img {
+            width: 46px;
+            height: 46px;
+            margin: 2px;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-image: url('../../images/img/loading.svg');
+            background-size: 50%;
+            border-radius: 50%;
+            &.load {
+              box-shadow: 0 0 5px var(--color5);
+              background-size: cover;
+            }
+          }
+        }
+
+        .playing_song_info {
+          flex: auto;
+          margin: 0 auto;
+          font-size: 16px;
+          height: 50px;
+          line-height: 50px;
+          overflow: hidden;
+          // animation: fcolor 18s infinite linear alternate;
+          overflow: hidden;
+          margin-left: 10px;
+
+          div {
+            float: left;
+            white-space: nowrap;
+          }
+        }
+
+        @keyframes fcolor {
+          0% {
+            color: #000;
+          }
+
+          20% {
+            color: #55aaff;
+          }
+
+          40% {
+            color: #ff55ff;
+          }
+
+          60% {
+            color: #55ff00;
+          }
+
+          80% {
+            color: #aa00ff;
+          }
+
+          100% {
+            color: #ff007f;
+          }
+        }
+
+        .right_btns {
+          flex: none;
+          width: 150px;
+          height: 50px;
+
+          div {
+            float: left;
+            width: 50px;
+            text-align: center;
+            font-size: 30px;
+            line-height: 50px;
+
+            &:hover {
+              color: var(--text-hover-color);
+              transform: scale(1.2);
+            }
+          }
+
+          @keyframes fontcolor {
+            0% {
+              color: #000000;
+            }
+
+            100% {
+              color: #fff;
+            }
+          }
+
+          .playing_list_btn {
+            font-size: 24px;
+            &.run {
+              animation: tada 1s;
+              color: var(--text-hover-color);
+            }
+          }
+        }
+      }
+
+      // 歌词盒子
+      .music_lrc_wrap {
+        position: absolute;
+        background-color: var(--color10);
+        top: 40px;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: 11;
+        transform: translateY(100%);
+        transition: transform 0.5s ease-in-out;
+        padding-bottom: 40px;
+
+        &.active {
+          transform: none;
+        }
+
+        .lrc_box {
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          height: 100%;
+
+          .lrc_bg {
+            position: absolute;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+            width: 100%;
+            height: 100%;
+            opacity: 0.3;
+            transform: scale(1.1);
+            filter: blur(10px);
+            z-index: -1;
+            transition: transform 0.3s ease-in-out, filter 1s ease-in-out,
+              opacity 1s ease-in-out;
+
+            &.open {
+              opacity: 0.8;
+              transform: scale(1);
+              filter: blur(0);
+            }
+
+            &.lrcbgss {
+              opacity: 0;
+              transition: opacity 0s;
+            }
+          }
+
+          .lrc_head {
+            display: flex;
+            flex-flow: row;
+            flex: none;
+            height: 60px;
+
+            .remote_play,
+            .close {
+              flex: none;
+              width: 60px;
+              height: 60px;
+              line-height: 60px;
+              text-align: center;
+              font-size: 20px;
+            }
+
+            .close:hover {
+              color: var(--text-hover-color);
+              transform: scale(1.2);
+            }
+
+            .remote_play {
+              font-size: 30px;
+              color: var(--icon-color);
+
+              &:hover {
+                transform: scale(1.2);
+                color: var(--text-hover-color);
+              }
+              &.red {
+                color: var(--btn-danger-color);
+                animation: tada 2s infinite;
+              }
+            }
+
+            .song_info_box {
+              flex: auto;
+              width: 0;
+
+              .song_name {
+                height: 40px;
+                padding-top: 15px;
+                font-size: 20px;
+                overflow: hidden;
+
+                div {
+                  white-space: nowrap;
+                  float: left;
+                }
+              }
+
+              .artist_name {
+                height: 20px;
+                font-size: 13px;
+                color: var(--color4);
+                overflow: hidden;
+
+                .artist_name_text {
+                  white-space: nowrap;
+                  float: left;
+
+                  &:hover {
+                    text-decoration: var(--text-hover-decoration);
+                    text-decoration-color: var(--color);
+                  }
+                }
+              }
+            }
+          }
+
+          // 歌词框
+          .lrc_list_wrap {
+            position: relative;
+            width: 100%;
+            flex: auto;
+            overflow: hidden;
+            -webkit-mask: linear-gradient(
+              180deg,
+              hsla(0, 0%, 100%, 0),
+              hsla(0, 0%, 100%, 0.6) 15%,
+              #fff 25%,
+              #fff 75%,
+              hsla(0, 0%, 100%, 0.6) 85%,
+              hsla(0, 0%, 100%, 0)
+            );
+            mask: linear-gradient(
+              180deg,
+              hsla(0, 0%, 100%, 0),
+              hsla(0, 0%, 100%, 0.6) 15%,
+              #fff 25%,
+              #fff 75%,
+              hsla(0, 0%, 100%, 0.6) 85%,
+              hsla(0, 0%, 100%, 0)
+            );
+
+            .lrc_items {
+              width: 100%;
+              padding: 0 20px;
+              overflow: hidden;
+              transform: translateY(0);
+
+              div {
+                padding-bottom: 0.7em;
+
+                &.active .elrc {
+                  color: var(--lrc-active-color);
+                  letter-spacing: 1px;
+                }
+
+                p {
+                  white-space: pre-wrap;
+                  word-break: break-word;
+                  line-height: 1.5;
+                }
+                .elrc {
+                  transition: letter-spacing 0.5s ease-in-out;
+                }
+                .lrcfy {
+                  font-size: 0.7em;
+                }
+              }
+            }
+          }
+
+          // 设置按钮
+          .lrc_menu_wrap {
+            flex: none;
+            height: 60px;
+
+            .collect_song_btn {
+              width: 30px;
+              height: 30px;
+              line-height: 30px;
+              text-align: center;
+              font-size: 24px;
+              color: var(--color4);
+              margin-left: 20px;
+              float: left;
+              &:hover {
+                transform: scale(1.2);
+              }
+              &.active {
+                color: #fd4747;
+              }
+            }
+
+            .right_btns {
+              float: right;
+              margin-right: 15px;
+
+              div {
+                height: 30px;
+                line-height: 30px;
+                margin: 0 5px;
+                font-size: 20px;
+                padding: 0 5px;
+                text-align: center;
+                float: left;
+
+                &:hover {
+                  color: var(--text-hover-color);
+                  transform: scale(1.2);
+                }
+              }
+              .set_lrc_btn {
+                font-size: 19px;
+              }
+
+              .lrc_translate_btn,
+              .play_mv_btn {
+                display: none;
+              }
+            }
+          }
+
+          .lrc_foot_wrap {
+            display: none;
+            width: 100%;
+            height: 120px;
+            flex: none;
+            background-color: transparent;
+
+            .progress_bar {
+              width: 100%;
+              height: 20px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+
+              .current_time,
+              .total_time {
+                font-size: 16px;
+                line-height: 10px;
+                flex: none;
+                padding: 0 10px;
+              }
+
+              .probox {
+                flex: auto;
+                height: 10px;
+                display: flex;
+                align-items: center;
+
+                &:hover .pro1 {
+                  height: 6px;
+                }
+
+                &:hover .pro1 .pro2 .dolt {
+                  display: block;
+                  margin-top: -2px;
+                  width: 6px;
+                  height: 10px;
+                }
+
+                .pro1 {
+                  position: relative;
+                  width: 100%;
+                  height: 2px;
+                  background-color: var(--color5);
+
+                  &.open {
+                    height: 6px;
+                  }
+
+                  .pro2 {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 0;
+                    height: 100%;
+                    background-image: linear-gradient(to right, orange, red);
+
+                    .dolt {
+                      display: none;
+                      float: right;
+                      transform: translateX(50%);
+                      margin-top: -3px;
+                      width: 4px;
+                      height: 8px;
+                      background-color: var(--color);
+
+                      &:open {
+                        margin-top: -2px;
+                        width: 6px;
+                        height: 10px;
+                      }
+
+                      @keyframes bgcolor {
+                        0% {
+                          background-color: #000000;
+                        }
+
+                        100% {
+                          background-color: #fff;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
+            .foot_btn_wrap {
+              width: 80%;
+              max-width: 500px;
+              height: 100px;
+              line-height: 50px;
+              padding: 25px 0;
+              display: flex;
+              flex-direction: row;
+              margin: 0 auto;
+              justify-content: space-around;
+              border-radius: 0 0 5px 5px;
+
+              .play_btn,
+              .playing_list_btn,
+              .random_play_btn,
+              .prev_play_btn,
+              .next_play {
+                font-size: 25px;
+
+                &:hover {
+                  color: var(--text-hover-color);
+                  transform: scale(1.2);
+                }
+              }
+
+              .play_btn {
+                font-size: 40px;
+              }
+
+              .playing_list_btn {
+                font-size: 22px;
+              }
+
+              @keyframes fontcolor {
+                0% {
+                  color: #000000;
+                }
+
+                100% {
+                  color: #fff;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // 搜索列表
+      .search_music_wrap {
+        display: none;
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 40px;
+        right: 0;
+        padding-bottom: 40px;
+        background-color: var(--bg-color-o4);
+        z-index: 13;
+
+        .s_music_list_box {
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 100%;
+          height: 80%;
+          border-radius: 0 0 5px 5px;
+          background-color: var(--color8);
+          ol,
+          li,
+          ul {
+            list-style: none;
+          }
+          ul {
+            text-align: left;
+            height: 100%;
+            border-radius: 0 0 5px 5px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-bottom: 40px;
+
+            .song_item {
+              position: relative;
+              display: flex;
+              width: 100%;
+              height: 60px;
+              border-bottom: 1px solid var(--color9);
+
+              &:hover {
+                background-color: var(--bg-color-o1);
+                color: var(--text-hover-color);
+                .logo_wrap {
+                  transform: scale(1.2);
+                }
+              }
+              .downloaded {
+                position: absolute;
+                top: 0;
+                left: 0;
+                pointer-events: none;
+                opacity: 0.8;
+                color: var(--message-success-color);
+                z-index: 6;
+              }
+              .play_mv,
+              .like_hear,
+              .set_menu,
+              .add_palying_list {
+                flex: none;
+                width: 40px;
+                line-height: 60px;
+                text-align: center;
+                font-size: 20px;
+                color: var(--color4);
+              }
+
+              .like_hear {
+                font-size: 18px;
+                color: var(--color4);
+                &:hover {
+                  transform: scale(1.2);
+                }
+              }
+
+              .like_hear.active {
+                color: #fd4747;
+              }
+
+              .play_mv:hover,
+              .add_palying_list:hover,
+              .set_menu:hover {
+                color: var(--text-hover-color);
+                transform: scale(1.2);
+              }
+
+              .logo_wrap {
+                position: relative;
+                flex: none;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 60px;
+                height: 60px;
+                overflow: hidden;
+
+                .logo {
+                  width: 80%;
+                  height: 80%;
+                  background-image: url('../../images/img/loading.svg');
+                  background-repeat: no-repeat;
+                  background-position: center;
+                  background-size: 50%;
+                  border-radius: 50%;
+                  &.load {
+                    background-color: transparent;
+                    background-size: cover;
+                  }
+                }
+              }
+
+              .song_info_wrap {
+                flex: auto;
+                width: 0;
+                padding: 5px;
+
+                .song_name,
+                .artist_name {
+                  line-height: 25px;
+                  height: 25px;
+                  display: block;
+                  overflow: hidden;
+                  white-space: nowrap;
+                  text-overflow: ellipsis;
+                  background-color: transparent;
+                }
+
+                .song_name {
+                  font-size: 16px;
+                }
+
+                .artist_name {
+                  font-size: 12px;
+                  color: var(--color4);
+                }
+              }
+            }
+            .playing_list_paging {
+              button {
+                background-color: transparent;
+                border: none;
+                color: var(--color2);
+              }
+            }
+          }
+        }
+      }
+
+      // 当前播放列表
+      .playing_list_mask {
+        display: none;
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background-color: var(--bg-color-o4);
+        z-index: 12;
+
+        .p_music_list_wrap {
+          display: none;
+          position: absolute;
+          bottom: 0;
+          right: 0;
+          width: 100%;
+          height: 70%;
+          overflow: hidden;
+          border-radius: 5px 5px 0 0;
+          padding: 0 2px;
+          background-color: var(--color8);
+
+          .p_head {
+            width: 100%;
+            height: 40px;
+            padding: 5px 0;
+            display: flex;
+            align-items: center;
+            .left {
+              flex: auto;
+              line-height: 40px;
+              margin-left: 5px;
+            }
+
+            .share_playing_list,
+            .check_btn,
+            .clear_playing_list {
+              flex: none;
+              line-height: 40px;
+              text-align: center;
+              height: 40px;
+              width: 40px;
+              font-size: 20px;
+
+              &:hover {
+                color: var(--text-hover-color);
+                transform: scale(1.2);
+              }
+            }
+
+            .share_playing_list {
+              font-size: 18px;
+            }
+          }
+
+          .p_foot {
+            width: 100%;
+            height: 100%;
+            padding-bottom: 100px;
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            .song_item {
+              height: 60px;
+              display: flex;
+              border-bottom: 1px solid var(--color9);
+              position: relative;
+
+              &:hover {
+                background-color: var(--bg-color-o1);
+                color: var(--text-hover-color);
+                .logo_wrap {
+                  transform: scale(1.2);
+                }
+              }
+
+              &.active {
+                color: var(--text-hover-color);
+                border-radius: 5px;
+                background-color: var(--bg-color-o2);
+              }
+              .check_state {
+                display: none;
+                position: absolute;
+                top: 0;
+                left: 0;
+                border-radius: 5px;
+                width: 100%;
+                height: 100%;
+                z-index: 5;
+              }
+              .downloaded {
+                position: absolute;
+                top: 0;
+                left: 0;
+                pointer-events: none;
+                opacity: 0.8;
+                color: var(--message-success-color);
+                z-index: 6;
+              }
+              .play_mv,
+              .like_hear,
+              .del {
+                flex: none;
+                text-align: center;
+                line-height: 60px;
+                width: 40px;
+                font-size: 20px;
+                &:hover {
+                  transform: scale(1.2);
+                }
+              }
+
+              .like_hear {
+                font-size: 18px;
+                color: var(--color4);
+              }
+
+              .like_hear.active {
+                color: #fd4747;
+              }
+
+              .logo_wrap {
+                position: relative;
+                flex: none;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 60px;
+                height: 60px;
+                overflow: hidden;
+
+                .logo {
+                  width: 80%;
+                  height: 80%;
+                  border-radius: 50%;
+                  background-image: url('../../images/img/loading.svg');
+                  background-repeat: no-repeat;
+                  background-position: center;
+                  background-size: 50%;
+                  overflow: hidden;
+                  position: relative;
+                  &.load {
+                    background-color: transparent;
+                    background-size: cover;
+                  }
+                  .play_gif {
+                    width: 100%;
+                    height: 100%;
+                    background-image: url(../../images/img/wave.gif);
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    background-size: 14px;
+                    background-color: #00000060;
+                    pointer-events: none;
+                    top: 0;
+                    display: none;
+                    left: 0;
+                    position: absolute;
+
+                    &.show {
+                      display: block;
+                    }
+                  }
+                }
+              }
+
+              .play_mv,
+              .del {
+                color: var(--color4);
+
+                &:hover {
+                  color: var(--text-hover-color);
+                }
+              }
+
+              .song_info_wrap {
+                flex: auto;
+                width: 0;
+                padding: 5px;
+
+                span {
+                  line-height: 25px;
+                  display: block;
+                  overflow: hidden;
+                  white-space: nowrap;
+                  text-overflow: ellipsis;
+                  background-color: transparent;
+                }
+
+                .song_name {
+                  font-size: 16px;
+                }
+
+                .artist_name {
+                  color: var(--color4);
+                  font-size: 12px;
+
+                  i {
+                    &:hover {
+                      text-decoration: var(--text-hover-decoration);
+                      text-decoration-color: var(--color);
+                    }
+                  }
+                }
+              }
+            }
+
+            .playing_list_paging {
+              button {
+                background-color: transparent;
+                border: none;
+                color: var(--color2);
+              }
+            }
+          }
+          .p_foot_menu {
+            display: none;
+            position: absolute;
+            left: 0;
+            flex: none;
+            width: 100%;
+            bottom: 0;
+            padding: 5px 0;
+            background-color: var(--bg-color-o2);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 5;
+
+            div {
+              display: inline-block;
+              flex: none;
+              font-size: 20px;
+              margin: 5px 5px 5px 10px;
+              text-align: center;
+              width: 25px;
+              height: 25px;
+              line-height: 25px;
+              &:hover {
+                transform: scale(1.2);
+                color: var(--text-hover-color);
+              }
+            }
+
+            button {
+              flex: none;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 歌词编辑
+  .edit_lrc_wrap {
+    max-height: 100%;
+    display: none;
+    flex-flow: column;
+    position: fixed;
+    border-radius: 4px;
+    background-color: var(--color9);
+    box-shadow: 0 0 5px var(--color5);
+    padding: 2px;
+
+    .e_head_btns {
+      padding: 0 5px;
+      display: flex;
+      height: 41px;
+      align-items: center;
+      border-bottom: 1px solid var(--color8);
+      .top,
+      .close,
+      .save {
+        flex: none;
+        width: 30px;
+        height: 40px;
+        line-height: 40px;
+        text-align: center;
+        font-size: 20px;
+        margin: 0 5px;
+
+        &:hover {
+          color: var(--text-hover-color);
+          transform: scale(1.2);
+        }
+      }
+      @media (max-width: 800px) {
+        .top {
+          display: none;
+        }
+      }
+      .song_info_text {
+        flex: auto;
+        height: 40px;
+        line-height: 40px;
+        text-align: center;
+        font-size: 20px;
+        margin: 0 5px;
+        overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+
+        p {
+          white-space: nowrap;
+          float: left;
+        }
+      }
+    }
+
+    textarea {
+      flex: auto;
+      width: 100%;
+      height: 100%;
+      outline: none;
+      border: none;
+      resize: none;
+      padding: 10px;
+      line-height: 30px;
+      font-size: 18px;
+      overflow-y: auto;
+      background-color: var(--color10);
+    }
+  }
+
+  // MV盒子
+  .music_mv_wrap {
+    max-height: 100%;
+    display: none;
+    flex-flow: column;
+    position: fixed;
+    background-color: var(--color9);
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 0 5px var(--color5);
+    padding: 2px;
+
+    .m_head_btns {
+      flex: none;
+      display: flex;
+      width: 100%;
+      height: 41px;
+      border-bottom: 1px solid var(--color8);
+      align-items: center;
+      padding: 0 5px;
+
+      .m_top_space {
+        flex: auto;
+        overflow: hidden;
+        line-height: 40px;
+        height: 40px;
+        margin: 0 5px;
+
+        p {
+          white-space: nowrap;
+          float: left;
+        }
+      }
+      .top,
+      .m_close {
+        flex: none;
+        margin: 0 5px;
+        width: 30px;
+        line-height: 40px;
+        text-align: center;
+        font-size: 20px;
+
+        &:hover {
+          color: var(--text-hover-color);
+          transform: scale(1.2);
+        }
+      }
+      @media (max-width: 800px) {
+        .top {
+          display: none;
+        }
+      }
+    }
+
+    .video_box {
+      flex: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--color10);
+      overflow: hidden;
+      video {
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+
+  // 待办
+  .todo_box {
+    max-height: 100%;
+    display: none;
+    flex-flow: column;
+    position: fixed;
+    border-radius: 5px;
+    overflow: hidden;
+    background-color: var(--color9);
+    box-shadow: 0 0 5px var(--color5);
+    padding: 2px;
+
+    .t_head_btns {
+      flex: none;
+      width: 100%;
+      height: 41px;
+      border-bottom: 1px solid var(--color8);
+      padding: 0 5px;
+      display: flex;
+      align-items: center;
+
+      div {
+        margin: 0 5px;
+        font-size: 20px;
+      }
+      .t_space {
+        flex: auto;
+        height: 40px;
+        line-height: 40px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      .top,
+      .t_refresh_btn,
+      .t_close_btn {
+        flex: none;
+        width: 30px;
+        height: 40px;
+        line-height: 40px;
+        text-align: center;
+
+        &:hover {
+          color: var(--text-hover-color);
+          transform: scale(1.2);
+        }
+      }
+      @media (max-width: 800px) {
+        .top {
+          display: none;
+        }
+      }
+    }
+
+    .todo_list {
+      flex: auto;
+      padding: 5px;
+      overflow-y: auto;
+      background-color: var(--color10);
+      ol,
+      li,
+      ul {
+        list-style: none;
+      }
+      ul {
+        width: 100%;
+        display: flex;
+        flex-flow: row;
+        font-size: 18px;
+        overflow: hidden;
+        border-bottom: 1px solid var(--color9);
+        align-items: center;
+
+        &:hover {
+          background-color: var(--color9);
+        }
+
+        .todo_text {
+          flex: auto;
+          line-height: 1.5;
+          padding: 5px;
+          .text {
+            white-space: pre-wrap;
+            word-break: break-all;
+            overflow-y: auto;
+            max-height: 190px;
+            a {
+              margin: 0 4px;
+            }
+
+            &.del {
+              text-decoration: line-through;
+              color: var(--color4);
+            }
+          }
+          .time {
+            font-size: 0.7em;
+            color: var(--color6);
+            margin-top: 5px;
+          }
+        }
+
+        .todo_state,
+        .set_btn {
+          flex: none;
+          width: 40px;
+          line-height: 40px;
+          text-align: center;
+          font-size: 20px;
+
+          &:hover {
+            color: var(--text-hover-color);
+            transform: scale(1.2);
+          }
+        }
+      }
+      .todo_paging_box {
+        padding: 20px 0;
+      }
+    }
+  }
+  // 倒计时
+  .count_box {
+    max-height: 100%;
+    display: none;
+    flex-flow: column;
+    position: fixed;
+    border-radius: 5px;
+    overflow: hidden;
+    background-color: var(--color9);
+    box-shadow: 0 0 5px var(--color5);
+    padding: 2px;
+
+    .c_head_btns {
+      flex: none;
+      width: 100%;
+      height: 41px;
+      border-bottom: 1px solid var(--color8);
+      padding: 0 5px;
+      display: flex;
+      align-items: center;
+
+      div {
+        margin: 0 5px;
+        font-size: 20px;
+      }
+      .c_space {
+        flex: auto;
+        height: 40px;
+        line-height: 40px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      .top,
+      .c_refresh_btn,
+      .c_close_btn {
+        flex: none;
+        width: 30px;
+        height: 40px;
+        line-height: 40px;
+        text-align: center;
+
+        &:hover {
+          color: var(--text-hover-color);
+          transform: scale(1.2);
+        }
+      }
+      @media (max-width: 800px) {
+        .top {
+          display: none;
+        }
+      }
+    }
+
+    .count_list {
+      flex: auto;
+      padding: 10px;
+      overflow-y: auto;
+      background-color: var(--color10);
+      .item_box {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--color9);
+        &:hover .icon {
+          transform: scale(1.2);
+        }
+        .title {
+          display: flex;
+          align-items: center;
+          .top_btn,
+          .set_btn,
+          .icon {
+            flex: none;
+            color: var(--icon-color);
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            font-size: 16px;
+          }
+          .icon:hover {
+            color: var(--text-hover-color);
+          }
+          .text {
+            line-height: 1.5;
+            word-break: break-all;
+            font-size: 20px;
+            flex: auto;
+            overflow-y: auto;
+            max-height: 190px;
+          }
+          .top_btn {
+            color: var(--color5);
+          }
+          .set_btn {
+            color: var(--color3);
+            &:hover {
+              color: var(--text-hover-color);
+              transform: scale(1.2);
+            }
+          }
+        }
+        .info {
+          font-size: 14px;
+          line-height: 1.5;
+        }
+        &.close {
+          .title .text {
+            text-decoration: line-through;
+            color: var(--color4);
+          }
+        }
+        .pro {
+          background-color: var(--color9);
+          height: 20px;
+          line-height: 20px;
+          border-radius: 4px;
+          overflow: hidden;
+          width: 95%;
+          margin: 10px 0;
+          border: 1px solid var(--color8);
+          font-size: 14px;
+          .bar {
+            width: 1.5em;
+            overflow: hidden;
+            max-width: 100%;
+            min-width: 1.5em;
+            transition: width 0.5s ease-in-out;
+            background-color: var(--color8);
+          }
+          .num {
+            float: right;
+          }
+        }
+      }
+
+      .count_paging_box {
+        padding: 20px 0;
+      }
+    }
+  }
+
+  // iframe窗口
+  .iframe_warp {
+    max-height: 100%;
+    display: none;
+    flex-flow: column;
+    position: fixed;
+    border-radius: 5px;
+    overflow: hidden;
+    background-color: var(--color9);
+    box-shadow: 0 0 5px var(--color5);
+    padding: 2px;
+
+    .i_head_btns {
+      flex: none;
+      width: 100%;
+      height: 41px;
+      border-bottom: 1px solid var(--color8);
+      padding: 0 5px;
+      display: flex;
+      align-items: center;
+
+      div {
+        margin: 0 5px;
+        font-size: 20px;
+        flex: none;
+        width: 30px;
+        height: 40px;
+        line-height: 40px;
+        text-align: center;
+
+        &:hover {
+          color: var(--text-hover-color);
+        }
+      }
+      .iconfont:hover {
+        transform: scale(1.2);
+      }
+      @media (max-width: 800px) {
+        .i_top {
+          display: none;
+        }
+      }
+      .i_title_text {
+        flex: auto;
+        height: 40px;
+        overflow: hidden;
+        line-height: 40px;
+        width: 0;
+        white-space: nowrap;
+        .scroll_text {
+          float: left;
+          color: var(--color1);
+          font-size: 18px;
+        }
+      }
+
+      .i_to_max_btn {
+        font-size: 17px;
+
+        @media (max-width: 800px) {
+          & {
+            display: none;
+          }
+        }
+      }
+    }
+    .con {
+      position: relative;
+      flex: auto;
+      width: 100%;
+      height: 100%;
+      background-color: var(--color10);
+
+      iframe {
+        width: 100%;
+        height: 100%;
+      }
+      .iframe_mask {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: none;
+        z-index: 3;
+      }
+      .iframe_load {
+        pointer-events: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url(../../images/img/loading.svg);
+        background-size: 100px 100px;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-color: var(--color10);
+        transition: opacity 0.5s ease-in-out;
+        z-index: 2;
+      }
+    }
+  }
+}
+html.head_btn_to_right {
+  .chat_room_wrap .c_head_btns {
+    flex-flow: row-reverse;
+  }
+  .music_player_box {
+    .head_wrap {
+      flex-flow: row-reverse;
+    }
+  }
+  .edit_lrc_wrap {
+    .e_head_btns {
+      flex-flow: row-reverse;
+    }
+  }
+  .music_mv_wrap {
+    .m_head_btns {
+      flex-flow: row-reverse;
+    }
+  }
+  .todo_box {
+    .t_head_btns {
+      flex-flow: row-reverse;
+    }
+  }
+  .count_box {
+    .c_head_btns {
+      flex-flow: row-reverse;
+    }
+  }
+  .mini_lrc_wrap {
+    .close {
+      left: auto !important;
+      right: -10px;
+    }
+    .top {
+      left: auto !important;
+      right: 16px;
+    }
+  }
+  .user_info_wrap {
+    .u_close_btn {
+      left: auto !important;
+      right: 10px;
+    }
+  }
+  .all_bg_wrap {
+    .upload_bg {
+      left: auto !important;
+      right: 60px;
+    }
+    .b_close_btn {
+      left: auto !important;
+      right: 20px;
+    }
+  }
+  .iframe_warp {
+    .i_head_btns {
+      flex-flow: row-reverse;
+    }
+  }
+}

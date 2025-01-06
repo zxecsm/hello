@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="google" content="notranslate" />
+    <meta
+      name="description"
+      content="一个收藏夹：用于收藏书签、笔记、音乐、图片…… | 用户管理"
+    />
+    <meta name="Keywords" content="收藏夹,用户管理" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-status-bar-style" content="black" />
+    <meta name="mobile-web-app-title" content="assets" />
+    <link rel="stylesheet icon" href="../../images/img/icon1.svg" />
+    <title>用户管理</title>
+  </head>
+
+  <body style="opacity: 0">
+    <div id="app">
+      <div class="content_wrap">
+        <div class="head_btns">
+          <button cursor="y" class="h_go_home btn btn_primary">主页</button>
+          <button cursor="y" class="register_state btn btn_primary">
+            注册：<span
+              style="color: var(--icon-color)"
+              class="iconfont icon-kaiguan-kai1"
+            ></span>
+          </button>
+          <button cursor="y" class="trash_state btn btn_primary">
+            站点文件回收站
+          </button>
+          <button cursor="y" class="clear_file btn btn_primary">
+            清理文件
+          </button>
+          <button cursor="y" class="upload_save_day btn btn_primary">
+            聊天室文件保存时间: 无限制
+          </button>
+          <button cursor="y" class="favicon_save_day btn btn_primary">
+            网址图标缓存时间: 无限制
+          </button>
+          <button cursor="y" class="site_info_save_day btn btn_primary">
+            网址描述缓存时间: 无限制
+          </button>
+          <button cursor="y" class="clean_database btn btn_primary">
+            释放数据库空间
+          </button>
+          <button cursor="y" class="email_btn btn btn_primary">配置邮箱</button>
+          <button cursor="y" class="custom_btn btn btn_primary">
+            自定义css/js
+          </button>
+          <button cursor="y" class="random_bg_btn btn btn_primary">
+            随机壁纸接口
+          </button>
+          <button cursor="y" class="set_token_key btn btn_primary">
+            updateTokenKey
+          </button>
+          <button cursor="y" class="test_btn btn btn_primary">测试</button>
+        </div>
+        <table class="table_box" border="1" cellpadding="0">
+          <thead>
+            <tr>
+              <th width="15%">在线时间</th>
+              <th width="10%">登录状态</th>
+              <th width="15%">用户名</th>
+              <th width="20%">邮箱</th>
+              <th width="15%">id</th>
+              <th width="10%">使用状态</th>
+              <th width="15%">操作</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div class="pagination_box"></div>
+      </div>
+    </div>
+  </body>
+</html>

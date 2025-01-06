@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="google" content="notranslate" />
+    <meta
+      name="description"
+      content="一个收藏夹：用于收藏书签、笔记、音乐、图片…… | 音乐分享"
+    />
+    <meta name="Keywords" content="收藏夹,音乐分享" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-status-bar-style" content="black" />
+    <meta name="mobile-web-app-title" content="assets" />
+    <link rel="stylesheet icon" href="../../images/img/icon1.svg" />
+    <title>音乐分享</title>
+  </head>
+
+  <body style="opacity: 0">
+    <div id="app">
+      <div class="music_player_wrap">
+        <div class="lrc_box">
+          <p class="user_info">
+            来自：<span class="from"></span> 的音乐分享；名称：<span
+              class="title"
+            ></span
+            >；过期时间：<span class="valid"></span>；
+          </p>
+          <div class="lrc_bg"></div>
+          <div class="lrc_head">
+            <div cursor="y" class="user_logo"></div>
+            <div class="song_info_box">
+              <div class="song_name">
+                <div></div>
+              </div>
+              <div class="artist_name">
+                <div></div>
+              </div>
+            </div>
+          </div>
+          <div class="lrc_list_wrap">
+            <div class="lrc_items"></div>
+          </div>
+          <!-- 音乐控制台 -->
+          <div class="lrc_menu_wrap">
+            <div class="right_btns">
+              <div cursor="y" class="play_speed_btn">x1</div>
+              <div cursor="y" class="play_mv_btn iconfont icon-shipin2"></div>
+              <div
+                cursor
+                class="lrc_translate_btn iconfont icon-tubiao-fanyi"
+              ></div>
+              <div cursor="y" class="set_lrc_btn iconfont icon-icon"></div>
+            </div>
+          </div>
+          <div class="lrc_foot_wrap">
+            <div class="progress_bar">
+              <div class="current_time">00:00</div>
+              <!--进度条-->
+              <div class="probox">
+                <div cursor="y" class="pro1">
+                  <div cursor="y" class="pro2">
+                    <div cursor="y" class="dolt"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="total_time">00:00</div>
+            </div>
+            <div class="foot_btn_wrap">
+              <div
+                cursor
+                class="random_play_btn iconfont icon-shunxubofang"
+              ></div>
+              <div
+                cursor
+                class="prev_play_btn iconfont icon-ic_skip_previous_px"
+              ></div>
+              <div cursor="y" class="play_btn iconfont icon-65zanting"></div>
+              <div
+                cursor="y"
+                class="next_play iconfont icon-ic_skip_next_px"
+              ></div>
+              <div
+                cursor
+                class="playing_list_btn iconfont icon-31liebiao"
+              ></div>
+            </div>
+          </div>
+        </div>
+        <!-- 正在播放列表 -->
+        <div class="playing_list_mask">
+          <div class="p_music_list_wrap">
+            <div class="p_head">
+              <div class="left"></div>
+              <div
+                cursor="y"
+                class="save_playing_list iconfont icon-baocun1"
+              ></div>
+            </div>
+            <div class="p_foot"></div>
+          </div>
+        </div>
+      </div>
+      <!-- MV -->
+      <div class="music_mv_wrap">
+        <div class="m_head_btns">
+          <div cursor="y" class="m_close iconfont icon-close-bold"></div>
+          <div class="m_top_space">
+            <p></p>
+          </div>
+        </div>
+        <div class="video_box">
+          <video class="my_video" width="100%" controls="controls"></video>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

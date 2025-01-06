@@ -1,0 +1,35 @@
+{
+  "name": "hello",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "dev": "nodemon app.js"
+  },
+  "keywords": [],
+  "author": "ecan",
+  "license": "ISC",
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "axios": "^1.7.7",
+    "cheerio": "1.0.0",
+    "cookie-parser": "^1.4.6",
+    "express": "^4.21.0",
+    "formidable": "^3.5.1",
+    "ip2region": "^2.3.0",
+    "jsonwebtoken": "^9.0.2",
+    "music-metadata": "^10.5.0",
+    "node-id3": "^0.2.6",
+    "nodemailer": "^6.9.15",
+    "pinyin": "4.0.0-alpha.2",
+    "sharp": "^0.33.5",
+    "speakeasy": "^2.0.0",
+    "sqlite3": "^5.1.7",
+    "ua-parser-js": "^1.0.39",
+    "unzipper": "^0.12.3"
+  },
+  "description": "This is a favorite",
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  },
+  "type": "module"
+}

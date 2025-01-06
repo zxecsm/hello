@@ -1,0 +1,341 @@
+@import url('./animate.css');
+.clearfix:after {
+  content: '';
+  display: block;
+  clear: both;
+}
+
+:root {
+  --text-hover-color: #409eff;
+  --icon-color: #1389a7;
+  --text-hover-decoration: underline wavy;
+}
+
+html {
+  --lrc-active-color: #690460;
+  --color: #0f0f0f;
+  --color1: #222222;
+  --color2: #333333;
+  --color3: #444444;
+  --color4: #666666;
+  --color5: #888888;
+  --color6: #aaaaaa;
+  --color7: #cccccc;
+  --color8: #dddddd;
+  --color9: #ebebeb;
+  --color10: #ffffff;
+  --bg-color-o1: rgb(255 255 255/ 20%);
+  --bg-color-o2: rgb(255 255 255/ 40%);
+  --bg-color-o3: rgb(255 255 255/ 60%);
+  --bg-color-o4: rgb(255 255 255/ 80%);
+  --bg-color-o5: rgb(255 255 255/ 90%);
+
+  --a-color: #2a64f6;
+
+  --btn-primary-color: #409eff;
+  --btn-primary-bg-color: #ecf5ff;
+  --btn-primary-border-color: #a0cfff;
+  --btn-primary-hover-color: #fff;
+  --btn-primary-hover-bg-color: #409eff;
+  --btn-primary-hover-border-color: #409eff;
+  --btn-info-color: #909399;
+  --btn-info-bg-color: #f4f4f5;
+  --btn-info-border-color: #c8c9cc;
+  --btn-info-hover-color: #fff;
+  --btn-info-hover-bg-color: #909399;
+  --btn-info-hover-border-color: #909399;
+  --btn-danger-color: #f56c6c;
+  --btn-danger-bg-color: #fef0f0;
+  --btn-danger-border-color: #fab6b6;
+  --btn-danger-hover-color: #fff;
+  --btn-danger-hover-bg-color: #f56c6c;
+  --btn-danger-hover-border-color: #f56c6c;
+  --cursor-default: url('../../images/pointer/blue/default.cur'), default;
+  --cursor-pointer: url('../../images/pointer/blue/pointer.cur'), pointer;
+  --cursor-ew-resize: url('../../images/pointer/blue/ew-resize.cur'), ew-resize;
+  --cursor-nesw-resize: url('../../images/pointer/blue/nesw-resize.cur'),
+    nesw-resize;
+  --cursor-ns-resize: url('../../images/pointer/blue/ns-resize.cur'), ns-resize;
+  --cursor-nwse-resize: url('../../images/pointer/blue/nwse-resize.cur'),
+    nwse-resize;
+  --message-success-color: #146c43;
+  --message-success-bg: #d1e7dd;
+  --message-success-border: #a3cfbb;
+  --message-info-color: #087990;
+  --message-info-bg: #cff4fc;
+  --message-info-border: #9eeaf9;
+  --message-warning-color: #997404;
+  --message-warning-bg: #fff3cd;
+  --message-warning-border: #ffe69c;
+  --message-error-color: #b02a37;
+  --message-error-bg: #f8d7da;
+  --message-error-border: #f1aeb5;
+}
+
+html.dark {
+  --lrc-active-color: #05f3c9;
+  --color10: #0f0f0f;
+  --color9: #222222;
+  --color8: #333333;
+  --color7: #444444;
+  --color6: #666666;
+  --color5: #888888;
+  --color4: #aaaaaa;
+  --color3: #cccccc;
+  --color2: #dddddd;
+  --color1: #ebebeb;
+  --color: #ffffff;
+  --bg-color-o1: rgb(0 0 0 / 20%);
+  --bg-color-o2: rgb(0 0 0 / 40%);
+  --bg-color-o3: rgb(0 0 0 / 60%);
+  --bg-color-o4: rgb(0 0 0 / 80%);
+  --bg-color-o5: rgb(0 0 0 / 90%);
+
+  --a-color: #7c7ccf;
+
+  --btn-primary-color: #409eff;
+  --btn-primary-bg-color: #18222c;
+  --btn-primary-border-color: #2a598a;
+  --btn-primary-hover-color: #fff;
+  --btn-primary-hover-bg-color: #409eff;
+  --btn-primary-hover-border-color: #409eff;
+  --btn-info-color: #909399;
+  --btn-info-bg-color: #202121;
+  --btn-info-border-color: #525457;
+  --btn-info-hover-color: #fff;
+  --btn-info-hover-bg-color: #909399;
+  --btn-info-hover-border-color: #909399;
+  --btn-danger-color: #f56c6c;
+  --btn-danger-bg-color: #2b1d1d;
+  --btn-danger-border-color: #854040;
+  --btn-danger-hover-color: #fff;
+  --btn-danger-hover-bg-color: #f56c6c;
+  --btn-danger-hover-border-color: #f56c6c;
+  --cursor-default: url('../../images/pointer/orange/default.cur'), default;
+  --cursor-pointer: url('../../images/pointer/orange/pointer.cur'), pointer;
+  --cursor-ew-resize: url('../../images/pointer/orange/ew-resize.cur'),
+    ew-resize;
+  --cursor-nesw-resize: url('../../images/pointer/orange/nesw-resize.cur'),
+    nesw-resize;
+  --cursor-ns-resize: url('../../images/pointer/orange/ns-resize.cur'),
+    ns-resize;
+  --cursor-nwse-resize: url('../../images/pointer/orange/nwse-resize.cur'),
+    nwse-resize;
+  --message-success-color: #75b798;
+  --message-success-bg: #051b11;
+  --message-success-border: #0f5132;
+  --message-info-color: #6edff6;
+  --message-info-bg: #032830;
+  --message-info-border: #055160;
+  --message-warning-color: #ffda6a;
+  --message-warning-bg: #332701;
+  --message-warning-border: #664d03;
+  --message-error-color: #ea868f;
+  --message-error-bg: #2c0b0e;
+  --message-error-border: #842029;
+}
+::-webkit-scrollbar {
+  background-color: transparent; /* 滚动条轨道颜色 */
+  max-width: 8px;
+  max-height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color7); /* 滚动条滑块颜色 */
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color6);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: var(--color5);
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent; /* 滚动条轨道背景颜色 */
+}
+/* 全局设置 box-sizing */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+/* 火狐 */
+@-moz-document url-prefix() {
+  * {
+    scrollbar-color: var(--color7) transparent;
+    scrollbar-width: thin;
+  }
+}
+@font-face {
+  font-family: 'codeFont';
+  src: url('../../font/consolas.ttf') format('truetype');
+}
+body {
+  color: var(--color3);
+  background-color: var(--color10);
+  font-size: 16px;
+  cursor: var(--cursor-default);
+}
+body:before {
+  content: '';
+  position: fixed;
+  z-index: -1;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+.iconfont {
+  text-shadow: 0 0 var(--color5);
+}
+[cursor]:hover {
+  cursor: var(--cursor-pointer);
+}
+.ew-resize {
+  cursor: var(--cursor-ew-resize);
+}
+.nesw-resize {
+  cursor: var(--cursor-nesw-resize);
+}
+.ns-resize {
+  cursor: var(--cursor-ns-resize);
+}
+.nwse-resize {
+  cursor: var(--cursor-nwse-resize);
+}
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+  color: inherit;
+  border-radius: 0;
+}
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+/* 选中背景和字体颜色 */
+::selection {
+  background: var(--color3);
+  color: var(--color10);
+}
+
+::-moz-selection {
+  background: var(--color3);
+  color: var(--color10);
+}
+
+::-webkit-selection {
+  background: var(--color3);
+  color: var(--color10);
+}
+
+input::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder {
+  color: var(--color4);
+  font-size: 0.9em;
+}
+input::-moz-placeholder,
+textarea::-moz-placeholder {
+  /* Mozilla Firefox 19+ */
+  color: var(--color4);
+  font-size: 0.9em;
+}
+input:-moz-placeholder,
+textarea:-moz-placeholder {
+  /* Mozilla Firefox 4 to 18 */
+  color: var(--color4);
+  font-size: 0.9em;
+}
+input:-ms-input-placeholder,
+textarea:-ms-input-placeholder {
+  /* Internet Explorer 10-11 */
+  color: var(--color4);
+  font-size: 0.9em;
+}
+.btn {
+  margin: 5px;
+  line-height: 1;
+  padding: 10px;
+  outline: none;
+  border: 1px solid;
+  border-radius: 4px;
+  cursor: inherit;
+}
+
+.btn_primary {
+  color: var(--btn-primary-color);
+  background-color: var(--btn-primary-bg-color);
+  border-color: var(--btn-primary-border-color);
+}
+
+.btn_primary:hover {
+  transition: 0.2s ease-in-out;
+  color: var(--btn-primary-hover-color);
+  background-color: var(--btn-primary-hover-bg-color);
+  border-color: var(--btn-primary-hover-border-color);
+}
+
+.btn_info {
+  color: var(--btn-info-color);
+  background-color: var(--btn-info-bg-color);
+  border-color: var(--btn-info-border-color);
+}
+
+.btn_info:hover {
+  transition: 0.2s ease-in-out;
+  color: var(--btn-info-hover-color);
+  background-color: var(--btn-info-hover-bg-color);
+  border-color: var(--btn-info-hover-border-color);
+}
+
+.btn_danger {
+  color: var(--btn-danger-color);
+  background-color: var(--btn-danger-bg-color);
+  border-color: var(--btn-danger-border-color);
+}
+
+.btn_danger:hover {
+  transition: 0.2s ease-in-out;
+  color: var(--btn-danger-hover-color);
+  background-color: var(--btn-danger-hover-bg-color);
+  border-color: var(--btn-danger-hover-border-color);
+}
+/* 关闭选中 */
+.jzxz {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  /* -webkit-touch-callout: none; iOS Safari */
+}
+.inp_box i {
+  font-size: 1.1em;
+  padding: 0 6px;
+}
+.inp_box input {
+  padding-left: 10px;
+  line-height: 1.5;
+}
+.inp_box i:hover {
+  transform: scale(1.2);
+  color: var(--text-hover-color);
+}
+.shake {
+  animation: tada 0.5s ease-in-out infinite;
+}
+.notScroll {
+  overflow: hidden !important;
+}
+a {
+  color: var(--a-color);
+}
+a:hover {
+  text-decoration: underline wavy;
+  color: var(--text-hover-color);
+}

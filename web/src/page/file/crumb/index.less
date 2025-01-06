@@ -1,0 +1,46 @@
+#app {
+  .crumb {
+    font-size: 0;
+    overflow-y: auto;
+    max-height: 180px;
+    .refresh,
+    .back {
+      padding: 5px 0;
+      color: var(--icon-color);
+      display: inline-block;
+      overflow: hidden;
+      &:hover {
+        color: var(--text-hover-color);
+        transform: scale(1.2);
+      }
+    }
+    span {
+      border-right: 2px solid var(--color6);
+      padding: 0 10px;
+      display: inline-block;
+      font-size: 16px;
+      margin: 5px 0;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      &:hover {
+        color: var(--text-hover-color);
+      }
+      &:last-of-type {
+        border: none;
+      }
+    }
+    input {
+      font-size: 16px;
+      outline: none;
+      border: none;
+      margin: 0;
+      line-height: 1.5;
+      width: 100%;
+      background-color: transparent;
+      padding: 5px 10px;
+      border-radius: 4px;
+    }
+  }
+}

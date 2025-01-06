@@ -1,0 +1,43 @@
+.tabs_box {
+  display: flex;
+  flex-flow: row wrap;
+  line-height: 30px;
+  .tab {
+    max-width: 150px;
+    display: flex;
+    align-items: center;
+    margin: 5px;
+    padding-left: 5px;
+    border-radius: 4px;
+    border: 1px solid var(--color9);
+    .text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .close {
+      width: 30px;
+      height: 30px;
+      flex: none;
+      text-align: center;
+      color: var(--icon-color);
+      &:hover {
+        color: var(--text-hover-color);
+        transform: scale(1.2);
+      }
+    }
+  }
+  .add_tab {
+    width: 30px;
+    height: 30px;
+    margin: 5px;
+    flex: none;
+    font-size: 18px;
+    text-align: center;
+    color: var(--icon-color);
+    &:hover {
+      color: var(--text-hover-color);
+      transform: scale(1.2);
+    }
+  }
+}

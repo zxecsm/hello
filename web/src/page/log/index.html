@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="google" content="notranslate" />
+    <meta
+      name="description"
+      content="一个收藏夹：用于收藏书签、笔记、音乐、图片…… | 日志管理"
+    />
+    <meta name="Keywords" content="收藏夹,日志" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-status-bar-style" content="black" />
+    <meta name="mobile-web-app-title" content="assets" />
+    <link rel="stylesheet icon" href="../../images/img/icon1.svg" />
+    <title>日志管理</title>
+  </head>
+  <body style="opacity: 0">
+    <div id="app">
+      <div class="header">
+        <button cursor="y" class="select_btn btn btn_primary">选择</button>
+        <button
+          style="display: none"
+          cursor="y"
+          class="refresh_btn btn btn_info"
+        >
+          刷新
+        </button>
+        <button style="display: none" cursor="y" class="del_btn btn btn_danger">
+          删除
+        </button>
+        <button cursor="" class="clean_log btn btn_danger">清空日志</button>
+        <div cursor="y" class="h_go_home iconfont icon-zhuye"></div>
+        <div class="inp_box">
+          <input autocomplete="off" placeholder="搜索" type="text" />
+          <i cursor="y" class="clean_btn iconfont icon-close-bold"></i>
+          <i cursor="y" class="search_btn iconfont icon-search"></i>
+        </div>
+        <div class="log_info"></div>
+      </div>
+      <div class="main"></div>
+      <div class="footer"></div>
+      <div class="stat"></div>
+    </div>
+  </body>
+</html>
