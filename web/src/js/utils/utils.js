@@ -481,7 +481,7 @@ export function longPress(target, selector, callback) {
         clearTimeout(timer);
         timer = null;
       }
-      if (Math.abs(x - cx) > 10 || Math.abs(y - cy) > 10 || !isMobile()) return;
+      if (Math.abs(x - cx) > 5 || Math.abs(y - cy) > 5 || !isMobile()) return;
       if (selector && callback) {
         const _this = getTriggerTarget(e, { target: this, selector });
         if (_this) {
@@ -518,15 +518,16 @@ export function longPress(target, selector, callback) {
   };
 }
 const reqObj = {
-  req: {},
+  req: new Map(),
   add(key, xhr) {
-    if (this.req.hasOwnProperty(key)) {
-      this.req[key].abort();
+    const x = this.req.get(key);
+    if (x) {
+      x.abort();
     }
-    this.req[key] = xhr;
+    this.req.set(key, xhr);
   },
   del(key) {
-    delete this.req[key];
+    this.req.delete(key);
   },
 };
 // 请求
@@ -1230,11 +1231,6 @@ export function downloadFile(tasks, type) {
       xhr.send();
     });
   });
-}
-// 提取链接
-export function getPreUrl() {
-  const reg = /^(https?:\/\/)([^\/\#\?]+)/;
-  return myOpen().match(reg)[0];
 }
 // 设置滚动
 export function pageScrollTop(top) {

@@ -2,34 +2,31 @@ import bus from '../../../js/utils/bus';
 import _path from '../../../js/utils/path';
 import { _tpl } from '../../../js/utils/template';
 import { _mySlide, isMobile } from '../../../js/utils/utils';
+import hashRouter from './hashRouter';
 import './index.less';
-
-let historyList = [];
-let pathArr = [];
 
 let target = null;
 let callback = null;
 
+let HASH = _path.normalize(hashRouter.getHash());
+
 let pageInfo = { pageNo: 1, top: 0 };
+
+window.addEventListener('hashchange', () => {
+  // 跳转前获取当前页信息并保存
+  updatePageInfo();
+  hashRouter.set(HASH, pageInfo);
+  // 查看是否有即将跳转页的信息
+  HASH = _path.normalize(hashRouter.getHash());
+  const info = hashRouter.get(HASH) || { pageNo: 1, top: 0 };
+  renderCrumb();
+  callback && callback(HASH, info);
+});
 
 bus.on('setPageInfo', (info) => (pageInfo = info));
 
 function updatePageInfo() {
   bus.emit('getPageInfo');
-}
-
-function addHistory() {
-  if (
-    historyList.length > 0 &&
-    arrToPath(historyList[historyList.length - 1].pathArr) === getPath()
-  )
-    return;
-  historyList.push({ pageInfo, pathArr });
-}
-
-function getLastHistory() {
-  const res = historyList.pop();
-  return res || { pageInfo: { pageNo: 1, top: 0 }, pathArr: [] };
 }
 
 // 生成路径
@@ -41,7 +38,7 @@ function renderCrumb() {
     <span v-for="item,idx in pathArr" :title="item" :cursor="idx + 1 === pathArr.length ? '' : 'y'" :data-idx="idx + 1">{{item}}</span>
     <i cursor="y" class="refresh iconfont icon-suijibofang"></i>
     `,
-    { pathArr }
+    { pathArr: pathToArr(HASH) }
   );
   _tpl.html(target, html);
 }
@@ -54,23 +51,14 @@ function bind(el, cb) {
   el.addEventListener('click', hdClick);
 }
 
-function toBack() {
-  const { pageInfo, pathArr: p } = getLastHistory();
-  pathArr = p;
-  renderCrumb();
-  callback && callback(getPath(), pageInfo);
-}
-
 function toGo(p, param = {}) {
-  if (typeof p === 'string') {
-    p = pathToArr(p);
+  p = _path.normalize(p);
+  if (p !== HASH) {
+    hashRouter.setHash(p);
+  } else {
+    renderCrumb();
+    callback && callback(p, param);
   }
-  if (arrToPath(p) !== getPath()) {
-    addHistory();
-  }
-  pathArr = p;
-  renderCrumb();
-  callback && callback(getPath(), param);
 }
 
 // 点击事件
@@ -81,9 +69,9 @@ function hdClick(e) {
     if (tag === 'i') {
       const className = target.className;
       if (className.includes('back')) {
-        toBack();
+        hashRouter.back();
       } else if (className.includes('refresh')) {
-        toGo(pathArr.slice(0), { pageNo: 1, top: 0, update: 1 });
+        callback && callback(HASH, { pageNo: 1, top: 0, update: 1 });
       }
     } else if (tag === 'span') {
       let p = [];
@@ -91,11 +79,12 @@ function hdClick(e) {
         p = [];
       } else {
         const idx = +target.dataset.idx;
-        p = pathArr.slice(0, idx);
+        p = pathToArr(HASH).slice(0, idx);
       }
-      if (arrToPath(p) === getPath()) return;
-      updatePageInfo();
-      toGo(p, { pageNo: 1, top: 0 });
+      const path = arrToPath(p);
+      if (HASH !== path) {
+        hashRouter.setHash(path);
+      }
     }
   } else if (this === target) {
     editPath();
@@ -107,7 +96,7 @@ _mySlide({
   el: '.content_wrap',
   right() {
     if (isMobile()) {
-      toBack();
+      hashRouter.back();
     }
   },
 });
@@ -116,18 +105,17 @@ _mySlide({
   el: '.crumb_box',
   right() {
     if (isMobile()) {
-      toBack();
+      hashRouter.back();
     }
   },
 });
 
 function hdInputBlur() {
-  const val = this.value.trim();
-  if (getPath() !== val) {
-    updatePageInfo();
-    toGo(val, { pageNo: 1, top: 0 });
-  } else {
+  const val = _path.normalize(this.value.trim());
+  if (val === HASH) {
     renderCrumb();
+  } else {
+    hashRouter.setHash(val);
   }
 }
 
@@ -142,7 +130,7 @@ oInp.addEventListener('keyup', hdInputKeyup);
 
 // 编辑路径
 function editPath() {
-  oInp.value = getPath();
+  oInp.value = HASH;
   target.innerHTML = '';
   target.appendChild(oInp);
   oInp.focus();
@@ -150,7 +138,7 @@ function editPath() {
 
 // 获取路径
 function getPath() {
-  return arrToPath(pathArr);
+  return HASH;
 }
 
 function arrToPath(arr) {

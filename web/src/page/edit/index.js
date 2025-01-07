@@ -660,8 +660,7 @@ $headBtns
       toLogin();
       return;
     }
-    _setData('curFileDirPath', `/.noteHistory/${HASH}`);
-    _myOpen(`/file/`, '文件管理');
+    _myOpen(`/file/#/.noteHistory/${HASH}`, '文件管理');
   })
   .on('click', '.table_btn', createTable)
   .on('click', '.code_btn', createCodeBlock)

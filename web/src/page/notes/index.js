@@ -14,7 +14,6 @@ import {
   toLogin,
   scrollState,
   showQcode,
-  getPreUrl,
   queryURLParams,
   isIframe,
   wrapInput,
@@ -575,7 +574,7 @@ $contentWrap
         } else if (id === '3') {
           showQcode(
             e,
-            `${getPreUrl()}/note/?v=${encodeURIComponent(noteid)}`,
+            `${window.location.origin}/note/?v=${encodeURIComponent(noteid)}`,
             title
           );
         } else if (id === '4') {

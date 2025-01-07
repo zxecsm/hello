@@ -104,8 +104,8 @@ export function getSearchSongs(top, pageNo = searchMusicPageNo) {
                   <span v-html="hdTitleHighlight(splitWord, title)" class="song_name"></span>
                   <span v-html="hdTitleHighlight(splitWord, artist)" class="artist_name"></span>
                 </div>
-                <div class="add_palying_list iconfont icon-icon-test"></div>
                 <div v-if="mv" class="play_mv iconfont icon-shipin2"></div>
+                <div class="add_palying_list iconfont icon-icon-test"></div>
                 <div class="like_hear iconfont {{issc(id) ? 'icon-hear-full active' : 'icon-hear'}}"></div>
                 <div class="set_menu iconfont icon-icon"></div>
               </li>

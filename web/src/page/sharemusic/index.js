@@ -46,6 +46,7 @@ import {
   darkMode,
   getScreenSize,
   loadImg,
+  pageErr,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -68,7 +69,7 @@ import { imgCache } from '../../js/utils/imgCache';
 import percentBar from '../../js/plugins/percentBar';
 import imgPreview from '../../js/plugins/imgPreview';
 const urlparmes = queryURLParams(myOpen()),
-  HASH = urlparmes.HASH,
+  shareId = urlparmes.s,
   $myAudio = $(new Audio()),
   $musicPlayerWrap = $('.music_player_wrap'),
   $userInfo = $musicPlayerWrap.find('.user_info'),
@@ -84,6 +85,9 @@ const urlparmes = queryURLParams(myOpen()),
   $musicMvWrap = $('.music_mv_wrap'),
   $myVideo = $musicMvWrap.find('.my_video');
 $myAudio[0].preload = 'none';
+if (!shareId) {
+  pageErr();
+}
 const lrcHeadContentScrollName = new ContentScroll(
   $lrcHead.find('.song_name div')[0]
 );
@@ -97,7 +101,7 @@ let playingList = null,
   curPlaySpeed = _getData('songPlaySpeed'),
   lrcState = _getData('lrcState'),
   userInfo = null,
-  passCode = _getDataTem('passCode', HASH) || '',
+  passCode = _getDataTem('passCode', shareId) || '',
   shareToken = '';
 let defaultShareTitle = '';
 const verifyCode = hdOnce(() => {
@@ -109,11 +113,11 @@ const verifyCode = hdOnce(() => {
 // 获取分享数据
 function getShareData(close, loading = { start() {}, end() {} }) {
   loading.start();
-  reqPlayerGetShare({ id: HASH, pass: passCode })
+  reqPlayerGetShare({ id: shareId, pass: passCode })
     .then((resObj) => {
       loading.end();
       if (resObj.code === 1) {
-        _setDataTem('passCode', passCode, HASH);
+        _setDataTem('passCode', passCode, shareId);
         close && close();
         const { account, username, logo, title, exp_time, email, token } =
           resObj.data;

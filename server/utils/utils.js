@@ -863,3 +863,15 @@ export function getTextSize(text) {
   const byteArray = encoder.encode(text);
   return byteArray.length; // 返回字节数
 }
+
+// 获取请求源
+export function getOrigin(req) {
+  try {
+    const refererUrl = new URL(
+      req.headers.origin || req.headers.referer || `http://${req.headers.host}`
+    );
+    return `${refererUrl.protocol}//${refererUrl.host}`;
+  } catch {
+    return 'https://xxx.com';
+  }
+}

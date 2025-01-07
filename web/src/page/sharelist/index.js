@@ -4,7 +4,6 @@ import '../../css/common/common.css';
 import '../../font/iconfont.css';
 import './index.less';
 import {
-  getPreUrl,
   toLogin,
   showQcode,
   isIframe,
@@ -75,19 +74,19 @@ function renderShareList(total, pageNo, top) {
       sList,
       getUrlAndLogo(type, id) {
         let logo = 'icon-shoucang',
-          url = getPreUrl();
+          url = window.location.origin;
         if (type === 'music') {
           logo = `icon-yinle1`;
-          url += `/sharemusic/#${id}`;
+          url += `/sharemusic/?s=${id}`;
         } else if (type === 'bookmk') {
           logo = `icon-shuqian`;
-          url += `/sharebm/#${id}`;
+          url += `/sharebm/?s=${id}`;
         } else if (type === 'file') {
           logo = `icon-24gl-fileText`;
-          url += `/sharefile/#${id}`;
+          url += `/sharefile/?s=${id}`;
         } else if (type === 'dir') {
           logo = `icon-24gl-folder`;
-          url += `/sharefile/#${id}`;
+          url += `/sharefile/?s=${id}`;
         }
         return { logo, url };
       },

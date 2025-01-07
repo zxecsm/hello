@@ -63,17 +63,17 @@ const $header = $('.header');
 const $shareInfo = $('.share_info');
 const $fileBox = $('.file_box');
 let pageSize = _getData('filesPageSize');
-let curFileDirPath = _getDataTem('curFileDirPath') || '/';
+let curFileDirPath = curmb.getPath();
 let fileShowGrid = _getData('fileShowGrid');
 let hiddenFile = _getData('hiddenFile');
 let fileSort = _getData('fileSort'); // 排序
 let subDir = _getData('searchFileSubDir'); // 搜索子目录
-let urlparmes = queryURLParams(myOpen()),
-  HASH = urlparmes.HASH;
-if (!HASH) {
+const urlparmes = queryURLParams(myOpen()),
+  shareId = urlparmes.s;
+if (!shareId) {
   pageErr();
 }
-let passCode = _getDataTem('passCode', HASH) || '';
+let passCode = _getDataTem('passCode', shareId) || '';
 let shareToken = '';
 let shareObj = {};
 let uObj = {};
@@ -87,11 +87,11 @@ const verifyCode = hdOnce(() => {
 // 获取分享数据
 function getShareData(close, loading = { start() {}, end() {} }) {
   loading.start();
-  reqFileGetShare({ id: HASH, pass: passCode })
+  reqFileGetShare({ id: shareId, pass: passCode })
     .then((res) => {
       loading.end();
       if (res.code === 1) {
-        _setDataTem('passCode', passCode, HASH); // 缓存
+        _setDataTem('passCode', passCode, shareId); // 缓存
         close && close();
         const { username, logo, account, data, exp_time, title, email, token } =
           res.data;

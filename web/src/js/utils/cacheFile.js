@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { CacheByExpire } from './cache';
 import md5 from './md5';
-import { _getData, _setData, getFiles, getPreUrl } from './utils';
+import { _getData, _setData, getFiles } from './utils';
 import _msg from '../plugins/message';
 
 const cacheFile = {
@@ -20,7 +20,7 @@ const cacheFile = {
     return navigator.storage.getDirectory();
   },
   getHash(key, type) {
-    const side = getPreUrl();
+    const side = window.location.origin;
     key = key.replace(side, '');
     return `${type}_${md5.getStringHash(key)}`;
   },

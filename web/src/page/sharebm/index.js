@@ -40,15 +40,15 @@ import _path from '../../js/utils/path';
 import cacheFile from '../../js/utils/cacheFile';
 
 const urlparmes = queryURLParams(myOpen()),
-  HASH = urlparmes.HASH;
-if (!HASH) {
+  shareId = urlparmes.s;
+if (!shareId) {
   pageErr();
 }
 
 let pageNo = 1;
 let bmList = [];
 let bmPageSize = 12;
-let passCode = _getDataTem('passCode', HASH) || '';
+let passCode = _getDataTem('passCode', shareId) || '';
 let shareToken = '';
 
 const bmLoadImg = new LazyLoad();
@@ -160,11 +160,11 @@ const verifyCode = hdOnce(() => {
 // 获取书签数据
 function getShareData(close, loading = { start() {}, end() {} }) {
   loading.start();
-  reqBmkGetShare({ id: HASH, pass: passCode })
+  reqBmkGetShare({ id: shareId, pass: passCode })
     .then((res) => {
       loading.end();
       if (res.code === 1) {
-        _setDataTem('passCode', passCode, HASH);
+        _setDataTem('passCode', passCode, shareId);
         close && close();
 
         const { username, logo, account, data, title, exp_time, email, token } =

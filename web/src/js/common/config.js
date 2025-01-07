@@ -1,4 +1,4 @@
-import { getPreUrl, nanoid } from '../utils/utils';
+import { nanoid } from '../utils/utils';
 const levelObj = {
   upProgressbox: 100, // 上传进度（静）
   rightBox: 101, // 右键菜单（静）
@@ -10,7 +10,7 @@ const levelObj = {
   loading: 107, // 加载动画（静）
   clickLove: 107, // 点击（动）
 };
-const url = getPreUrl() + '/api';
+const url = window.location.origin + '/api';
 const serverURL = url;
 const mediaURL = url + '/getfile';
 // 搜索引擎
@@ -119,7 +119,6 @@ const _d = {
     editNoteFontSize: 0.22, // 编辑笔记输入框字体大小
     bmPageSize: 20, // 书签每页显示
     filesPageSize: 20, // 文件列表每页显示
-    curFileDirPath: '/', // 文件路径
     fileSort: { type: 'time', isDes: true }, // 文件排序
     fileFontSize: 0.22, // 文件编辑文本大小
     fileShowGrid: false, // 文件列表块状显示

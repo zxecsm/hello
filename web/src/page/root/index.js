@@ -18,7 +18,6 @@ import {
   _setData,
   wave,
   darkMode,
-  getPreUrl,
   _myOpen,
   getTextSize,
 } from '../../js/utils/utils';
@@ -462,8 +461,7 @@ function changeTrashState(e) {
     data,
     ({ id, resetMenu, close, loading }) => {
       if (id === 'toTrash') {
-        _setData('curFileDirPath', '/.trash');
-        _myOpen(`/file/`, '文件管理');
+        _myOpen(`/file/#/.trash`, '文件管理');
         close();
       } else if (id === 'state') {
         loading.start();
@@ -938,7 +936,7 @@ function handleRandomBg(e) {
     data,
     ({ id, resetMenu, e, loading }) => {
       if (id === 'info') {
-        const pre = getPreUrl();
+        const pre = window.location.origin;
         rMenu.rightInfo(
           e,
           `大屏：${pre}/api/bg/r/big\n小屏：${pre}/api/bg/r/small`,

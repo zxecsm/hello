@@ -21,6 +21,7 @@ import {
   errLog,
   batchTask,
   parseObjectJson,
+  getOrigin,
 } from '../../utils/utils.js';
 
 import { getUserInfo } from '../user/user.js';
@@ -62,11 +63,12 @@ export async function markAsRead(mAcc, fAcc) {
 // 助手回复响应消息
 export async function hdHelloMsg(req, data, type) {
   let { receive_chat_state, chat_id, account } = req._hello.userinfo;
+  const origin = getOrigin(req);
 
   const stopMsgText =
     '接口为关闭状态\n\n回复 start 开启接口 或 update 开启并更新接口';
 
-  let msgText = `收信接口：\nGET：/api/chat/${chat_id}/sendMessage?text=消息内容\nPOST：/api/chat/${chat_id}/sendMessage body：{"text": "消息内容"}\n\n回复 update 更新接口 回复 stop 关闭接口`;
+  let msgText = `收信接口：\nGET：${origin}/api/chat/${chat_id}/sendMessage?text=消息内容\nPOST：${origin}/api/chat/${chat_id}/sendMessage body：{"text": "消息内容"}\n\n回复 update 更新接口 回复 stop 关闭接口`;
 
   const text = data.trim();
 
@@ -80,7 +82,7 @@ export async function hdHelloMsg(req, data, type) {
       [account, 1]
     );
 
-    msgText = `收信接口：\nGET：/api/chat/${chat_id}/sendMessage?text=消息内容\nPOST：/api/chat/${chat_id}/sendMessage body：{"text": "消息内容"}\n\n回复 update 更新接口 回复 stop 关闭接口`;
+    msgText = `收信接口：\nGET：${origin}/api/chat/${chat_id}/sendMessage?text=消息内容\nPOST：${origin}/api/chat/${chat_id}/sendMessage body：{"text": "消息内容"}\n\n回复 update 更新接口 回复 stop 关闭接口`;
 
     await uLog(req, `更新收信接口成功(${chat_id})`);
   } else if (type === 'text' && text === 'stop') {
