@@ -898,7 +898,8 @@ function userMenu(e, msgObj, isUserList) {
                     },
                   },
                 },
-                function ({ close, inp, loading }) {
+                function ({ close, inp, loading, isDiff }) {
+                  if (!isDiff()) return;
                   const des = inp.text;
                   loading.start();
                   reqChatSetDes({ account: _from, des })
@@ -1152,8 +1153,8 @@ function hdDateSearchChat(e) {
         },
       },
     },
-    function ({ close, inp }) {
-      if (!verifyDate(inp)) return;
+    function ({ close, inp, isDiff }) {
+      if (!isDiff() || !verifyDate(inp)) return;
       searchDateLimit = inp;
       changeDateSearchState();
       openFriend(curChatAccount);

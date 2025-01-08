@@ -91,10 +91,10 @@ export async function bmkGroupExist(account, groupId) {
 
 // 清理缓存siteInfo
 export async function cleanSiteInfo(req = false) {
-  if (_d.siteInfoCache > 0) {
+  if (_d.cacheExp.siteInfoCache > 0) {
     const now = Date.now();
 
-    const threshold = now - _d.siteInfoCache * 24 * 60 * 60 * 1000;
+    const threshold = now - _d.cacheExp.siteInfoCache * 24 * 60 * 60 * 1000;
 
     const sList = await readMenu(
       _path.normalize(`${appConfig.appData}/siteinfo`)
@@ -121,10 +121,10 @@ export async function cleanSiteInfo(req = false) {
 
 // 清理缓存favicon
 export async function cleanFavicon(req = false) {
-  if (_d.faviconCache > 0) {
+  if (_d.cacheExp.faviconCache > 0) {
     const now = Date.now();
 
-    const threshold = now - _d.faviconCache * 24 * 60 * 60 * 1000;
+    const threshold = now - _d.cacheExp.faviconCache * 24 * 60 * 60 * 1000;
 
     const fList = await readMenu(
       _path.normalize(`${appConfig.appData}/favicon`)

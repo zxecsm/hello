@@ -51,22 +51,6 @@ export function reqRootRegisterState() {
 export function reqRootTrashState() {
   return _postAjax('/root/trash-state');
 }
-// 随机壁纸接口状态
-export function reqRootRandomBgState() {
-  return _postAjax('/root/random-bg-state');
-}
-// 聊天文件保存时间
-export function reqRootCleanChatFile(data) {
-  return _postAjax('/root/clean-chat-file', data);
-}
-// favicon缓存时间
-export function reqRootCleanFavicon(data) {
-  return _postAjax('/root/clean-favicon', data);
-}
-// siteInfo缓存时间
-export function reqRootCleanSiteInfo(data) {
-  return _postAjax('/root/clean-site-info', data);
-}
 // 更新token Key
 export function reqRootUpdateTokenKey() {
   return _postAjax('/root/update-tokenkey');
@@ -94,4 +78,12 @@ export function reqRootTestEmail(data) {
 // 测试tfa
 export function reqRootTestTfa(data) {
   return _postAjax('/root/test-tfa', data);
+}
+// 文件缓存时间
+export function reqRootChangeCacheTime(data) {
+  return _postAjax('/root/change-cache-time', data);
+}
+// 公开接口状态
+export function reqRootPubApiState(data) {
+  return _postAjax('/root/pub-api-state', data);
 }

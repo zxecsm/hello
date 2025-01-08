@@ -22,6 +22,7 @@ import {
   batchTask,
   parseObjectJson,
   getOrigin,
+  writelog,
 } from '../../utils/utils.js';
 
 import { getUserInfo } from '../user/user.js';
@@ -516,14 +517,16 @@ export function getChatUserList(account, pageSize, offset) {
 }
 
 // 清理到期聊天文件
-export async function cleanUpload() {
-  if (_d.uploadSaveDay > 0) {
+export async function cleanUpload(req = false) {
+  if (_d.cacheExp.uploadSaveDay > 0) {
     const uploadDir = _path.normalize(`${appConfig.appData}/upload`);
 
     if (!(await _f.exists(uploadDir))) return;
 
     const now = Date.now();
-    const exp = now - _d.uploadSaveDay * 24 * 60 * 60 * 1000;
+    const exp = now - _d.cacheExp.uploadSaveDay * 24 * 60 * 60 * 1000;
+
+    let count = 0;
 
     await batchTask(async (offset, limit) => {
       const list = await queryData(
@@ -545,11 +548,16 @@ export async function cleanUpload() {
         const { url } = item;
         const path = _path.normalize(`${uploadDir}/${url}`);
         await _delDir(path);
+        count++;
       });
 
       return true;
     }, 800);
 
     await delEmptyFolder(uploadDir);
+
+    if (count) {
+      await writelog(req, `清理到期聊天室文件：${count}`, 'user');
+    }
   }
 }

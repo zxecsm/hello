@@ -205,9 +205,9 @@ function changeUsername(e) {
         },
       },
     },
-    function ({ close, inp, loading }) {
+    function ({ close, inp, loading, isDiff }) {
+      if (!isDiff()) return;
       const username = inp.name;
-      if (username === setUserInfo().username) return;
       loading.start();
       reqUerChangename({
         username,
@@ -592,7 +592,8 @@ function handleForwardMsg(e) {
         },
       },
     },
-    function ({ close, inp, loading }) {
+    function ({ close, inp, loading, isDiff }) {
+      if (!isDiff()) return;
       let { state, link, type, header, body } = inp;
       header = parseObjectJson(header) || {};
       body = parseObjectJson(body) || {};
@@ -679,7 +680,8 @@ function setGentlemanLock(e) {
         },
       },
     },
-    function ({ inp, close }) {
+    function ({ inp, close, isDiff }) {
+      if (!isDiff()) return;
       close();
       const text = inp.text;
       _setData('gentlemanLockPd', text);

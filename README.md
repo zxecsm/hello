@@ -1,4 +1,4 @@
-```yml
+```
 services:
   hello:
     image: 'zxecsm/hello:latest'
@@ -13,7 +13,26 @@ services:
       - '55555:55555'
 ```
 
-- username：admin
+- username：`admin`
 - password：
+
+随机壁纸
+
+```
+http://localhost:55555/api/bg/r/big    # 大屏
+http://localhost:55555/api/bg/r/small  # 小屛
+```
+
+获取网站图标
+
+```
+http://localhost:55555/api/getfavicon?u=https://google.com
+```
+
+获取网站信息
+
+```
+http://localhost:55555/api/bmk/parse-site-info?u=https://google.com
+```
 
 ![hello](https://raw.githubusercontent.com/zxecsm/hello/main/hello.png)

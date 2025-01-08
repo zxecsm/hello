@@ -84,8 +84,9 @@ export function setEditor(e, editor, cb) {
         },
       },
     },
-    function ({ inp, close }) {
+    function ({ inp, close, isDiff }) {
       close(1);
+      if (!isDiff()) return;
       editorOption = {
         animatedScroll: inp.animatedScroll === 'y',
         showInvisibles: inp.showInvisibles === 'y',

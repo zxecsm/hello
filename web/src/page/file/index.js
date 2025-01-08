@@ -802,9 +802,9 @@ function editFileMode(e, obj) {
         },
       },
     },
-    function ({ close, inp, loading }) {
+    function ({ close, inp, loading, isDiff }) {
+      if (!isDiff()) return;
       const mode = inp.mode;
-      if (obj.mode.split(' ')[1] === mode) return;
       loading.start();
       reqFileMode({ data: obj, mode })
         .then((res) => {
@@ -1685,8 +1685,9 @@ function hdRename(e, obj, cb) {
         },
       },
     },
-    async function ({ close, inp, loading }) {
+    async function ({ close, inp, loading, isDiff }) {
       try {
+        if (!isDiff()) return;
         let name = inp.name;
         loading.start();
         const res = await reqFileRename({ data: obj, name });

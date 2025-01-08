@@ -54,8 +54,8 @@ route.get('/r/:type', async (req, res) => {
     }
 
     // 检查壁纸接口是否开启
-    if (!_d.randomBgApi) {
-      return _err(res, '壁纸接口未开启')(req);
+    if (!_d.pubApi.randomBgApi) {
+      return _err(res, '接口未开放')(req);
     }
 
     // 从数据库中随机选择一条数据

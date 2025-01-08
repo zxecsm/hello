@@ -130,9 +130,9 @@ function editCategory(e, obj) {
         },
       },
     },
-    function ({ close, inp, loading }) {
+    function ({ close, inp, loading, isDiff }) {
+      if (!isDiff()) return;
       const title = inp.text;
-      if (obj.title === title) return;
       loading.start();
       reqNoteEditCategory({ id: obj.id, title })
         .then((res) => {

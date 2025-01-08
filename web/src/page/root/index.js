@@ -28,19 +28,17 @@ import pagination from '../../js/plugins/pagination';
 import _d from '../../js/common/config';
 import {
   reqRootAccountState,
+  reqRootChangeCacheTime,
   reqRootCleanBgFile,
-  reqRootCleanChatFile,
   reqRootCleanDatabase,
-  reqRootCleanFavicon,
   reqRootCleanLogoFile,
   reqRootCleanMusicFile,
   reqRootCleanPicFile,
-  reqRootCleanSiteInfo,
   reqRootCleanThumbFile,
   reqRootCustomCode,
   reqRootDeleteAccount,
   reqRootEmail,
-  reqRootRandomBgState,
+  reqRootPubApiState,
   reqRootRegisterState,
   reqRootTestEmail,
   reqRootTestTfa,
@@ -125,14 +123,7 @@ function getUserList(top) {
   reqRootUserList({ pageNo, pageSize: uPageSize })
     .then((result) => {
       if (result.code === 1) {
-        const {
-          registerState,
-          uploadSaveDay,
-          faviconCache,
-          siteInfoCache,
-          data,
-          total,
-        } = (dataObj = result.data);
+        const { registerState, data, total } = (dataObj = result.data);
         pageNo = result.data.pageNo;
         userList = data;
         $headBtns
@@ -141,33 +132,6 @@ function getUserList(top) {
             'class',
             `iconfont iconfont ${
               registerState ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'
-            }`
-          );
-        $headBtns
-          .find('.upload_save_day')
-          .text(
-            `${
-              uploadSaveDay <= 0
-                ? '聊天室文件保存时间: 无限制'
-                : `聊天室文件保存时间: ${uploadSaveDay}天`
-            }`
-          );
-        $headBtns
-          .find('.favicon_save_day')
-          .text(
-            `${
-              faviconCache <= 0
-                ? '网址图标缓存时间: 无限制'
-                : `网址图标缓存时间: ${faviconCache}天`
-            }`
-          );
-        $headBtns
-          .find('.site_info_save_day')
-          .text(
-            `${
-              siteInfoCache <= 0
-                ? '网址描述缓存时间: 无限制'
-                : `网址描述缓存时间: ${siteInfoCache}天`
             }`
           );
         renderUserList(pageNo, total, top);
@@ -483,150 +447,6 @@ function changeTrashState(e) {
     '站点文件回收站（删除的壁纸音乐..）'
   );
 }
-// 修改聊天文件保存时间
-function changeChatFileSaveTime(e) {
-  rMenu.inpMenu(
-    e,
-    {
-      subText: '提交',
-      items: {
-        text: {
-          value: dataObj.uploadSaveDay,
-          placeholder: '0: 无限制',
-          inputType: 'number',
-          verify(val) {
-            val = parseFloat(val);
-            if (!isInteger(val) || val < 0 || val > _d.fieldLenght.expTime) {
-              return `限制0-${_d.fieldLenght.expTime}`;
-            }
-          },
-        },
-      },
-    },
-    function ({ close, inp, loading }) {
-      const day = parseInt(inp.text);
-      loading.start();
-      reqRootCleanChatFile({ day })
-        .then((res) => {
-          loading.end();
-          if (res.code === 1) {
-            close();
-            dataObj.uploadSaveDay = day;
-            $headBtns
-              .find('.upload_save_day')
-              .text(
-                `${
-                  dataObj.uploadSaveDay <= 0
-                    ? '聊天室文件保存时间: 无限制'
-                    : `聊天室文件保存时间: ${dataObj.uploadSaveDay}天`
-                }`
-              );
-            _msg.success(res.codeText);
-          }
-        })
-        .catch(() => {
-          loading.end();
-        });
-    },
-    '设置聊天室文件保存时间（天）'
-  );
-}
-// 修改favicon缓存时间
-function changeFaviconSaveTime(e) {
-  rMenu.inpMenu(
-    e,
-    {
-      subText: '提交',
-      items: {
-        text: {
-          value: dataObj.faviconCache,
-          placeholder: '0: 无限制',
-          inputType: 'number',
-          verify(val) {
-            val = parseFloat(val);
-            if (!isInteger(val) || val < 0 || val > _d.fieldLenght.expTime) {
-              return `限制0-${_d.fieldLenght.expTime}`;
-            }
-          },
-        },
-      },
-    },
-    function ({ close, inp, loading }) {
-      const day = parseInt(inp.text);
-      loading.start();
-      reqRootCleanFavicon({ day })
-        .then((res) => {
-          loading.end();
-          if (res.code === 1) {
-            close();
-            dataObj.faviconCache = day;
-            $headBtns
-              .find('.favicon_save_day')
-              .text(
-                `${
-                  dataObj.faviconCache <= 0
-                    ? '网址图标缓存时间: 无限制'
-                    : `网址图标缓存时间: ${dataObj.faviconCache}天`
-                }`
-              );
-            _msg.success(res.codeText);
-          }
-        })
-        .catch(() => {
-          loading.end();
-        });
-    },
-    '设置网址图标缓存时间（天）'
-  );
-}
-// 修改siteInfo缓存时间
-function changeSiteInfoSaveTime(e) {
-  rMenu.inpMenu(
-    e,
-    {
-      subText: '提交',
-      items: {
-        text: {
-          value: dataObj.siteInfoCache,
-          placeholder: '0: 无限制',
-          inputType: 'number',
-          verify(val) {
-            val = parseFloat(val);
-            if (!isInteger(val) || val < 0 || val > _d.fieldLenght.expTime) {
-              return `限制0-${_d.fieldLenght.expTime}`;
-            }
-          },
-        },
-      },
-    },
-    function ({ close, inp, loading }) {
-      const day = parseInt(inp.text);
-      loading.start();
-      reqRootCleanSiteInfo({ day })
-        .then((res) => {
-          loading.end();
-          if (res.code === 1) {
-            close();
-            dataObj.siteInfoCache = day;
-            $headBtns
-              .find('.site_info_save_day')
-              .text(
-                `${
-                  dataObj.siteInfoCache <= 0
-                    ? '网址描述缓存时间: 无限制'
-                    : `网址描述缓存时间: ${dataObj.siteInfoCache}天`
-                }`
-              );
-            _msg.success(res.codeText);
-          }
-        })
-        .catch(() => {
-          loading.end();
-        });
-    },
-    '设置网址描述缓存时间（天）'
-  );
-}
 // 更新token Key
 function updateTokenKey(e) {
   _pop({ e, text: `确认更新：tokenKey？` }, (type) => {
@@ -732,7 +552,8 @@ function setEmail(e) {
         },
       },
     },
-    function ({ inp, close, loading }) {
+    function ({ inp, close, loading, isDiff }) {
+      if (!isDiff()) return;
       const obj = {
         state: inp.state === 'y' ? 1 : 0,
         secure: inp.secure === 'y' ? 1 : 0,
@@ -801,9 +622,9 @@ function customCssJs(e) {
         },
       },
     },
-    function ({ close, inp, loading }) {
+    function ({ close, inp, loading, isDiff }) {
+      if (!isDiff()) return;
       const { js, css } = inp;
-      if (js === customCode.js && css === customCode.css) return;
       loading.start();
       reqRootCustomCode({ js, css })
         .then((result) => {
@@ -920,48 +741,6 @@ function handleTest(e) {
     '测试'
   );
 }
-// 随机壁纸
-function handleRandomBg(e) {
-  const data = [
-    { id: 'info', text: '接口信息', beforeIcon: 'iconfont icon-about' },
-    {
-      id: 'state',
-      text: '接口状态',
-      beforeIcon: 'iconfont icon-tupian',
-      afterIcon: dataObj.randomBgApi ? openIcon : closeIcon,
-    },
-  ];
-  rMenu.selectMenu(
-    e,
-    data,
-    ({ id, resetMenu, e, loading }) => {
-      if (id === 'info') {
-        const pre = window.location.origin;
-        rMenu.rightInfo(
-          e,
-          `大屏：${pre}/api/bg/r/big\n小屏：${pre}/api/bg/r/small`,
-          '接口信息'
-        );
-      } else if (id === 'state') {
-        loading.start();
-        reqRootRandomBgState()
-          .then((res) => {
-            loading.end();
-            if (res.code === 1) {
-              dataObj.randomBgApi = res.data;
-              data[1].afterIcon = dataObj.randomBgApi ? openIcon : closeIcon;
-              resetMenu(data);
-              _msg.success(res.codeText);
-            }
-          })
-          .catch(() => {
-            loading.end();
-          });
-      }
-    },
-    '随机壁纸接口'
-  );
-}
 // 清理文件
 function handleClearFile(e) {
   const data = [
@@ -1010,6 +789,149 @@ function handleClearFile(e) {
     '清理文件'
   );
 }
+
+// 文件缓存时间
+function handleFileCacheExp(e) {
+  const { uploadSaveDay, faviconCache, siteInfoCache } = dataObj.cacheExp;
+  function verify(val) {
+    val = parseFloat(val);
+    if (!isInteger(val) || val < 0 || val > _d.fieldLenght.expTime) {
+      return `限制0-${_d.fieldLenght.expTime}`;
+    }
+  }
+  const placeholder = '0: 无限制';
+  const inputType = 'number';
+  rMenu.inpMenu(
+    e,
+    {
+      subText: '提交',
+      items: {
+        uploadSaveDay: {
+          beforeText: '聊天室文件保存时间：',
+          value: uploadSaveDay,
+          placeholder,
+          inputType,
+          verify,
+        },
+        faviconCache: {
+          beforeText: '网站图标保存时间：',
+          value: faviconCache,
+          placeholder,
+          inputType,
+          verify,
+        },
+        siteInfoCache: {
+          beforeText: '网站信息保存时间：',
+          value: siteInfoCache,
+          placeholder,
+          inputType,
+          verify,
+        },
+      },
+    },
+    ({ close, inp, loading, isDiff }) => {
+      if (!isDiff()) return;
+      loading.start();
+      reqRootChangeCacheTime(inp)
+        .then((res) => {
+          if (res.code === 1) {
+            loading.end();
+            close();
+            dataObj.cacheExp = res.data;
+            _msg.success(res.codeText);
+          }
+        })
+        .catch(() => {
+          loading.end();
+        });
+    },
+    '设置文件缓存时间（天）'
+  );
+}
+
+// 公开接口状态
+function handlePubApi(e) {
+  const data = [
+    { id: 'info', text: '接口信息', beforeIcon: 'iconfont icon-about' },
+    {
+      id: 'state',
+      text: '接口状态',
+      beforeIcon: 'iconfont icon-bangzhu',
+    },
+  ];
+  rMenu.selectMenu(e, data, ({ id, e }) => {
+    if (id === 'info') {
+      const pre = window.location.origin;
+      rMenu.rightInfo(
+        e,
+        `壁纸：\n  大屏：${pre}/api/bg/r/big\n  小屏：${pre}/api/bg/r/small\n\n获取网站图标：${pre}/api/getfavicon?u=${pre}\n\n获取网站信息：${pre}/api/bmk/parse-site-info?u=${pre}`,
+        '接口信息'
+      );
+    } else if (id === 'state') {
+      const { randomBgApi, siteInfoApi, faviconApi } = dataObj.pubApi;
+      const type = 'select';
+      rMenu.inpMenu(
+        e,
+        {
+          subText: '提交',
+          items: {
+            randomBgApi: {
+              beforeText: '壁纸接口：',
+              type,
+              value: randomBgApi ? 'y' : 'n',
+              selectItem: [
+                { value: 'y', text: '开启' },
+                { value: 'n', text: '关闭' },
+              ],
+            },
+            faviconApi: {
+              beforeText: '获取网站图标接口：',
+              type,
+              value: faviconApi ? 'y' : 'n',
+              selectItem: [
+                { value: 'y', text: '开启' },
+                { value: 'n', text: '关闭' },
+              ],
+            },
+            siteInfoApi: {
+              beforeText: '获取网站信息接口：',
+              type,
+              value: siteInfoApi ? 'y' : 'n',
+              selectItem: [
+                { value: 'y', text: '开启' },
+                { value: 'n', text: '关闭' },
+              ],
+            },
+          },
+        },
+        function ({ inp, close, loading, isDiff }) {
+          if (!isDiff()) return;
+          const { randomBgApi, siteInfoApi, faviconApi } = inp;
+
+          const obj = {
+            randomBgApi: randomBgApi === 'y' ? 1 : 0,
+            siteInfoApi: siteInfoApi === 'y' ? 1 : 0,
+            faviconApi: faviconApi === 'y' ? 1 : 0,
+          };
+          loading.start();
+          reqRootPubApiState(obj)
+            .then((res) => {
+              if (res.code === 1) {
+                loading.end();
+                close();
+                dataObj.pubApi = res.data;
+                _msg.success(res.codeText);
+              }
+            })
+            .catch(() => {
+              loading.end();
+            });
+        },
+        '更改接口状态'
+      );
+    }
+  });
+}
 $headBtns
   .on('click', '.h_go_home', function () {
     myOpen('/');
@@ -1017,14 +939,12 @@ $headBtns
   .on('click', '.register_state', changeRegisterState)
   .on('click', '.trash_state', changeTrashState)
   .on('click', '.clear_file', handleClearFile)
-  .on('click', '.upload_save_day', changeChatFileSaveTime)
-  .on('click', '.favicon_save_day', changeFaviconSaveTime)
-  .on('click', '.site_info_save_day', changeSiteInfoSaveTime)
+  .on('click', '.file_cache_exp', handleFileCacheExp)
+  .on('click', '.pub_api', handlePubApi)
   .on('click', '.set_token_key', updateTokenKey)
   .on('click', '.email_btn', setEmail)
   .on('click', '.custom_btn', customCssJs)
   .on('click', '.test_btn', handleTest)
-  .on('click', '.random_bg_btn', handleRandomBg)
   .on('click', '.clean_database', cleanDatabase);
 if (!isIframe()) wave();
 changeDark.bind((isDark) => {

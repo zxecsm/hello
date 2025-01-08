@@ -470,12 +470,11 @@ function bmMenu(e) {
               },
             },
           },
-          function ({ close, inp, loading }) {
+          function ({ close, inp, loading, isDiff }) {
+            if (!isDiff()) return;
             const title = inp.title,
               link = inp.link,
               des = inp.des;
-            if (title === obj.title && link === obj.link && des === obj.des)
-              return;
             const requestObj = {
               groupId: obj.group_id,
               id: obj.id,

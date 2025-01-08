@@ -173,7 +173,6 @@ app.use(
     maxAge: 2592000000,
   })
 );
-app.use('/api/getfavicon', getfaviconRoute);
 
 app.use(async (req, res, next) => {
   try {
@@ -227,6 +226,7 @@ app.use('/api/count', countRoute);
 app.use('/api/file', fileRoute);
 app.use('/api/notepad', notepadRoute);
 app.use('/api/task', taskRoute);
+app.use('/api/getfavicon', getfaviconRoute);
 
 app.use((_, res) => {
   res.sendFile(resolve(__dirname, 'data/404.html'));

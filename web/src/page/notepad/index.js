@@ -227,7 +227,7 @@ if (!k || !/^[\w]+$/.test(k)) {
           verify(val) {
             if (val === '') {
               return '请输入便条Key';
-            } else if (val.length > 20) {
+            } else if (val.length > _d.fieldLenght.filename) {
               return '便条key过长';
             } else if (!/^[\w]+$/.test(val)) {
               return '只能包含数字、字母和下划线';

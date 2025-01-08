@@ -325,9 +325,9 @@ function editTodo(e, todo) {
         },
       },
     },
-    function ({ close, inp, loading }) {
+    function ({ close, inp, loading, isDiff }) {
+      if (!isDiff()) return;
       const content = inp.text;
-      if (content === todo.content) return;
       loading.start();
       reqTodoEdit({ id: todo.id, content })
         .then((result) => {

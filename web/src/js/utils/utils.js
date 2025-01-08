@@ -2769,3 +2769,51 @@ export function bindEvent(el, type, callback) {
     el.removeEventListener(type, callback);
   };
 }
+
+// 深度比较对象
+export function deepEqual(obj1, obj2) {
+  // 如果两个引用相同，直接返回 true
+  if (obj1 === obj2) return true;
+
+  // 如果不是对象或数组类型，直接比较值
+  if (
+    typeof obj1 !== 'object' ||
+    typeof obj2 !== 'object' ||
+    obj1 == null ||
+    obj2 == null
+  ) {
+    return obj1 === obj2;
+  }
+
+  // 如果是数组
+  if (Array.isArray(obj1) && Array.isArray(obj2)) {
+    // 长度不同，直接返回 false
+    if (obj1.length !== obj2.length) return false;
+
+    // 比较每一个元素
+    for (let i = 0; i < obj1.length; i++) {
+      if (!deepEqual(obj1[i], obj2[i])) return false;
+    }
+
+    return true;
+  }
+
+  // 如果一个是数组，另一个不是，返回 false
+  if (Array.isArray(obj1) !== Array.isArray(obj2)) return false;
+
+  // 如果是对象
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+
+  // 键的数量不同，返回 false
+  if (keys1.length !== keys2.length) return false;
+
+  // 比较每一个键和值
+  for (const key of keys1) {
+    if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key])) {
+      return false;
+    }
+  }
+
+  return true;
+}

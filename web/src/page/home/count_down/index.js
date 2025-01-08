@@ -439,8 +439,8 @@ function editCount(e, count) {
         },
       },
     },
-    function ({ close, inp, loading }) {
-      if (!verifyDate(inp)) return;
+    function ({ close, inp, loading, isDiff }) {
+      if (!isDiff() || !verifyDate(inp)) return;
       loading.start();
       reqCountEdit({ id: count.id, ...inp })
         .then((result) => {
@@ -553,7 +553,8 @@ function toTop(e, obj) {
         },
       },
     },
-    function ({ inp, close, loading }) {
+    function ({ inp, close, loading, isDiff }) {
+      if (!isDiff()) return;
       const top = inp.num;
       if (obj.top === top) return;
       loading.start();

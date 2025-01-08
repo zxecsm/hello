@@ -6,7 +6,7 @@ import cheerio from '../bmk/cheerio.js';
 
 import axios from 'axios';
 
-import { errLog, getDirname } from '../../utils/utils.js';
+import { _err, errLog, getDirname } from '../../utils/utils.js';
 
 import appConfig from '../../data/config.js';
 
@@ -17,6 +17,7 @@ import { compressionImg } from '../../utils/img.js';
 import _crypto from '../../utils/crypto.js';
 import _path from '../../utils/path.js';
 import { cleanFavicon } from '../bmk/bmk.js';
+import { _d } from '../../data/data.js';
 
 const route = express.Router();
 
@@ -51,6 +52,11 @@ route.get('/', async (req, res) => {
 
   try {
     const u = new URL(req.query.u);
+
+    // 检查接口是否开启
+    if (!_d.pubApi.faviconApi && !req._hello.userinfo.account) {
+      return _err(res, '接口未开放')(req, req.query.u, 1);
+    }
 
     p = _path.normalize(
       `${appConfig.appData}/favicon/${_crypto.getStringHash(u.host)}.png`

@@ -131,12 +131,10 @@ route.get('/user-list', async (req, res) => {
 
     _success(res, 'ok', {
       ...result,
-      uploadSaveDay: _d.uploadSaveDay,
-      faviconCache: _d.faviconCache,
-      siteInfoCache: _d.siteInfoCache,
       registerState: _d.registerState,
       trashState: _d.trashState,
-      randomBgApi: _d.randomBgApi,
+      cacheExp: _d.cacheExp,
+      pubApi: _d.pubApi,
       email: _d.email,
       data: list,
     });
@@ -329,69 +327,6 @@ route.post('/update-tokenkey', async (req, res) => {
   }
 });
 
-// 定时清理聊天文件
-route.post('/clean-chat-file', async (req, res) => {
-  try {
-    let { day } = req.body;
-    day = parseInt(day);
-
-    if (isNaN(day) || day < 0 || day > fieldLenght.expTime) {
-      paramErr(res, req);
-      return;
-    }
-
-    _d.uploadSaveDay = day;
-
-    await cleanUpload();
-
-    _success(res, '设置聊天文件过期时间成功')(req, _d.uploadSaveDay, 1);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 定时清理缓存favicon
-route.post('/clean-favicon', async (req, res) => {
-  try {
-    let { day } = req.body;
-    day = parseInt(day);
-
-    if (isNaN(day) || day < 0 || day > fieldLenght.expTime) {
-      paramErr(res, req);
-      return;
-    }
-
-    _d.faviconCache = day;
-
-    await cleanFavicon(req);
-
-    _success(res, '设置缓存favicon过期时间成功')(req, _d.faviconCache, 1);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 定时清理缓存siteInfo
-route.post('/clean-site-info', async (req, res) => {
-  try {
-    let { day } = req.body;
-    day = parseInt(day);
-
-    if (isNaN(day) || day < 0 || day > fieldLenght.expTime) {
-      paramErr(res, req);
-      return;
-    }
-
-    _d.siteInfoCache = day;
-
-    await cleanSiteInfo(req);
-
-    _success(res, '设置缓存siteInfo过期时间成功')(req, _d.siteInfoCache, 1);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
 // 读取日志
 route.get('/log', async (req, res) => {
   try {
@@ -467,16 +402,78 @@ route.post('/trash-state', async (req, res) => {
   }
 });
 
-// 随机壁纸接口状态
-route.post('/random-bg-state', async (req, res) => {
+// 公开api状态
+route.post('/pub-api-state', async (req, res) => {
   try {
-    _d.randomBgApi = !_d.randomBgApi;
+    const { randomBgApi, siteInfoApi, faviconApi } = req.body;
+    if (
+      !validationValue(randomBgApi, [0, 1]) ||
+      !validationValue(siteInfoApi, [0, 1]) ||
+      !validationValue(faviconApi, [0, 1])
+    ) {
+      paramErr(res, req);
+      return;
+    }
 
-    _success(
-      res,
-      `${_d.randomBgApi ? '开启' : '关闭'}随机壁纸接口成功`,
-      _d.randomBgApi
-    )(req);
+    _d.pubApi = {
+      randomBgApi: !!randomBgApi,
+      siteInfoApi: !!siteInfoApi,
+      faviconApi: !!faviconApi,
+    };
+
+    _success(res, `修改接口状态成功`, _d.pubApi)(req);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 文件缓存时间
+route.post('/change-cache-time', async (req, res) => {
+  try {
+    let { uploadSaveDay, faviconCache, siteInfoCache } = req.body;
+
+    uploadSaveDay = parseInt(uploadSaveDay);
+    faviconCache = parseInt(faviconCache);
+    siteInfoCache = parseInt(siteInfoCache);
+
+    if (
+      isNaN(uploadSaveDay) ||
+      uploadSaveDay < 0 ||
+      uploadSaveDay > fieldLenght.expTime ||
+      isNaN(faviconCache) ||
+      faviconCache < 0 ||
+      faviconCache > fieldLenght.expTime ||
+      isNaN(siteInfoCache) ||
+      siteInfoCache < 0 ||
+      siteInfoCache > fieldLenght.expTime
+    ) {
+      paramErr(res, req);
+      return;
+    }
+
+    const uploadSaveDayIschange = _d.cacheExp.uploadSaveDay !== uploadSaveDay;
+    const faviconCacheIschange = _d.cacheExp.faviconCache !== faviconCache;
+    const siteInfoCacheIschange = _d.cacheExp.siteInfoCache !== siteInfoCache;
+
+    _d.cacheExp = {
+      uploadSaveDay,
+      faviconCache,
+      siteInfoCache,
+    };
+
+    if (uploadSaveDayIschange) {
+      await cleanUpload(req);
+    }
+
+    if (faviconCacheIschange) {
+      await cleanFavicon(req);
+    }
+
+    if (siteInfoCacheIschange) {
+      await cleanSiteInfo(req);
+    }
+
+    _success(res, `修改文件缓存过期时间成功`, _d.cacheExp)(req);
   } catch (error) {
     _err(res)(req, error);
   }

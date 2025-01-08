@@ -773,7 +773,7 @@ export function addBookMark(e, pid) {
     function ({ e, inp, close, loading }) {
       const u = inp.link;
       loading.start();
-      reqBmkParseSiteInfo({ url: u })
+      reqBmkParseSiteInfo({ u })
         .then((result) => {
           loading.end();
           if (result.code === 1) {
@@ -898,10 +898,10 @@ function editBmList(e, obj) {
         },
       },
     },
-    function ({ close, inp, loading }) {
+    function ({ close, inp, loading, isDiff }) {
+      if (!isDiff()) return;
       const title = inp.text;
       let idx = inp.idx - 1;
-      if (title === obj.title && idx === obj.num) return;
       let toId = '';
       if (idx !== obj.num) {
         const lastNum = bookmark.list.length - 1;
@@ -1161,18 +1161,12 @@ function editBm(e, obj, isHome) {
         },
       },
     },
-    function ({ close, inp, loading }) {
+    function ({ close, inp, loading, isDiff }) {
+      if (!isDiff()) return;
       let an = inp.title,
         al = inp.link,
         idx = inp.idx - 1,
         des = inp.des;
-      if (
-        an === obj.title &&
-        al === obj.link &&
-        des === obj.des &&
-        idx === obj.num
-      )
-        return;
       const pid = isHome ? 'home' : obj.group_id;
       let tid = '';
       if (idx != obj.num) {

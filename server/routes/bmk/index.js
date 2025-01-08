@@ -51,6 +51,7 @@ import { getFriendDes } from '../chat/chat.js';
 import _crypto from '../../utils/crypto.js';
 import _path from '../../utils/path.js';
 import jwt from '../../utils/jwt.js';
+import { _d } from '../../data/data.js';
 
 const route = express.Router();
 
@@ -283,15 +284,6 @@ route.get('/list', async (req, res) => {
   }
 });
 
-// 验证登录态
-route.use((req, res, next) => {
-  if (req._hello.userinfo.account) {
-    next();
-  } else {
-    _nologin(res);
-  }
-});
-
 // 删除网址描述缓存信息
 timedTask.add(async (flag) => {
   if (flag.slice(-6) === '000030') {
@@ -305,18 +297,23 @@ route.get('/parse-site-info', async (req, res) => {
   let p = '',
     miss = '';
 
-  const { url } = req.query;
+  const { u } = req.query;
 
   try {
-    if (!isurl(url) || !validaString(url, 1, fieldLenght.url)) {
+    if (!isurl(u) || !validaString(u, 1, fieldLenght.url)) {
       paramErr(res, req);
       return;
     }
 
-    await uLog(req, `获取网站信息(${url})`);
+    // 检查接口是否开启
+    if (!_d.pubApi.siteInfoApi && !req._hello.userinfo.account) {
+      return _err(res, '接口未开放')(req, u, 1);
+    }
+
+    await uLog(req, `获取网站信息(${u})`);
 
     p = _path.normalize(
-      `${appConfig.appData}/siteinfo/${_crypto.getStringHash(url)}.json`
+      `${appConfig.appData}/siteinfo/${_crypto.getStringHash(u)}.json`
     );
 
     miss = p + '.miss';
@@ -336,7 +333,7 @@ route.get('/parse-site-info', async (req, res) => {
 
     const result = await axios({
       method: 'get',
-      url,
+      url: u,
       timeout: 5000,
     });
 
@@ -360,12 +357,21 @@ route.get('/parse-site-info', async (req, res) => {
       try {
         await _f.fsp.writeFile(miss, '');
       } catch (err) {
-        await errLog(req, `${err}(${url})`);
+        await errLog(req, `${err}(${u})`);
       }
     }
 
-    await errLog(req, `${error}(${url})`);
+    await errLog(req, `${error}(${u})`);
     _success(res, 'ok', obj);
+  }
+});
+
+// 验证登录态
+route.use((req, res, next) => {
+  if (req._hello.userinfo.account) {
+    next();
+  } else {
+    _nologin(res);
   }
 });
 

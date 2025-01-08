@@ -6,6 +6,7 @@ import {
   _position,
   _setTimeout,
   debounce,
+  deepEqual,
   findLastIndex,
   getScreenSize,
   hdTextMsg,
@@ -273,24 +274,26 @@ function shake(target) {
 function selectTabs(e, data, opt = {}, title = '') {
   const html = `<div class="tabs_wrap"><i cursor="y" class="clean_btn iconfont icon-15qingkong-1"></i></div><p class='err'></p><button cursor="y" class="mtcbtn">提交</button>`;
   let tabsObj = null;
+  function isDiff() {
+    return !deepEqual(
+      tabsObj.list.map((item) => item.id),
+      data.map((item) => item.id)
+    );
+  }
   const r = rightM({
     e,
     title,
     html,
     readyToCloseAll({ e, close }) {
-      if (
-        (tabsObj.list.length === 0 && data.length === 0) ||
-        (tabsObj.list.length === data.length &&
-          tabsObj.list.every((item) => data.some((y) => y.id === item.id)))
-      ) {
-        return true;
-      } else {
+      if (isDiff()) {
         _pop({ e, text: '关闭：输入框？' }, (type) => {
           if (type === 'confirm') {
             close(1, e);
           }
         });
         return false;
+      } else {
+        return true;
       }
     },
     beforeClose() {
@@ -326,7 +329,8 @@ function selectTabs(e, data, opt = {}, title = '') {
           errText = opt.verify(tabsObj.list) || '';
         }
         if (!errText) {
-          opt.submit && opt.submit({ e, close, data: tabsObj.list, loading });
+          opt.submit &&
+            opt.submit({ e, close, data: tabsObj.list, loading, isDiff });
         } else {
           shake(this.rightBox);
         }
@@ -416,6 +420,19 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
     });
   }
   const initItems = deepClone(items);
+  // 与最初值是否不同
+  function isDiff() {
+    const curItemsArr = [],
+      initItemsArr = [];
+    Object.keys(items).forEach((key) => {
+      curItemsArr.push(items[key]);
+      initItemsArr.push(initItems[key]);
+    });
+    return !deepEqual(
+      curItemsArr.map((item) => item.value),
+      initItemsArr.map((item) => item.value)
+    );
+  }
   const r = rightM({
     e,
     title,
@@ -473,27 +490,15 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       if (isMask) {
         return false;
       }
-      const curItemsArr = [],
-        initItemsArr = [];
-      Object.keys(items).forEach((key) => {
-        curItemsArr.push(items[key]);
-        initItemsArr.push(initItems[key]);
-      });
-      if (
-        curItemsArr
-          .filter((item) => item.type !== 'select')
-          .every((item) => item.value === '') ||
-        curItemsArr.map((item) => item.value).toString() ==
-          initItemsArr.map((item) => item.value).toString()
-      ) {
-        return true;
-      } else {
+      if (isDiff()) {
         _pop({ e, text: '关闭：输入框？' }, (type) => {
           if (type === 'confirm') {
             close(1, e);
           }
         });
         return false;
+      } else {
+        return true;
       }
     },
     click({ e, close }) {
@@ -526,7 +531,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
           Object.keys(items).forEach((k) => {
             inp[k] = items[k].value;
           });
-          callback && callback({ e, inp, close, items, loading });
+          callback && callback({ e, inp, close, items, loading, isDiff });
         }
       } else if (cleanBtn) {
         const inp = cleanBtn.parentNode.firstElementChild;

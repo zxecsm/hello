@@ -24,7 +24,7 @@ route.get('/', async (req, res) => {
   try {
     const { k } = req.query;
 
-    if (!validaString(k, 1, 20, 1)) {
+    if (!validaString(k, 1, fieldLenght.filename, 1)) {
       paramErr(res, req);
       return;
     }
@@ -49,7 +49,7 @@ route.post('/', async (req, res) => {
     const { k, data = '' } = req.body;
 
     if (
-      !validaString(k, 1, 20, 1) ||
+      !validaString(k, 1, fieldLenght.filename, 1) ||
       !validaString(data, 0, 0, 0, 1) ||
       getTextSize(data) > fieldLenght.noteSize
     ) {

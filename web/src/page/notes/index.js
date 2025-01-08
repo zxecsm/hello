@@ -380,9 +380,9 @@ function toTop(e, obj) {
         },
       },
     },
-    function ({ inp, close, loading }) {
+    function ({ inp, close, loading, isDiff }) {
+      if (!isDiff()) return;
       const w = inp.num;
-      if (obj.top === w) return;
       loading.start();
       reqNoteTop({ id: obj.id, top: w })
         .then((res) => {
@@ -428,7 +428,8 @@ function noteEditCategory(e, obj) {
           add(param);
         });
       },
-      submit({ close, data, loading }) {
+      submit({ close, data, loading, isDiff }) {
+        if (!isDiff()) return;
         loading.start();
         reqNoteSetCategory({
           id: obj.id,
@@ -519,8 +520,8 @@ function editNoteInfo(e, obj) {
         },
       },
     },
-    function ({ close, inp, loading }) {
-      if (!verifyDate(inp)) return;
+    function ({ close, inp, loading, isDiff }) {
+      if (!isDiff() || !verifyDate(inp)) return;
       loading.start();
       reqNoteEditInfo({
         id: obj.id,

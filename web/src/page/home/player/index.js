@@ -593,7 +593,7 @@ export function editSongInfo(e, sobj) {
             }
           },
         },
-        name: {
+        title: {
           value: sobj.title,
           beforeText: '歌曲名：',
           placeholder: '歌曲名',
@@ -672,41 +672,12 @@ export function editSongInfo(e, sobj) {
         },
       },
     },
-    function ({ close, inp, loading }) {
-      const newName = inp.name;
-      const newArtist = inp.artist;
-      const newAlbum = inp.album;
-      const newYear = inp.year;
-      const newDuration = inp.duration;
-      const newPlayCount = inp.play_count;
-      const newCollectCount = inp.collect_count;
-      if (
-        newName +
-          newArtist +
-          newAlbum +
-          newYear +
-          newDuration +
-          newPlayCount +
-          newCollectCount ==
-        sobj.title +
-          sobj.artist +
-          sobj.album +
-          sobj.year +
-          sobj.duration +
-          sobj.play_count +
-          sobj.collect_count
-      )
-        return;
+    function ({ close, inp, loading, isDiff }) {
+      if (!isDiff()) return;
       loading.start();
       reqPlayerEditSong({
+        ...inp,
         id: sobj.id,
-        title: newName,
-        artist: newArtist,
-        album: newAlbum,
-        year: newYear,
-        duration: newDuration,
-        play_count: newPlayCount,
-        collect_count: newCollectCount,
       })
         .then((res) => {
           loading.end();
@@ -1411,11 +1382,11 @@ function editSongList(e, obj, sid) {
   rMenu.inpMenu(
     e,
     option,
-    function ({ close, inp, loading }) {
+    function ({ close, inp, loading, isDiff }) {
+      if (!isDiff()) return;
       let nname = inp.title,
         idx = inp.idx - 1,
         ndes = inp.des;
-      if (nname + ndes === name + (des || '') && idx === obj.num) return;
       let toId = '';
       if (idx != obj.num) {
         const lastNum = musicList.length - 1;
