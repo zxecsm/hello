@@ -30,7 +30,7 @@ module.exports = merge(require('./webpack.base'), {
     compress: true,
     port: 55556,
     open: true,
-    hot: true,
+    hot: false,
     proxy: [
       {
         context: ['/api'],
@@ -38,8 +38,15 @@ module.exports = merge(require('./webpack.base'), {
       },
     ],
   },
+  optimization: {
+    // 只加载必要的模块
+    splitChunks: {
+      chunks: 'all',
+    },
+  },
   mode: 'development',
-  devtool: 'source-map',
+  // devtool: 'source-map',
+  devtool: 'cheap-module-source-map',
   watchOptions: {
     ignored: /node_modules/, // 忽略 node_modules
     poll: 1000, // 每秒检查一次改动
