@@ -413,6 +413,7 @@ export function _mySlide(options) {
     }
   }
   function handleEnd(e) {
+    if (getSelectText() !== '') return; // 有选中文本
     let spanX = 0,
       spanY = 0;
     if (e.type === 'touchend') {

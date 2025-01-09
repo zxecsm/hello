@@ -11,7 +11,6 @@ import {
   myDrag,
   myToMax,
   myToRest,
-  getSelectText,
   myResize,
   _mySlide,
   getScreenSize,
@@ -478,11 +477,7 @@ myResize({
 _mySlide({
   el: $todoList[0],
   right(e) {
-    if (
-      getSelectText() !== '' ||
-      _getTarget(this, e, '.todo_list .todo_paging_box')
-    )
-      return;
+    if (_getTarget(this, e, '.todo_list .todo_paging_box')) return;
     closeTodoBox();
   },
 });

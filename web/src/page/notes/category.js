@@ -1,11 +1,6 @@
 import $ from 'jquery';
 import _d from '../../js/common/config';
-import {
-  _mySlide,
-  getSelectText,
-  loadingImg,
-  toHide,
-} from '../../js/utils/utils';
+import { _mySlide, loadingImg, toHide } from '../../js/utils/utils';
 import {
   reqNoteAddCategory,
   reqNoteCategory,
@@ -207,7 +202,6 @@ $categoryBox
 _mySlide({
   el: $categoryBox[0],
   right() {
-    if (getSelectText() !== '') return;
     hideCategoryBox();
   },
 });

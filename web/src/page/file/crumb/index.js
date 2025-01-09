@@ -33,7 +33,8 @@ function updatePageInfo() {
 function renderCrumb() {
   const html = _tpl(
     `
-    <i cursor="y" class="back iconfont icon-Undo"></i>
+    <i cursor="y" class="back iconfont icon-zuo"></i>
+    <i cursor="y" class="forward iconfont icon-you"></i>
     <span :cursor="pathArr.length > 0 ? 'y' : ''" class='home'>主页</span>
     <span v-for="item,idx in pathArr" :title="item" :cursor="idx + 1 === pathArr.length ? '' : 'y'" :data-idx="idx + 1">{{item}}</span>
     <i cursor="y" class="refresh iconfont icon-suijibofang"></i>
@@ -70,6 +71,8 @@ function hdClick(e) {
       const className = target.className;
       if (className.includes('back')) {
         hashRouter.back();
+      } else if (className.includes('forward')) {
+        hashRouter.forward();
       } else if (className.includes('refresh')) {
         callback && callback(HASH, { pageNo: 1, top: 0, update: 1 });
       }
@@ -99,6 +102,11 @@ _mySlide({
       hashRouter.back();
     }
   },
+  left() {
+    if (isMobile()) {
+      hashRouter.forward();
+    }
+  },
 });
 
 _mySlide({
@@ -106,6 +114,11 @@ _mySlide({
   right() {
     if (isMobile()) {
       hashRouter.back();
+    }
+  },
+  left() {
+    if (isMobile()) {
+      hashRouter.forward();
     }
   },
 });

@@ -1969,7 +1969,6 @@ myResize({
 _mySlide({
   el: '.chat_list_box',
   right() {
-    if (getSelectText() !== '') return;
     closeChatRoom();
   },
 });

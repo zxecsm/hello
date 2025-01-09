@@ -1387,7 +1387,7 @@ export function showAside() {
   $asideWrap.outerWidth();
   $asideWrap.css('display', 'block').addClass('open');
   $asideBtn.fadeOut(_d.speed);
-  getBookMarkList($asideBtn.activeId, 1, 500);
+  getBookMarkList($asideBtn.activeId, 1, 0);
 }
 
 function hideAside() {

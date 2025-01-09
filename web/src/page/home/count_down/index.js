@@ -9,7 +9,6 @@ import {
   myDrag,
   myToMax,
   myToRest,
-  getSelectText,
   myResize,
   _mySlide,
   getScreenSize,
@@ -671,11 +670,7 @@ myResize({
 _mySlide({
   el: $countList[0],
   right(e) {
-    if (
-      getSelectText() !== '' ||
-      _getTarget(this, e, '.count_list .count_paging_box')
-    )
-      return;
+    if (_getTarget(this, e, '.count_list .count_paging_box')) return;
     closeCountBox();
   },
 });

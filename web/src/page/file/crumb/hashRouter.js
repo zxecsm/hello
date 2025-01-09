@@ -10,10 +10,14 @@ const hashRouter = {
     return decodeURIComponent(window.location.hash.slice(1)) || '/';
   },
   setHash(path) {
+    this.data.delete(path);
     window.location.hash = '#' + path;
   },
   back() {
     window.history.back();
+  },
+  forward() {
+    window.history.forward();
   },
 };
 
