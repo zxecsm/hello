@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { CacheByExpire } from './cache';
 import md5 from './md5';
-import { _getData, _setData, getFiles } from './utils';
+import { _getData, _setData, downloadBlob, getFiles } from './utils';
 import _msg from '../plugins/message';
 
 const cacheFile = {
@@ -234,36 +234,61 @@ const cacheFile = {
     try {
       if (!this.supported) throw '';
 
-      const zip = new JSZip();
-
       const dirHandle = await this.getDirectory();
+      const packs = []; // 分包
+      let size = 0;
+      let pack = [];
+      const packName = 'hello_storage';
 
-      let count = 0;
-      // 遍历目录中的文件并添加到zip
+      // 遍历目录中的文件按照一定大小进行分包处理
       for await (const [entryName, entryHandle] of dirHandle.entries()) {
         if (entryHandle.kind === 'file') {
           const file = await entryHandle.getFile();
-          zip.file(entryName, file);
-          count++;
-          _msg.botMsg(`添加文件：${count}`, 1);
+          size += file.size;
+          pack.push({ name: entryName, file });
+
+          _msg.botMsg(
+            `缓存分包：${packName}_${packs.length + 1} - ${(
+              size /
+              1024 /
+              1024
+            ).toFixed(2)}M`,
+            1
+          );
+          if (size > 500 * 1024 * 1024) {
+            packs.push({ size, pack, num: packs.length + 1 });
+            size = 0;
+            pack = [];
+          }
         }
       }
 
-      _msg.botMsg(`开始压缩文件：${count}`, 1);
-      // 生成zip文件并下载
-      const content = await zip.generateAsync({
-        type: 'blob',
-      });
+      // 处理最后的分包
+      if (pack.length > 0) {
+        packs.push({ size, pack, num: packs.length + 1 });
+      }
 
-      // 完成压缩后，下载文件
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(content);
-      link.href = url;
-      link.download = `hello_storage.zip`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      // 分别压缩包并下载
+      for await (const { size, num, pack } of packs) {
+        const zip = new JSZip();
+
+        for await (const { name, file } of pack) {
+          zip.file(name, file);
+        }
+
+        const pName = `${packName}_${num}.zip`;
+
+        _msg.botMsg(
+          `开始压缩：${pName} - ${(size / 1024 / 1024).toFixed(2)}M`,
+          1
+        );
+        // 生成zip文件并下载
+        const content = await zip.generateAsync({
+          type: 'blob',
+        });
+
+        downloadBlob(content, pName);
+      }
     } catch (error) {
       throw error;
     }
@@ -274,26 +299,32 @@ const cacheFile = {
       if (!this.supported) throw '';
 
       // 选择文件
-      const file = (await getFiles({ accept: '.zip' }))[0];
-      if (!file) throw '';
-
-      // 解压文件
-      const zip = new JSZip();
-      const zipContent = await file.arrayBuffer();
-      const zipFiles = await zip.loadAsync(zipContent);
+      const files = await getFiles({ accept: '.zip', multiple: 'multiple' });
+      if (files.length === 0) throw '';
 
       const cacheList = await this.getList();
-
       let count = 0;
-      // 将zip文件中的内容写入存储目录
-      for (const filename in zipFiles.files) {
-        // 不跳过或者不存在
-        if (!skip || !cacheList.some((item) => item.name === filename)) {
-          const fileData = await zipFiles.files[filename].async('blob');
-          await this.writeCache(filename, fileData);
-          _msg.botMsg(`导入文件：${++count}`, 1);
-        }
-      }
+
+      await Promise.all(
+        files.map(async (file) => {
+          // 解压文件
+          const zip = new JSZip();
+          const zipContent = await file.arrayBuffer();
+          const zipFiles = await zip.loadAsync(zipContent);
+
+          // 将zip文件中的内容写入存储目录
+          for (const filename in zipFiles.files) {
+            // 不跳过或者不存在
+            if (!skip || !cacheList.some((item) => item.name === filename)) {
+              try {
+                const fileData = await zipFiles.files[filename].async('blob');
+                await this.writeCache(filename, fileData);
+                _msg.botMsg(`导入文件：${++count}`, 1);
+              } catch {}
+            }
+          }
+        })
+      );
     } catch (error) {
       throw error;
     }

@@ -439,14 +439,17 @@ function sliceChatList(isPush, $item) {
 }
 export const renderChatMsg = {
   push(data, lastItem) {
-    if (data.length === 0) return;
     chatMsgData.push(data);
-    $chatListBox.find('.chat_list').append(renderMsgList(data));
+    const html = renderMsgList(data);
+    if (!html) return;
+    $chatListBox.find('.chat_list').append(html);
     sliceChatList(1, lastItem);
     chatimgLoad();
   },
   unshift(data, firstItem) {
-    if (data.length === 0) {
+    chatMsgData.unshift(data);
+    const html = renderMsgList(data);
+    if (!html) {
       $chatListBox
         .find('.chat_item')
         .first()
@@ -457,14 +460,13 @@ export const renderChatMsg = {
         );
       return;
     }
-    chatMsgData.unshift(data);
-    $chatListBox.find('.chat_list').prepend(renderMsgList(data));
+    $chatListBox.find('.chat_list').prepend(html);
     sliceChatList(0, firstItem);
     chatimgLoad();
   },
   reset(data = []) {
     chatMsgData.reset(data);
-    $chatListBox.find('.chat_list').html(renderMsgList(data));
+    $chatListBox.find('.chat_list').html(renderMsgList(data), 1);
     $chatListBox.scrollTop($chatListBox[0].scrollHeight);
     chatimgLoad();
   },
@@ -472,7 +474,7 @@ export const renderChatMsg = {
     $chatListBox
       .find('.chat_list')
       .html(
-        renderMsgList(chatMsgData.get().slice(-_d.fieldLenght.chatPageSize))
+        renderMsgList(chatMsgData.get().slice(-_d.fieldLenght.chatPageSize), 1)
       );
     $chatListBox.scrollTop($chatListBox[0].scrollHeight);
     chatimgLoad();
@@ -541,9 +543,11 @@ export const chatMsgData = {
   },
 };
 // 生成消息列表
-function renderMsgList(list) {
+function renderMsgList(list, skip) {
   if (list.length === 0) return '';
-  const listDoms = [...$chatListBox[0].querySelectorAll('.chat_item')];
+  const listDoms = skip
+    ? []
+    : [...$chatListBox[0].querySelectorAll('.chat_item')];
   const cList = chatMsgData.get();
   list = list.reduce((pre, item) => {
     // 处理可能时间戳相同的信息，因为游标使用create_at导致信息重复的问题
@@ -554,6 +558,7 @@ function renderMsgList(list) {
     }
     return pre;
   }, []);
+  if (list.length === 0) return '';
   const html = _tpl(
     `
     <template v-for="{id,content,create_at,_from,_to,username,size,showTime,type,des = ''} in list">
