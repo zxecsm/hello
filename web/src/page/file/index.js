@@ -414,7 +414,7 @@ async function openDir(path, { top, update = 0 }) {
   try {
     const $clearTrashBtn = $header.find('.clear_trash_btn');
 
-    if (path === '/.trash') {
+    if (path === `/${_d.trashDirName}`) {
       $clearTrashBtn.css('display', 'block');
     } else {
       $clearTrashBtn.css('display', 'none');
@@ -1139,7 +1139,7 @@ $header
   })
   .on('click', '.h_trash_btn', function () {
     updatePageInfo();
-    curmb.toGo('/.trash', { pageNo: 1, top: 0 });
+    curmb.toGo(`/${_d.trashDirName}`, { pageNo: 1, top: 0 });
   })
   .on('click', '.h_go_home', function () {
     myOpen('/');
@@ -1625,6 +1625,15 @@ $footer
   });
 // 删除
 function hdDel(e, arr, cb, loading = { start() {}, end() {} }) {
+  if (
+    arr.some(
+      (item) =>
+        _path.normalize(`${item.path}/${item.name}`) === `/${_d.trashDirName}`
+    )
+  ) {
+    _msg.error(`不能删除回收站目录：/${_d.trashDirName}`);
+    return;
+  }
   let text = '确认删除？';
   if (arr.length === 1) {
     text = `确认删除：${arr[0].name}？`;
@@ -1636,8 +1645,8 @@ function hdDel(e, arr, cb, loading = { start() {}, end() {} }) {
   };
   // 不是回收站目录
   if (
-    curFileDirPath !== '/.trash' &&
-    !_path.isPathWithin('/.trash', curFileDirPath)
+    curFileDirPath !== `/${_d.trashDirName}` &&
+    !_path.isPathWithin(`/${_d.trashDirName}`, curFileDirPath)
   ) {
     opt.cancel = { text: '放入回收站', type: 'primary' };
     opt.confirm.text = '直接删除';

@@ -1,5 +1,7 @@
 // 规范化路径
 function normalize(path) {
+  path = path.replace(/\\+/g, '/');
+
   const parts = path.split('/');
 
   const stack = [];

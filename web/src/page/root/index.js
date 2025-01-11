@@ -425,7 +425,7 @@ function changeTrashState(e) {
     data,
     ({ id, resetMenu, close, loading }) => {
       if (id === 'toTrash') {
-        _myOpen(`/file/#/.trash`, '文件管理');
+        _myOpen(`/file/#/${_d.trashDirName}`, '文件管理');
         close();
       } else if (id === 'state') {
         loading.start();

@@ -1,3 +1,4 @@
+import appConfig from '../../data/config.js';
 import _f from '../../utils/f.js';
 import _path from '../../utils/path.js';
 
@@ -7,7 +8,9 @@ import { getRootDir } from '../file/file.js';
 
 // 获取笔记历史版本记录文件夹
 export function getNoteHistoryDir(account, noteId) {
-  return _path.normalize(`${getRootDir(account)}/.noteHistory/${noteId}`);
+  return _path.normalize(
+    `${getRootDir(account)}/${appConfig.noteHistoryDirName}/${noteId}`
+  );
 }
 
 // 保存笔记历史

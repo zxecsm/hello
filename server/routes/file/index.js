@@ -249,8 +249,6 @@ route.get('/read-dir', async (req, res) => {
       let count = 0;
 
       if (await _f.exists(p)) {
-        const trashDir = getTrashDir(account);
-
         async function readDir(p) {
           if (signal.aborted) return;
 
@@ -263,9 +261,6 @@ route.get('/read-dir', async (req, res) => {
             taskState.update(taskKey, `${hdType}...${count}`);
 
             const fullPath = _path.normalize(`${item.path}/${item.name}`);
-            // 隐藏回收站目录
-            if (account && item.type === 'dir' && trashDir === fullPath)
-              continue;
 
             // 递归获取子目录
             if (item.type === 'dir' && subDir === 1 && word) {
@@ -535,11 +530,11 @@ route.post('/share', async (req, res) => {
       !validaString(pass, 0, fieldLenght.sharePass) ||
       isNaN(expireTime) ||
       expireTime > fieldLenght.expTime ||
-      (!_type.isObject(data) &&
-        !validaString(data.name, 1, fieldLenght.filename) &&
-        !validaString(data.path, 1, fieldLenght.url) &&
-        _path.normalize(data.path) !== '/' &&
-        !validationValue(data.type, ['dir', 'file']))
+      !_type.isObject(data) ||
+      !validaString(data.name, 1, fieldLenght.filename) ||
+      !validaString(data.path, 1, fieldLenght.url) ||
+      _path.normalize(`${data.path}/${data.name}`) === '/' ||
+      !validationValue(data.type, ['dir', 'file'])
     ) {
       paramErr(res, req);
       return;
@@ -605,7 +600,9 @@ route.post('/save-file', async (req, res) => {
         // 保存编辑历史版本
         const [, filename, , suffix] = _path.basename(fpath);
 
-        const historyDir = _path.normalize(`${_path.dirname(fpath)}/.history`);
+        const historyDir = _path.normalize(
+          `${_path.dirname(fpath)}/${appConfig.textFileHistoryDirName}`
+        );
 
         await _f.mkdir(historyDir);
 
@@ -648,6 +645,7 @@ route.post('/copy', async (req, res) => {
           _type.isObject(item) &&
           validaString(item.name, 1, fieldLenght.filename) &&
           validaString(item.path, 1, fieldLenght.url) &&
+          _path.normalize(`${item.path}/${item.name}`) !== '/' &&
           validationValue(item.type, ['dir', 'file'])
       )
     ) {
@@ -775,6 +773,7 @@ route.post('/move', async (req, res) => {
           _type.isObject(item) &&
           validaString(item.name, 1, fieldLenght.filename) &&
           validaString(item.path, 1, fieldLenght.url) &&
+          _path.normalize(`${item.path}/${item.name}`) !== '/' &&
           validationValue(item.type, ['dir', 'file'])
       )
     ) {
@@ -851,9 +850,10 @@ route.post('/zip', async (req, res) => {
     const { data } = req.body;
 
     if (
-      !_type.isObject(data) &&
-      !validaString(data.name, 1, fieldLenght.filename) &&
-      !validaString(data.path, 1, fieldLenght.url) &&
+      !_type.isObject(data) ||
+      !validaString(data.name, 1, fieldLenght.filename) ||
+      !validaString(data.path, 1, fieldLenght.url) ||
+      _path.normalize(`${data.path}/${data.name}`) === '/' ||
       !validationValue(data.type, ['file', 'dir'])
     ) {
       paramErr(res, req);
@@ -914,10 +914,10 @@ route.post('/unzip', async (req, res) => {
     const { data } = req.body;
 
     if (
-      !_type.isObject(data) &&
-      !validaString(data.name, 1, fieldLenght.filename) &&
-      _path.extname(data.name)[2].toLowerCase() != 'zip' &&
-      !validaString(data.path, 1, fieldLenght.url) &&
+      !_type.isObject(data) ||
+      !validaString(data.name, 1, fieldLenght.filename) ||
+      _path.extname(data.name)[2].toLowerCase() !== 'zip' ||
+      !validaString(data.path, 1, fieldLenght.url) ||
       !validationValue(data.type, ['file'])
     ) {
       paramErr(res, req);
@@ -987,6 +987,9 @@ route.post('/delete', async (req, res) => {
           _type.isObject(item) &&
           validaString(item.name, 1, fieldLenght.filename) &&
           validaString(item.path, 1, fieldLenght.url) &&
+          _path.normalize(`${item.path}/${item.name}`) !== '/' &&
+          _path.normalize(`${item.path}/${item.name}`) !==
+            `/${appConfig.trashDirName}` &&
           validationValue(item.type, ['dir', 'file'])
       )
     ) {

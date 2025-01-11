@@ -10,6 +10,9 @@ const appConfig = {
   appData,
   appFiles,
   userFiles: `${appData}/userFiles`,
+  trashDirName: '.trash', // 垃圾回收站目录名
+  noteHistoryDirName: '.noteHistory', // 笔记历史记录目录名
+  textFileHistoryDirName: '.history', // 文本文件历史记录目录名
 };
 
 export default appConfig;

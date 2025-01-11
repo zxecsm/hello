@@ -66,6 +66,8 @@ const fieldLenght = {
   customCodeSize: 100 * 1024, // 自定义代码大小
 };
 const _d = {
+  trashDirName: '.trash', // 垃圾回收站目录名
+  noteHistoryDirName: '.noteHistory', // 笔记历史记录目录名
   fieldLenght,
   serverURL,
   mediaURL,

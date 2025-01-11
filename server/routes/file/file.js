@@ -24,7 +24,7 @@ export function getRootDir(acc) {
 
 // 获取回收站目录
 export function getTrashDir(account) {
-  return _path.normalize(`${getRootDir(account)}/.trash`);
+  return _path.normalize(`${getRootDir(account)}/${appConfig.trashDirName}`);
 }
 
 // 删除站点文件
