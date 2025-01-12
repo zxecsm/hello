@@ -2,25 +2,27 @@ import bus from '../../../js/utils/bus';
 import _path from '../../../js/utils/path';
 import { _tpl } from '../../../js/utils/template';
 import { _mySlide, isMobile } from '../../../js/utils/utils';
-import hashRouter from './hashRouter';
+import HashRouter from './hashRouter';
 import './index.less';
+
+const routerData = new Map(); // 储存页面信息
 
 let target = null;
 let callback = null;
-
-let HASH = _path.normalize(hashRouter.getHash());
-
 let pageInfo = { pageNo: 1, top: 0 };
 
-window.addEventListener('hashchange', () => {
-  // 跳转前获取当前页信息并保存
-  updatePageInfo();
-  hashRouter.set(HASH, pageInfo);
-  // 查看是否有即将跳转页的信息
-  HASH = _path.normalize(hashRouter.getHash());
-  const info = hashRouter.get(HASH) || { pageNo: 1, top: 0 };
-  renderCrumb();
-  callback && callback(HASH, info);
+const hashRouter = new HashRouter({
+  before(HASH) {
+    // 跳转前获取当前页信息并保存
+    updatePageInfo();
+    routerData.set(HASH, pageInfo);
+  },
+  change(HASH) {
+    // 查看是否有即将跳转页的信息
+    const info = routerData.get(HASH) || { pageNo: 1, top: 0 };
+    renderCrumb(HASH);
+    callback && callback(HASH, info);
+  },
 });
 
 bus.on('setPageInfo', (info) => (pageInfo = info));
@@ -30,16 +32,18 @@ function updatePageInfo() {
 }
 
 // 生成路径
-function renderCrumb() {
+function renderCrumb(HASH) {
+  const hasBack = hashRouter.hasBack();
+  const hasForward = hashRouter.hasForward();
   const html = _tpl(
     `
-    <i cursor="y" class="back iconfont icon-zuo"></i>
-    <i cursor="y" class="forward iconfont icon-you"></i>
+    <i cursor="y" class="back iconfont icon-zuo {{hasBack ? '' : 'deactive'}}"></i>
+    <i cursor="y" class="forward iconfont icon-you {{hasForward ? '' : 'deactive'}}"></i>
     <span :cursor="pathArr.length > 0 ? 'y' : ''" class='home'>主页</span>
     <span v-for="item,idx in pathArr" :title="item" :cursor="idx + 1 === pathArr.length ? '' : 'y'" :data-idx="idx + 1">{{item}}</span>
     <i cursor="y" class="refresh iconfont icon-suijibofang"></i>
     `,
-    { pathArr: pathToArr(HASH) }
+    { pathArr: pathToArr(HASH), hasBack, hasForward }
   );
   _tpl.html(target, html);
 }
@@ -54,10 +58,11 @@ function bind(el, cb) {
 
 function toGo(p, param = {}) {
   p = _path.normalize(p);
-  if (p !== HASH) {
-    hashRouter.setHash(p);
+  if (p !== hashRouter.getRoute()) {
+    routerData.delete(p);
+    hashRouter.push(p);
   } else {
-    renderCrumb();
+    renderCrumb(p);
     callback && callback(p, param);
   }
 }
@@ -67,6 +72,7 @@ function hdClick(e) {
   const target = e.target;
   const tag = target.tagName.toLowerCase();
   if (tag === 'i' || tag === 'span') {
+    const route = hashRouter.getRoute();
     if (tag === 'i') {
       const className = target.className;
       if (className.includes('back')) {
@@ -74,7 +80,7 @@ function hdClick(e) {
       } else if (className.includes('forward')) {
         hashRouter.forward();
       } else if (className.includes('refresh')) {
-        callback && callback(HASH, { pageNo: 1, top: 0, update: 1 });
+        callback && callback(route, { pageNo: 1, top: 0, update: 1 });
       }
     } else if (tag === 'span') {
       let p = [];
@@ -82,11 +88,12 @@ function hdClick(e) {
         p = [];
       } else {
         const idx = +target.dataset.idx;
-        p = pathToArr(HASH).slice(0, idx);
+        p = pathToArr(route).slice(0, idx);
       }
       const path = arrToPath(p);
-      if (HASH !== path) {
-        hashRouter.setHash(path);
+      if (route !== path) {
+        routerData.delete(path);
+        hashRouter.push(path);
       }
     }
   } else if (this === target) {
@@ -125,10 +132,11 @@ _mySlide({
 
 function hdInputBlur() {
   const val = _path.normalize(this.value.trim());
-  if (val === HASH) {
-    renderCrumb();
+  if (val === hashRouter.getRoute()) {
+    renderCrumb(val);
   } else {
-    hashRouter.setHash(val);
+    routerData.delete(val);
+    hashRouter.push(val);
   }
 }
 
@@ -143,15 +151,15 @@ oInp.addEventListener('keyup', hdInputKeyup);
 
 // 编辑路径
 function editPath() {
-  oInp.value = HASH;
+  oInp.value = hashRouter.getRoute();
   target.innerHTML = '';
   target.appendChild(oInp);
   oInp.focus();
 }
 
 // 获取路径
-function getPath() {
-  return HASH;
+function getHash() {
+  return hashRouter.getHash();
 }
 
 function arrToPath(arr) {
@@ -164,7 +172,7 @@ function pathToArr(path) {
 
 const curmb = {
   bind,
-  getPath,
+  getHash,
   toGo,
 };
 
