@@ -1,9 +1,11 @@
 import $ from 'jquery';
 import {
   ContentScroll,
+  _animate,
   _getTarget,
   _position,
   _setTimeout,
+  getCenterPointDistance,
   getScreenSize,
   imgjz,
   isFullScreen,
@@ -15,7 +17,6 @@ import {
   nanoid,
   switchBorderRadius,
   toCenter,
-  toHide,
   toSetSize,
 } from '../../js/utils/utils';
 import { popWindow, setZidx } from './popWindow';
@@ -293,11 +294,15 @@ class CreateIframe {
     } catch {}
     this.dragClose();
     this.resizeClose();
-    toHide(this.box, { to: 'bottom', scale: 'small' }, () => {
-      popWindow.remove(this.id);
-      this.iframe.remove();
-      this.box.remove();
-    });
+    _animate(
+      this.box,
+      { to: { transform: 'translateY(100%) scale(0)', opacity: 0 } },
+      () => {
+        popWindow.remove(this.id);
+        this.iframe.remove();
+        this.box.remove();
+      }
+    );
   }
   hdClick(e) {
     const topBtn = _getTarget(this.box, e, '.i_top');
@@ -335,11 +340,17 @@ class CreateIframe {
     }
   }
   hdHide() {
-    toHide(this.box, { to: 'top', scale: 'small', useVisibility: true }, () => {
-      popWindow.remove(this.id);
-      this.tagBox.classList.add('hide');
-      this.scrollT.close();
-    });
+    const { x, y } = getCenterPointDistance(this.box, this.tagBox);
+    _animate(
+      this.box,
+      { to: { transform: `translate(${x}px,${y}px) scale(0)`, opacity: 0 } },
+      (target) => {
+        target.style.visibility = 'hidden';
+        popWindow.remove(this.id);
+        this.tagBox.classList.add('hide');
+        this.scrollT.close();
+      }
+    );
   }
 }
 function openInIframe(url, name) {
@@ -392,7 +403,18 @@ function switchIframeBox() {
     (obj && obj.id != _this._iframeBox.id)
   ) {
     _this._iframeBox.hdZindex();
+    const isShow = htarget.style.visibility === 'visible';
     htarget.style.visibility = 'visible';
+    if (!isShow) {
+      const { x, y } = getCenterPointDistance(_this._iframeBox.box, _this);
+      _animate(_this._iframeBox.box, {
+        to: {
+          transform: `translate(${x}px,${y}px) scale(0)`,
+          opacity: 0,
+        },
+        direction: 'reverse',
+      });
+    }
     _this._iframeBox.scrollT.init(_this._iframeBox.name);
     _this._iframeBox.toRest();
     _this.classList.remove('hide');

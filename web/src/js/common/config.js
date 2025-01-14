@@ -50,6 +50,7 @@ const fieldLenght = {
   filename: 255, // 文件名
   searchHistory: 200, // 搜索历史文本
   chatDes: 20, // 用户备注
+  chatContent: 3000, // 消息文本
   countTitle: 300, // 倒计时标题
   top: 9999, // 置顶
   username: 20, // 用户名

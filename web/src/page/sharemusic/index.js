@@ -21,7 +21,6 @@ import {
   ContentScroll,
   myDrag,
   toCenter,
-  toHide,
   toSetSize,
   myResize,
   myToMax,
@@ -47,6 +46,7 @@ import {
   getScreenSize,
   loadImg,
   pageErr,
+  _animate,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -360,6 +360,9 @@ const musicMvContentScroll = new ContentScroll(
 );
 // MV播放
 function playMv(obj) {
+  const mvBox = $musicMvWrap[0];
+  const isHide = $musicMvWrap.is(':hidden');
+  $musicMvWrap.css('display', 'flex');
   playingSongInfo = initSongInfo(obj);
   _setDataTem('playingSongInfo', playingSongInfo);
   updateSongInfo();
@@ -367,13 +370,21 @@ function playMv(obj) {
   $myVideo.attr('src', playingSongInfo.mmv);
   toggleMvBtnState();
   playVideo();
-  $musicMvWrap.stop().fadeIn(_d.speed).css('display', 'flex');
   if (!$musicMvWrap.once) {
     $musicMvWrap.once = true;
-    toSetSize($musicMvWrap[0], 600, 600);
-    toCenter($musicMvWrap[0]);
+    toSetSize(mvBox, 600, 600);
+    toCenter(mvBox);
   } else {
-    myToRest($musicMvWrap[0]);
+    myToRest(mvBox);
+  }
+  if (isHide) {
+    _animate(mvBox, {
+      to: {
+        transform: `translateY(100%) scale(0)`,
+        opacity: 0,
+      },
+      direction: 'reverse',
+    });
   }
   musicMvContentScroll.init(
     `${playingSongInfo.artist} - ${playingSongInfo.title}`
@@ -408,10 +419,18 @@ function pauseSong() {
 function playSong() {
   pauseVideo();
   if (!$musicMvWrap.is(':hidden')) {
-    toHide($musicMvWrap[0], {
-      to: dmwidth > _d.screen ? 'bottom' : 'right',
-      scale: dmwidth > _d.screen ? 'small' : '',
-    });
+    _animate(
+      $musicMvWrap[0],
+      {
+        to: {
+          transform: `translateY(100%) scale(0)`,
+          opacity: 0,
+        },
+      },
+      (target) => {
+        target.style.display = 'none';
+      }
+    );
     musicMvContentScroll.close();
   }
   if (!playingSongInfo) return;
@@ -1153,10 +1172,19 @@ window.addEventListener(
 );
 $musicMvWrap.on('click', '.m_close', function () {
   pauseVideo();
-  toHide($musicMvWrap[0], {
-    to: dmwidth > _d.screen ? 'bottom' : 'right',
-    scale: dmwidth > _d.screen ? 'small' : '',
-  });
+  _animate(
+    $musicMvWrap[0],
+    {
+      to: {
+        transform: `translateY(100%) scale(0)`,
+        opacity: 0,
+      },
+    },
+    (target) => {
+      target.style.display = 'none';
+    }
+  );
+
   musicMvContentScroll.close();
 });
 // 播放列表

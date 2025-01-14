@@ -1,7 +1,7 @@
 import _d from '../../common/config';
 import './index.less';
 import cacheFile from '../../utils/cacheFile';
-import { imgjz, toHide } from '../../utils/utils';
+import { _animate, imgjz } from '../../utils/utils';
 import { _loadingBar } from '../loadingBar';
 import _msg from '../message';
 
@@ -47,8 +47,10 @@ export default function imgPreview(arr, idx = 0) {
   box.appendChild(close);
   box.appendChild(load);
   document.body.appendChild(box);
-  box.style.transition = 'opacity .2s ease-in-out';
-  box.style.opacity = 1;
+  _animate(box, {
+    to: { transform: 'translateY(100%) scale(0)', opacity: 0 },
+    direction: 'reverse',
+  });
   if (arr.length > 1) {
     pre.style.display = 'block';
     next.style.display = 'block';
@@ -176,11 +178,10 @@ export default function imgPreview(arr, idx = 0) {
     image.removeEventListener('wheel', hdWheel);
     image.removeEventListener('load', hdLoad);
     image.removeEventListener('error', hdError);
-    toHide(
+    _animate(
       box,
       {
-        to: 'auto',
-        scale: 'small',
+        to: { transform: 'translateY(100%) scale(0)', opacity: 0 },
       },
       () => {
         box.remove();

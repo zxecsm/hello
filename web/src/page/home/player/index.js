@@ -21,7 +21,6 @@ import {
   isMusicFile,
   ContentScroll,
   toCenter,
-  toHide,
   toSetSize,
   creatSelect,
   formartSongTime,
@@ -45,6 +44,8 @@ import {
   concurrencyTasks,
   getScreenSize,
   upStr,
+  _animate,
+  getCenterPointDistance,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -150,7 +151,8 @@ const $musicPlayerBox = $('.music_player_box'),
   $listItemsWarp = $musicPlayerBox.find('.list_items_wrap'),
   $songItemsBox = $listItemsWarp.find('.items_box'),
   $musicFootBox = $musicPlayerBox.find('.music_foot_box'),
-  $playingSongLogo = $musicFootBox.find('.logo_img');
+  $playingSongLogo = $musicFootBox.find('.logo_img'),
+  $miniPlayer = $('.mini_player');
 let mediaVolume = _getData('mediaVolume'),
   musicPageSize = _getData('songListPageSize'),
   curSongListSort = _getData('songListSort'),
@@ -303,22 +305,51 @@ export function hideMusicPlayBox() {
       showMiniLrcBox(1);
     }
   }
-  toHide($musicPlayerBox[0], { to: 'bottom', scale: 'small' }, () => {
-    $songItemsBox.html('');
-    $songListUl.html('');
-    closeMusicTitleScroll();
-    unBindMusicPlayerLazyImg();
-  });
+  const mBox = $musicPlayerBox[0];
+  let to = {
+    transform: `translateY(100%) scale(0)`,
+    opacity: 0,
+  };
+  if (isBigScreen()) {
+    const { x, y } = getCenterPointDistance(mBox, $miniPlayer[0]);
+    to = {
+      transform: `translate(${x}px,${y}px) scale(0)`,
+      opacity: 0,
+    };
+  }
+  _animate(
+    mBox,
+    {
+      to,
+    },
+    (target) => {
+      target.style.display = 'none';
+      $songItemsBox.html('');
+      $songListUl.html('');
+      closeMusicTitleScroll();
+      unBindMusicPlayerLazyImg();
+    }
+  );
 }
 // 关闭播放器
 export function closeMusicPlayer() {
-  toHide($musicPlayerBox[0], { to: 'bottom', scale: 'small' }, () => {
-    popWindow.remove('music');
-    $songItemsBox.html('');
-    $songListUl.html('');
-    closeMusicTitleScroll();
-    unBindMusicPlayerLazyImg();
-  });
+  _animate(
+    $musicPlayerBox[0],
+    {
+      to: {
+        transform: `translateY(100%) scale(0)`,
+        opacity: 0,
+      },
+    },
+    (target) => {
+      target.style.display = 'none';
+      popWindow.remove('music');
+      $songItemsBox.html('');
+      $songListUl.html('');
+      closeMusicTitleScroll();
+      unBindMusicPlayerLazyImg();
+    }
+  );
   closeMvBox();
   closeEditLrcBox();
   hideMiniPlayer();
@@ -351,16 +382,7 @@ function musicBackBtn() {
     }, 800);
     $musicHeadWrap.find('.song_list_name').css('opacity', 0).text('');
   } else if (!musicPlayerIsHide()) {
-    if (!isBigScreen()) {
-      toHide($musicPlayerBox[0], { to: 'bottom', scale: 'small' }, () => {
-        $songItemsBox.html('');
-        $songListUl.html('');
-        closeMusicTitleScroll();
-        unBindMusicPlayerLazyImg();
-      });
-    } else {
-      hideMusicPlayBox();
-    }
+    hideMusicPlayBox();
   }
 }
 const handleRemoteVol = debounce(function () {
@@ -2470,20 +2492,39 @@ export function showMusicPlayerBox(cb) {
     );
     $musicPlayerBox._mflag = true;
   }
+  const mBox = $musicPlayerBox[0];
+  const isHide = musicPlayerIsHide();
   hideMiniPlayer();
-  $musicPlayerBox.stop().fadeIn(_d.speed, () => {
-    getSongList(cb);
-    lrcScroll(true);
-  });
+  mBox.style.display = 'block';
+  getSongList(cb);
+  lrcScroll(true);
   if (!$musicPlayerBox._once) {
     $musicPlayerBox._once = true;
-    toSetSize($musicPlayerBox[0], 600, 800);
-    toCenter($musicPlayerBox[0]);
+    toSetSize(mBox, 600, 800);
+    toCenter(mBox);
     setPlayVolume();
   } else {
-    myToRest($musicPlayerBox[0]);
+    myToRest(mBox);
   }
-  setZidx($musicPlayerBox[0], 'music', hideMusicPlayBox, playerIsTop);
+  setZidx(mBox, 'music', hideMusicPlayBox, playerIsTop);
+  if (isHide) {
+    const mini = $miniPlayer[0];
+    let to = {
+      transform: `translateY(100%) scale(0)`,
+      opacity: 0,
+    };
+    if (isBigScreen() && !$miniPlayer.is(':hidden')) {
+      const { x, y } = getCenterPointDistance(mBox, mini);
+      to = {
+        transform: `translate(${x}px,${y}px) scale(0)`,
+        opacity: 0,
+      };
+    }
+    _animate(mBox, {
+      to,
+      direction: 'reverse',
+    });
+  }
 }
 // 播放歌曲音符落下动画
 export const changePlayingAnimate = (function () {

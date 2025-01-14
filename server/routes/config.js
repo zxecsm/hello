@@ -8,7 +8,7 @@ export const fieldLenght = {
   searchWord: 100, // 搜索长度
   searchHistory: 200, // 搜索历史文本
   des: 500, // 备注
-  chatContent: 2500, // 消息文本
+  chatContent: 3000, // 消息文本
   chatDes: 20, // 用户备注
   top: 9999, // 置顶
   expTime: 999, // 过期时间天

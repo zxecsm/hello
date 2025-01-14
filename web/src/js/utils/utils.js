@@ -1168,7 +1168,14 @@ export function downloadBlob(blob, filename) {
 // 下载文件
 export async function downloadFile(tasks, type) {
   if (tasks.length === 1) {
-    const { fileUrl, filename } = tasks[0];
+    let { fileUrl, filename } = tasks[0];
+    filename = filename || _path.basename(fileUrl);
+    if (type) {
+      const cache = await cacheFile.read(fileUrl, type);
+      if (cache) {
+        fileUrl = cache;
+      }
+    }
     defaultDownFile(fileUrl, filename);
     return;
   } else if (tasks.length < 1) {
@@ -1185,6 +1192,7 @@ export async function downloadFile(tasks, type) {
     if (signal.aborted) return;
 
     let { fileUrl, filename } = task;
+    filename = filename || _path.basename(fileUrl);
     if (type) {
       const cache = await cacheFile.read(fileUrl, type);
       if (cache) {
@@ -1192,7 +1200,6 @@ export async function downloadFile(tasks, type) {
       }
     }
     await new Promise((resolve) => {
-      filename = filename || _path.basename(fileUrl);
       const xhr = new XMLHttpRequest();
       xhr.open('GET', fileUrl, true);
       xhr.responseType = 'blob'; // 设置响应类型为 Blob
@@ -1894,46 +1901,57 @@ export function myResize(opt, minW = 200, minH = 200) {
     });
   };
 }
-// 窗口隐藏
-export function toHide(el, opt, cb) {
-  const { to, scale, speed = 500, useVisibility } = opt;
-  let tran = '';
-  let s = '';
-  if (to === 'right') {
-    tran = `translateX(100%)`;
-  } else if (to === 'left') {
-    tran = `translateX(-100%)`;
-  } else if (to === 'top') {
-    tran = `translateY(-100%)`;
-  } else if (to === 'bottom') {
-    tran = `translateY(100%)`;
-  } else if (to === 'auto') {
-    tran = `translate${randomNum(1, 10) % 2 ? 'Y' : 'X'}(${
-      randomNum(1, 10) % 2 ? '-' : ''
-    }100%)`;
+export function _animate(
+  target,
+  {
+    from = {},
+    to = {},
+    duration = _d.speed,
+    easing = 'ease-in-out',
+    direction = 'normal',
+  } = {},
+  callback
+) {
+  // 创建动画实例
+  const animation = target.animate([from, to], {
+    duration,
+    easing,
+    direction,
+  });
+
+  // 定义定时器
+  let timer;
+
+  // 取消动画的函数
+  function cancel() {
+    animation.cancel();
+    callback && callback(target); // 如果有回调，则执行
+    clearTimeout(timer); // 清除定时器
+    timer = null;
   }
-  if (scale === 'big') {
-    s = `scale(${2})`;
-  } else if (scale === 'small') {
-    s = `scale(${0})`;
-  } else if (scale === 'auto') {
-    s = `scale(${randomNum(1, 10) % 2 ? 1 : 2})`;
-  }
-  const second = speed / 1000;
-  el.style.transition = `transform ${second}s ease-in-out, opacity ${second}s ease-in-out`;
-  el.style.transform = `${tran} ${s}`;
-  el.style.opacity = 0;
-  _setTimeout(() => {
-    el.style.transition = '0s';
-    el.style.transform = 'none';
-    el.style.opacity = 1;
-    if (useVisibility) {
-      el.style.visibility = 'hidden';
-    } else {
-      el.style.display = 'none';
-    }
-    cb && cb(el);
-  }, speed);
+
+  // 设置定时器，在动画结束后调用取消
+  timer = setTimeout(cancel, duration);
+
+  // 返回取消函数，以便外部调用
+  return cancel;
+}
+// 获取中心点坐标
+export function getCenterPoint(target) {
+  const { top, left } = _position(target, 1);
+  return {
+    x: left + target.offsetWidth / 2,
+    y: top + target.offsetHeight / 2,
+  };
+}
+// 中心点距离
+export function getCenterPointDistance(from, to) {
+  const f = from.x !== undefined ? from : getCenterPoint(from);
+  const t = to.x !== undefined ? to : getCenterPoint(to);
+  return {
+    x: t.x - f.x,
+    y: t.y - f.y,
+  };
 }
 // 二维码
 export async function showQcode(e, text, title = '展示二维码') {

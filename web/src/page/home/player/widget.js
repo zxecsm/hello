@@ -3,6 +3,7 @@ import _d from '../../../js/common/config';
 import { popWindow, setZidx } from '../popWindow';
 import {
   ContentScroll,
+  _animate,
   _getData,
   _getTarget,
   _setData,
@@ -17,7 +18,6 @@ import {
   myToMax,
   myToRest,
   toCenter,
-  toHide,
   toSetSize,
 } from '../../../js/utils/utils';
 import _msg from '../../../js/plugins/message';
@@ -230,13 +230,16 @@ $editLrcWrap.find('textarea').on('keydown', function (e) {
 // 关闭编辑歌词
 export function closeEditLrcBox() {
   popWindow.remove('editlrc');
-  toHide(
+  _animate(
     $editLrcWrap[0],
     {
-      to: 'bottom',
-      scale: 'small',
+      to: {
+        transform: `translateY(100%) scale(0)`,
+        opacity: 0,
+      },
     },
-    () => {
+    (target) => {
+      target.style.display = 'none';
       $editLrcWrap.find('textarea').val('');
     }
   );
@@ -279,30 +282,39 @@ export function showEditLrc(sobj) {
   if (!isRoot()) {
     $editLrcWrap.find('.save').remove();
   }
-  setZidx($editLrcWrap[0], 'editlrc', closeEditLrcBox, editLrcIsTop);
-  $editLrcWrap.stop().fadeIn(_d.speed, () => {
-    editLrcHeadContentScroll.init(`${sobj.artist} - ${sobj.title}`);
-    $editLrcWrap.find('textarea').val('');
-    $editLrcWrap._mobj = deepClone(sobj);
-    reqPlayerReadLrc({
-      id: sobj.id,
-    })
-      .then((result) => {
-        if (result.code === 1) {
-          $editLrcWrap._val = result.data;
-          $editLrcWrap.find('textarea').val(result.data);
-          return;
-        }
-      })
-      .catch(() => {});
-  });
+  const editBox = $editLrcWrap[0];
+  setZidx(editBox, 'editlrc', closeEditLrcBox, editLrcIsTop);
+  const isHide = $editLrcWrap.is(':hidden');
   $editLrcWrap.css('display', 'flex');
+  editLrcHeadContentScroll.init(`${sobj.artist} - ${sobj.title}`);
+  $editLrcWrap.find('textarea').val('');
+  $editLrcWrap._mobj = deepClone(sobj);
+  reqPlayerReadLrc({
+    id: sobj.id,
+  })
+    .then((result) => {
+      if (result.code === 1) {
+        $editLrcWrap._val = result.data;
+        $editLrcWrap.find('textarea').val(result.data);
+        return;
+      }
+    })
+    .catch(() => {});
   if (!$editLrcWrap._once) {
     $editLrcWrap._once = true;
-    toSetSize($editLrcWrap[0], 800, 800);
-    toCenter($editLrcWrap[0]);
+    toSetSize(editBox, 800, 800);
+    toCenter(editBox);
   } else {
-    myToRest($editLrcWrap[0]);
+    myToRest(editBox);
+  }
+  if (isHide) {
+    _animate(editBox, {
+      to: {
+        transform: `translateY(100%) scale(0)`,
+        opacity: 0,
+      },
+      direction: 'reverse',
+    });
   }
 }
 // 暂停视频
@@ -317,9 +329,19 @@ export function playVideo() {
 // 关闭mv
 export function closeMvBox() {
   pauseVideo();
-  toHide($musicMvWrap[0], { to: 'bottom', scale: 'small' }, () => {
-    popWindow.remove('mv');
-  });
+  _animate(
+    $musicMvWrap[0],
+    {
+      to: {
+        transform: `translateY(100%) scale(0)`,
+        opacity: 0,
+      },
+    },
+    (target) => {
+      target.style.display = 'none';
+      popWindow.remove('mv');
+    }
+  );
   musicMvContentScroll.close();
 }
 $musicMvWrap
@@ -335,19 +357,30 @@ export async function playMv(obj) {
   updateSongInfo();
   pauseSong();
   $myVideo.attr('src', setPlayingSongInfo().mmv);
+  const mvBox = $musicMvWrap[0];
+  const isHide = musicMvIsHide();
   playVideo();
-  $musicMvWrap.stop().fadeIn(_d.speed).css('display', 'flex');
+  $musicMvWrap.css('display', 'flex');
   if (!$musicMvWrap.once) {
     $musicMvWrap.once = true;
-    toSetSize($musicMvWrap[0], 600, 600);
-    toCenter($musicMvWrap[0]);
+    toSetSize(mvBox, 600, 600);
+    toCenter(mvBox);
   } else {
-    myToRest($musicMvWrap[0]);
+    myToRest(mvBox);
+  }
+  if (isHide) {
+    _animate(mvBox, {
+      to: {
+        transform: `translateY(100%) scale(0)`,
+        opacity: 0,
+      },
+      direction: 'reverse',
+    });
   }
   musicMvContentScroll.init(
     `${setPlayingSongInfo().artist} - ${setPlayingSongInfo().title}`
   );
-  setZidx($musicMvWrap[0], 'mv', closeMvBox, mvIsTop);
+  setZidx(mvBox, 'mv', closeMvBox, mvIsTop);
   highlightPlayingSong(false);
   playingListHighlight(false);
   toggleLrcMenuWrapBtnsState();

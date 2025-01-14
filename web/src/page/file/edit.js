@@ -11,7 +11,6 @@ import {
   isDarkMode,
   isIframe,
   percentToValue,
-  toHide,
   wave,
 } from '../../js/utils/utils';
 import _msg from '../../js/plugins/message';
@@ -307,17 +306,9 @@ function hdClose() {
   if (originText != oText) {
     bus.emit('refreshList');
   }
-  toHide(
-    $editFile[0],
-    {
-      to: 'bottom',
-      scale: 'small',
-    },
-    () => {
-      document.documentElement.classList.remove('notScroll');
-      init();
-    }
-  );
+  $editFile.hide();
+  document.documentElement.classList.remove('notScroll');
+  init();
 }
 if (!isIframe()) wave(11);
 changeDark.bind((isDark) => {

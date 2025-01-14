@@ -15,7 +15,6 @@ import {
   toLogin,
   darkMode,
   toCenter,
-  toHide,
   showQcode,
   upStr,
   getbookmark,
@@ -38,6 +37,7 @@ import {
   getScreenSize,
   _getDataSize,
   computeSize,
+  _animate,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -258,7 +258,18 @@ function hdHideState() {
 // 隐藏用户个人信息
 export function hideUserInfo() {
   popWindow.remove('userinfo');
-  toHide($userInfoWrap[0], { to: 'bottom', scale: 'small' });
+  _animate(
+    $userInfoWrap[0],
+    {
+      to: {
+        transform: `translateY(100%) scale(0)`,
+        opacity: 0,
+      },
+    },
+    (target) => {
+      target.style.display = 'none';
+    }
+  );
 }
 // 上传头像
 export async function upLogo(type, cb, id, loading = { start() {}, end() {} }) {

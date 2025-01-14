@@ -2,7 +2,6 @@ import $ from 'jquery';
 import {
   formatDate,
   copyText,
-  toHide,
   hdTextMsg,
   toSetSize,
   toCenter,
@@ -17,6 +16,8 @@ import {
   _getData,
   _setData,
   isFullScreen,
+  getCenterPointDistance,
+  _animate,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
@@ -184,29 +185,52 @@ function getTodo(id) {
 }
 // 显示todo
 export function showTodoBox() {
+  const tBox = $todoBox[0];
   hideRightMenu();
-  setZidx($todoBox[0], 'todo', closeTodoBox, todoIsTop);
-  $todoBox.stop().fadeIn(_d.speed, () => {
-    getTodoList(true);
-  });
+  const isHide = $todoBox.is(':hidden');
   $todoBox.css('display', 'flex');
+  setZidx(tBox, 'todo', closeTodoBox, todoIsTop);
+  getTodoList(true);
   if (!$todoBox._once) {
     $todoBox._once = true;
-    toSetSize($todoBox[0], 800, 800);
-    toCenter($todoBox[0]);
+    toSetSize(tBox, 800, 800);
+    toCenter(tBox);
   } else {
-    myToRest($todoBox[0]);
+    myToRest(tBox);
+  }
+  if (isHide) {
+    const screen = getScreenSize();
+    const { x, y } = getCenterPointDistance(tBox, {
+      x: screen.w,
+      y: screen.h / 2,
+    });
+    _animate(tBox, {
+      to: {
+        transform: `translate(${x}px,${y}px) scale(0)`,
+        opacity: 0,
+      },
+      direction: 'reverse',
+    });
   }
 }
 // 关闭todo
 export function closeTodoBox() {
-  toHide(
-    $todoBox[0],
+  const tBox = $todoBox[0];
+  const screen = getScreenSize();
+  const { x, y } = getCenterPointDistance(tBox, {
+    x: screen.w,
+    y: screen.h / 2,
+  });
+  _animate(
+    tBox,
     {
-      to: 'bottom',
-      scale: 'small',
+      to: {
+        transform: `translate(${x}px,${y}px) scale(0)`,
+        opacity: 0,
+      },
     },
-    () => {
+    (target) => {
+      target.style.display = 'none';
       popWindow.remove('todo');
       $todoList.html('');
     }

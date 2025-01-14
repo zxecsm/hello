@@ -1,7 +1,6 @@
 import $ from 'jquery';
 import {
   formatDate,
-  toHide,
   toSetSize,
   toCenter,
   _getTarget,
@@ -21,6 +20,8 @@ import {
   _getData,
   _setData,
   isFullScreen,
+  getCenterPointDistance,
+  _animate,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
@@ -221,29 +222,52 @@ function getCount(id) {
 }
 // 显示
 export function showCountBox() {
+  const cBox = $countBox[0];
   hideRightMenu();
-  setZidx($countBox[0], 'count', closeCountBox, countDownIsTop);
-  $countBox.stop().fadeIn(_d.speed, () => {
-    getCountList(true);
-  });
-  $countBox.css('display', 'flex');
+  const isHide = $countBox.is(':hidden');
+  cBox.style.display = 'flex';
+  setZidx(cBox, 'count', closeCountBox, countDownIsTop);
+  getCountList(true);
   if (!$countBox._once) {
     $countBox._once = true;
-    toSetSize($countBox[0], 800, 800);
-    toCenter($countBox[0]);
+    toSetSize(cBox, 800, 800);
+    toCenter(cBox);
   } else {
-    myToRest($countBox[0]);
+    myToRest(cBox);
+  }
+  if (isHide) {
+    const screen = getScreenSize();
+    const { x, y } = getCenterPointDistance(cBox, {
+      x: screen.w,
+      y: screen.h / 2,
+    });
+    _animate(cBox, {
+      to: {
+        transform: `translate(${x}px,${y}px) scale(0)`,
+        opacity: 0,
+      },
+      direction: 'reverse',
+    });
   }
 }
 // 关闭
 export function closeCountBox() {
-  toHide(
-    $countBox[0],
+  const cBox = $countBox[0];
+  const screen = getScreenSize();
+  const { x, y } = getCenterPointDistance(cBox, {
+    x: screen.w,
+    y: screen.h / 2,
+  });
+  _animate(
+    cBox,
     {
-      to: 'bottom',
-      scale: 'small',
+      to: {
+        transform: `translate(${x}px,${y}px) scale(0)`,
+        opacity: 0,
+      },
     },
-    () => {
+    (target) => {
+      target.style.display = 'none';
       popWindow.remove('count');
       $countList.html('');
     }

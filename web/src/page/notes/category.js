@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import _d from '../../js/common/config';
-import { _mySlide, loadingImg, toHide } from '../../js/utils/utils';
+import { _mySlide, loadingImg } from '../../js/utils/utils';
 import {
   reqNoteAddCategory,
   reqNoteCategory,
@@ -53,17 +53,9 @@ export function showCategoryBox() {
   $categoryBox.stop().fadeIn(_d.speed, renderCategoryList);
 }
 function hideCategoryBox() {
-  toHide(
-    $categoryBox[0],
-    {
-      to: 'bottom',
-      scale: 'small',
-    },
-    () => {
-      $categoryBox.find('.list').html('');
-      document.documentElement.classList.remove('notScroll');
-    }
-  );
+  $categoryBox.hide();
+  $categoryBox.find('.list').html('');
+  document.documentElement.classList.remove('notScroll');
 }
 // 添加分类
 function addCategory(e) {

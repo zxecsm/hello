@@ -20,7 +20,6 @@ import {
   ContentScroll,
   myDrag,
   toCenter,
-  toHide,
   myResize,
   myToMax,
   myToRest,
@@ -42,6 +41,8 @@ import {
   concurrencyTasks,
   isValidDate,
   getScreenSize,
+  getCenterPointDistance,
+  _animate,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -317,15 +318,22 @@ function lazyLoadChatLogo() {
 }
 // 关闭聊天室
 export function closeChatRoom() {
-  toHide($chatRoomWrap[0], { to: 'bottom', scale: 'small' }, () => {
-    popWindow.remove('chat');
-    chatTitleScroll.close();
-    $chatListBox.find('.chat_list').html('');
-    cImgLoad.unBind();
-    cUserListLoad.unBind();
-    cUserLogoLoad.unBind();
-    updateOnlineStatus.clear();
-  });
+  const chatRoom = $chatRoomWrap[0];
+  const { x, y } = getCenterPointDistance(chatRoom, $showChatRoomBtn[0]);
+  _animate(
+    chatRoom,
+    { to: { transform: `translate(${x}px,${y}px) scale(0)`, opacity: 0 } },
+    (target) => {
+      target.style.display = 'none';
+      popWindow.remove('chat');
+      chatTitleScroll.close();
+      $chatListBox.find('.chat_list').html('');
+      cImgLoad.unBind();
+      cUserListLoad.unBind();
+      cUserLogoLoad.unBind();
+      updateOnlineStatus.clear();
+    }
+  );
 }
 // 清空消息
 function clearMsg(e) {
@@ -767,36 +775,44 @@ export function chatMessageNotification(name, data, from, to, logo) {
 }
 //打开聊天窗
 export function showChatRoom(chatAcc = curChatAccount) {
+  const chatRoom = $chatRoomWrap[0];
   $showChatRoomBtn.attr('class', 'show_chat_room_btn iconfont icon-liaotian');
-  setZidx($chatRoomWrap[0], 'chat', closeChatRoom, chatIsTop);
+  setZidx(chatRoom, 'chat', closeChatRoom, chatIsTop);
+  const isHide = chatRoomWrapIsHide();
+  chatRoom.style.display = 'block';
   //隐藏主页消息提示
-  $chatRoomWrap.stop().fadeIn(_d.speed, () => {
-    openFriend(chatAcc, false, () => {
-      reqChatNews()
-        .then((result) => {
-          if (result.code === 1) {
-            const { group, friend } = result.data;
-            if (friend > 0) {
-              $chatHeadBtns.find('.c_msg_alert').stop().fadeIn(_d.speed);
-            } else {
-              $chatHeadBtns.find('.c_msg_alert').stop().fadeOut(_d.speed);
-            }
-            if (group > 0) {
-              $chatHeadBtns.find('.c_home_msg_alert').stop().fadeIn(_d.speed);
-            } else {
-              $chatHeadBtns.find('.c_home_msg_alert').stop().fadeOut(_d.speed);
-            }
-          }
-        })
-        .catch(() => {});
+  const { x, y } = getCenterPointDistance(chatRoom, $showChatRoomBtn[0]);
+  if (isHide) {
+    _animate(chatRoom, {
+      to: { transform: `translate(${x}px,${y}px) scale(0)`, opacity: 0 },
+      direction: 'reverse',
     });
+  }
+  openFriend(chatAcc, false, () => {
+    reqChatNews()
+      .then((result) => {
+        if (result.code === 1) {
+          const { group, friend } = result.data;
+          if (friend > 0) {
+            $chatHeadBtns.find('.c_msg_alert').stop().fadeIn(_d.speed);
+          } else {
+            $chatHeadBtns.find('.c_msg_alert').stop().fadeOut(_d.speed);
+          }
+          if (group > 0) {
+            $chatHeadBtns.find('.c_home_msg_alert').stop().fadeIn(_d.speed);
+          } else {
+            $chatHeadBtns.find('.c_home_msg_alert').stop().fadeOut(_d.speed);
+          }
+        }
+      })
+      .catch(() => {});
   });
   if (!$chatRoomWrap._once) {
     $chatRoomWrap._once = true;
-    toSetSize($chatRoomWrap[0], 600, 800);
-    toCenter($chatRoomWrap[0]);
+    toSetSize(chatRoom, 600, 800);
+    toCenter(chatRoom);
   } else {
-    myToRest($chatRoomWrap[0]);
+    myToRest(chatRoom);
   }
 }
 $showChatRoomBtn.on(
@@ -1345,7 +1361,7 @@ $chatAudio
 function sendTextMsg() {
   const chatAcc = curChatAccount,
     content = chatMsgInp.getValue().trim();
-  if (content.length > 2500) {
+  if (content.length > _d.fieldLenght.chatContent) {
     _msg.error('发送内容过长');
     return;
   }
@@ -1384,8 +1400,8 @@ const chatMsgInp = wrapInput(
   $chatFootBox.find('.c_text_msg .c_text_content')[0],
   {
     update(val) {
-      if (val.length > 2500) {
-        val = val.slice(0, 2500);
+      if (val.length > _d.fieldLenght.chatContent) {
+        val = val.slice(0, _d.fieldLenght.chatContent);
       }
       $chatFootBox.find('.c_text_msg .fill_height').text(val);
       saveTemChatMsg(val);
