@@ -4,6 +4,7 @@ import {
   _setData,
   getScreenSize,
   isMobile,
+  myAnimate,
   myDrag,
   percentToValue,
 } from '../../js/utils/utils';
@@ -11,51 +12,52 @@ import { setZidx } from './popWindow';
 import { hideIframeMask, showIframeMask } from './iframe';
 import _d from '../../js/common/config';
 import percentBar from '../../js/plugins/percentBar';
-const _head = document.querySelector('head'),
-  _style = document.createElement('style');
-_style.type = 'text/css';
-_head.appendChild(_style);
 const clock = document.querySelector('.clock');
 const domHour = clock.querySelector('.hour');
 const domMin = clock.querySelector('.min');
 const domSec = clock.querySelector('.sec');
+let animateList = [];
 // 开始运作
 function clockRun(sec, min, hour) {
-  if (domHour.animate) {
-    domHour.animate(
-      { transform: [`rotate(${hour}deg`, `rotate(${hour + 360}deg`] },
-      { duration: 216000 * 1000, iterations: Infinity }
-    );
-    domMin.animate(
-      { transform: [`rotate(${min}deg`, `rotate(${min + 360}deg`] },
-      { duration: 3600 * 1000, iterations: Infinity }
-    );
-    domSec.animate(
-      { transform: [`rotate(${sec}deg`, `rotate(${sec + 360}deg`] },
-      { duration: 60 * 1000, iterations: Infinity }
-    );
-    return;
-  }
-  const arr = [];
-  new Array(3).fill(null).forEach(() => {
-    arr.push('a' + Math.random().toString(36).slice(2));
+  // 清除重新创建
+  animateList.forEach((animation) => animation.cancel());
+  animateList = [];
+  [
+    {
+      target: domHour,
+      keyframes: [
+        {
+          transform: `rotate(${hour}deg)`,
+        },
+        {
+          transform: `rotate(${hour + 360}deg)`,
+        },
+      ],
+      options: { duration: 216000 * 1000, iterations: Infinity },
+    },
+    {
+      target: domMin,
+      keyframes: [
+        { transform: `rotate(${min}deg)` },
+        { transform: `rotate(${min + 360}deg)` },
+      ],
+      options: { duration: 3600 * 1000, iterations: Infinity },
+    },
+    {
+      target: domSec,
+      keyframes: [
+        { transform: `rotate(${sec}deg)` },
+        { transform: `rotate(${sec + 360}deg)` },
+      ],
+      options: { duration: 60 * 1000, iterations: Infinity },
+    },
+  ].forEach(({ keyframes, options, target }) => {
+    if (target.animate) {
+      animateList.push(target.animate(keyframes, options));
+    } else {
+      animateList.push(myAnimate(target, keyframes, options));
+    }
   });
-  let str = '';
-  // 遍历三个参数
-  [].forEach.call(arguments, (item, index) => {
-    str += `@keyframes ${arr[index]}{
-            0%{
-                transform: rotate(${item}deg);
-            }
-            100%{
-                transform: rotate(${item + 360}deg);
-            }
-        }`;
-  });
-  _style.innerHTML = str;
-  domHour.style.animation = `${arr[2]} 216000s infinite linear`;
-  domMin.style.animation = `${arr[1]} 3600s infinite linear`;
-  domSec.style.animation = `${arr[0]} 60s infinite linear`;
 }
 // 刻度
 function drawLines(className, total, translateX) {
