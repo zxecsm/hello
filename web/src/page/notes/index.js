@@ -557,6 +557,7 @@ $contentWrap
       { id: '2', text: '分类', beforeIcon: 'iconfont icon-liebiao1' },
       { id: '3', text: '二维码', beforeIcon: 'iconfont icon-erweima' },
       { id: '4', text: '笔记信息', beforeIcon: 'iconfont icon-bianji' },
+      { id: '7', text: '历史版本', beforeIcon: 'iconfont icon-history' },
       { id: '5', text: '笔记内容', beforeIcon: 'iconfont icon-bianji' },
       {
         id: '6',
@@ -586,6 +587,10 @@ $contentWrap
           _myOpen(`/edit/#${encodeURIComponent(noteid)}`, title);
         } else if (id === '6') {
           deleteNote(e, [noteid], close, title, loading);
+        } else if (id === '7') {
+          close();
+          e.stopPropagation();
+          _myOpen(`/file/#/${_d.noteHistoryDirName}/${noteid}`, '文件管理');
         }
       },
       title

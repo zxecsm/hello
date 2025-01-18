@@ -355,11 +355,14 @@ $contentWrap
     const t = $this.parent().attr('data-type');
     let data = [];
     if (t === 'note') {
-      data.push({
-        id: '1',
-        text: '笔记内容',
-        beforeIcon: 'iconfont icon-bianji',
-      });
+      data.push(
+        {
+          id: '1',
+          text: '笔记内容',
+          beforeIcon: 'iconfont icon-bianji',
+        },
+        { id: '4', text: '历史版本', beforeIcon: 'iconfont icon-history' }
+      );
     }
     data = [
       ...data,
@@ -400,6 +403,10 @@ $contentWrap
           close();
           e.stopPropagation();
           _myOpen(`/edit/#${encodeURIComponent(id)}`, obj.title);
+        } else if (flag === '4') {
+          close();
+          e.stopPropagation();
+          _myOpen(`/file/#/${_d.noteHistoryDirName}/${obj.id}`, '文件管理');
         }
       },
       obj.title || obj.content

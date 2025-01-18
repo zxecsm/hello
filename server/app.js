@@ -5,7 +5,7 @@ import cookieParser from 'cookie-parser';
 import express from 'express';
 
 // 获取访问设备信息
-import UAParser from 'ua-parser-js';
+import { UAParser } from 'ua-parser-js';
 
 import {
   writelog,
