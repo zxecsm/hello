@@ -4,7 +4,6 @@ import '../../font/iconfont.css';
 import '../home/searchBox/cat.less';
 import './index.less';
 import $ from 'jquery';
-import './coloured.js';
 import {
   myOpen,
   _setData,
