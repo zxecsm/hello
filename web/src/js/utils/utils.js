@@ -2016,7 +2016,7 @@ export function _animate(
   }
 
   // 设置定时器，在动画结束后调用取消
-  timer = setTimeout(cancel, duration);
+  timer = setTimeout(cancel, duration - 20);
 
   // 返回取消函数，以便外部调用
   return cancel;
