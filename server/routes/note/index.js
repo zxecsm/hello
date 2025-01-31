@@ -26,13 +26,13 @@ import {
   isValidDate,
   getSplitWord,
   nanoid,
-  getTextSize,
   uLog,
 } from '../../utils/utils.js';
 
 import { getFriendDes } from '../chat/chat.js';
 import { fieldLenght } from '../config.js';
 import { saveNoteHistory } from './note.js';
+import _f from '../../utils/f.js';
 
 const route = express.Router();
 
@@ -397,7 +397,7 @@ route.post('/up-note', async (req, res) => {
     if (
       !validaString(title, 1, fieldLenght.title) ||
       !validaString(content, 0, 0, 0, 1) ||
-      getTextSize(content) > fieldLenght.noteSize
+      _f.getTextSize(content) > fieldLenght.noteSize
     ) {
       paramErr(res, req);
       return;
@@ -429,7 +429,7 @@ route.post('/edit', async (req, res) => {
       !validaString(id, 1, fieldLenght.id, 1) ||
       !validaString(title, 1, fieldLenght.title) ||
       !validaString(content, 0, 0, 0, 1) ||
-      getTextSize(content) > fieldLenght.noteSize
+      _f.getTextSize(content) > fieldLenght.noteSize
     ) {
       paramErr(res, req);
       return;

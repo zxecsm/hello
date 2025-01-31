@@ -12,7 +12,7 @@ import {
   _mySlide,
   formatDate,
   copyText,
-  computeSize,
+  formatBytes,
   isImgFile,
   fileLogoType,
   downloadFile,
@@ -584,7 +584,7 @@ function renderMsgList(list, skip) {
               {{getUsername(username,des,_to)}} <span>{{getDate(create_at)[1]}}</span>
             </span>
             <div v-if="type === 'image'" cursor="y" class="c_img_msg_box" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
-              <div class="c_img"><span>{{computeSize(size)}}</span></div>
+              <div class="c_img"><span>{{formatBytes(size)}}</span></div>
             </div>
             <div v-else-if="type === 'voice'" cursor="y" 
               class="c_voice_msg_box {{isRight(_from) ? 'bcolor' : ''}}" 
@@ -603,7 +603,7 @@ function renderMsgList(list, skip) {
             <div v-else-if="type === 'file'" :title="content" class="c_file_msg_box" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
               <div cursor="y" class="c_file_info">
                 <span class="file_name">{{content}}</span>
-                <span class="file_size">{{computeSize(size)}}</span>
+                <span class="file_size">{{formatBytes(size)}}</span>
               </div>
               <div class="file_type iconfont {{fileLogoType(content)}}"></div>
               <span class="{{isRight(_from) ? 'c_right_triangle' : 'c_left_triangle'}}"></span>
@@ -640,7 +640,7 @@ function renderMsgList(list, skip) {
         return '';
       },
       fileLogoType,
-      computeSize,
+      formatBytes,
     }
   );
   return html;

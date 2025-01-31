@@ -133,6 +133,40 @@ async function rename(oldPath, newPath, { signal, progress } = {}) {
   }
 }
 
-const _f = { fsp, fs, rename, del, mkdir, cp, isTextFile, exists };
+// 格式化字节大小
+export function formatBytes(size) {
+  size = Number(size);
+  if (isNaN(size) || size < 0) return '0B';
+
+  const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  let idx = 0;
+
+  while (size >= 1024 && idx < units.length - 1) {
+    size /= 1024;
+    idx++;
+  }
+
+  return size.toFixed(2) + units[idx];
+}
+
+// 获取文本大小
+function getTextSize(text) {
+  const encoder = new TextEncoder();
+  const byteArray = encoder.encode(text);
+  return byteArray.length; // 返回字节数
+}
+
+const _f = {
+  fsp,
+  fs,
+  rename,
+  del,
+  mkdir,
+  cp,
+  isTextFile,
+  exists,
+  formatBytes,
+  getTextSize,
+};
 
 export default _f;

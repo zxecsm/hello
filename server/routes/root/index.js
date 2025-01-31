@@ -26,7 +26,6 @@ import {
   nanoid,
   isEmail,
   concurrencyTasks,
-  getTextSize,
 } from '../../utils/utils.js';
 
 import { cleanUpload } from '../chat/chat.js';
@@ -526,8 +525,8 @@ route.post('/custom-code', async (req, res) => {
     if (
       !validaString(js, 0, 0, 0, 1) ||
       !validaString(css, 0, 0, 0, 1) ||
-      getTextSize(js) > fieldLenght.customCodeSize ||
-      getTextSize(css) > fieldLenght.customCodeSize
+      _f.getTextSize(js) > fieldLenght.customCodeSize ||
+      _f.getTextSize(css) > fieldLenght.customCodeSize
     ) {
       paramErr(res, req);
       return;

@@ -6,7 +6,6 @@ import {
   paramErr,
   _success,
   uLog,
-  getTextSize,
 } from '../../utils/utils.js';
 
 import appConfig from '../../data/config.js';
@@ -51,7 +50,7 @@ route.post('/', async (req, res) => {
     if (
       !validaString(k, 1, fieldLenght.filename, 1) ||
       !validaString(data, 0, 0, 0, 1) ||
-      getTextSize(data) > fieldLenght.noteSize
+      _f.getTextSize(data) > fieldLenght.noteSize
     ) {
       paramErr(res, req);
       return;

@@ -59,6 +59,10 @@ export function reqFileCreateDir(data) {
 export function reqFileCopy(data) {
   return _postAjax('/file/copy', data);
 }
+// 离线下载
+export function reqFileDownload(data) {
+  return _postAjax('/file/download', data);
+}
 // 是否存在同名文件
 export function reqFileSameName(data) {
   return _postAjax('/file/same-name', data);

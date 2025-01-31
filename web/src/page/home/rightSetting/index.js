@@ -36,7 +36,7 @@ import {
   encodeHtml,
   getScreenSize,
   _getDataSize,
-  computeSize,
+  formatBytes,
   _animate,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
@@ -1066,7 +1066,7 @@ export function settingMenu(e, isMain) {
           async ({ e, id, loading }) => {
             if (id === '1') {
               const { quota } = await cacheFile.getEstimateSize();
-              const titleText = `选择要清除的缓存：剩余空间大约(${computeSize(
+              const titleText = `选择要清除的缓存：剩余空间大约(${formatBytes(
                 quota
               )})`;
               const data = [
@@ -1117,7 +1117,7 @@ export function settingMenu(e, isMain) {
                     _pop(
                       {
                         e,
-                        text: `确认清空：${param.text}缓存？大约：${computeSize(
+                        text: `确认清空：${param.text}缓存？大约：${formatBytes(
                           size
                         )}`,
                       },
@@ -1178,7 +1178,7 @@ export function settingMenu(e, isMain) {
               _pop(
                 {
                   e,
-                  text: `确认导出：缓存？大约：${computeSize(size)}`,
+                  text: `确认导出：缓存？大约：${formatBytes(size)}`,
                 },
                 async (type) => {
                   if (type === 'confirm') {

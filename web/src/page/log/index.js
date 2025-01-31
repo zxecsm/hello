@@ -6,7 +6,7 @@ import $ from 'jquery';
 import '../../js/common/common';
 import {
   _getData,
-  computeSize,
+  formatBytes,
   darkMode,
   debounce,
   pageScrollTop,
@@ -86,7 +86,7 @@ function getLogList(e) {
           const { name, size } = item;
           data.push({
             id: idx + 1 + '',
-            text: `${name} - ${computeSize(size)}`,
+            text: `${name} - ${formatBytes(size)}`,
             param: { name },
             beforeIcon: 'iconfont icon-rizhi',
           });

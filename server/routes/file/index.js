@@ -21,7 +21,7 @@ import {
   errLog,
   createPagingData,
   getDuplicates,
-  getTextSize,
+  isurl,
 } from '../../utils/utils.js';
 
 import appConfig from '../../data/config.js';
@@ -53,6 +53,7 @@ import jwt from '../../utils/jwt.js';
 import taskState from '../../utils/taskState.js';
 import zipper from '../../utils/zip.js';
 import fileList from './cacheFileList.js';
+import axios from 'axios';
 
 const route = express.Router();
 
@@ -574,7 +575,7 @@ route.post('/save-file', async (req, res) => {
     if (
       !validaString(path, 1, fieldLenght.url) ||
       !validaString(text, 0, 0, 0, 1) ||
-      getTextSize(text) > fieldLenght.textFileSize
+      _f.getTextSize(text) > fieldLenght.textFileSize
     ) {
       paramErr(res, req);
       return;
@@ -1388,6 +1389,122 @@ route.post('/repeat', async (req, res) => {
     }
 
     _nothing(res);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 离线下载
+route.post('/download', async (req, res) => {
+  try {
+    const { url, path } = req.body;
+
+    if (
+      !validaString(path, 1, fieldLenght.url) ||
+      !validaString(url, 1, fieldLenght.url) ||
+      !isurl(url)
+    ) {
+      paramErr(res, req);
+      return;
+    }
+
+    const { account } = req._hello.userinfo;
+
+    const targetPath = getCurPath(account, path);
+
+    if (!(await _f.exists(targetPath))) {
+      _err(res, '目标文件夹不存在')(req, targetPath, 1);
+      return;
+    }
+
+    let outputFilePath = _path.normalize(
+      `${targetPath}/${_path.basename(url)[0]}`
+    );
+
+    // 已存在添加后缀
+    if (
+      (await _f.exists(outputFilePath)) ||
+      outputFilePath === getTrashDir(account)
+    ) {
+      outputFilePath = await getUniqueFilename(outputFilePath);
+    }
+
+    const filename = _path.basename(outputFilePath)[0];
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const taskKey = taskState.add(
+      account,
+      `下载文件: ${filename}(0)`,
+      controller
+    );
+
+    _success(res, 'ok', { key: taskKey });
+
+    async function handleError(error, responseData, writer) {
+      // 销毁流
+      if (responseData) responseData.destroy();
+      if (writer) writer.destroy();
+      taskState.delete(taskKey);
+      await errLog(req, `下载文件失败(${error})`);
+      errorNotifyMsg(req, `下载文件失败`);
+    }
+
+    try {
+      const response = await axios({
+        method: 'get',
+        url,
+        responseType: 'stream', // 以流的形式接收数据
+        signal, // 绑定 AbortController
+      });
+
+      // 获取文件总大小（从响应头中获取）
+      const contentLength = response.headers['content-length'];
+      if (contentLength && contentLength > fieldLenght.downloadFileSize) {
+        await handleError('文件过大，下载取消', response.data);
+        return;
+      }
+
+      // 创建一个可写流，将文件保存到本地
+      const writer = _f.fs.createWriteStream(outputFilePath);
+
+      // 监听下载进度
+      let downloadedBytes = 0;
+      response.data.on('data', (chunk) => {
+        downloadedBytes += chunk.length;
+
+        // 动态检查文件大小
+        if (downloadedBytes > fieldLenght.downloadFileSize) {
+          handleError('文件过大，下载取消', response.data, writer);
+        }
+
+        taskState.update(
+          taskKey,
+          `下载文件: ${filename}(${_f.formatBytes(downloadedBytes)})`
+        );
+      });
+
+      // 将响应数据流通过管道传输到文件
+      response.data.pipe(writer);
+
+      // 监听流的结束事件
+      writer.on('finish', () => {
+        taskState.delete(taskKey);
+        syncUpdateData(req, 'file');
+      });
+
+      // 监听流的错误事件
+      writer.on('error', (err) => {
+        handleError(err, response.data, writer);
+      });
+
+      // 监听响应流的错误事件
+      response.data.on('error', (err) => {
+        handleError(err, response.data, writer);
+      });
+    } catch (error) {
+      handleError(error);
+    }
   } catch (error) {
     _err(res)(req, error);
   }

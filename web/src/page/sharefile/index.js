@@ -12,7 +12,7 @@ import {
   _myOpen,
   _setData,
   _setDataTem,
-  computeSize,
+  formatBytes,
   copyText,
   downloadFile,
   enterPassCode,
@@ -141,7 +141,7 @@ function getShareData(close, loading = { start() {}, end() {} }) {
               { a, b }
             )
           );
-          $fileBox.find('.download').text(`下载 (${computeSize(data.size)})`);
+          $fileBox.find('.download').text(`下载 (${formatBytes(data.size)})`);
           if (isImgFile(data.name)) {
             const url =
               getFilePath(`/sharefile/`, 1) +
@@ -282,7 +282,7 @@ async function renderList(top) {
         <li class="check_state" check="n"></li>
         <li cursor="y" class="logo iconfont {{getLogo(name,type) || 'is_img'}}"></li>
         <li cursor="y" class="name"><span class="text">{{getText(name,type).a}}<span class="suffix">{{getText(name,type).b}}</span></span></li>
-        <li class="size">{{size ? computeSize(size) : '--'}}</li>
+        <li class="size">{{size ? formatBytes(size) : '--'}}</li>
         <li class="date">{{formatDate({template: '{0}-{1}-{2} {3}:{4}',timestamp: time})}}</li>
       </ul>
       <i v-for="item in 10" class='fill'></i>
@@ -294,7 +294,7 @@ async function renderList(top) {
       _d,
       paging: { list: fileListData.data },
       formatDate,
-      computeSize,
+      formatBytes,
       getLogo(name, type) {
         let logo = '';
         if (!isImgFile(name)) {
@@ -559,7 +559,7 @@ $contentWrap
     const id = $this.attr('data-id');
     const { name, type, path, mode, size, time } = getFileItem(id);
     const str = `name：${name}\ntype：${type}\npath：${path}\nmode：${mode}\nsize：${
-      size ? computeSize(size) : '--'
+      size ? formatBytes(size) : '--'
     }\ntime：${formatDate({
       template: '{0}-{1}-{2} {3}:{4}',
       timestamp: time,

@@ -10,7 +10,7 @@ import {
   _getTarget,
   _myOpen,
   _setData,
-  computeSize,
+  formatBytes,
   concurrencyTasks,
   copyText,
   createShare,
@@ -34,6 +34,7 @@ import {
   toLogin,
   wrapInput,
   getDuplicates,
+  isurl,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
@@ -51,6 +52,7 @@ import {
   reqFileCreateDir,
   reqFileCreateFile,
   reqFileDelete,
+  reqFileDownload,
   reqFileMerge,
   reqFileMode,
   reqFileMove,
@@ -226,7 +228,7 @@ async function renderList(top) {
           <span class="text">{{getText(name,type).a}}<span class="suffix">{{getText(name,type).b}}</span>
           </span>
         </li>
-        <li :cursor="type === 'file' ? '' : 'cursor'" class="size">{{size ? computeSize(size) : type === 'file' ? '--' : '计算'}}</li>
+        <li :cursor="type === 'file' ? '' : 'cursor'" class="size">{{size ? formatBytes(size) : type === 'file' ? '--' : '计算'}}</li>
         <li class="date">{{formatDate({template: '{0}-{1}-{2} {3}:{4}',timestamp: time})}}</li>
       </ul>
       <i v-for="item in 10" class='fill'></i>
@@ -248,7 +250,7 @@ async function renderList(top) {
           return logo;
         }
       },
-      computeSize,
+      formatBytes,
       getText(name, type) {
         let [a, , b] = _path.extname(name);
         if (type === 'file') {
@@ -559,7 +561,7 @@ $contentWrap
     const id = $this.attr('data-id');
     const { name, type, path, mode, size, time } = getFileItem(id);
     const str = `name：${name}\ntype：${type}\npath：${path}\nmode：${mode}\nsize：${
-      size ? computeSize(size) : '--'
+      size ? formatBytes(size) : '--'
     }\ntime：${formatDate({
       template: '{0}-{1}-{2} {3}:{4}',
       timestamp: time,
@@ -1152,6 +1154,7 @@ $header
     }
   })
   .on('click', '.h_upload_btn', upFileAndDir)
+  .on('click', '.h_download_btn', handleDownloadFile)
   .on('click', '.h_add_item_btn', createFileAndDir)
   .on('click', '.h_sort_btn', hdFileSort)
   .on('click', '.paste_btn .text', hdPaste)
@@ -1168,7 +1171,7 @@ $header
     data.forEach((item) => {
       const { name, type, size } = item;
       str += `\n${type === 'file' ? '文件' : '目录'}：${name}${
-        size ? ` (${computeSize(size)})` : ''
+        size ? ` (${formatBytes(size)})` : ''
       }`;
     });
     toolTip.setTip(str).show();
@@ -1176,6 +1179,38 @@ $header
   .on('mouseleave', '.paste_btn', function () {
     toolTip.hide();
   });
+
+// 离线下载
+function handleDownloadFile(e) {
+  rMenu.inpMenu(
+    e,
+    {
+      subText: '提交',
+      items: {
+        url: {
+          beforeText: '离线下载最大文件10GB',
+          placeholder: '仅支持http/https网络链接',
+          verify(val) {
+            if (!isurl(val)) {
+              return '请输入正确的外链地址';
+            }
+          },
+        },
+      },
+    },
+    async function ({ close, inp }) {
+      close();
+      reqFileDownload({ url: inp.url, path: curFileDirPath })
+        .then((res) => {
+          if (res.code === 1) {
+            addTask(res.data.key, updateCurPage);
+          }
+        })
+        .catch(() => {});
+    },
+    '离线下载'
+  );
+}
 function upFileAndDir(e) {
   const data = [
     { id: '1', text: '上传文件', beforeIcon: 'iconfont icon-24gl-fileEmpty' },

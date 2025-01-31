@@ -881,20 +881,20 @@ function fallbackCopyText(content) {
   selection.removeAllRanges();
   tempDiv.remove();
 }
-// 文件大小计算
-export function computeSize(fsize) {
-  fsize = Number(fsize);
-  if (isNaN(fsize)) return 0;
-  if (fsize >= 1024 * 1024 * 1024) {
-    fsize = `${(fsize / 1024 / 1024 / 1024).toFixed(2)}G`;
-  } else if (fsize >= 1024 * 1024) {
-    fsize = `${(fsize / 1024 / 1024).toFixed(2)}M`;
-  } else if (fsize >= 1024) {
-    fsize = `${(fsize / 1024).toFixed(2)}kb`;
-  } else if (fsize < 1024) {
-    fsize = `${fsize.toFixed(2)}b`;
+// 格式化字节大小
+export function formatBytes(size) {
+  size = Number(size);
+  if (isNaN(size) || size < 0) return '0B';
+
+  const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  let idx = 0;
+
+  while (size >= 1024 && idx < units.length - 1) {
+    size /= 1024;
+    idx++;
   }
-  return fsize;
+
+  return size.toFixed(2) + units[idx];
 }
 // 转义字符串
 export function encodeHtml(str) {

@@ -857,13 +857,6 @@ export function isChinese(str) {
   }
 }
 
-// 获取文本大小
-export function getTextSize(text) {
-  const encoder = new TextEncoder();
-  const byteArray = encoder.encode(text);
-  return byteArray.length; // 返回字节数
-}
-
 // 获取请求源
 export function getOrigin(req) {
   try {

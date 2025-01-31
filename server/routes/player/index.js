@@ -39,7 +39,6 @@ import {
   tplReplace,
   myShuffle,
   normalizePageNo,
-  getTextSize,
 } from '../../utils/utils.js';
 
 import { _d } from '../../data/data.js';
@@ -1469,7 +1468,7 @@ route.post('/edit-lrc', async (req, res) => {
     if (
       !validaString(id, 1, fieldLenght.id, 1) ||
       !validaString(text, 0, 0, 0, 1) ||
-      getTextSize(text) > fieldLenght.lrcSize
+      _f.getTextSize(text) > fieldLenght.lrcSize
     ) {
       paramErr(res, req);
       return;

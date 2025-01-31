@@ -1,6 +1,6 @@
 import { reqPlayerSongInfo } from '../../api/player';
 import rMenu from '../plugins/rightMenu';
-import { computeSize, formartSongTime, formatDate, formatNum } from './utils';
+import { formatBytes, formartSongTime, formatDate, formatNum } from './utils';
 // 显示歌曲信息
 export function showSongInfo(
   e,
@@ -154,7 +154,7 @@ export function showFileInfo(e, obj) {
       beforeText: 'mode：',
     },
     {
-      text: obj.size ? computeSize(obj.size) : '--',
+      text: obj.size ? formatBytes(obj.size) : '--',
       beforeText: 'size：',
     },
     {
