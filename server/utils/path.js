@@ -1,6 +1,15 @@
+// 转换为 Unix 风格的路径
+function toUnixPath(path) {
+  return path.replace(/\\+/g, '/');
+}
+
 // 规范化路径
 function normalize(path) {
-  path = path.replace(/\\+/g, '/');
+  path = toUnixPath(path);
+
+  if (path === '/') {
+    return '/';
+  }
 
   const parts = path.split('/');
 
@@ -24,11 +33,16 @@ function normalize(path) {
   }
 
   // 使用 `/` 重新组合栈中的路径
-  const normalizedPath = stack.join('/');
+  let normalizedPath = stack.join('/');
 
   // 确保如果输入路径是以 `/` 开头的，输出路径也应该以 `/` 开头
   if (path.startsWith('/')) {
-    return '/' + normalizedPath;
+    normalizedPath = '/' + normalizedPath;
+  }
+
+  // 确保如果输入路径是以 `/` 结尾的，输出路径也应该以 `/` 结尾
+  if (path.endsWith('/') && normalizedPath !== '/') {
+    normalizedPath += '/';
   }
 
   return normalizedPath;
@@ -36,12 +50,14 @@ function normalize(path) {
 
 // 获取文件名
 function basename(path) {
-  const filename = path.substring(path.lastIndexOf('/') + 1);
+  path = toUnixPath(path);
+  const filename = path.substring(path.lastIndexOf('/') + 1).split('?')[0];
   return [filename, ...extname(filename)];
 }
 
 // 获取目录名
 function dirname(path) {
+  path = toUnixPath(path);
   return normalize(path.substring(0, path.lastIndexOf('/')) || '/');
 }
 
@@ -81,6 +97,7 @@ function randomFilenameSuffix(
 }
 
 const _path = {
+  toUnixPath,
   normalize,
   basename,
   dirname,

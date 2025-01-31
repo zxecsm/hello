@@ -582,7 +582,7 @@ function hdHomeBgBtn(e, obj) {
           [
             {
               fileUrl: getFilePath(`/bg/${obj.url}`),
-              filename: _path.basename(obj.url)[0],
+              filename: _path.basename(obj.url)[0] || 'unknown',
             },
           ],
           'image'

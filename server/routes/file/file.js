@@ -44,7 +44,11 @@ export async function _delDir(path) {
 
     await _f.mkdir(trashDir);
 
-    let targetPath = _path.normalize(`${trashDir}/${_path.basename(path)[0]}`);
+    const targetName = _path.basename(path)[0];
+
+    if (!targetName) return;
+
+    let targetPath = _path.normalize(`${trashDir}/${targetName}`);
 
     if (await _f.exists(targetPath)) {
       // 已存在添加随机后缀
@@ -91,14 +95,18 @@ export async function getAllFile(path) {
             await getFile(_path.normalize(`${path}/${item}`));
           });
         } else {
-          arr.push({
-            name: _path.basename(path)[0],
-            path: _path.dirname(path),
-            size: s.size,
-            atime: s.atimeMs, //最近一次访问文件的时间戳
-            ctime: s.ctimeMs, //最近一次文件状态的修改的时间戳
-            birthtime: s.birthtimeMs, //文件创建时间的时间戳
-          });
+          const name = _path.basename(path)[0];
+
+          if (name) {
+            arr.push({
+              name,
+              path: _path.dirname(path),
+              size: s.size,
+              atime: s.atimeMs, //最近一次访问文件的时间戳
+              ctime: s.ctimeMs, //最近一次文件状态的修改的时间戳
+              birthtime: s.birthtimeMs, //文件创建时间的时间戳
+            });
+          }
         }
       } catch (error) {
         await writelog(false, `[ getAllFile ] - ${error}`, 'error');
@@ -234,7 +242,7 @@ export function getPermissions(stats) {
 // 生成唯一文件名
 export async function getUniqueFilename(path) {
   const dir = _path.dirname(path);
-  const filename = _path.basename(path)[0];
+  const filename = _path.basename(path)[0] || 'unknown';
 
   let counter = 0;
   let newPath = '';

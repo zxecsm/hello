@@ -1169,7 +1169,7 @@ export function downloadBlob(blob, filename) {
 export async function downloadFile(tasks, type) {
   if (tasks.length === 1) {
     let { fileUrl, filename } = tasks[0];
-    filename = filename || _path.basename(fileUrl);
+    filename = filename || _path.basename(fileUrl) || 'unknown';
     if (type) {
       const cache = await cacheFile.read(fileUrl, type);
       if (cache) {
@@ -1192,7 +1192,7 @@ export async function downloadFile(tasks, type) {
     if (signal.aborted) return;
 
     let { fileUrl, filename } = task;
-    filename = filename || _path.basename(fileUrl);
+    filename = filename || _path.basename(fileUrl) || 'unknown';
     if (type) {
       const cache = await cacheFile.read(fileUrl, type);
       if (cache) {

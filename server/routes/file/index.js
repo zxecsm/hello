@@ -1418,7 +1418,7 @@ route.post('/download', async (req, res) => {
     }
 
     let outputFilePath = _path.normalize(
-      `${targetPath}/${_path.basename(url)[0]}`
+      `${targetPath}/${_path.basename(url)[0] || 'unknown'}`
     );
 
     // 已存在添加后缀
