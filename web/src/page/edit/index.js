@@ -251,7 +251,9 @@ function updateIframeTitle(title) {
   if (isIframe()) {
     try {
       // 更新标题
-      window.parent.openInIframe.hdTitle.updateTitle(window.iframeId, title);
+      window.parent.openInIframe.iframes
+        .get(window.iframeId)
+        .updateTitle(title);
     } catch {}
   }
 }

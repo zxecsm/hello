@@ -191,10 +191,9 @@ if (urlparmes.v) {
           if (isIframe()) {
             try {
               // 更新标题
-              window.parent.openInIframe.hdTitle.updateTitle(
-                window.iframeId,
-                titleName
-              );
+              window.parent.openInIframe.iframes
+                .get(window.iframeId)
+                .updateTitle(titleName);
             } catch {}
           }
         }, 1000);

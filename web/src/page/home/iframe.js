@@ -64,22 +64,16 @@ function getTagFont(type) {
   return font;
 }
 // 更新iframe标题
-openInIframe.hdTitle = {
-  data: {},
+openInIframe.iframes = {
+  data: new Map(),
   add(id, i) {
-    this.data[id] = i;
+    this.data.set(id, i);
+  },
+  get(id) {
+    return this.data.get(id);
   },
   remove(id) {
-    if (this.data.hasOwnProperty(id)) {
-      delete this.data[id];
-    }
-  },
-  updateTitle(id, val) {
-    if (this.data.hasOwnProperty(id)) {
-      const ifram = this.data[id];
-      ifram.name = val;
-      ifram.updateTitle();
-    }
+    this.data.delete(id);
   },
 };
 window.openInIframe = openInIframe;
@@ -200,7 +194,7 @@ class CreateIframe {
     });
     this.bandEvent();
     this.tagBox = addHideBox(this);
-    this.updateTitle();
+    this.updateTitle(this.name);
   }
   onIframeLoad() {
     try {
@@ -212,7 +206,8 @@ class CreateIframe {
     } catch {}
   }
   // 更新标题
-  updateTitle() {
+  updateTitle(name) {
+    this.name = name;
     this.scrollT.init(this.name);
     this.tagBox.querySelector('.title').innerText = this.name;
   }
@@ -277,7 +272,7 @@ class CreateIframe {
     this.hdZindex();
   }
   close() {
-    openInIframe.hdTitle.remove(this.id);
+    openInIframe.iframes.remove(this.id);
     this.box.removeEventListener('click', this.hdClick);
     this.box.removeEventListener('mousedown', this.hdDown);
     this.box.removeEventListener('touchstart', this.hdStart);
@@ -304,6 +299,13 @@ class CreateIframe {
       }
     );
   }
+  getUrl() {
+    try {
+      const url = this.iframeWindow.location.href;
+      this.url = url;
+    } catch {}
+    return this.url;
+  }
   hdClick(e) {
     const topBtn = _getTarget(this.box, e, '.i_top');
     if (_getTarget(this.box, e, '.i_close_btn')) {
@@ -322,11 +324,7 @@ class CreateIframe {
       } catch {}
       this.iframe.src = this.url;
     } else if (_getTarget(this.box, e, '.i_new_page_open_btn')) {
-      try {
-        let url = this.iframeWindow.location.href;
-        this.url = url;
-      } catch {}
-      myOpen(this.url, '_blank');
+      myOpen(this.getUrl(), '_blank');
     } else if (_getTarget(this.box, e, '.i_hide_btn')) {
       this.hdHide();
     } else if (topBtn) {
@@ -355,16 +353,16 @@ class CreateIframe {
 }
 function openInIframe(url, name) {
   const ifra = new CreateIframe(url, name);
-  openInIframe.hdTitle.add(ifra.id, ifra);
+  openInIframe.iframes.add(ifra.id, ifra);
   return ifra;
 }
 // 生成标签
 function addHideBox(iframeBox) {
   const box = document.createElement('div');
   box.className = 'iframe_tag';
-  box._iframeBox = iframeBox;
   box.setAttribute('title', iframeBox.url);
   box.setAttribute('cursor', '');
+  box.setAttribute('iframeId', iframeBox.id);
 
   const close = document.createElement('span');
   close.className = 'close_btn iconfont icon-close-bold';
@@ -396,18 +394,16 @@ function addHideBox(iframeBox) {
 // 切换显示/隐藏
 function switchIframeBox() {
   const _this = this.parentNode;
-  const htarget = _this._iframeBox.box;
+  const ifram = openInIframe.iframes.get(_this.getAttribute('iframeId'));
+  const iframeBox = ifram.box;
   const obj = popWindow.getList().slice(-1)[0];
-  if (
-    htarget.style.visibility === 'hidden' ||
-    (obj && obj.id != _this._iframeBox.id)
-  ) {
-    _this._iframeBox.hdZindex();
-    const isShow = htarget.style.visibility === 'visible';
-    htarget.style.visibility = 'visible';
+  if (iframeBox.style.visibility === 'hidden' || (obj && obj.id != ifram.id)) {
+    ifram.hdZindex();
+    const isShow = iframeBox.style.visibility === 'visible';
+    iframeBox.style.visibility = 'visible';
     if (!isShow) {
-      const { x, y } = getCenterPointDistance(_this._iframeBox.box, _this);
-      _animate(_this._iframeBox.box, {
+      const { x, y } = getCenterPointDistance(iframeBox, _this);
+      _animate(iframeBox, {
         to: {
           transform: `translate(${x}px,${y}px) scale(0)`,
           opacity: 0,
@@ -415,12 +411,12 @@ function switchIframeBox() {
         direction: 'reverse',
       });
     }
-    _this._iframeBox.scrollT.init(_this._iframeBox.name);
-    _this._iframeBox.toRest();
+    ifram.scrollT.init(ifram.name);
+    ifram.toRest();
     _this.classList.remove('hide');
     return;
   }
-  _this._iframeBox.hdHide();
+  ifram.hdHide();
 }
 $minimizeBox
   .on('click', '.title', switchIframeBox)
@@ -430,7 +426,8 @@ $minimizeBox
   })
   .on('click', '.close_btn', function () {
     const _this = this.parentNode;
-    _this._iframeBox.close();
+    const ifram = openInIframe.iframes.get(_this.getAttribute('iframeId'));
+    ifram.close();
   })
   .on('contextmenu', '.iframe_tag', function (e) {
     e.preventDefault();
@@ -445,8 +442,8 @@ longPress($minimizeBox[0], '.iframe_tag', function (e) {
 });
 // 标签菜单
 function handleHideBox(e, _this) {
-  const htarget = _this._iframeBox,
-    url = htarget.url;
+  const ifram = openInIframe.iframes.get(_this.getAttribute('iframeId'));
+  const url = ifram.getUrl();
   const data = [
     {
       id: '1',
@@ -481,24 +478,22 @@ function handleHideBox(e, _this) {
   );
 }
 export function closeAllIframe() {
-  $minimizeBox[0].querySelectorAll('.iframe_tag').forEach((item) => {
-    item._iframeBox.close();
+  openInIframe.iframes.data.forEach((ifram) => {
+    ifram.close();
   });
 }
 export function hideAllIframe() {
-  $minimizeBox[0].querySelectorAll('.iframe_tag').forEach((item) => {
-    item._iframeBox.hdHide();
+  openInIframe.iframes.data.forEach((ifram) => {
+    ifram.hdHide();
   });
 }
 export function showIframeMask() {
-  Object.keys(openInIframe.hdTitle.data).forEach((item) => {
-    const ifra = openInIframe.hdTitle.data[item];
-    ifra.iframeMask.style.display = 'block';
+  openInIframe.iframes.data.forEach((ifram) => {
+    ifram.iframeMask.style.display = 'block';
   });
 }
 export function hideIframeMask() {
-  Object.keys(openInIframe.hdTitle.data).forEach((item) => {
-    const ifra = openInIframe.hdTitle.data[item];
-    ifra.iframeMask.style.display = 'none';
+  openInIframe.iframes.data.forEach((ifram) => {
+    ifram.iframeMask.style.display = 'none';
   });
 }
