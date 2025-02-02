@@ -1063,7 +1063,9 @@ function scrollTopMsg() {
     } else if (idx > 0) {
       if (chatRoomWrapIsHide()) return;
       renderChatMsg.unshift(
-        chatMsgData.get().slice(idx - _d.fieldLenght.chatPageSize, idx),
+        chatMsgData
+          .get()
+          .slice(Math.max(idx - _d.fieldLenght.chatPageSize, 0), idx),
         firstItem
       );
     }
