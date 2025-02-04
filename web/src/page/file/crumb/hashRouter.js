@@ -11,7 +11,7 @@ class HashRouter {
   // 获取当前的 hash 路径
   getHash() {
     const hash = window.location.hash.slice(1);
-    return _path.normalize(decodeURIComponent(hash || '/'));
+    return _path.normalize(hash || '/');
   }
 
   // 更改 hash 路径

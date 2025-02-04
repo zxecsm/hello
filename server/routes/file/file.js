@@ -9,7 +9,7 @@ import { concurrencyTasks, mixedSort, writelog } from '../../utils/utils.js';
 import _path from '../../utils/path.js';
 
 export function getCurPath(acc, p) {
-  return _path.normalize(getRootDir(acc) + '/' + p);
+  return _path.normalize(getRootDir(acc), p);
 }
 
 // 用户文件管理根目录
@@ -48,7 +48,7 @@ export async function _delDir(path) {
 
     if (!targetName) return;
 
-    let targetPath = _path.normalize(`${trashDir}/${targetName}`);
+    let targetPath = _path.normalize(trashDir, targetName);
 
     if (await _f.exists(targetPath)) {
       // 已存在添加随机后缀

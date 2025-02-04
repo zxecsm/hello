@@ -4,8 +4,17 @@ function toUnixPath(path) {
 }
 
 // 规范化路径
-function normalize(path) {
-  path = toUnixPath(path);
+function normalize(...paths) {
+  if (paths.length > 1) {
+    return normalize(
+      paths.reduce((pre, cur) => {
+        pre += `/${normalize(cur)}`;
+        return pre;
+      }, '')
+    );
+  }
+
+  const path = toUnixPath(paths[0]);
 
   if (path === '/') {
     return '/';
@@ -67,14 +76,21 @@ function join(...paths) {
 }
 
 // 是否包含在另一个路径
-function isPathWithin(parentP, childP) {
+function isPathWithin(parentP, childP, allowEqual = false) {
+  // 规范化路径并移除末尾的斜杠
   const normalizedParent = normalize(parentP).replace(/\/$/, '');
   const normalizedChild = normalize(childP).replace(/\/$/, '');
 
-  return (
-    normalizedChild.startsWith(normalizedParent + '/') &&
-    normalizedChild !== normalizedParent
-  );
+  // 检查子路径是否以父路径开头
+  const isWithin = normalizedChild.startsWith(normalizedParent + '/');
+
+  // 如果 allowEqual 为 true，且子路径与父路径相等，也返回 true
+  if (allowEqual && normalizedChild === normalizedParent) {
+    return true;
+  }
+
+  // 否则，返回子路径是否在父路径内
+  return isWithin;
 }
 
 // 获取扩展名

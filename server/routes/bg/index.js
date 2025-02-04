@@ -32,6 +32,7 @@ import {
   concurrencyTasks,
   createPagingData,
   uLog,
+  isFilename,
 } from '../../utils/utils.js';
 
 import { _delDir } from '../file/file.js';
@@ -67,7 +68,7 @@ route.get('/r/:type', async (req, res) => {
     }
 
     // 获取壁纸 URL 并返回
-    const url = _path.normalize(`${appConfig.appData}/bg/${bgData.url}`);
+    const url = _path.normalize(`${appConfig.appData}/bg`, bgData.url);
     res.sendFile(url);
   } catch (error) {
     _err(res)(req, error);
@@ -230,7 +231,7 @@ route.post('/delete', async (req, res) => {
 
     await concurrencyTasks(dels, 5, async (del) => {
       const { url } = del;
-      await _delDir(_path.normalize(`${appConfig.appData}/bg/${url}`));
+      await _delDir(_path.normalize(`${appConfig.appData}/bg`, url));
       await uLog(req, `删除壁纸(${url})`);
     });
 
@@ -250,7 +251,8 @@ route.post('/up', async (req, res) => {
     if (
       !validaString(HASH, 1, fieldLenght.id, 1) ||
       !isImgFile(name) ||
-      !validaString(name, 1, fieldLenght.filename)
+      !validaString(name, 1, fieldLenght.filename) ||
+      !isFilename(name)
     ) {
       paramErr(res, req);
       return;
@@ -309,9 +311,7 @@ route.post('/repeat', async (req, res) => {
     const bg = (await queryData('bg', 'url,id', `WHERE hash = ?`, [HASH]))[0];
 
     if (bg) {
-      if (
-        await _f.exists(_path.normalize(`${appConfig.appData}/bg/${bg.url}`))
-      ) {
+      if (await _f.exists(_path.normalize(`${appConfig.appData}/bg`, bg.url))) {
         _success(res);
         return;
       }

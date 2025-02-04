@@ -28,6 +28,7 @@ import {
   createPagingData,
   concurrencyTasks,
   uLog,
+  isFilename,
 } from '../../utils/utils.js';
 
 import { fieldLenght } from '../config.js';
@@ -54,7 +55,8 @@ route.post('/up', async (req, res) => {
     if (
       !validaString(HASH, 1, fieldLenght.id, 1) ||
       !isImgFile(name) ||
-      !validaString(name, 1, fieldLenght.filename)
+      !validaString(name, 1, fieldLenght.filename) ||
+      !isFilename(name)
     ) {
       paramErr(res, req);
       return;
@@ -107,7 +109,7 @@ route.post('/repeat', async (req, res) => {
 
     if (pic) {
       if (
-        await _f.exists(_path.normalize(`${appConfig.appData}/pic/${pic.url}`))
+        await _f.exists(_path.normalize(`${appConfig.appData}/pic`, pic.url))
       ) {
         _success(res, 'ok', pic);
         return;
@@ -198,7 +200,7 @@ route.post('/delete', async (req, res) => {
     await concurrencyTasks(dels, 5, async (del) => {
       const { url } = del;
 
-      await _delDir(_path.normalize(`${appConfig.appData}/pic/${url}`));
+      await _delDir(_path.normalize(`${appConfig.appData}/pic`, url));
 
       await uLog(req, `删除图片(${url})`);
     });

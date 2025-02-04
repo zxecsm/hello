@@ -546,7 +546,7 @@ export async function cleanUpload(req = false) {
 
       await concurrencyTasks(list, 5, async (item) => {
         const { url } = item;
-        const path = _path.normalize(`${uploadDir}/${url}`);
+        const path = _path.normalize(uploadDir, url);
         await _delDir(path);
         count++;
       });

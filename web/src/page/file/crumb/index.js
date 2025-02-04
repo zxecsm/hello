@@ -131,7 +131,7 @@ _mySlide({
 });
 
 function hdInputBlur() {
-  const val = _path.normalize(this.value.trim());
+  const val = _path.normalize(this.value.trim()) || '/';
   if (val === hashRouter.getRoute()) {
     renderCrumb(val);
   } else {

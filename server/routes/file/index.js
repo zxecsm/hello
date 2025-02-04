@@ -205,9 +205,9 @@ route.get('/read-dir', async (req, res) => {
       const { name } = data;
 
       // 用户根目录
-      rootP = _path.normalize(`${getRootDir(account)}/${data.path}/${name}`);
+      rootP = _path.normalize(getRootDir(account), `${data.path}/${name}`);
 
-      p = _path.normalize(`${rootP}/${path}`);
+      p = _path.normalize(rootP, path);
     } else {
       p = getCurPath(account, path);
       rootP = getRootDir(account);
@@ -364,13 +364,14 @@ route.get('/read-file', async (req, res) => {
       const { name, type } = data;
 
       const rootP = _path.normalize(
-        `${getRootDir(account)}/${data.path}/${name}`
+        getRootDir(account),
+        `${data.path}/${name}`
       );
 
       if (type === 'file') {
         p = rootP;
       } else if (type === 'dir') {
-        p = _path.normalize(`${rootP}/${path}`);
+        p = _path.normalize(rootP, path);
       }
     } else {
       p = getCurPath(account, path);
@@ -526,6 +527,8 @@ route.post('/share', async (req, res) => {
     let { data, title, expireTime, pass = '' } = req.body;
     expireTime = parseInt(expireTime);
 
+    data.path = _path.normalize(data.path);
+
     if (
       !validaString(title, 1, fieldLenght.title) ||
       !validaString(pass, 0, fieldLenght.sharePass) ||
@@ -533,6 +536,7 @@ route.post('/share', async (req, res) => {
       expireTime > fieldLenght.expTime ||
       !_type.isObject(data) ||
       !validaString(data.name, 1, fieldLenght.filename) ||
+      !isFilename(data.name) ||
       !validaString(data.path, 1, fieldLenght.url) ||
       _path.normalize(`${data.path}/${data.name}`) === '/' ||
       !validationValue(data.type, ['dir', 'file'])
@@ -645,6 +649,7 @@ route.post('/copy', async (req, res) => {
         (item) =>
           _type.isObject(item) &&
           validaString(item.name, 1, fieldLenght.filename) &&
+          isFilename(item.name) &&
           validaString(item.path, 1, fieldLenght.url) &&
           _path.normalize(`${item.path}/${item.name}`) !== '/' &&
           validationValue(item.type, ['dir', 'file'])
@@ -681,7 +686,7 @@ route.post('/copy', async (req, res) => {
 
         const { name, path, type } = task;
 
-        const f = getCurPath(account, _path.normalize(`${path}/${name}`));
+        const f = getCurPath(account, `${path}/${name}`);
 
         let to = _path.normalize(`${p}/${name}`);
 
@@ -773,6 +778,7 @@ route.post('/move', async (req, res) => {
         (item) =>
           _type.isObject(item) &&
           validaString(item.name, 1, fieldLenght.filename) &&
+          isFilename(item.name) &&
           validaString(item.path, 1, fieldLenght.url) &&
           _path.normalize(`${item.path}/${item.name}`) !== '/' &&
           validationValue(item.type, ['dir', 'file'])
@@ -809,11 +815,11 @@ route.post('/move', async (req, res) => {
 
         const { name, path, type } = task;
 
-        const f = getCurPath(account, _path.normalize(`${path}/${name}`));
+        const f = getCurPath(account, `${path}/${name}`);
 
         let t = _path.normalize(`${p}/${name}`);
 
-        if (f === t || _path.isPathWithin(f, t)) return;
+        if (_path.isPathWithin(f, t, true)) return;
 
         if (((await _f.exists(t)) && rename === 1) || t === trashDir) {
           t = await getUniqueFilename(t);
@@ -853,6 +859,7 @@ route.post('/zip', async (req, res) => {
     if (
       !_type.isObject(data) ||
       !validaString(data.name, 1, fieldLenght.filename) ||
+      !isFilename(data.name) ||
       !validaString(data.path, 1, fieldLenght.url) ||
       _path.normalize(`${data.path}/${data.name}`) === '/' ||
       !validationValue(data.type, ['file', 'dir'])
@@ -917,6 +924,7 @@ route.post('/unzip', async (req, res) => {
     if (
       !_type.isObject(data) ||
       !validaString(data.name, 1, fieldLenght.filename) ||
+      !isFilename(data.name) ||
       _path.extname(data.name)[2].toLowerCase() !== 'zip' ||
       !validaString(data.path, 1, fieldLenght.url) ||
       !validationValue(data.type, ['file'])
@@ -987,6 +995,7 @@ route.post('/delete', async (req, res) => {
         (item) =>
           _type.isObject(item) &&
           validaString(item.name, 1, fieldLenght.filename) &&
+          isFilename(item.name) &&
           validaString(item.path, 1, fieldLenght.url) &&
           _path.normalize(`${item.path}/${item.name}`) !== '/' &&
           _path.normalize(`${item.path}/${item.name}`) !==
@@ -1018,7 +1027,7 @@ route.post('/delete', async (req, res) => {
 
         let { path, name, type } = task;
 
-        const p = getCurPath(account, _path.normalize(`${path}/${name}`));
+        const p = getCurPath(account, `${path}/${name}`);
 
         let handleType = '删除';
 
@@ -1140,7 +1149,7 @@ route.post('/create-dir', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const fpath = getCurPath(account, _path.normalize(`${path}/${name}`));
+    const fpath = getCurPath(account, `${path}/${name}`);
 
     if (await _f.exists(fpath)) {
       _err(res, '已存在重名文件')(req, fpath, 1);
@@ -1184,7 +1193,7 @@ route.post('/rename', async (req, res) => {
 
     const dir = getCurPath(account, data.path);
 
-    const p = _path.normalize(`${dir}/${data.name}`),
+    const p = _path.normalize(dir, data.name),
       t = _path.normalize(`${dir}/${name}`);
 
     if ((await _f.exists(t)) || getTrashDir(account) === t) {
@@ -1217,6 +1226,7 @@ route.post('/mode', async (req, res) => {
       !/^[0-7]{3}$/.test(mode) ||
       !_type.isObject(data) ||
       !validaString(data.name, 1, fieldLenght.filename) ||
+      !isFilename(data.name) ||
       !validaString(data.path, 1, fieldLenght.url) ||
       !validationValue(data.type, ['dir', 'file'])
     ) {

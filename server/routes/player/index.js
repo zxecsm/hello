@@ -39,6 +39,7 @@ import {
   tplReplace,
   myShuffle,
   normalizePageNo,
+  isFilename,
 } from '../../utils/utils.js';
 
 import { _d } from '../../data/data.js';
@@ -126,7 +127,7 @@ route.get('/lrc', async (req, res) => {
       return;
     }
 
-    const url = _path.normalize(`${appConfig.appData}/music/${songInfo.lrc}`);
+    const url = _path.normalize(`${appConfig.appData}/music`, songInfo.lrc);
 
     if (await _f.exists(url)) {
       const str = (await _f.fsp.readFile(url)).toString(),
@@ -1042,7 +1043,8 @@ route.post('/edit-song', async (req, res) => {
 
     try {
       const songUrl = _path.normalize(
-        `${appConfig.appData}/music/${songInfo.url}`
+        `${appConfig.appData}/music`,
+        songInfo.url
       );
 
       // 写入歌曲文件
@@ -1272,7 +1274,7 @@ route.post('/delete-song', async (req, res) => {
         const { url, artist, title } = del;
 
         await _delDir(
-          _path.normalize(`${appConfig.appData}/music/${_path.dirname(url)}`)
+          _path.normalize(`${appConfig.appData}/music`, _path.dirname(url))
         );
 
         await uLog(req, `删除歌曲(${artist}-${title})`);
@@ -1406,7 +1408,7 @@ route.post('/delete-mv', async (req, res) => {
     for (let i = 0; i < dels.length; i++) {
       const { mv, artist, title } = dels[i];
       if (mv) {
-        await _delDir(_path.normalize(`${appConfig.appData}/music/${mv}`));
+        await _delDir(_path.normalize(`${appConfig.appData}/music`, mv));
         await uLog(req, `删除MV(${artist}-${title})`);
       }
     }
@@ -1439,7 +1441,7 @@ route.get('/read-lrc', async (req, res) => {
       _err(res, '歌曲不存在')(req, id, 1);
     }
 
-    const url = _path.normalize(`${appConfig.appData}/music/${musicinfo.lrc}`);
+    const url = _path.normalize(`${appConfig.appData}/music`, musicinfo.lrc);
 
     if (await _f.exists(url)) {
       const str = (await _f.fsp.readFile(url)).toString();
@@ -1484,7 +1486,7 @@ route.post('/edit-lrc', async (req, res) => {
       _err(res, '歌曲不存在')(req, id, 1);
     }
 
-    const url = _path.normalize(`${appConfig.appData}/music/${musicinfo.lrc}`);
+    const url = _path.normalize(`${appConfig.appData}/music`, musicinfo.lrc);
 
     await _f.mkdir(_path.dirname(url));
 
@@ -1492,7 +1494,8 @@ route.post('/edit-lrc', async (req, res) => {
 
     try {
       const songUrl = _path.normalize(
-        `${appConfig.appData}/music/${musicinfo.url}`
+        `${appConfig.appData}/music`,
+        musicinfo.url
       );
 
       // 写入歌曲文件
@@ -1586,6 +1589,7 @@ route.post('/up', async (req, res) => {
 
     if (
       !validaString(name, 1, fieldLenght.filename) ||
+      !isFilename(name) ||
       !validaString(HASH, 0, fieldLenght.id, 1) ||
       !validationValue(type, ['song', 'cover', 'mv']) ||
       !validaString(id, 0, fieldLenght.id, 1)
@@ -1646,11 +1650,12 @@ route.post('/up', async (req, res) => {
       if (pic) {
         // 提取封面
         await _f.fsp.writeFile(
-          _path.normalize(`${tDir}/${songId}.${_path.basename(picFormat)[0]}`),
+          _path.normalize(tDir, `${songId}.${_path.basename(picFormat)[0]}`),
           pic
         );
         pic = _path.normalize(
-          `${timePath}/${songId}/${songId}.${_path.basename(picFormat)[0]}`
+          `${timePath}/${songId}`,
+          `${songId}.${_path.basename(picFormat)[0]}`
         );
       }
 
@@ -1704,7 +1709,8 @@ route.post('/up', async (req, res) => {
       const { url, pic, title, artist, hash } = songInfo;
 
       const tDir = _path.normalize(
-        `${appConfig.appData}/music/${_path.dirname(url)}`
+        `${appConfig.appData}/music`,
+        _path.dirname(url)
       );
       const tName = `${_path.basename(url)[1]}.${_path.extname(name)[2]}`;
 
@@ -1715,14 +1721,14 @@ route.post('/up', async (req, res) => {
       // 如果上传封面文件和现有的封面文件名不同，删除现有的
       if (_path.basename(pic)[0] !== tName) {
         if (pic) {
-          await _delDir(_path.normalize(`${tDir}/${_path.basename(pic)[0]}`));
+          await _delDir(_path.normalize(tDir, _path.basename(pic)[0]));
         }
       }
 
       let newHASH = '';
 
       try {
-        const songUrl = _path.normalize(`${appConfig.appData}/music/${url}`);
+        const songUrl = _path.normalize(`${appConfig.appData}/music`, url);
 
         // 写入歌曲文件
         await nodeID3.update(
@@ -1788,7 +1794,8 @@ route.post('/up', async (req, res) => {
       const { url, mv, title, artist } = songInfo;
 
       const tDir = _path.normalize(
-        `${appConfig.appData}/music/${_path.dirname(url)}`
+        `${appConfig.appData}/music`,
+        _path.dirname(url)
       );
       const tName = `${_path.basename(url)[1]}.${_path.extname(name)[2]}`;
 
@@ -1798,7 +1805,7 @@ route.post('/up', async (req, res) => {
       if (_path.basename(mv)[0] != tName) {
         // 上传和现有文件名不同上传现有的
         if (mv) {
-          await _delDir(_path.normalize(`${tDir}/${_path.basename(mv)[0]}`));
+          await _delDir(_path.normalize(tDir, _path.basename(mv)[0]));
         }
 
         await updateData(
@@ -1830,7 +1837,7 @@ route.post('/repeat', async (req, res) => {
     )[0];
 
     if (songInfo) {
-      const url = _path.normalize(`${appConfig.appData}/music/${songInfo.url}`);
+      const url = _path.normalize(`${appConfig.appData}/music`, songInfo.url);
 
       if (await _f.exists(url)) {
         _success(res);

@@ -33,6 +33,7 @@ import {
   unique,
   getSongInfo,
   isValidDate,
+  isFilename,
 } from '../../utils/utils.js';
 import { fieldLenght } from '../config.js';
 
@@ -339,7 +340,7 @@ route.get('/expired', async (req, res) => {
     const file = (await queryData('upload', 'url', `WHERE id = ?`, [hash]))[0];
 
     if (file) {
-      const u = _path.normalize(`${appConfig.appData}/upload/${file.url}`);
+      const u = _path.normalize(`${appConfig.appData}/upload`, file.url);
 
       if (await _f.exists(u)) {
         _success(res, 'ok', {
@@ -727,6 +728,7 @@ route.post('/up-voice', async (req, res) => {
     if (
       !/\.wav$/.test(name) ||
       !validaString(name, 1, fieldLenght.filename) ||
+      !isFilename(name) ||
       !validaString(HASH, 1, fieldLenght.id, 1) ||
       !validaString(to, 1, fieldLenght.id, 1)
     ) {
@@ -809,6 +811,7 @@ route.post('/merge', async (req, res) => {
 
     if (
       !validaString(name, 1, fieldLenght.filename) ||
+      !isFilename(name) ||
       !validaString(HASH, 1, fieldLenght.id, 1) ||
       !validaString(to, 1, fieldLenght.id, 1) ||
       !validationValue(type, ['image', 'file']) ||
@@ -951,7 +954,7 @@ route.post('/repeat', async (req, res) => {
 
     if (upload) {
       // 文件已存在则，跳过上传
-      const p = _path.normalize(`${appConfig.appData}/upload/${upload.url}`);
+      const p = _path.normalize(`${appConfig.appData}/upload`, upload.url);
 
       if (await _f.exists(p)) {
         const stats = await _f.fsp.lstat(p);

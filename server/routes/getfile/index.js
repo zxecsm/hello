@@ -86,7 +86,7 @@ route.get('/', async (req, res) => {
         (msg.flag === 'chang' || msg.flag.includes(account))
       ) {
         // 消息文件存在，并且是群和自己发送或收到的消息
-        path = _path.normalize(`${appConfig.appData}/upload/${msg.url}`);
+        path = _path.normalize(`${appConfig.appData}/upload`, msg.url);
       } else {
         _err(res, '无权访问')(req, `${dir}-${id}`, 1);
         return;
@@ -107,7 +107,8 @@ route.get('/', async (req, res) => {
         const { name, type } = obj;
 
         const rootP = _path.normalize(
-          `${getRootDir(share.data.account)}/${obj.path}/${name}`
+          getRootDir(share.data.account),
+          `${obj.path}/${name}`
         );
 
         if (type === 'file') {
