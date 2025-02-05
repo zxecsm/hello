@@ -739,6 +739,7 @@ route.post('/same-name', async (req, res) => {
         (item) =>
           _type.isObject(item) &&
           validaString(item.name, 1, fieldLenght.filename) &&
+          isFilename(item.name) &&
           validaString(item.path, 1, fieldLenght.url) &&
           validationValue(item.type, ['dir', 'file'])
       )
@@ -1033,9 +1034,8 @@ route.post('/delete', async (req, res) => {
 
         if (
           force === 1 ||
-          p === trashDir ||
-          _path.isPathWithin(p, trashDir) ||
-          _path.isPathWithin(trashDir, p)
+          _path.isPathWithin(p, trashDir, true) ||
+          _path.isPathWithin(trashDir, p, true)
         ) {
           await _f.del(p, {
             signal,
@@ -1177,6 +1177,7 @@ route.post('/rename', async (req, res) => {
       !validaString(name, 1, fieldLenght.filename) ||
       !_type.isObject(data) ||
       !validaString(data.name, 1, fieldLenght.filename) ||
+      !isFilename(data.name) ||
       !validaString(data.path, 1, fieldLenght.url) ||
       !validationValue(data.type, ['dir', 'file'])
     ) {
@@ -1193,7 +1194,7 @@ route.post('/rename', async (req, res) => {
 
     const dir = getCurPath(account, data.path);
 
-    const p = _path.normalize(dir, data.name),
+    const p = _path.normalize(`${dir}/${data.name}`),
       t = _path.normalize(`${dir}/${name}`);
 
     if ((await _f.exists(t)) || getTrashDir(account) === t) {

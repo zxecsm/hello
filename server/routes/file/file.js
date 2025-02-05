@@ -35,9 +35,8 @@ export async function _delDir(path) {
     const trashDir = getTrashDir('root');
 
     if (
-      path === trashDir ||
-      _path.isPathWithin(path, trashDir) ||
-      _path.isPathWithin(trashDir, path)
+      _path.isPathWithin(path, trashDir, true) ||
+      _path.isPathWithin(trashDir, path, true)
     ) {
       return _f.del(path);
     }

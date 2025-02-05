@@ -939,6 +939,7 @@ route.post('/repeat', async (req, res) => {
     if (
       !validaString(HASH, 1, fieldLenght.id, 1) ||
       !validaString(name, 1, fieldLenght.filename) ||
+      !isFilename(name) ||
       !validationValue(type, ['image', 'file']) ||
       !validaString(to, 1, fieldLenght.id, 1) ||
       isNaN(size) ||
