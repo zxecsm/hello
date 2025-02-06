@@ -2,6 +2,7 @@ import {
   _getData,
   _getTarget,
   _setData,
+  formatDate,
   getScreenSize,
   isMobile,
   myAnimate,
@@ -16,6 +17,85 @@ const clock = document.querySelector('.clock');
 const domHour = clock.querySelector('.hour');
 const domMin = clock.querySelector('.min');
 const domSec = clock.querySelector('.sec');
+const sections = clock.querySelectorAll('.time_section');
+
+// 滚动字符
+class ScrollText {
+  constructor(target) {
+    this.target = target;
+    this.curContent = '';
+    this.nextContent = '';
+    this.init();
+  }
+
+  init() {
+    this.cur = this.createScrollElement();
+    this.next = this.createScrollElement();
+    this.next.style.transform = 'translateY(100%)';
+    this.target.appendChild(this.cur);
+    this.target.appendChild(this.next);
+  }
+
+  createScrollElement() {
+    const element = document.createElement('div');
+    element.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    `;
+    return element;
+  }
+
+  run(curContent, nextContent) {
+    if (this.curContent === nextContent && this.nextContent === curContent) {
+      return;
+    }
+
+    if (this.timer) {
+      clearTimeout(this.timer);
+    }
+
+    this.cur.textContent = curContent;
+    this.next.textContent = nextContent;
+
+    this.cur.style.transition = this.next.style.transition =
+      'transform 0.5s ease-in-out';
+    this.cur.style.transform = 'translateY(-100%)';
+    this.next.style.transform = 'translateY(0)';
+
+    this.timer = setTimeout(() => {
+      this.curContent = nextContent;
+      this.nextContent = curContent;
+      this.cur.textContent = nextContent;
+      this.next.textContent = curContent;
+      this.cur.style.transition = this.next.style.transition = '0s';
+      this.cur.style.transform = 'translateY(0)';
+      this.next.style.transform = 'translateY(100%)';
+    }, 500);
+  }
+}
+
+let scrollTexts = [];
+sections.forEach((item) => {
+  scrollTexts.push(new ScrollText(item));
+});
+
+function updateTime() {
+  const date = formatDate({
+    timestamp: Date.now() + 500,
+    template: '{3}{4}{5}',
+  });
+
+  scrollTexts.forEach((item, idx) => {
+    const nextContent = +date[idx];
+    const curContent = nextContent - 1;
+    item.run(curContent < 0 ? 9 : curContent, nextContent);
+  });
+}
+
 let animateList = [];
 // 开始运作
 function clockRun(sec, min, hour) {
@@ -103,6 +183,8 @@ function clockinit() {
 }
 clockinit();
 clockMove();
+setInterval(updateTime, 1000);
+updateTime(); // 初始化时间
 const clockData = _getData('clockData');
 function hdClick(e) {
   clockMove();
