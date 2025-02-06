@@ -141,6 +141,7 @@ function drawLines(className, total, translateX) {
   const gap = 360 / total;
   let strHtml = '';
   for (let i = 0; i < total; i++) {
+    if (className === '.line-min' && i % 5 === 0) continue;
     strHtml += `<li style="transform:rotate(${
       i * gap
     }deg) translate(${translateX}px,-50%);"></li>`;
@@ -155,6 +156,7 @@ function drawNumbers(className) {
 
   let strHtml = '';
   for (let i = 1; i <= 12; i++) {
+    if (![12, 3, 6, 9].includes(i)) continue;
     const myAngle = ((i - 3) / 6) * Math.PI,
       myX = radius + radius * Math.cos(myAngle),
       myY = radius + radius * Math.sin(myAngle);
