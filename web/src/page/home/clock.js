@@ -50,16 +50,15 @@ class ScrollText {
   }
 
   run(curContent, nextContent) {
-    if (this.curContent === nextContent && this.nextContent === curContent) {
+    if (this.curContent === curContent && this.nextContent === nextContent)
       return;
-    }
 
     if (this.timer) {
       clearTimeout(this.timer);
     }
 
-    this.cur.textContent = curContent;
-    this.next.textContent = nextContent;
+    this.curContent = this.cur.textContent = curContent;
+    this.nextContent = this.next.textContent = nextContent;
 
     this.cur.style.transition = this.next.style.transition =
       'transform 0.5s ease-in-out';
@@ -67,8 +66,6 @@ class ScrollText {
     this.next.style.transform = 'translateY(0)';
 
     this.timer = setTimeout(() => {
-      this.curContent = nextContent;
-      this.nextContent = curContent;
       this.cur.textContent = nextContent;
       this.next.textContent = curContent;
       this.cur.style.transition = this.next.style.transition = '0s';

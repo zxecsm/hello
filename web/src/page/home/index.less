@@ -397,6 +397,10 @@ body {
     }
     &:hover {
       background-color: rgba(0, 0, 0, 0.548);
+      & .time_container {
+        z-index: 1;
+        color: var(--text-hover-color);
+      }
     }
     &:hover i {
       display: block;
@@ -498,7 +502,7 @@ body {
       font-size: 1.2em;
       transform: translateX(-50%);
       color: #ffffff;
-      bottom: 60px;
+      bottom: 50px;
       .time_section {
         position: relative;
         display: flex;
