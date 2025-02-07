@@ -8,7 +8,6 @@ import {
   _getData,
   formatBytes,
   darkMode,
-  debounce,
   pageScrollTop,
   getScreenSize,
   getWordCount,
@@ -38,7 +37,8 @@ const $head = $('.header'),
   $foot = $('.footer');
 $main.pageNo = 1;
 $main.list = [];
-let lPageSize = 20;
+let lPageSize = 20,
+  sPageSize = 50;
 window.addEventListener('load', () => {
   $head.addClass('open');
 });
@@ -189,36 +189,62 @@ function getStatData(list) {
   ipArr.sort((a, b) => b.total - a.total);
   return ipArr;
 }
+const spgnt = pagination($stat[0], {
+  change(val) {
+    $stat.pageNo = val;
+    renderStat();
+    _msg.botMsg(`第 ${$stat.pageNo} 页`);
+  },
+  changeSize(val) {
+    sPageSize = val;
+    $stat.pageNo = 1;
+    renderStat();
+    _msg.botMsg(`第 ${$stat.pageNo} 页`);
+  },
+  toTop() {
+    $stat.scrollTop(0);
+  },
+});
 function renderStat() {
+  const pageTotal = Math.ceil($stat.list.length / sPageSize);
+  $stat.pageNo < 1
+    ? ($stat.pageNo = pageTotal)
+    : $stat.pageNo > pageTotal
+    ? ($stat.pageNo = 1)
+    : null;
   const html = _tpl(
     `
-    <p v-for="{ip, total, addr} in list">
-      <span cursor="y" class='ip'>{{ip}}</span>({{addr}})<span>：{{total}}</span>
-    </p>
+    <template v-if="arr.length > 0">
+      <p v-for="{ip, total, addr} in list">
+        <span cursor="y" class='ip'>{{ip}}</span>({{addr}})<span>：{{total}}</span>
+      </p>
+      <div v-html="getPaging()"></div>
+    </template>
     `,
     {
-      list: $stat.list.slice(($stat.pageNo - 1) * 50, $stat.pageNo * 50),
+      arr: $stat.list,
+      list: $stat.list.slice(
+        ($stat.pageNo - 1) * sPageSize,
+        $stat.pageNo * sPageSize
+      ),
+      getPaging() {
+        return spgnt.getHTML({
+          pageNo: $stat.pageNo,
+          pageSize: sPageSize,
+          total: $stat.list.length,
+          small: getScreenSize().w <= _d.screen,
+        });
+      },
     }
   );
-  $stat.append(html);
+  $stat.html(html);
+  $stat.scrollTop(0);
 }
 $stat.on('click', '.ip', function () {
   wInput.setValue(this.innerText);
   $main.pageNo = 1;
   hdRender();
 });
-window.addEventListener(
-  'scroll',
-  debounce(function () {
-    if (
-      pageScrollTop() + this.document.documentElement.clientHeight >
-      this.document.documentElement.scrollHeight - 50
-    ) {
-      $stat.pageNo++;
-      renderStat();
-    }
-  }, 500)
-);
 // 分页
 const pgnt = pagination($foot[0], {
   change(val) {
@@ -254,7 +280,6 @@ async function hdRender() {
       <p v-if="arr.length === 0" style='text-align: center;'>{{_d.emptyList}}</p>
       <template v-else>
         <p v-for="data in list" v-html="hdTitleHighlight([word], data)"></p>
-        <div v-html="getPaging()"></div>
       </template>
       `,
     {
@@ -263,16 +288,14 @@ async function hdRender() {
       arr,
       list: arr.slice(($main.pageNo - 1) * lPageSize, $main.pageNo * lPageSize),
       hdTitleHighlight,
-      getPaging() {
-        return pgnt.render({
-          pageNo: $main.pageNo,
-          pageSize: lPageSize,
-          total: arr.length,
-          small: getScreenSize().w <= _d.screen,
-        });
-      },
     }
   );
+  pgnt.render({
+    pageNo: $main.pageNo,
+    pageSize: lPageSize,
+    total: arr.length,
+    small: getScreenSize().w <= _d.screen,
+  });
   $main.html(html);
   pageScrollTop(0);
 }
