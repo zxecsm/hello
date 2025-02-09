@@ -58,9 +58,9 @@ import axios from 'axios';
 const route = express.Router();
 
 // 分享文件
-route.get('/share', async (req, res) => {
+route.post('/get-share', async (req, res) => {
   try {
-    const { id, pass = '' } = req.query;
+    const { id, pass = '' } = req.body;
 
     if (
       !validaString(id, 1, fieldLenght.id, 1) ||
@@ -138,7 +138,7 @@ function fileListSortAndCacheSize(list, rootP, sortType, isDesc, hidden) {
 
   return sortFileList(list, sortType, isDesc);
 }
-route.get('/read-dir', async (req, res) => {
+route.post('/read-dir', async (req, res) => {
   try {
     let {
       path,
@@ -151,13 +151,9 @@ route.get('/read-dir', async (req, res) => {
       word = '',
       token = '',
       hidden = 0,
-    } = req.query;
+    } = req.body;
     pageNo = parseInt(pageNo);
     pageSize = parseInt(pageSize);
-    subDir = parseInt(subDir);
-    isDesc = parseInt(isDesc);
-    update = parseInt(update);
-    hidden = parseInt(hidden);
 
     const temid = req._hello.temid;
 
@@ -330,9 +326,9 @@ route.get('/read-dir', async (req, res) => {
 });
 
 // 读取文件
-route.get('/read-file', async (req, res) => {
+route.post('/read-file', async (req, res) => {
   try {
-    const { path = '', token = '' } = req.query;
+    const { path = '', token = '' } = req.body;
 
     if (
       !validaString(path, 0, fieldLenght.url) ||

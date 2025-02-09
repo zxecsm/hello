@@ -15,6 +15,10 @@ export function reqUserDailyChangeBg() {
 export function reqUserHideState() {
   return _getAjax('/user/hide-state');
 }
+// 免密登录状态
+export function reqUserRemoteLoginState() {
+  return _getAjax('/user/remote-login-state');
+}
 // 删除头像
 export function reqUserDeleteLogo() {
   return _getAjax('/user/delete-logo');
@@ -34,6 +38,10 @@ export function reqUserDeleteAccount(data) {
 // 批准登录
 export function reqUserAllowLogin(data) {
   return _postAjax('/user/allow-code-login', data, { timeout: 15000 });
+}
+// 批准登录请求
+export function reqUserAllowLoginReq(data) {
+  return _postAjax('/user/allow-login-req', data);
 }
 // 退出
 export function reqUserLogout(param) {
@@ -129,7 +137,7 @@ export function reqUserEmailCode(data) {
   return _getAjax('/user/mail-code', data);
 }
 export function reqUserBindEmailCode(data) {
-  return _getAjax('/user/bind-mail-code', data);
+  return _postAjax('/user/bind-mail-code', data);
 }
 // 绑定邮箱
 export function reqUserBindEmail(data) {

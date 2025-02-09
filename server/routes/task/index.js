@@ -12,9 +12,9 @@ import { validShareState } from '../user/user.js';
 const route = express.Router();
 
 // 获取任务信息
-route.get('/info', async (req, res) => {
+route.post('/info', async (req, res) => {
   try {
-    const { key, token = '' } = req.query;
+    const { key, token = '' } = req.body;
 
     let {
       temid,
@@ -112,9 +112,9 @@ route.post('/cancel', async (req, res) => {
 });
 
 // 获取任务列表
-route.get('/list', async (req, res) => {
+route.post('/list', async (req, res) => {
   try {
-    const { token = '' } = req.query;
+    const { token = '' } = req.body;
 
     let {
       temid,

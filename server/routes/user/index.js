@@ -66,6 +66,7 @@ import _path from '../../utils/path.js';
 import { getNoteHistoryDir } from '../note/note.js';
 import { getTrashDir } from '../file/file.js';
 import _crypto from '../../utils/crypto.js';
+import getCity from '../../utils/getCity.js';
 
 const verifyCode = new Map();
 
@@ -201,6 +202,61 @@ route.post('/register', async (req, res) => {
   }
 });
 
+// 批准登录请求
+route.post('/allow-login-req', async (req, res) => {
+  try {
+    const { code, username } = req.body;
+
+    if (
+      !validaString(code, 6, 6, 1) ||
+      !validaString(username, 1, fieldLenght.username)
+    ) {
+      paramErr(res, req);
+      return;
+    }
+
+    const userinfo = (
+      await queryData(
+        'user',
+        'account,remote_login',
+        `WHERE username = ? AND state = ? AND account != ?`,
+        [username, 1, 'hello']
+      )
+    )[0];
+
+    if (!userinfo) {
+      _err(res, '用户不存在')(req, username, 1);
+      return;
+    }
+
+    const { account, remote_login } = userinfo;
+
+    if (remote_login === 0) {
+      _err(res, '用户未开启免密登录')(req, `${username}-${account}`, 1);
+      return;
+    }
+
+    const { ip, os } = req._hello;
+
+    const { country, province, city, isp } = getCity(ip);
+
+    // 发送允许登录消息
+    _connect.send(userinfo.account, nanoid(), {
+      type: 'allowLogin',
+      data: {
+        ip,
+        os,
+        addr: `${country} ${province} ${city} ${isp}`,
+        code,
+      },
+    });
+
+    _success(res, '发送登录请求成功')(req, `${username}-${account}`, 1);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
 // 免密登录
 route.post('/code-login', async (req, res) => {
   try {
@@ -217,7 +273,7 @@ route.post('/code-login', async (req, res) => {
     const userinfo = (
       await queryData(
         'user',
-        'account',
+        'account,remote_login',
         `WHERE username = ? AND state = ? AND account != ?`,
         [username, 1, 'hello']
       )
@@ -225,6 +281,17 @@ route.post('/code-login', async (req, res) => {
 
     if (!userinfo) {
       _err(res, '用户不存在')(req, username, 1);
+      return;
+    }
+
+    const { remote_login } = userinfo;
+
+    if (remote_login === 0) {
+      _err(res, '用户未开启免密登录')(
+        req,
+        `${username}-${userinfo.account}`,
+        1
+      );
       return;
     }
 
@@ -589,9 +656,9 @@ route.get('/font-list', async (req, res) => {
 });
 
 // 发送邮件验证码
-route.get('/bind-mail-code', async (req, res) => {
+route.post('/bind-mail-code', async (req, res) => {
   try {
-    const { email } = req.query;
+    const { email } = req.body;
 
     if (!validaString(email, 1, fieldLenght.email) || !isEmail(email)) {
       paramErr(res, req);
@@ -995,6 +1062,7 @@ route.get('/userinfo', async (req, res) => {
       bgxs,
       hide,
       email,
+      remote_login,
       daily_change_bg,
     } = req._hello.userinfo;
 
@@ -1021,6 +1089,7 @@ route.get('/userinfo', async (req, res) => {
       verify,
       account,
       daily_change_bg,
+      remote_login,
       bg,
       bgxs,
       hide,
@@ -1178,6 +1247,40 @@ route.get('/hide-state', async (req, res) => {
       onlineMsg(req, 1); // 通知上线
 
       _success(res, '成功关闭')(req, '关闭隐身');
+    }
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 免密登录状态
+route.get('/remote-login-state', async (req, res) => {
+  try {
+    const { account, remote_login } = req._hello.userinfo;
+
+    let tem;
+
+    if (remote_login === 1) {
+      tem = 0;
+    } else {
+      tem = 1;
+    }
+
+    await updateData(
+      'user',
+      {
+        remote_login: tem,
+      },
+      `WHERE account = ? AND state = ?`,
+      [account, 1]
+    );
+
+    syncUpdateData(req, 'userinfo');
+
+    if (tem === 1) {
+      _success(res, '成功开启')(req, '开启免密登录');
+    } else {
+      _success(res, '成功关闭')(req, '关闭免密登录');
     }
   } catch (error) {
     _err(res)(req, error);

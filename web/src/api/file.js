@@ -2,11 +2,11 @@ import _d from '../js/common/config';
 import { _getAjax, _postAjax, _upFile } from '../js/utils/utils';
 // 读取目录
 export function reqFileReadDir(data) {
-  return _getAjax('/file/read-dir', data);
+  return _postAjax('/file/read-dir', data);
 }
 // 读取文件
 export function reqFileReadFile(data) {
-  return _getAjax('/file/read-file', data);
+  return _postAjax('/file/read-file', data);
 }
 // 保存文件
 export function reqFileSaveFile(data) {
@@ -85,7 +85,7 @@ export function reqFileRename(data) {
 }
 // 获取分享数据
 export function reqFileGetShare(data) {
-  return _getAjax('/file/share', data);
+  return _postAjax('/file/get-share', data);
 }
 // 读取目录大小
 export function reqFileReadDirSize(data) {

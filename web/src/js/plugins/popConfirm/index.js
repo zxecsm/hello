@@ -107,7 +107,7 @@ class Pop {
   }
 }
 function _pop(opt, callback) {
-  new Pop(opt, callback);
+  return new Pop(opt, callback);
 }
 _pop.p = function (opt) {
   return new Promise((resolve) => {

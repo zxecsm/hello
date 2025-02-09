@@ -39,7 +39,7 @@ import realtime from '../../js/plugins/realtime';
 import loadingPage from '../../js/plugins/loading/index.js';
 import { reqChatNews, reqChatReadMsg } from '../../api/chat.js';
 import { reqTodoList } from '../../api/todo.js';
-import { reqUserInfo } from '../../api/user.js';
+import { reqUserAllowLogin, reqUserInfo } from '../../api/user.js';
 import { reqBgRandom, reqChangeBg } from '../../api/bg.js';
 // 时钟
 import './clock.js';
@@ -148,6 +148,7 @@ import { deepClone } from '../../js/utils/template.js';
 import _path from '../../js/utils/path.js';
 import percentBar from '../../js/plugins/percentBar/index.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
+import _pop from '../../js/plugins/popConfirm/index.js';
 const $pageBg = $('.page_bg'),
   $document = $(document),
   $userLogoBtn = $('.user_logo_btn'),
@@ -989,6 +990,63 @@ function handleOnlineMsg(data) {
     }
   });
 }
+
+let allowLoginPop = null,
+  isLoding = false;
+// 批准登录
+function handleAllowLoginMsg(data) {
+  const { ip, code, addr, os } = data;
+
+  const msg = `设备：${os}\nIP：${ip}\n位置：${addr}\n验证码：${code.slice(
+    0,
+    3
+  )} ${code.slice(3)}\n\n请求允许登录。`;
+
+  if (allowLoginPop) {
+    allowLoginPop.close();
+  }
+
+  allowLoginPop = _pop(
+    {
+      text: msg,
+      confirm: {
+        text: '批准登录',
+      },
+    },
+    (type) => {
+      allowLoginPop = null;
+      if (type === 'confirm') {
+        if (isLoding) {
+          _msg.info('正在认证中');
+          return;
+        }
+        isLoding = true;
+        let num = 0;
+        let timer = setInterval(() => {
+          _msg.botMsg(`认证中…${++num}`, 1);
+        }, 1000);
+        function closeLogin() {
+          clearInterval(timer);
+          timer = null;
+          isLoding = false;
+          _msg.botMsg(`认证失败`, 1);
+        }
+        reqUserAllowLogin({ code })
+          .then((res) => {
+            closeLogin();
+            if (res.code === 1) {
+              _msg.success(res.codeText);
+              _msg.botMsg(`认证成功`, 1);
+            }
+          })
+          .catch(() => {
+            closeLogin();
+          });
+      }
+    }
+  );
+}
+
 //同步数据
 realtime.init('home').add((res) => {
   res.forEach((item) => {
@@ -1017,6 +1075,8 @@ realtime.init('home').add((res) => {
       switchPlayMode();
     } else if (type === 'online') {
       handleOnlineMsg(data);
+    } else if (type === 'allowLogin') {
+      handleAllowLoginMsg(data);
     }
   });
 });

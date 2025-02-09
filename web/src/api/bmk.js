@@ -66,11 +66,11 @@ export function reqBmkEditBmk(data) {
 }
 // 搜索
 export function reqBmkSearch(data) {
-  return _getAjax('/bmk/search', data);
+  return _postAjax('/bmk/search', data);
 }
 // 获取分享数据
 export function reqBmkGetShare(data) {
-  return _getAjax('/bmk/share', data);
+  return _postAjax('/bmk/get-share', data);
 }
 // 保存分享
 export function reqBmkSaveShare(data) {

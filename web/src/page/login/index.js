@@ -22,6 +22,7 @@ import validateImg from './validate';
 import '../../js/common/common.js';
 import _msg from '../../js/plugins/message';
 import {
+  reqUserAllowLoginReq,
   reqUserCodeLogin,
   reqUserEmailCode,
   reqUserLogin,
@@ -150,21 +151,25 @@ function hdNopdLogin() {
       });
   }
 }
+function changeCode() {
+  // 显示登录码
+  code = Math.random().toFixed(6).slice(2);
+  $ratify
+    .css('display', 'flex')
+    .find('.code_box')
+    .stop()
+    .fadeIn(_d.speed)
+    .find('.code span')
+    .html(`<i>${code.slice(0, 3)}</i><i>${code.slice(3)}</i>`);
+}
 $nopd
   .on('click', '.nopd_login', function () {
     if (!checkUserName()) {
       shake();
       return;
     }
-    // 显示登录码
-    code = Math.random().toFixed(6).slice(2);
-    $ratify
-      .css('display', 'flex')
-      .find('.code_box')
-      .stop()
-      .fadeIn(_d.speed)
-      .find('.code span')
-      .html(`<i>${code.slice(0, 3)}</i><i>${code.slice(3)}</i>`);
+    changeCode();
+    sendLoginRequest();
     hdNopdLogin();
   })
   .on('click', '.resetpd', resetPassword);
@@ -232,7 +237,22 @@ function resetPassword(e) {
     }
   });
 }
-$ratify.on('click', '.close', closeRatify);
+$ratify.on('click', '.close', closeRatify).on('click', '.resend', () => {
+  changeCode();
+  sendLoginRequest();
+});
+// 发送登录请求
+function sendLoginRequest() {
+  if (code) {
+    reqUserAllowLoginReq({ code, username: accInp.getValue().trim() })
+      .then((res) => {
+        if (res.code === 1) {
+          _msg.success(res.codeText);
+        }
+      })
+      .catch(() => {});
+  }
+}
 function closeRatify() {
   $ratify.css('display', 'none').find('.code_box').css('display', 'none');
   code = '';

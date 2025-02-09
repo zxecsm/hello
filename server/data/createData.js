@@ -504,6 +504,8 @@ CREATE TABLE IF NOT EXISTS user (
                                DEFAULT (''),
     daily_change_bg    INTEGER DEFAULT (0) 
                                NOT NULL,
+    remote_login       INTEGER DEFAULT (1) 
+                               NOT NULL,
     exp_token_time     INTEGER DEFAULT (0) 
                                NOT NULL,
     logo               TEXT    NOT NULL

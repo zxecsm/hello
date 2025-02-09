@@ -582,7 +582,9 @@ export function _postAjax(url, data = {}, opt = {}, callback) {
           _loadingBar.end();
         }
         if (data.code === 0) {
-          _msg.error(data.codeText);
+          if (!stopErrorMsg) {
+            _msg.error(data.codeText);
+          }
           reject(data.codeText);
           return;
         } else if (data.code === 2) {
@@ -648,7 +650,9 @@ export function _getAjax(url, data = {}, opt = {}) {
           _loadingBar.end();
         }
         if (data.code === 0) {
-          _msg.error(data.codeText);
+          if (!stopErrorMsg) {
+            _msg.error(data.codeText);
+          }
           reject(data.codeText);
           return;
         } else if (data.code === 2) {

@@ -10,7 +10,7 @@ export function reqPlayerGetLastPlay() {
 }
 // 歌词
 export function reqPlayerLrc(data) {
-  return _getAjax('/player/lrc', data);
+  return _postAjax('/player/lrc', data);
 }
 // 编辑歌词
 export function reqPlayerEditLrc(data) {
@@ -42,7 +42,7 @@ export function reqPlayerEditSong(data) {
 }
 // 获取歌曲信息
 export function reqPlayerSongInfo(data) {
-  return _getAjax('/player/song-info', data);
+  return _postAjax('/player/song-info', data);
 }
 // 删除mv
 export function reqPlayerDeleteMv(data) {
@@ -98,7 +98,7 @@ export function reqPlayerDeleteList(data) {
 }
 // 读取分享
 export function reqPlayerGetShare(data) {
-  return _getAjax('/player/share', data);
+  return _postAjax('/player/get-share', data);
 }
 // 保存分享
 export function reqPlayerSaveShare(data) {

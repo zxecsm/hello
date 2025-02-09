@@ -76,7 +76,7 @@ const maxSonglistCount = 2000;
 const route = express.Router();
 
 // 获取歌词
-route.get('/lrc', async (req, res) => {
+route.post('/lrc', async (req, res) => {
   const errData = [
     {
       t: 0,
@@ -86,7 +86,7 @@ route.get('/lrc', async (req, res) => {
   ];
 
   try {
-    const { id, token = '' } = req.query;
+    const { id, token = '' } = req.body;
 
     if (!validaString(id, 1, fieldLenght.id, 1)) {
       paramErr(res, req);
@@ -154,9 +154,9 @@ route.get('/lrc', async (req, res) => {
 });
 
 // 歌曲信息
-route.get('/song-info', async (req, res) => {
+route.post('/song-info', async (req, res) => {
   try {
-    const { id, token = '' } = req.query;
+    const { id, token = '' } = req.body;
 
     if (!validaString(id, 1, fieldLenght.id, 1)) {
       paramErr(res, req);
@@ -207,9 +207,9 @@ route.get('/song-info', async (req, res) => {
 });
 
 // 分享
-route.get('/share', async (req, res) => {
+route.post('/get-share', async (req, res) => {
   try {
-    const { id, pass = '' } = req.query;
+    const { id, pass = '' } = req.body;
 
     if (
       !validaString(id, 1, fieldLenght.id, 1) ||

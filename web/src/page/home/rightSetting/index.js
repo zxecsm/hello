@@ -46,7 +46,6 @@ import _pop from '../../../js/plugins/popConfirm';
 import {
   reqUerChangename,
   reqUserDeleteAccount,
-  reqUserAllowLogin,
   reqUserBindEmail,
   reqUserBindEmailCode,
   reqUserChangPd,
@@ -59,6 +58,7 @@ import {
   reqUserTips,
   reqUserUpLogo,
   reqUserVerify,
+  reqUserRemoteLoginState,
 } from '../../../api/user.js';
 import { reqBmkExport, reqBmkImport } from '../../../api/bmk.js';
 import { setTodoUndone, showTodoBox } from '../todo/index.js';
@@ -246,6 +246,18 @@ function dailyChangeBg() {
 // 隐身
 function hdHideState() {
   reqUserHideState()
+    .then((result) => {
+      if (result.code === 1) {
+        updateUserInfo();
+        _msg.success(result.codeText);
+        return;
+      }
+    })
+    .catch(() => {});
+}
+// 免密登录状态
+function hdRemoteLoginState() {
+  reqUserRemoteLoginState()
     .then((result) => {
       if (result.code === 1) {
         updateUserInfo();
@@ -639,6 +651,7 @@ $userInfoWrap
   .on('click', '.bind_email', bindEmail)
   .on('click', '.dailybg', dailyChangeBg)
   .on('click', '.hide', hdHideState)
+  .on('click', '.remote_login', hdRemoteLoginState)
   .on('click', '.u_close_btn', hideUserInfo)
   .on('click', '.user_logo div', hdUserLogo);
 // 更新用户信息
@@ -650,6 +663,7 @@ export function renderUserinfo() {
     <ul><li>账号</li><li>{{account}}</li></ul>
     <ul><li>邮箱</li><li>{{email || '未绑定邮箱'}}</li><li cursor="y" class="bind_email">{{email ? '解绑' : '绑定'}}</li></ul>
     <ul><li>状态</li><li>开启隐身</li><li style="color: var(--icon-color);" class="hide iconfont {{hide && hide === 1 ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'}}" cursor="y"></li></ul>
+    <ul><li>登录</li><li>免密登录</li><li style="color: var(--icon-color);" class="remote_login iconfont {{remote_login && remote_login === 1 ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'}}" cursor="y"></li></ul>
     <ul><li>转发</li><li>消息转发至外部应用</li><li cursor="y" class="forward_msg">编辑</li></ul>
     <ul><li>壁纸</li><li>每日自动更换壁纸</li><li style="color: var(--icon-color);" class="dailybg iconfont {{daily_change_bg === 1 ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'}}" cursor="y"></li></ul>
     `,
@@ -1443,61 +1457,6 @@ function closeAccount(e) {
     '请输入用户密码认证'
   );
 }
-// 批准登录
-function allowLogin(e) {
-  rMenu.inpMenu(
-    e,
-    {
-      items: {
-        text: {
-          beforeText: '登录码：',
-          inputType: 'number',
-          verify(val) {
-            if (val === '') {
-              return '请输入登录码';
-            } else if (val.length !== 6 || !isInteger(+val) || val < 0) {
-              return '请输入6位正整数';
-            }
-          },
-        },
-      },
-    },
-    function ({ inp, close, loading }) {
-      if ($rightBox.isloding) {
-        _msg.info('正在认证中');
-        return;
-      }
-      const code = inp.text;
-      $rightBox.isloding = true;
-      let num = 0;
-      let timer = setInterval(() => {
-        _msg.botMsg(`认证中…${++num}`, 1);
-      }, 1000);
-      function closeLogin() {
-        clearInterval(timer);
-        timer = null;
-        $rightBox.isloding = false;
-        _msg.botMsg(`认证失败`, 1);
-      }
-      loading.start();
-      reqUserAllowLogin({ code })
-        .then((res) => {
-          loading.end();
-          closeLogin();
-          if (res.code === 1) {
-            close();
-            _msg.success(res.codeText);
-            _msg.botMsg(`认证成功`, 1);
-          }
-        })
-        .catch(() => {
-          loading.end();
-          closeLogin();
-        });
-    },
-    '批准免密登录'
-  );
-}
 // 账号设置
 function hdAccountManage(e) {
   const { account, verify } = setUserInfo();
@@ -1506,11 +1465,6 @@ function hdAccountManage(e) {
       id: '1',
       text: '个人信息',
       beforeIcon: 'iconfont icon-zhanghao',
-    },
-    {
-      id: '2',
-      text: '批准免密登录',
-      beforeIcon: 'iconfont icon-yuanchengguanli',
     },
     {
       id: '3',
@@ -1547,8 +1501,6 @@ function hdAccountManage(e) {
         changeUserPd(e);
       } else if (id === '5') {
         closeAccount(e);
-      } else if (id === '2') {
-        allowLogin(e);
       } else if (id === '6') {
         hdAdmin(e);
       } else if (id === '4') {

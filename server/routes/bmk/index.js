@@ -56,9 +56,9 @@ import { _d } from '../../data/data.js';
 const route = express.Router();
 
 // 分享
-route.get('/share', async (req, res) => {
+route.post('/get-share', async (req, res) => {
   try {
-    const { id, pass = '' } = req.query;
+    const { id, pass = '' } = req.body;
 
     if (
       !validaString(id, 1, fieldLenght.id, 1) ||
@@ -119,7 +119,7 @@ route.get('/share', async (req, res) => {
 });
 
 // 搜索书签
-route.get('/search', async (req, res) => {
+route.post('/search', async (req, res) => {
   try {
     let {
       word = '',
@@ -127,7 +127,7 @@ route.get('/search', async (req, res) => {
       pageSize = 20,
       account: acc = '',
       category = [],
-    } = req.query;
+    } = req.body;
     pageNo = parseInt(pageNo);
     pageSize = parseInt(pageSize);
 
