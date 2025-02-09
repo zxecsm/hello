@@ -116,7 +116,7 @@ route.get('/read', async (req, res) => {
 });
 
 // 搜索笔记
-route.get('/search', async (req, res) => {
+route.post('/search', async (req, res) => {
   try {
     let {
       account: acc = '',
@@ -124,7 +124,7 @@ route.get('/search', async (req, res) => {
       category = [],
       pageNo = 1,
       pageSize = 20,
-    } = req.query;
+    } = req.body;
 
     pageNo = parseInt(pageNo);
     pageSize = parseInt(pageSize);

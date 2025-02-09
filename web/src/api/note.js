@@ -26,7 +26,7 @@ export function reqNoteState(data) {
 }
 // 搜索
 export function reqNoteSearch(data) {
-  return _getAjax('/note/search', data);
+  return _postAjax('/note/search', data);
 }
 // 置顶
 export function reqNoteTop(data) {
