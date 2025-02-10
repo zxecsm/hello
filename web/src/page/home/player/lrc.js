@@ -434,6 +434,7 @@ function songStartPlaying() {
 }
 // 更新播放时间
 function songTimeUpdate() {
+  if (songIspaused()) return;
   const curPlayTime = Math.round(this.currentTime);
   // 播放50%以上缓存歌曲
   if (this.currentTime / playingSongInfo.duration > 0.5) {

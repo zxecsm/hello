@@ -581,6 +581,7 @@ $myAudio
     playNextSong();
   })
   .on('timeupdate', function () {
+    if ($myAudio[0].paused) return;
     const curTime = Math.round(this.currentTime);
     upprog();
     if ($myAudio._flag === curTime) return;
