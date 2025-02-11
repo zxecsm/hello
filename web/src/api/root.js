@@ -87,3 +87,7 @@ export function reqRootChangeCacheTime(data) {
 export function reqRootPubApiState(data) {
   return _postAjax('/root/pub-api-state', data);
 }
+// 创建帐号
+export function reqRootCreateAccount(data) {
+  return _postAjax('/root/create-account', data);
+}

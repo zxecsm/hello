@@ -35,6 +35,7 @@ import {
   reqRootCleanMusicFile,
   reqRootCleanPicFile,
   reqRootCleanThumbFile,
+  reqRootCreateAccount,
   reqRootCustomCode,
   reqRootDeleteAccount,
   reqRootEmail,
@@ -51,6 +52,8 @@ import { reqUserCustomCode } from '../../api/user';
 import changeDark from '../../js/utils/changeDark';
 import toolTip from '../../js/plugins/tooltip';
 import { _tpl } from '../../js/utils/template';
+import md5 from '../../js/utils/md5.js';
+
 const $contentWrap = $('.content_wrap'),
   $paginationBox = $('.pagination_box'),
   $headBtns = $contentWrap.find('.head_btns'),
@@ -946,6 +949,58 @@ $headBtns
   .on('click', '.custom_btn', customCssJs)
   .on('click', '.test_btn', handleTest)
   .on('click', '.clean_database', cleanDatabase);
+
+// 创建帐号
+$('.create_account').on('click', (e) => {
+  rMenu.inpMenu(
+    e,
+    {
+      subText: '提交',
+      items: {
+        username: {
+          beforeText: '用户名：',
+          value: '',
+          verify(val) {
+            if (val.length < 1 || val.length > 20) {
+              return '请输入1-20位用户名';
+            }
+          },
+        },
+        password: {
+          beforeText: '密码：',
+          inputType: 'password',
+          value: '',
+        },
+        repassword: {
+          beforeText: '确认密码：',
+          inputType: 'password',
+          value: '',
+        },
+      },
+    },
+    ({ inp, close, loading }) => {
+      const { username, password, repassword } = inp;
+      if (password !== repassword) {
+        _msg.error('密码不一致');
+        return;
+      }
+      loading.start();
+      reqRootCreateAccount({ username, password: md5.getStringHash(password) })
+        .then((res) => {
+          if (res.code === 1) {
+            loading.end();
+            close();
+            _msg.success(res.codeText);
+            getUserList();
+          }
+        })
+        .catch(() => {
+          loading.end();
+        });
+    },
+    '创建帐号'
+  );
+});
 if (!isIframe()) wave();
 changeDark.bind((isDark) => {
   if (_getData('dark') != 's') return;

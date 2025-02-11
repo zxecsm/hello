@@ -12,6 +12,7 @@ import {
   queryData,
   runSqlite,
   getTableRowCount,
+  insertData,
 } from '../../utils/sqlite.js';
 
 import timedTask from '../../utils/timedTask.js';
@@ -29,7 +30,7 @@ import {
   isFilename,
 } from '../../utils/utils.js';
 
-import { cleanUpload } from '../chat/chat.js';
+import { becomeFriends, cleanUpload } from '../chat/chat.js';
 
 import { fieldLenght } from '../config.js';
 
@@ -38,6 +39,7 @@ import { _delDir, delEmptyFolder, getAllFile, readMenu } from '../file/file.js';
 import { deleteUser } from '../user/user.js';
 import _path from '../../utils/path.js';
 import { cleanFavicon, cleanSiteInfo } from '../bmk/bmk.js';
+import _crypto from '../../utils/crypto.js';
 
 const route = express.Router();
 
@@ -618,6 +620,58 @@ route.post('/test-tfa', async (req, res) => {
     } else {
       _err(res, '验证码错误')(req);
     }
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 创建帐号
+route.post('/create-account', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (
+      !validaString(username, 1, fieldLenght.username) ||
+      !validaString(password, 1, fieldLenght.id, 1)
+    ) {
+      paramErr(res, req);
+      return;
+    }
+
+    const users = await queryData('user', 'account', `WHERE username = ?`, [
+      username,
+    ]);
+
+    if (users.length > 0) {
+      _err(res, '用户名已注册')(req, username, 1);
+      return;
+    }
+
+    // 写入用户数据
+    const account = nanoid();
+
+    await insertData(
+      'user',
+      [
+        {
+          update_at: 0,
+          account,
+          username,
+          chat_id: nanoid(),
+          password: await _crypto.hashPassword(password),
+        },
+      ],
+      'account'
+    );
+
+    await becomeFriends(account, 'chang');
+    await becomeFriends(account, 'hello');
+
+    _success(res, '创建账号成功', { account, username })(
+      req,
+      `${username}-${account}`,
+      1
+    );
   } catch (error) {
     _err(res)(req, error);
   }
