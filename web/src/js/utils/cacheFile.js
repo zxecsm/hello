@@ -4,7 +4,14 @@ import md5 from './md5';
 import { _getData, _setData, downloadBlob, getFiles } from './utils';
 import _msg from '../plugins/message';
 
+let cacheState = _getData('cacheState');
+
 const cacheFile = {
+  setCacheState(val) {
+    if (val === undefined) return cacheState;
+    cacheState = val;
+    _setData('cacheState', val);
+  },
   // URL缓存
   urlCache: new CacheByExpire(30 * 60 * 1000, 40 * 60 * 1000, {
     onDelete: (_, url) => {
@@ -104,7 +111,8 @@ const cacheFile = {
       // 没有传文件，加载文件
       if (!file) file = await this.loadFile(url);
 
-      if (this.supported) {
+      // 关闭缓存停止写入
+      if (this.supported && this.setCacheState()) {
         await this.writeCache(hash, file);
       }
 

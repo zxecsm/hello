@@ -110,6 +110,7 @@ const _d = {
     noteWiden: false, // 笔记显示区域加宽
     username: '', // 用户名
     account: '', // 账号
+    cacheState: true, // 开启缓存
     showpd: false, // 显示密码
     dark: 's', // 黑暗模式 s：随系统 y：开启 n：关闭
     headBtnToRight: true, // 窗口头部按钮排序

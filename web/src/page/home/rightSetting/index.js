@@ -927,7 +927,7 @@ export function settingMenu(e, isMain) {
         if (!isMobile()) {
           data.push({
             id: '6',
-            text: '提示工具',
+            text: '鼠标移入提示窗',
             beforeIcon: 'iconfont icon-tishi',
             afterIcon:
               'iconfont ' + (tip ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
@@ -1057,19 +1057,29 @@ export function settingMenu(e, isMain) {
         close();
         openInIframe('/edit/#new', '新笔记');
       } else if (id === '6') {
+        const cacheState = cacheFile.setCacheState();
         const data = [
           {
             id: '1',
+            text: '缓存状态',
+            beforeIcon: `iconfont icon-xinxi`,
+            afterIcon:
+              'iconfont ' +
+              (cacheState ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+            param: { value: cacheState },
+          },
+          {
+            id: '2',
             text: '清理缓存',
             beforeIcon: `iconfont icon-15qingkong-1`,
           },
           {
-            id: '2',
+            id: '3',
             text: '导入缓存数据',
             beforeIcon: 'iconfont icon-upload',
           },
           {
-            id: '3',
+            id: '4',
             text: '导出缓存数据',
             beforeIcon: 'iconfont icon-download',
           },
@@ -1077,8 +1087,21 @@ export function settingMenu(e, isMain) {
         rMenu.selectMenu(
           e,
           data,
-          async ({ e, id, loading }) => {
+          async ({ e, id, loading, resetMenu, param }) => {
             if (id === '1') {
+              if (param.value) {
+                data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
+                data[id - 1].param.value = false;
+                _msg.success('关闭成功');
+                cacheFile.setCacheState(false);
+              } else {
+                data[id - 1].afterIcon = 'iconfont icon-kaiguan-kai1';
+                data[id - 1].param.value = true;
+                _msg.success('开启成功');
+                cacheFile.setCacheState(true);
+              }
+              resetMenu(data);
+            } else if (id === '2') {
               const { quota } = await cacheFile.getEstimateSize();
               const titleText = `选择要清除的缓存：剩余空间大约(${formatBytes(
                 quota
@@ -1137,6 +1160,7 @@ export function settingMenu(e, isMain) {
                       },
                       async (type) => {
                         if (type === 'confirm') {
+                          const cacheState = cacheFile.setCacheState();
                           try {
                             loading.start();
                             if (id === 'local') {
@@ -1146,6 +1170,12 @@ export function settingMenu(e, isMain) {
                               if (id === 'all') {
                                 _delData();
                               }
+                            }
+                            // 保留必要的本地配置
+                            if (['all', 'local'].includes(id)) {
+                              cacheFile.setCacheState(cacheState);
+                              _setData('account', setUserInfo().account);
+                              _setData('username', setUserInfo().username);
                             }
                             loading.end();
                             _msg.success();
@@ -1160,7 +1190,7 @@ export function settingMenu(e, isMain) {
                 },
                 titleText
               );
-            } else if (id === '2') {
+            } else if (id === '3') {
               _pop(
                 {
                   e,
@@ -1187,7 +1217,7 @@ export function settingMenu(e, isMain) {
                   }
                 }
               );
-            } else if (id === '3') {
+            } else if (id === '4') {
               const size = await cacheFile.size();
               _pop(
                 {
@@ -1210,7 +1240,7 @@ export function settingMenu(e, isMain) {
               );
             }
           },
-          '缓存管理'
+          '缓存管理(关闭缓存后，会停止新增歌曲和图片的缓存文件。已缓存的文件不受影响)'
         );
       }
     },
