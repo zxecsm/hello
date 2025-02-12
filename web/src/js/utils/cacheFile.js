@@ -7,12 +7,13 @@ import _msg from '../plugins/message';
 let cacheState = _getData('cacheState');
 
 const cacheFile = {
+  // 缓存状态
   setCacheState(val) {
     if (val === undefined) return cacheState;
     cacheState = val;
     _setData('cacheState', val);
   },
-  // URL缓存
+  // URL对象缓存
   urlCache: new CacheByExpire(30 * 60 * 1000, 40 * 60 * 1000, {
     onDelete: (_, url) => {
       // 清除url缓存，释放URL对象
@@ -21,17 +22,20 @@ const cacheFile = {
       }
     },
   }),
+  // 文件缓存支持
   supported:
     navigator.storage && typeof navigator.storage.getDirectory === 'function',
+  // 获取文件系统
   getDirectory() {
     return navigator.storage.getDirectory();
   },
+  // 文件标识
   getHash(key, type) {
     const side = window.location.origin;
     key = key.replace(side, '');
     return `${type}_${md5.getStringHash(key)}`;
   },
-
+  // 保存配置数据
   async setData(key, value, type = 'hello') {
     const hash = this.getHash(key, type);
 
@@ -46,7 +50,7 @@ const cacheFile = {
       encodeURIComponent(JSON.stringify({ data: value }))
     );
   },
-
+  // 获取配置数据
   async getData(key, type = 'hello') {
     const hash = this.getHash(key, type);
 
@@ -63,12 +67,12 @@ const cacheFile = {
       return _getData(key);
     }
   },
-
+  // 判断url对象缓存是否存在
   hasUrl(url, type) {
     const hash = this.getHash(url, type);
     return this.urlCache.get(hash);
   },
-
+  // 读取文件
   async read(url, type = 'hello') {
     try {
       const hash = this.getHash(url, type);
@@ -92,7 +96,7 @@ const cacheFile = {
       return null;
     }
   },
-
+  // 加载文件
   async loadFile(url) {
     try {
       return (await fetch(url)).blob();
@@ -100,7 +104,7 @@ const cacheFile = {
       throw error;
     }
   },
-
+  // 添加文件
   async add(url, type = 'hello', file) {
     try {
       const hash = this.getHash(url, type);
@@ -125,7 +129,7 @@ const cacheFile = {
       return null;
     }
   },
-
+  // 读取文件缓存
   async readCache(hash) {
     try {
       const fileHandle = await (
@@ -136,7 +140,7 @@ const cacheFile = {
       return null;
     }
   },
-
+  // 写入文件缓存
   async writeCache(hash, data) {
     try {
       const fileHandle = await (
@@ -150,7 +154,7 @@ const cacheFile = {
       return false;
     }
   },
-
+  // 删除文件缓存
   async delete(url, type = 'hello') {
     try {
       const hash = this.getHash(url, type);
@@ -164,7 +168,7 @@ const cacheFile = {
       await (await this.getDirectory()).removeEntry(hash);
     } catch {}
   },
-
+  // 获取文件列表
   async getList(type) {
     const res = [];
     try {
@@ -185,7 +189,7 @@ const cacheFile = {
       return res;
     }
   },
-
+  // 清理缓存
   async clear(type) {
     try {
       if (!this.supported) throw '';
@@ -210,7 +214,7 @@ const cacheFile = {
       throw error;
     }
   },
-
+  // 获取缓存大小
   async size(type) {
     let total = 0;
     try {
@@ -230,6 +234,7 @@ const cacheFile = {
     } catch {}
     return total;
   },
+  // 获取缓存预估大小
   getEstimateSize() {
     try {
       return navigator.storage.estimate();
@@ -237,7 +242,7 @@ const cacheFile = {
       return { quota: 0, usage: 0 };
     }
   },
-
+  // 导出缓存
   async exportStorage() {
     try {
       if (!this.supported) throw '';
@@ -301,7 +306,7 @@ const cacheFile = {
       throw error;
     }
   },
-
+  // 导入缓存
   async importStorage(skip = true) {
     try {
       if (!this.supported) throw '';

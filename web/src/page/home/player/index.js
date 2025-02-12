@@ -962,14 +962,14 @@ function songsLoading() {
   $songItemsBox.html(str);
 }
 export async function hdLoadedSong(list) {
-  const loadedSongs = await cacheFile.getList('music');
-  return list.map((item) => {
-    const isLoaded = loadedSongs.some(
-      (s) =>
-        s.name === cacheFile.getHash(getFilePath(`/music/${item.url}`), 'music')
-    );
-    return { ...item, isLoaded };
-  });
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    item.isLoaded = !!(await cacheFile.read(
+      getFilePath(`/music/${item.url}`),
+      'music'
+    ));
+  }
+  return list;
 }
 // 生成歌曲列表
 async function renderSongs(gao) {
