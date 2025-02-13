@@ -529,7 +529,8 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
           }
           const inp = {};
           Object.keys(items).forEach((k) => {
-            inp[k] = items[k].value;
+            const { value, trimValue } = items[k];
+            inp[k] = trimValue ? value.trim() : value;
           });
           callback && callback({ e, inp, close, items, loading, isDiff });
         }
