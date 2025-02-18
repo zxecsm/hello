@@ -1078,6 +1078,7 @@ async function renderSongs(gao) {
       <div v-if="ind != 2" cursor="y" class="remove_song_btn">移除</div>
       <div v-if="isRoot()" cursor="y" class="del_songs_btn">删除</div>
       <div v-if="ind < 2" cursor="y" class="clear_all_song_btn">清空</div>
+      <div cursor="y" class="del_cache_file">清缓存</div>
       <div cursor="y" class="cancel_btn">取消</div>
     </div>
     `,
@@ -2056,6 +2057,20 @@ $msuicContentBox
       musicList[idx].item.map((y) => y.id),
       'clean'
     );
+  })
+  .on('click', '.del_cache_file', function (e) {
+    // 清缓存
+    const arr = getCheckSongs();
+    if (arr.length === 0) return;
+    _pop({ e, text: '确认清除：选中歌曲缓存文件？' }, (type) => {
+      if (type === 'confirm') {
+        arr.forEach((item) => {
+          cacheFile.delete(getFilePath(`/music/${item.url}`), 'music');
+          cacheFile.delete(item.id, 'music');
+        });
+        renderSongs();
+      }
+    });
   })
   .on('click', '.move_song_btn', function (e) {
     // 全选移动
