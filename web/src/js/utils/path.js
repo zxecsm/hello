@@ -1,5 +1,6 @@
 // 转换为 Unix 风格的路径
 function toUnixPath(path) {
+  if (typeof path !== 'string') return '';
   return path.replace(/\\+/g, '/');
 }
 
@@ -95,6 +96,7 @@ function isPathWithin(parentP, childP, allowEqual = false) {
 
 // 获取扩展名
 function extname(path) {
+  path = toUnixPath(path);
   const idx = path.lastIndexOf('.');
   return idx === -1
     ? [path, '', '']
