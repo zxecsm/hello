@@ -1497,6 +1497,7 @@ route.post('/download', async (req, res) => {
       // 监听流的结束事件
       writer.on('finish', () => {
         taskState.delete(taskKey);
+        uLog(req, `离线下载文件: ${url}=>${outputFilePath}`);
         syncUpdateData(req, 'file');
       });
 

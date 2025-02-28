@@ -37,7 +37,7 @@ import {
 
 import { _delDir } from '../file/file.js';
 
-import { getRandowBg } from './bg.js';
+import { getRandomBg } from './bg.js';
 
 import { getImgInfo } from '../../utils/img.js';
 import { fieldLenght } from '../config.js';
@@ -60,7 +60,7 @@ route.get('/r/:type', async (req, res) => {
     }
 
     // 从数据库中随机选择一条数据
-    const bgData = await getRandowBg(type === 'big' ? 'bg' : 'bgxs', 'url');
+    const bgData = await getRandomBg(type === 'big' ? 'bg' : 'bgxs', 'url');
 
     // 如果没有数据，返回错误
     if (!bgData) {
@@ -88,8 +88,8 @@ route.use((req, res, next) => {
 timedTask.add(async (flag) => {
   if (flag.slice(-6) === '000000') {
     // 从数据库中随机获取一张背景壁纸和一张背景小图
-    const bg = await getRandowBg('bg', 'id');
-    const bgxs = await getRandowBg('bgxs', 'id');
+    const bg = await getRandomBg('bg', 'id');
+    const bgxs = await getRandomBg('bgxs', 'id');
 
     // 更新用户数据
     await batchUpdateData(
@@ -112,7 +112,7 @@ route.get('/random', async (req, res) => {
       return;
     }
 
-    const bgData = await getRandowBg(type, 'url,id,type');
+    const bgData = await getRandomBg(type, 'url,id,type');
 
     if (!bgData) {
       _err(res, '壁纸库为空，请先上传壁纸')(req);
