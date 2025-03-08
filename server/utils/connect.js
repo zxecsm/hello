@@ -26,12 +26,18 @@ function add(account, cb, info) {
   }
 
   connect.cbs.push(cb);
-  connect.onlines.push({ os: info.os, ip: info.ip, time, temid: info.temid });
+  connect.onlines.push({
+    os: info.os,
+    ip: info.ip,
+    time,
+    temid: info.temid,
+    page: info.page,
+  });
 
   // 清理超过 30 秒未活跃的在线设备
   const seen = new Map();
   connect.onlines = connect.onlines
-    .filter((item) => time - item.time < 30 * 1000)
+    .filter((item) => time - item.time < 30 * 1000 && item.page === 'home')
     .filter((item) => !seen.has(item.temid) && seen.set(item.temid, true));
 
   return connect;

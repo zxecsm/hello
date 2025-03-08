@@ -1344,6 +1344,8 @@ route.get('/real-time', async (req, res) => {
       onlineMsg(req);
     }
 
+    req._hello.page = page;
+
     const con = _connect.add(account, cb, req._hello);
 
     //初始化指令标识
