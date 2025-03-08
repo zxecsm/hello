@@ -171,21 +171,13 @@ export default function parseHtmlToAst(html) {
   return root; // 返回 AST 的根节点
 }
 // 插值
-function parsingValues(tpl, ...datas) {
-  let res = '';
-  for (const data of datas) {
-    res = evaluateExpression(tpl, data);
-    if (res !== '') break;
-  }
-  return res;
-}
-function tplReplace(tpl, ...args) {
+function tplReplace(tpl, data) {
   if (typeof tpl === 'string') {
     return tpl.replace(/\{\{(.*?)\}\}/g, (_, k) => {
-      return parsingValues(k, ...args);
+      return evaluateExpression(k, data);
     });
   } else {
-    return parsingValues(tpl, ...args);
+    return evaluateExpression(tpl, data);
   }
 }
 // 深拷贝
@@ -250,55 +242,56 @@ const attrTool = {
 };
 // 生成虚拟节点
 function vnode(ast, data) {
-  ast.data = [data];
+  ast.data = data;
   generate(ast);
   return ast;
 }
 // 处理元素文本虚拟节点
 function generate(ast) {
   if (ast.type === 1) {
-    // 递归处理子节点
-    hdChilds(ast);
-    // 处理属性
+    hdel(ast);
     hdAttrs(ast);
   } else if (ast.type === 3 || ast.type === 8) {
-    ast.text = tplReplace(ast.text, ...ast.data);
+    ast.text = tplReplace(ast.text, ast.data);
   }
 }
-// 递归处理节点
-function hdChilds(ast) {
+// 递归处理虚拟节点
+function hdel(ast) {
   const { children } = ast;
   if (children.length > 0) {
+    // 处理v-for指令
+    ast.children = hdchilds(ast);
     // 递归处理子元素
-    const childs = [];
-    children.forEach((child) => {
-      if (child.type === 1) {
-        const v_for = attrTool.get(child.attrs, 'v-for');
-        if (v_for) {
-          // 批量生成节点
-          hdFor(ast, child, childs, v_for);
-        } else {
-          childs.push({
-            ...child,
-            data: ast.data,
-          });
-        }
-      } else if (child.type === 3 || child.type === 8) {
-        childs.push({ ...child, data: ast.data });
-      }
-    });
-    ast.children = childs;
     ast.children.forEach((child) => {
       generate(child);
     });
   }
 }
+function hdchilds(ast) {
+  const childs = [];
+  ast.children.forEach((child) => {
+    if (child.type === 1) {
+      const v_for = attrTool.get(child.attrs, 'v-for');
+      if (v_for) {
+        hdFor(ast, child, childs, v_for);
+      } else {
+        childs.push({
+          ...child,
+          attrs: deepClone(child.attrs),
+          data: ast.data,
+        });
+      }
+    } else if (child.type === 3 || child.type === 8) {
+      childs.push({ ...child, data: ast.data });
+    }
+  });
+  return childs;
+}
 // 处理v-for遍历生成节点
 function hdFor(ast, child, childs, v_for) {
   let [a, b] = v_for.value.split(' in ');
-  const items = parsingValues(b.trim(), ...ast.data);
+  const items = evaluateExpression(b.trim(), ast.data);
   a = a.trim();
-  // item=>item,index  {name}=>{name},index
   if (!a.includes(',') || /\}$/.test(a)) {
     a += ',index';
   }
@@ -309,16 +302,12 @@ function hdFor(ast, child, childs, v_for) {
     items.forEach((value, index) => {
       childs.push({
         ...child,
-        // 克隆属性避免互相影响
         attrs: deepClone(attrTool.del(child.attrs, 'v-for')),
-        // 形成数据作用域链
-        data: [
-          {
-            [a.trim()]: value,
-            [idx]: index,
-          },
+        data: {
           ...ast.data,
-        ],
+          [a.trim()]: value,
+          [idx]: index,
+        },
       });
     });
   } else if (typeof items === 'object' && items !== null) {
@@ -327,13 +316,11 @@ function hdFor(ast, child, childs, v_for) {
       childs.push({
         ...child,
         attrs: deepClone(attrTool.del(child.attrs, 'v-for')),
-        data: [
-          {
-            [a.trim()]: items[key],
-            [idx]: key,
-          },
+        data: {
           ...ast.data,
-        ],
+          [a.trim()]: items[key],
+          [idx]: key,
+        },
       });
     });
   } else if (typeof items === 'string') {
@@ -342,13 +329,11 @@ function hdFor(ast, child, childs, v_for) {
       childs.push({
         ...child,
         attrs: deepClone(attrTool.del(child.attrs, 'v-for')),
-        data: [
-          {
-            [a.trim()]: char,
-            [idx]: index,
-          },
+        data: {
           ...ast.data,
-        ],
+          [a.trim()]: char,
+          [idx]: index,
+        },
       });
     });
   } else if (typeof items === 'number' && Number.isInteger(items)) {
@@ -357,13 +342,11 @@ function hdFor(ast, child, childs, v_for) {
       childs.push({
         ...child,
         attrs: deepClone(attrTool.del(child.attrs, 'v-for')),
-        data: [
-          {
-            [a.trim()]: i,
-            [idx]: i - 1,
-          },
+        data: {
           ...ast.data,
-        ],
+          [a.trim()]: i,
+          [idx]: i - 1,
+        },
       });
     }
   }
@@ -374,11 +357,10 @@ function hdAttrs(ast) {
   attrs.forEach((item) => {
     const { name, value } = item;
     if (['v-if', 'v-html', 'v-show', 'v-else-if', 'v-else'].includes(name)) {
-      item.value = parsingValues(value, ...data);
+      item.value = evaluateExpression(value, data);
     } else if (/^\:/.test(name)) {
-      // :key="value"
       const name = item.name.replace(/^:+/, '');
-      item.value = parsingValues(value, ...data);
+      item.value = evaluateExpression(value, data);
       const idx = attrs.findIndex((attr) => attr.name === name);
       if (name === 'style') {
         let val = item.value;
@@ -413,8 +395,7 @@ function hdAttrs(ast) {
         }
       }
     } else {
-      // key="{{value}}"
-      item.value = tplReplace(value, ...data);
+      item.value = tplReplace(value, data);
     }
   });
 }
@@ -448,7 +429,6 @@ function createNode(ast, pEl) {
   if (type === 1) {
     const el = createEl(tag);
     setAttr(el, attrs);
-    // 显示或隐藏
     const v_show = attrTool.get(attrs, 'v-show');
     if (v_show) {
       el.style.display = v_show.value ? 'block' : 'none';
@@ -595,63 +575,3 @@ _tpl.append = function (target, html) {
     target.appendChild(html);
   }
 };
-
-/**
-const app = document.getElementById('app');
-
-app.appendChild(
-  _tpl(
-    `
-  <h2>列表渲染</h2>
-  <span>数组</span>
-  <div v-for='{name,age} in list'>{{name}}-{{age}}</div>
-  <br />
-
-  <span>对象</span>
-  <div v-for='value,key in obj'>{{key}}--{{value}}</div>
-  <br />
-
-  <span>字符串</span>
-  <div v-for='value in "zxcvbnm"'>{{value}}--{{index}}</div>
-  <br />
-
-  <span>数字</span>
-  <div v-for='value in 10'>{{value}}</div>
-  <br />
-
-  <h2>条件渲染</h2>
-  <div v-show='true'>show</div>
-  <div v-if='true'>true</div>
-  <div v-else>false</div>
-  <div v-html='html'></div>
-  <br />
-
-  <h2>插值</h2>
-  <div :style='styleObj' style='{{styleString}}'>{{title}}</div>
-  <div :class='classArr' class={{classString}}>class</div>
-  <br />
-
-  <h2>template</h2>
-  <template>
-    <div>template</div>
-  </template>
-  `,
-    {
-      styleString: 'font-size: 20px;',
-      styleObj: {
-        color: 'red',
-      },
-      title: 'Hello World',
-      list: [
-        { name: 'a', age: 1 },
-        { name: 'b', age: 2 },
-        { name: 'c', age: 3 },
-      ],
-      obj: { a: 1, b: 2, c: 3 },
-      html: '<span>html</span>',
-      classString: 'a',
-      classArr: ['b', 'c'],
-    }
-  )
-);
- * */
