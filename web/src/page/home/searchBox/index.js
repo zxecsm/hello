@@ -481,7 +481,7 @@ reqSearchConfig()
 // 切换搜索引擎
 function switchSearchEngine() {
   const { icon, logo, color } = getSearchEngine();
-  $searchInpWrap.find('.content').css('borderColor', color);
+  $searchInpWrap.find('.content').css('box-shadow', `0 0 1px ${color}`);
   $searchLogo.find('img').attr({ src: logo });
   $searchLogo.find('.logo_box').addClass('active');
   $searchBoxBtn.attr('src', icon);

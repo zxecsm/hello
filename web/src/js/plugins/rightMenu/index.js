@@ -447,10 +447,6 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       }
       unBindInput();
       inputs = this.content.querySelectorAll('input,textarea');
-      if (inputs.length > 0) {
-        inputs[0].select();
-        inputs[0].focus();
-      }
       [...inputs].forEach((item) => {
         const key = item.dataset.flag;
         const verify = items[key].verify;
@@ -485,6 +481,10 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
         });
         wrapInputList.push(wInput);
       });
+      if (inputs.length > 0) {
+        inputs[0].select();
+        inputs[0].focus();
+      }
     },
     readyToCloseAll({ e, close }) {
       if (isMask) {
