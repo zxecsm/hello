@@ -107,6 +107,7 @@ import {
   setSongPlayVolume,
   showLrcBox,
   showLrcFootWrap,
+  showWillPlaySongInfo,
   songIspaused,
   toggleLrcMenuWrapBtnsState,
   updateLrcHeadSongInfo,
@@ -205,6 +206,18 @@ export function setCurPlayingList(val) {
     return curPlayingList;
   }
   curPlayingList = val;
+}
+export function getNextSongInfo() {
+  let index = curPlayingList.findIndex((x) => x.id === setPlayingSongInfo().id);
+  index++;
+  index > curPlayingList.length - 1 ? (index = 0) : null;
+  return curPlayingList[index] || {};
+}
+export function getPrevSongInfo() {
+  let index = curPlayingList.findIndex((x) => x.id === setPlayingSongInfo().id);
+  index--;
+  index < 0 ? (index = curPlayingList.length - 1) : null;
+  return curPlayingList[index] || {};
 }
 // 歌曲封面懒加载
 const songListLazyImg = new LazyLoad();
@@ -2384,6 +2397,12 @@ export function highlightPlayingSong(isPosition) {
 $musicFootBox
   .on('click', '.right_btns .playing_list_btn', showPlayingList)
   .on('click', '.right_btns .next_btn', playNextSong)
+  .on(
+    'mouseenter',
+    '.right_btns .next_btn',
+    showWillPlaySongInfo.bind(null, 'next')
+  )
+  .on('mouseleave', '.right_btns .next_btn', toolTip.hide)
   .on('click', '.right_btns .play_btn', changePlayState)
   .on('click', '.playing_song_info', showLrcBox);
 // 底部歌曲信息滚动

@@ -580,7 +580,7 @@ function renderMsgList(list, skip) {
             <div class="c_logo" style="float: left;"></div>
           </li>
           <li class="c_content_box">
-            <span class="c_user_name" style="text-align: {{!isRight(_from) ? 'left' : 'right'}};">
+            <span :title="getDate(create_at)[0]" class="c_user_name" style="text-align: {{!isRight(_from) ? 'left' : 'right'}};">
               {{getUsername(username,des,_to)}} <span>{{getDate(create_at)[1]}}</span>
             </span>
             <div v-if="type === 'image'" cursor="y" class="c_img_msg_box" style="float: {{!isRight(_from) ? 'left' : 'right'}};">

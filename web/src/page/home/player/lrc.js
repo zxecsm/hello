@@ -33,6 +33,8 @@ import {
 import {
   delSong,
   getMusicPlayerOffsetLeft,
+  getNextSongInfo,
+  getPrevSongInfo,
   highlightPlayingSong,
   moveSongToList,
   musicFootBoxPlayBtnLoading,
@@ -210,31 +212,23 @@ export function switchPlayMode() {
 }
 // 上一曲
 export function playPrevSong() {
-  let index;
   if (setCurPlayingList().length === 0) {
     _msg.error('播放列表为空');
     pauseSong();
     return;
   }
-  index = setCurPlayingList().findIndex((x) => x.id === playingSongInfo.id);
-  index--;
-  index < 0 ? (index = setCurPlayingList().length - 1) : null;
-  musicPlay(setCurPlayingList()[index]);
+  musicPlay(getPrevSongInfo());
 }
 // 下一曲
 export function playNextSong() {
   updatePlayerBottomProgress(0);
   $lrcProgressBar.find('.pro2').width('0');
-  let index;
   if (setCurPlayingList().length === 0) {
     _msg.error('播放列表为空');
     pauseSong();
     return;
   }
-  index = setCurPlayingList().findIndex((x) => x.id === playingSongInfo.id);
-  index++;
-  index > setCurPlayingList().length - 1 ? (index = 0) : null;
-  musicPlay(setCurPlayingList()[index]);
+  musicPlay(getNextSongInfo());
 }
 // 播放状态
 export function changePlayState() {
@@ -249,7 +243,20 @@ $lrcFootBtnWrap
   .on('click', '.playing_list_btn', showPlayingList)
   .on('click', '.prev_play_btn', playPrevSong)
   .on('click', '.next_play', playNextSong)
-  .on('click', '.play_btn', changePlayState);
+  .on('click', '.play_btn', changePlayState)
+  .on('mouseenter', '.prev_play_btn', showWillPlaySongInfo.bind(null, 'prev'))
+  .on('mouseenter', '.next_play', showWillPlaySongInfo.bind(null, 'next'))
+  .on('mouseleave', '.prev_play_btn', toolTip.hide)
+  .on('mouseleave', '.next_play', toolTip.hide);
+export function showWillPlaySongInfo(type) {
+  const { artist, title } =
+    type === 'next' ? getNextSongInfo() : getPrevSongInfo();
+  let str = '播放列表为空';
+  if (artist && title) {
+    str = `${type === 'next' ? '下一曲' : '上一曲'}：${artist} - ${title}`;
+  }
+  toolTip.setTip(str).show();
+}
 // 暂停
 export function pauseSong() {
   $myAudio[0].pause();

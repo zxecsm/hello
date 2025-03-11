@@ -282,32 +282,45 @@ function changePlayMode() {
     .attr('class', `random_play_btn ${icon}`);
   _msg.msg({ message: text, icon });
 }
+function getNextSongInfo() {
+  let index = curPlayingList.findIndex((x) => x.id === playingSongInfo.id);
+  index++;
+  index > curPlayingList.length - 1 ? (index = 0) : null;
+  return curPlayingList[index] || {};
+}
+function getPrevSongInfo() {
+  let index = curPlayingList.findIndex((x) => x.id === playingSongInfo.id);
+  index--;
+  index < 0 ? (index = curPlayingList.length - 1) : null;
+  return curPlayingList[index] || {};
+}
 // 上一曲
 function playPrevSong() {
-  let index;
   if (curPlayingList.length === 0) {
     _msg.error('播放列表为空');
     pauseSong();
     return;
   }
-  index = curPlayingList.findIndex((x) => x.id === playingSongInfo.id);
-  index--;
-  index < 0 ? (index = curPlayingList.length - 1) : null;
-  musicPlay(curPlayingList[index]);
+  musicPlay(getPrevSongInfo());
 }
 // 下一曲
 function playNextSong() {
   $lrcProgressBar.find('.pro2').width('0');
-  let index;
   if (curPlayingList.length === 0) {
     _msg.error('播放列表为空');
     pauseSong();
     return;
   }
-  index = curPlayingList.findIndex((x) => x.id === playingSongInfo.id);
-  index++;
-  index > curPlayingList.length - 1 ? (index = 0) : null;
-  musicPlay(curPlayingList[index]);
+  musicPlay(getNextSongInfo());
+}
+function showWillPlaySongInfo(type) {
+  const { artist, title } =
+    type === 'next' ? getNextSongInfo() : getPrevSongInfo();
+  let str = '播放列表为空';
+  if (artist && title) {
+    str = `${type === 'next' ? '下一曲' : '上一曲'}：${artist} - ${title}`;
+  }
+  toolTip.setTip(str).show();
 }
 // 播放状态
 $lrcFootBtnWrap
@@ -328,7 +341,11 @@ $lrcFootBtnWrap
     });
   })
   .on('click', '.prev_play_btn', playPrevSong)
+  .on('mouseenter', '.prev_play_btn', showWillPlaySongInfo.bind(null, 'prev'))
+  .on('mouseleave', '.prev_play_btn', toolTip.hide)
   .on('click', '.next_play', playNextSong)
+  .on('mouseenter', '.next_play', showWillPlaySongInfo.bind(null, 'next'))
+  .on('mouseleave', '.next_play', toolTip.hide)
   .on('click', '.play_btn', playState);
 // 播放状态
 function playState() {

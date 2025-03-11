@@ -30,6 +30,7 @@ import {
   playPrevSong,
   setCurPlaySpeed,
   setPlayingSongInfo,
+  showWillPlaySongInfo,
   toggleLrcMenuWrapBtnsState,
 } from './lrc';
 import {
@@ -44,6 +45,7 @@ import { hideIframeMask, showIframeMask } from '../iframe';
 import { _tpl, deepClone } from '../../../js/utils/template';
 import { initRainCodeSleep } from '../../../js/common/codeRain';
 import cacheFile from '../../../js/utils/cacheFile';
+import toolTip from '../../../js/plugins/tooltip';
 
 const $miniPlayer = $('.mini_player'),
   $miniLrcWrap = $('.mini_lrc_wrap'),
@@ -146,7 +148,11 @@ $miniLrcWrap
 $miniPlayer
   .on('click', '.play_btn', changePlayState)
   .on('click', '.next_btn', playNextSong)
+  .on('mouseenter', '.next_btn', showWillPlaySongInfo.bind(null, 'next'))
+  .on('mouseleave', '.next_btn', toolTip.hide)
   .on('click', '.prev_btn', playPrevSong)
+  .on('mouseenter', '.prev_btn', showWillPlaySongInfo.bind(null, 'prev'))
+  .on('mouseleave', '.prev_btn', toolTip.hide)
   .on('click', '.top', switchMiniPlayerTopState)
   .on('mouseenter', function () {
     if (!setPlayingSongInfo().hash) return;
