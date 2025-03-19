@@ -523,13 +523,13 @@ route.get('/clean-logo-file', async (req, res) => {
 // 自定义代码
 route.post('/custom-code', async (req, res) => {
   try {
-    const { js = '', css = '' } = req.body;
+    const { body = '', head = '' } = req.body;
 
     if (
-      !validaString(js, 0, 0, 0, 1) ||
-      !validaString(css, 0, 0, 0, 1) ||
-      _f.getTextSize(js) > fieldLenght.customCodeSize ||
-      _f.getTextSize(css) > fieldLenght.customCodeSize
+      !validaString(body, 0, 0, 0, 1) ||
+      !validaString(head, 0, 0, 0, 1) ||
+      _f.getTextSize(body) > fieldLenght.customCodeSize ||
+      _f.getTextSize(head) > fieldLenght.customCodeSize
     ) {
       paramErr(res, req);
       return;
@@ -538,8 +538,8 @@ route.post('/custom-code', async (req, res) => {
     const u = _path.normalize(`${appConfig.appData}/custom`);
 
     await _f.mkdir(u);
-    await _f.fsp.writeFile(_path.normalize(`${u}/custom.js`), js);
-    await _f.fsp.writeFile(_path.normalize(`${u}/custom.css`), css);
+    await _f.fsp.writeFile(_path.normalize(`${u}/custom_head.html`), head);
+    await _f.fsp.writeFile(_path.normalize(`${u}/custom_body.html`), body);
 
     _success(res, '添加自定义代码成功')(req);
   } catch (error) {

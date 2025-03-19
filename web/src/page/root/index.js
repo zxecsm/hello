@@ -586,7 +586,7 @@ function setEmail(e) {
 }
 // 自定义代码
 _d.isRootPage = true;
-let customCode = { js: '', css: '' };
+let customCode = { body: '', head: '' };
 reqUserCustomCode()
   .then((res) => {
     if (res.code === 1) {
@@ -595,15 +595,15 @@ reqUserCustomCode()
     }
   })
   .catch(() => {});
-function customCssJs(e) {
+function customHtmlCode(e) {
   rMenu.inpMenu(
     e,
     {
       subText: '提交',
       items: {
-        js: {
-          beforeText: 'js代码：',
-          value: customCode.js,
+        head: {
+          beforeText: 'head代码：',
+          value: customCode.head,
           type: 'textarea',
           trimValue: false,
           verify(val) {
@@ -612,9 +612,9 @@ function customCssJs(e) {
             }
           },
         },
-        css: {
-          beforeText: 'css代码：',
-          value: customCode.css,
+        body: {
+          beforeText: 'body代码：',
+          value: customCode.body,
           type: 'textarea',
           trimValue: false,
           verify(val) {
@@ -627,15 +627,15 @@ function customCssJs(e) {
     },
     function ({ close, inp, loading, isDiff }) {
       if (!isDiff()) return;
-      const { js, css } = inp;
+      const { body, head } = inp;
       loading.start();
-      reqRootCustomCode({ js, css })
+      reqRootCustomCode({ body, head })
         .then((result) => {
           loading.end();
           if (result.code === 1) {
             close(true);
             _msg.success(result.codeText);
-            customCode = { js, css };
+            customCode = { body, head };
             return;
           }
         })
@@ -643,7 +643,7 @@ function customCssJs(e) {
           loading.end();
         });
     },
-    '自定义css/js'
+    '自定义代码'
   );
 }
 // 测试邮箱验证
@@ -946,7 +946,7 @@ $headBtns
   .on('click', '.pub_api', handlePubApi)
   .on('click', '.set_token_key', updateTokenKey)
   .on('click', '.email_btn', setEmail)
-  .on('click', '.custom_btn', customCssJs)
+  .on('click', '.custom_btn', customHtmlCode)
   .on('click', '.test_btn', handleTest)
   .on('click', '.clean_database', cleanDatabase);
 

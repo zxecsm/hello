@@ -2708,13 +2708,9 @@ export function isValidDate(dateString) {
 }
 // 添加自定义代码
 export function addCustomCode(code = {}) {
-  const { js = '', css = '' } = code;
-  const script = document.createElement('script');
-  script.innerHTML = js;
-  const style = document.createElement('style');
-  style.innerHTML = css;
-  document.head.appendChild(style);
-  document.body.appendChild(script);
+  const { body = '', head = '' } = code;
+  _tpl.append(document.head, head);
+  _tpl.append(document.body, body);
 }
 export function wave(idx = 1) {
   const _0x1f03ad = document['createElement']('style');

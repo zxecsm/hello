@@ -102,20 +102,18 @@ route.get('/player-config', async (req, res) => {
 // 获取自定义code
 route.get('/custom-code', async (req, res) => {
   try {
-    const obj = { css: '', js: '' };
+    const obj = { head: '', body: '' };
 
     const u = _path.normalize(`${appConfig.appData}/custom`);
+    const headPath = _path.normalize(`${u}/custom_head.html`);
+    const bodyPath = _path.normalize(`${u}/custom_body.html`);
 
-    if (await _f.exists(_path.normalize(`${u}/custom.css`))) {
-      obj.css = (
-        await _f.fsp.readFile(_path.normalize(`${u}/custom.css`))
-      ).toString();
+    if (await _f.exists(headPath)) {
+      obj.head = (await _f.fsp.readFile(headPath)).toString();
     }
 
-    if (await _f.exists(_path.normalize(`${u}/custom.js`))) {
-      obj.js = (
-        await _f.fsp.readFile(_path.normalize(`${u}/custom.js`))
-      ).toString();
+    if (await _f.exists(bodyPath)) {
+      obj.body = (await _f.fsp.readFile(bodyPath)).toString();
     }
 
     _success(res, 'ok', obj);

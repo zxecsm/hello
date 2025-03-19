@@ -548,19 +548,45 @@ _tpl.html = function (target, dom) {
 };
 _tpl.append = function (target, html) {
   if (typeof html === 'string') {
-    let divTemp = createEl('div');
-    let nodes = null;
-    let fragment = createFrag();
-    divTemp.innerHTML = html;
-    nodes = divTemp.childNodes;
-    nodes.forEach((item) => {
-      fragment.appendChild(item.cloneNode(true));
+    const tempDiv = createEl('div');
+    tempDiv.innerHTML = html;
+
+    const fragment = createFrag();
+
+    Array.from(tempDiv.childNodes).forEach((node) => {
+      if (node.tagName === 'SCRIPT') {
+        const script = createEl('script');
+        if (node.src) {
+          script.src = node.src;
+          script.async = node.async;
+          script.defer = node.defer;
+          fragment.appendChild(script);
+        } else {
+          script.textContent = node.textContent;
+          fragment.appendChild(script);
+        }
+      } else if (node.tagName === 'TITLE') {
+        document.title = node.textContent;
+      } else if (node.tagName === 'LINK') {
+        if (!document.head.querySelector(`link[href="${node.href}"]`)) {
+          const link = createEl('link');
+          link.rel = node.rel;
+          link.href = node.href;
+          document.head.appendChild(link);
+        }
+      } else if (node.tagName === 'META') {
+        if (!document.head.querySelector(`meta[name="${node.name}"]`)) {
+          const meta = createEl('meta');
+          meta.name = node.name;
+          meta.content = node.content;
+          document.head.appendChild(meta);
+        }
+      } else {
+        fragment.appendChild(node.cloneNode(true));
+      }
     });
+
     target.appendChild(fragment);
-    // 在最前插入 prepend
-    // this.insertBefore(fragment, this.firstChild);
-    nodes = null;
-    fragment = null;
   } else {
     target.appendChild(html);
   }
