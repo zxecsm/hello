@@ -887,6 +887,7 @@ export function settingMenu(e, isMain) {
         setGentlemanLock(e);
       } else if (id === '3') {
         const clickLove = _getData('clickLove');
+        const showStars = _getData('showStars');
         const pmsound = _getData('pmsound');
         const tip = _getData('toolTip');
         const data = [
@@ -916,6 +917,15 @@ export function settingMenu(e, isMain) {
           },
           {
             id: '5',
+            text: '小星星',
+            beforeIcon: 'iconfont icon-asterisks-1-copy',
+            afterIcon:
+              'iconfont ' +
+              (showStars ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+            param: { value: showStars },
+          },
+          {
+            id: '6',
             text: '提示音',
             beforeIcon: 'iconfont icon-tongzhi',
             afterIcon:
@@ -926,7 +936,7 @@ export function settingMenu(e, isMain) {
         ];
         if (!isMobile()) {
           data.push({
-            id: '6',
+            id: '7',
             text: '鼠标移入提示窗',
             beforeIcon: 'iconfont icon-tishi',
             afterIcon:
@@ -970,6 +980,20 @@ export function settingMenu(e, isMain) {
               }
               resetMenu(data);
             } else if (id === '5') {
+              // 小星星
+              if (param.value) {
+                data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
+                data[id - 1].param.value = false;
+                _msg.success('关闭成功');
+                _setData('showStars', false);
+              } else {
+                data[id - 1].afterIcon = 'iconfont icon-kaiguan-kai1';
+                data[id - 1].param.value = true;
+                _msg.success('开启成功');
+                _setData('showStars', true);
+              }
+              resetMenu(data);
+            } else if (id === '6') {
               // 提示音
               if (param.value) {
                 data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
@@ -983,7 +1007,7 @@ export function settingMenu(e, isMain) {
                 _setData('pmsound', true);
               }
               resetMenu(data);
-            } else if (id === '6') {
+            } else if (id === '7') {
               // 提示工具
               if (param.value) {
                 data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';

@@ -17,6 +17,7 @@ import imgHechang from '../../images/img/hechang.png';
 import loadingPage from '../plugins/loading';
 import { reqUserCustomCode, reqUserError } from '../../api/user';
 import './codeRain';
+import './stars';
 document.body.style.opacity = 1;
 loadingPage.start();
 window.addEventListener('load', function () {
