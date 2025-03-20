@@ -104,10 +104,10 @@ export function reqUserDeleteTrash(data) {
   return _postAjax('/user/delete-trash', data);
 }
 // 错误
-let lastErrText = '';
+const errList = new Set();
 export function reqUserError(err) {
-  if (lastErrText === err) return;
-  lastErrText = err;
+  if (errList.has(err)) return;
+  errList.add(err);
   err = `[Panel error] ` + err;
   return _postAjax(
     '/user/error',
