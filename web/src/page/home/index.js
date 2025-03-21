@@ -25,8 +25,6 @@ import {
   isBigScreen,
   getIn,
   getFilePath,
-  _getDataTem,
-  _setDataTem,
   myShuffle,
   isLogin,
   isRoot,
@@ -160,8 +158,7 @@ const $pageBg = $('.page_bg'),
   $showChatRoomBtn = $('.show_chat_room_btn'),
   $randomChangeBgBtn = $('.random_change_bg_btn'),
   $searchBoxBtn = $('.search_box_btn');
-let curFilterBg = _getData('filterbg'),
-  gentlemanLockPd = _getData('gentlemanLockPd');
+let curFilterBg = _getData('filterbg');
 let userInfo = {};
 // 设置用户数据
 export function setUserInfo(val) {
@@ -173,18 +170,6 @@ export function setUserInfo(val) {
 // 判断登录
 if (!isLogin()) {
   toLogin();
-} else {
-  // 君子锁
-  ~(function getGentlemanLock() {
-    if (gentlemanLockPd) {
-      const pd = _getDataTem('gentlemanLockPd') || prompt('请输入君子锁密码：');
-      if (pd !== gentlemanLockPd) {
-        getGentlemanLock();
-      } else {
-        _setDataTem('gentlemanLockPd', pd);
-      }
-    }
-  })();
 }
 // 背景模糊
 function bgFilter(value) {

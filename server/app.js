@@ -229,7 +229,7 @@ app.use('/api/task', taskRoute);
 app.use('/api/getfavicon', getfaviconRoute);
 
 app.use((_, res) => {
-  res.sendFile(resolve(__dirname, 'data/404.html'));
+  res.status(404).redirect('/404');
 });
 
 app.listen(appConfig.port, () => {

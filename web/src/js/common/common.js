@@ -7,6 +7,10 @@ import {
   isIframe,
   addCustomCode,
   changeHeadBtnSort,
+  isLogin,
+  _getDataTem,
+  _setDataTem,
+  _delDataTem,
 } from '../utils/utils';
 import _d from './config';
 import _msg from '../plugins/message';
@@ -18,6 +22,21 @@ import loadingPage from '../plugins/loading';
 import { reqUserCustomCode, reqUserError } from '../../api/user';
 import './codeRain';
 import './stars';
+if (isLogin()) {
+  // 君子锁
+  ~(function getGentlemanLock() {
+    const gentlemanLockPd = _getData('gentlemanLockPd');
+    if (gentlemanLockPd) {
+      const pd = _getDataTem('gentlemanLockPd') || prompt('请输入君子锁密码：');
+      if (pd === gentlemanLockPd) {
+        _setDataTem('gentlemanLockPd', pd);
+      } else {
+        _delDataTem('gentlemanLockPd');
+        getGentlemanLock();
+      }
+    }
+  })();
+}
 document.body.style.opacity = 1;
 loadingPage.start();
 window.addEventListener('load', function () {
