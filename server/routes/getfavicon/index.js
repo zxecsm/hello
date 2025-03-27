@@ -27,7 +27,7 @@ const defaultIcon = resolve(__dirname, '../../img/default-icon.png');
 
 // 定期清理图标缓存
 timedTask.add(async (flag) => {
-  if (flag.slice(-6) === '001000') {
+  if (flag.slice(-6) === '002000') {
     await cleanFavicon();
   }
 });

@@ -134,7 +134,7 @@ async function rename(oldPath, newPath, { signal, progress } = {}) {
 }
 
 // 格式化字节大小
-export function formatBytes(size) {
+function formatBytes(size) {
   size = Number(size);
   if (isNaN(size) || size < 0) return '0B';
 

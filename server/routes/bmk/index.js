@@ -286,7 +286,7 @@ route.get('/list', async (req, res) => {
 
 // 删除网址描述缓存信息
 timedTask.add(async (flag) => {
-  if (flag.slice(-6) === '000030') {
+  if (flag.slice(-6) === '001000') {
     await cleanSiteInfo();
   }
 });

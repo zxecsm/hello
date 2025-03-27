@@ -679,8 +679,22 @@ route.post('/create-account', async (req, res) => {
 
 // 定期清理聊天过期文件
 timedTask.add(async (flag) => {
-  if (flag.slice(-6) === '001030') {
+  if (flag.slice(-6) === '003000') {
     await cleanUpload();
+
+    // 定期清理LOG文件
+    const list = (
+      await readMenu(_path.normalize(`${appConfig.appData}/log`))
+    ).filter((f) => f.type === 'file');
+
+    if (list.length > 200) {
+      list.sort((a, b) => b.time - a.time);
+      for (const item of list.slice(200)) {
+        const { name, path } = item;
+        const p = _path.normalize(`${path}/${name}`);
+        await _delDir(p);
+      }
+    }
   }
 });
 
