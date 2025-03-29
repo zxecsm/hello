@@ -372,10 +372,8 @@ export function isChinese(str) {
   }
 }
 // 触控滑动事件
-export function _mySlide(options) {
-  let { el, up, right, down, left } = options,
-    startX,
-    startY;
+export function _mySlide({ el, up, right, down, left, isStrict = true } = {}) {
+  let startX, startY;
   if (typeof el === 'string') {
     el = document.querySelector(el);
   }
@@ -423,8 +421,10 @@ export function _mySlide(options) {
       spanX = e.clientX - startX;
       spanY = e.clientY - startY;
     }
+
     if (Math.abs(spanX) > Math.abs(spanY)) {
       //水平方向滑动
+      if ((spanY > 30 || spanY < -30) && isStrict) return;
       if (spanX > 30) {
         right && right.call(el, e);
       } else if (spanX < -30) {
@@ -432,6 +432,7 @@ export function _mySlide(options) {
       }
     } else {
       //垂直方向滑动
+      if ((spanX > 30 || spanX < -30) && isStrict) return;
       if (spanY > 30) {
         down && down.call(el, e);
       } else if (spanY < -30) {

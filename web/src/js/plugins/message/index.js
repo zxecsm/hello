@@ -86,6 +86,7 @@ class Msg {
       right: close,
       up: close,
       down: close,
+      isStrict: false,
     });
   }
   unbind() {
