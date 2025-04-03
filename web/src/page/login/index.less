@@ -43,18 +43,18 @@ html {
   }
   .box {
     position: relative;
-    background-color: var(--bg-color-o3);
+    background-color: var(--bg-color-o2);
     width: 90%;
     max-width: 450px;
     padding: 30px;
     margin: auto;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
     border-radius: 5px 0 5px 5px;
     transform: translateY(-50px);
     opacity: 0;
     box-shadow: 0 0 5px var(--color5);
     &:hover {
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       z-index: 11;
     }
     &.open {
