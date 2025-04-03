@@ -8,8 +8,9 @@ function toUnixPath(path) {
 function normalize(...paths) {
   if (paths.length > 1) {
     return normalize(
-      paths.reduce((pre, cur) => {
-        pre += `/${normalize(cur)}`;
+      paths.reduce((pre, cur, index) => {
+        if (index > 0) pre += '/';
+        pre += normalize(cur);
         return pre;
       }, '')
     );

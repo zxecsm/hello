@@ -16,6 +16,8 @@ import {
   _getDataTem,
   wave,
   throttle,
+  loadImg,
+  isBigScreen,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import validateImg from './validate';
@@ -34,7 +36,8 @@ import rMenu from '../../js/plugins/rightMenu/index.js';
 import _pop from '../../js/plugins/popConfirm/index.js';
 import changeDark from '../../js/utils/changeDark.js';
 import md5 from '../../js/utils/md5.js';
-const $box = $('.box'),
+const $bg = $('.bg'),
+  $box = $('.box'),
   $title = $box.find('.title'),
   $register = $box.find('.register'),
   $darkState = $box.find('.dark_state'),
@@ -56,6 +59,17 @@ $about.on('click', function () {
 if (_getData('account')) {
   myOpen('/');
 }
+(async () => {
+  const url = `/api/bg/r/${isBigScreen() ? 'big' : 'small'}`;
+
+  try {
+    await loadImg(url);
+    $bg.css({
+      backgroundImage: `url(${url})`,
+      opacity: 0.8,
+    });
+  } catch {}
+})();
 function hdKeyUp(e) {
   if (e.key === 'Enter') {
     hdSubmit();
