@@ -315,8 +315,8 @@ function selectTabs(e, data, opt = {}, title = '') {
           }
           clean.style.display = 'none';
         },
-        add({ e, add }) {
-          opt.add && opt.add({ e, add });
+        add({ e, add, data }) {
+          opt.add && opt.add({ e, add, data });
         },
       });
     },

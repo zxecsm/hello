@@ -66,7 +66,8 @@ export class CreateTabs {
       const id = close.parentNode.dataset.id;
       this.remove(id);
     } else if (addTab) {
-      this.opt.add && this.opt.add({ e, add: this.add.bind(this) });
+      this.opt.add &&
+        this.opt.add({ e, add: this.add.bind(this), data: this.opt.data });
     }
   }
   get list() {

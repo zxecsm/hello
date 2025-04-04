@@ -141,13 +141,22 @@ function updataCategory() {
 }
 updataCategory();
 // 添加分类条件
-function hdCategoryAdd(e, cb) {
+function hdCategoryAdd(e, cb, hasList) {
+  if (hasList.length >= 10) {
+    _msg.error('分类最多10个');
+    return;
+  }
+
+  const filterList = noteCategoryList.filter(
+    (item) => !hasList.some((i) => i.id === item.id)
+  );
+
   const data = [];
-  if (noteCategoryList.length === 0) {
+  if (filterList.length === 0) {
     _msg.error('没有可选分类');
     return;
   }
-  noteCategoryList.forEach((item) => {
+  filterList.forEach((item) => {
     const { id, title } = item;
     data.push({
       id,
@@ -282,11 +291,15 @@ const tabsObj = new CreateTabs({
     $contentWrap.pagenum = 1;
     renderList(1);
   },
-  add({ e, add }) {
-    hdCategoryAdd(e, ({ param, close }) => {
-      close();
-      add(param);
-    });
+  add({ e, add, data }) {
+    hdCategoryAdd(
+      e,
+      ({ param, close }) => {
+        close();
+        add(param);
+      },
+      data
+    );
   },
 });
 // 获取笔记信息
@@ -422,11 +435,15 @@ function noteEditCategory(e, obj) {
           return '最多添加10个分类';
         }
       },
-      add({ e, add }) {
-        hdCategoryAdd(e, ({ param, close }) => {
-          close();
-          add(param);
-        });
+      add({ e, add, data }) {
+        hdCategoryAdd(
+          e,
+          ({ param, close }) => {
+            close();
+            add(param);
+          },
+          data
+        );
       },
       submit({ close, data, loading, isDiff }) {
         if (!isDiff()) return;
