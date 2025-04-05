@@ -69,7 +69,12 @@ route.get('/r/:type', async (req, res) => {
 
     // 获取壁纸 URL 并返回
     const url = _path.normalize(`${appConfig.appData}/bg`, bgData.url);
-    res.sendFile(url);
+
+    if (await _f.exists(url)) {
+      res.sendFile(url);
+    } else {
+      _err(res, '获取壁纸失败')(req, url, 1);
+    }
   } catch (error) {
     _err(res)(req, error);
   }

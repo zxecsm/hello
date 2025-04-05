@@ -544,6 +544,7 @@ async function createTables() {
     }
   } catch (error) {
     await writelog(false, `[ createTables ] - ${error}`, 'error');
+    throw error;
   }
 }
 
@@ -594,6 +595,7 @@ async function insertInitialData() {
     await becomeFriends('root', 'hello');
   } catch (error) {
     await writelog(false, `[ insertInitialData ] - ${error}`, 'error');
+    throw error;
   }
 }
 
