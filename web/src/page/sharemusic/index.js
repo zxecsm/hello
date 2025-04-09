@@ -797,7 +797,7 @@ function renderPlayList() {
       <div v-if="mv" class="play_mv iconfont icon-shipin2"></div>
       <div cursor="y" class="del iconfont icon-close-bold"></div>
     </li>
-    <div v-html="getPaging()" style="padding:20px 0;text-align:center;" class="playing_list_paging jzxz"></div>
+    <div v-html="getPaging()" style="padding:20px 0;text-align:center;" class="playing_list_paging no_select"></div>
     `,
     {
       arr,

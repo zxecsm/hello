@@ -63,7 +63,7 @@ function renderList() {
 
   const html = _tpl(
     `
-    <div v-for="{title,des,id} in list" :data-id="id" cursor="y" class="bm_item jzxz">
+    <div v-for="{title,des,id} in list" :data-id="id" cursor="y" class="bm_item no_select">
       <div class="logo"></div>
       <div class="bm_title">{{title}}</div>
       <p>{{des || '描述'}}</p>

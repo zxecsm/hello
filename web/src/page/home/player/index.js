@@ -1138,7 +1138,7 @@ async function renderSongs(gao) {
       <div title="添加到播放列表" class="add_song_playing_btn iconfont icon-icon-test"></div>
       <div class="set_song_btn iconfont icon-icon"></div>
     </div>
-    <div v-if="pageTotal > 1" v-html="getPaging()" style="padding:20px 0;text-align:center;line-height: 26px;" class="song_list_paging jzxz"></div>
+    <div v-if="pageTotal > 1" v-html="getPaging()" style="padding:20px 0;text-align:center;line-height: 26px;" class="song_list_paging no_select"></div>
     <div class="check_all_menu_wrap">
       <div cursor="y" x='1' class="check_all_song_btn">全选</div>
       <div cursor="y" class="share_all_song_btn">分享</div>
@@ -2759,7 +2759,7 @@ const allowSlide = {
     this.time = Date.now();
   },
   allow() {
-    return Date.now() - this.time > 500;
+    return Date.now() - this.time > 1000;
   },
 };
 // 歌单

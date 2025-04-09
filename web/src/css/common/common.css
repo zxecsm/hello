@@ -307,7 +307,7 @@ textarea:-ms-input-placeholder {
   border-color: var(--btn-danger-hover-border-color);
 }
 /* 关闭选中 */
-.jzxz {
+.no_select {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;

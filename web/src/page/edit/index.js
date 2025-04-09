@@ -427,7 +427,7 @@ function pasteImg(e) {
 ~(function () {
   let previeW, editW, x;
   function hdDown(e) {
-    $editWrap.addClass('jzxz');
+    $editWrap.addClass('no_select');
     previeW = $previewBox[0].offsetWidth;
     editW = $editBox[0].offsetWidth;
     if (e.type === 'touchstart') {
@@ -462,7 +462,7 @@ function pasteImg(e) {
     }
   }
   function hdUp() {
-    $editWrap.removeClass('jzxz');
+    $editWrap.removeClass('no_select');
     this.removeEventListener('touchmove', hdMove);
     document.removeEventListener('mousemove', hdMove);
     this.removeEventListener('touchend', hdUp);

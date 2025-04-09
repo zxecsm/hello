@@ -4,11 +4,6 @@ import './index.less';
 import '../../js/common/common';
 import { randomNum } from '../../js/utils/utils';
 
-// 随机字体效果
-const fonts = ['Arial', 'Verdana', 'Georgia', 'Courier New', 'Comic Sans MS'];
-const randomFont = fonts[randomNum(0, fonts.length - 1)];
-document.body.style.fontFamily = randomFont;
-
 // 随机动画效果
 const animations = [
   {

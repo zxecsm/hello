@@ -1492,7 +1492,7 @@ export function myDrag(opt) {
   create && create({ trigger, target });
   let ol, ot, x, y, pointerX, pointerY;
   function hdDown(e) {
-    target.classList.add('jzxz');
+    target.classList.add('no_select');
     x = target.offsetLeft;
     y = target.offsetTop;
     const l = target.offsetLeft,
@@ -1535,7 +1535,7 @@ export function myDrag(opt) {
     move && move({ e, trigger, target, x, y, pointerX, pointerY });
   }
   function hdUp(e) {
-    target.classList.remove('jzxz');
+    target.classList.remove('no_select');
     target.removeEventListener('touchmove', hdMove);
     target.removeEventListener('touchend', hdUp);
     document.removeEventListener('mousemove', hdMove);
@@ -1796,7 +1796,7 @@ export function myResize(opt, minW = 200, minH = 200) {
   let x, y, w, h, ol, ot;
   function hdDown(e) {
     e.stopPropagation();
-    target.classList.add('jzxz');
+    target.classList.add('no_select');
     w = target.offsetWidth;
     h = target.offsetHeight;
     ol = target.offsetLeft;
@@ -1888,7 +1888,7 @@ export function myResize(opt, minW = 200, minH = 200) {
     move && move({ target });
   }
   function hdUp() {
-    target.classList.remove('jzxz');
+    target.classList.remove('no_select');
     this.removeEventListener('touchmove', hdMove);
     document.removeEventListener('mousemove', hdMove);
     this.removeEventListener('touchend', hdUp);
@@ -2938,7 +2938,9 @@ export function deepEqual(obj1, obj2) {
 export function toggleUserSelect(enable = true, target = document.body) {
   if (!target || !(target instanceof HTMLElement)) return;
 
-  target.style.userSelect = enable ? 'auto' : 'none';
-  target.style.webkitUserSelect = enable ? 'auto' : 'none'; // Safari 兼容
-  target.style.msUserSelect = enable ? 'auto' : 'none'; // IE 兼容
+  if (enable) {
+    target.classList.remove('no_select');
+  } else {
+    target.classList.add('no_select');
+  }
 }

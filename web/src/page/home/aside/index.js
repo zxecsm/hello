@@ -276,14 +276,14 @@ function renderAsideList(p, delayScroll = 0) {
   const html = _tpl(
     `
     <template v-for="item in _nav">
-      <div class="list_title jzxz" :data-id="item.id" :flag="item.id==id?'on':'off'">
+      <div class="list_title no_select" :data-id="item.id" :flag="item.id==id?'on':'off'">
         <div cursor="y" check="n" class="check_bmlist"></div>
         <i cursor="y" class="iconfont {{item.share === 1 ? 'icon-24gl-unlock4' : 'icon-24gl-unlock2 active'}}"></i>
         <em cursor="y">{{item.title}}</em>
       </div>
       <ul v-show="item.id==id">
         <template v-if="item.id==id">
-          <li v-for="y in getBmList(item)" class="bm_item jzxz" :data-id="y.id" cursor="y">
+          <li v-for="y in getBmList(item)" class="bm_item no_select" :data-id="y.id" cursor="y">
             <div cursor="y" check="n" class="check_bm"></div>
             <div class="bm_logo"></div>
             <div class="bm_name">{{y.title}}</div>
@@ -1507,7 +1507,7 @@ const allowSlide = {
     this.time = Date.now();
   },
   allow() {
-    return Date.now() - this.time > 500;
+    return Date.now() - this.time > 1000;
   },
 };
 _mySlide({

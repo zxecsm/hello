@@ -87,7 +87,7 @@ class CreateIframe {
   }
   init() {
     this.box = document.createElement('div');
-    this.box.className = 'iframe_warp jzxz';
+    this.box.className = 'iframe_warp no_select';
     const html = _tpl(
       `
       <div class="i_head_btns">

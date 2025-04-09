@@ -73,7 +73,7 @@ class RightM {
     this.head.appendChild(this.searchBox);
     this.title = document.createElement('div');
     this.title.className = 'title';
-    this.title.innerHTML = '<div class="scroll_text jzxz"></div>';
+    this.title.innerHTML = '<div class="scroll_text no_select"></div>';
     this.head.appendChild(this.title);
     this.content = document.createElement('div');
     this.content.className = 'content';
