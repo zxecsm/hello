@@ -250,7 +250,7 @@ function bgLoading() {
 }
 // 获取壁纸信息
 function getBgItem(id) {
-  return bgList.find((item) => item.id === id);
+  return bgList.find((item) => item.id === id) || {};
 }
 // 壁纸库是隐藏
 function bgBoxIsHide() {

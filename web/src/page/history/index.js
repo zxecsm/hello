@@ -94,7 +94,7 @@ let curPageSize = _getData('historyPageSize'),
   hList = [];
 $contentWrap.pagenum = 1;
 function getItemInfo(id) {
-  return hList.find((item) => item.id === id);
+  return hList.find((item) => item.id === id) || {};
 }
 function renderList(y) {
   const pagenum = $contentWrap.pagenum,

@@ -373,7 +373,7 @@ const tabsObj = new CreateTabs({
 });
 // 获取笔记信息
 function getNoteInfo(id) {
-  return noteList.find((item) => item.id === id);
+  return noteList.find((item) => item.id === id) || {};
 }
 // 搜索高亮显示
 function hdHighlight(con) {

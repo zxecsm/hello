@@ -893,7 +893,7 @@ $pMusicListBox.on('click', '.save_playing_list', function (e) {
   );
 });
 function getPlayingListItem(id) {
-  return playingList.find((item) => item.id === id);
+  return playingList.find((item) => item.id === id) || {};
 }
 $pMusicListBox
   .find('.p_foot')

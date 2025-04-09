@@ -1329,7 +1329,7 @@ function deleteSongList(e, name, id, cb, loading = { start() {}, end() {} }) {
   );
 }
 function getSongListInfo(id) {
-  return musicList.find((item) => item.id === id);
+  return musicList.find((item) => item.id === id) || {};
 }
 // 歌单菜单
 function songListMenu(e, sid) {
@@ -1417,7 +1417,7 @@ function songListMenu(e, sid) {
 // 获取歌曲信息
 function getSongInfo(id) {
   const p = musicList.find((item) => item.id === $songListWrap.listId);
-  return p.item.find((item) => item.id === id);
+  return p?.item?.find((item) => item.id === id) || {};
 }
 // 获取选中的歌曲
 function getCheckSongs() {

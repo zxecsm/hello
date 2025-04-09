@@ -67,7 +67,7 @@ export function hideMusicSearchList() {
 }
 const searchListLazyImg = new LazyLoad();
 function getSearchSongItemData(id) {
-  return searchMusicList.find((item) => item.id === id);
+  return searchMusicList.find((item) => item.id === id) || {};
 }
 let searchMusicPageNo = 1;
 // 获取搜索列表

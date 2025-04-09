@@ -147,7 +147,7 @@ const pgnt = pagination($paginationBox[0], {
 let defaultTitle = '';
 
 function getBmInfo(id) {
-  return bmList.find((item) => item.id === id);
+  return bmList.find((item) => item.id === id) || {};
 }
 
 const verifyCode = hdOnce(() => {

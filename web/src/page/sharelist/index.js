@@ -152,7 +152,7 @@ function getShareList(top) {
 }
 // 获取分享信息
 function getShareItem(id) {
-  return sList.find((item) => item.id === id);
+  return sList.find((item) => item.id === id) || {};
 }
 getShareList(1);
 // 删除

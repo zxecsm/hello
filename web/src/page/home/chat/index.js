@@ -165,7 +165,7 @@ let userPageNo = 1,
   forwardData = null;
 // 获取用户信息
 function getUserItem(account) {
-  return userList.find((item) => item.account === account);
+  return userList.find((item) => item.account === account) || {};
 }
 const cUserListLoad = new LazyLoad();
 // 获取用户列表

@@ -164,7 +164,7 @@ function bmsLoading() {
 }
 // 获取书签信息
 function getHomeBmData(id) {
-  return setBookMark().home.find((item) => item.id === id);
+  return setBookMark().home.find((item) => item.id === id) || {};
 }
 // 选中书签
 function getHomeCheckBmItem() {
@@ -683,7 +683,7 @@ function saveSearchText(str) {
 }
 // 获取搜索项
 function getSearchItem(id) {
-  return searchList.find((item) => item.id === id);
+  return searchList.find((item) => item.id === id) || {};
 }
 // 生成列表
 function renderSearchList() {

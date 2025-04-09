@@ -102,7 +102,7 @@ let curPageSize = _getData('trashPageSize');
 $contentWrap.pagenum = 1;
 $contentWrap.list = [];
 function getListItem(id) {
-  return $contentWrap.list.find((item) => item.id === id);
+  return $contentWrap.list.find((item) => item.id === id) || {};
 }
 const trashBoxSelector = new BoxSelector(document, {
   selectables: '.item_box',

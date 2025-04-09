@@ -413,13 +413,13 @@ function hdAsideListItemLogo() {
 
 // 获取分组信息
 function getBmListTitleData(id) {
-  return bookmark.list.find((item) => item.id === id);
+  return bookmark.list.find((item) => item.id === id) || {};
 }
 
 // 获取书签信息
 function getBmItemData(groupId, id) {
   const p = bookmark.list.find((item) => item.id === groupId);
-  return p.item.find((item) => item.id === id);
+  return p?.item?.find((item) => item.id === id) || {};
 }
 
 // 获取选中书签

@@ -45,7 +45,7 @@ export function renderCategoryList() {
 }
 // 获取分类信息
 function getCategoryInfo(id) {
-  return setNoteCategoryList().find((item) => item.id === id);
+  return setNoteCategoryList().find((item) => item.id === id) || {};
 }
 // 显示分类设置
 export function showCategoryBox() {

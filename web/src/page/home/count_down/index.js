@@ -218,7 +218,7 @@ const countPgnt = pagination($countList[0], {
 });
 // 获取数据
 function getCount(id) {
-  return countList.find((item) => item.id === id);
+  return countList.find((item) => item.id === id) || {};
 }
 // 显示
 export function showCountBox() {

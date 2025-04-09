@@ -194,7 +194,7 @@ if (!isRoot()) {
 }
 // 获取图片信息
 function getPicItem(id) {
-  return $imgList.list.find((item) => item.id === id);
+  return $imgList.list.find((item) => item.id === id) || {};
 }
 const picBoxSelector = new BoxSelector($imgList[0], {
   selectables: '.img_item',

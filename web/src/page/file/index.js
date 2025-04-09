@@ -436,7 +436,7 @@ async function openDir(path, { top, update = 0 }) {
 }
 // 获取文件信息
 function getFileItem(id) {
-  return fileListData.data.find((item) => item.id === id + '');
+  return fileListData.data.find((item) => item.id === id + '') || {};
 }
 // 刷新继续显示任务
 reqTaskList()

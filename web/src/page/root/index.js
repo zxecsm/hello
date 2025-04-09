@@ -149,7 +149,7 @@ function getUserList(top) {
 }
 // 获取用户信息
 function getUserInfo(acc) {
-  return userList.find((item) => item.account === acc);
+  return userList.find((item) => item.account === acc) || {};
 }
 // 修改用户状态
 function changeUserState(e, obj) {

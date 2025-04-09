@@ -64,7 +64,7 @@ let playingPageSize = 100;
 const playListLazyImg = new LazyLoad();
 // 播放列表歌曲信息
 function getPlayingItemData(id) {
-  return playingList.find((item) => item.id === id);
+  return playingList.find((item) => item.id === id) || {};
 }
 // 对比播放列表
 export function diffPlayingList(arr) {

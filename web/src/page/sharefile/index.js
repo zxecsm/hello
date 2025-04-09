@@ -437,7 +437,7 @@ async function openDir(path, { top, update = 0 }) {
   } catch {}
 }
 function getFileItem(id) {
-  return fileListData.data.find((item) => item.id === id + '');
+  return fileListData.data.find((item) => item.id === id + '') || {};
 }
 async function readFileAndDir(obj) {
   const { type, name, path } = obj;

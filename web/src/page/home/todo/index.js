@@ -181,7 +181,7 @@ const todoPgnt = pagination($todoList[0], {
 });
 // 获取todo数据
 function getTodo(id) {
-  return todoList.find((item) => item.id === id);
+  return todoList.find((item) => item.id === id) || {};
 }
 // 显示todo
 export function showTodoBox() {
