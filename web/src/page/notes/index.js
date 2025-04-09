@@ -32,6 +32,8 @@ import {
   getFileReader,
   getFiles,
   concurrencyTasks,
+  _getTarget,
+  toggleUserSelect,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -61,6 +63,7 @@ import { showNoteInfo } from '../../js/utils/showinfo';
 import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import { UpProgress } from '../../js/plugins/UpProgress';
+import { BoxSelector } from '../../js/utils/boxSelector';
 const $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
   $categoryTag = $('.category_tag'),
@@ -193,6 +196,73 @@ function listLoading() {
 $contentWrap.pagenum = 1;
 let notePageSize = _getData('notePageSize');
 let noteList = [];
+
+const noteBoxSelector = new BoxSelector(document, {
+  selectables: '.item_box',
+  onSelectStart({ e }) {
+    const item = _getTarget($contentWrap[0], e, '.item_box');
+    if (item) return true;
+  },
+  onSelectEnd() {
+    updateSelectInfo();
+  },
+  onSelectUpdate({ selectedItems, allItems, isKeepOld }) {
+    allItems.forEach((item) => {
+      const needCheck = selectedItems.includes(item);
+      const $cItem = $(item).find('.check_state');
+      const isChecked = $cItem.attr('check') === 'y';
+      if (needCheck && !isChecked) {
+        $cItem
+          .css({
+            'background-color': _d.checkColor,
+          })
+          .attr('check', 'y');
+      } else if (!needCheck && isChecked && !isKeepOld) {
+        $cItem
+          .css({
+            'background-color': 'transparent',
+          })
+          .attr('check', 'n');
+      }
+    });
+  },
+});
+noteBoxSelector.stop();
+function isSelecting() {
+  return !$footer.is(':hidden');
+}
+function startSelect() {
+  $contentWrap.find('.item_box .check_state').css('display', 'block');
+  $footer
+    .stop()
+    .slideDown(_d.speed, () => {
+      noteBoxSelector.start();
+      toggleUserSelect(false);
+    })
+    .find('span')
+    .attr({
+      class: 'iconfont icon-xuanzeweixuanze',
+      check: 'n',
+    });
+}
+function stopSelect() {
+  $contentWrap
+    .find('.item_box .check_state')
+    .css('display', 'none')
+    .attr('check', 'n')
+    .css('background-color', 'transparent');
+  $footer
+    .stop()
+    .slideUp(_d.speed, () => {
+      noteBoxSelector.stop();
+      toggleUserSelect();
+    })
+    .find('span')
+    .attr({
+      class: 'iconfont icon-xuanzeweixuanze',
+      check: 'n',
+    });
+}
 // 生成列表
 function renderList(y) {
   let pagenum = $contentWrap.pagenum,
@@ -262,8 +332,7 @@ function renderList(y) {
             _d,
           }
         );
-        $headWrap._checkState = false;
-        $footer.stop().slideUp(_d.speed);
+        stopSelect();
         $contentWrap.html(html).addClass('open');
         $headWrap.addClass('open');
         if (y) {
@@ -627,8 +696,7 @@ $contentWrap
   .on('contextmenu', '.item_box', function (e) {
     if (runState !== 'own') return;
     e.preventDefault();
-    if (isMobile()) return;
-    if (!$footer.is(':hidden')) return;
+    if (isMobile() || isSelecting()) return;
     hdCheckItemBtn();
     checkedItem(this.querySelector('.check_state'));
   })
@@ -684,7 +752,7 @@ if (isIframe()) {
   $headWrap.find('.h_go_home').remove();
 }
 longPress($contentWrap[0], '.item_box', function () {
-  if (!$footer.is(':hidden')) return;
+  if (isSelecting()) return;
   hdCheckItemBtn();
   checkedItem(this.querySelector('.check_state'));
 });
@@ -698,6 +766,9 @@ function checkedItem(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
+  updateSelectInfo();
+}
+function updateSelectInfo() {
   const $itemBox = $contentWrap.find('.item_box'),
     $checkArr = $itemBox.filter(
       (_, item) => $(item).find('.check_state').attr('check') === 'y'
@@ -718,24 +789,11 @@ function checkedItem(el) {
 // 开启选中
 function hdCheckItemBtn() {
   if (runState !== 'own') return;
-  const $itemBox = $contentWrap.find('.item_box');
-  if ($headWrap._checkState) {
-    $itemBox
-      .find('.check_state')
-      .css('display', 'none')
-      .attr('check', 'n')
-      .css('background-color', 'transparent');
-    $headWrap._checkState = false;
-    $footer.stop().slideUp(_d.speed);
+  if (isSelecting()) {
+    stopSelect();
   } else {
-    $itemBox.find('.check_state').css('display', 'block');
-    $headWrap._checkState = true;
-    $footer.stop().slideDown(_d.speed);
+    startSelect();
   }
-  $footer.find('span').attr({
-    class: 'iconfont icon-xuanzeweixuanze',
-    check: 'n',
-  });
 }
 // 上传笔记
 async function upNote() {
@@ -849,7 +907,7 @@ $footer
         filename: getNoteInfo(id).title + '.md',
       }))
     );
-    closeCheck();
+    stopSelect();
   })
   .on('click', '.f_clock', function () {
     if (runState !== 'own') return;
@@ -865,19 +923,10 @@ $footer
   })
   .on('click', '.f_close', function () {
     if (runState !== 'own') return;
-    closeCheck();
+    stopSelect();
   })
   .on('click', 'span', switchCheckAll);
-function closeCheck() {
-  const $itemBox = $contentWrap.find('.item_box');
-  $itemBox
-    .find('.check_state')
-    .css('display', 'none')
-    .attr('check', 'n')
-    .css('background-color', 'transparent');
-  $headWrap._checkState = false;
-  $footer.stop().slideUp(_d.speed);
-}
+
 function switchCheckAll() {
   if (runState !== 'own') return;
   const $checkBtn = $footer.find('span');
@@ -915,7 +964,7 @@ document.addEventListener('keydown', function (e) {
   if (isFocus) return;
   e.preventDefault();
   if (ctrl && key === 'a') {
-    if (!$headWrap._checkState) {
+    if (!isSelecting()) {
       hdCheckItemBtn();
     }
     switchCheckAll();

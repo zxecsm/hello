@@ -20,6 +20,7 @@ import {
   LazyLoad,
   copyText,
   throttle,
+  toggleUserSelect,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
@@ -46,6 +47,10 @@ import { showBmk, showHistory } from '../rightSetting/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
+import {
+  BoxSelector,
+  MouseElementTracker,
+} from '../../../js/utils/boxSelector.js';
 const $searchBoxMask = $('.search_box_mask'),
   $searchLogo = $searchBoxMask.find('.search_logo'),
   $searchInpWrap = $searchBoxMask.find('.search_inp_wrap'),
@@ -57,35 +62,78 @@ let curSearchIdx = _getData('searchengine'),
   searchWordIdx = _getData('searchWordIdx');
 let searchList = [];
 // 底部菜单是隐藏
-export function homeFootMenuIsHide() {
+function homeFootMenuIsHide() {
   return $homeFootMenu.is(':hidden');
+}
+// 显示底部菜单
+export function showHomeFootMenu() {
+  $homeFootMenu
+    .stop()
+    .slideDown(_d.speed, () => {
+      homeBmBoxSelector.start();
+      toggleUserSelect(false);
+    })
+    .find('div')
+    .attr({
+      class: 'iconfont icon-xuanzeweixuanze',
+      check: 'n',
+    });
+}
+function stopSelect() {
+  $homeBmWrap
+    .find('.home_bm_item .check_home_bm')
+    .css('display', 'none')
+    .attr('check', 'n')
+    .css('background-color', 'transparent');
+  $homeFootMenu
+    .stop()
+    .slideUp(_d.speed, () => {
+      homeBmBoxSelector.stop();
+      toggleUserSelect();
+    })
+    .find('div')
+    .attr({
+      class: 'iconfont icon-xuanzeweixuanze',
+      check: 'n',
+    });
 }
 // 搜索框是隐藏
 export function searchBoxIsHide() {
   return $searchBoxMask.is(':hidden');
 }
 // 拖动移动书签
-~(function () {
-  let fromDom = null;
-  $homeBmWrap
-    .find('ul')
-    .on('dragstart', '.home_bm_item', function () {
-      fromDom = this;
-    })
-    .on('drop', '.home_bm_item', function () {
-      if (fromDom) {
-        let fromId = $(fromDom).attr('data-id'),
-          toId = $(this).attr('data-id');
+const homeBmMouseElementTracker = new MouseElementTracker($homeBmWrap[0], {
+  delay: isMobile() ? 500 : 0,
+  onStart({ e }) {
+    const item = _getTarget($homeBmWrap[0], e, '.home_bm_item');
+    if (
+      !item ||
+      !homeFootMenuIsHide() ||
+      (isMobile() && !e.target.className.includes('home_bm_logo'))
+    )
+      return true;
+
+    $homeBmWrap.homeBmfromDom = item;
+    const obj = getHomeBmData(item.dataset.id);
+    if (!obj) return true;
+    homeBmMouseElementTracker.changeInfo(obj.title);
+  },
+  onEnd({ dropElement }) {
+    if (homeFootMenuIsHide() && $homeBmWrap.homeBmfromDom) {
+      const to = dropElement
+        ? _getTarget($homeBmWrap[0], { target: dropElement }, '.home_bm_item')
+        : null;
+      if (to) {
+        let fromId = $homeBmWrap.homeBmfromDom.dataset.id,
+          toId = to.dataset.id;
         if (fromId && toId && fromId !== toId) {
           dragMoveBookmark('home', fromId, toId);
         }
-        fromDom = null;
       }
-    })
-    .on('dragover', '.home_bm_item', function (e) {
-      e.preventDefault();
-    });
-})();
+      $homeBmWrap.homeBmfromDom = null;
+    }
+  },
+});
 // 书签列表
 export function getHomeBmList() {
   if (searchBoxIsHide()) return;
@@ -131,24 +179,46 @@ function getHomeCheckBmItem() {
   });
   return arr;
 }
-// 显示底部菜单
-export function showHomeFootMenu() {
-  $homeFootMenu.stop().slideDown(_d.speed).find('div').attr({
-    class: 'iconfont icon-xuanzeweixuanze',
-    check: 'n',
-  });
-}
+
+const homeBmBoxSelector = new BoxSelector($homeBmWrap[0], {
+  selectables: '.home_bm_item',
+  onSelectStart({ e }) {
+    const item = _getTarget($homeBmWrap[0], e, '.home_bm_item');
+    if (item) return true;
+  },
+  onSelectEnd() {
+    updateSelectingInfo();
+  },
+  onSelectUpdate({ selectedItems, allItems, isKeepOld }) {
+    allItems.forEach((item) => {
+      const needCheck = selectedItems.includes(item);
+      const $cItem = $(item).find('.check_home_bm');
+      const isChecked = $cItem.attr('check') === 'y';
+      if (needCheck && !isChecked) {
+        $cItem
+          .css({
+            'background-color': _d.checkColor,
+          })
+          .attr('check', 'y');
+      } else if (!needCheck && isChecked && !isKeepOld) {
+        $cItem
+          .css({
+            'background-color': 'transparent',
+          })
+          .attr('check', 'n');
+      }
+    });
+  },
+});
+homeBmBoxSelector.stop();
 // 生成列表
 function renderHomeBmList() {
   if (searchBoxIsHide()) return;
-  $homeFootMenu.stop().slideUp(_d.speed).find('div').attr({
-    class: 'iconfont icon-xuanzeweixuanze',
-    check: 'n',
-  });
+  stopSelect();
   let list = setBookMark().home;
   const html = _tpl(
     `
-    <li v-for="{id,title} in list" class="home_bm_item" :data-id="id" draggable="true">
+    <li v-for="{id,title} in list" class="home_bm_item" :data-id="id">
       <div cursor="y" check="n" class="check_home_bm"></div>
       <div class="home_bm_logo" cursor="y"></div>
       <p cursor="y">{{title}}</p>
@@ -231,17 +301,17 @@ $searchBoxMask
       myOpen(link, '_blank');
     }
   })
-  .on('contextmenu', '.home_bm_logo', function (e) {
+  .on('contextmenu', '.home_bm_item', function (e) {
     e.preventDefault();
-    if (isMobile()) return;
+    if (isMobile() || !homeFootMenuIsHide()) return;
     const $this = $(this);
-    const id = $this.parent().attr('data-id');
+    const id = $this.attr('data-id');
     if (!id) return;
     bookMarkSetting(
       e,
       getHomeBmData(id),
       'home',
-      this.parentNode.querySelector('.check_home_bm')
+      this.querySelector('.check_home_bm')
     );
   })
   .on('mouseenter', '.home_bm_item', function () {
@@ -339,15 +409,7 @@ $searchBoxMask
     }
     moveBookMark(e, 'home', arr);
   })
-  .on('click', '.close', function () {
-    const $bms = $homeBmWrap.find('.home_bm_item');
-    $bms
-      .find('.check_home_bm')
-      .css('display', 'none')
-      .attr('check', 'n')
-      .css('background-color', 'transparent');
-    $homeFootMenu.stop().slideUp(_d.speed);
-  })
+  .on('click', '.close', stopSelect)
   .on('click', function (e) {
     if (_getTarget(this, e, '.search_box_mask', 1)) {
       hideSearchBox();
@@ -375,6 +437,9 @@ export function checkedHomeBm(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
+  updateSelectingInfo();
+}
+function updateSelectingInfo() {
   const $bms = $homeBmWrap.find('.home_bm_item'),
     $checkArr = $bms.filter((_, item) => {
       const $item = $(item);
@@ -397,16 +462,17 @@ export function checkedHomeBm(el) {
   }
 }
 // 长按菜单
-longPress($searchBoxMask[0], '.home_bm_logo', function (e) {
+longPress($searchBoxMask[0], '.home_bm_item', function (e) {
+  if (homeBmMouseElementTracker.active || !homeFootMenuIsHide()) return;
   const $this = $(this),
     ev = e.changedTouches[0];
-  const id = $this.parent().attr('data-id');
+  const id = $this.attr('data-id');
   if (!id) return;
   bookMarkSetting(
     ev,
     getHomeBmData(id),
     'home',
-    this.parentNode.querySelector('.check_home_bm')
+    this.querySelector('.check_home_bm')
   );
 });
 // 显示搜索框

@@ -18,6 +18,7 @@ import {
   LazyLoad,
   isRoot,
   concurrencyTasks,
+  toggleUserSelect,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import pagination from '../../../js/plugins/pagination';
@@ -40,6 +41,7 @@ import md5 from '../../../js/utils/md5.js';
 import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
+import { BoxSelector } from '../../../js/utils/boxSelector.js';
 const $allBgWrap = $('.all_bg_wrap'),
   $bgList = $allBgWrap.find('.bg_list'),
   $bgFooter = $allBgWrap.find('.bg_footer');
@@ -182,18 +184,18 @@ function bgItemMenu(e, obj, el) {
     },
   ];
   if (isRoot()) {
-    if ($bgFooter.is(':hidden')) {
-      data.push({
+    data.push(
+      {
         id: '3',
         text: '选中',
         beforeIcon: 'iconfont icon-duoxuan',
-      });
-    }
-    data.push({
-      id: '4',
-      text: '删除',
-      beforeIcon: 'iconfont icon-shanchu',
-    });
+      },
+      {
+        id: '4',
+        text: '删除',
+        beforeIcon: 'iconfont icon-shanchu',
+      }
+    );
   }
   rMenu.selectMenu(
     e,
@@ -227,11 +229,7 @@ function bgItemMenu(e, obj, el) {
         );
       } else if (id === '3') {
         close();
-        $bgList.find('.check_level').css('display', 'block');
-        $bgFooter.stop().slideDown(_d.speed).find('span').attr({
-          class: 'iconfont icon-xuanzeweixuanze',
-          check: 'n',
-        });
+        startSelect();
         checkedBg(el);
       }
     },
@@ -258,6 +256,65 @@ function getBgItem(id) {
 function bgBoxIsHide() {
   return $allBgWrap.is(':hidden');
 }
+function isSelecting() {
+  return !$bgFooter.is(':hidden');
+}
+function startSelect() {
+  $bgList.find('.bg_item .check_level').css('display', 'block');
+  $bgFooter
+    .stop()
+    .slideDown(_d.speed, () => {
+      bgBoxSelector.start();
+      toggleUserSelect(false);
+    })
+    .find('span')
+    .attr({
+      class: 'iconfont icon-xuanzeweixuanze',
+      check: 'n',
+    });
+}
+function stopSelect() {
+  $bgList
+    .find('.bg_item .check_level')
+    .css('display', 'none')
+    .attr('check', 'n')
+    .css('background-color', 'transparent');
+  $bgFooter.stop().slideUp(_d.speed, () => {
+    bgBoxSelector.stop();
+    toggleUserSelect();
+  });
+}
+const bgBoxSelector = new BoxSelector($bgList[0], {
+  selectables: '.bg_item',
+  onSelectStart({ e }) {
+    const item = _getTarget($bgList[0], e, '.bg_item');
+    if (item) return true;
+  },
+  onSelectEnd() {
+    updateSelectInfo();
+  },
+  onSelectUpdate({ selectedItems, allItems, isKeepOld }) {
+    allItems.forEach((item) => {
+      const needCheck = selectedItems.includes(item);
+      const $cItem = $(item).find('.check_level');
+      const isChecked = $cItem.attr('check') === 'y';
+      if (needCheck && !isChecked) {
+        $cItem
+          .css({
+            'background-color': _d.checkColor,
+          })
+          .attr('check', 'y');
+      } else if (!needCheck && isChecked && !isKeepOld) {
+        $cItem
+          .css({
+            'background-color': 'transparent',
+          })
+          .attr('check', 'n');
+      }
+    });
+  },
+});
+bgBoxSelector.stop();
 // 获取壁纸列表
 export function renderBgList(y) {
   if (bgBoxIsHide()) return;
@@ -300,8 +357,8 @@ export function renderBgList(y) {
             },
           }
         );
+        stopSelect();
         $bgList.html(html);
-        $bgFooter.stop().slideUp(_d.speed);
         if (y) {
           $bgList.scrollTop(0);
         }
@@ -381,7 +438,7 @@ function hdPreview() {
 $bgList
   .on('contextmenu', '.bg_img', function (e) {
     e.preventDefault();
-    if (isMobile()) return;
+    if (isMobile() || isSelecting()) return;
     const obj = getBgItem($(this).parent().data('id'));
     bgItemMenu(e, obj, this.parentNode.querySelector('.check_level'));
   })
@@ -394,8 +451,9 @@ $bgList
     checkedBg(this);
   });
 longPress($bgList[0], '.bg_img', function (e) {
-  let ev = e.changedTouches[0];
-  let obj = getBgItem($(this).parent().data('id'));
+  if (isSelecting()) return;
+  const ev = e.changedTouches[0];
+  const obj = getBgItem($(this).parent().data('id'));
   bgItemMenu(ev, obj, this.parentNode.querySelector('.check_level'));
 });
 // 选中
@@ -407,6 +465,9 @@ function checkedBg(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
+  updateSelectInfo();
+}
+function updateSelectInfo() {
   const $bgItems = $bgList.find('.bg_item'),
     $checkList = $bgItems.filter(
       (_, item) => $(item).find('.check_level').attr('check') === 'y'
@@ -439,15 +500,7 @@ function deleteCheckBg(e) {
 }
 $bgFooter
   .on('click', '.f_delete', deleteCheckBg)
-  .on('click', '.f_close', function () {
-    const $bgItems = $bgList.find('.bg_item');
-    $bgItems
-      .find('.check_level')
-      .css('display', 'none')
-      .attr('check', 'n')
-      .css('background-color', 'transparent');
-    $bgFooter.stop().slideUp(_d.speed);
-  })
+  .on('click', '.f_close', stopSelect)
   .on('click', 'span', function () {
     let che = $(this).attr('check');
     che === 'y' ? (che = 'n') : (che = 'y');
@@ -488,6 +541,7 @@ window.addEventListener(
 _mySlide({
   el: '.all_bg_wrap',
   right() {
+    if (isSelecting()) return;
     closeBgBox();
   },
 });

@@ -18,6 +18,7 @@ import {
   LazyLoad,
   _mySlide,
   _setTimeout,
+  toggleUserSelect,
 } from '../../../js/utils/utils.js';
 
 import _d from '../../../js/common/config';
@@ -45,7 +46,6 @@ import { upLogo } from '../rightSetting/index.js';
 
 import {
   checkedHomeBm,
-  homeFootMenuIsHide,
   openCheckState,
   getHomeBmList,
   showHomeFootMenu,
@@ -58,6 +58,10 @@ import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
+import {
+  BoxSelector,
+  MouseElementTracker,
+} from '../../../js/utils/boxSelector.js';
 
 const $asideBtn = $('.aside_btn'),
   $asideWrap = $('.aside_wrap'),
@@ -73,33 +77,43 @@ export function setBookMark(val) {
   }
   bookmark = val;
 }
-
-// 拖动移动书签位置
-~(function () {
-  let fromDom = null;
-  $aside
-    .find('.list')
-    .on('dragstart', '.bm_item', function () {
-      fromDom = this;
-    })
-    .on('drop', '.bm_item', function () {
-      if (fromDom) {
-        const $this = $(this),
-          $fromDom = $(fromDom),
-          pid = $this.parent().prev().attr('data-id'),
-          fromId = $fromDom.attr('data-id'),
-          toId = $this.attr('data-id');
-
-        if (fromId != toId) {
+const bmMouseElementTracker = new MouseElementTracker($aside.find('.list')[0], {
+  delay: isMobile() ? 500 : 0,
+  onStart({ e }) {
+    const item = _getTarget($aside[0], e, '.list .bm_item');
+    if (
+      isSelecting() ||
+      !item ||
+      (isMobile() && !e.target.className.includes('bm_logo'))
+    )
+      return true;
+    $aside.bmfromDom = item;
+    const obj = getBmItemData(
+      $(item).parent().prev().attr('data-id'),
+      item.dataset.id
+    );
+    bmMouseElementTracker.changeInfo(obj.title);
+  },
+  onMove() {
+    allowSlide.update();
+  },
+  onEnd({ dropElement }) {
+    if (!isSelecting() && $aside.bmfromDom) {
+      const to = dropElement
+        ? _getTarget($aside[0], { target: dropElement }, '.list .bm_item')
+        : null;
+      if (to) {
+        const pid = $(to).parent().prev().attr('data-id');
+        const toId = to.dataset.id;
+        const fromId = $aside.bmfromDom.dataset.id;
+        if (fromId !== toId) {
           dragMoveBookmark(pid, fromId, toId);
         }
-        fromDom = null;
       }
-    })
-    .on('dragover', '.bm_item', function (e) {
-      e.preventDefault();
-    });
-})();
+      $aside.bmfromDom = null;
+    }
+  },
+});
 
 // 书签移动位置
 export function dragMoveBookmark(groupId, fromId, toId) {
@@ -126,29 +140,38 @@ function bmListMove(fromId, toId) {
     .catch(() => {});
 }
 
-// 拖动移动分组位置
-~(function () {
-  let fromDom = null;
-  $aside
-    .find('.list')
-    .on('dragstart', '.list_title', function () {
-      fromDom = this;
-    })
-    .on('drop', '.list_title', function () {
-      if (fromDom) {
-        const $this = $(this),
-          fromId = $(fromDom).attr('data-id'),
-          toId = $this.attr('data-id');
-        if (fromId !== toId) {
-          bmListMove(fromId, toId);
+const bmListMouseElementTracker = new MouseElementTracker(
+  $aside.find('.list')[0],
+  {
+    delay: isMobile() ? 500 : 0,
+    onStart({ e }) {
+      const item = _getTarget($aside[0], e, '.list .list_title');
+      if (!item || isSelecting() || (isMobile() && e.target.tagName !== 'I'))
+        return true;
+      $aside.bmListfromDom = item;
+      const obj = getBmListTitleData(item.dataset.id);
+      bmListMouseElementTracker.changeInfo(obj.title);
+    },
+    onMove() {
+      allowSlide.update();
+    },
+    onEnd({ dropElement }) {
+      if (!isSelecting() && $aside.bmListfromDom) {
+        const to = dropElement
+          ? _getTarget($aside[0], { target: dropElement }, '.list .list_title')
+          : null;
+        if (to) {
+          const toId = to.dataset.id;
+          const fromId = $aside.bmListfromDom.dataset.id;
+          if (fromId !== toId) {
+            bmListMove(fromId, toId);
+          }
         }
-        fromDom = null;
+        $aside.bmListfromDom = null;
       }
-    })
-    .on('dragover', '.list_title', function (e) {
-      e.preventDefault();
-    });
-})();
+    },
+  }
+);
 
 $asideBtn.activeId = 'hide'; // 记录开启列表id
 // 获取书签列表
@@ -171,38 +194,96 @@ export function getBookMarkList(
 }
 
 let asidePageNo = 1;
-let bmCheckState = true; // 选中状态
+let isSelectingBm = true; // 选中状态
 
 // 切换书签和分组选中状态
 function switchCheckState() {
   const $fMenu = $aside.find('.foot_menu');
-  if (bmCheckState) {
+  if (isSelectingBm) {
     $fMenu.removeClass('liststate');
   } else {
     $fMenu.addClass('liststate');
   }
 }
-
+const bmListBoxSelector = new BoxSelector($aside.find('.list')[0], {
+  selectables: '.list_title',
+  onSelectStart({ e }) {
+    const item = _getTarget($aside[0], e, '.list_title');
+    if (item) return true;
+  },
+  onSelectEnd() {
+    updateBmListSelectInfo();
+  },
+  onSelectUpdate({ selectedItems, allItems, isKeepOld }) {
+    allItems.forEach((item) => {
+      const needCheck = selectedItems.includes(item);
+      const $cItem = $(item).find('.check_bmlist');
+      const isChecked = $cItem.attr('check') === 'y';
+      if (needCheck && !isChecked) {
+        $cItem
+          .css({
+            'background-color': _d.checkColor,
+          })
+          .attr('check', 'y');
+      } else if (!needCheck && isChecked && !isKeepOld) {
+        $cItem
+          .css({
+            'background-color': 'transparent',
+          })
+          .attr('check', 'n');
+      }
+    });
+  },
+});
+bmListBoxSelector.stop();
+const bmBoxSelector = new BoxSelector($aside.find('.list')[0], {
+  selectables: '.bm_item',
+  onSelectStart({ e }) {
+    const item = _getTarget($aside[0], e, '.bm_item');
+    if (item) return true;
+  },
+  onSelectEnd() {
+    updateBmSelectInfo();
+  },
+  onSelectUpdate({ selectedItems, allItems, isKeepOld }) {
+    allItems.forEach((item) => {
+      const needCheck = selectedItems.includes(item);
+      const $cItem = $(item).find('.check_bm');
+      const isChecked = $cItem.attr('check') === 'y';
+      if (needCheck && !isChecked) {
+        $cItem
+          .css({
+            'background-color': _d.checkColor,
+          })
+          .attr('check', 'y');
+      } else if (!needCheck && isChecked && !isKeepOld) {
+        $cItem
+          .css({
+            'background-color': 'transparent',
+          })
+          .attr('check', 'n');
+      }
+    });
+  },
+});
+bmBoxSelector.stop();
 // 生成列表
 function renderAsideList(p, delayScroll = 0) {
   if (asideWrapIsHide()) return;
-  $aside.find('.foot_menu').stop().slideUp(_d.speed).find('div').attr({
-    class: 'iconfont icon-xuanzeweixuanze',
-    check: 'n',
-  });
+  stopSelect();
   let id = $asideBtn.activeId,
     _nav = bookmark.list;
   const html = _tpl(
     `
     <template v-for="item in _nav">
-      <div class="list_title jzxz" :data-id="item.id" :flag="item.id==id?'on':'off'" draggable="true">
+      <div class="list_title jzxz" :data-id="item.id" :flag="item.id==id?'on':'off'">
         <div cursor="y" check="n" class="check_bmlist"></div>
         <i cursor="y" class="iconfont {{item.share === 1 ? 'icon-24gl-unlock4' : 'icon-24gl-unlock2 active'}}"></i>
         <em cursor="y">{{item.title}}</em>
       </div>
       <ul v-show="item.id==id">
         <template v-if="item.id==id">
-          <li v-for="y in getBmList(item)" class="bm_item jzxz" :data-id="y.id" cursor="y" draggable="true">
+          <li v-for="y in getBmList(item)" class="bm_item jzxz" :data-id="y.id" cursor="y">
             <div cursor="y" check="n" class="check_bm"></div>
             <div class="bm_logo"></div>
             <div class="bm_name">{{y.title}}</div>
@@ -256,7 +337,7 @@ function renderAsideList(p, delayScroll = 0) {
         const $listTitle = $aList.find('.list_title').eq(curIdx);
         $aList.stop().animate(
           {
-            scrollTop: _position($listTitle[0]).top + $aList[0].scrollTop - 5,
+            scrollTop: _position($listTitle[0]).top + $aList[0].scrollTop - 10,
           },
           _d.speed
         );
@@ -462,7 +543,7 @@ function hdCheckAll() {
         : 'iconfont icon-xuanzeweixuanze',
     check: che,
   });
-  if (bmCheckState) {
+  if (isSelectingBm) {
     const $sidenav = $aside.find('.bm_item');
     $sidenav
       .find('.check_bm')
@@ -517,7 +598,7 @@ $asideWrap
   .on('contextmenu', '.list_title', function (e) {
     //操作列表
     e.preventDefault();
-    if (isMobile()) return;
+    if (isMobile() || isSelecting()) return;
     const $this = $(this);
     asideListMenu(
       e,
@@ -542,7 +623,7 @@ $asideWrap
   .on('contextmenu', '.bm_item', function (e) {
     //操作书签
     e.preventDefault();
-    if (isMobile()) return;
+    if (isMobile() || isSelecting()) return;
     const $this = $(this);
     const groupId = $asideBtn.activeId;
     bookMarkSetting(
@@ -564,7 +645,7 @@ $asideWrap
     checkAsideBmList(this);
   })
   .on('click', '.delete_bm', function (e) {
-    if (bmCheckState) {
+    if (isSelectingBm) {
       const arr = getAsideCheckBmItem();
       if (arr.length === 0) return;
       delBm(e, arr);
@@ -581,30 +662,18 @@ $asideWrap
     moveBookMark(e, groupId, arr);
   })
   .on('click', '.clock_bm', function () {
-    if (bmCheckState) return;
+    if (isSelectingBm) return;
     const arr = getAsideCheckBmList();
     if (arr.length === 0) return;
     changeBmListState(0, arr);
   })
   .on('click', '.open_bm', function () {
-    if (bmCheckState) return;
+    if (isSelectingBm) return;
     const arr = getAsideCheckBmList();
     if (arr.length === 0) return;
     changeBmListState(1, arr);
   })
-  .on('click', '.close', function () {
-    let $check = [];
-    if (bmCheckState) {
-      $check = $aside.find('.bm_item .check_bm');
-    } else {
-      $check = $aside.find('.list_title .check_bmlist');
-    }
-    $check
-      .css('display', 'none')
-      .attr('check', 'n')
-      .css('background-color', 'transparent');
-    $aside.find('.foot_menu').stop().slideUp(_d.speed);
-  })
+  .on('click', '.close', stopSelect)
   .on('click', function (e) {
     if (_getTarget(this, e, '.aside_wrap', 1)) {
       hideAside();
@@ -620,6 +689,9 @@ function checkAsideBm(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
+  updateBmSelectInfo();
+}
+function updateBmSelectInfo() {
   const $sidenav = $aside.find('.bm_item'),
     $checkArr = $sidenav.filter(
       (_, item) => $(item).find('.check_bm').attr('check') === 'y'
@@ -647,6 +719,9 @@ function checkAsideBmList(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
+  updateBmListSelectInfo();
+}
+function updateBmListSelectInfo() {
   const $sidenav = $aside.find('.list_title'),
     $checkArr = $sidenav.filter(
       (_, item) => $(item).find('.check_bmlist').attr('check') === 'y'
@@ -725,6 +800,7 @@ export function moveBookMark(e, pid, arr) {
 
 // 分组菜单
 longPress($aside[0], '.list_title', function (e) {
+  if (bmListMouseElementTracker.active || isSelecting()) return;
   const $this = $(this),
     ev = e.changedTouches[0];
   asideListMenu(
@@ -736,6 +812,7 @@ longPress($aside[0], '.list_title', function (e) {
 
 // 书签菜单
 longPress($aside[0], '.bm_item', function (e) {
+  if (bmMouseElementTracker.active || isSelecting()) return;
   const $this = $(this),
     ev = e.changedTouches[0];
   const groupId = $asideBtn.activeId;
@@ -1008,14 +1085,12 @@ function asideListMenu(e, obj, el) {
       text: obj.share === 1 ? '锁定' : '公开',
       beforeIcon: 'iconfont icon-suo',
     },
-  ];
-  if (asideFootMenuIsHide()) {
-    data.push({
+    {
       id: 'check',
       text: '选中',
       beforeIcon: 'iconfont icon-duoxuan',
-    });
-  }
+    },
+  ];
   data = [
     ...data,
     {
@@ -1073,17 +1148,8 @@ function asideListMenu(e, obj, el) {
           loading
         );
       } else if (id === 'check') {
-        bmCheckState = false;
-        switchCheckState();
-        $aside.find('.foot_menu').stop().slideDown(_d.speed).find('div').attr({
-          class: 'iconfont icon-xuanzeweixuanze',
-          check: 'n',
-        });
-        $aside.find('ul').css('display', 'none').html('');
-        const $sidenav = $aside.find('.list_title');
-        $asideBtn.activeId = 'hide';
-        $sidenav.attr('flag', 'off');
-        $sidenav.find('.check_bmlist').css('display', 'block');
+        isSelectingBm = false;
+        startSelect();
         checkAsideBmList(el);
         close();
       }
@@ -1277,14 +1343,12 @@ export function bookMarkSetting(e, obj, isHome, el) {
       text: '书签图标',
       beforeIcon: 'iconfont icon-tupian',
     },
-  ];
-  if ((!isHome && asideFootMenuIsHide()) || (isHome && homeFootMenuIsHide())) {
-    data.push({
+    {
       id: '3',
       text: '选中',
       beforeIcon: 'iconfont icon-duoxuan',
-    });
-  }
+    },
+  ];
   data = [
     ...data,
     {
@@ -1320,19 +1384,8 @@ export function bookMarkSetting(e, obj, isHome, el) {
           openCheckState();
           checkedHomeBm(el);
         } else {
-          bmCheckState = true;
-          switchCheckState();
-          $aside
-            .find('.foot_menu')
-            .stop()
-            .slideDown(_d.speed)
-            .find('div')
-            .attr({
-              class: 'iconfont icon-xuanzeweixuanze',
-              check: 'n',
-            });
-          const $sidenav = $aside.find('.bm_item');
-          $sidenav.find('.check_bm').css('display', 'block');
+          isSelectingBm = true;
+          startSelect();
           checkAsideBm(el);
         }
         close();
@@ -1365,10 +1418,55 @@ function asideWrapIsHide() {
 }
 
 // 侧栏底部菜单是隐藏
-function asideFootMenuIsHide() {
-  return $aside.find('.foot_menu').is(':hidden');
+function isSelecting() {
+  return !$aside.find('.foot_menu').is(':hidden');
 }
-
+function stopSelect() {
+  const $check = isSelectingBm
+    ? $aside.find('.bm_item .check_bm')
+    : $aside.find('.list_title .check_bmlist');
+  $check
+    .css('display', 'none')
+    .attr('check', 'n')
+    .css('background-color', 'transparent');
+  $aside
+    .find('.foot_menu')
+    .stop()
+    .slideUp(_d.speed, () => {
+      bmListBoxSelector.stop();
+      bmBoxSelector.stop();
+      toggleUserSelect();
+    });
+}
+function startSelect() {
+  switchCheckState();
+  if (isSelectingBm) {
+    const $sidenav = $aside.find('.bm_item');
+    $sidenav.find('.check_bm').css('display', 'block');
+  } else {
+    $aside.find('ul').css('display', 'none').html('');
+    const $sidenav = $aside.find('.list_title');
+    $asideBtn.activeId = 'hide';
+    $sidenav.attr('flag', 'off');
+    $sidenav.find('.check_bmlist').css('display', 'block');
+  }
+  $aside
+    .find('.foot_menu')
+    .stop()
+    .slideDown(_d.speed, () => {
+      if (isSelectingBm) {
+        bmBoxSelector.start();
+      } else {
+        bmListBoxSelector.start();
+      }
+      toggleUserSelect(false);
+    })
+    .find('div')
+    .attr({
+      class: 'iconfont icon-xuanzeweixuanze',
+      check: 'n',
+    });
+}
 // 显示隐藏侧边
 export function toggleAside() {
   if (asideWrapIsHide()) {
@@ -1403,9 +1501,20 @@ function hideAside() {
 }
 
 // 手势
+const allowSlide = {
+  time: 0,
+  update() {
+    this.time = Date.now();
+  },
+  allow() {
+    return Date.now() - this.time > 500;
+  },
+};
 _mySlide({
   el: '.aside_wrap',
   left() {
-    hideAside();
+    if (!isSelecting() && allowSlide.allow()) {
+      hideAside();
+    }
   },
 });

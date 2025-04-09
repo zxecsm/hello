@@ -2935,3 +2935,10 @@ export function deepEqual(obj1, obj2) {
 
   return true;
 }
+export function toggleUserSelect(enable = true, target = document.body) {
+  if (!target || !(target instanceof HTMLElement)) return;
+
+  target.style.userSelect = enable ? 'auto' : 'none';
+  target.style.webkitUserSelect = enable ? 'auto' : 'none'; // Safari 兼容
+  target.style.msUserSelect = enable ? 'auto' : 'none'; // IE 兼容
+}

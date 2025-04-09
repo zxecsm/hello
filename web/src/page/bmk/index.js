@@ -23,6 +23,8 @@ import {
   isLogin,
   wave,
   darkMode,
+  _getTarget,
+  toggleUserSelect,
 } from '../../js/utils/utils';
 
 import _d from '../../js/common/config';
@@ -47,6 +49,7 @@ import rMenu from '../../js/plugins/rightMenu';
 import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import { CreateTabs } from '../notes/tabs';
+import { BoxSelector } from '../../js/utils/boxSelector';
 
 const $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
@@ -303,7 +306,7 @@ function renderList(y) {
           }
         );
 
-        closeCheck();
+        stopSelect();
         $contentWrap.html(html).addClass('open');
         $headWrap.addClass('open');
 
@@ -558,8 +561,7 @@ function openBmk() {
 // 书签右键
 function bmkContextMenu(e) {
   e.preventDefault();
-  if (isMobile()) return;
-  if (!$footer.is(':hidden')) return;
+  if (isMobile() || isSelecting()) return;
   checkedItemBtn();
   checkItem(this.querySelector('.check_state'));
 }
@@ -593,12 +595,35 @@ $contentWrap
 
 // 长按选中
 function bmkLongPress() {
-  if (!$footer.is(':hidden')) return;
+  if (isSelecting()) return;
   checkedItemBtn();
   checkItem(this.querySelector('.check_state'));
 }
 longPress($contentWrap[0], '.item_box', bmkLongPress);
+function isSelecting() {
+  return !$footer.is(':hidden');
+}
+// 关闭/开启选中
+function stopSelect() {
+  $contentWrap.find('.item_box .check_state').css('display', 'none');
+  $footer.stop().slideUp(_d.speed, () => {
+    boxSelector.stop();
+    toggleUserSelect();
+  });
+}
 
+function startSelect() {
+  $contentWrap
+    .find('.item_box .check_state')
+    .css('display', 'block')
+    .attr('check', 'n')
+    .css('background-color', 'transparent');
+  $footer.stop().slideDown(_d.speed, () => {
+    boxSelector.start();
+    toggleUserSelect(false);
+  });
+  footerCheckIocnState('n');
+}
 // 选中
 function checkItem(el) {
   const $this = $(el),
@@ -608,6 +633,10 @@ function checkItem(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
+  updateSelectInfo();
+}
+
+function updateSelectInfo() {
   const $itemBox = $contentWrap.find('.item_box'),
     $checkArr = $itemBox.filter(
       (_, item) => $(item).find('.check_state').attr('check') === 'y'
@@ -627,10 +656,10 @@ if (isIframe()) {
 
 // 切换选中
 function checkedItemBtn() {
-  if ($headWrap._checkState) {
-    closeCheck();
+  if (isSelecting()) {
+    stopSelect();
   } else {
-    openCheck();
+    startSelect();
   }
 }
 
@@ -702,26 +731,39 @@ function hdBmkMoveList(e) {
   const arr = getSelectItem();
   movebmk(e, arr);
 }
-
-// 关闭/开启选中
-function closeCheck() {
-  const $itemBox = $contentWrap.find('.item_box');
-  $itemBox.find('.check_state').css('display', 'none');
-  $headWrap._checkState = false;
-  $footer.stop().slideUp(_d.speed);
-}
-
-function openCheck() {
-  const $itemBox = $contentWrap.find('.item_box');
-  $itemBox
-    .find('.check_state')
-    .css('display', 'block')
-    .attr('check', 'n')
-    .css('background-color', 'transparent');
-  $headWrap._checkState = true;
-  $footer.stop().slideDown(_d.speed);
-  footerCheckIocnState('n');
-}
+const boxSelector = new BoxSelector(document, {
+  selectables: '.content_wrap .item_box',
+  onSelectStart({ e }) {
+    const item = _getTarget($contentWrap[0], e, '.content_wrap .item_box');
+    if (item) return true;
+  },
+  onSelectEnd() {
+    updateSelectInfo();
+  },
+  onSelectUpdate({ selectedItems, allItems, isKeepOld }) {
+    allItems.forEach((item) => {
+      const needCheck = selectedItems.includes(item);
+      const $cItem = $(item).find('.check_state');
+      const isChecked = $cItem.attr('check') === 'y';
+      if (needCheck && !isChecked) {
+        $cItem
+          .css({
+            display: 'block',
+            'background-color': _d.checkColor,
+          })
+          .attr('check', 'y');
+      } else if (!needCheck && isChecked && !isKeepOld) {
+        $cItem
+          .css({
+            display: 'block',
+            'background-color': 'transparent',
+          })
+          .attr('check', 'n');
+      }
+    });
+  },
+});
+boxSelector.stop();
 
 // 全选/不选
 function hdCheckAll() {
@@ -749,7 +791,7 @@ function footerCheckIocnState(state) {
 $footer
   .on('click', '.f_delete', hdDeleteCheck)
   .on('click', '.f_move_to', hdBmkMoveList)
-  .on('click', '.f_close', closeCheck)
+  .on('click', '.f_close', stopSelect)
   .on('click', 'span', hdCheckAll);
 // 滚动状态
 scrollState(
@@ -770,8 +812,8 @@ document.addEventListener('keydown', function (e) {
   if (isFocus) return;
   e.preventDefault();
   if (ctrl && key === 'a') {
-    if (!$headWrap._checkState) {
-      openCheck();
+    if (!isSelecting()) {
+      startSelect();
     }
     hdCheckAll();
   }

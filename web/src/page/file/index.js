@@ -35,6 +35,8 @@ import {
   wrapInput,
   getDuplicates,
   isurl,
+  toggleUserSelect,
+  _mySlide,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
@@ -78,6 +80,11 @@ import { addTask } from './task';
 import { reqTaskList } from '../../api/task';
 import cacheFile from '../../js/utils/cacheFile';
 import imgPreview from '../../js/plugins/imgPreview';
+import {
+  BoxSelector,
+  getEventPoints,
+  MouseElementTracker,
+} from '../../js/utils/boxSelector';
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
 const $curmbBox = $('.crumb_box');
@@ -120,7 +127,6 @@ function changeListShowModel() {
 changeListShowModel();
 let pageNo = 1;
 let waitObj = {};
-let isChecking;
 if (!isLogin()) {
   toLogin();
 }
@@ -221,7 +227,7 @@ async function renderList(top) {
   const html = _tpl(
     `
     <template v-if="total > 0">
-      <ul v-for="{type, name, size, time, id} in list" draggable="true" class="file_item" :data-id="id">
+      <ul v-for="{type, name, size, time, id} in list" class="file_item" :data-id="id">
         <li class="check_state" check="n"></li>
         <li cursor="y" class="logo iconfont {{hdLogo(name,type) || 'is_img'}}"></li>
         <li cursor="y" class="name">
@@ -317,74 +323,53 @@ async function renderList(top) {
   }
 }
 const lazyImg = new LazyLoad();
-~(function () {
-  let fromDom = null;
-  $contentWrap
-    .on('dragstart', '.file_item', function () {
-      fromDom = this;
-    })
-    .on('drop', '.file_item', function (e) {
-      if (fromDom) {
-        const $this = $(this),
-          fromId = $(fromDom).attr('data-id'),
-          toId = $this.attr('data-id');
-        const data = [getFileItem(fromId)];
+const mouseElementTracker = new MouseElementTracker(document, {
+  delay: isMobile() ? 500 : 0,
+  onStart({ e }) {
+    const item = _getTarget($contentWrap[0], e, '.content_wrap .file_item');
+    if (
+      isSelecting() &&
+      item &&
+      $(item).find('.check_state').attr('check') === 'y'
+    ) {
+      $contentWrap.fromDom = item;
+      mouseElementTracker.changeInfo(`选中 ${getCheckDatas().length} 项`);
+    } else {
+      return true;
+    }
+  },
+  onEnd({ e, dropElement }) {
+    e = getEventPoints(e)[0];
+    if (
+      isSelecting() &&
+      $contentWrap.fromDom &&
+      $($contentWrap.fromDom).find('.check_state').attr('check') === 'y'
+    ) {
+      const to = dropElement
+        ? _getTarget(
+            $contentWrap[0],
+            { target: dropElement },
+            '.content_wrap .file_item'
+          )
+        : null;
+      if (to) {
+        const toId = to.dataset.id;
+        const data = getCheckDatas();
         const toData = getFileItem(toId);
-        if (fromId !== toId && toData.type === 'dir') {
-          _pop(
-            { e, text: `${data[0].name} 移动到：${toData.name}？` },
-            async (type) => {
-              if (type === 'confirm') {
-                try {
-                  const same = await reqFileSameName({
-                    data,
-                    path: `${curFileDirPath}/${toData.name}`,
-                  });
-
-                  if (same.code === 1) {
-                    const { hasSameName } = same.data;
-                    let rename = 0;
-
-                    // 有重名文件
-                    if (hasSameName) {
-                      const type = await _pop.p({
-                        top: true,
-                        text: '如何处理同名文件？',
-                        cancel: { text: '重命名' },
-                        confirm: { text: '覆盖' },
-                      });
-                      if (type === 'close') return;
-                      if (type === 'confirm') {
-                        rename = 0;
-                      } else {
-                        rename = 1;
-                      }
-                    }
-
-                    const res = await reqFileMove({
-                      data,
-                      path: `${curFileDirPath}/${toData.name}`,
-                      rename,
-                    });
-                    if (res.code === 1) {
-                      addTask(res.data.key, updateCurPage);
-                      waitObj = {};
-                      realtime.send({ type: 'pastefiledata', data: waitObj });
-                      hidePaste();
-                    }
-                  }
-                } catch {}
-              }
-            }
+        if (!data.some((item) => item.id === toId) && toData.type === 'dir') {
+          hdCut(
+            e,
+            data,
+            false,
+            `${toData.path}/${toData.name}`,
+            `移动 ${data.length} 项到：${toData.name}？`
           );
         }
-        fromDom = null;
       }
-    })
-    .on('dragover', '.file_item', function (e) {
-      e.preventDefault();
-    });
-})();
+      $contentWrap.fromDom = null;
+    }
+  },
+});
 // 分页
 const pgnt = pagination($pagination.find('.container')[0], {
   change(val) {
@@ -573,7 +558,7 @@ $contentWrap
   })
   .on('contextmenu', function (e) {
     e.preventDefault();
-    if (isMobile()) return;
+    if (isMobile() || isSelecting()) return;
     const fileItem = _getTarget(this, e, '.content_wrap .file_item');
     if (fileItem) {
       rightList(
@@ -602,7 +587,7 @@ function hdContextMenu(e) {
   rMenu.selectMenu(e, data, async ({ e, close, id }) => {
     if (id === 'select') {
       close();
-      if (!isChecking) {
+      if (!isSelecting()) {
         startCheck();
       }
     } else if (id === 'create') {
@@ -613,6 +598,7 @@ function hdContextMenu(e) {
   });
 }
 longPress($contentWrap[0], function (e) {
+  if (isSelecting()) return;
   const ev = e.changedTouches[0];
   const fileItem = _getTarget(this, ev, '.content_wrap .file_item');
   if (fileItem) {
@@ -646,15 +632,13 @@ function rightList(e, obj, el) {
       beforeIcon: 'iconfont icon-download',
     });
   }
-  if ($footer.is(':hidden')) {
-    data.push({
+  data = [
+    ...data,
+    {
       id: 'check',
       text: '选中',
       beforeIcon: 'iconfont icon-duoxuan',
-    });
-  }
-  data = [
-    ...data,
+    },
     {
       id: 'rename',
       text: '重命名',
@@ -771,7 +755,7 @@ function rightList(e, obj, el) {
         showFileInfo(e, obj);
       } else if (id === 'check') {
         close();
-        if (!isChecking) {
+        if (!isSelecting()) {
           startCheck();
           hdCheckItem(el);
         }
@@ -1147,7 +1131,7 @@ $header
     myOpen('/');
   })
   .on('click', '.h_check_item_btn', function () {
-    if ($footer.is(':hidden')) {
+    if (!isSelecting()) {
       startCheck();
     } else {
       closeCheck();
@@ -1444,8 +1428,14 @@ async function hdCopy(e, data, cb) {
   }
 }
 // 移动
-async function hdCut(e, data, cb) {
-  const type = await _pop.p({ e, text: '确认粘贴？' });
+async function hdCut(
+  e,
+  data,
+  cb,
+  toPath = curFileDirPath,
+  text = '确认粘贴？'
+) {
+  const type = await _pop.p({ e, text });
   if (type === 'confirm') {
     try {
       if (getDuplicates(data, ['name']).length > 0) {
@@ -1457,7 +1447,7 @@ async function hdCut(e, data, cb) {
         !data.every((item) => {
           const { path, name } = item;
           const f = _path.normalize(`${path}/${name}`);
-          const t = _path.normalize(`${curFileDirPath}/${name}`);
+          const t = _path.normalize(`${toPath}/${name}`);
           return f !== t && !_path.isPathWithin(f, t);
         })
       ) {
@@ -1465,7 +1455,7 @@ async function hdCut(e, data, cb) {
         return;
       }
 
-      const same = await reqFileSameName({ data, path: curFileDirPath });
+      const same = await reqFileSameName({ data, path: toPath });
 
       if (same.code === 1) {
         const { hasSameName } = same.data;
@@ -1487,7 +1477,7 @@ async function hdCut(e, data, cb) {
           }
         }
 
-        const res = await reqFileMove({ data, path: curFileDirPath, rename });
+        const res = await reqFileMove({ data, path: toPath, rename });
         if (res.code === 1) {
           addTask(res.data.key, updateCurPage);
           waitObj = {};
@@ -1521,25 +1511,66 @@ function getCheckDatas() {
   });
   return arr;
 }
+const boxSelector = new BoxSelector(document, {
+  selectables: '.content_wrap .file_item',
+  onSelectStart({ e }) {
+    const item = _getTarget($contentWrap[0], e, '.content_wrap .file_item');
+    if (item) return true;
+  },
+  onSelectEnd() {
+    renderFoot();
+  },
+  onSelectUpdate({ selectedItems, allItems, isKeepOld }) {
+    allItems.forEach((item) => {
+      const needCheck = selectedItems.includes(item);
+      const $cItem = $(item).find('.check_state');
+      const isChecked = $cItem.attr('check') === 'y';
+      if (needCheck && !isChecked) {
+        $cItem
+          .css({
+            display: 'block',
+            'background-color': _d.checkColor,
+          })
+          .attr('check', 'y');
+      } else if (!needCheck && isChecked && !isKeepOld) {
+        $cItem
+          .css({
+            display: 'block',
+            'background-color': 'transparent',
+          })
+          .attr('check', 'n');
+      }
+    });
+  },
+});
+boxSelector.stop();
+function isSelecting() {
+  return !$footer.is(':hidden');
+}
 // 开启选中
 function startCheck() {
-  isChecking = true;
-  const $cItem = $contentWrap.find('.check_state');
-  $cItem
+  $contentWrap
+    .find('.check_state')
     .css({
       display: 'block',
       'background-color': 'transparent',
     })
     .attr('check', 'n');
   renderFoot();
-  $footer.stop().slideDown(_d.speed);
+  $footer.stop().slideDown(_d.speed, () => {
+    boxSelector.start();
+    mouseElementTracker.start();
+    toggleUserSelect(false);
+  });
 }
 // 关闭选中
 function closeCheck() {
-  isChecking = false;
-  const $cItem = $contentWrap.find('.check_state');
-  $cItem.css('display', 'none');
-  $footer.stop().slideUp(_d.speed);
+  $contentWrap.find('.check_state').css('display', 'none');
+  $footer.stop().slideUp(_d.speed, () => {
+    boxSelector.stop();
+    mouseElementTracker.stop();
+    toggleUserSelect();
+  });
 }
 // 更新底部菜单
 function renderFoot() {
@@ -1575,7 +1606,7 @@ function renderFoot() {
       isRoot,
     }
   );
-  if (!$footer.is(':hidden')) {
+  if (isSelecting()) {
     _msg.botMsg(`选中：${len}项`);
   }
   $footer.find('.container').html(html);
@@ -1774,7 +1805,7 @@ document.addEventListener('keydown', function (e) {
   if (isFocus) return;
   if (ctrl && key === 'a') {
     e.preventDefault();
-    if (!isChecking) {
+    if (!isSelecting()) {
       startCheck();
     }
     switchCheckAll($footer.find('span')[0]);
@@ -1805,4 +1836,18 @@ document.addEventListener('keydown', function (e) {
     showPaste();
     closeCheck();
   }
+});
+// 手势右划后退
+_mySlide({
+  el: '.content_wrap',
+  right() {
+    if (!isSelecting()) {
+      curmb.hashRouter.back();
+    }
+  },
+  left() {
+    if (!isSelecting()) {
+      curmb.hashRouter.forward();
+    }
+  },
 });

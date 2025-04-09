@@ -46,6 +46,7 @@ import {
   upStr,
   _animate,
   getCenterPointDistance,
+  toggleUserSelect,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -142,6 +143,10 @@ import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import percentBar from '../../../js/plugins/percentBar/index.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
+import {
+  BoxSelector,
+  MouseElementTracker,
+} from '../../../js/utils/boxSelector.js';
 const $musicPlayerBox = $('.music_player_box'),
   $musicFootProgress = $musicPlayerBox.find('.music_foot_progress'),
   $musicPlayerBg = $musicPlayerBox.find('.music_palyer_bg'),
@@ -791,18 +796,37 @@ export function getVolumeIcon(mediaVolume) {
   return icon;
 }
 // 拖动歌单
-(function () {
-  let fromDom = null;
-  $songListWrap
-    .on('dragstart', '.song_list_item', function () {
-      fromDom = this;
-    })
-    .on('drop', '.song_list_item', function () {
-      if (fromDom) {
-        const fIdx = $(fromDom).index(),
-          tIdx = $(this).index(),
-          fromId = $(fromDom).attr('data-id'),
-          toId = $(this).attr('data-id');
+const songListMouseElementTracker = new MouseElementTracker($songListWrap[0], {
+  delay: isMobile() ? 500 : 0,
+  onStart({ e }) {
+    const item = _getTarget($songListWrap[0], e, '.song_list_item');
+    if (
+      !item ||
+      $(item).index() < 3 ||
+      (isMobile() && !e.target.className.includes('logo'))
+    )
+      return true;
+    $songListWrap.songListfromDom = item;
+    const obj = getSongListInfo(item.dataset.id);
+    songListMouseElementTracker.changeInfo(obj.name);
+  },
+  onMove() {
+    allowSlide.update();
+  },
+  onEnd({ dropElement }) {
+    if ($songListWrap.songListfromDom) {
+      const to = dropElement
+        ? _getTarget(
+            $msuicContentBox[0],
+            { target: dropElement },
+            '.song_list_item'
+          )
+        : null;
+      if (to) {
+        const fIdx = $($songListWrap.songListfromDom).index(),
+          tIdx = $(to).index(),
+          fromId = $songListWrap.songListfromDom.dataset.id,
+          toId = to.dataset.id;
         if (fIdx > 2 && tIdx > 2 && fIdx !== tIdx) {
           reqPlayerMoveList({ fromId, toId })
             .then((result) => {
@@ -813,13 +837,11 @@ export function getVolumeIcon(mediaVolume) {
             })
             .catch(() => {});
         }
-        fromDom = null;
       }
-    })
-    .on('dragover', '.song_list_item', function (e) {
-      e.preventDefault();
-    });
-})();
+      $songListWrap.songListfromDom = null;
+    }
+  },
+});
 let playId = '';
 // 获取歌单
 export function getSongList(cb) {
@@ -897,7 +919,7 @@ function renderSongList() {
   let arr = musicList;
   const html = _tpl(
     `
-    <li v-for="item in arr" class="song_list_item" :data-id="item.id" cursor="y" draggable="true">
+    <li v-for="item in arr" class="song_list_item" :data-id="item.id" cursor="y">
       <div class="list_logo">
         <div class="logo" :data-src="getPic(item.pic)"></div>
       </div>
@@ -984,8 +1006,44 @@ export async function hdLoadedSong(list) {
   }
   return list;
 }
+const songsBoxSelector = new BoxSelector(
+  $msuicContentBox.find('.list_items_wrap')[0],
+  {
+    selectables: '.song_item',
+    onSelectStart({ e }) {
+      const item = _getTarget($msuicContentBox[0], e, '.song_item');
+      if (item) return true;
+    },
+    onSelectEnd() {
+      updateSelectSongsInfo();
+    },
+    onSelectUpdate({ selectedItems, allItems, isKeepOld }) {
+      allItems.forEach((item) => {
+        const needCheck = selectedItems.includes(item);
+        const $cItem = $(item).find('.check_state');
+        const isChecked = $cItem.attr('check') === 'y';
+        if (needCheck && !isChecked) {
+          $cItem
+            .css({
+              'background-color': _d.checkColor,
+            })
+            .attr('check', 'y');
+        } else if (!needCheck && isChecked && !isKeepOld) {
+          $cItem
+            .css({
+              'background-color': 'transparent',
+            })
+            .attr('check', 'n');
+        }
+      });
+    },
+  }
+);
+songsBoxSelector.stop();
 // 生成歌曲列表
 async function renderSongs(gao) {
+  songsBoxSelector.stop();
+  toggleUserSelect();
   const listId = $songListWrap.listId;
   if (!listId) return;
   const ind = musicList.findIndex((item) => item.id === listId);
@@ -1061,7 +1119,7 @@ async function renderSongs(gao) {
       <div cursor="y" class="checked_song_btn"><i class="iconfont icon-duoxuan"></i></div>
       <div v-if="ind > 0" cursor="y" class="sort_songs"><i class="iconfont icon-paixu"></i></div>
     </div>
-    <div v-for="{title,artist,mv,id,pic:picc,isLoaded} in slist" class="song_item" :data-id="id" draggable="true" :data-issc="issc(id)" cursor="y">
+    <div v-for="{title,artist,mv,id,pic:picc,isLoaded} in slist" class="song_item" :data-id="id" :data-issc="issc(id)" cursor="y">
       <div cursor="y" check="n" class="check_state"></div>
       <div v-if="isLoaded" class="downloaded iconfont icon-jiaobiao"></div>
       <div class="song_logo_box">
@@ -1237,6 +1295,7 @@ $songListWrap
     songListMenu(e, id);
   });
 longPress($songListWrap[0], '.song_list_item', function (e) {
+  if (songListMouseElementTracker.active) return;
   const id = $(this).attr('data-id');
   let ev = e.changedTouches[0];
   songListMenu(ev, id);
@@ -1268,6 +1327,9 @@ function deleteSongList(e, name, id, cb, loading = { start() {}, end() {} }) {
       }
     }
   );
+}
+function getSongListInfo(id) {
+  return musicList.find((item) => item.id === id);
 }
 // 歌单菜单
 function songListMenu(e, sid) {
@@ -1619,18 +1681,38 @@ async function upSong() {
 }
 // 歌曲歌曲选中
 function switchSongChecked() {
-  const $checkMenu = $msuicContentBox.find('.check_all_menu_wrap'),
-    $checks = $msuicContentBox.find('.list_items_wrap .check_state');
-  if ($songItemsBox._check) {
-    $checkMenu.css('display', 'none');
-    $checks.css('display', 'none');
-    $songItemsBox._check = false;
+  if (isSelectingSongs()) {
+    stopSelectSongs();
   } else {
-    $checkMenu.css('display', 'block');
-    $checks.css('display', 'block');
-    $songItemsBox._check = true;
+    startSelectSongs();
   }
-  $checks.attr('check', 'n').css('background-color', 'transparent');
+}
+function isSelectingSongs() {
+  const $checkMenu = $msuicContentBox.find('.check_all_menu_wrap');
+  if ($checkMenu.length === 0) return false;
+  return $checkMenu.css('display') === 'block';
+}
+function startSelectSongs() {
+  $msuicContentBox.find('.check_all_menu_wrap').css('display', 'block'),
+    $msuicContentBox
+      .find('.list_items_wrap .check_state')
+      .css('display', 'block')
+      .attr('check', 'n')
+      .css('background-color', 'transparent');
+  songsBoxSelector.start();
+  toggleUserSelect(false);
+  $msuicContentBox.find('.list_items_wrap .check_all_song_btn').attr('x', '1');
+}
+function stopSelectSongs() {
+  $msuicContentBox.find('.check_all_menu_wrap').css('display', 'none');
+  $msuicContentBox
+    .find('.list_items_wrap .check_state')
+    .css('display', 'none')
+    .attr('check', 'n')
+    .css('background-color', 'transparent');
+
+  songsBoxSelector.stop();
+  toggleUserSelect();
   $msuicContentBox.find('.list_items_wrap .check_all_song_btn').attr('x', '1');
 }
 // 播放歌单
@@ -2010,11 +2092,11 @@ $msuicContentBox
     }
     _msg.botMsg(`选中：${num}项`);
   })
-  .on('click', '.cancel_btn', switchSongChecked)
+  .on('click', '.cancel_btn', stopSelectSongs)
   .on('click', '.share_all_song_btn', function (e) {
     const arr = getCheckSongs().map((item) => item.id);
     if (arr.length === 0) return;
-    shareSongList(e, arr, switchSongChecked);
+    shareSongList(e, arr, stopSelectSongs);
   })
   .on('click', '.download_song_btn', function () {
     const arr = getCheckSongs();
@@ -2030,7 +2112,7 @@ $msuicContentBox
       }, []),
       'music'
     );
-    switchSongChecked();
+    stopSelectSongs();
   })
   .on(
     'click',
@@ -2107,7 +2189,7 @@ $msuicContentBox
           close();
           // 选中添加到播放列表
           addSongToPlayList(e, arr);
-          switchSongChecked();
+          stopSelectSongs();
         } else if (id === '2') {
           moveSongToList(
             e,
@@ -2173,9 +2255,8 @@ $msuicContentBox
   })
   .on('contextmenu', '.song_item', function (e) {
     e.preventDefault();
-    if (isMobile()) return;
-    if ($songItemsBox._check) return;
-    switchSongChecked();
+    if (isMobile() || isSelectingSongs()) return;
+    startSelectSongs();
     checkedSong(this.querySelector('.check_state'));
   })
   .on('click', '.sort_songs', hdSongsSort)
@@ -2243,6 +2324,9 @@ function checkedSong(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
+  updateSelectSongsInfo();
+}
+function updateSelectSongsInfo() {
   const $checks = $msuicContentBox.find('.list_items_wrap .check_state'),
     $checkArr = $checks.filter((_, item) => $(item).attr('check') === 'y');
   _msg.botMsg(`选中：${$checkArr.length}项`);
@@ -2252,8 +2336,8 @@ longPress(
   $msuicContentBox.find('.list_items_wrap')[0],
   '.song_item',
   function () {
-    if ($songItemsBox._check) return;
-    switchSongChecked();
+    if (isSelectingSongs() || songsMouseElementTracker.active) return;
+    startSelectSongs();
     checkedSong(this.querySelector('.check_state'));
   }
 );
@@ -2294,41 +2378,67 @@ function playSongList(id, e) {
   }
 }
 // 移动歌曲
-(function () {
-  let fromDom = null;
-  $msuicContentBox
-    .find('.list_items_wrap')
-    .on('dragstart', '.song_item', function () {
-      fromDom = this;
-    })
-    .on('drop', '.song_item', function () {
-      if (fromDom) {
-        const fid = $(fromDom).attr('data-id'),
-          tid = $(this).attr('data-id'),
-          id = $songListWrap.listId,
-          index = musicList.findIndex((item) => item.id === id);
-        if (
-          curSongListSort === 'default' &&
-          fid != tid &&
-          index > 0 &&
-          id !== 'all'
-        ) {
-          reqPlayerMoveSong({ listId: id, fromId: fid, toId: tid })
-            .then((result) => {
-              if (result.code === 1) {
-                getSongList();
-                return;
-              }
-            })
-            .catch(() => {});
+const songsMouseElementTracker = new MouseElementTracker(
+  $msuicContentBox.find('.list_items_wrap')[0],
+  {
+    delay: isMobile() ? 500 : 0,
+    onStart({ e }) {
+      const item = _getTarget($msuicContentBox[0], e, '.song_item');
+      if (
+        !item ||
+        isSelectingSongs() ||
+        $songListWrap.listId === 'all' ||
+        curSongListSort !== 'default' ||
+        (isMobile() && !e.target.className.includes('logo'))
+      )
+        return true;
+      $songItemsBox.songsfromDom = item;
+      const obj = getSongInfo(item.dataset.id);
+      songsMouseElementTracker.changeInfo(`${obj.artist} - ${obj.title}`);
+    },
+    onMove() {
+      allowSlide.update();
+    },
+    onEnd({ dropElement }) {
+      if (
+        !isSelectingSongs() &&
+        $songItemsBox.songsfromDom &&
+        $songListWrap.listId !== 'all' &&
+        curSongListSort === 'default'
+      ) {
+        const to = dropElement
+          ? _getTarget(
+              $msuicContentBox[0],
+              { target: dropElement },
+              '.song_item'
+            )
+          : null;
+        if (to) {
+          const tid = to.dataset.id;
+          const fid = $songItemsBox.songsfromDom.dataset.id;
+          const id = $songListWrap.listId;
+          const index = musicList.findIndex((item) => item.id === id);
+          if (
+            curSongListSort === 'default' &&
+            fid != tid &&
+            index > 0 &&
+            id !== 'all'
+          ) {
+            reqPlayerMoveSong({ listId: id, fromId: fid, toId: tid })
+              .then((result) => {
+                if (result.code === 1) {
+                  getSongList();
+                  return;
+                }
+              })
+              .catch(() => {});
+          }
         }
-        fromDom = null;
+        $songItemsBox.songsfromDom = null;
       }
-    })
-    .on('dragover', '.song_item', function (e) {
-      e.preventDefault();
-    });
-})();
+    },
+  }
+);
 
 // 自动触发定时函数
 function createAutoHide(timemax, el, ell, fn, fn2, fel) {
@@ -2643,18 +2753,31 @@ myResize({
     target.dataset.y = y;
   },
 });
+const allowSlide = {
+  time: 0,
+  update() {
+    this.time = Date.now();
+  },
+  allow() {
+    return Date.now() - this.time > 500;
+  },
+};
 // 歌单
 _mySlide({
   el: '.song_list_wrap',
   right() {
-    musicBackBtn();
+    if (allowSlide.allow()) {
+      musicBackBtn();
+    }
   },
 });
 // 歌单列表
 _mySlide({
   el: '.list_items_wrap',
   right() {
-    musicBackBtn();
+    if (!isSelectingSongs() && allowSlide.allow()) {
+      musicBackBtn();
+    }
   },
 });
 // 播放器底部控制

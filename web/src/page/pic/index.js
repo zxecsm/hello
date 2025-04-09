@@ -23,6 +23,8 @@ import {
   wave,
   darkMode,
   concurrencyTasks,
+  _getTarget,
+  toggleUserSelect,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -44,6 +46,7 @@ import md5 from '../../js/utils/md5';
 import _path from '../../js/utils/path';
 import cacheFile from '../../js/utils/cacheFile';
 import imgPreview from '../../js/plugins/imgPreview';
+import { BoxSelector } from '../../js/utils/boxSelector';
 if (!isLogin()) {
   toLogin();
 }
@@ -193,6 +196,64 @@ if (!isRoot()) {
 function getPicItem(id) {
   return $imgList.list.find((item) => item.id === id);
 }
+const picBoxSelector = new BoxSelector($imgList[0], {
+  selectables: '.img_item',
+  onSelectStart({ e }) {
+    const item = _getTarget($imgList[0], e, '.img_item');
+    if (item) return true;
+  },
+  onSelectEnd() {
+    updateSelectInfo();
+  },
+  onSelectUpdate({ selectedItems, allItems, isKeepOld }) {
+    allItems.forEach((item) => {
+      const needCheck = selectedItems.includes(item);
+      const $cItem = $(item).find('.check_level');
+      const isChecked = $cItem.attr('check') === 'y';
+      if (needCheck && !isChecked) {
+        $cItem
+          .css({
+            'background-color': _d.checkColor,
+          })
+          .attr('check', 'y');
+      } else if (!needCheck && isChecked && !isKeepOld) {
+        $cItem
+          .css({
+            'background-color': 'transparent',
+          })
+          .attr('check', 'n');
+      }
+    });
+  },
+});
+picBoxSelector.stop();
+function isSelecting() {
+  return !$footer.is(':hidden');
+}
+function stopSelect() {
+  $imgList
+    .find('.img_item .check_level')
+    .css('display', 'none')
+    .attr('check', 'n')
+    .css('background-color', 'transparent');
+  $footer.stop().slideUp(_d.speed, () => {
+    picBoxSelector.stop();
+    toggleUserSelect();
+  });
+}
+function startSelect() {
+  $footer
+    .stop()
+    .slideDown(_d.speed, () => {
+      picBoxSelector.start();
+      toggleUserSelect(false);
+    })
+    .find('span')
+    .attr({
+      class: 'iconfont icon-xuanzeweixuanze',
+      check: 'n',
+    });
+}
 $imgList.list = [];
 // 生成列表
 function renderImgList(y) {
@@ -233,8 +294,8 @@ function renderImgList(y) {
             },
           }
         );
+        stopSelect();
         $imgList.html(html).addClass('open');
-        $footer.stop().slideUp(_d.speed);
         if (y) {
           $imgList.scrollTop(0);
         }
@@ -380,10 +441,7 @@ function picMenu(e, pobj, el) {
       } else if (id === '2') {
         close();
         $imgList.find('.check_level').css('display', 'block');
-        $footer.stop().slideDown(_d.speed).find('span').attr({
-          class: 'iconfont icon-xuanzeweixuanze',
-          check: 'n',
-        });
+        startSelect();
         checkedImg(el);
       }
     },
@@ -395,7 +453,7 @@ $imgList
     const $this = $(this);
     const idx = $this.index('.img');
     const arr = [];
-    $imgList.find('.img').each((idx, item) => {
+    $imgList.find('.img').each((_, item) => {
       const $item = $(item);
       const obj = getPicItem($item.parent().attr('data-id'));
       const u1 = `/api/pub/picture/${obj.url}`;
@@ -409,7 +467,7 @@ $imgList
   })
   .on('contextmenu', '.img', function (e) {
     e.preventDefault();
-    if (isMobile()) return;
+    if (isMobile() || isSelecting()) return;
     picMenu(
       e,
       getPicItem($(this).parent().data('id')),
@@ -436,6 +494,9 @@ function checkedImg(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
+  updateSelectInfo();
+}
+function updateSelectInfo() {
   const $imgItem = $imgList.find('.img_item'),
     $checkArr = $imgItem.filter(
       (_, item) => $(item).find('.check_level').attr('check') === 'y'
@@ -454,6 +515,7 @@ function checkedImg(el) {
   }
 }
 longPress($imgList[0], '.img', function (e) {
+  if (isSelecting()) return;
   const ev = e.changedTouches[0];
   picMenu(
     ev,
@@ -557,15 +619,7 @@ $footer
     });
     deletePic(e, arr, false, 1);
   })
-  .on('click', '.f_close', function () {
-    let $imgItem = $imgList.find('.img_item');
-    $imgItem
-      .find('.check_level')
-      .css('display', 'none')
-      .attr('check', 'n')
-      .css('background-color', 'transparent');
-    $footer.stop().slideUp(_d.speed);
-  })
+  .on('click', '.f_close', stopSelect)
   .on('click', 'span', function () {
     let che = $(this).attr('check');
     che === 'y' ? (che = 'n') : (che = 'y');

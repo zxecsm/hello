@@ -9,6 +9,7 @@ import {
   LazyLoad,
   _mySlide,
   myShuffle,
+  toggleUserSelect,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
@@ -39,6 +40,7 @@ import toolTip from '../../../js/plugins/tooltip/index.js';
 import { showSongInfo } from '../../../js/utils/showinfo.js';
 import { _tpl, deepClone } from '../../../js/utils/template.js';
 import { getSearchSongs } from './search.js';
+import { BoxSelector } from '../../../js/utils/boxSelector.js';
 const $playingListWrap = $('.music_player_box .playing_list_mask'),
   $pMusicListBox = $playingListWrap.find('.p_music_list_wrap');
 let playingList = [];
@@ -109,11 +111,41 @@ export function showPlayingList() {
     });
   });
 }
+const playListBoxSelector = new BoxSelector($pMusicListBox.find('.p_foot')[0], {
+  selectables: '.song_item',
+  onSelectStart({ e }) {
+    const item = _getTarget($pMusicListBox[0], e, '.song_item');
+    if (item) return true;
+  },
+  onSelectEnd() {
+    updateSelectInfo();
+  },
+  onSelectUpdate({ selectedItems, allItems, isKeepOld }) {
+    allItems.forEach((item) => {
+      const needCheck = selectedItems.includes(item);
+      const $cItem = $(item).find('.check_state');
+      const isChecked = $cItem.attr('check') === 'y';
+      if (needCheck && !isChecked) {
+        $cItem
+          .css({
+            'background-color': _d.checkColor,
+          })
+          .attr('check', 'y');
+      } else if (!needCheck && isChecked && !isKeepOld) {
+        $cItem
+          .css({
+            'background-color': 'transparent',
+          })
+          .attr('check', 'n');
+      }
+    });
+  },
+});
+playListBoxSelector.stop();
 // 生成播放列表
 export async function renderPlayingList() {
   if ($pMusicListBox.is(':hidden')) return;
-  $pMusicListBox._checked = true;
-  switchPlayingChecked();
+  stopSelect();
   const scObj = getCollectSongs();
   if (!playingList || playingList.length === 0) {
     $pMusicListBox.find('.left').text(`正在播放(0)`);
@@ -200,34 +232,50 @@ const pgnt = pagination($pMusicListBox[0], {
 });
 // 开启/关闭播放列表选中
 function switchPlayingChecked() {
-  if ($pMusicListBox._checked) {
-    $pMusicListBox._checked = false;
-    $pMusicListBox.find('.p_foot_menu').stop().slideUp(_d.speed);
-    $pMusicListBox.find('.check_state').css('display', 'none');
+  if (isCheckedPlayingList()) {
+    stopSelect();
   } else {
-    $pMusicListBox._checked = true;
-    $pMusicListBox
-      .find('.p_foot_menu')
-      .stop()
-      .slideDown(_d.speed)
-      .find('div')
-      .attr({
-        class: 'iconfont icon-xuanzeweixuanze',
-        check: 'n',
-      });
-    $pMusicListBox
-      .find('.check_state')
-      .css({
-        display: 'block',
-        'background-color': 'transparent',
-      })
-      .attr('check', 'n');
+    startSelect();
   }
+}
+function isCheckedPlayingList() {
+  return !$pMusicListBox.find('.p_foot_menu').is(':hidden');
+}
+function stopSelect() {
+  $pMusicListBox
+    .find('.p_foot_menu')
+    .stop()
+    .slideUp(_d.speed, () => {
+      playListBoxSelector.stop();
+      toggleUserSelect();
+    });
+  $pMusicListBox.find('.check_state').css('display', 'none');
+}
+function startSelect() {
+  $pMusicListBox
+    .find('.p_foot_menu')
+    .stop()
+    .slideDown(_d.speed, () => {
+      playListBoxSelector.start();
+      toggleUserSelect(false);
+    })
+    .find('div')
+    .attr({
+      class: 'iconfont icon-xuanzeweixuanze',
+      check: 'n',
+    });
+  $pMusicListBox
+    .find('.check_state')
+    .css({
+      display: 'block',
+      'background-color': 'transparent',
+    })
+    .attr('check', 'n');
 }
 // 长按选中
 longPress($pMusicListBox.find('.p_foot')[0], '.song_item', function () {
-  if (!$pMusicListBox._checked) {
-    switchPlayingChecked();
+  if (!isCheckedPlayingList()) {
+    startSelect();
     checkedPlayingListItem(this.querySelector('.check_state'));
   }
 });
@@ -273,10 +321,7 @@ $pMusicListBox
     if (arr.length === 0) return;
     songCollect(arr);
   })
-  .on('click', '.close', function () {
-    $pMusicListBox._checked = true;
-    switchPlayingChecked();
-  })
+  .on('click', '.close', stopSelect)
   .on('click', '.clear_playing_list', function () {
     if (playingList.length === 0) return;
     playingList = [];
@@ -311,6 +356,9 @@ function checkedPlayingListItem(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
+  updateSelectInfo();
+}
+function updateSelectInfo() {
   const $item = $pMusicListBox.find('.song_item');
   const $checkArr = $item.filter((_, item) => {
     const $item = $(item);
@@ -348,11 +396,9 @@ $pMusicListBox
   })
   .on('contextmenu', '.song_item', function (e) {
     e.preventDefault();
-    if (isMobile()) return;
-    if (!$pMusicListBox._checked) {
-      switchPlayingChecked();
-      checkedPlayingListItem(this.querySelector('.check_state'));
-    }
+    if (isMobile() || isCheckedPlayingList()) return;
+    startSelect();
+    checkedPlayingListItem(this.querySelector('.check_state'));
   })
   .on('mouseenter', '.song_item', function () {
     const $this = $(this);
@@ -445,8 +491,7 @@ export function playingListHighlight(isPosition) {
   if (idx < 0) return;
   const cur = $song_item.eq(idx);
   if (isPosition) {
-    const sp =
-      $pMusicListBox.find('.p_foot').scrollTop() + cur.position().top - 42;
+    const sp = $pMusicListBox.find('.p_foot').scrollTop() + cur.position().top;
     $pMusicListBox.find('.p_foot').scrollTop(sp);
   }
   cur.addClass('active').find('.play_gif').addClass('show');
@@ -468,6 +513,7 @@ $playingListWrap.on('click', function (e) {
 _mySlide({
   el: '.playing_list_mask',
   right() {
+    if (isCheckedPlayingList()) return;
     $pMusicListBox.stop().slideUp(300, () => {
       $pMusicListBox.find('.p_foot').html('');
       $playingListWrap.stop().fadeOut(100);

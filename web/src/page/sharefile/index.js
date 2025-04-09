@@ -34,6 +34,7 @@ import {
   userLogoMenu,
   wrapInput,
   loadImg,
+  _mySlide,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
@@ -716,3 +717,13 @@ $header
     }
   })
   .on('click', '.h_sort_btn', hdFileSort);
+// 手势右划后退
+_mySlide({
+  el: '.content_wrap',
+  right() {
+    curmb.hashRouter.back();
+  },
+  left() {
+    curmb.hashRouter.forward();
+  },
+});

@@ -1,7 +1,6 @@
 import bus from '../../../js/utils/bus';
 import _path from '../../../js/utils/path';
 import { _tpl } from '../../../js/utils/template';
-import { _mySlide, isMobile } from '../../../js/utils/utils';
 import HashRouter from './hashRouter';
 import './index.less';
 
@@ -101,35 +100,6 @@ function hdClick(e) {
   }
 }
 
-// 手势右划后退
-_mySlide({
-  el: '.content_wrap',
-  right() {
-    if (isMobile()) {
-      hashRouter.back();
-    }
-  },
-  left() {
-    if (isMobile()) {
-      hashRouter.forward();
-    }
-  },
-});
-
-_mySlide({
-  el: '.crumb_box',
-  right() {
-    if (isMobile()) {
-      hashRouter.back();
-    }
-  },
-  left() {
-    if (isMobile()) {
-      hashRouter.forward();
-    }
-  },
-});
-
 function hdInputBlur() {
   const val = _path.normalize(this.value.trim()) || '/';
   if (val === hashRouter.getRoute()) {
@@ -174,6 +144,7 @@ const curmb = {
   bind,
   getHash,
   toGo,
+  hashRouter,
 };
 
 export default curmb;
