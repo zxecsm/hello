@@ -462,6 +462,7 @@ export class MouseElementTracker {
     this.currentY = clientY;
 
     this.timer = setTimeout(() => {
+      this.clear();
       let isStop = false;
       if (
         Math.abs(this.currentX - clientX) > 5 ||
@@ -513,7 +514,7 @@ export class MouseElementTracker {
     if (this.infoBox) {
       Object.assign(this.infoBox.style, {
         left: `${x + 20}px`,
-        top: `${y + 20}px`,
+        top: `${y - 20}px`,
         padding: '10px',
         opacity: 1,
       });
@@ -552,6 +553,7 @@ export class MouseElementTracker {
       fontSize: '20px',
       lineHeight: '1.5',
       opacity: 0,
+      transform: 'translateY(-100%)',
     });
     el.innerText = this.content;
     return el;

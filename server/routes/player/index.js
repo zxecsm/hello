@@ -653,7 +653,11 @@ route.post('/import', async (req, res) => {
 
     syncUpdateData(req, 'music');
 
-    _success(res, '导入歌曲成功')(req, songLists[idx].name, 1);
+    _success(res, '导入歌曲成功')(
+      req,
+      `${songLists[idx].name}-${list.length}`,
+      1
+    );
   } catch (error) {
     _err(res)(req, error);
   }

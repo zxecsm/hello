@@ -114,7 +114,7 @@ import { _getData } from '../utils/utils';
     };
 
     this.die = function () {
-      this.element.parentNode.removeChild(this.element);
+      this.element?.parentNode.removeChild(this.element);
     };
   }
 
