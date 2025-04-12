@@ -147,10 +147,16 @@ $miniLrcWrap
   .on('click', '.top', switchMiniLrcTopState);
 $miniPlayer
   .on('click', '.play_btn', changePlayState)
-  .on('click', '.next_btn', playNextSong)
+  .on('click', '.next_btn', () => {
+    playNextSong();
+    showWillPlaySongInfo('next');
+  })
   .on('mouseenter', '.next_btn', showWillPlaySongInfo.bind(null, 'next'))
   .on('mouseleave', '.next_btn', toolTip.hide)
-  .on('click', '.prev_btn', playPrevSong)
+  .on('click', '.prev_btn', () => {
+    playPrevSong();
+    showWillPlaySongInfo('prev');
+  })
   .on('mouseenter', '.prev_btn', showWillPlaySongInfo.bind(null, 'prev'))
   .on('mouseleave', '.prev_btn', toolTip.hide)
   .on('click', '.top', switchMiniPlayerTopState)

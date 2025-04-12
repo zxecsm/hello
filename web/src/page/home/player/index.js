@@ -2506,7 +2506,10 @@ export function highlightPlayingSong(isPosition) {
 }
 $musicFootBox
   .on('click', '.right_btns .playing_list_btn', showPlayingList)
-  .on('click', '.right_btns .next_btn', playNextSong)
+  .on('click', '.right_btns .next_btn', () => {
+    playNextSong();
+    showWillPlaySongInfo('next');
+  })
   .on(
     'mouseenter',
     '.right_btns .next_btn',

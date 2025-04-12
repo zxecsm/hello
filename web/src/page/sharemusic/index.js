@@ -340,10 +340,16 @@ $lrcFootBtnWrap
       });
     });
   })
-  .on('click', '.prev_play_btn', playPrevSong)
+  .on('click', '.prev_play_btn', () => {
+    playPrevSong();
+    showWillPlaySongInfo('prev');
+  })
   .on('mouseenter', '.prev_play_btn', showWillPlaySongInfo.bind(null, 'prev'))
   .on('mouseleave', '.prev_play_btn', toolTip.hide)
-  .on('click', '.next_play', playNextSong)
+  .on('click', '.next_play', () => {
+    playNextSong();
+    showWillPlaySongInfo('next');
+  })
   .on('mouseenter', '.next_play', showWillPlaySongInfo.bind(null, 'next'))
   .on('mouseleave', '.next_play', toolTip.hide)
   .on('click', '.play_btn', playState);

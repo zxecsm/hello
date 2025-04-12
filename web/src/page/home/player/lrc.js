@@ -241,8 +241,14 @@ export function changePlayState() {
 $lrcFootBtnWrap
   .on('click', '.random_play_btn', switchPlayMode)
   .on('click', '.playing_list_btn', showPlayingList)
-  .on('click', '.prev_play_btn', playPrevSong)
-  .on('click', '.next_play', playNextSong)
+  .on('click', '.prev_play_btn', () => {
+    playPrevSong();
+    showWillPlaySongInfo('prev');
+  })
+  .on('click', '.next_play', () => {
+    playNextSong();
+    showWillPlaySongInfo('next');
+  })
   .on('click', '.play_btn', changePlayState)
   .on('mouseenter', '.prev_play_btn', showWillPlaySongInfo.bind(null, 'prev'))
   .on('mouseenter', '.next_play', showWillPlaySongInfo.bind(null, 'next'))
