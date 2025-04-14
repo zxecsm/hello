@@ -1130,7 +1130,7 @@ export function isImgFile(name) {
   );
 }
 // 文件logo类型
-export function fileLogoType(fname) {
+export function fileLogoType(fname, size) {
   if (isImgFile(fname)) {
     return 'icon-tupian';
   } else if (/(\.rmvb|\.3gp|\.mp4|\.m4v|\.avi|\.mkv|\.flv)$/gi.test(fname)) {
@@ -1140,6 +1140,9 @@ export function fileLogoType(fname) {
   } else if (/(\.rar|\.7z|\.zip|\.tar|\.gz)$/gi.test(fname)) {
     return 'icon-yasuobao2';
   } else {
+    if (size === 0) {
+      return 'icon-24gl-fileEmpty';
+    }
     return 'icon-24gl-fileText';
   }
 }

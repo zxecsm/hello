@@ -229,7 +229,7 @@ async function renderList(top) {
     <template v-if="total > 0">
       <ul v-for="{type, name, size, time, id} in list" class="file_item" :data-id="id">
         <li class="check_state" check="n"></li>
-        <li cursor="y" class="logo iconfont {{hdLogo(name,type) || 'is_img'}}"></li>
+        <li cursor="y" class="logo iconfont {{hdLogo(name,type,size) || 'is_img'}}"></li>
         <li cursor="y" class="name">
           <span class="text">{{getText(name,type).a}}<span class="suffix">{{getText(name,type).b}}</span>
           </span>
@@ -245,11 +245,11 @@ async function renderList(top) {
       total: fileListData.total,
       formatDate,
       list: fileListData.data,
-      hdLogo(name, type) {
+      hdLogo(name, type, size) {
         let logo = '';
         if (!isImgFile(name)) {
           if (type === 'file') {
-            logo = fileLogoType(name);
+            logo = fileLogoType(name, size);
           } else {
             logo = 'icon-24gl-folder';
           }

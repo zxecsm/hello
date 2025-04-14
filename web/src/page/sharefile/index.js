@@ -159,7 +159,10 @@ function getShareData(close, loading = { start() {}, end() {} }) {
           } else {
             $fileBox
               .find('.logo')
-              .attr('class', `logo iconfont ${fileLogoType(data.name)}`);
+              .attr(
+                'class',
+                `logo iconfont ${fileLogoType(data.name, data.size)}`
+              );
           }
           $shareInfo.addClass('open');
           $fileBox.addClass('open');
@@ -281,7 +284,7 @@ async function renderList(top) {
     <template v-if="total > 0">
       <ul v-for="{type,name,size,time,id} in paging.list" class="file_item" :data-id="id">
         <li class="check_state" check="n"></li>
-        <li cursor="y" class="logo iconfont {{getLogo(name,type) || 'is_img'}}"></li>
+        <li cursor="y" class="logo iconfont {{getLogo(name,type,size) || 'is_img'}}"></li>
         <li cursor="y" class="name"><span class="text">{{getText(name,type).a}}<span class="suffix">{{getText(name,type).b}}</span></span></li>
         <li class="size">{{size ? formatBytes(size) : '--'}}</li>
         <li class="date">{{formatDate({template: '{0}-{1}-{2} {3}:{4}',timestamp: time})}}</li>
@@ -296,11 +299,11 @@ async function renderList(top) {
       paging: { list: fileListData.data },
       formatDate,
       formatBytes,
-      getLogo(name, type) {
+      getLogo(name, type, size) {
         let logo = '';
         if (!isImgFile(name)) {
           if (type === 'file') {
-            logo = fileLogoType(name);
+            logo = fileLogoType(name, size);
           } else {
             logo = 'icon-24gl-folder';
           }
