@@ -30,6 +30,7 @@ import {
   isRoot,
   wave,
   getScreenSize,
+  _setTimeout,
 } from '../../js/utils/utils.js';
 import _d from '../../js/common/config';
 import _msg from '../../js/plugins/message';
@@ -147,6 +148,7 @@ import _path from '../../js/utils/path.js';
 import percentBar from '../../js/plugins/percentBar/index.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
 import _pop from '../../js/plugins/popConfirm/index.js';
+import { reqRootSysStatus } from '../../api/root.js';
 const $pageBg = $('.page_bg'),
   $document = $(document),
   $userLogoBtn = $('.user_logo_btn'),
@@ -157,7 +159,8 @@ const $pageBg = $('.page_bg'),
   $chatListBox = $chatRoomWrap.find('.chat_list_box'),
   $showChatRoomBtn = $('.show_chat_room_btn'),
   $randomChangeBgBtn = $('.random_change_bg_btn'),
-  $searchBoxBtn = $('.search_box_btn');
+  $searchBoxBtn = $('.search_box_btn'),
+  $sysStatus = $('.sys_status');
 let curFilterBg = _getData('filterbg');
 let userInfo = {};
 // 设置用户数据
@@ -1031,7 +1034,36 @@ function handleAllowLoginMsg(data) {
     }
   );
 }
-
+function getPercentColor(percent) {
+  if (percent <= 60) {
+    return 'var(--message-success-color)';
+  } else if (percent <= 80) {
+    return 'var(--message-warning-color)';
+  } else {
+    return 'var(--message-error-color)';
+  }
+}
+if (isRoot()) {
+  $sysStatus.fadeIn();
+  (function updateSysStatus() {
+    reqRootSysStatus()
+      .then((res) => {
+        const { cpu = 0, memory = { usedPercent: 0 } } = res.data;
+        $sysStatus
+          .find('.cpu')
+          .text(parseInt(cpu) + '%')
+          .css('color', getPercentColor(cpu));
+        $sysStatus
+          .find('.mem')
+          .text(parseInt(memory.usedPercent) + '%')
+          .css('color', getPercentColor(memory.usedPercent));
+        _setTimeout(updateSysStatus, 1000);
+      })
+      .catch(() => {
+        _setTimeout(updateSysStatus, 5000);
+      });
+  })();
+}
 //同步数据
 realtime.init('home').add((res) => {
   res.forEach((item) => {

@@ -40,6 +40,7 @@ import { deleteUser } from '../user/user.js';
 import _path from '../../utils/path.js';
 import { cleanFavicon, cleanSiteInfo } from '../bmk/bmk.js';
 import _crypto from '../../utils/crypto.js';
+import { getCpuUsage, getMemoryUsage } from '../../utils/sys.js';
 
 const route = express.Router();
 
@@ -672,6 +673,18 @@ route.post('/create-account', async (req, res) => {
       `${username}-${account}`,
       1
     );
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 系统状态
+route.get('/sys-status', async (req, res) => {
+  try {
+    _success(res, 'ok', {
+      cpu: getCpuUsage(),
+      memory: getMemoryUsage(),
+    });
   } catch (error) {
     _err(res)(req, error);
   }
