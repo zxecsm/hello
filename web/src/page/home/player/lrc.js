@@ -71,7 +71,7 @@ import notifyMusicControlPanel from './notifyMusicControlPanel.js';
 import _path from '../../../js/utils/path.js';
 import { getSearchSongs } from './search.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
-import percentBar from '../../../js/plugins/percentBar/index.js';
+import { percentBar } from '../../../js/plugins/percentBar/index.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
 const $myAudio = $(new Audio()),
   $musicLrcWrap = $('.music_player_box .music_lrc_wrap'),

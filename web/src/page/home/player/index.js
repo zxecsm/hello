@@ -141,7 +141,7 @@ import notifyMusicControlPanel from './notifyMusicControlPanel.js';
 import md5 from '../../../js/utils/md5.js';
 import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
-import percentBar from '../../../js/plugins/percentBar/index.js';
+import { percentBar } from '../../../js/plugins/percentBar/index.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
 import {
   BoxSelector,

@@ -145,7 +145,10 @@ import {
 import { reqCountList } from '../../api/count.js';
 import { deepClone } from '../../js/utils/template.js';
 import _path from '../../js/utils/path.js';
-import percentBar from '../../js/plugins/percentBar/index.js';
+import {
+  CircularProgressBar,
+  percentBar,
+} from '../../js/plugins/percentBar/index.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
 import _pop from '../../js/plugins/popConfirm/index.js';
 import { reqRootSysStatus } from '../../api/root.js';
@@ -1044,19 +1047,22 @@ function getPercentColor(percent) {
   }
 }
 if (isRoot()) {
-  $sysStatus.fadeIn();
+  $sysStatus.css('display', 'flex');
+  const options = {
+    color: 'var(--message-success-color)',
+    bgColor: 'var(--bg-color-o1)',
+    strokeWidth: 8,
+  };
+  const cpuBar = new CircularProgressBar($sysStatus.find('.cpu')[0], options);
+  const memBar = new CircularProgressBar($sysStatus.find('.mem')[0], options);
   (function updateSysStatus() {
     reqRootSysStatus()
       .then((res) => {
         const { cpu = 0, memory = { usedPercent: 0 } } = res.data;
-        $sysStatus
-          .find('.cpu')
-          .text(parseInt(cpu) + '%')
-          .css('color', getPercentColor(cpu));
-        $sysStatus
-          .find('.mem')
-          .text(parseInt(memory.usedPercent) + '%')
-          .css('color', getPercentColor(memory.usedPercent));
+        cpuBar.setProgress(cpu).setColor(getPercentColor(cpu));
+        memBar
+          .setProgress(memory.usedPercent)
+          .setColor(getPercentColor(memory.usedPercent));
         _setTimeout(updateSysStatus, 1000);
       })
       .catch(() => {

@@ -62,11 +62,20 @@ body {
     left: 50%;
     transform: translateX(-50%);
     bottom: 20px;
-    background-color: var(--bg-color-o3);
-    padding: 6px;
+    background-color: var(--bg-color-o2);
+    width: 50%;
+    max-width: 120px;
     border-radius: 6px;
     font-family: codeFont;
     pointer-events: none;
+    flex-flow: row nowrap;
+    font-size: 0.9em;
+    padding: 5px;
+    justify-content: space-between;
+    .cpu,
+    .mem {
+      width: 48%;
+    }
   }
 
   .grassp {

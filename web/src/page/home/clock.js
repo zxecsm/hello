@@ -12,7 +12,7 @@ import {
 import { setZidx } from './popWindow';
 import { hideIframeMask, showIframeMask } from './iframe';
 import _d from '../../js/common/config';
-import percentBar from '../../js/plugins/percentBar';
+import { percentBar } from '../../js/plugins/percentBar';
 const clock = document.querySelector('.clock');
 const domHour = clock.querySelector('.hour');
 const domMin = clock.querySelector('.min');

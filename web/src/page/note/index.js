@@ -46,7 +46,7 @@ import loadingPage from '../../js/plugins/loading/index.js';
 import changeDark from '../../js/utils/changeDark.js';
 import { _tpl } from '../../js/utils/template.js';
 import _path from '../../js/utils/path.js';
-import percentBar from '../../js/plugins/percentBar/index.js';
+import { percentBar } from '../../js/plugins/percentBar/index.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
 const mdWorker = new MdWorker();
 let urlparmes = queryURLParams(myOpen()),

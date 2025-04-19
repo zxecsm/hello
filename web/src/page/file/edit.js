@@ -22,7 +22,7 @@ import changeDark from '../../js/utils/changeDark';
 import _path from '../../js/utils/path';
 import { setEditor } from '../edit/setEditor';
 import _d from '../../js/common/config';
-import percentBar from '../../js/plugins/percentBar';
+import { percentBar } from '../../js/plugins/percentBar';
 import cacheFile from '../../js/utils/cacheFile';
 const $editFile = $('.edit_file');
 const $container = $('#app .container');

@@ -66,7 +66,7 @@ import { initRainCodeSleep } from '../../js/common/codeRain';
 import notifyMusicControlPanel from '../home/player/notifyMusicControlPanel';
 import _path from '../../js/utils/path';
 import { imgCache } from '../../js/utils/imgCache';
-import percentBar from '../../js/plugins/percentBar';
+import { percentBar } from '../../js/plugins/percentBar';
 import imgPreview from '../../js/plugins/imgPreview';
 const urlparmes = queryURLParams(myOpen()),
   shareId = urlparmes.s,

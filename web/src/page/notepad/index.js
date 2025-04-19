@@ -44,7 +44,7 @@ import md5 from '../../js/utils/md5.js';
 import _path from '../../js/utils/path.js';
 import { setEditor } from '../edit/setEditor.js';
 import cacheFile from '../../js/utils/cacheFile.js';
-import percentBar from '../../js/plugins/percentBar/index.js';
+import { percentBar } from '../../js/plugins/percentBar/index.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
 const mdWorker = new MdWorker();
 const $contentWrap = $('.content_wrap'),
