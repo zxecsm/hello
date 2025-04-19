@@ -1,7 +1,7 @@
 import os from 'os';
 
 // 获取 CPU 占用百分比
-export const getCpuUsage = (() => {
+const getRawCpuUsage = (() => {
   // 记录上一次的 CPU 时间
   let prevIdle = 0;
   let prevTotal = 0;
@@ -21,18 +21,18 @@ export const getCpuUsage = (() => {
     // 计算 CPU 使用率
     const totalDiff = totalTick - prevTotal;
     const idleDiff = totalIdle - prevIdle;
-    const cpuUsagePercent = ((totalDiff - idleDiff) / totalDiff) * 100;
 
     // 更新上次的 CPU 时间
     prevIdle = totalIdle;
     prevTotal = totalTick;
 
-    return cpuUsagePercent;
+    if (totalDiff === 0) return 0;
+    return ((totalDiff - idleDiff) / totalDiff) * 100;
   };
 })();
 
 // 获取内存占用百分比
-export const getMemoryUsage = () => {
+const getRawMemoryUsage = () => {
   const total = os.totalmem();
   const free = os.freemem();
   const used = total - free;
@@ -42,4 +42,19 @@ export const getMemoryUsage = () => {
     used,
     usedPercent: (used / total) * 100,
   };
+};
+
+let lastFetchTime = 0;
+let cachedResult = null;
+
+export const getSystemUsage = () => {
+  const now = Date.now();
+  if (cachedResult && now - lastFetchTime < 1000) {
+    return cachedResult;
+  }
+
+  cachedResult = { cpu: getRawCpuUsage(), memory: getRawMemoryUsage() };
+  lastFetchTime = now;
+
+  return cachedResult;
 };
