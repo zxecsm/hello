@@ -1050,7 +1050,7 @@ if (isRoot()) {
   $sysStatus.css('display', 'flex');
   const options = {
     color: 'var(--message-success-color)',
-    bgColor: 'var(--bg-color-o1)',
+    bgColor: '#88888880',
     strokeWidth: 8,
   };
   const cpuBar = new CircularProgressBar($sysStatus.find('.cpu')[0], options);
