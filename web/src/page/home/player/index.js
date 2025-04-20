@@ -1054,6 +1054,12 @@ async function renderSongs(gao) {
   if (ind < 0) return;
   const songListInfo = deepClone(musicList[ind]);
   if (listId !== 'all' && ind > 0) {
+    if (onlyShowMv) {
+      songListInfo.item = songListInfo.item.filter((item) => {
+        return item.mv;
+      });
+      songListInfo.len = songListInfo.item.length;
+    }
     // 排序
     if (curSongListSort === 'artist') {
       songListInfo.item = arrSortMinToMax(songListInfo.item, 'artist_pinyin');
@@ -1116,7 +1122,7 @@ async function renderSongs(gao) {
       <div class="list_total_num">{{listId === 'all' ? '一共' : '播放全部'}}
         <span>({{songListInfo.len}})</span>
       </div>
-      <div v-if="listId === 'all'" cursor="y" class="show_mv_list_btn"><i class="iconfont icon-shipin2"></i></div>
+      <div v-if="ind > 0" cursor="y" class="show_mv_list_btn"><i class="iconfont icon-shipin2"></i></div>
       <div v-if="listId === 'all'" cursor="y" class="random_song_list_btn"><i class="iconfont icon-suiji"></i></div>
       <div v-if="ind > 2 || isRoot()" cursor="y" class="edit_song_list_btn"><i class="iconfont icon-bianji"></i></div>
       <div v-if="ind === 2" cursor="y" class="upload_song_btn"><i class="iconfont icon-upload"></i></div>
@@ -2046,11 +2052,13 @@ $msuicContentBox
   })
   .on('click', '.random_song_list_btn', playRandomList)
   .on('click', '.show_mv_list_btn', () => {
+    onlyShowMv = onlyShowMv ? 0 : 1;
+    songPageNo = 1;
+    $msuicContentBox.find('.list_items_wrap')[0].scrollTop = 0;
     if ($songListWrap.listId === 'all') {
-      onlyShowMv = onlyShowMv ? 0 : 1;
-      $msuicContentBox.find('.list_items_wrap')[0].scrollTop = 0;
-      songPageNo = 1;
       getSongs();
+    } else {
+      renderSongs();
     }
   })
   .on('click', '.share_song_list_btn', function (e) {
@@ -2302,6 +2310,7 @@ $msuicContentBox
       const page = Math.ceil((idx + 1) / musicPageSize);
       if (page != songPageNo) {
         songPageNo = page;
+        onlyShowMv = 0;
         renderSongs(1);
         return;
       }
