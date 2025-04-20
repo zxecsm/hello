@@ -2293,6 +2293,7 @@ $msuicContentBox
         return;
       }
       playId = setPlayingSongInfo().id;
+      onlyShowMv = 0;
       getSongs(1);
       playId = '';
       return;

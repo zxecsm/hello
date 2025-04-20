@@ -365,6 +365,10 @@ route.get('/list', async (req, res) => {
     }
 
     if (id === 'all') {
+      if (playId) {
+        onlyMv = 0;
+      }
+
       pageNo = parseInt(pageNo);
       pageSize = parseInt(pageSize);
       onlyMv = parseInt(onlyMv);
