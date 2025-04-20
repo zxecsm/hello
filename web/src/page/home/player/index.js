@@ -2310,7 +2310,6 @@ $msuicContentBox
       const page = Math.ceil((idx + 1) / musicPageSize);
       if (page != songPageNo) {
         songPageNo = page;
-        onlyShowMv = 0;
         renderSongs(1);
         return;
       }
