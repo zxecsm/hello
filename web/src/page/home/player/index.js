@@ -2048,6 +2048,8 @@ $msuicContentBox
   .on('click', '.show_mv_list_btn', () => {
     if ($songListWrap.listId === 'all') {
       onlyShowMv = onlyShowMv ? 0 : 1;
+      $msuicContentBox.find('.list_items_wrap')[0].scrollTop = 0;
+      songPageNo = 1;
       getSongs();
     }
   })

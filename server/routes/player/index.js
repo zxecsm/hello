@@ -479,8 +479,16 @@ route.get('/list', async (req, res) => {
         delete item.item;
       } else {
         if (item.id === 'all') {
+          let where = ``;
+
+          let offsetWhere = '';
+
+          if (onlyMv === 1) {
+            where = `WHERE mv != '' `;
+            offsetWhere = `WHERE mv != '' `;
+          }
           // 如果是所有歌曲歌单，则在服务端分页处理
-          const total = await getTableRowCount('songs');
+          const total = await getTableRowCount('songs', where);
 
           pageNo = normalizePageNo(total, pageSize, pageNo);
 
@@ -497,15 +505,6 @@ route.get('/list', async (req, res) => {
                               SELECT row_num
                               FROM OrderedSongs
                               WHERE id = ?`;
-
-            let where = ``;
-
-            let offsetWhere = '';
-
-            if (onlyMv === 1) {
-              where = `WHERE mv != '' `;
-              offsetWhere = `WHERE mv != '' `;
-            }
 
             // 排序
             if (sort === 'artist') {
