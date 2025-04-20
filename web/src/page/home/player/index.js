@@ -393,6 +393,7 @@ function musicBackBtn() {
     $msuicContentBox.find('.list_items_wrap').css('transform') === 'none'
   ) {
     $songListWrap.listId = '';
+    onlyShowMv = 0;
     $songListWrap.removeClass('open');
     $msuicContentBox.find('.list_items_wrap').removeClass('open');
     _setTimeout(() => {
@@ -871,6 +872,7 @@ export function getSongList(cb) {
           pageSize: musicPageSize,
           sort: curSongListSort,
           playId,
+          onlyMv: onlyShowMv,
         })
           .then((result) => {
             if (result.code === 1) {
@@ -962,6 +964,7 @@ function getSongs(gao) {
     pageSize: musicPageSize,
     sort: curSongListSort,
     playId,
+    onlyMv: onlyShowMv,
   })
     .then((result) => {
       if (result.code === 1) {
@@ -1040,6 +1043,7 @@ const songsBoxSelector = new BoxSelector(
   }
 );
 songsBoxSelector.stop();
+let onlyShowMv = 0;
 // 生成歌曲列表
 async function renderSongs(gao) {
   songsBoxSelector.stop();
@@ -1112,6 +1116,7 @@ async function renderSongs(gao) {
       <div class="list_total_num">{{listId === 'all' ? '一共' : '播放全部'}}
         <span>({{songListInfo.len}})</span>
       </div>
+      <div v-if="listId === 'all'" cursor="y" class="show_mv_list_btn"><i class="iconfont icon-shipin2"></i></div>
       <div v-if="listId === 'all'" cursor="y" class="random_song_list_btn"><i class="iconfont icon-suiji"></i></div>
       <div v-if="ind > 2 || isRoot()" cursor="y" class="edit_song_list_btn"><i class="iconfont icon-bianji"></i></div>
       <div v-if="ind === 2" cursor="y" class="upload_song_btn"><i class="iconfont icon-upload"></i></div>
@@ -2040,6 +2045,12 @@ $msuicContentBox
     editSongList(e, { name, des, num }, id);
   })
   .on('click', '.random_song_list_btn', playRandomList)
+  .on('click', '.show_mv_list_btn', () => {
+    if ($songListWrap.listId === 'all') {
+      onlyShowMv = onlyShowMv ? 0 : 1;
+      getSongs();
+    }
+  })
   .on('click', '.share_song_list_btn', function (e) {
     const id = $songListWrap.listId;
     const index = musicList.findIndex((item) => item.id === id);

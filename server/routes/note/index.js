@@ -467,7 +467,7 @@ route.post('/edit', async (req, res) => {
 
       syncUpdateData(req, 'trash');
 
-      _success(res, '更新笔记成功')(req, title, 1);
+      _success(res, '更新笔记成功')(req, `${title}-${id}`, 1);
     } else {
       id = nanoid();
 
@@ -483,7 +483,7 @@ route.post('/edit', async (req, res) => {
 
       syncUpdateData(req, 'note');
 
-      _success(res, '新增笔记成功', { id })(req, title, 1);
+      _success(res, '新增笔记成功', { id })(req, `${title}-${id}`, 1);
     }
   } catch (error) {
     _err(res)(req, error);
@@ -534,7 +534,7 @@ route.post('/edit-info', async (req, res) => {
 
     syncUpdateData(req, 'trash');
 
-    _success(res, '更新笔记信息成功')(req, title, 1);
+    _success(res, '更新笔记信息成功')(req, `${title}-${id}`, 1);
   } catch (error) {
     _err(res)(req, error);
   }
@@ -588,16 +588,17 @@ route.post('/set-category', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
+    const categoryStr = category.join('-');
     await updateData(
       'note',
-      { category: category.join('-') },
+      { category: categoryStr },
       `WHERE account = ? AND id = ?`,
       [account, id]
     );
 
     syncUpdateData(req, 'note');
 
-    _success(res, '更新分类成功')(req, id, 1);
+    _success(res, '更新分类成功')(req, `${id}: ${categoryStr}`, 1);
   } catch (error) {
     _err(res)(req, error);
   }
@@ -627,7 +628,7 @@ route.post('/edit-category', async (req, res) => {
 
     syncUpdateData(req, 'category');
 
-    _success(res, '编辑分类标题成功')(req, title, 1);
+    _success(res, '编辑分类标题成功')(req, `${title}-${id}`, 1);
   } catch (error) {
     _err(res)(req, error);
   }

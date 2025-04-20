@@ -57,7 +57,7 @@ route.get('/split-word', async (req, res) => {
       return;
     }
 
-    _success(res, '获取分词成功', getSplitWord(word))(req);
+    _success(res, '获取分词成功', getSplitWord(word))(req, word, 1);
   } catch (error) {
     _err(res)(req, error);
   }

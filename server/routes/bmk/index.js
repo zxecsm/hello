@@ -394,7 +394,7 @@ route.post('/move-group', async (req, res) => {
 
     syncUpdateData(req, 'bookmark');
 
-    _success(res, '移动分组位置成功')(req);
+    _success(res, '移动分组位置成功')(req, `${fromId}=>${toId}`, 1);
   } catch (error) {
     _err(res)(req, error);
   }
@@ -420,7 +420,7 @@ route.post('/move-bmk', async (req, res) => {
 
     syncUpdateData(req, 'bookmark');
 
-    _success(res, '移动书签位置成功')(req);
+    _success(res, '移动书签位置成功')(req, `${groupId}: ${fromId}=>${toId}`, 1);
   } catch (error) {
     _err(res)(req, error);
   }
@@ -691,7 +691,11 @@ route.post('/edit-bmk', async (req, res) => {
 
     syncUpdateData(req, 'bookmark');
 
-    _success(res, '更新书签信息成功')(req, `${title}-${link}-${des}`, 1);
+    _success(res, '更新书签信息成功')(
+      req,
+      `${groupId}: ${id}-${title}-${link}-${des}`,
+      1
+    );
   } catch (error) {
     _err(res)(req, error);
   }
@@ -850,7 +854,11 @@ route.post('/share', async (req, res) => {
 
     syncUpdateData(req, 'sharelist');
 
-    _success(res, '分享分组成功', { id: obj.id })(req, `${title}-${obj.id}`, 1);
+    _success(res, '分享分组成功', { id: obj.id })(
+      req,
+      `${id}: ${title}-${obj.id}-${bms.length}`,
+      1
+    );
   } catch (error) {
     _err(res)(req, error);
   }

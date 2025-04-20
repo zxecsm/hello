@@ -356,6 +356,7 @@ route.get('/list', async (req, res) => {
       pageSize = 50,
       sort = 'default',
       playId = '',
+      onlyMv = 0,
     } = req.query;
 
     if (!validaString(id, 0, fieldLenght.id, 1)) {
@@ -366,6 +367,7 @@ route.get('/list', async (req, res) => {
     if (id === 'all') {
       pageNo = parseInt(pageNo);
       pageSize = parseInt(pageSize);
+      onlyMv = parseInt(onlyMv);
       if (
         !validationValue(sort, [
           'default',
@@ -374,6 +376,7 @@ route.get('/list', async (req, res) => {
           'playCount',
           'collectCount',
         ]) ||
+        !validationValue(onlyMv, [0, 1]) ||
         !validaString(playId, 0, fieldLenght.id, 1) ||
         isNaN(pageNo) ||
         isNaN(pageSize) ||
@@ -499,6 +502,11 @@ route.get('/list', async (req, res) => {
 
             let offsetWhere = '';
 
+            if (onlyMv === 1) {
+              where = `WHERE mv != '' `;
+              offsetWhere = `WHERE mv != '' `;
+            }
+
             // 排序
             if (sort === 'artist') {
               const order = 'ORDER BY artist_pinyin ASC';
@@ -604,7 +612,7 @@ route.get('/export', async (req, res) => {
       return pre;
     }, []);
 
-    await uLog(req, `导出歌单(${songListObj.name})`);
+    await uLog(req, `导出歌单(${songListObj.name}-${id}-${list.length})`);
     res.send(JSON.stringify(list));
   } catch (error) {
     _err(res)(req, error);
@@ -655,7 +663,7 @@ route.post('/import', async (req, res) => {
 
     _success(res, '导入歌曲成功')(
       req,
-      `${songLists[idx].name}-${list.length}`,
+      `${songLists[idx].name}-${id}-${list.length}`,
       1
     );
   } catch (error) {
@@ -903,7 +911,7 @@ route.post('/move-list', async (req, res) => {
 
     syncUpdateData(req, 'music');
 
-    _success(res, '歌单移动位置成功')(req);
+    _success(res, '歌单移动位置成功')(req, `${fromId}-${toId}`, 1);
   } catch (error) {
     _err(res)(req, error);
   }
@@ -933,7 +941,7 @@ route.post('/delete-list', async (req, res) => {
 
       syncUpdateData(req, 'music');
 
-      _success(res, '删除歌单成功')(req, songListTitle, 1);
+      _success(res, '删除歌单成功')(req, `${songListTitle}-${id}`, 1);
       return;
     }
 
@@ -964,7 +972,7 @@ route.post('/edit-list', async (req, res) => {
 
     const idx = list.findIndex((item) => item.id === id);
 
-    const log = `${name}${des ? `-${des}` : ''}`;
+    const log = `${id}-${name}${des ? `-${des}` : ''}`;
 
     if (id === 'all' && req._hello.isRoot) {
       _d.songList[2].name = name;
@@ -1030,7 +1038,7 @@ route.post('/edit-song', async (req, res) => {
     }
 
     if (!req._hello.isRoot) {
-      _err(res, '无权更新歌曲信息')(req, `${artist}-${title}`, 1);
+      _err(res, '无权更新歌曲信息')(req, `${id}-${artist}-${title}`, 1);
       return;
     }
 
@@ -1091,7 +1099,7 @@ route.post('/edit-song', async (req, res) => {
 
     syncUpdateData(req, 'music');
 
-    _success(res, '更新歌曲信息成功')(req, `${artist}-${title}`, 1);
+    _success(res, '更新歌曲信息成功')(req, `${id}-${artist}-${title}`, 1);
   } catch (error) {
     _err(res)(req, error);
   }
@@ -1131,7 +1139,11 @@ route.post('/add-list', async (req, res) => {
 
     syncUpdateData(req, 'music');
 
-    _success(res, '添加歌单成功')(req, `${name}${des ? `-${des}` : ''}`, 1);
+    _success(res, '添加歌单成功')(
+      req,
+      `${id}-${name}${des ? `-${des}` : ''}`,
+      1
+    );
   } catch (error) {
     _err(res)(req, error);
   }
@@ -1157,7 +1169,7 @@ route.post('/move-song', async (req, res) => {
 
     syncUpdateData(req, 'music');
 
-    _success(res, '歌曲移动位置成功')(req);
+    _success(res, '歌曲移动位置成功')(req, `${listId}: ${fromId}=>${toId}`, 1);
   } catch (error) {
     _err(res)(req, error);
   }
@@ -1421,7 +1433,7 @@ route.post('/delete-mv', async (req, res) => {
 
     syncUpdateData(req, 'music');
 
-    _success(res, '删除MV成功')(req, id, 1);
+    _success(res, '删除MV成功');
   } catch (error) {
     _err(res)(req, error);
   }
@@ -1534,7 +1546,7 @@ route.post('/edit-lrc', async (req, res) => {
 
     _success(res, '更新歌词成功')(
       req,
-      `${musicinfo.artist}-${musicinfo.title}`,
+      `${id}-${musicinfo.artist}-${musicinfo.title}`,
       1
     );
   } catch (error) {
@@ -1580,7 +1592,11 @@ route.post('/share', async (req, res) => {
 
     syncUpdateData(req, 'sharelist');
 
-    _success(res, '分享歌曲成功', { id })(req, `${title}-${id}`, 1);
+    _success(res, '分享歌曲成功', { id })(
+      req,
+      `${title}-${id}-${list.length}`,
+      1
+    );
   } catch (error) {
     _err(res)(req, error);
   }
@@ -1682,7 +1698,7 @@ route.post('/up', async (req, res) => {
         },
       ]);
 
-      _success(res, '上传歌曲成功')(req, `${artist}-${title}`, 1);
+      _success(res, '上传歌曲成功')(req, `${songId}-${artist}-${title}`, 1);
     } else if (type === 'cover') {
       if (!validaString(id, 1, fieldLenght.id, 1)) {
         paramErr(res, req);
@@ -1769,7 +1785,7 @@ route.post('/up', async (req, res) => {
 
       syncUpdateData(req, 'music');
 
-      _success(res, '上传封面成功')(req, `${artist}-${title}`, 1);
+      _success(res, '上传封面成功')(req, `${id}-${artist}-${title}`, 1);
     } else if (type === 'mv') {
       if (!validaString(id, 1, fieldLenght.id, 1)) {
         paramErr(res, req);
@@ -1819,7 +1835,7 @@ route.post('/up', async (req, res) => {
           [id]
         );
       }
-      _success(res, '上传MV成功')(req, `${artist}-${title}`, 1);
+      _success(res, '上传MV成功')(req, `${id}-${artist}-${title}`, 1);
     }
   } catch (error) {
     _err(res)(req, error);
@@ -1887,10 +1903,11 @@ route.post('/save-share', async function (req, res) {
       .slice(0, maxSonglistCount);
 
     const songList = await getMusicList(account);
+    const id = nanoid();
 
     songList.push({
       name,
-      id: nanoid(),
+      id,
       item: data,
       des: '',
     });
@@ -1898,7 +1915,7 @@ route.post('/save-share', async function (req, res) {
 
     syncUpdateData(req, 'music');
 
-    _success(res, '保存歌单成功')(req, `${data.length}=>${name}`, 1);
+    _success(res, '保存歌单成功')(req, `${data.length}=>${name}-${id}`, 1);
   } catch (error) {
     _err(res)(req, error);
   }

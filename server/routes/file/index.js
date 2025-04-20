@@ -1453,7 +1453,7 @@ route.post('/download', async (req, res) => {
       if (responseData) responseData.destroy();
       if (writer) writer.destroy();
       taskState.delete(taskKey);
-      await errLog(req, `下载文件失败(${error})`);
+      await errLog(req, `下载文件失败: ${url}(${error})`);
       errorNotifyMsg(req, `下载文件失败`);
     }
 
