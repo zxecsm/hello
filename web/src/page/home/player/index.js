@@ -2412,6 +2412,7 @@ const songsMouseElementTracker = new MouseElementTracker(
         isSelectingSongs() ||
         $songListWrap.listId === 'all' ||
         curSongListSort !== 'default' ||
+        onlyShowMv === 1 ||
         (isMobile() && !e.target.className.includes('logo'))
       )
         return true;
@@ -2427,7 +2428,8 @@ const songsMouseElementTracker = new MouseElementTracker(
         !isSelectingSongs() &&
         $songItemsBox.songsfromDom &&
         $songListWrap.listId !== 'all' &&
-        curSongListSort === 'default'
+        curSongListSort === 'default' &&
+        onlyShowMv === 0
       ) {
         const to = dropElement
           ? _getTarget(
