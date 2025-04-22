@@ -502,14 +502,18 @@ export function replaceObjectValue(obj, msg) {
     const res = Array.isArray(obj) ? [] : {};
     for (let key in obj) {
       if (obj.hasOwnProperty(key)) {
-        if (typeof obj[key] === 'object') {
-          if (obj[key] === null) {
+        const value = obj[key];
+
+        if (typeof value === 'object') {
+          if (value === null) {
             res[key] = null;
           } else {
-            res[key] = fn(obj[key]);
+            res[key] = fn(value);
           }
+        } else if (typeof value === 'string') {
+          res[key] = tplReplace(value, { msg });
         } else {
-          res[key] = tplReplace(obj[key], { msg });
+          res[key] = value;
         }
       }
     }
@@ -652,6 +656,7 @@ export function getIn(target, keys) {
 }
 
 export function tplReplace(tpl, data) {
+  // console.log(tpl, data);
   return tpl.replace(/\{\{(.*?)\}\}/g, (_, k) => {
     return (
       getIn(
