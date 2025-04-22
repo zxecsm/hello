@@ -656,7 +656,6 @@ export function getIn(target, keys) {
 }
 
 export function tplReplace(tpl, data) {
-  // console.log(tpl, data);
   return tpl.replace(/\{\{(.*?)\}\}/g, (_, k) => {
     return (
       getIn(
