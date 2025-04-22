@@ -49,6 +49,7 @@ import {
   becomeFriends,
   heperMsgAndForward,
   getChatUserList,
+  hdForwardToLink,
 } from './chat.js';
 
 import _connect from '../../utils/connect.js';
@@ -1052,16 +1053,27 @@ route.post('/forward-msg-link', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
+    const forward_msg_link = JSON.stringify({
+      type,
+      link,
+      body,
+      header,
+    });
+
+    if (state === 1) {
+      try {
+        await hdForwardToLink(req, [{ forward_msg_link }], [], '测试消息');
+      } catch (error) {
+        _err(res, '发送测试消息失败')(req, error, 1);
+        return;
+      }
+    }
+
     await updateData(
       'user',
       {
         forward_msg_state: state,
-        forward_msg_link: JSON.stringify({
-          type,
-          link,
-          body,
-          header,
-        }),
+        forward_msg_link,
       },
       `WHERE account = ? AND state = ?`,
       [account, 1]
