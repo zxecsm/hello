@@ -1,3 +1,4 @@
+import MarkdownIt from 'markdown-it';
 import appConfig from '../../data/config.js';
 import _f from '../../utils/f.js';
 import _path from '../../utils/path.js';
@@ -5,6 +6,7 @@ import _path from '../../utils/path.js';
 import { errLog, formatDate } from '../../utils/utils.js';
 
 import { getRootDir } from '../file/file.js';
+import cheerio from '../bmk/cheerio.js';
 
 // 获取笔记历史版本记录文件夹
 export function getNoteHistoryDir(account, noteId) {
@@ -31,5 +33,18 @@ export async function saveNoteHistory(req, noteId, content) {
     await _f.fsp.writeFile(notePath, content);
   } catch (error) {
     errLog(req, `保存笔记历史版本失败(${error})`);
+  }
+}
+
+const md = new MarkdownIt({
+  html: false,
+  linkify: false,
+  typographer: false,
+});
+export function markdownToText(content) {
+  try {
+    return cheerio.load(md.render(content)).text();
+  } catch {
+    return content;
   }
 }

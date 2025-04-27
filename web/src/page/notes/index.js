@@ -381,8 +381,8 @@ function hdHighlight(con) {
     `
     <template v-for="{type,value} in con">
       <template v-if="type === 'text'">{{value}}</template>
-      <template v-else-if="type === 'icon">
-        <br/><span style="color:var(--btn-danger-color);">···</span><br/>
+      <template v-else-if="type === 'icon'">
+        <span style="color:var(--btn-danger-color);">{{value}}</span><br/>
       </template>
       <span v-else-if="type === 'word'" style="color:var(--btn-danger-color);">{{value}}</span>
     </template>

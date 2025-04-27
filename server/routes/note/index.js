@@ -31,7 +31,7 @@ import {
 
 import { getFriendDes } from '../chat/chat.js';
 import { fieldLenght } from '../config.js';
-import { saveNoteHistory } from './note.js';
+import { markdownToText, saveNoteHistory } from './note.js';
 import _f from '../../utils/f.js';
 
 const route = express.Router();
@@ -207,37 +207,33 @@ route.post('/search', async (req, res) => {
 
       list = await queryData(
         'note',
-        `${
-          word
-            ? '*'
-            : 'title,create_at,update_at,id,share,visit_count,top,category'
-        }`,
+        'title,create_at,update_at,id,share,content,visit_count,top,category',
         where,
         valArr
       );
 
-      if (word) {
-        list = list.map((item) => {
-          let {
-            title,
-            content,
-            id,
-            create_at,
-            update_at,
-            share,
-            visit_count,
-            top,
-            category,
-          } = item;
+      list = list.map((item) => {
+        let {
+          title,
+          content,
+          id,
+          create_at,
+          update_at,
+          share,
+          visit_count,
+          top,
+          category,
+        } = item;
 
-          content = content.replace(/[\n\r]/g, '');
+        content = markdownToText(content).replace(/[\n\r]/g, '');
 
-          let con = [];
+        let con = [];
 
+        if (word) {
           // 提取关键词
           const wc = getWordContent(splitWord, content);
 
-          let idx = wc.findIndex(
+          const idx = wc.findIndex(
             (item) => item.value.toLowerCase() === splitWord[0].toLowerCase()
           );
 
@@ -256,20 +252,32 @@ route.post('/search', async (req, res) => {
           }
 
           con = wc.slice(start, end);
+        }
 
-          return {
-            id,
-            share,
-            title,
-            visit_count,
-            con,
-            top,
-            category,
-            create_at,
-            update_at,
-          };
-        });
-      }
+        if (con.length === 0) {
+          con = [
+            {
+              value: content.slice(0, 200),
+              type: 'text',
+            },
+          ];
+          if (content.length > 200) {
+            con.push({ type: 'icon', value: '...' });
+          }
+        }
+
+        return {
+          id,
+          share,
+          title,
+          visit_count,
+          con,
+          top,
+          category,
+          create_at,
+          update_at,
+        };
+      });
     }
 
     _success(res, 'ok', {
