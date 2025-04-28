@@ -624,7 +624,7 @@ function selectSearchItem(e) {
   $searchItem.removeClass('active').eq(searchResultIdx).addClass('active');
   const value = $searchItem.eq(searchResultIdx).text().trim();
   searchInput.setValue(value);
-  const dw = parseInt(searchResultIdx * 41);
+  const dw = parseInt(searchResultIdx * 40);
   $searchInpWrap.find('.search_list_box').scrollTop(dw);
 }
 // 点击搜索项
