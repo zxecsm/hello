@@ -27,6 +27,7 @@ import {
   batchTask,
   concurrencyTasks,
   isFilename,
+  getWordContent,
 } from '../../utils/utils.js';
 
 import {
@@ -63,7 +64,7 @@ import { playInConfig, getUserInfo, deleteUser } from './user.js';
 import jwt from '../../utils/jwt.js';
 import { fieldLenght } from '../config.js';
 import _path from '../../utils/path.js';
-import { getNoteHistoryDir } from '../note/note.js';
+import { getNoteHistoryDir, markdownToText } from '../note/note.js';
 import { getTrashDir } from '../file/file.js';
 import _crypto from '../../utils/crypto.js';
 import getCity from '../../utils/getCity.js';
@@ -1685,8 +1686,7 @@ route.post('/edit-share', async (req, res) => {
 // 回收站列表
 route.get('/trash-list', async (req, res) => {
   try {
-    let { word = '', type, pageNo = 1, pageSize = 20 } = req.query,
-      fields = 'id,title';
+    let { word = '', type, pageNo = 1, pageSize = 20 } = req.query;
 
     pageNo = parseInt(pageNo);
     pageSize = parseInt(pageSize);
@@ -1704,10 +1704,21 @@ route.get('/trash-list', async (req, res) => {
       return;
     }
 
+    let fieldArr = [];
+    let fields = '';
+
     if (type === 'bmk') {
       fields = 'id,title,link,des,group_id';
+      fieldArr = ['title', 'link', 'des'];
     } else if (type === 'history') {
       fields = 'id,content';
+      fieldArr = ['content'];
+    } else if (type === 'bmk_group') {
+      fields = 'id,title';
+      fieldArr = ['title'];
+    } else if (type === 'note') {
+      fields = 'id,title,content';
+      fieldArr = ['title', 'content'];
     }
 
     const { account } = req._hello.userinfo;
@@ -1722,14 +1733,6 @@ route.get('/trash-list', async (req, res) => {
 
       const curSplit = splitWord.slice(0, 10);
 
-      let fieldArr = [];
-      if (type === 'bmk') {
-        fieldArr = ['title', 'link', 'des'];
-      } else if (type === 'history') {
-        fieldArr = ['content'];
-      } else {
-        fieldArr = ['title'];
-      }
       const searchSql = createSearchSql(curSplit, fieldArr);
 
       const scoreSql = createScoreSql(curSplit, fieldArr);
@@ -1755,6 +1758,59 @@ route.get('/trash-list', async (req, res) => {
       valArr.push(pageSize, offset);
 
       data = await queryData(type, fields, where, valArr, [account, 0]);
+
+      if (type === 'note') {
+        data = data.map((item) => {
+          let { title, content, id } = item;
+
+          content = markdownToText(content).replace(/[\n\r]/g, '');
+
+          let con = [];
+
+          if (word) {
+            // 提取关键词
+            const wc = getWordContent(splitWord, content);
+
+            const idx = wc.findIndex(
+              (item) => item.value.toLowerCase() === splitWord[0].toLowerCase()
+            );
+
+            let start = 0,
+              end = 0;
+
+            if (idx >= 0) {
+              if (idx > 15) {
+                start = idx - 15;
+                end = idx + 15;
+              } else {
+                end = 30;
+              }
+            } else {
+              end = 30;
+            }
+
+            con = wc.slice(start, end);
+          }
+
+          if (con.length === 0) {
+            con = [
+              {
+                value: content.slice(0, fieldLenght.notePreviewLength),
+                type: 'text',
+              },
+            ];
+            if (content.length > fieldLenght.notePreviewLength) {
+              con.push({ type: 'icon', value: '...' });
+            }
+          }
+
+          return {
+            id,
+            title,
+            con,
+          };
+        });
+      }
     }
 
     _success(res, 'ok', {

@@ -32,4 +32,5 @@ export const fieldLenght = {
   lrcSize: 20 * 1024, // 歌词大小
   customCodeSize: 100 * 1024, // 自定义代码大小
   downloadFileSize: 10 * 1024 * 1024 * 1024, // 离线下载文件大小
+  notePreviewLength: 200, // 笔记预览长度
 };

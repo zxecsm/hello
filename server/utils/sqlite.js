@@ -110,12 +110,14 @@ export async function batchInsertData(
 
 // 查询数据
 export function queryData(table, fields, where = '', valArr = []) {
+  where = buildWhereClause(where);
   const sql = `SELECT ${fields} FROM ${table} ${where}`;
   return allSqlite(sql, valArr);
 }
 
 // 获取表的总行数
 export async function getTableRowCount(table, where = '', valArr = []) {
+  where = buildWhereClause(where);
   const sql = `SELECT COUNT(*) AS count FROM ${table} ${where}`;
   const rows = await allSqlite(sql, valArr);
   return rows[0]?.count || 0;
@@ -144,6 +146,7 @@ export async function getRandomRow(table, fields, where = '', valArr = []) {
 
 // 更新数据
 export function updateData(table, sets, where = '', varr = []) {
+  where = buildWhereClause(where);
   const keyArr = Object.keys(sets);
   const valsArr = keyArr.map((key) => `${key} = ?`);
   const valArr = keyArr.map((key) => sets[key]);
@@ -171,11 +174,10 @@ export async function batchUpdateData(
 
     if (ids.length === 0) return false;
 
-    const whereClause = where.toUpperCase().includes('IN ')
-      ? where
-      : `${where ? `${where} AND` : ''} ${idField} IN (${fillString(
-          ids.length
-        )})`;
+    const whereClause =
+      where && !/\bIN\s*\(/i.test(where)
+        ? `${where} AND ${idField} IN (${fillString(ids.length)})`
+        : where || `${idField} IN (${fillString(ids.length)})`;
 
     await updateData(table, sets, whereClause, [
       ...valArr,
@@ -188,6 +190,7 @@ export async function batchUpdateData(
 
 // 字段自增
 export function incrementField(table, sets, where = '', varr = []) {
+  where = buildWhereClause(where);
   const keyArr = Object.keys(sets);
   const valsArr = keyArr.map((key) => `${key} = ${key} + ?`);
   const valArr = keyArr.map((key) => sets[key]);
@@ -199,6 +202,7 @@ export function incrementField(table, sets, where = '', varr = []) {
 
 // 删除数据
 export async function deleteData(table, where = '', valArr = []) {
+  where = buildWhereClause(where);
   const sql = `DELETE FROM ${table} ${where}`;
 
   return runSqlite(sql, valArr);
@@ -220,11 +224,10 @@ export async function batchDeleteData(
 
     if (ids.length === 0) return false;
 
-    const whereClause = where.toUpperCase().includes('IN ')
-      ? where
-      : `${where ? `${where} AND` : ''} ${idField} IN (${fillString(
-          ids.length
-        )})`;
+    const whereClause =
+      where && !/\bIN\s*\(/i.test(where)
+        ? `${where} AND ${idField} IN (${fillString(ids.length)})`
+        : where || `${idField} IN (${fillString(ids.length)})`;
 
     await deleteData(table, whereClause, [
       ...valArr,
@@ -273,19 +276,25 @@ export function batchDiffUpdateData(table, data, where = '', valArr = []) {
 
 // 计算相关性分数的函数
 export function createScoreSql(splitWord, keys) {
+  if (!splitWord.length || !keys.length) {
+    return { sql: '', valArr: [] };
+  }
+
+  // 为模糊查询搜索词添加 %
+  const likeWords = splitWord.map((word) => `%${word}%`);
+
   const { valArr, scoreArr } = keys.reduce(
     (acc, key) => {
-      // 为模糊查询搜索词添加 %
-      acc.valArr.push(...splitWord.map((word) => `%${word}%`));
-
       // 计算相关性分数
-      const scores = splitWord.map((_, index) => {
+      splitWord.forEach((_, index) => {
         // 如果是第一个词，则优先级加10
         const scoreWeight = index === 0 ? 10 : 1;
-        return `(CASE WHEN LOWER(${key}) LIKE LOWER(?) THEN ${scoreWeight} ELSE 0 END)`;
+        acc.scoreArr.push(
+          `(CASE WHEN LOWER(${key}) LIKE LOWER(?) THEN ${scoreWeight} ELSE 0 END)`
+        );
       });
-      acc.scoreArr.push(...scores);
 
+      acc.valArr.push(...likeWords);
       return acc;
     },
     { valArr: [], scoreArr: [] }
@@ -300,15 +309,21 @@ export function createScoreSql(splitWord, keys) {
 
 // 生成搜索sql
 export function createSearchSql(splitWord, keys) {
+  if (!splitWord.length || !keys.length) {
+    return { sql: '1=1', valArr: [] };
+  }
+
+  // 为模糊查询搜索词添加 %
+  const likeWords = splitWord.map((word) => `%${word}%`);
+
   const { sqlArr, valArr } = keys.reduce(
     (acc, key) => {
       // 构建 WHERE 条件，使用 LOWER 来忽略大小写
-      const conditions = splitWord.map(() => `LOWER(${key}) LIKE LOWER(?)`);
-      acc.sqlArr.push(...conditions);
+      splitWord.forEach(() => {
+        acc.sqlArr.push(`LOWER(${key}) LIKE LOWER(?)`);
+      });
 
-      // 为模糊查询搜索词添加 %
-      acc.valArr.push(...splitWord.map((word) => `%${word}%`));
-
+      acc.valArr.push(...likeWords);
       return acc;
     },
     { sqlArr: [], valArr: [] }
@@ -324,4 +339,11 @@ export function createSearchSql(splitWord, keys) {
 // 填充sql?
 export function fillString(len) {
   return new Array(len).fill('?').join(',');
+}
+
+// 补全where
+function buildWhereClause(condition) {
+  condition = condition.trim();
+  if (!condition) return '';
+  return /^where\b/i.test(condition) ? condition : `WHERE ${condition}`;
 }

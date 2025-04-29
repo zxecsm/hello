@@ -170,6 +170,22 @@ function stopSelect() {
       check: 'n',
     });
 }
+function hdHighlight(con) {
+  return _tpl(
+    `
+    <template v-for="{type,value} in con">
+      <template v-if="type === 'text'">{{value}}</template>
+      <template v-else-if="type === 'icon'">
+        <span style="color:var(--btn-danger-color);">{{value}}</span><br/>
+      </template>
+      <span v-else-if="type === 'word'" style="color:var(--btn-danger-color);">{{value}}</span>
+    </template>
+    `,
+    {
+      con,
+    }
+  );
+}
 function renderList(y) {
   let pagenum = $contentWrap.pagenum,
     a = wInput.getValue().trim(),
@@ -211,12 +227,15 @@ function renderList(y) {
           `
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
-            <ul v-for="{title,id,link,content} in list" class="item_box" :data-id="id" :data-type="HASH">
-              <div cursor="y" check="n" class="check_state"></div>
-              <li class="item_type iconfont {{slogo}}"></li>
-              <li v-html="getTitle(title,content,link)" :cursor="HASH !== 'bmk_group' ? 'y' : ''" class="item_title"></li>
-              <li cursor="y" class="set_btn iconfont icon-icon"></li>
-            </ul>
+            <template v-for="{title,id,link,content,con} in list">
+              <ul class="item_box" :data-id="id" :data-type="HASH">
+                <div cursor="y" check="n" class="check_state"></div>
+                <li class="item_type iconfont {{slogo}}"></li>
+                <li v-html="getTitle(title,content,link)" :cursor="HASH !== 'bmk_group' ? 'y' : ''" class="item_title"></li>
+                <li cursor="y" class="set_btn iconfont icon-icon"></li>
+              </ul>
+              <p v-if="con && con.length > 0" v-html="hdHighlight(con)"></p>
+            </template >
             <div v-html="getPaging()" class="pagingbox"></div>
           </template>
           `,
@@ -226,6 +245,7 @@ function renderList(y) {
             _d,
             HASH,
             slogo,
+            hdHighlight,
             getTitle(title, content, link) {
               title ? null : (title = content);
               link ? (title = `${title} (${link})`) : null;

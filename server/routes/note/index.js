@@ -257,11 +257,11 @@ route.post('/search', async (req, res) => {
         if (con.length === 0) {
           con = [
             {
-              value: content.slice(0, 200),
+              value: content.slice(0, fieldLenght.notePreviewLength),
               type: 'text',
             },
           ];
-          if (content.length > 200) {
+          if (content.length > fieldLenght.notePreviewLength) {
             con.push({ type: 'icon', value: '...' });
           }
         }
