@@ -1,11 +1,11 @@
 import { createHash, randomBytes, pbkdf2 } from 'crypto';
-import _f from './f.js';
+import fs from 'fs';
 
 // 计算文件的 MD5 值
 function getFileMD5Hash(filePath) {
   return new Promise((resolve, reject) => {
     const hash = createHash('md5');
-    const stream = _f.fs.createReadStream(filePath);
+    const stream = fs.createReadStream(filePath);
 
     stream.on('data', (chunk) => {
       hash.update(chunk); // 更新哈希值
@@ -20,6 +20,11 @@ function getFileMD5Hash(filePath) {
       stream.destroy(); // 在发生错误时，销毁流
     });
   });
+}
+
+// 生成安全密钥
+function generateSecureKey(length = 64) {
+  return randomBytes(length).toString('base64url');
 }
 
 // 获取字符串的哈希值
@@ -86,6 +91,7 @@ const _crypto = {
   getStringHash,
   hashPassword,
   verifyPassword,
+  generateSecureKey,
 };
 
 export default _crypto;

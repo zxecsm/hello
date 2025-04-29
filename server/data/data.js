@@ -4,6 +4,7 @@ import appConfig from './config.js';
 import _f from '../utils/f.js';
 import { getDirname } from '../utils/utils.js';
 import _path from '../utils/path.js';
+import _crypto from '../utils/crypto.js';
 
 const __dirname = getDirname(import.meta);
 
@@ -15,7 +16,7 @@ const dataConfigPath = _path.normalize(`${appConfig.appData}/data/config.json`);
 
 // 加载默认配置
 let config = loadConfig(defaultConfigPath);
-config.tokenKey = generateKey(30);
+config.tokenKey = _crypto.generateSecureKey();
 
 // 合并配置文件
 if (_f.fs.existsSync(dataConfigPath)) {
@@ -61,13 +62,4 @@ function deepProxy(target, callback) {
     },
   };
   return new Proxy(target, handler);
-}
-
-// 生成随机密钥
-export function generateKey(keyLength) {
-  const characters =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=';
-  return Array.from({ length: keyLength }, () =>
-    characters.charAt(Math.floor(Math.random() * characters.length))
-  ).join('');
 }

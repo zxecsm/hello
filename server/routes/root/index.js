@@ -1,7 +1,7 @@
 import express from 'express';
 
 import appConfig from '../../data/config.js';
-import { _d, generateKey } from '../../data/data.js';
+import { _d } from '../../data/data.js';
 import _connect from '../../utils/connect.js';
 import mailer from '../../utils/email.js';
 import _f from '../../utils/f.js';
@@ -322,7 +322,7 @@ route.post('/register-state', async (req, res) => {
 // 更新tokenKey
 route.post('/update-tokenkey', async (req, res) => {
   try {
-    _d.tokenKey = generateKey(30);
+    _d.tokenKey = _crypto.generateSecureKey();
 
     _success(res, '更新tokenKey成功')(req);
   } catch (error) {
