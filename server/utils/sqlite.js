@@ -110,14 +110,12 @@ export async function batchInsertData(
 
 // 查询数据
 export function queryData(table, fields, where = '', valArr = []) {
-  where = buildWhereClause(where);
   const sql = `SELECT ${fields} FROM ${table} ${where}`;
   return allSqlite(sql, valArr);
 }
 
 // 获取表的总行数
 export async function getTableRowCount(table, where = '', valArr = []) {
-  where = buildWhereClause(where);
   const sql = `SELECT COUNT(*) AS count FROM ${table} ${where}`;
   const rows = await allSqlite(sql, valArr);
   return rows[0]?.count || 0;
@@ -146,7 +144,6 @@ export async function getRandomRow(table, fields, where = '', valArr = []) {
 
 // 更新数据
 export function updateData(table, sets, where = '', varr = []) {
-  where = buildWhereClause(where);
   const keyArr = Object.keys(sets);
   const valsArr = keyArr.map((key) => `${key} = ?`);
   const valArr = keyArr.map((key) => sets[key]);
@@ -177,7 +174,9 @@ export async function batchUpdateData(
     const whereClause =
       where && !/\bIN\s*\(/i.test(where)
         ? `${where} AND ${idField} IN (${fillString(ids.length)})`
-        : where || `${idField} IN (${fillString(ids.length)})`;
+        : where
+        ? where
+        : `WHERE ${idField} IN (${fillString(ids.length)})`;
 
     await updateData(table, sets, whereClause, [
       ...valArr,
@@ -190,7 +189,6 @@ export async function batchUpdateData(
 
 // 字段自增
 export function incrementField(table, sets, where = '', varr = []) {
-  where = buildWhereClause(where);
   const keyArr = Object.keys(sets);
   const valsArr = keyArr.map((key) => `${key} = ${key} + ?`);
   const valArr = keyArr.map((key) => sets[key]);
@@ -202,7 +200,6 @@ export function incrementField(table, sets, where = '', varr = []) {
 
 // 删除数据
 export async function deleteData(table, where = '', valArr = []) {
-  where = buildWhereClause(where);
   const sql = `DELETE FROM ${table} ${where}`;
 
   return runSqlite(sql, valArr);
@@ -227,7 +224,9 @@ export async function batchDeleteData(
     const whereClause =
       where && !/\bIN\s*\(/i.test(where)
         ? `${where} AND ${idField} IN (${fillString(ids.length)})`
-        : where || `${idField} IN (${fillString(ids.length)})`;
+        : where
+        ? where
+        : `WHERE ${idField} IN (${fillString(ids.length)})`;
 
     await deleteData(table, whereClause, [
       ...valArr,
@@ -339,11 +338,4 @@ export function createSearchSql(splitWord, keys) {
 // 填充sql?
 export function fillString(len) {
   return new Array(len).fill('?').join(',');
-}
-
-// 补全where
-function buildWhereClause(condition) {
-  condition = condition.trim();
-  if (!condition) return '';
-  return /^where\b/i.test(condition) ? condition : `WHERE ${condition}`;
 }
