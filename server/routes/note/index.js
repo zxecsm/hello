@@ -619,7 +619,7 @@ route.post('/set-category', async (req, res) => {
       [account, id]
     );
 
-    syncUpdateData(req, 'note');
+    syncUpdateData(req, 'note', id);
 
     _success(res, '更新分类成功')(req, `${id}: ${categoryStr}`, 1);
   } catch (error) {
@@ -649,7 +649,7 @@ route.post('/edit-category', async (req, res) => {
       [id, account]
     );
 
-    syncUpdateData(req, 'category');
+    syncUpdateData(req, 'category', id);
 
     _success(res, '编辑分类标题成功')(req, `${title}-${id}`, 1);
   } catch (error) {
@@ -703,7 +703,7 @@ route.get('/delete-category', async (req, res) => {
       account,
     ]);
 
-    syncUpdateData(req, 'category');
+    syncUpdateData(req, 'category', id);
 
     _success(res, '删除分类成功')(req, id, 1);
   } catch (error) {

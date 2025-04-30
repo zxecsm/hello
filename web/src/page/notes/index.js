@@ -86,14 +86,15 @@ if (urlParams.acc && urlParams.acc !== _getData('account')) {
           data: { flag },
         } = item;
         if (type === 'updatedata') {
-          if (flag === 'note') {
-            renderList();
-          } else if (flag === 'category') {
-            if (isHideCategoryBox()) {
-              updataCategory();
-            } else {
-              renderCategoryList();
+          if (flag === 'note' || flag === 'category') {
+            if (flag === 'category') {
+              if (isHideCategoryBox()) {
+                updataCategory();
+              } else {
+                renderCategoryList();
+              }
             }
+            renderList();
           }
         }
       });
@@ -264,7 +265,7 @@ function stopSelect() {
     });
 }
 // 生成列表
-function renderList(y) {
+export function renderList(y) {
   let pagenum = $contentWrap.pagenum,
     word = wInput.getValue().trim();
   if (word.length > 100) {

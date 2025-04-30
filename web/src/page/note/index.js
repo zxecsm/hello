@@ -211,8 +211,8 @@ if (urlparmes.v) {
               } = item;
               if (
                 type === 'updatedata' &&
-                flag === 'note' &&
-                urlparmes.v === id
+                ((flag === 'note' && urlparmes.v === id) ||
+                  (flag === 'category' && category.includes(id)))
               ) {
                 window.location.reload();
               }

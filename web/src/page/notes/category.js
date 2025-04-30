@@ -9,7 +9,7 @@ import {
 } from '../../api/note';
 import _msg from '../../js/plugins/message';
 import _pop from '../../js/plugins/popConfirm';
-import { setNoteCategoryList } from '.';
+import { renderList, setNoteCategoryList } from '.';
 import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';
 const $categoryBox = $('.category_box');
@@ -17,7 +17,7 @@ export function isHideCategoryBox() {
   return $categoryBox.is(':hidden');
 }
 // 生成列表
-export function renderCategoryList() {
+export function renderCategoryList(updateNoteList = false) {
   const $list = $categoryBox.find('.list');
   if ($list.children().length === 0) {
     loadingImg($list[0]);
@@ -39,6 +39,9 @@ export function renderCategoryList() {
           }
         );
         $list.html(html);
+        if (updateNoteList) {
+          renderList();
+        }
       }
     })
     .catch(() => {});
@@ -125,7 +128,7 @@ function editCategory(e, obj) {
         .then((res) => {
           loading.end();
           if (res.code === 1) {
-            renderCategoryList();
+            renderCategoryList(1);
             close(1);
             _msg.success(res.codeText);
           }
@@ -153,7 +156,7 @@ function deleteCategory(e, obj, cb, loading = { start() {}, end() {} }) {
             loading.end();
             if (res.code === 1) {
               cb && cb();
-              renderCategoryList();
+              renderCategoryList(1);
               _msg.success(res.codeText);
             }
           })
