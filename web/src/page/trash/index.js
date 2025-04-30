@@ -39,7 +39,6 @@ import {
   reqUserRecoverTrash,
   reqUserTrashList,
 } from '../../api/user';
-import toolTip from '../../js/plugins/tooltip';
 import rMenu from '../../js/plugins/rightMenu';
 import { showBmkInfo } from '../../js/utils/showinfo';
 import { reqSearchConfig } from '../../api/search';
@@ -227,14 +226,31 @@ function renderList(y) {
           `
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
-            <template v-for="{title,id,link,content,con} in list">
+            <template v-for="{title,id,link,content,con,des,group_title,categoryArr} in list">
               <ul class="item_box" :data-id="id" :data-type="HASH">
                 <div cursor="y" check="n" class="check_state"></div>
                 <li class="item_type iconfont {{slogo}}"></li>
-                <li v-html="getTitle(title,content,link)" :cursor="HASH !== 'bmk_group' ? 'y' : ''" class="item_title"></li>
+                <li v-html="getTitle(title,content)" :cursor="HASH !== 'bmk_group' ? 'y' : ''" class="item_title"></li>
                 <li cursor="y" class="set_btn iconfont icon-icon"></li>
               </ul>
-              <p v-if="con && con.length > 0" v-html="hdHighlight(con)"></p>
+              <div v-if="(categoryArr.length > 0 || (con && con.length > 0)) && HASH === 'note'" class="item_info">
+                <template v-if="categoryArr.length > 0">
+                  <span v-for="cgs in categoryArr" class="category">
+                    <span style="color:var(--icon-color);margin-right:4px;">#</span>{{cgs.title}}
+                  </span>
+                  <br/>
+                </template>
+                <span v-if="con && con.length > 0" v-html="hdHighlight(con)"></span>
+              </div>
+              <div class="item_info" v-else-if="HASH === 'bmk'">
+                <span class="category">
+                  <span style="color:var(--icon-color);margin-right:4px;">#</span>{{group_title}}
+                </span>
+                <br/>
+                <a cursor="y" v-html="hdTitleHighlight(splitWord, link)" href="{{link}}" target="_blank"></a>
+                <br/>
+                <span v-html="hdTitleHighlight(splitWord, des)"></span>
+              </div>
             </template >
             <div v-html="getPaging()" class="pagingbox"></div>
           </template>
@@ -245,10 +261,11 @@ function renderList(y) {
             _d,
             HASH,
             slogo,
+            splitWord,
             hdHighlight,
-            getTitle(title, content, link) {
+            hdTitleHighlight,
+            getTitle(title, content) {
               title ? null : (title = content);
-              link ? (title = `${title} (${link})`) : null;
               return hdTitleHighlight(splitWord, title);
             },
             getPaging() {
@@ -505,21 +522,6 @@ $contentWrap
     if (isMobile() || isSelecting()) return;
     startSelect();
     checkedItem(this.querySelector('.check_state'));
-  })
-  .on('mouseenter', '.item_box', function () {
-    const $this = $(this);
-    const type = $this.attr('data-type');
-    if (type === 'bmk') {
-      const obj = getListItem($this.attr('data-id'));
-      const { title, link, des } = obj;
-      const str = `名称：${title || '--'}\n链接：${link || '--'}\n描述：${
-        des || '--'
-      }`;
-      toolTip.setTip(str).show();
-    }
-  })
-  .on('mouseleave', '.item_box', function () {
-    toolTip.hide();
   })
   .on('click', '.item_type', function (e) {
     const $this = $(this).parent();

@@ -33,7 +33,6 @@ import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
 import _pop from '../../js/plugins/popConfirm';
 import realtime from '../../js/plugins/realtime';
-import toolTip from '../../js/plugins/tooltip/index';
 
 import {
   reqBmkAddBmk,
@@ -282,12 +281,23 @@ function renderList(y) {
           `
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
-            <ul v-for="{id,link,title} in data" class="item_box" :data-id="id">
-              <div cursor="y" check="n" class="check_state"></div>
-              <li class="item_type iconfont icon-shuqian"></li>
-              <li v-html="hdTitleHighlight(splitWord, title + ' (' + link + ')')" cursor="y" class="item_title"></li>
-              <li cursor="y" class="set_btn iconfont icon-icon"></li>
-            </ul>
+            <template v-for="{id,link,title,des,group_title,group_id} in data">
+              <ul class="item_box" :data-id="id">
+                <div cursor="y" check="n" class="check_state"></div>
+                <li class="item_type iconfont icon-shuqian"></li>
+                <li v-html="hdTitleHighlight(splitWord, title)" cursor="y" class="item_title"></li>
+                <li cursor="y" class="set_btn iconfont icon-icon"></li>
+              </ul>
+              <div class="item_info">
+                <span cursor="y" :data-id="group_id" class="category">
+                  <span style="color:var(--icon-color);margin-right:4px;">#</span>{{group_title}}
+                </span>
+                <br/>
+                <a cursor="y" v-html="hdTitleHighlight(splitWord, link)" href="{{link}}" target="_blank"></a>
+                <br/>
+                <span v-html="hdTitleHighlight(splitWord, des)"></span>
+              </div>
+            </template>
             <div v-html="paginnation" class="pagingbox"></div>
           </template>
           `,
@@ -574,17 +584,10 @@ $contentWrap
   .on('click', '.set_btn', bmMenu)
   .on('click', '.item_title', openBmk)
   .on('contextmenu', '.item_box', bmkContextMenu)
-  .on('mouseenter', '.item_box', function () {
-    const $this = $(this);
-    const id = $this.attr('data-id');
-    const { title, link, des, group_title } = getItemObj(id);
-    const str = `分组：${group_title || '--'}\n名称：${title || '--'}\n链接：${
-      link || '--'
-    }\n描述：${des || '--'}`;
-    toolTip.setTip(str).show();
-  })
-  .on('mouseleave', '.item_box', function () {
-    toolTip.hide();
+  .on('click', '.item_info .category', function () {
+    tabsObj.list = $contentWrap.groupList.filter(
+      (item) => item.id === this.dataset.id
+    );
   })
   .on('click', '.item_type', function (e) {
     const $this = $(this).parent();

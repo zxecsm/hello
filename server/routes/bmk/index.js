@@ -206,6 +206,12 @@ route.post('/search', async (req, res) => {
         where,
         valArr
       );
+
+      data.forEach((item) => {
+        if (!item.group_title) {
+          item.group_title = '未知分组';
+        }
+      });
     }
 
     _success(res, 'ok', {

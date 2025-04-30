@@ -336,6 +336,6 @@ a {
   color: var(--a-color);
 }
 a:hover {
-  text-decoration: underline wavy;
-  color: var(--text-hover-color);
+  text-decoration: underline wavy !important;
+  color: var(--text-hover-color) !important;
 }

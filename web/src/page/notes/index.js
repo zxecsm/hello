@@ -298,7 +298,7 @@ function renderList(y) {
           `
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
-            <template v-for="{title,share,id,con,top} in data">
+            <template v-for="{title,share,id,con,top,categoryArr} in data">
               <ul class="item_box" :data-id="id">
                 <div cursor="y" check="n" class="check_state"></div>
                 <li class="item_type iconfont icon-jilu"></li>
@@ -307,7 +307,15 @@ function renderList(y) {
                 <li v-if="runState === 'own'" cursor="y" class="lock_state iconfont {{share === 0? 'icon-24gl-unlock2 open': 'icon-24gl-unlock4'}}"></li>
                 <li v-if="runState === 'own'" cursor="y" class="set_btn iconfont icon-icon"></li>
               </ul>
-              <p v-if="con && con.length > 0" v-html="hdHighlight(con)"></p>
+              <div v-if="categoryArr.length > 0 || (con && con.length > 0)" class="item_info">
+                <template v-if="categoryArr.length > 0">
+                  <span cursor="y" v-for="cgs in categoryArr" :data-id="cgs.id" class="category">
+                    <span style="color:var(--icon-color);margin-right:4px;">#</span>{{cgs.title}}
+                  </span>
+                  <br/>
+                </template>
+                <span v-if="con && con.length > 0" v-html="hdHighlight(con)"></span>
+              </div>
             </template>
             <div v-html="getPaging()" class="pagingbox"></div>
           </template>
@@ -483,15 +491,8 @@ function toTop(e, obj) {
   );
 }
 function categoryToArr(category) {
-  const c = category.split('-').filter((item) => item);
-  const res = [];
-  c.forEach((id) => {
-    const cInfo = noteCategoryList.find((item) => item.id === id);
-    if (cInfo) {
-      res.push(cInfo);
-    }
-  });
-  return res;
+  const cArr = category.split('-').filter((item) => item);
+  return noteCategoryList.filter((item) => cArr.includes(item.id));
 }
 // 笔记添加分类
 function noteEditCategory(e, obj) {
@@ -692,6 +693,9 @@ $contentWrap
       }`,
       title
     );
+  })
+  .on('click', '.item_info .category', function () {
+    tabsObj.list = categoryToArr(this.dataset.id);
   })
   .on('contextmenu', '.item_box', function (e) {
     if (runState !== 'own') return;

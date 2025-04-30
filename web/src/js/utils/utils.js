@@ -1621,8 +1621,8 @@ export function switchBorderRadius(target) {
 // 窗口尺寸
 export function getScreenSize() {
   return {
-    w: document.documentElement.clientWidth || window.innerWidth,
-    h: document.documentElement.clientHeight || window.innerHeight,
+    w: window.innerWidth,
+    h: window.innerHeight,
   };
 }
 // 窗口大小设置

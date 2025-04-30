@@ -212,6 +212,13 @@ route.post('/search', async (req, res) => {
         valArr
       );
 
+      const noteCategory = await queryData(
+        'note_category',
+        'id,title',
+        `WHERE account = ?`,
+        [acc || account]
+      );
+
       list = list.map((item) => {
         let {
           title,
@@ -225,46 +232,53 @@ route.post('/search', async (req, res) => {
           category,
         } = item;
 
-        content = markdownToText(content).replace(/[\n\r]/g, '');
-
         let con = [];
 
-        if (word) {
-          // 提取关键词
-          const wc = getWordContent(splitWord, content);
+        if (content) {
+          content = markdownToText(content).replace(/[\n\r]/g, '');
 
-          const idx = wc.findIndex(
-            (item) => item.value.toLowerCase() === splitWord[0].toLowerCase()
-          );
+          if (word) {
+            // 提取关键词
+            const wc = getWordContent(splitWord, content);
 
-          let start = 0,
-            end = 0;
+            const idx = wc.findIndex(
+              (item) => item.value.toLowerCase() === splitWord[0].toLowerCase()
+            );
 
-          if (idx >= 0) {
-            if (idx > 15) {
-              start = idx - 15;
-              end = idx + 15;
+            let start = 0,
+              end = 0;
+
+            if (idx >= 0) {
+              if (idx > 15) {
+                start = idx - 15;
+                end = idx + 15;
+              } else {
+                end = 30;
+              }
             } else {
               end = 30;
             }
-          } else {
-            end = 30;
+
+            con = wc.slice(start, end);
           }
 
-          con = wc.slice(start, end);
-        }
-
-        if (con.length === 0) {
-          con = [
-            {
-              value: content.slice(0, fieldLenght.notePreviewLength),
-              type: 'text',
-            },
-          ];
-          if (content.length > fieldLenght.notePreviewLength) {
-            con.push({ type: 'icon', value: '...' });
+          if (con.length === 0) {
+            con = [
+              {
+                value: content.slice(0, fieldLenght.notePreviewLength),
+                type: 'text',
+              },
+            ];
+            if (content.length > fieldLenght.notePreviewLength) {
+              con.push({ type: 'icon', value: '...' });
+            }
           }
         }
+
+        const cArr = category.split('-').filter((item) => item);
+        const categoryArr = noteCategory.filter((item) =>
+          cArr.includes(item.id)
+        );
 
         return {
           id,
@@ -274,6 +288,7 @@ route.post('/search', async (req, res) => {
           con,
           top,
           category,
+          categoryArr,
           create_at,
           update_at,
         };

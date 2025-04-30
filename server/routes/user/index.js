@@ -1708,7 +1708,7 @@ route.get('/trash-list', async (req, res) => {
     let fields = '';
 
     if (type === 'bmk') {
-      fields = 'id,title,link,des,group_id';
+      fields = 'id,title,link,des,group_id,group_title';
       fieldArr = ['title', 'link', 'des'];
     } else if (type === 'history') {
       fields = 'id,content';
@@ -1717,7 +1717,7 @@ route.get('/trash-list', async (req, res) => {
       fields = 'id,title';
       fieldArr = ['title'];
     } else if (type === 'note') {
-      fields = 'id,title,content';
+      fields = 'id,title,content,category';
       fieldArr = ['title', 'content'];
     }
 
@@ -1744,7 +1744,11 @@ route.get('/trash-list', async (req, res) => {
       where += `ORDER BY create_at DESC`;
     }
 
-    const total = await getTableRowCount(type, where, valArr);
+    const total = await getTableRowCount(
+      type === 'bmk' ? 'bmk_bmk_group_view' : type,
+      where,
+      valArr
+    );
 
     const result = createPagingData(Array(total), pageSize, pageNo);
 
@@ -1757,58 +1761,86 @@ route.get('/trash-list', async (req, res) => {
 
       valArr.push(pageSize, offset);
 
-      data = await queryData(type, fields, where, valArr, [account, 0]);
+      data = await queryData(
+        type === 'bmk' ? 'bmk_bmk_group_view' : type,
+        fields,
+        where,
+        valArr,
+        [account, 0]
+      );
 
       if (type === 'note') {
+        const noteCategory = await queryData(
+          'note_category',
+          'id,title',
+          `WHERE account = ?`,
+          [account]
+        );
+
         data = data.map((item) => {
-          let { title, content, id } = item;
-
-          content = markdownToText(content).replace(/[\n\r]/g, '');
-
+          let { title, content, id, category } = item;
           let con = [];
 
-          if (word) {
-            // 提取关键词
-            const wc = getWordContent(splitWord, content);
+          if (content) {
+            content = markdownToText(content).replace(/[\n\r]/g, '');
 
-            const idx = wc.findIndex(
-              (item) => item.value.toLowerCase() === splitWord[0].toLowerCase()
-            );
+            if (word) {
+              // 提取关键词
+              const wc = getWordContent(splitWord, content);
 
-            let start = 0,
-              end = 0;
+              const idx = wc.findIndex(
+                (item) =>
+                  item.value.toLowerCase() === splitWord[0].toLowerCase()
+              );
 
-            if (idx >= 0) {
-              if (idx > 15) {
-                start = idx - 15;
-                end = idx + 15;
+              let start = 0,
+                end = 0;
+
+              if (idx >= 0) {
+                if (idx > 15) {
+                  start = idx - 15;
+                  end = idx + 15;
+                } else {
+                  end = 30;
+                }
               } else {
                 end = 30;
               }
-            } else {
-              end = 30;
+
+              con = wc.slice(start, end);
             }
 
-            con = wc.slice(start, end);
-          }
-
-          if (con.length === 0) {
-            con = [
-              {
-                value: content.slice(0, fieldLenght.notePreviewLength),
-                type: 'text',
-              },
-            ];
-            if (content.length > fieldLenght.notePreviewLength) {
-              con.push({ type: 'icon', value: '...' });
+            if (con.length === 0) {
+              con = [
+                {
+                  value: content.slice(0, fieldLenght.notePreviewLength),
+                  type: 'text',
+                },
+              ];
+              if (content.length > fieldLenght.notePreviewLength) {
+                con.push({ type: 'icon', value: '...' });
+              }
             }
           }
+
+          const cArr = category.split('-').filter((item) => item);
+          const categoryArr = noteCategory.filter((item) =>
+            cArr.includes(item.id)
+          );
 
           return {
             id,
             title,
             con,
+            category,
+            categoryArr,
           };
+        });
+      } else if (type === 'bmk') {
+        data.forEach((item) => {
+          if (!item.group_title) {
+            item.group_title = item.group_id === 'home' ? '主页' : '未知分组';
+          }
         });
       }
     }

@@ -226,13 +226,23 @@ html {
       }
     }
 
-    p {
+    .item_info {
       font-size: 16px;
       line-height: 1.5;
-      padding: 10px;
+      padding: 0 10px 10px 10px;
       white-space: pre-wrap;
       word-break: break-word;
       color: var(--color5);
+      .category {
+        font-size: 0.9em;
+        margin-right: 6px;
+        &:hover {
+          color: var(--text-hover-color);
+        }
+      }
+      a {
+        color: var(--color4);
+      }
     }
     .pagingbox {
       width: 100%;
