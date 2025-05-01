@@ -54,7 +54,7 @@ const $bg = $('.bg'),
   $about = $box.find('.about');
 const originurl = _getDataTem('originurl') || '/';
 $about.on('click', function () {
-  myOpen('/note/?v=about');
+  myOpen('/note?v=about');
 });
 if (_getData('account')) {
   myOpen('/');

@@ -553,7 +553,7 @@ $contentWrap
       }
     } else if (type === 'note') {
       e.stopPropagation();
-      _myOpen(`/note/?v=${encodeURIComponent(obj.id)}`, obj.title);
+      _myOpen(`/note?v=${encodeURIComponent(obj.id)}`, obj.title);
     }
   })
   .on('click', '.check_state', function () {

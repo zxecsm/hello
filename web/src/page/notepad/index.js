@@ -237,7 +237,7 @@ if (!k || !/^[\w]+$/.test(k)) {
       },
     },
     ({ inp }) => {
-      myOpen(`/notepad/?k=${inp.key}`);
+      myOpen(`/notepad?k=${inp.key}`);
     },
     0,
     1,
@@ -640,7 +640,7 @@ function openNotepad(e) {
     },
     function ({ close, inp }) {
       close();
-      myOpen(`/notepad/?k=${inp.key}`);
+      myOpen(`/notepad?k=${inp.key}`);
     },
     '切换到指定便条'
   );

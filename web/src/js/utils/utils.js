@@ -686,7 +686,7 @@ export function _getAjax(url, data = {}, opt = {}) {
 }
 // 上传文件
 export function _upFile(url, data = {}, file, callback, signal) {
-  url = `${_d.serverURL}${url}/?${qs.stringify(data)}`;
+  url = `${_d.serverURL}${url}?${qs.stringify(data)}`;
   return new Promise((resolve, reject) => {
     const formData = new FormData();
     formData.append('attrname', file);
@@ -1177,7 +1177,7 @@ export function downloadBlob(blob, filename) {
 export async function downloadFile(tasks, type) {
   if (tasks.length === 1) {
     let { fileUrl, filename } = tasks[0];
-    filename = filename || _path.basename(fileUrl) || 'unknown';
+    filename = filename || _path.basename(fileUrl)[0] || 'unknown';
     if (type) {
       const cache = await cacheFile.read(fileUrl, type);
       if (cache) {
@@ -1200,7 +1200,7 @@ export async function downloadFile(tasks, type) {
     if (signal.aborted) return;
 
     let { fileUrl, filename } = task;
-    filename = filename || _path.basename(fileUrl) || 'unknown';
+    filename = filename || _path.basename(fileUrl)[0] || 'unknown';
     if (type) {
       const cache = await cacheFile.read(fileUrl, type);
       if (cache) {
@@ -2534,7 +2534,7 @@ export function enterPassCode(cb) {
 // 生成文件路径
 export function getFilePath(p, t) {
   p = _path.normalize('/' + p);
-  return `${_d.mediaURL}/?${qs.stringify({ p, t })}`;
+  return `${_d.mediaURL}?${qs.stringify({ p, t })}`;
 }
 // 格式歌曲时间
 export function formartSongTime(time) {
@@ -2600,14 +2600,14 @@ export function userLogoMenu(e, account, username, email) {
       close();
       let url = '';
       if (id === '2') {
-        url = `/notes/?acc=${encodeURIComponent(account)}`;
+        url = `/notes?acc=${encodeURIComponent(account)}`;
         if (isIframe()) {
           _myOpen(url, username + '的笔记本');
         } else {
           myOpen(url);
         }
       } else if (id === '1') {
-        url = `/?c=${encodeURIComponent(account)}`;
+        url = `${_d.originURL}?c=${encodeURIComponent(account)}`;
         if (isIframe()) {
           myOpen(url, '_blank');
         } else {
@@ -2621,7 +2621,7 @@ export function userLogoMenu(e, account, username, email) {
           myOpen(url);
         }
       } else if (id === '4') {
-        url = `/?p=open`;
+        url = `${_d.originURL}?p=open`;
         if (isIframe()) {
           myOpen(url, '_blank');
         } else {

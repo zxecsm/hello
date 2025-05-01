@@ -1,15 +1,16 @@
 // 转换为 Unix 风格的路径
 function toUnixPath(path) {
   if (typeof path !== 'string') return '';
-  return path.replace(/\\+/g, '/');
+  return path.replace(/\\/g, '/');
 }
 
 // 规范化路径
 function normalize(...paths) {
   if (paths.length > 1) {
     return normalize(
-      paths.reduce((pre, cur) => {
-        pre += `/${normalize(cur)}`;
+      paths.reduce((pre, cur, index) => {
+        if (index > 0) pre += '/';
+        pre += normalize(cur);
         return pre;
       }, '')
     );
@@ -61,14 +62,16 @@ function normalize(...paths) {
 // 获取文件名
 function basename(path) {
   path = toUnixPath(path);
-  const filename = path.substring(path.lastIndexOf('/') + 1).split('?')[0];
+  path = path.split(/[?#]/)[0];
+  const filename = path.slice(path.lastIndexOf('/') + 1);
   return [filename, ...extname(filename)];
 }
 
 // 获取目录名
 function dirname(path) {
   path = toUnixPath(path);
-  return normalize(path.substring(0, path.lastIndexOf('/')) || '/');
+  path = path.split(/[?#]/)[0];
+  return normalize(path.slice(0, path.lastIndexOf('/')) || '/');
 }
 
 // 合并路径

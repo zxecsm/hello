@@ -1849,13 +1849,13 @@ $rightBox
   .on('click', '.user_name', showUserInfo)
   .on('click', '.r_about', function () {
     hideRightMenu();
-    openInIframe('/note/?v=about', '关于');
+    openInIframe('/note?v=about', '关于');
   })
   .on('click', '.tips', function () {
     hideRightMenu();
     _setData('tipsFlag', tipsFlag);
     changeLogoAlertStatus();
-    openInIframe('/note/?v=tips', 'Tips');
+    openInIframe('/note?v=tips', 'Tips');
   })
   .on('contextmenu', '.tips', function (e) {
     if (!isRoot()) return;

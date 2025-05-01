@@ -74,19 +74,19 @@ function renderShareList(total, pageNo, top) {
       sList,
       getUrlAndLogo(type, id) {
         let logo = 'icon-shoucang',
-          url = window.location.origin;
+          url = _d.originURL;
         if (type === 'music') {
           logo = `icon-yinle1`;
-          url += `/sharemusic/?s=${id}`;
+          url += `/sharemusic?s=${id}`;
         } else if (type === 'bookmk') {
           logo = `icon-shuqian`;
-          url += `/sharebm/?s=${id}`;
+          url += `/sharebm?s=${id}`;
         } else if (type === 'file') {
           logo = `icon-24gl-fileText`;
-          url += `/sharefile/?s=${id}`;
+          url += `/sharefile?s=${id}`;
         } else if (type === 'dir') {
           logo = `icon-24gl-folder`;
-          url += `/sharefile/?s=${id}`;
+          url += `/sharefile?s=${id}`;
         }
         return { logo, url };
       },

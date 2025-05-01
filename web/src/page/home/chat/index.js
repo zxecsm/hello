@@ -875,7 +875,7 @@ function userMenu(e, msgObj, isUserList) {
         close();
         openFriend(_from);
       } else if (id === '3') {
-        let url = `/notes/?acc=${_from}`;
+        let url = `/notes?acc=${_from}`;
         openInIframe(url, (des || username) + '的笔记本');
         close();
       } else if (id === '1') {
@@ -1119,12 +1119,8 @@ $chatListBox
   })
   .on('click', '.c_voice_msg_box', function () {
     if (getSelectText() !== '') return;
-    playVoice(
-      getFilePath(
-        `/upload/${$(this).parent().parent().parent().attr('data-id')}`
-      ),
-      this
-    );
+    const id = $(this).parent().parent().parent().attr('data-id');
+    playVoice(getFilePath(`/upload/${id}`), this, id);
   })
   .on('click', '.c_img', function () {
     if (getSelectText() !== '') return;
@@ -1335,16 +1331,15 @@ function chatMsgMenu(e, cobj) {
   );
 }
 // 播放语音
-function playVoice(a, _this) {
-  const pflag = $chatAudio.playflag,
-    _flag = _path.basename(a)[1];
+function playVoice(a, _this, id) {
+  const pflag = $chatAudio.playflag;
   $chatAudio[0].pause();
   $chatListBox.find('.c_voice_msg_box i').css('animation', 'none');
-  if (pflag === _flag) {
+  if (pflag === id) {
     $chatAudio.playflag = '';
     return;
   }
-  $chatAudio.playflag = _flag;
+  $chatAudio.playflag = id;
   $chatAudio[0].src = a;
   $chatAudio[0].play();
   $(_this)
@@ -1696,6 +1691,7 @@ function upVoice(blob, duration) {
         yy = e.changedTouches[0].clientY;
       if (Math.abs(x - xx) > 60 || Math.abs(y - yy) > 60) {
         record.stop();
+        _msg.botMsg('已取消', 1);
         return;
       }
       const { blob, duration } = record.stop();
@@ -1714,6 +1710,7 @@ function upVoice(blob, duration) {
       upVoice(blob, duration);
     } else {
       record.stop();
+      _msg.botMsg('已取消', 1);
     }
   });
 })();

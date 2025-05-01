@@ -1410,7 +1410,7 @@ function songListMenu(e, sid) {
             if (type === 'confirm') {
               downloadFile([
                 {
-                  fileUrl: `/api/player/export/?id=${sid}`,
+                  fileUrl: `/api/player/export?id=${sid}`,
                   filename: `${name}.json`,
                 },
               ]);
@@ -2081,7 +2081,7 @@ $msuicContentBox
         if (type === 'confirm') {
           upSong();
         } else if (type === 'cancel') {
-          openInIframe('/note/?v=about', '关于');
+          openInIframe('/note?v=about', '关于');
         }
       }
     );

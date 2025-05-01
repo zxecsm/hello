@@ -3,6 +3,7 @@ import { CacheByExpire } from './cache';
 import md5 from './md5';
 import { _getData, _setData, downloadBlob, getFiles } from './utils';
 import _msg from '../plugins/message';
+import _d from '../common/config';
 
 let cacheState = _getData('cacheState');
 
@@ -31,7 +32,7 @@ const cacheFile = {
   },
   // 文件标识
   getHash(key, type) {
-    const side = window.location.origin;
+    const side = _d.originURL;
     key = key.replace(side, '');
     return `${type}_${md5.getStringHash(key)}`;
   },

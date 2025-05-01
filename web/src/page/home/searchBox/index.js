@@ -636,7 +636,7 @@ function hdClickSearchItem() {
   if (type === 'ss') {
     toSearch(text);
   } else if (type === 'note') {
-    const u = `/note/?v=${id}`;
+    const u = `/note?v=${id}`;
     if (isSearchOpenPop()) {
       openInIframe(u, text);
     } else {

@@ -10,9 +10,9 @@ const levelObj = {
   loading: 107, // 加载动画（静）
   clickLove: 107, // 点击（动）
 };
-const url = window.location.origin + '/api';
-const serverURL = url;
-const mediaURL = url + '/getfile';
+const originURL = window.location.origin;
+const serverURL = originURL + '/api';
+const mediaURL = serverURL + '/getfile';
 // 搜索引擎
 const searchEngineData = [
   {
@@ -71,6 +71,7 @@ const _d = {
   noteHistoryDirName: '.noteHistory', // 笔记历史记录目录名
   fieldLenght,
   serverURL,
+  originURL,
   mediaURL,
   levelObj,
   speed: 500,

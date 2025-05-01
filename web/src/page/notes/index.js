@@ -664,7 +664,7 @@ $contentWrap
         } else if (id === '3') {
           showQcode(
             e,
-            `${window.location.origin}/note/?v=${encodeURIComponent(noteid)}`,
+            `${_d.originURL}/note?v=${encodeURIComponent(noteid)}`,
             title
           );
         } else if (id === '4') {
@@ -689,7 +689,7 @@ $contentWrap
     const val = wInput.getValue().trim();
     const { title, id } = getNoteInfo($(this).parent().attr('data-id'));
     _myOpen(
-      `/note/?v=${encodeURIComponent(id)}${
+      `/note?v=${encodeURIComponent(id)}${
         val ? '#' + encodeURIComponent(val) : ''
       }`,
       title
@@ -908,7 +908,7 @@ $footer
     if (ids.length === 0) return;
     downloadFile(
       ids.map((id) => ({
-        fileUrl: `/api/note/read/?v=${id}&download=1`,
+        fileUrl: `/api/note/read?v=${id}&download=1`,
         filename: getNoteInfo(id).title + '.md',
       }))
     );

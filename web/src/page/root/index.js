@@ -864,7 +864,7 @@ function handlePubApi(e) {
   ];
   rMenu.selectMenu(e, data, ({ id, e }) => {
     if (id === 'info') {
-      const pre = window.location.origin;
+      const pre = _d.originURL;
       rMenu.rightInfo(
         e,
         `壁纸：\n  大屏：${pre}/api/bg/r/big\n  小屏：${pre}/api/bg/r/small\n\n获取网站图标：${pre}/api/getfavicon?u=${pre}\n\n获取网站信息：${pre}/api/bmk/parse-site-info?u=${pre}`,

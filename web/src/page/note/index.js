@@ -329,7 +329,7 @@ $authorInfo.on('click', '.logo', function (e) {
 $noteInfo.on('click', '.category', function () {
   const id = $(this).data('id');
   const { account, username } = $authorInfo._uobj;
-  const url = `/notes/?acc=${encodeURIComponent(account)}#${id}`;
+  const url = `/notes?acc=${encodeURIComponent(account)}#${id}`;
   if (isIframe()) {
     _myOpen(url, username + '的笔记本');
   } else {
