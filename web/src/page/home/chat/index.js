@@ -1704,7 +1704,9 @@ function upVoice(blob, duration) {
     });
   $document.on('mouseup', function (e) {
     if (isMobile()) return;
-    $chatFootBox.find('.c_get_voice_btn').removeClass('gren');
+    const $vBtn = $chatFootBox.find('.c_get_voice_btn');
+    if (!$vBtn.hasClass('gren')) return;
+    $vBtn.removeClass('gren');
     if (_getTarget(this, e, '.chat_foot_box .c_get_voice_btn')) {
       const { blob, duration } = record.stop();
       upVoice(blob, duration);
