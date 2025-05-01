@@ -1120,7 +1120,9 @@ $chatListBox
   .on('click', '.c_voice_msg_box', function () {
     if (getSelectText() !== '') return;
     playVoice(
-      getFilePath(`/upload/${$(this).parent().parent().attr('data-id')}`),
+      getFilePath(
+        `/upload/${$(this).parent().parent().parent().attr('data-id')}`
+      ),
       this
     );
   })
