@@ -8,6 +8,7 @@ import {
   copyText,
   darkMode,
   debounce,
+  isIframe,
   isLogin,
   myOpen,
   queryURLParams,
@@ -20,9 +21,19 @@ import _pop from '../../js/plugins/popConfirm';
 import { _tpl } from '../../js/utils/template';
 import videoLinkLogo from '../../images/img/videoLink.png';
 import { initRainCodeSleep } from '../../js/common/codeRain';
+import realtime from '../../js/plugins/realtime';
+import { otherWindowMsg } from '../home/home';
 const vd = document.querySelector('video'),
   playIn = document.querySelector('.playIn');
 const url = queryURLParams(myOpen()).HASH;
+if (!isIframe() && isLogin()) {
+  // 同步数据
+  realtime.init().add((res) => {
+    res.forEach((item) => {
+      otherWindowMsg(item);
+    });
+  });
+}
 let playerList = [];
 reqUserPlayerConfig()
   .then((res) => {

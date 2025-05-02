@@ -35,6 +35,8 @@ import {
   wrapInput,
   loadImg,
   _mySlide,
+  isLogin,
+  isIframe,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
@@ -56,6 +58,8 @@ import _path from '../../js/utils/path';
 import { addTask } from '../file/task';
 import { imgCache } from '../../js/utils/imgCache';
 import imgPreview from '../../js/plugins/imgPreview';
+import realtime from '../../js/plugins/realtime';
+import { otherWindowMsg } from '../home/home';
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
 const $curmbBox = $('.crumb_box');
@@ -73,6 +77,14 @@ const urlparmes = queryURLParams(myOpen()),
   shareId = urlparmes.s;
 if (!shareId) {
   pageErr();
+}
+if (!isIframe() && isLogin()) {
+  // 同步数据
+  realtime.init().add((res) => {
+    res.forEach((item) => {
+      otherWindowMsg(item);
+    });
+  });
 }
 let passCode = _getDataTem('passCode', shareId) || '';
 let shareToken = '';
@@ -485,7 +497,7 @@ async function readFileAndDir(obj) {
               list.findIndex((item) => item.id === obj.id)
             );
           } else if (isVideoFile(p)) {
-            _myOpen(`/videoplay/#${encodeURIComponent(fPath)}`, obj.name);
+            _myOpen(`/videoplay#${encodeURIComponent(fPath)}`, obj.name);
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(p)) {
             _myOpen(fPath, obj.name);
           } else {
@@ -530,7 +542,7 @@ async function readFile() {
               },
             ]);
           } else if (isVideoFile(shareObj.name)) {
-            _myOpen(`/videoplay/#${encodeURIComponent(fPath)}`, shareObj.name);
+            _myOpen(`/videoplay#${encodeURIComponent(fPath)}`, shareObj.name);
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(shareObj.name)) {
             _myOpen(fPath, shareObj.name);
           } else {

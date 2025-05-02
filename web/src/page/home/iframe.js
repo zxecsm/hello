@@ -24,6 +24,7 @@ import imgMrLogo from '../../images/img/mrlogo.png';
 import { closeAllwindow, hideAllwindow } from './index';
 import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';
+import _path from '../../js/utils/path';
 const $minimizeBox = $('.minimize_box');
 // 标签logo
 function getTagFont(type) {
@@ -373,7 +374,7 @@ function addHideBox(iframeBox) {
   const isOuterLink = iframeBox.url.startsWith('http');
 
   logo.className = `logo ${
-    isOuterLink ? '' : getTagFont(iframeBox.url.split('/')[1])
+    isOuterLink ? '' : getTagFont(_path.basename(iframeBox.url)[0])
   }`;
   if (isOuterLink) {
     const u = `/api/getfavicon?u=${encodeURIComponent(iframeBox.url)}`;

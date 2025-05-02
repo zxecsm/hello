@@ -31,6 +31,7 @@ import {
 } from '../../api/user';
 import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
+import { otherWindowMsg } from '../home/home';
 if (!isLogin()) {
   toLogin();
 }
@@ -44,6 +45,7 @@ realtime.init().add((res) => {
     if (type === 'updatedata' && flag === 'sharelist') {
       getShareList();
     }
+    otherWindowMsg(item);
   });
 });
 const $contentWrap = $('.content_wrap'),

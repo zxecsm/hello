@@ -251,7 +251,7 @@ $editFile
       return;
     }
     await cacheFile.setData('newNote', text);
-    _myOpen('/edit/#new', '新笔记');
+    _myOpen('/edit#new', '新笔记');
   })
   .on('click', '.close', function (e) {
     if (readOnly) {

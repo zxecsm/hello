@@ -41,6 +41,7 @@ import rMenu from '../../js/plugins/rightMenu';
 import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import { BoxSelector } from '../../js/utils/boxSelector';
+import { otherWindowMsg } from '../home/home';
 const $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
   $footer = $('.footer');
@@ -57,6 +58,7 @@ realtime.init().add((res) => {
     if (type === 'updatedata' && flag === 'history') {
       renderList();
     }
+    otherWindowMsg(item);
   });
 });
 // 搜索

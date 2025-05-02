@@ -47,8 +47,17 @@ import _path from '../../js/utils/path';
 import cacheFile from '../../js/utils/cacheFile';
 import imgPreview from '../../js/plugins/imgPreview';
 import { BoxSelector } from '../../js/utils/boxSelector';
+import realtime from '../../js/plugins/realtime';
+import { otherWindowMsg } from '../home/home';
 if (!isLogin()) {
   toLogin();
+}
+if (!isIframe()) {
+  realtime.init().add((res) => {
+    res.forEach((item) => {
+      otherWindowMsg(item);
+    });
+  });
 }
 const $contentWrap = $('.content_wrap'),
   $imgList = $contentWrap.find('.img_list'),

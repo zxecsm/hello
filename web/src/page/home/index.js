@@ -38,7 +38,7 @@ import realtime from '../../js/plugins/realtime';
 import loadingPage from '../../js/plugins/loading/index.js';
 import { reqChatNews, reqChatReadMsg } from '../../api/chat.js';
 import { reqTodoList } from '../../api/todo.js';
-import { reqUserAllowLogin, reqUserInfo } from '../../api/user.js';
+import { reqUserInfo } from '../../api/user.js';
 import { reqBgRandom, reqChangeBg } from '../../api/bg.js';
 // 时钟
 import './clock.js';
@@ -81,7 +81,6 @@ import {
   getSearchDateLimit,
   renderChatMsg,
   setCurChatAccount,
-  shakeChat,
   showChatRoom,
 } from './chat/index.js';
 import './timer.js';
@@ -150,8 +149,8 @@ import {
   percentBar,
 } from '../../js/plugins/percentBar/index.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
-import _pop from '../../js/plugins/popConfirm/index.js';
 import { reqRootSysStatus } from '../../api/root.js';
+import { handleAllowLoginMsg, shakeChat } from './home.js';
 const $pageBg = $('.page_bg'),
   $document = $(document),
   $userLogoBtn = $('.user_logo_btn'),
@@ -700,7 +699,7 @@ function keyboard(e) {
     }
     // 新建笔记
     else if (key === 'e') {
-      openInIframe('/edit/#new', '新笔记');
+      openInIframe('/edit#new', '新笔记');
     }
     // 打开图床
     else if (key === 'p') {
@@ -980,62 +979,6 @@ function handleOnlineMsg(data) {
       showChatRoom(account);
     }
   });
-}
-
-let allowLoginPop = null,
-  isLoding = false;
-// 批准登录
-function handleAllowLoginMsg(data) {
-  const { ip, code, addr, os } = data;
-
-  const msg = `设备：${os}\nIP：${ip}\n位置：${addr}\n验证码：${code.slice(
-    0,
-    3
-  )} ${code.slice(3)}\n\n请求允许登录。`;
-
-  if (allowLoginPop) {
-    allowLoginPop.close();
-  }
-
-  allowLoginPop = _pop(
-    {
-      text: msg,
-      confirm: {
-        text: '批准登录',
-      },
-    },
-    (type) => {
-      allowLoginPop = null;
-      if (type === 'confirm') {
-        if (isLoding) {
-          _msg.info('正在认证中');
-          return;
-        }
-        isLoding = true;
-        let num = 0;
-        let timer = setInterval(() => {
-          _msg.botMsg(`认证中…${++num}`, 1);
-        }, 1000);
-        function closeLogin() {
-          clearInterval(timer);
-          timer = null;
-          isLoding = false;
-          _msg.botMsg(`认证失败`, 1);
-        }
-        reqUserAllowLogin({ code })
-          .then((res) => {
-            closeLogin();
-            if (res.code === 1) {
-              _msg.success(res.codeText);
-              _msg.botMsg(`认证成功`, 1);
-            }
-          })
-          .catch(() => {
-            closeLogin();
-          });
-      }
-    }
-  );
 }
 function getPercentColor(percent) {
   if (percent <= 60) {

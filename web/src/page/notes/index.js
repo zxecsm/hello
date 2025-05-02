@@ -64,6 +64,7 @@ import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import { UpProgress } from '../../js/plugins/UpProgress';
 import { BoxSelector } from '../../js/utils/boxSelector';
+import { otherWindowMsg } from '../home/home';
 const $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
   $categoryTag = $('.category_tag'),
@@ -78,9 +79,14 @@ if (urlParams.acc && urlParams.acc !== _getData('account')) {
   $headWrap.find('.h_check_item_btn').remove();
   $categoryTag.find('.setting_category').remove();
 } else {
-  if (isLogin()) {
-    realtime.init().add((res) => {
-      res.forEach((item) => {
+  if (!isLogin()) {
+    toLogin();
+  }
+}
+if (isLogin()) {
+  realtime.init().add((res) => {
+    res.forEach((item) => {
+      if (!urlParams.acc || urlParams.acc === _getData('account')) {
         const {
           type,
           data: { flag },
@@ -97,11 +103,10 @@ if (urlParams.acc && urlParams.acc !== _getData('account')) {
             renderList();
           }
         }
-      });
+      }
+      otherWindowMsg(item);
     });
-  } else {
-    toLogin();
-  }
+  });
 }
 
 export function setNoteCategoryList(val) {
@@ -672,13 +677,13 @@ $contentWrap
         } else if (id === '5') {
           close();
           e.stopPropagation();
-          _myOpen(`/edit/#${encodeURIComponent(noteid)}`, title);
+          _myOpen(`/edit#${encodeURIComponent(noteid)}`, title);
         } else if (id === '6') {
           deleteNote(e, [noteid], close, title, loading);
         } else if (id === '7') {
           close();
           e.stopPropagation();
-          _myOpen(`/file/#/${_d.noteHistoryDirName}/${noteid}`, '文件管理');
+          _myOpen(`/file#/${_d.noteHistoryDirName}/${noteid}`, '文件管理');
         }
       },
       title
@@ -868,7 +873,7 @@ $headWrap
     rMenu.selectMenu(e, data, ({ close, id }) => {
       close();
       if (id === 'add') {
-        _myOpen('/edit/#new', '新笔记');
+        _myOpen('/edit#new', '新笔记');
       } else if (id === 'up') {
         upNote();
       }

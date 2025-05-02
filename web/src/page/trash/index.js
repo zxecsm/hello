@@ -45,6 +45,7 @@ import { reqSearchConfig } from '../../api/search';
 import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import { BoxSelector } from '../../js/utils/boxSelector';
+import { otherWindowMsg } from '../home/home';
 if (!isLogin()) {
   toLogin();
 }
@@ -58,6 +59,7 @@ realtime.init().add((res) => {
     if (type === 'updatedata' && flag === 'trash') {
       renderList();
     }
+    otherWindowMsg(item);
   });
 });
 const $headWrap = $('.head_wrap'),
@@ -196,7 +198,7 @@ function renderList(y) {
   if (y) {
     listLoading();
   }
-  myOpen(`/trash/#${encodeURIComponent(HASH)}`);
+  myOpen(`/trash#${encodeURIComponent(HASH)}`);
   pagenum ? null : (pagenum = 1);
   let btnText = '书签分组';
   if (HASH === 'note') {
@@ -507,11 +509,11 @@ $contentWrap
         } else if (flag === '1') {
           close();
           e.stopPropagation();
-          _myOpen(`/edit/#${encodeURIComponent(id)}`, obj.title);
+          _myOpen(`/edit#${encodeURIComponent(id)}`, obj.title);
         } else if (flag === '4') {
           close();
           e.stopPropagation();
-          _myOpen(`/file/#/${_d.noteHistoryDirName}/${obj.id}`, '文件管理');
+          _myOpen(`/file#/${_d.noteHistoryDirName}/${obj.id}`, '文件管理');
         }
       },
       obj.title || obj.content

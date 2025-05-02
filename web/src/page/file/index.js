@@ -85,6 +85,7 @@ import {
   getEventPoints,
   MouseElementTracker,
 } from '../../js/utils/boxSelector';
+import { otherWindowMsg } from '../home/home';
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
 const $curmbBox = $('.crumb_box');
@@ -149,6 +150,7 @@ realtime.init().add((res) => {
     } else if (type === 'errMsg') {
       _msg.error(item.data.text);
     }
+    otherWindowMsg(item);
   });
 });
 // 绑定面包屑
@@ -483,7 +485,7 @@ async function readFileAndDir(obj) {
             );
           } else if (isVideoFile(p)) {
             // 视频
-            _myOpen(`/videoplay/#${encodeURIComponent(fPath)}`, obj.name);
+            _myOpen(`/videoplay#${encodeURIComponent(fPath)}`, obj.name);
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(p)) {
             // 音频
             _myOpen(fPath, obj.name);

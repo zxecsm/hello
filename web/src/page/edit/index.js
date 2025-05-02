@@ -49,6 +49,8 @@ import { setEditor } from './setEditor.js';
 import cacheFile from '../../js/utils/cacheFile.js';
 import { percentBar } from '../../js/plugins/percentBar/index.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
+import realtime from '../../js/plugins/realtime/index.js';
+import { otherWindowMsg } from '../home/home.js';
 const mdWorker = new MdWorker();
 const $contentWrap = $('.content_wrap'),
   $headBtns = $contentWrap.find('.head_btns'),
@@ -59,6 +61,14 @@ const $contentWrap = $('.content_wrap'),
   $resize = $previewBox.find('.resize');
 
 let editNoteFontSize = _getData('editNoteFontSize');
+if (!isIframe() && isLogin()) {
+  // 同步数据
+  realtime.init().add((res) => {
+    res.forEach((item) => {
+      otherWindowMsg(item);
+    });
+  });
+}
 // 更改主题
 function changeTheme(dark) {
   if (dark === 'y') {
@@ -245,7 +255,7 @@ let orginData = {
 };
 if (!HASH) {
   HASH = 'new';
-  myOpen(`/edit/#new`);
+  myOpen(`/edit#new`);
 }
 function updateIframeTitle(title) {
   if (isIframe()) {
@@ -662,7 +672,7 @@ $headBtns
       toLogin();
       return;
     }
-    _myOpen(`/file/#/${_d.noteHistoryDirName}/${HASH}`, '文件管理');
+    _myOpen(`/file#/${_d.noteHistoryDirName}/${HASH}`, '文件管理');
   })
   .on('click', '.table_btn', createTable)
   .on('click', '.code_btn', createCodeBlock)
@@ -734,7 +744,7 @@ function saveNote() {
             await cacheFile.setData('newNote', '');
           }
           HASH = result.data.id;
-          myOpen(`/edit/#${encodeURIComponent(HASH)}`);
+          myOpen(`/edit#${encodeURIComponent(HASH)}`);
           _msg.success(result.codeText);
           return;
         }

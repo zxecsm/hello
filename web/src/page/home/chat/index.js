@@ -98,14 +98,6 @@ function switchChatTop() {
   _setData('chatIsTop', chatIsTop);
   setZidx($chatRoomWrap[0], 'chat', closeChatRoom, chatIsTop);
 }
-const closeShake = debounce((target) => {
-  target.classList.remove('shake');
-}, 500);
-export function shakeChat() {
-  const target = document.body;
-  target.classList.add('shake');
-  closeShake(target);
-}
 setTop();
 function setTop() {
   if (chatIsTop) {
@@ -983,7 +975,7 @@ function openChatFile(target) {
         } else {
           if (isVideoFile(content)) {
             openInIframe(
-              `/videoplay/#${encodeURIComponent(
+              `/videoplay#${encodeURIComponent(
                 getFilePath(`/upload/${msgId}`)
               )}`,
               content
@@ -1324,7 +1316,7 @@ function chatMsgMenu(e, cobj) {
       } else if (id === '6') {
         close();
         await cacheFile.setData('newNote', z);
-        openInIframe('/edit/#new', '新笔记');
+        openInIframe('/edit#new', '新笔记');
       }
     },
     cobj.content

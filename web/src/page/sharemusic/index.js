@@ -47,6 +47,7 @@ import {
   loadImg,
   pageErr,
   _animate,
+  isLogin,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -68,6 +69,8 @@ import _path from '../../js/utils/path';
 import { imgCache } from '../../js/utils/imgCache';
 import { percentBar } from '../../js/plugins/percentBar';
 import imgPreview from '../../js/plugins/imgPreview';
+import realtime from '../../js/plugins/realtime';
+import { otherWindowMsg } from '../home/home';
 const urlparmes = queryURLParams(myOpen()),
   shareId = urlparmes.s,
   $myAudio = $(new Audio()),
@@ -87,6 +90,14 @@ const urlparmes = queryURLParams(myOpen()),
 $myAudio[0].preload = 'none';
 if (!shareId) {
   pageErr();
+}
+if (!isIframe() && isLogin()) {
+  // 同步数据
+  realtime.init().add((res) => {
+    res.forEach((item) => {
+      otherWindowMsg(item);
+    });
+  });
 }
 const lrcHeadContentScrollName = new ContentScroll(
   $lrcHead.find('.song_name div')[0]

@@ -30,6 +30,8 @@ import { reqRootDeleteLog, reqRootLog, reqRootLogList } from '../../api/root';
 import rMenu from '../../js/plugins/rightMenu';
 import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
+import realtime from '../../js/plugins/realtime';
+import { otherWindowMsg } from '../home/home';
 let curName = null;
 const $head = $('.header'),
   $main = $('.main'),
@@ -68,6 +70,14 @@ const wInput = wrapInput($head.find('.inp_box input')[0], {
   if (isLogin()) {
     if (!isRoot()) {
       pageErr();
+    } else {
+      if (!isIframe()) {
+        realtime.init().add((res) => {
+          res.forEach((item) => {
+            otherWindowMsg(item);
+          });
+        });
+      }
     }
   } else {
     toLogin();

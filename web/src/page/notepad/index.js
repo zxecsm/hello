@@ -46,6 +46,8 @@ import { setEditor } from '../edit/setEditor.js';
 import cacheFile from '../../js/utils/cacheFile.js';
 import { percentBar } from '../../js/plugins/percentBar/index.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
+import realtime from '../../js/plugins/realtime/index.js';
+import { otherWindowMsg } from '../home/home.js';
 const mdWorker = new MdWorker();
 const $contentWrap = $('.content_wrap'),
   $headBtns = $contentWrap.find('.head_btns'),
@@ -73,6 +75,14 @@ function changeTheme(dark) {
       editor.setTheme('ace/theme/chrome');
     }
   }
+}
+if (!isIframe() && isLogin()) {
+  // 同步数据
+  realtime.init().add((res) => {
+    res.forEach((item) => {
+      otherWindowMsg(item);
+    });
+  });
 }
 window.changeTheme = changeTheme;
 // 编辑器

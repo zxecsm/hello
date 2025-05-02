@@ -31,6 +31,7 @@ import {
   LazyLoad,
   isDarkMode,
   wave,
+  isLogin,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -48,6 +49,7 @@ import { _tpl } from '../../js/utils/template.js';
 import _path from '../../js/utils/path.js';
 import { percentBar } from '../../js/plugins/percentBar/index.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
+import { otherWindowMsg } from '../home/home.js';
 const mdWorker = new MdWorker();
 let urlparmes = queryURLParams(myOpen()),
   HASH = urlparmes.HASH;
@@ -89,7 +91,7 @@ function showSearchBox() {
 $setBtnsWrap
   .on('click', '.edit_note_btn', function (e) {
     e.stopPropagation();
-    _myOpen(`/edit/#${encodeURIComponent(urlparmes.v)}`, titleName);
+    _myOpen(`/edit#${encodeURIComponent(urlparmes.v)}`, titleName);
   })
   .on('click', '.to_top_btn', function () {
     pageScrollTop(0);
@@ -202,23 +204,28 @@ if (urlparmes.v) {
           username,
           email,
         };
-        if (_getData('account') && account === _getData('account')) {
+
+        if (isLogin()) {
           realtime.init().add((res) => {
             res.forEach((item) => {
-              const {
-                type,
-                data: { flag, id },
-              } = item;
-              if (
-                type === 'updatedata' &&
-                ((flag === 'note' && urlparmes.v === id) ||
-                  (flag === 'category' && category.includes(id)))
-              ) {
-                window.location.reload();
+              if (account === _getData('account')) {
+                const {
+                  type,
+                  data: { flag, id },
+                } = item;
+                if (
+                  type === 'updatedata' &&
+                  ((flag === 'note' && urlparmes.v === id) ||
+                    (flag === 'category' && category.includes(id)))
+                ) {
+                  window.location.reload();
+                }
               }
+              otherWindowMsg(item);
             });
           });
         }
+
         if (logo) {
           imgjz(_path.normalize(`/api/pub/logo/${account}/${logo}`))
             .then((cache) => {

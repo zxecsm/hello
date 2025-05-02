@@ -1079,7 +1079,7 @@ export function settingMenu(e, isMain) {
         closeAllwindow(1);
       } else if (id === '7') {
         close();
-        openInIframe('/edit/#new', '新笔记');
+        openInIframe('/edit#new', '新笔记');
       } else if (id === '6') {
         const cacheState = cacheFile.setCacheState();
         const data = [
@@ -1820,27 +1820,27 @@ export function showTrash() {
 }
 export function showNote() {
   hideRightMenu();
-  openInIframe(`/notes/`, '笔记本');
+  openInIframe(`/notes`, '笔记本');
 }
 export function showHistory() {
   hideRightMenu();
-  openInIframe('/history/', '搜索历史');
+  openInIframe('/history', '搜索历史');
 }
 export function showBmk() {
   hideRightMenu();
-  openInIframe('/bmk/', '书签夹');
+  openInIframe('/bmk', '书签夹');
 }
 export function showFileManage() {
   hideRightMenu();
-  openInIframe(`/file/`, '文件管理');
+  openInIframe(`/file`, '文件管理');
 }
 export function showNotepad() {
   hideRightMenu();
-  openInIframe(`/notepad/`, '便条');
+  openInIframe(`/notepad`, '便条');
 }
 export function showPicture() {
   hideRightMenu();
-  openInIframe(`/pic/`, '图床');
+  openInIframe(`/pic`, '图床');
 }
 // 事件绑定
 $rightBox
@@ -1867,7 +1867,7 @@ $rightBox
   .on('click', '.r_setting', settingMenu)
   .on('click', '.show_share_list', function () {
     hideRightMenu();
-    openInIframe(`/sharelist/`, '分享列表');
+    openInIframe(`/sharelist`, '分享列表');
   })
   .on('click', '.show_music_player', () => {
     showMusicPlayerBox();

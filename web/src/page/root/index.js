@@ -53,6 +53,8 @@ import changeDark from '../../js/utils/changeDark';
 import toolTip from '../../js/plugins/tooltip';
 import { _tpl } from '../../js/utils/template';
 import md5 from '../../js/utils/md5.js';
+import realtime from '../../js/plugins/realtime/index.js';
+import { otherWindowMsg } from '../home/home.js';
 
 const $contentWrap = $('.content_wrap'),
   $paginationBox = $('.pagination_box'),
@@ -69,6 +71,13 @@ if (isRoot()) {
   getUserList(1);
 } else {
   myOpen('/');
+}
+if (!isIframe()) {
+  realtime.init().add((res) => {
+    res.forEach((item) => {
+      otherWindowMsg(item);
+    });
+  });
 }
 // 生成用户列表
 function renderUserList(pageNo, total, top) {
@@ -428,7 +437,7 @@ function changeTrashState(e) {
     data,
     ({ id, resetMenu, close, loading }) => {
       if (id === 'toTrash') {
-        _myOpen(`/file/#/${_d.trashDirName}`, '文件管理');
+        _myOpen(`/file#/${_d.trashDirName}`, '文件管理');
         close();
       } else if (id === 'state') {
         loading.start();

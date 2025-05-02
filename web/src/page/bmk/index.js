@@ -49,6 +49,7 @@ import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import { CreateTabs } from '../notes/tabs';
 import { BoxSelector } from '../../js/utils/boxSelector';
+import { otherWindowMsg } from '../home/home';
 
 const $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
@@ -64,10 +65,15 @@ if (urlParams.acc && urlParams.acc !== _getData('account')) {
   $footer.find('.f_move_to').text('添加到');
   $footer.find('.f_delete').remove();
 } else {
-  if (isLogin()) {
-    // 同步数据
-    realtime.init().add((res) => {
-      res.forEach((item) => {
+  if (!isLogin()) {
+    toLogin();
+  }
+}
+if (isLogin()) {
+  // 同步数据
+  realtime.init().add((res) => {
+    res.forEach((item) => {
+      if (!urlParams.acc || urlParams.acc === _getData('account')) {
         const {
           type,
           data: { flag },
@@ -75,11 +81,10 @@ if (urlParams.acc && urlParams.acc !== _getData('account')) {
         if (type === 'updatedata' && flag === 'bookmark') {
           updataCategory();
         }
-      });
+      }
+      otherWindowMsg(item);
     });
-  } else {
-    toLogin();
-  }
+  });
 }
 
 // 搜索书签
