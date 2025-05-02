@@ -31,7 +31,6 @@ import {
   LazyLoad,
   isDarkMode,
   wave,
-  isLogin,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -49,7 +48,7 @@ import { _tpl } from '../../js/utils/template.js';
 import _path from '../../js/utils/path.js';
 import { percentBar } from '../../js/plugins/percentBar/index.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
-import { otherWindowMsg } from '../home/home.js';
+import { otherWindowMsg, waitLogin } from '../home/home.js';
 const mdWorker = new MdWorker();
 let urlparmes = queryURLParams(myOpen()),
   HASH = urlparmes.HASH;
@@ -204,8 +203,7 @@ if (urlparmes.v) {
           username,
           email,
         };
-
-        if (isLogin()) {
+        waitLogin(() => {
           realtime.init().add((res) => {
             res.forEach((item) => {
               if (account === _getData('account')) {
@@ -224,7 +222,7 @@ if (urlparmes.v) {
               otherWindowMsg(item);
             });
           });
-        }
+        });
 
         if (logo) {
           imgjz(_path.normalize(`/api/pub/logo/${account}/${logo}`))

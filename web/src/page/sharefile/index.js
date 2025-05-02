@@ -35,7 +35,6 @@ import {
   wrapInput,
   loadImg,
   _mySlide,
-  isLogin,
   isIframe,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
@@ -59,7 +58,7 @@ import { addTask } from '../file/task';
 import { imgCache } from '../../js/utils/imgCache';
 import imgPreview from '../../js/plugins/imgPreview';
 import realtime from '../../js/plugins/realtime';
-import { otherWindowMsg } from '../home/home';
+import { otherWindowMsg, waitLogin } from '../home/home';
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
 const $curmbBox = $('.crumb_box');
@@ -78,11 +77,13 @@ const urlparmes = queryURLParams(myOpen()),
 if (!shareId) {
   pageErr();
 }
-if (!isIframe() && isLogin()) {
-  // 同步数据
-  realtime.init().add((res) => {
-    res.forEach((item) => {
-      otherWindowMsg(item);
+if (!isIframe()) {
+  waitLogin(() => {
+    // 同步数据
+    realtime.init().add((res) => {
+      res.forEach((item) => {
+        otherWindowMsg(item);
+      });
     });
   });
 }

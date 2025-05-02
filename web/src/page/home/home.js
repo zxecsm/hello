@@ -2,7 +2,14 @@ import { reqUserAllowLogin } from '../../api/user';
 import _d from '../../js/common/config';
 import _msg from '../../js/plugins/message';
 import _pop from '../../js/plugins/popConfirm';
-import { _getData, debounce, isIframe, myOpen } from '../../js/utils/utils';
+import {
+  _getData,
+  _setTimeout,
+  debounce,
+  isIframe,
+  isLogin,
+  myOpen,
+} from '../../js/utils/utils';
 
 let allowLoginPop = null,
   isLoding = false;
@@ -111,5 +118,12 @@ export function otherWindowMsg(msg) {
       },
       1
     );
+  }
+}
+export function waitLogin(callback) {
+  if (isLogin()) {
+    callback && callback();
+  } else {
+    _setTimeout(() => waitLogin(callback), 5000);
   }
 }

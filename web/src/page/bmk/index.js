@@ -49,7 +49,7 @@ import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import { CreateTabs } from '../notes/tabs';
 import { BoxSelector } from '../../js/utils/boxSelector';
-import { otherWindowMsg } from '../home/home';
+import { otherWindowMsg, waitLogin } from '../home/home';
 
 const $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
@@ -69,7 +69,7 @@ if (urlParams.acc && urlParams.acc !== _getData('account')) {
     toLogin();
   }
 }
-if (isLogin()) {
+waitLogin(() => {
   // 同步数据
   realtime.init().add((res) => {
     res.forEach((item) => {
@@ -85,8 +85,7 @@ if (isLogin()) {
       otherWindowMsg(item);
     });
   });
-}
-
+});
 // 搜索书签
 const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
   update(val) {

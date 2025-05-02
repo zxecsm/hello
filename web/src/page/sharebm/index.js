@@ -23,7 +23,6 @@ import {
   wave,
   _getData,
   darkMode,
-  isLogin,
 } from '../../js/utils/utils';
 
 import imgMrLogo from '../../images/img/mrlogo.png';
@@ -40,7 +39,7 @@ import { _tpl } from '../../js/utils/template';
 import _path from '../../js/utils/path';
 import cacheFile from '../../js/utils/cacheFile';
 import realtime from '../../js/plugins/realtime';
-import { otherWindowMsg } from '../home/home';
+import { otherWindowMsg, waitLogin } from '../home/home';
 
 const urlparmes = queryURLParams(myOpen()),
   shareId = urlparmes.s;
@@ -58,11 +57,13 @@ const bmLoadImg = new LazyLoad();
 const $box = $('.box');
 const $head = $('.head');
 const $paginationBox = $('.pagination_box');
-if (!isIframe() && isLogin()) {
-  // 同步数据
-  realtime.init().add((res) => {
-    res.forEach((item) => {
-      otherWindowMsg(item);
+if (!isIframe()) {
+  waitLogin(() => {
+    // 同步数据
+    realtime.init().add((res) => {
+      res.forEach((item) => {
+        otherWindowMsg(item);
+      });
     });
   });
 }

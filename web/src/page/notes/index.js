@@ -64,7 +64,7 @@ import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import { UpProgress } from '../../js/plugins/UpProgress';
 import { BoxSelector } from '../../js/utils/boxSelector';
-import { otherWindowMsg } from '../home/home';
+import { otherWindowMsg, waitLogin } from '../home/home';
 const $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
   $categoryTag = $('.category_tag'),
@@ -83,7 +83,7 @@ if (urlParams.acc && urlParams.acc !== _getData('account')) {
     toLogin();
   }
 }
-if (isLogin()) {
+waitLogin(() => {
   realtime.init().add((res) => {
     res.forEach((item) => {
       if (!urlParams.acc || urlParams.acc === _getData('account')) {
@@ -107,7 +107,7 @@ if (isLogin()) {
       otherWindowMsg(item);
     });
   });
-}
+});
 
 export function setNoteCategoryList(val) {
   if (val === undefined) {

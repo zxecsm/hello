@@ -22,15 +22,17 @@ import { _tpl } from '../../js/utils/template';
 import videoLinkLogo from '../../images/img/videoLink.png';
 import { initRainCodeSleep } from '../../js/common/codeRain';
 import realtime from '../../js/plugins/realtime';
-import { otherWindowMsg } from '../home/home';
+import { otherWindowMsg, waitLogin } from '../home/home';
 const vd = document.querySelector('video'),
   playIn = document.querySelector('.playIn');
 const url = queryURLParams(myOpen()).HASH;
-if (!isIframe() && isLogin()) {
-  // 同步数据
-  realtime.init().add((res) => {
-    res.forEach((item) => {
-      otherWindowMsg(item);
+if (!isIframe()) {
+  waitLogin(() => {
+    // 同步数据
+    realtime.init().add((res) => {
+      res.forEach((item) => {
+        otherWindowMsg(item);
+      });
     });
   });
 }
