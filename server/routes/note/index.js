@@ -31,7 +31,7 @@ import {
 
 import { getFriendDes } from '../chat/chat.js';
 import { fieldLenght } from '../config.js';
-import { markdownToText, saveNoteHistory } from './note.js';
+import { parseMarkDown, saveNoteHistory } from './note.js';
 import _f from '../../utils/f.js';
 
 const route = express.Router();
@@ -233,9 +233,12 @@ route.post('/search', async (req, res) => {
         } = item;
 
         let con = [];
+        let images = [];
 
         if (content) {
-          content = markdownToText(content).replace(/[\n\r]/g, '');
+          const { text, images: img } = parseMarkDown(content);
+          content = text.replace(/[\n\r]/g, '');
+          images = img;
 
           if (word) {
             // 提取关键词
@@ -291,6 +294,7 @@ route.post('/search', async (req, res) => {
           categoryArr,
           create_at,
           update_at,
+          images,
         };
       });
     }

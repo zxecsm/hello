@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import imgMrLogo from '../../../images/img/mrlogo.png';
+import defaultIcon from '../../../images/img/default-icon.png';
 
 import {
   myOpen,
@@ -406,7 +406,9 @@ function hdAsideListItemLogo() {
         $bm_logo.css('background-image', `url(${cache})`).addClass('load');
       })
       .catch(() => {
-        $bm_logo.css('background-image', `url(${imgMrLogo})`).addClass('load');
+        $bm_logo
+          .css('background-image', `url(${defaultIcon})`)
+          .addClass('load');
       });
   });
 }

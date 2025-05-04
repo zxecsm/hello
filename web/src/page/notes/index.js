@@ -34,6 +34,8 @@ import {
   concurrencyTasks,
   _getTarget,
   toggleUserSelect,
+  LazyLoad,
+  imgjz,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -65,6 +67,9 @@ import { _tpl } from '../../js/utils/template';
 import { UpProgress } from '../../js/plugins/UpProgress';
 import { BoxSelector } from '../../js/utils/boxSelector';
 import { otherWindowMsg, waitLogin } from '../home/home';
+import imgPreview from '../../js/plugins/imgPreview';
+import cacheFile from '../../js/utils/cacheFile';
+import loadingSvg from '../../images/img/loading.svg';
 const $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
   $categoryTag = $('.category_tag'),
@@ -269,6 +274,7 @@ function stopSelect() {
       check: 'n',
     });
 }
+const imgLazy = new LazyLoad();
 // 生成列表
 export function renderList(y) {
   let pagenum = $contentWrap.pagenum,
@@ -304,7 +310,7 @@ export function renderList(y) {
           `
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
-            <template v-for="{title,share,id,con,top,categoryArr} in data">
+            <template v-for="{title,share,id,con,top,categoryArr,images} in data">
               <ul class="item_box" :data-id="id">
                 <div cursor="y" check="n" class="check_state"></div>
                 <li class="item_type iconfont icon-jilu"></li>
@@ -320,6 +326,7 @@ export function renderList(y) {
                   </span>
                   <br/>
                 </template>
+                <img class="default_size" :src="loadingSvg" v-if="images.length > 0" cursor="y" :data-src="images[0]" />
                 <span v-if="con && con.length > 0" v-html="hdHighlight(con)"></span>
               </div>
             </template>
@@ -332,6 +339,7 @@ export function renderList(y) {
             word,
             splitWord,
             runState,
+            loadingSvg,
             hdHighlight,
             getPaging() {
               return pgnt.getHTML({
@@ -352,6 +360,28 @@ export function renderList(y) {
         if (y) {
           pageScrollTop(0);
         }
+        imgLazy.bind(
+          [...$contentWrap[0].querySelectorAll('img')].filter((item) => {
+            const url = item.getAttribute('data-src');
+            const cache = cacheFile.hasUrl(url, 'image');
+            if (cache) {
+              item.src = cache;
+              item.classList.remove('default_size');
+            }
+            return !cache;
+          }),
+          (item) => {
+            const url = item.getAttribute('data-src');
+            imgjz(url)
+              .then((cache) => {
+                item.src = cache;
+                item.classList.remove('default_size');
+              })
+              .catch(() => {
+                item.style.display = 'none';
+              });
+          }
+        );
       }
     })
     .catch(() => {});
@@ -699,6 +729,20 @@ $contentWrap
       }`,
       title
     );
+  })
+  .on('click', 'img', function () {
+    const imgs = $contentWrap.find('img');
+    let idx = 0;
+    const arr = [];
+    imgs.each((i, item) => {
+      if (item === this) {
+        idx = i;
+      }
+      arr.push({
+        u1: item.getAttribute('data-src'),
+      });
+    });
+    imgPreview(arr, idx);
   })
   .on('click', '.item_info .category', function () {
     tabsObj.list = categoryToArr(this.dataset.id);

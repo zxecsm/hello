@@ -25,7 +25,7 @@ import {
   darkMode,
 } from '../../js/utils/utils';
 
-import imgMrLogo from '../../images/img/mrlogo.png';
+import defaultIcon from '../../images/img/default-icon.png';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
 import { reqBmkGetShare, reqBmkSaveShare } from '../../api/bmk';
@@ -129,7 +129,7 @@ function renderList() {
       .catch(() => {
         $img
           .css({
-            'background-image': `url(${imgMrLogo})`,
+            'background-image': `url(${defaultIcon})`,
           })
           .addClass('load');
       });

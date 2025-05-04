@@ -64,7 +64,7 @@ import { playInConfig, getUserInfo, deleteUser } from './user.js';
 import jwt from '../../utils/jwt.js';
 import { fieldLenght } from '../config.js';
 import _path from '../../utils/path.js';
-import { getNoteHistoryDir, markdownToText } from '../note/note.js';
+import { getNoteHistoryDir, parseMarkDown } from '../note/note.js';
 import { getTrashDir } from '../file/file.js';
 import _crypto from '../../utils/crypto.js';
 import getCity from '../../utils/getCity.js';
@@ -1708,7 +1708,7 @@ route.get('/trash-list', async (req, res) => {
     let fields = '';
 
     if (type === 'bmk') {
-      fields = 'id,title,link,des,group_id,group_title';
+      fields = 'id,title,link,des,group_id,group_title,logo';
       fieldArr = ['title', 'link', 'des'];
     } else if (type === 'history') {
       fields = 'id,content';
@@ -1780,9 +1780,12 @@ route.get('/trash-list', async (req, res) => {
         data = data.map((item) => {
           let { title, content, id, category } = item;
           let con = [];
+          let images = [];
 
           if (content) {
-            content = markdownToText(content).replace(/[\n\r]/g, '');
+            const { text, images: img } = parseMarkDown(content);
+            content = text.replace(/[\n\r]/g, '');
+            images = img;
 
             if (word) {
               // 提取关键词
@@ -1834,6 +1837,7 @@ route.get('/trash-list', async (req, res) => {
             con,
             category,
             categoryArr,
+            images,
           };
         });
       } else if (type === 'bmk') {

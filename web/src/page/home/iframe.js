@@ -20,7 +20,7 @@ import {
   toSetSize,
 } from '../../js/utils/utils';
 import { popWindow, setZidx } from './popWindow';
-import imgMrLogo from '../../images/img/mrlogo.png';
+import defaultIcon from '../../images/img/default-icon.png';
 import { closeAllwindow, hideAllwindow } from './index';
 import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';
@@ -383,7 +383,7 @@ function addHideBox(iframeBox) {
         logo.style.backgroundImage = `url(${cache})`;
       })
       .catch(() => {
-        logo.style.backgroundImage = `url(${imgMrLogo})`;
+        logo.style.backgroundImage = `url(${defaultIcon})`;
       });
   }
   box.appendChild(logo);

@@ -4,6 +4,7 @@ import '../../css/common/common.css';
 import '../../font/iconfont.css';
 import '../notes/index.less';
 import './index.less';
+import '../bmk/index.less';
 import {
   _setData,
   _getData,
@@ -27,6 +28,8 @@ import {
   darkMode,
   _getTarget,
   toggleUserSelect,
+  LazyLoad,
+  imgjz,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -46,6 +49,11 @@ import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import { BoxSelector } from '../../js/utils/boxSelector';
 import { otherWindowMsg } from '../home/home';
+import imgPreview from '../../js/plugins/imgPreview';
+import cacheFile from '../../js/utils/cacheFile';
+import loadingSvg from '../../images/img/loading.svg';
+import defaultIcon from '../../images/img/default-icon.png';
+import _path from '../../js/utils/path';
 if (!isLogin()) {
   toLogin();
 }
@@ -187,6 +195,8 @@ function hdHighlight(con) {
     }
   );
 }
+const imgLazy = new LazyLoad();
+const bmLogoLazy = new LazyLoad();
 function renderList(y) {
   let pagenum = $contentWrap.pagenum,
     a = wInput.getValue().trim(),
@@ -198,7 +208,7 @@ function renderList(y) {
   if (y) {
     listLoading();
   }
-  myOpen(`/trash#${encodeURIComponent(HASH)}`);
+  myOpen(`#${encodeURIComponent(HASH)}`);
   pagenum ? null : (pagenum = 1);
   let btnText = '书签分组';
   if (HASH === 'note') {
@@ -228,7 +238,7 @@ function renderList(y) {
           `
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
-            <template v-for="{title,id,link,content,con,des,group_title,categoryArr} in list">
+            <template v-for="{title,id,link,content,con,des,group_title,categoryArr,images} in list">
               <ul class="item_box" :data-id="id" :data-type="HASH">
                 <div cursor="y" check="n" class="check_state"></div>
                 <li class="item_type iconfont {{slogo}}"></li>
@@ -242,6 +252,7 @@ function renderList(y) {
                   </span>
                   <br/>
                 </template>
+                <img class="default_size" :src="loadingSvg" v-if="images.length > 0" cursor="y" :data-src="images[0]" />
                 <span v-if="con && con.length > 0" v-html="hdHighlight(con)"></span>
               </div>
               <div class="item_info" v-else-if="HASH === 'bmk'">
@@ -249,6 +260,7 @@ function renderList(y) {
                   <span style="color:var(--icon-color);margin-right:4px;">#</span>{{group_title}}
                 </span>
                 <br/>
+                <div class="logo"></div>
                 <a cursor="y" v-html="hdTitleHighlight(splitWord, link)" href="{{link}}" target="_blank"></a>
                 <br/>
                 <span v-html="hdTitleHighlight(splitWord, des)"></span>
@@ -265,6 +277,7 @@ function renderList(y) {
             slogo,
             splitWord,
             hdHighlight,
+            loadingSvg,
             hdTitleHighlight,
             getTitle(title, content) {
               title ? null : (title = content);
@@ -285,6 +298,73 @@ function renderList(y) {
         $headWrap.addClass('open');
         if (y) {
           pageScrollTop(0);
+        }
+        if (HASH === 'note') {
+          imgLazy.bind(
+            [...$contentWrap[0].querySelectorAll('img')].filter((item) => {
+              const url = item.getAttribute('data-src');
+              const cache = cacheFile.hasUrl(url, 'image');
+              if (cache) {
+                item.src = cache;
+                item.classList.remove('default_size');
+              }
+              return !cache;
+            }),
+            (item) => {
+              const url = item.getAttribute('data-src');
+              imgjz(url)
+                .then((cache) => {
+                  item.src = cache;
+                  item.classList.remove('default_size');
+                })
+                .catch(() => {
+                  item.style.display = 'none';
+                });
+            }
+          );
+        } else if (HASH === 'bmk') {
+          bmLogoLazy.bind(
+            [...$contentWrap[0].querySelectorAll('.logo')].filter((item) => {
+              const $item = $(item);
+              let { logo, link } = getListItem(
+                $item.parent().prev().attr('data-id')
+              );
+
+              if (logo) {
+                logo = _path.normalize(`/api/pub/${logo}`);
+              } else {
+                logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
+              }
+              const cache = cacheFile.hasUrl(logo, 'image');
+              if (cache) {
+                $item.css('background-image', `url(${cache})`).addClass('load');
+              }
+              return !cache;
+            }),
+            (item) => {
+              const $item = $(item);
+              let { logo, link } = getListItem(
+                $item.parent().prev().attr('data-id')
+              );
+
+              if (logo) {
+                logo = _path.normalize(`/api/pub/${logo}`);
+              } else {
+                logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
+              }
+              imgjz(logo)
+                .then((cache) => {
+                  $item
+                    .css('background-image', `url(${cache})`)
+                    .addClass('load');
+                })
+                .catch(() => {
+                  $item
+                    .css('background-image', `url(${defaultIcon})`)
+                    .addClass('load');
+                });
+            }
+          );
         }
       }
     })
@@ -557,6 +637,21 @@ $contentWrap
       e.stopPropagation();
       _myOpen(`/note?v=${encodeURIComponent(obj.id)}`, obj.title);
     }
+  })
+  .on('click', 'img', function () {
+    if (HASH !== 'note') return;
+    const imgs = $contentWrap.find('img');
+    let idx = 0;
+    const arr = [];
+    imgs.each((i, item) => {
+      if (item === this) {
+        idx = i;
+      }
+      arr.push({
+        u1: item.getAttribute('data-src'),
+      });
+    });
+    imgPreview(arr, idx);
   })
   .on('click', '.check_state', function () {
     checkedItem(this);

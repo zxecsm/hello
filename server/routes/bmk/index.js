@@ -202,7 +202,7 @@ route.post('/search', async (req, res) => {
       // 匹配数据
       data = await queryData(
         'bmk_bmk_group_view',
-        'group_title,id,group_id,title,link,des',
+        'group_title,id,group_id,title,link,des,logo',
         where,
         valArr
       );

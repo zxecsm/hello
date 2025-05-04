@@ -41,10 +41,22 @@ const md = new MarkdownIt({
   linkify: false,
   typographer: false,
 });
-export function markdownToText(content) {
+export function parseMarkDown(content) {
+  const res = {
+    text: content,
+    images: [],
+  };
+
   try {
-    return cheerio.load(md.render(content)).text();
-  } catch {
-    return content;
-  }
+    const $ = cheerio.load(md.render(content));
+    res.text = $.text();
+    $('img').each((_, el) => {
+      const src = $(el).attr('src');
+      if (src) {
+        res.images.push(src);
+      }
+    });
+  } catch {}
+
+  return res;
 }

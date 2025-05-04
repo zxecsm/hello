@@ -3,6 +3,9 @@ import '../../css/common/reset.css';
 import '../../css/common/common.css';
 import '../../font/iconfont.css';
 import '../notes/index.less';
+import './index.less';
+import loadingSvg from '../../images/img/loading.svg';
+import defaultIcon from '../../images/img/default-icon.png';
 
 import {
   _setData,
@@ -25,6 +28,8 @@ import {
   darkMode,
   _getTarget,
   toggleUserSelect,
+  LazyLoad,
+  imgjz,
 } from '../../js/utils/utils';
 
 import _d from '../../js/common/config';
@@ -50,6 +55,8 @@ import { _tpl } from '../../js/utils/template';
 import { CreateTabs } from '../notes/tabs';
 import { BoxSelector } from '../../js/utils/boxSelector';
 import { otherWindowMsg, waitLogin } from '../home/home';
+import _path from '../../js/utils/path';
+import cacheFile from '../../js/utils/cacheFile';
 
 const $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
@@ -248,7 +255,7 @@ const pgnt = pagination($contentWrap[0], {
     pageScrollTop(0);
   },
 });
-
+const loadImg = new LazyLoad();
 // 生成列表
 function renderList(y) {
   let pagenum = bmksPageNo,
@@ -297,6 +304,7 @@ function renderList(y) {
                   <span style="color:var(--icon-color);margin-right:4px;">#</span>{{group_title}}
                 </span>
                 <br/>
+                <div class="logo"></div>
                 <a cursor="y" v-html="hdTitleHighlight(splitWord, link)" href="{{link}}" target="_blank"></a>
                 <br/>
                 <span v-html="hdTitleHighlight(splitWord, des)"></span>
@@ -308,6 +316,7 @@ function renderList(y) {
           {
             total,
             data,
+            loadingSvg,
             hdTitleHighlight,
             splitWord,
             _d,
@@ -327,6 +336,47 @@ function renderList(y) {
         if (y) {
           pageScrollTop(0);
         }
+
+        loadImg.bind(
+          [...$contentWrap[0].querySelectorAll('.logo')].filter((item) => {
+            const $item = $(item);
+            let { logo, link } = getItemObj(
+              $item.parent().prev().attr('data-id')
+            );
+
+            if (logo) {
+              logo = _path.normalize(`/api/pub/${logo}`);
+            } else {
+              logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
+            }
+            const cache = cacheFile.hasUrl(logo, 'image');
+            if (cache) {
+              $item.css('background-image', `url(${cache})`).addClass('load');
+            }
+            return !cache;
+          }),
+          (item) => {
+            const $item = $(item);
+            let { logo, link } = getItemObj(
+              $item.parent().prev().attr('data-id')
+            );
+
+            if (logo) {
+              logo = _path.normalize(`/api/pub/${logo}`);
+            } else {
+              logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
+            }
+            imgjz(logo)
+              .then((cache) => {
+                $item.css('background-image', `url(${cache})`).addClass('load');
+              })
+              .catch(() => {
+                $item
+                  .css('background-image', `url(${defaultIcon})`)
+                  .addClass('load');
+              });
+          }
+        );
       }
     })
     .catch(() => {});

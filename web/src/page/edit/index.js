@@ -257,7 +257,7 @@ let orginData = {
 };
 if (!HASH) {
   HASH = 'new';
-  myOpen(`/edit#new`);
+  myOpen(`#new`);
 }
 function updateIframeTitle(title) {
   if (isIframe()) {
@@ -746,7 +746,7 @@ function saveNote() {
             await cacheFile.setData('newNote', '');
           }
           HASH = result.data.id;
-          myOpen(`/edit#${encodeURIComponent(HASH)}`);
+          myOpen(`#${encodeURIComponent(HASH)}`);
           _msg.success(result.codeText);
           return;
         }

@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import './cat.less';
-import imgMrLogo from '../../../images/img/mrlogo.png';
+import defaultIcon from '../../../images/img/default-icon.png';
 import imgTianjia from '../../../images/img/tianjia.png';
 import {
   myOpen,
@@ -285,7 +285,7 @@ function lazyLoadHomeBmLogo() {
       .catch(() => {
         $homeBmLogo
           .css({
-            'background-image': `url(${imgMrLogo})`,
+            'background-image': `url(${defaultIcon})`,
           })
           .addClass('load');
       });
