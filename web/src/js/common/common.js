@@ -193,7 +193,7 @@ window.onerror = function (message, url, line, column) {
     return new Promise((resolve, reject) => {
       const fontType = _getData('fontType');
       if (fontType === 'default') {
-        document.body.style.fontFamily = 'Roboto, Arial, sans-serif';
+        document.body.style.fontFamily = _d.defaultFontFamily;
         resolve();
         return;
       }

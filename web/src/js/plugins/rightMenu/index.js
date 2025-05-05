@@ -61,7 +61,7 @@ class RightM {
     this.searchBtn.className = 'search_btn iconfont icon-search';
     this.head.appendChild(this.searchBtn);
     this.searchBox = document.createElement('div');
-    this.searchBox.className = 'search_box';
+    this.searchBox.className = 'search_box inp_box';
     this.searchInp = document.createElement('input');
     this.searchInp.setAttribute('placeholder', '搜索');
     this.searchInp.setAttribute('autocomplete', 'off');
@@ -687,7 +687,7 @@ function selectMenu(e, data, callback, title = '') {
       }
     },
   };
-  if (data.length < 20) {
+  if (data.length < 10) {
     delete rOpt.searchCallback;
   }
   const r = rightM(rOpt);

@@ -1,4 +1,5 @@
 import { _getData } from '../utils/utils';
+import _d from './config';
 
 /* 鼠标特效 - 小星星拖尾 */
 (function () {
@@ -74,10 +75,11 @@ import { _getData } from '../utils/utils';
       top: '0px',
       left: '0px',
       pointerEvents: 'none',
-      'touch-action': 'none',
-      'z-index': '10000000',
+      touchAction: 'none',
+      zIndex: '10000000',
       fontSize: '25px',
-      'will-change': 'transform',
+      fontFamily: _d.defaultFontFamily,
+      willChange: 'transform',
     };
 
     // Init, and set properties

@@ -73,6 +73,7 @@ const _d = {
   serverURL,
   originURL,
   mediaURL,
+  defaultFontFamily: 'Roboto, Arial, sans-serif', // 默认字体
   levelObj,
   speed: 500,
   translator: 'https://bing.com/translator?text={{}}', // 翻译接口
