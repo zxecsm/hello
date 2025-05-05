@@ -61,7 +61,6 @@ const $setBtnsWrap = $('.set_btns_wrap'),
   $pageSearchWrap = $('.page_search_wrap'),
   $authorInfo = $contentWrap.find('.author_info'),
   $fillBox = $contentWrap.find('.fill_box');
-_d.isNote = true;
 let noteFontSize = _getData('noteFontSize'),
   dark = _getData('dark'),
   noteWiden = _getData('noteWiden'),

@@ -289,7 +289,6 @@ export function changeLogoAlertStatus() {
   }
 }
 // 关闭页面加载
-_d.isHome = true;
 function closeLoading() {
   loadingPage.end();
   $searchBoxBtn.stop().slideDown(_d.speed, () => {

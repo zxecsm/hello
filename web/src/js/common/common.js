@@ -11,6 +11,8 @@ import {
   _getDataTem,
   _setDataTem,
   _delDataTem,
+  myOpen,
+  pageErr,
 } from '../utils/utils';
 import _d from './config';
 import _msg from '../plugins/message';
@@ -22,6 +24,25 @@ import loadingPage from '../plugins/loading';
 import { reqUserCustomCode, reqUserError } from '../../api/user';
 import './codeRain';
 import './stars';
+window._pageName =
+  myOpen()
+    .split(/[?#]/)[0]
+    .replace(_d.originURL, '')
+    .split('/')
+    .filter((item) => item)[0] || 'home';
+if (isIframe() && window._pageName !== '404') {
+  if (window._pageName === 'home') {
+    pageErr();
+  } else {
+    try {
+      if (top._pageName !== 'home') {
+        pageErr();
+      }
+    } catch {
+      pageErr();
+    }
+  }
+}
 if (isLogin()) {
   // 君子锁
   ~(function getGentlemanLock() {
@@ -40,7 +61,7 @@ if (isLogin()) {
 document.body.style.opacity = 1;
 loadingPage.start();
 window.addEventListener('load', function () {
-  if (!_d.isRootPage) {
+  if (window._pageName !== 'root') {
     reqUserCustomCode()
       .then((res) => {
         if (res.code === 1) {
@@ -49,7 +70,7 @@ window.addEventListener('load', function () {
       })
       .catch(() => {});
   }
-  if (_d.isHome || _d.isNote) return;
+  if (window._pageName === 'home' || window._pageName === 'note') return;
   loadingPage.end();
 });
 //鼠标点击效果
@@ -152,10 +173,12 @@ window.addEventListener('offline', function () {
     document.body.appendChild(img);
   }
 })();
-// 黑白
-document.documentElement.style.filter = `grayscale(${_getData(
-  'pageGrayscale'
-)})`;
+if (!isIframe()) {
+  // 黑白
+  document.documentElement.style.filter = `grayscale(${_getData(
+    'pageGrayscale'
+  )})`;
+}
 
 // 捕获错误
 window.onerror = function (message, url, line, column) {

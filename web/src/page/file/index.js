@@ -1174,7 +1174,6 @@ function handleDownloadFile(e) {
       subText: '提交',
       items: {
         url: {
-          beforeText: '离线下载最大文件10GB',
           placeholder: '仅支持http/https网络链接',
           verify(val) {
             if (!isurl(val)) {
@@ -1194,7 +1193,7 @@ function handleDownloadFile(e) {
         })
         .catch(() => {});
     },
-    '离线下载'
+    '离线下载文件'
   );
 }
 function upFileAndDir(e) {

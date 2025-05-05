@@ -2242,7 +2242,7 @@ export function unique(arr, keys) {
   });
 }
 export function isIframe() {
-  return self != top;
+  return self !== top;
 }
 // 包装input
 export function wrapInput(target, opt) {

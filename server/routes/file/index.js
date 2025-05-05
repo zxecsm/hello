@@ -1465,13 +1465,6 @@ route.post('/download', async (req, res) => {
         signal, // 绑定 AbortController
       });
 
-      // 获取文件总大小（从响应头中获取）
-      const contentLength = response.headers['content-length'];
-      if (contentLength && contentLength > fieldLenght.downloadFileSize) {
-        await handleError('文件过大，下载取消', response.data);
-        return;
-      }
-
       // 创建一个可写流，将文件保存到本地
       const writer = _f.fs.createWriteStream(outputFilePath);
 
@@ -1479,11 +1472,6 @@ route.post('/download', async (req, res) => {
       let downloadedBytes = 0;
       response.data.on('data', (chunk) => {
         downloadedBytes += chunk.length;
-
-        // 动态检查文件大小
-        if (downloadedBytes > fieldLenght.downloadFileSize) {
-          handleError('文件过大，下载取消', response.data, writer);
-        }
 
         taskState.update(
           taskKey,

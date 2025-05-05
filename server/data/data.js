@@ -2,7 +2,7 @@ import { resolve } from 'path';
 import appConfig from './config.js';
 
 import _f from '../utils/f.js';
-import { getDirname } from '../utils/utils.js';
+import { debounce, getDirname } from '../utils/utils.js';
 import _path from '../utils/path.js';
 import _crypto from '../utils/crypto.js';
 
@@ -23,11 +23,24 @@ if (_f.fs.existsSync(dataConfigPath)) {
   config = { ...config, ...loadConfig(dataConfigPath) };
 }
 
+// 保存配置文件
+function saveConfig() {
+  try {
+    _f.fs.mkdirSync(_path.dirname(dataConfigPath), { recursive: true });
+    _f.fs.writeFileSync(dataConfigPath, JSON.stringify(_d, null, 2));
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(error);
+  }
+}
+
+const saveConfigDebounced = debounce(saveConfig, 100);
+
 // 创建深度代理，自动保存配置
-export const _d = deepProxy(config, saveConfig);
+export const _d = deepProxy(config, saveConfigDebounced);
 
 // 保存配置到文件
-saveConfig();
+saveConfigDebounced();
 
 // 读取配置文件
 function loadConfig(path) {
@@ -40,26 +53,32 @@ function loadConfig(path) {
   }
 }
 
-// 保存配置文件
-function saveConfig() {
-  _f.fs.mkdirSync(_path.dirname(dataConfigPath), { recursive: true });
-  _f.fs.writeFileSync(dataConfigPath, JSON.stringify(_d, null, 2));
-}
-
 // 代理
-function deepProxy(target, callback) {
-  const handler = {
-    get(target, key) {
-      const value = Reflect.get(target, key);
-      return value !== null && typeof value === 'object'
-        ? new Proxy(value, handler)
-        : value;
+function deepProxy(target, callback, cache = new WeakMap()) {
+  if (cache.has(target)) {
+    return cache.get(target);
+  }
+
+  const proxy = new Proxy(target, {
+    get(target, key, receiver) {
+      const value = Reflect.get(target, key, receiver);
+      if (value && typeof value === 'object') {
+        return deepProxy(value, callback, cache);
+      }
+      return value;
     },
-    set(target, key, value) {
-      const result = Reflect.set(target, key, value);
+    set(target, key, value, receiver) {
+      const result = Reflect.set(target, key, value, receiver);
       callback && callback();
       return result;
     },
-  };
-  return new Proxy(target, handler);
+    deleteProperty(obj, key) {
+      const result = Reflect.deleteProperty(obj, key);
+      callback && callback();
+      return result;
+    },
+  });
+
+  cache.set(target, proxy);
+  return proxy;
 }

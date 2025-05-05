@@ -594,7 +594,6 @@ function setEmail(e) {
   );
 }
 // 自定义代码
-_d.isRootPage = true;
 let customCode = { body: '', head: '' };
 reqUserCustomCode()
   .then((res) => {
