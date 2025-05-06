@@ -84,6 +84,7 @@ if (!isIframe()) {
   });
 }
 window.changeTheme = changeTheme;
+changeTheme(localData.get('dark'));
 // 编辑器
 const editor = createEditer($editBox[0]);
 editor.getSession().setMode('ace/mode/markdown');

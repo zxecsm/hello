@@ -48,6 +48,7 @@ function changeTheme(dark) {
 let filePath = '';
 let currentCodeType = 'text'; // 语言
 window.changeTheme = changeTheme;
+changeTheme(localData.get('dark'));
 
 export function setReadOnly(val) {
   readOnly = val;

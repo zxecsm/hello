@@ -500,6 +500,7 @@ function hdTheme(dark) {
   }
 }
 window.changeTheme = changeTheme;
+changeTheme(localData.get('dark'));
 window.addEventListener('scroll', hdWindowScroll);
 function hdWindowScroll() {
   const p = pageScrollTop();

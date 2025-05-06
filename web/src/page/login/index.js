@@ -348,6 +348,7 @@ function changeTheme(dark) {
   }
 }
 window.changeTheme = changeTheme;
+changeTheme(localData.get('dark'));
 
 $account.next().on('click', function () {
   accInp.setValue('').focus();
