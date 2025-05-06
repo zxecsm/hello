@@ -4,8 +4,6 @@ import defaultIcon from '../../../images/img/default-icon.png';
 import imgTianjia from '../../../images/img/tianjia.png';
 import {
   myOpen,
-  _setData,
-  _getData,
   debounce,
   _getTarget,
   imgjz,
@@ -51,6 +49,7 @@ import {
   BoxSelector,
   MouseElementTracker,
 } from '../../../js/utils/boxSelector.js';
+import localData from '../../../js/common/localData.js';
 const $searchBoxMask = $('.search_box_mask'),
   $searchLogo = $searchBoxMask.find('.search_logo'),
   $searchInpWrap = $searchBoxMask.find('.search_inp_wrap'),
@@ -58,8 +57,8 @@ const $searchBoxMask = $('.search_box_mask'),
   $homeFootMenu = $searchBoxMask.find('.home_foot_menu'),
   $searchBoxBtn = $('.search_box_btn'),
   $pageBg = $('.page_bg');
-let curSearchIdx = _getData('searchengine'),
-  searchWordIdx = _getData('searchWordIdx');
+let curSearchIdx = localData.get('searchengine'),
+  searchWordIdx = localData.get('searchWordIdx');
 let searchList = [];
 // 底部菜单是隐藏
 function homeFootMenuIsHide() {
@@ -489,7 +488,7 @@ export function showSearchBox() {
 $searchBoxBtn.on('click', showSearchBox);
 // 是否弹窗打开搜索结果
 function isSearchOpenPop() {
-  return _getData('searchOpenPop');
+  return localData.get('searchOpenPop');
 }
 // 搜索框处理
 const searchInput = wrapInput($searchInpWrap.find('.inp_box input')[0], {
@@ -820,7 +819,7 @@ function switchSearchCallWord(e) {
     ({ close, id }) => {
       if (id) {
         searchWordIdx = id - 1;
-        _setData('searchWordIdx', searchWordIdx);
+        localData.set('searchWordIdx', searchWordIdx);
         close(1);
         _msg.success();
       }
@@ -830,7 +829,7 @@ function switchSearchCallWord(e) {
 }
 // 搜索设置
 function searchSetting(e) {
-  const openInPop = _getData('searchOpenPop');
+  const openInPop = localData.get('searchOpenPop');
   const data = [
     {
       id: '3',
@@ -873,12 +872,12 @@ function searchSetting(e) {
         if (flag) {
           data[4].param.openInPop = false;
           data[4].afterIcon = 'iconfont icon-kaiguan-guan';
-          _setData('searchOpenPop', false);
+          localData.set('searchOpenPop', false);
           _msg.success('关闭成功');
         } else {
           data[4].param.openInPop = true;
           data[4].afterIcon = 'iconfont icon-kaiguan-kai1';
-          _setData('searchOpenPop', true);
+          localData.set('searchOpenPop', true);
           _msg.success('开启成功');
         }
         resetMenu(data);
@@ -926,7 +925,7 @@ function selectSearch(e) {
           .then(() => {
             curSearchIdx = xi;
             switchSearchEngine();
-            _setData('searchengine', xi);
+            localData.set('searchengine', xi);
             _msg.success('切换成功');
             loading.end();
             close(true);
@@ -934,7 +933,7 @@ function selectSearch(e) {
           .catch(() => {
             curSearchIdx = xi;
             switchSearchEngine();
-            _setData('searchengine', xi);
+            localData.set('searchengine', xi);
             _msg.success('切换成功');
             loading.end();
             close(true);

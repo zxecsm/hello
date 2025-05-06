@@ -1,18 +1,14 @@
 import './index.less';
-import {
-  getScreenSize,
-  _getData,
-  isMobile,
-  hdTextMsg,
-} from '../../utils/utils';
+import { getScreenSize, isMobile, hdTextMsg } from '../../utils/utils';
 import { _tpl } from '../../utils/template';
+import localData from '../../common/localData';
 
 const tipBox = document.createElement('pre');
 tipBox.className = 'tool_tip';
 document.body.appendChild(tipBox);
 const space = 20;
 function move(e) {
-  if (!_getData('toolTip') || tipBox.style.opacity === '0' || isMobile())
+  if (!localData.get('toolTip') || tipBox.style.opacity === '0' || isMobile())
     return;
   const { w, h } = getScreenSize();
   const tw = tipBox.offsetWidth,
@@ -29,13 +25,13 @@ function move(e) {
 let tip = '';
 const toolTip = {
   setTip(val) {
-    if (!_getData('toolTip') || isMobile()) return this;
+    if (!localData.get('toolTip') || isMobile()) return this;
     tip = val;
     _tpl.html(tipBox, hdTextMsg(tip));
     return this;
   },
   show() {
-    if (!_getData('toolTip') || isMobile()) return this;
+    if (!localData.get('toolTip') || isMobile()) return this;
     if (tip) {
       tipBox.style.opacity = 0.9;
     } else {

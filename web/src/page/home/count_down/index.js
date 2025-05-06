@@ -17,8 +17,6 @@ import {
   myOpen,
   isurl,
   isInteger,
-  _getData,
-  _setData,
   isFullScreen,
   getCenterPointDistance,
   _animate,
@@ -43,6 +41,7 @@ import { hideRightMenu } from '../rightSetting/index.js';
 import { hideIframeMask, showIframeMask } from '../iframe.js';
 import { changeLogoAlertStatus } from '../index.js';
 import { _tpl } from '../../../js/utils/template.js';
+import localData from '../../../js/common/localData.js';
 const $countBox = $('.count_box'),
   $cheadBtns = $countBox.find('.c_head_btns'),
   $countList = $countBox.find('.count_list');
@@ -50,11 +49,11 @@ let countList = [],
   countPageNo = 1,
   expireCount = 0,
   countPageSize = 40,
-  countDownIsTop = _getData('countDownIsTop');
+  countDownIsTop = localData.get('countDownIsTop');
 function switchCountDownTop() {
   countDownIsTop = !countDownIsTop;
   setTop();
-  _setData('countDownIsTop', countDownIsTop);
+  localData.set('countDownIsTop', countDownIsTop);
   setZidx($countBox[0], 'count', closeCountBox, countDownIsTop);
 }
 setTop();

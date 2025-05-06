@@ -6,8 +6,6 @@ import './md.less';
 import {
   queryURLParams,
   myOpen,
-  _setData,
-  _getData,
   _setTimeout,
   throttle,
   debounce,
@@ -16,7 +14,6 @@ import {
   _myOpen,
   pageScrollTop,
   pageErr,
-  darkMode,
   getDateDiff,
   formatNum,
   showQcode,
@@ -43,12 +40,12 @@ import { createNoteDir, toggleNoteDir } from './noteDir';
 import rMenu from '../../js/plugins/rightMenu';
 import MdWorker from '../../js/utils/md.worker.js';
 import loadingPage from '../../js/plugins/loading/index.js';
-import changeDark from '../../js/utils/changeDark.js';
 import { _tpl } from '../../js/utils/template.js';
 import _path from '../../js/utils/path.js';
 import { percentBar } from '../../js/plugins/percentBar/index.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
 import { otherWindowMsg, waitLogin } from '../home/home.js';
+import localData from '../../js/common/localData.js';
 const mdWorker = new MdWorker();
 let urlparmes = queryURLParams(myOpen()),
   HASH = urlparmes.HASH;
@@ -61,9 +58,8 @@ const $setBtnsWrap = $('.set_btns_wrap'),
   $pageSearchWrap = $('.page_search_wrap'),
   $authorInfo = $contentWrap.find('.author_info'),
   $fillBox = $contentWrap.find('.fill_box');
-let noteFontSize = _getData('noteFontSize'),
-  dark = _getData('dark'),
-  noteWiden = _getData('noteWiden'),
+let noteFontSize = localData.get('noteFontSize'),
+  noteWiden = localData.get('noteWiden'),
   highlightnum = 0,
   $highlightWords = [],
   titleName = '';
@@ -101,6 +97,7 @@ $setBtnsWrap
     searchInp.select();
   })
   .on('click', '.change_theme_btn', function () {
+    let dark = localData.get('dark');
     // 切换黑暗模式
     if (dark === 'y') {
       dark = 'n';
@@ -112,18 +109,17 @@ $setBtnsWrap
       dark = 'y';
       _msg.success('开启黑暗模式');
     }
-    changeTheme(dark);
-    _setData('dark', dark);
+    localData.set('dark', dark);
   })
   .on('click', '.note_box_width', function () {
     if (!noteWiden) {
       noteWiden = true;
       $contentWrap.addClass('big');
-      _setData('noteWiden', noteWiden);
+      localData.set('noteWiden', noteWiden);
     } else {
       noteWiden = false;
       $contentWrap.removeClass('big');
-      _setData('noteWiden', noteWiden);
+      localData.set('noteWiden', noteWiden);
     }
   })
   .on('click', '.font_size_btn', (e) => {
@@ -132,7 +128,7 @@ $setBtnsWrap
         'font-size': percentToValue(12, 30, percent),
       });
       noteFontSize = percent;
-      _setData('noteFontSize', noteFontSize);
+      localData.set('noteFontSize', noteFontSize, 200);
     });
   })
   .on('click', '.show_navigation_btn', () => {
@@ -205,7 +201,7 @@ if (urlparmes.v) {
         waitLogin(() => {
           realtime.init().add((res) => {
             res.forEach((item) => {
-              if (account === _getData('account')) {
+              if (account === localData.get('account')) {
                 const {
                   type,
                   data: { flag, id },
@@ -474,8 +470,7 @@ $contentWrap.css({
   'font-size': percentToValue(12, 30, noteFontSize),
 });
 // 黑暗模式
-function changeTheme(flag) {
-  dark = flag;
+function changeTheme(dark) {
   if (dark === 'y') {
     $setBtnsWrap
       .find('.change_theme_btn')
@@ -489,7 +484,6 @@ function changeTheme(flag) {
       .find('.change_theme_btn')
       .attr('class', 'change_theme_btn iconfont icon-xianshiqi');
   }
-  darkMode(dark);
   hdTheme(dark);
 }
 function hdTheme(dark) {
@@ -506,7 +500,6 @@ function hdTheme(dark) {
   }
 }
 window.changeTheme = changeTheme;
-changeTheme(dark);
 window.addEventListener('scroll', hdWindowScroll);
 function hdWindowScroll() {
   const p = pageScrollTop();
@@ -548,9 +541,3 @@ const pagepro = (function () {
   };
 })();
 if (!isIframe()) wave();
-changeDark.bind((isDark) => {
-  if (_getData('dark') != 's') return;
-  const dark = isDark ? 'y' : 'n';
-  darkMode(dark);
-  hdTheme(dark);
-});

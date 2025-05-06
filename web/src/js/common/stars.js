@@ -1,5 +1,5 @@
-import { _getData } from '../utils/utils';
 import _d from './config';
+import localData from './localData';
 
 /* 鼠标特效 - 小星星拖尾 */
 (function () {
@@ -18,7 +18,7 @@ import _d from './config';
   }
 
   function onMouseMove(e) {
-    if (!_getData('showStars')) return;
+    if (!localData.get('showStars')) return;
 
     let x = 0,
       y = 0;

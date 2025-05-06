@@ -4,9 +4,7 @@ import { popWindow, setZidx } from '../popWindow';
 import {
   ContentScroll,
   _animate,
-  _getData,
   _getTarget,
-  _setData,
   debounce,
   getScreenSize,
   getTextSize,
@@ -46,16 +44,17 @@ import { _tpl, deepClone } from '../../../js/utils/template';
 import { initRainCodeSleep } from '../../../js/common/codeRain';
 import cacheFile from '../../../js/utils/cacheFile';
 import toolTip from '../../../js/plugins/tooltip';
+import localData from '../../../js/common/localData';
 
 const $miniPlayer = $('.mini_player'),
   $miniLrcWrap = $('.mini_lrc_wrap'),
   $editLrcWrap = $('.edit_lrc_wrap'),
   $musicMvWrap = $('.music_mv_wrap'),
   $myVideo = $musicMvWrap.find('.my_video');
-let miniPlayerCoord = _getData('miniPlayerCoord'),
-  miniLrcCoord = _getData('miniLrcCoord'),
-  mvIsTop = _getData('mvIsTop'),
-  editLrcIsTop = _getData('editLrcIsTop');
+let miniPlayerCoord = localData.get('miniPlayerCoord'),
+  miniLrcCoord = localData.get('miniLrcCoord'),
+  mvIsTop = localData.get('mvIsTop'),
+  editLrcIsTop = localData.get('editLrcIsTop');
 // 显示/隐藏迷你播放器
 export function showMiniPlayer() {
   $miniPlayer.stop().show(_d.speed);
@@ -71,25 +70,25 @@ export function showMiniPlayer() {
 function switchMiniPlayerTopState() {
   miniPlayerCoord.isTop = !miniPlayerCoord.isTop;
   setTop($miniPlayer, miniPlayerCoord.isTop);
-  _setData('miniPlayerCoord', miniPlayerCoord);
+  localData.set('miniPlayerCoord', miniPlayerCoord);
   setZidx($miniPlayer[0], 0, 0, miniPlayerCoord.isTop);
 }
 function switchMvTopState() {
   mvIsTop = !mvIsTop;
   setTop($musicMvWrap, mvIsTop);
-  _setData('mvIsTop', mvIsTop);
+  localData.set('mvIsTop', mvIsTop);
   setZidx($musicMvWrap[0], 'mv', closeMvBox, mvIsTop);
 }
 function switchEditLrcTopState() {
   editLrcIsTop = !editLrcIsTop;
   setTop($editLrcWrap, editLrcIsTop);
-  _setData('editLrcIsTop', editLrcIsTop);
+  localData.set('editLrcIsTop', editLrcIsTop);
   setZidx($editLrcWrap[0], 'editlrc', closeEditLrcBox, editLrcIsTop);
 }
 function switchMiniLrcTopState() {
   miniLrcCoord.isTop = !miniLrcCoord.isTop;
   setTop($miniLrcWrap, miniLrcCoord.isTop);
-  _setData('miniLrcCoord', miniLrcCoord);
+  localData.set('miniLrcCoord', miniLrcCoord);
   setZidx($miniLrcWrap[0], 0, 0, miniLrcCoord.isTop);
 }
 setTop($miniLrcWrap, miniLrcCoord.isTop);
@@ -122,7 +121,7 @@ export function showMiniLrcBox(once) {
   const { w, h } = getScreenSize();
   // 超出屏幕恢复默认
   if (left > w || top > h) {
-    miniLrcCoord = _d.localStorageDefaultData.miniLrcCoord;
+    miniLrcCoord = localData.defaultData.miniLrcCoord;
     $miniLrcWrap[0].style.left = miniLrcCoord.left + 'px';
     $miniLrcWrap[0].style.top = miniLrcCoord.top + 'px';
   }
@@ -199,7 +198,7 @@ export function miniplayerPlaying() {
 }
 // 更新歌词
 export function miniLrcUpdateLrc(list, activeLrcIndex) {
-  const showfy = _getData('showSongTranslation');
+  const showfy = localData.get('showSongTranslation');
   const curObj = list[activeLrcIndex] || {},
     nextObj = list[activeLrcIndex + 1] || {};
   let activep = '',
@@ -421,7 +420,7 @@ myDrag({
     hideIframeMask();
     miniPlayerCoord.left = x;
     miniPlayerCoord.top = y;
-    _setData('miniPlayerCoord', miniPlayerCoord);
+    localData.set('miniPlayerCoord', miniPlayerCoord);
   },
 });
 myDrag({
@@ -438,7 +437,7 @@ myDrag({
     hideIframeMask();
     miniLrcCoord.left = x;
     miniLrcCoord.top = y;
-    _setData('miniLrcCoord', miniLrcCoord);
+    localData.set('miniLrcCoord', miniLrcCoord);
   },
 });
 myDrag({

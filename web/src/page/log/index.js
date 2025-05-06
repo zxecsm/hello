@@ -5,9 +5,7 @@ import './index.less';
 import $ from 'jquery';
 import '../../js/common/common';
 import {
-  _getData,
   formatBytes,
-  darkMode,
   pageScrollTop,
   getScreenSize,
   getWordCount,
@@ -28,7 +26,6 @@ import pagination from '../../js/plugins/pagination/index';
 import _d from '../../js/common/config';
 import { reqRootDeleteLog, reqRootLog, reqRootLogList } from '../../api/root';
 import rMenu from '../../js/plugins/rightMenu';
-import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import realtime from '../../js/plugins/realtime';
 import { otherWindowMsg } from '../home/home';
@@ -340,8 +337,3 @@ function dellog(e, name) {
   );
 }
 if (!isIframe()) wave();
-changeDark.bind((isDark) => {
-  if (_getData('dark') != 's') return;
-  const dark = isDark ? 'y' : 'n';
-  darkMode(dark);
-});

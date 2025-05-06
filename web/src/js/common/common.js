@@ -1,5 +1,4 @@
 import {
-  _getData,
   _setTimeout,
   debounce,
   randomColor,
@@ -8,9 +7,6 @@ import {
   addCustomCode,
   changeHeadBtnSort,
   isLogin,
-  _getDataTem,
-  _setDataTem,
-  _delDataTem,
   myOpen,
   pageErr,
 } from '../utils/utils';
@@ -24,6 +20,7 @@ import loadingPage from '../plugins/loading';
 import { reqUserCustomCode, reqUserError } from '../../api/user';
 import './codeRain';
 import './stars';
+import localData from './localData';
 window._pageName =
   myOpen()
     .split(/[?#]/)[0]
@@ -46,13 +43,15 @@ if (isIframe() && window._pageName !== '404') {
 if (isLogin()) {
   // 君子锁
   ~(function getGentlemanLock() {
-    const gentlemanLockPd = _getData('gentlemanLockPd');
+    const gentlemanLockPd = localData.get('gentlemanLockPd');
     if (gentlemanLockPd) {
-      const pd = _getDataTem('gentlemanLockPd') || prompt('请输入君子锁密码：');
+      const pd =
+        localData.session.get('gentlemanLockPd') ||
+        prompt('请输入君子锁密码：');
       if (pd === gentlemanLockPd) {
-        _setDataTem('gentlemanLockPd', pd);
+        localData.session.set('gentlemanLockPd', pd);
       } else {
-        _delDataTem('gentlemanLockPd');
+        localData.session.remove('gentlemanLockPd');
         getGentlemanLock();
       }
     }
@@ -77,7 +76,7 @@ window.addEventListener('load', function () {
 ~(function () {
   function handle(e) {
     const randomc = randomColor();
-    if (!_getData('clickLove')) {
+    if (!localData.get('clickLove')) {
       const box = document.createElement('div');
       box.style.cssText = `
         position: fixed;
@@ -173,13 +172,38 @@ window.addEventListener('offline', function () {
     document.body.appendChild(img);
   }
 })();
-if (!isIframe()) {
-  // 黑白
-  document.documentElement.style.filter = `grayscale(${_getData(
-    'pageGrayscale'
-  )})`;
+localData.onChange(({ key }) => {
+  if (!key || key === 'pageGrayscale') {
+    updateGrayscale();
+  }
+  if (!key || key === 'fontType') {
+    if (window._pageName !== 'home') {
+      handleFontType(localData.get('fontType')).catch(() => {});
+    }
+  }
+  if (!key || key === 'dark') {
+    darkMode(localData.get('dark'));
+  }
+  if (!key || key === 'headBtnToRight') {
+    changeHeadBtnSort(localData.get('headBtnToRight'));
+  }
+});
+window
+  .matchMedia('(prefers-color-scheme: dark)')
+  .addEventListener('change', (event) => {
+    if (localData.get('dark') != 's') return;
+    const dark = event.matches ? 'y' : 'n';
+    darkMode(dark);
+  });
+function updateGrayscale() {
+  if (!isIframe()) {
+    // 黑白
+    document.documentElement.style.filter = `grayscale(${localData.get(
+      'pageGrayscale'
+    )})`;
+  }
 }
-
+updateGrayscale();
 // 捕获错误
 window.onerror = function (message, url, line, column) {
   reqUserError(`${message} at ${url}:${line}:${column}`);
@@ -189,9 +213,8 @@ window.onerror = function (message, url, line, column) {
 // 字体处理
 ~(function () {
   let flag = null;
-  function handleFontType() {
+  function handleFontType(fontType) {
     return new Promise((resolve, reject) => {
-      const fontType = _getData('fontType');
       if (fontType === 'default') {
         document.body.style.fontFamily = _d.defaultFontFamily;
         resolve();
@@ -221,10 +244,10 @@ window.onerror = function (message, url, line, column) {
   }
   window.handleFontType = handleFontType;
 })();
-handleFontType();
+handleFontType(localData.get('fontType')).catch(() => {});
 
-darkMode(_getData('dark'));
-changeHeadBtnSort(_getData('headBtnToRight'));
+darkMode(localData.get('dark'));
+changeHeadBtnSort(localData.get('headBtnToRight'));
 // 图标处理
 ~(function () {
   const icon = document.querySelector("link[rel*='icon']");

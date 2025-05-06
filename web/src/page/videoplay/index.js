@@ -3,17 +3,14 @@ import './index.less';
 import '../../font/iconfont.css';
 import '../../js/common/common';
 import {
-  _getData,
   _getTarget,
   copyText,
-  darkMode,
   debounce,
   isIframe,
   isLogin,
   myOpen,
   queryURLParams,
 } from '../../js/utils/utils';
-import changeDark from '../../js/utils/changeDark';
 import rMenu from '../../js/plugins/rightMenu';
 import { reqUserFileToken, reqUserPlayerConfig } from '../../api/user';
 import toolTip from '../../js/plugins/tooltip';
@@ -123,8 +120,3 @@ vd.onerror = function () {
   });
 };
 vd.ontimeupdate = initRainCodeSleep;
-changeDark.bind((isDark) => {
-  if (_getData('dark') != 's') return;
-  const dark = isDark ? 'y' : 'n';
-  darkMode(dark);
-});

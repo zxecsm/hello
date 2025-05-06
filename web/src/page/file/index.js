@@ -6,10 +6,8 @@ import './index.less';
 import '../../js/common/common';
 import {
   LazyLoad,
-  _getData,
   _getTarget,
   _myOpen,
-  _setData,
   formatBytes,
   concurrencyTasks,
   copyText,
@@ -86,19 +84,20 @@ import {
   MouseElementTracker,
 } from '../../js/utils/boxSelector';
 import { otherWindowMsg } from '../home/home';
+import localData from '../../js/common/localData';
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
 const $curmbBox = $('.crumb_box');
 const $search = $('.search');
 const $header = $('.header');
 const $footer = $('.footer');
-let pageSize = _getData('filesPageSize');
+let pageSize = localData.get('filesPageSize');
 let curFileDirPath = curmb.getHash();
-let fileShowGrid = _getData('fileShowGrid');
-let hiddenFile = _getData('hiddenFile');
-let fileSort = _getData('fileSort');
-let subDir = _getData('searchFileSubDir'); // 搜索子目录
-let skipUpSameNameFiles = _getData('skipUpSameNameFiles'); // 上传略过同名文件
+let fileShowGrid = localData.get('fileShowGrid');
+let hiddenFile = localData.get('hiddenFile');
+let fileSort = localData.get('fileSort');
+let subDir = localData.get('searchFileSubDir'); // 搜索子目录
+let skipUpSameNameFiles = localData.get('skipUpSameNameFiles'); // 上传略过同名文件
 // 更改显示隐藏文件模式
 function changeHiddenFileModel() {
   $header
@@ -207,7 +206,7 @@ $search
   .on('click', '.check_box', () => {
     subDir = !subDir;
     changeSubDirState();
-    _setData('searchFileSubDir', subDir);
+    localData.set('searchFileSubDir', subDir);
   });
 // 显示搜索
 function openSearch() {
@@ -382,7 +381,7 @@ const pgnt = pagination($pagination.find('.container')[0], {
     pageSize = val;
     curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
     _msg.botMsg(`第 ${pageNo} 页`);
-    _setData('filesPageSize', pageSize);
+    localData.set('filesPageSize', pageSize);
   },
   toTop() {
     pageScrollTop(0);
@@ -409,7 +408,6 @@ async function openDir(path, { top, update = 0 }) {
       $clearTrashBtn.css('display', 'none');
     }
 
-    _setData('curFileDirPath', path);
     const res = await reqFileReadDir({
       path,
       pageNo,
@@ -1108,12 +1106,12 @@ function createDir(e) {
 $header
   .on('click', '.h_showmodel_btn', function () {
     fileShowGrid = !fileShowGrid;
-    _setData('fileShowGrid', fileShowGrid);
+    localData.set('fileShowGrid', fileShowGrid);
     changeListShowModel();
   })
   .on('click', '.h_hidden_file_btn', function () {
     hiddenFile = !hiddenFile;
-    _setData('hiddenFile', hiddenFile);
+    localData.set('hiddenFile', hiddenFile);
     changeHiddenFileModel();
     curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
   })
@@ -1237,12 +1235,12 @@ function upFileAndDir(e) {
           data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
           data[id - 1].param.value = false;
           skipUpSameNameFiles = false;
-          _setData('skipUpSameNameFiles', false);
+          localData.set('skipUpSameNameFiles', false);
         } else {
           data[id - 1].afterIcon = 'iconfont icon-kaiguan-kai1';
           data[id - 1].param.value = true;
           skipUpSameNameFiles = true;
-          _setData('skipUpSameNameFiles', true);
+          localData.set('skipUpSameNameFiles', true);
         }
         resetMenu(data);
       }
@@ -1358,7 +1356,7 @@ function hdFileSort(e) {
         }
         close();
         curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
-        _setData('fileSort', fileSort);
+        localData.set('fileSort', fileSort);
       }
     },
     '选择列表排序方式'

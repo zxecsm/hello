@@ -1,18 +1,16 @@
 import JSZip from 'jszip';
 import { CacheByExpire } from './cache';
 import md5 from './md5';
-import { _getData, _setData, downloadBlob, getFiles } from './utils';
+import { downloadBlob, getFiles } from './utils';
 import _msg from '../plugins/message';
 import _d from '../common/config';
-
-let cacheState = _getData('cacheState');
+import localData from '../common/localData';
 
 const cacheFile = {
   // 缓存状态
   setCacheState(val) {
-    if (val === undefined) return cacheState;
-    cacheState = val;
-    _setData('cacheState', val);
+    if (val === undefined) return localData.get('cacheState');
+    localData.set('cacheState', val);
   },
   // URL对象缓存
   urlCache: new CacheByExpire(30 * 60 * 1000, 40 * 60 * 1000, {
@@ -42,7 +40,7 @@ const cacheFile = {
 
     if (!this.supported) {
       // 浏览器不支持文件系统，则存储到 localStorage
-      _setData(key, value);
+      localData.set(key, value);
       return;
     }
 
@@ -65,7 +63,7 @@ const cacheFile = {
       return JSON.parse(decodeURIComponent(text)).data;
     } catch {
       // 如果文件系统不可用，则回退到 localStorage
-      return _getData(key);
+      return localData.get(key);
     }
   },
   // 判断url对象缓存是否存在

@@ -2,9 +2,6 @@ import $ from 'jquery';
 import QRCode from 'qrcode';
 import {
   myOpen,
-  _setData,
-  _getData,
-  _delData,
   _setTimeout,
   throttle,
   _getTarget,
@@ -13,7 +10,6 @@ import {
   _mySlide,
   isImgFile,
   toLogin,
-  darkMode,
   toCenter,
   showQcode,
   upStr,
@@ -22,20 +18,16 @@ import {
   getTextImg,
   getFiles,
   isInteger,
-  _delDataTem,
   myDrag,
   isMobile,
-  isDarkMode,
   longPress,
   copyText,
   isRoot,
   isEmail,
   isurl,
   parseObjectJson,
-  changeHeadBtnSort,
   encodeHtml,
   getScreenSize,
-  _getDataSize,
   formatBytes,
   _animate,
 } from '../../../js/utils/utils.js';
@@ -82,7 +74,6 @@ import { reqRootTips } from '../../../api/root.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { setExpireCount, showCountBox } from '../count_down/index.js';
 import { hideIframeMask, showIframeMask } from '../iframe.js';
-import changeDark from '../../../js/utils/changeDark.js';
 import { reqChatForwardMsgLink } from '../../../api/chat.js';
 import md5 from '../../../js/utils/md5.js';
 import { _tpl } from '../../../js/utils/template.js';
@@ -90,11 +81,9 @@ import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import { percentBar } from '../../../js/plugins/percentBar/index.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
+import localData from '../../../js/common/localData.js';
 // local数据
-let dark = _getData('dark'),
-  pageGrayscale = _getData('pageGrayscale'),
-  headBtnToRight = _getData('headBtnToRight'),
-  tipsFlag = 0;
+let tipsFlag = 0;
 const $rightMenuMask = $('.right_menu_mask'),
   $rightBox = $rightMenuMask.find('.right_box'),
   $userInfoWrap = $('.user_info_wrap');
@@ -126,7 +115,7 @@ updateTipsFlag();
 // 切换tips提示显示状态
 function switchTipsBtn() {
   const $tips = $rightBox.find('.tips .icon-new1');
-  if (tipsFlag === 0 || tipsFlag === _getData('tipsFlag')) {
+  if (tipsFlag === 0 || tipsFlag === localData.get('tipsFlag')) {
     $tips.css('display', 'none');
   } else {
     $tips.css('display', 'block');
@@ -698,7 +687,7 @@ function setGentlemanLock(e) {
       items: {
         text: {
           inputType: 'password',
-          value: _getData('gentlemanLockPd'),
+          value: localData.get('gentlemanLockPd'),
           trimValue: false,
           placeholder: '为空则取消',
           beforeText: '设置密码：',
@@ -709,8 +698,8 @@ function setGentlemanLock(e) {
       if (!isDiff()) return;
       close();
       const text = inp.text;
-      _setData('gentlemanLockPd', text);
-      _delDataTem('gentlemanLockPd');
+      localData.set('gentlemanLockPd', text);
+      localData.session.remove('gentlemanLockPd');
       if (text) {
         location.reload();
       } else {
@@ -737,7 +726,7 @@ function setPageFont(e, loading = { start() {}, end() {} }) {
             text: item === 'default' ? '默认字体' : name,
             beforeText: (idx + 1 + '').padStart(2, '0') + '. ',
             param: { font: item },
-            active: _getData('fontType') === item ? true : false,
+            active: localData.get('fontType') === item ? true : false,
           });
         });
         rMenu.selectMenu(
@@ -746,7 +735,6 @@ function setPageFont(e, loading = { start() {}, end() {} }) {
           async ({ id, resetMenu, param, loading }) => {
             if (id) {
               const font = param.font;
-              _setData('fontType', font);
               data.forEach((item) => {
                 if (font === item.param.font) {
                   item.active = true;
@@ -757,12 +745,8 @@ function setPageFont(e, loading = { start() {}, end() {} }) {
               resetMenu(data);
               loading.start();
               try {
-                await handleFontType();
-                const oIframe = [...document.querySelectorAll('iframe')];
-                oIframe.forEach((item) => {
-                  item.contentWindow.handleFontType &&
-                    item.contentWindow.handleFontType();
-                });
+                await handleFontType(font);
+                localData.set('fontType', font);
                 loading.end();
               } catch {
                 loading.end();
@@ -777,40 +761,10 @@ function setPageFont(e, loading = { start() {}, end() {} }) {
       loading.end();
     });
 }
-// 处理黑暗模式
-function hdIframeDarkMode(dark) {
-  [...document.querySelectorAll('iframe')].forEach((item) => {
-    try {
-      const html = item.contentWindow.document.documentElement;
-      if (dark === 'y') {
-        html.classList.add('dark');
-      } else if (dark === 'n') {
-        html.classList.remove('dark');
-      } else if (dark === 's') {
-        if (isDarkMode()) {
-          html.classList.add('dark');
-        } else {
-          html.classList.remove('dark');
-        }
-      }
-      item.contentWindow.changeTheme && item.contentWindow.changeTheme(dark);
-    } catch {}
-  });
-}
-function hdIframeCloseBtnSortMode(flag) {
-  [...document.querySelectorAll('iframe')].forEach((item) => {
-    try {
-      const html = item.contentWindow.document.documentElement;
-      if (flag) {
-        html.classList.add('head_btn_to_right');
-      } else {
-        html.classList.remove('head_btn_to_right');
-      }
-    } catch {}
-  });
-}
 // 设置
 export function settingMenu(e, isMain) {
+  const dark = localData.get('dark');
+  const headBtnToRight = localData.get('headBtnToRight');
   let icon = 'icon-xianshiqi';
   if (dark === 'y') {
     icon = 'icon-icon_yejian-yueliang';
@@ -886,10 +840,10 @@ export function settingMenu(e, isMain) {
       } else if (id === '2') {
         setGentlemanLock(e);
       } else if (id === '3') {
-        const clickLove = _getData('clickLove');
-        const showStars = _getData('showStars');
-        const pmsound = _getData('pmsound');
-        const tip = _getData('toolTip');
+        const clickLove = localData.get('clickLove');
+        const showStars = localData.get('showStars');
+        const pmsound = localData.get('pmsound');
+        const tip = localData.get('toolTip');
         const data = [
           {
             id: '1',
@@ -955,11 +909,9 @@ export function settingMenu(e, isMain) {
               // 黑白
               percentBar(
                 e,
-                pageGrayscale,
+                localData.get('pageGrayscale'),
                 throttle(function (per) {
-                  document.documentElement.style.filter = `grayscale(${per})`;
-                  pageGrayscale = per;
-                  _setData('pageGrayscale', per);
+                  localData.set('pageGrayscale', per);
                 }, 500)
               );
             } else if (id === '3') {
@@ -971,12 +923,12 @@ export function settingMenu(e, isMain) {
                 data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
                 data[id - 1].param.value = false;
                 _msg.success('关闭成功');
-                _setData('clickLove', false);
+                localData.set('clickLove', false);
               } else {
                 data[id - 1].afterIcon = 'iconfont icon-kaiguan-kai1';
                 data[id - 1].param.value = true;
                 _msg.success('开启成功');
-                _setData('clickLove', true);
+                localData.set('clickLove', true);
               }
               resetMenu(data);
             } else if (id === '5') {
@@ -985,12 +937,12 @@ export function settingMenu(e, isMain) {
                 data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
                 data[id - 1].param.value = false;
                 _msg.success('关闭成功');
-                _setData('showStars', false);
+                localData.set('showStars', false);
               } else {
                 data[id - 1].afterIcon = 'iconfont icon-kaiguan-kai1';
                 data[id - 1].param.value = true;
                 _msg.success('开启成功');
-                _setData('showStars', true);
+                localData.set('showStars', true);
               }
               resetMenu(data);
             } else if (id === '6') {
@@ -999,12 +951,12 @@ export function settingMenu(e, isMain) {
                 data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
                 data[id - 1].param.value = false;
                 _msg.success('关闭成功');
-                _setData('pmsound', false);
+                localData.set('pmsound', false);
               } else {
                 data[id - 1].afterIcon = 'iconfont icon-kaiguan-kai1';
                 data[id - 1].param.value = true;
                 _msg.success('开启成功');
-                _setData('pmsound', true);
+                localData.set('pmsound', true);
               }
               resetMenu(data);
             } else if (id === '7') {
@@ -1013,12 +965,12 @@ export function settingMenu(e, isMain) {
                 data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
                 data[id - 1].param.value = false;
                 _msg.success('关闭成功');
-                _setData('toolTip', false);
+                localData.set('toolTip', false);
               } else {
                 data[id - 1].afterIcon = 'iconfont icon-kaiguan-kai1';
                 data[id - 1].param.value = true;
                 _msg.success('开启成功');
-                _setData('toolTip', true);
+                localData.set('toolTip', true);
               }
               resetMenu(data);
             }
@@ -1026,47 +978,38 @@ export function settingMenu(e, isMain) {
           '个性化设置'
         );
       } else if (id === '4') {
+        let dark = '';
         // 黑暗模式
         const flag = param.value;
         if (flag === 'y') {
           dark = 'n';
           data[id - 1].beforeIcon = 'iconfont icon-taiyangtianqi';
           data[id - 1].param.value = dark;
-          _setData('dark', dark);
           _msg.success('关闭成功');
         } else if (flag === 'n') {
           dark = 's';
           data[id - 1].beforeIcon = 'iconfont icon-xianshiqi';
           data[id - 1].param.value = dark;
-          _setData('dark', dark);
           _msg.success('跟随系统');
         } else if (flag === 's') {
           dark = 'y';
           data[id - 1].beforeIcon = 'iconfont icon-icon_yejian-yueliang';
           data[id - 1].param.value = dark;
-          _setData('dark', dark);
           _msg.success('开启成功');
         }
-        darkMode(dark);
+        localData.set('dark', dark);
         resetMenu(data);
-        hdIframeDarkMode(dark);
       } else if (id === '5') {
         if (param.value) {
           data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
           data[id - 1].param.value = false;
-          changeHeadBtnSort();
-          hdIframeCloseBtnSortMode();
           _msg.success('关闭成功');
-          headBtnToRight = false;
-          _setData('headBtnToRight', false);
+          localData.set('headBtnToRight', false);
         } else {
           data[id - 1].afterIcon = 'iconfont icon-kaiguan-kai1';
           data[id - 1].param.value = true;
-          changeHeadBtnSort(1);
-          hdIframeCloseBtnSortMode(1);
           _msg.success('开启成功');
-          headBtnToRight = true;
-          _setData('headBtnToRight', true);
+          localData.set('headBtnToRight', true);
         }
         resetMenu(data);
       } else if (id === '8') {
@@ -1170,7 +1113,7 @@ export function settingMenu(e, isMain) {
                     loading.start();
                     let size = 0;
                     if (id === 'local') {
-                      size = _getDataSize();
+                      size = localData.getSize();
                     } else {
                       size = await cacheFile.size(param.type);
                     }
@@ -1188,18 +1131,18 @@ export function settingMenu(e, isMain) {
                           try {
                             loading.start();
                             if (id === 'local') {
-                              _delData();
+                              localData.remove();
                             } else {
                               await cacheFile.clear(param.type);
                               if (id === 'all') {
-                                _delData();
+                                localData.remove();
                               }
                             }
                             // 保留必要的本地配置
                             if (['all', 'local'].includes(id)) {
                               cacheFile.setCacheState(cacheState);
-                              _setData('account', setUserInfo().account);
-                              _setData('username', setUserInfo().username);
+                              localData.set('account', setUserInfo().account);
+                              localData.set('username', setUserInfo().username);
                             }
                             loading.end();
                             _msg.success();
@@ -1492,7 +1435,7 @@ function closeAccount(e) {
                 loading.end();
                 if (result.code === 1) {
                   close();
-                  _delData();
+                  localData.remove();
                   _msg.success(result.codeText, (type) => {
                     if (type === 'close') {
                       myOpen('/login/');
@@ -1853,7 +1796,7 @@ $rightBox
   })
   .on('click', '.tips', function () {
     hideRightMenu();
-    _setData('tipsFlag', tipsFlag);
+    localData.set('tipsFlag', tipsFlag);
     changeLogoAlertStatus();
     openInIframe('/note?v=tips', 'Tips');
   })
@@ -1951,9 +1894,4 @@ document.addEventListener('mousedown', (e) => {
 document.addEventListener('touchstart', (e) => {
   if (!isMobile()) return;
   hdIndex(e.changedTouches[0]);
-});
-changeDark.bind((isDark) => {
-  if (_getData('dark') != 's') return;
-  const dark = isDark ? 'y' : 'n';
-  darkMode(dark);
 });

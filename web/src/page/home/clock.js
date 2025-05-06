@@ -1,7 +1,5 @@
 import {
-  _getData,
   _getTarget,
-  _setData,
   formatDate,
   getScreenSize,
   isMobile,
@@ -11,8 +9,8 @@ import {
 } from '../../js/utils/utils';
 import { setZidx } from './popWindow';
 import { hideIframeMask, showIframeMask } from './iframe';
-import _d from '../../js/common/config';
 import { percentBar } from '../../js/plugins/percentBar';
+import localData from '../../js/common/localData';
 const clock = document.querySelector('.clock');
 const domHour = clock.querySelector('.hour');
 const domMin = clock.querySelector('.min');
@@ -184,14 +182,14 @@ clockinit();
 clockMove();
 setInterval(updateTime, 1000);
 updateTime(); // 初始化时间
-const clockData = _getData('clockData');
+const clockData = localData.get('clockData');
 function hdClick(e) {
   clockMove();
   if (e.target.tagName.toLowerCase() === 'i') {
     percentBar(e, clockData.size, (percent) => {
       clock.style.transform = `scale(${percentToValue(0.5, 4, percent)})`;
       clockData.size = percent;
-      _setData('clockData', clockData);
+      localData.set('clockData', clockData, 200);
     });
   }
 }
@@ -212,7 +210,7 @@ myDrag({
     const { w, h } = getScreenSize();
     // 超出屏幕恢复默认
     if (left > w || top > h) {
-      clockData.coord = _d.localStorageDefaultData.clockData.coord;
+      clockData.coord = localData.defaultData.clockData.coord;
     }
 
     target.style.left = clockData.coord.left + 'px';
@@ -227,7 +225,7 @@ myDrag({
       left: x,
       top: y,
     };
-    _setData('clockData', clockData);
+    localData.set('clockData', clockData);
   },
 });
 function clockIndex(e) {

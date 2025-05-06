@@ -5,8 +5,6 @@ import '../../font/iconfont.css';
 import '../notes/index.less';
 import {
   myOpen,
-  _setData,
-  _getData,
   isurl,
   toLogin,
   scrollState,
@@ -21,7 +19,6 @@ import {
   isLogin,
   pageScrollTop,
   wave,
-  darkMode,
   _getTarget,
   toggleUserSelect,
 } from '../../js/utils/utils';
@@ -38,10 +35,10 @@ import {
   reqSearchSave,
 } from '../../api/search';
 import rMenu from '../../js/plugins/rightMenu';
-import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import { BoxSelector } from '../../js/utils/boxSelector';
 import { otherWindowMsg } from '../home/home';
+import localData from '../../js/common/localData';
 const $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
   $footer = $('.footer');
@@ -92,7 +89,7 @@ function listLoading() {
   $contentWrap.html(str);
   pageScrollTop(0);
 }
-let curPageSize = _getData('historyPageSize'),
+let curPageSize = localData.get('historyPageSize'),
   hList = [];
 $contentWrap.pagenum = 1;
 function getItemInfo(id) {
@@ -167,7 +164,7 @@ const pgnt = pagination($contentWrap[0], {
   },
   changeSize(val) {
     curPageSize = val;
-    _setData('historyPageSize', curPageSize);
+    localData.set('historyPageSize', curPageSize);
     $contentWrap.pagenum = 1;
     renderList(true);
     _msg.botMsg(`第 ${$contentWrap.pagenum} 页`);
@@ -187,7 +184,7 @@ reqSearchConfig()
 // 获取搜索引擎
 function getSearchEngine() {
   return (
-    _d.searchEngineData[_getData('searchengine')] || _d.searchEngineData[0]
+    _d.searchEngineData[localData.get('searchengine')] || _d.searchEngineData[0]
   );
 }
 // 删除
@@ -473,8 +470,3 @@ document.addEventListener('keydown', function (e) {
   }
 });
 if (!isIframe()) wave();
-changeDark.bind((isDark) => {
-  if (_getData('dark') != 's') return;
-  const dark = isDark ? 'y' : 'n';
-  darkMode(dark);
-});

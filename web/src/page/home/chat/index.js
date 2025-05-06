@@ -34,8 +34,6 @@ import {
   LazyLoad,
   mailTo,
   isRoot,
-  _setData,
-  _getData,
   isFullScreen,
   isVideoFile,
   concurrencyTasks,
@@ -79,6 +77,7 @@ import md5 from '../../../js/utils/md5.js';
 import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
+import localData from '../../../js/common/localData.js';
 const $document = $(document),
   $chatRoomWrap = $('.chat_room_wrap'),
   $userListBox = $chatRoomWrap.find('.user_list_box'),
@@ -91,11 +90,11 @@ const $document = $(document),
 let curChatAccount = 'chang',
   userList = [],
   helperInfo = '用于接收提示信息和外部信息(回复任意信息查看收信接口API)',
-  chatIsTop = _getData('chatIsTop');
+  chatIsTop = localData.get('chatIsTop');
 function switchChatTop() {
   chatIsTop = !chatIsTop;
   setTop();
-  _setData('chatIsTop', chatIsTop);
+  localData.set('chatIsTop', chatIsTop);
   setZidx($chatRoomWrap[0], 'chat', closeChatRoom, chatIsTop);
 }
 setTop();

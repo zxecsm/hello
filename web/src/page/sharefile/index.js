@@ -7,11 +7,7 @@ import './index.less';
 import '../../js/common/common';
 import {
   LazyLoad,
-  _getData,
-  _getDataTem,
   _myOpen,
-  _setData,
-  _setDataTem,
   formatBytes,
   copyText,
   downloadFile,
@@ -59,6 +55,7 @@ import { imgCache } from '../../js/utils/imgCache';
 import imgPreview from '../../js/plugins/imgPreview';
 import realtime from '../../js/plugins/realtime';
 import { otherWindowMsg, waitLogin } from '../home/home';
+import localData from '../../js/common/localData';
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
 const $curmbBox = $('.crumb_box');
@@ -66,12 +63,12 @@ const $search = $('.search');
 const $header = $('.header');
 const $shareInfo = $('.share_info');
 const $fileBox = $('.file_box');
-let pageSize = _getData('filesPageSize');
+let pageSize = localData.get('filesPageSize');
 let curFileDirPath = curmb.getHash();
-let fileShowGrid = _getData('fileShowGrid');
-let hiddenFile = _getData('hiddenFile');
-let fileSort = _getData('fileSort'); // 排序
-let subDir = _getData('searchFileSubDir'); // 搜索子目录
+let fileShowGrid = localData.get('fileShowGrid');
+let hiddenFile = localData.get('hiddenFile');
+let fileSort = localData.get('fileSort'); // 排序
+let subDir = localData.get('searchFileSubDir'); // 搜索子目录
 const urlparmes = queryURLParams(myOpen()),
   shareId = urlparmes.s;
 if (!shareId) {
@@ -87,7 +84,7 @@ if (!isIframe()) {
     });
   });
 }
-let passCode = _getDataTem('passCode', shareId) || '';
+let passCode = localData.session.get('passCode', shareId) || '';
 let shareToken = '';
 let shareObj = {};
 let uObj = {};
@@ -105,7 +102,7 @@ function getShareData(close, loading = { start() {}, end() {} }) {
     .then((res) => {
       loading.end();
       if (res.code === 1) {
-        _setDataTem('passCode', passCode, shareId); // 缓存
+        localData.session.set('passCode', passCode, shareId); // 缓存
         close && close();
         const { username, logo, account, data, exp_time, title, email, token } =
           res.data;
@@ -276,7 +273,7 @@ $search
   .on('click', '.check_box', () => {
     subDir = !subDir;
     changeSubDirState();
-    _setData('searchFileSubDir', subDir);
+    localData.set('searchFileSubDir', subDir);
   });
 function openSearch() {
   $search.stop().slideDown(_d.speed, () => {
@@ -406,7 +403,7 @@ const pgnt = pagination($pagination.find('.container')[0], {
     pageSize = val;
     curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
     _msg.botMsg(`第 ${pageNo} 页`);
-    _setData('filesPageSize', pageSize);
+    localData.set('filesPageSize', pageSize);
   },
   toTop() {
     pageScrollTop(0);
@@ -424,7 +421,7 @@ let fileListData = { data: [] };
 // 打开目录
 async function openDir(path, { top, update = 0 }) {
   try {
-    _setDataTem('curFileDirPath', path);
+    localData.session.set('curFileDirPath', path);
     const res = await reqFileReadDir({
       path,
       pageNo,
@@ -706,7 +703,7 @@ function hdFileSort(e) {
         }
         close();
         curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
-        _setData('fileSort', fileSort);
+        localData.set('fileSort', fileSort);
       }
     },
     '选择列表排序方式'
@@ -715,12 +712,12 @@ function hdFileSort(e) {
 $header
   .on('click', '.h_showmodel_btn', function () {
     fileShowGrid = !fileShowGrid;
-    _setData('fileShowGrid', fileShowGrid);
+    localData.set('fileShowGrid', fileShowGrid);
     changeListShowModel();
   })
   .on('click', '.h_hidden_file_btn', function () {
     hiddenFile = !hiddenFile;
-    _setData('hiddenFile', hiddenFile);
+    localData.set('hiddenFile', hiddenFile);
     changeHiddenFileModel();
     curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
   })

@@ -13,16 +13,12 @@ import {
   getTextImg,
   formatDate,
   enterPassCode,
-  _getDataTem,
-  _setDataTem,
   userLogoMenu,
   LazyLoad,
   getScreenSize,
   hdOnce,
   isIframe,
   wave,
-  _getData,
-  darkMode,
 } from '../../js/utils/utils';
 
 import defaultIcon from '../../images/img/default-icon.png';
@@ -34,12 +30,12 @@ import _d from '../../js/common/config';
 import toolTip from '../../js/plugins/tooltip/index';
 import rMenu from '../../js/plugins/rightMenu';
 import { showBmkInfo } from '../../js/utils/showinfo';
-import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import _path from '../../js/utils/path';
 import cacheFile from '../../js/utils/cacheFile';
 import realtime from '../../js/plugins/realtime';
 import { otherWindowMsg, waitLogin } from '../home/home';
+import localData from '../../js/common/localData';
 
 const urlparmes = queryURLParams(myOpen()),
   shareId = urlparmes.s;
@@ -50,7 +46,7 @@ if (!shareId) {
 let pageNo = 1;
 let bmList = [];
 let bmPageSize = 12;
-let passCode = _getDataTem('passCode', shareId) || '';
+let passCode = localData.session.get('passCode', shareId) || '';
 let shareToken = '';
 
 const bmLoadImg = new LazyLoad();
@@ -175,7 +171,7 @@ function getShareData(close, loading = { start() {}, end() {} }) {
     .then((res) => {
       loading.end();
       if (res.code === 1) {
-        _setDataTem('passCode', passCode, shareId);
+        localData.session.set('passCode', passCode, shareId);
         close && close();
 
         const { username, logo, account, data, title, exp_time, email, token } =
@@ -297,9 +293,3 @@ $box
   });
 
 if (!isIframe()) wave();
-
-changeDark.bind((isDark) => {
-  if (_getData('dark') != 's') return;
-  const dark = isDark ? 'y' : 'n';
-  darkMode(dark);
-});

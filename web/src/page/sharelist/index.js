@@ -15,8 +15,6 @@ import {
   copyText,
   isLogin,
   wave,
-  _getData,
-  darkMode,
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
@@ -29,7 +27,6 @@ import {
   reqUserEditShare,
   reqUserShareList,
 } from '../../api/user';
-import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import { otherWindowMsg } from '../home/home';
 if (!isLogin()) {
@@ -261,8 +258,3 @@ $headBtns
     myOpen('/');
   });
 if (!isIframe()) wave();
-changeDark.bind((isDark) => {
-  if (_getData('dark') != 's') return;
-  const dark = isDark ? 'y' : 'n';
-  darkMode(dark);
-});

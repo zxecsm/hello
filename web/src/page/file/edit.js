@@ -2,10 +2,7 @@ import $ from 'jquery';
 import createEditer from '../../js/utils/editor';
 import {
   ContentScroll,
-  _getData,
   _myOpen,
-  _setData,
-  darkMode,
   debounce,
   getTextSize,
   isDarkMode,
@@ -18,23 +15,22 @@ import _pop from '../../js/plugins/popConfirm';
 import { reqFileSaveFile } from '../../api/file';
 import bus from '../../js/utils/bus';
 import rMenu from '../../js/plugins/rightMenu';
-import changeDark from '../../js/utils/changeDark';
 import _path from '../../js/utils/path';
 import { setEditor } from '../edit/setEditor';
 import _d from '../../js/common/config';
 import { percentBar } from '../../js/plugins/percentBar';
 import cacheFile from '../../js/utils/cacheFile';
+import localData from '../../js/common/localData';
 const $editFile = $('.edit_file');
 const $container = $('#app .container');
 let oText = '';
 let originText = '';
 let readOnly = false;
 const editor = createEditer($editFile.find('.editor')[0]);
-let fileFontSize = _getData('fileFontSize');
+let fileFontSize = localData.get('fileFontSize');
 export function editFileIsHiden() {
   return $editFile.is(':hidden');
 }
-changeTheme(_getData('dark'));
 // 切换黑暗模式
 function changeTheme(dark) {
   if (dark === 'y') {
@@ -206,7 +202,7 @@ function settingMenu(e) {
             'font-size': percentToValue(12, 30, percent),
           });
           fileFontSize = percent;
-          _setData('fileFontSize', fileFontSize);
+          localData.set('fileFontSize', fileFontSize, 200);
         });
       } else if (id === 'setEditor') {
         setEditor(e, editor, () => {
@@ -311,9 +307,3 @@ function hdClose() {
   init();
 }
 if (!isIframe()) wave(11);
-changeDark.bind((isDark) => {
-  if (_getData('dark') != 's') return;
-  const dark = isDark ? 'y' : 'n';
-  changeTheme(dark);
-  darkMode(dark);
-});

@@ -6,8 +6,6 @@ import '../notes/index.less';
 import './index.less';
 import '../bmk/index.less';
 import {
-  _setData,
-  _getData,
   pageScrollTop,
   toLogin,
   scrollState,
@@ -25,7 +23,6 @@ import {
   copyText,
   isLogin,
   wave,
-  darkMode,
   _getTarget,
   toggleUserSelect,
   LazyLoad,
@@ -45,7 +42,6 @@ import {
 import rMenu from '../../js/plugins/rightMenu';
 import { showBmkInfo } from '../../js/utils/showinfo';
 import { reqSearchConfig } from '../../api/search';
-import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import { BoxSelector } from '../../js/utils/boxSelector';
 import { otherWindowMsg } from '../home/home';
@@ -54,6 +50,7 @@ import cacheFile from '../../js/utils/cacheFile';
 import loadingSvg from '../../images/img/loading.svg';
 import defaultIcon from '../../images/img/default-icon.png';
 import _path from '../../js/utils/path';
+import localData from '../../js/common/localData';
 if (!isLogin()) {
   toLogin();
 }
@@ -107,7 +104,7 @@ function listLoading() {
   $contentWrap.html(str);
   pageScrollTop(0);
 }
-let curPageSize = _getData('trashPageSize');
+let curPageSize = localData.get('trashPageSize');
 $contentWrap.pagenum = 1;
 $contentWrap.list = [];
 function getListItem(id) {
@@ -378,7 +375,7 @@ const pgnt = pagination($contentWrap[0], {
   },
   changeSize(val) {
     curPageSize = val;
-    _setData('trashPageSize', curPageSize);
+    localData.set('trashPageSize', curPageSize);
     $contentWrap.pagenum = 1;
     renderList(true);
     _msg.botMsg(`第 ${$contentWrap.pagenum} 页`);
@@ -531,7 +528,7 @@ reqSearchConfig()
   .catch(() => {});
 function getSearchEngine() {
   return (
-    _d.searchEngineData[_getData('searchengine')] || _d.searchEngineData[0]
+    _d.searchEngineData[localData.get('searchengine')] || _d.searchEngineData[0]
   );
 }
 $contentWrap
@@ -763,8 +760,3 @@ document.addEventListener('keydown', function (e) {
   }
 });
 if (!isIframe()) wave();
-changeDark.bind((isDark) => {
-  if (_getData('dark') != 's') return;
-  const dark = isDark ? 'y' : 'n';
-  darkMode(dark);
-});

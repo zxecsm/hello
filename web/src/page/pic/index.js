@@ -4,8 +4,6 @@ import '../../css/common/common.css';
 import '../../font/iconfont.css';
 import './index.less';
 import {
-  _setData,
-  _getData,
   imgjz,
   copyText,
   isImgFile,
@@ -21,7 +19,6 @@ import {
   isRoot,
   isLogin,
   wave,
-  darkMode,
   concurrencyTasks,
   _getTarget,
   toggleUserSelect,
@@ -40,7 +37,6 @@ import {
   reqPicUp,
 } from '../../api/pic';
 import rMenu from '../../js/plugins/rightMenu';
-import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import md5 from '../../js/utils/md5';
 import _path from '../../js/utils/path';
@@ -49,6 +45,7 @@ import imgPreview from '../../js/plugins/imgPreview';
 import { BoxSelector } from '../../js/utils/boxSelector';
 import realtime from '../../js/plugins/realtime';
 import { otherWindowMsg } from '../home/home';
+import localData from '../../js/common/localData';
 if (!isLogin()) {
   toLogin();
 }
@@ -184,7 +181,7 @@ $contentWrap
 })();
 // 获取壁纸
 let picPageNo = 1;
-let curPageSize = _getData('bgPageSize');
+let curPageSize = localData.get('bgPageSize');
 renderImgList(true);
 // 图片列表加载
 function imgListLoading() {
@@ -357,7 +354,7 @@ const pgnt = pagination($imgList[0], {
   },
   changeSize(val) {
     curPageSize = val;
-    _setData('bgPageSize', curPageSize);
+    localData.set('bgPageSize', curPageSize);
     picPageNo = 1;
     renderImgList(true);
     _msg.botMsg(`第 ${picPageNo} 页`);
@@ -644,8 +641,3 @@ $footer
     _msg.botMsg(`选中：${che === 'y' ? $imgItem.length : 0}项`);
   });
 if (!isIframe()) wave();
-changeDark.bind((isDark) => {
-  if (_getData('dark') != 's') return;
-  const dark = isDark ? 'y' : 'n';
-  darkMode(dark);
-});

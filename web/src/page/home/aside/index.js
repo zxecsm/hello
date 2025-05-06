@@ -3,8 +3,6 @@ import defaultIcon from '../../../images/img/default-icon.png';
 
 import {
   myOpen,
-  _setData,
-  _getData,
   debounce,
   _getTarget,
   imgjz,
@@ -62,12 +60,13 @@ import {
   BoxSelector,
   MouseElementTracker,
 } from '../../../js/utils/boxSelector.js';
+import localData from '../../../js/common/localData.js';
 
 const $asideBtn = $('.aside_btn'),
   $asideWrap = $('.aside_wrap'),
   $aside = $asideWrap.find('.aside');
 
-let asidePageSize = _getData('asidePageSize');
+let asidePageSize = localData.get('asidePageSize');
 let bookmark = [];
 
 // 设置书签数据
@@ -358,7 +357,7 @@ const asidePgnt = pagination($aside[0], {
   },
   changeSize(val) {
     asidePageSize = val;
-    _setData('asidePageSize', asidePageSize);
+    localData.set('asidePageSize', asidePageSize);
     asidePageNo = 1;
     renderAsideList(1);
   },

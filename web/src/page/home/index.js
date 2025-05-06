@@ -9,8 +9,6 @@ import imgBgSvg from '../../images/img/bg.svg';
 import {
   queryURLParams,
   myOpen,
-  _setData,
-  _getData,
   throttle,
   debounce,
   _getTarget,
@@ -151,6 +149,7 @@ import {
 import imgPreview from '../../js/plugins/imgPreview/index.js';
 import { reqRootSysStatus } from '../../api/root.js';
 import { handleAllowLoginMsg, shakeChat } from './home.js';
+import localData from '../../js/common/localData.js';
 const $pageBg = $('.page_bg'),
   $document = $(document),
   $userLogoBtn = $('.user_logo_btn'),
@@ -163,7 +162,7 @@ const $pageBg = $('.page_bg'),
   $randomChangeBgBtn = $('.random_change_bg_btn'),
   $searchBoxBtn = $('.search_box_btn'),
   $sysStatus = $('.sys_status');
-let curFilterBg = _getData('filterbg');
+let curFilterBg = localData.get('filterbg');
 let userInfo = {};
 // 设置用户数据
 export function setUserInfo(val) {
@@ -187,7 +186,7 @@ function bgFilter(value) {
   $pageBg.css({
     filter: `blur(${value}px)`,
   });
-  _setData('filterbg', value);
+  localData.set('filterbg', value);
 }
 bgFilter(curFilterBg);
 // 调节模糊度
@@ -281,7 +280,7 @@ export function changeLogoAlertStatus() {
   if (
     expireCount > 0 ||
     undoneCount > 0 ||
-    (tipsFlag !== 0 && tipsFlag !== _getData('tipsFlag'))
+    (tipsFlag !== 0 && tipsFlag !== localData.get('tipsFlag'))
   ) {
     $alertFlag.fadeIn();
   } else {
@@ -378,7 +377,7 @@ export function updateUserInfo(cb) {
         setUserInfo(result.data);
         onceInit();
         const { logo, username, account, bg, bgxs, bgObj } = userInfo;
-        _setData('username', username);
+        localData.set('username', username);
         // 标题
         _d.title = `Hello ${username}`;
         if (songIspaused()) {

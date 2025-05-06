@@ -14,10 +14,7 @@ import {
   isRoot,
   isEmail,
   addCustomCode,
-  _getData,
-  _setData,
   wave,
-  darkMode,
   _myOpen,
   getTextSize,
 } from '../../js/utils/utils';
@@ -49,12 +46,12 @@ import {
 } from '../../api/root';
 import rMenu from '../../js/plugins/rightMenu';
 import { reqUserCustomCode } from '../../api/user';
-import changeDark from '../../js/utils/changeDark';
 import toolTip from '../../js/plugins/tooltip';
 import { _tpl } from '../../js/utils/template';
 import md5 from '../../js/utils/md5.js';
 import realtime from '../../js/plugins/realtime/index.js';
 import { otherWindowMsg } from '../home/home.js';
+import localData from '../../js/common/localData.js';
 
 const $contentWrap = $('.content_wrap'),
   $paginationBox = $('.pagination_box'),
@@ -663,7 +660,7 @@ function testEmail(e) {
       items: {
         email: {
           beforeText: '收件人邮箱：',
-          value: _getData('testEmail') || '',
+          value: localData.get('testEmail') || '',
           verify(val) {
             if (!isEmail(val)) {
               return '邮箱格式错误';
@@ -675,7 +672,7 @@ function testEmail(e) {
       },
     },
     ({ inp, loading }) => {
-      _setData('testEmail', inp.email);
+      localData.set('testEmail', inp.email);
       loading.start();
       reqRootTestEmail({ email: inp.email })
         .then((res) => {
@@ -701,7 +698,7 @@ function testTFA(e) {
         token: {
           beforeText: '验证码：',
           inputType: 'number',
-          value: _getData('testCode') || '',
+          value: localData.get('testCode') || '',
           verify(val) {
             if (val === '') {
               return '请输入验证码';
@@ -713,7 +710,7 @@ function testTFA(e) {
       },
     },
     ({ inp, loading }) => {
-      _setData('testCode', inp.token);
+      localData.set('testCode', inp.token);
       loading.start();
       reqRootTestTfa({ token: inp.token })
         .then((res) => {
@@ -1010,8 +1007,3 @@ $('.create_account').on('click', (e) => {
   );
 });
 if (!isIframe()) wave();
-changeDark.bind((isDark) => {
-  if (_getData('dark') != 's') return;
-  const dark = isDark ? 'y' : 'n';
-  darkMode(dark);
-});

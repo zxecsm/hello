@@ -7,8 +7,6 @@ import imgMusic from '../../images/img/music.jpg';
 import {
   queryURLParams,
   myOpen,
-  _setData,
-  _getData,
   _setTimeout,
   throttle,
   debounce,
@@ -33,8 +31,6 @@ import {
   formatDate,
   getFilePath,
   enterPassCode,
-  _getDataTem,
-  _setDataTem,
   userLogoMenu,
   LazyLoad,
   hdOnce,
@@ -42,7 +38,6 @@ import {
   isFullScreen,
   isIframe,
   wave,
-  darkMode,
   getScreenSize,
   loadImg,
   pageErr,
@@ -60,7 +55,6 @@ import pagination from '../../js/plugins/pagination';
 import toolTip from '../../js/plugins/tooltip';
 import { showSongInfo } from '../../js/utils/showinfo';
 import rMenu from '../../js/plugins/rightMenu';
-import changeDark from '../../js/utils/changeDark';
 import { _tpl, deepClone } from '../../js/utils/template';
 import { initRainCodeSleep } from '../../js/common/codeRain';
 import notifyMusicControlPanel from '../home/player/notifyMusicControlPanel';
@@ -70,6 +64,7 @@ import { percentBar } from '../../js/plugins/percentBar';
 import imgPreview from '../../js/plugins/imgPreview';
 import realtime from '../../js/plugins/realtime';
 import { otherWindowMsg, waitLogin } from '../home/home';
+import localData from '../../js/common/localData';
 const urlparmes = queryURLParams(myOpen()),
   shareId = urlparmes.s,
   $myAudio = $(new Audio()),
@@ -110,10 +105,10 @@ const defaultTitle = document.title;
 let playingList = null,
   curPlayingList = null,
   playingSongInfo = null,
-  curPlaySpeed = _getData('songPlaySpeed'),
-  lrcState = _getData('lrcState'),
+  curPlaySpeed = localData.get('songPlaySpeed'),
+  lrcState = localData.get('lrcState'),
   userInfo = null,
-  passCode = _getDataTem('passCode', shareId) || '',
+  passCode = localData.session.get('passCode', shareId) || '',
   shareToken = '';
 let defaultShareTitle = '';
 const verifyCode = hdOnce(() => {
@@ -129,7 +124,7 @@ function getShareData(close, loading = { start() {}, end() {} }) {
     .then((resObj) => {
       loading.end();
       if (resObj.code === 1) {
-        _setDataTem('passCode', passCode, shareId);
+        localData.session.set('passCode', passCode, shareId);
         close && close();
         const { account, username, logo, title, exp_time, email, token } =
           resObj.data;
@@ -167,7 +162,7 @@ function getShareData(close, loading = { start() {}, end() {} }) {
         playingList = resObj.data.data;
         curPlayingList = deepClone(playingList);
         playingSongInfo = initSongInfo(
-          _getDataTem('playingSongInfo') || playingList[0]
+          localData.session.get('playingSongInfo') || playingList[0]
         );
         toggleMvBtnState();
         updateSongInfo();
@@ -377,7 +372,7 @@ function playState() {
 function musicPlay(obj) {
   $myAudio[0].currentTime = 0; //时间进度归零
   playingSongInfo = initSongInfo(obj); //初始化音乐数据
-  _setDataTem('playingSongInfo', playingSongInfo);
+  localData.session.set('playingSongInfo', playingSongInfo);
   const songText = `${playingSongInfo.artist} - ${playingSongInfo.title}`;
   $lrcProgressBar
     .find('.total_time')
@@ -399,7 +394,7 @@ function playMv(obj) {
   const isHide = $musicMvWrap.is(':hidden');
   $musicMvWrap.css('display', 'flex');
   playingSongInfo = initSongInfo(obj);
-  _setDataTem('playingSongInfo', playingSongInfo);
+  localData.session.set('playingSongInfo', playingSongInfo);
   updateSongInfo();
   pauseSong();
   $myVideo.attr('src', playingSongInfo.mmv);
@@ -501,7 +496,8 @@ function musiclrc() {
         } else {
           $lrcMenuWrap.find('.lrc_translate_btn').stop().hide(_d.speed);
         }
-        const showFy = _getData('showSongTranslation') && hasfy ? true : false;
+        const showFy =
+          localData.get('showSongTranslation') && hasfy ? true : false;
         const html = _tpl(
           `
           <div v-for="{p,fy} in list">
@@ -666,7 +662,7 @@ $lrcProgressBar
     let str = formartSongTime(time);
     if (lrc) {
       str += `${lrc.p ? `\n${lrc.p}` : ''}${
-        _getData('showSongTranslation') && lrc.fy ? `\n${lrc.fy}` : ''
+        localData.get('showSongTranslation') && lrc.fy ? `\n${lrc.fy}` : ''
       }`;
     }
     toolTip.setTip(str).show();
@@ -1032,7 +1028,7 @@ $lrcMenuWrap
     playMv(playingSongInfo);
   })
   .on('click', '.lrc_translate_btn', () => {
-    let showfy = _getData('showSongTranslation');
+    let showfy = localData.get('showSongTranslation');
     if (showfy) {
       $lrcListWrap.find('.lrc_items .lrcfy').css('display', 'none');
     } else {
@@ -1040,7 +1036,7 @@ $lrcMenuWrap
     }
     lrcScroll(true);
     showfy = !showfy;
-    _setData('showSongTranslation', showfy);
+    localData.set('showSongTranslation', showfy);
   })
   .on('click', '.set_lrc_btn', function (e) {
     const data = [
@@ -1097,7 +1093,7 @@ $lrcMenuWrap
               'font-size': percentToValue(14, 30, percent) + 'px',
             });
             lrcState.size = percent;
-            _setData('lrcState', lrcState);
+            localData.set('lrcState', lrcState, 200);
             lrcScroll(true);
           });
         } else if (id === '2') {
@@ -1106,21 +1102,21 @@ $lrcMenuWrap
           $lrcListWrap.find('.lrc_items').css({
             'text-align': 'left',
           });
-          _setData('lrcState', lrcState);
+          localData.set('lrcState', lrcState);
         } else if (id === '3') {
           close();
           lrcState.position = 'center';
           $lrcListWrap.find('.lrc_items').css({
             'text-align': 'center',
           });
-          _setData('lrcState', lrcState);
+          localData.set('lrcState', lrcState);
         } else if (id === '4') {
           close();
           lrcState.position = 'right';
           $lrcListWrap.find('.lrc_items').css({
             'text-align': 'right',
           });
-          _setData('lrcState', lrcState);
+          localData.set('lrcState', lrcState);
         } else if (id === '6') {
           close();
           let u1 = playingSongInfo.ppic;
@@ -1180,7 +1176,7 @@ $lrcMenuWrap
             }
           });
           resetMenu(data);
-          _setData('songPlaySpeed', curPlaySpeed);
+          localData.set('songPlaySpeed', curPlaySpeed);
           _msg.msg({ message: b + 'X', icon: 'iconfont icon-sudu' });
         }
       },
@@ -1313,8 +1309,3 @@ zidonghide(
   '.lrc_menu_wrap'
 );
 if (!isIframe()) wave();
-changeDark.bind((isDark) => {
-  if (_getData('dark') != 's') return;
-  const dark = isDark ? 'y' : 'n';
-  darkMode(dark);
-});

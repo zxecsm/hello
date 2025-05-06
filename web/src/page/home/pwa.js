@@ -1,5 +1,5 @@
+import localData from '../../js/common/localData';
 import _pop from '../../js/plugins/popConfirm';
-import { _getData, _setData } from '../../js/utils/utils';
 const link = document.createElement('link');
 link.setAttribute('rel', 'manifest');
 link.href = 'manifest.json';
@@ -10,7 +10,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
     // don't display install banner when installed
     return e.preventDefault();
   } else {
-    const install = _getData('install') || 0;
+    const install = localData.get('install') || 0;
     const t = Date.now();
     if (t - install < 5 * 24 * 60 * 60 * 1000) return;
     _pop(
@@ -24,7 +24,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
         if (type === 'confirm') {
           e.prompt();
         } else if (type === 'cancel') {
-          _setData('install', t);
+          localData.set('install', t);
         }
       }
     );

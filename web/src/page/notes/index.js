@@ -5,8 +5,6 @@ import '../../font/iconfont.css';
 import './index.less';
 import './notes.less';
 import {
-  _setData,
-  _getData,
   throttle,
   _myOpen,
   pageScrollTop,
@@ -27,7 +25,6 @@ import {
   wave,
   isValidDate,
   formatNum,
-  darkMode,
   downloadFile,
   getFileReader,
   getFiles,
@@ -62,7 +59,6 @@ import {
 import toolTip from '../../js/plugins/tooltip';
 import rMenu from '../../js/plugins/rightMenu';
 import { showNoteInfo } from '../../js/utils/showinfo';
-import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import { UpProgress } from '../../js/plugins/UpProgress';
 import { BoxSelector } from '../../js/utils/boxSelector';
@@ -70,6 +66,7 @@ import { otherWindowMsg, waitLogin } from '../home/home';
 import imgPreview from '../../js/plugins/imgPreview';
 import cacheFile from '../../js/utils/cacheFile';
 import loadingSvg from '../../images/img/loading.svg';
+import localData from '../../js/common/localData';
 const $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
   $categoryTag = $('.category_tag'),
@@ -78,7 +75,7 @@ let runState = 'own';
 let noteCategoryList = [];
 const urlParams = queryURLParams(myOpen());
 let { HASH } = urlParams;
-if (urlParams.acc && urlParams.acc !== _getData('account')) {
+if (urlParams.acc && urlParams.acc !== localData.get('account')) {
   runState = 'other';
   $headWrap.find('.h_add_item_btn').remove();
   $headWrap.find('.h_check_item_btn').remove();
@@ -91,7 +88,7 @@ if (urlParams.acc && urlParams.acc !== _getData('account')) {
 waitLogin(() => {
   realtime.init().add((res) => {
     res.forEach((item) => {
-      if (!urlParams.acc || urlParams.acc === _getData('account')) {
+      if (!urlParams.acc || urlParams.acc === localData.get('account')) {
         const {
           type,
           data: { flag },
@@ -205,7 +202,7 @@ function listLoading() {
 }
 // 渲染列表
 $contentWrap.pagenum = 1;
-let notePageSize = _getData('notePageSize');
+let notePageSize = localData.get('notePageSize');
 let noteList = [];
 
 const noteBoxSelector = new BoxSelector(document, {
@@ -445,7 +442,7 @@ const pgnt = pagination($contentWrap[0], {
   },
   changeSize(val) {
     notePageSize = val;
-    _setData('notePageSize', notePageSize);
+    localData.set('notePageSize', notePageSize);
     $contentWrap.pagenum = 1;
     renderList(true);
     _msg.botMsg(`第 ${$contentWrap.pagenum} 页`);
@@ -1025,8 +1022,3 @@ document.addEventListener('keydown', function (e) {
   }
 });
 if (!isIframe()) wave(6);
-changeDark.bind((isDark) => {
-  if (_getData('dark') != 's') return;
-  const dark = isDark ? 'y' : 'n';
-  darkMode(dark);
-});

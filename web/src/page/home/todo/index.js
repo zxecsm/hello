@@ -13,8 +13,6 @@ import {
   myResize,
   _mySlide,
   getScreenSize,
-  _getData,
-  _setData,
   isFullScreen,
   getCenterPointDistance,
   _animate,
@@ -36,6 +34,7 @@ import { hideRightMenu } from '../rightSetting/index.js';
 import { hideIframeMask, showIframeMask } from '../iframe.js';
 import { changeLogoAlertStatus } from '../index.js';
 import { _tpl } from '../../../js/utils/template.js';
+import localData from '../../../js/common/localData.js';
 const $todoBox = $('.todo_box'),
   $theadBtns = $todoBox.find('.t_head_btns'),
   $todoList = $todoBox.find('.todo_list');
@@ -43,11 +42,11 @@ let todoList = [],
   todoPageNo = 1,
   todoPageSize = 40,
   undoneCount = 0,
-  todoIsTop = _getData('todoIsTop');
+  todoIsTop = localData.get('todoIsTop');
 function switchTodoTop() {
   todoIsTop = !todoIsTop;
   setTop();
-  _setData('todoIsTop', todoIsTop);
+  localData.set('todoIsTop', todoIsTop);
   setZidx($todoBox[0], 'todo', closeTodoBox, todoIsTop);
 }
 setTop();

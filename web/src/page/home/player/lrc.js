@@ -1,7 +1,5 @@
 import $ from 'jquery';
 import {
-  _setData,
-  _getData,
   _setTimeout,
   throttle,
   myShuffle,
@@ -73,6 +71,7 @@ import { getSearchSongs } from './search.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import { percentBar } from '../../../js/plugins/percentBar/index.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
+import localData from '../../../js/common/localData.js';
 const $myAudio = $(new Audio()),
   $musicLrcWrap = $('.music_player_box .music_lrc_wrap'),
   $lrcBg = $musicLrcWrap.find('.lrc_bg'),
@@ -83,8 +82,8 @@ const $myAudio = $(new Audio()),
   $lrcProgressBar = $lrcFootWrap.find('.progress_bar'),
   $lrcFootBtnWrap = $lrcFootWrap.find('.foot_btn_wrap');
 $myAudio[0].preload = 'none';
-let curPlaySpeed = _getData('songPlaySpeed'),
-  lrcState = _getData('lrcState');
+let curPlaySpeed = localData.get('songPlaySpeed'),
+  lrcState = localData.get('lrcState');
 let activeLrcIndex = 0,
   remotePlayState = false,
   lrcList = [],
@@ -344,7 +343,7 @@ async function renderLrc() {
   } else {
     $lrcMenuWrap.find('.lrc_translate_btn').stop().hide(_d.speed);
   }
-  const showFy = _getData('showSongTranslation') && hasfy ? true : false;
+  const showFy = localData.get('showSongTranslation') && hasfy ? true : false;
   const html = _tpl(
     `
           <div v-for="{p,fy} in list">
@@ -687,7 +686,7 @@ $lrcProgressBar
     let str = formartSongTime(time);
     if (lrc) {
       str += `${lrc.p ? `\n${lrc.p}` : ''}${
-        _getData('showSongTranslation') && lrc.fy ? `\n${lrc.fy}` : ''
+        localData.get('showSongTranslation') && lrc.fy ? `\n${lrc.fy}` : ''
       }`;
     }
     toolTip.setTip(str).show();
@@ -779,7 +778,7 @@ $lrcMenuWrap
     playMv(playingSongInfo);
   })
   .on('click', '.lrc_translate_btn', () => {
-    let showfy = _getData('showSongTranslation');
+    let showfy = localData.get('showSongTranslation');
     if (showfy) {
       $lrcListWrap.find('.lrc_items .lrcfy').css('display', 'none');
     } else {
@@ -787,7 +786,7 @@ $lrcMenuWrap
     }
     lrcScroll(true);
     showfy = !showfy;
-    _setData('showSongTranslation', showfy);
+    localData.set('showSongTranslation', showfy);
   })
   .on('click', '.share_song_btn', function (e) {
     if (!playingSongInfo.hash) return;
@@ -866,7 +865,7 @@ $lrcMenuWrap
               'font-size': percentToValue(14, 30, percent) + 'px',
             });
             lrcState.size = percent;
-            _setData('lrcState', lrcState);
+            localData.set('lrcState', lrcState, 200);
             lrcScroll(true);
           });
         } else if (id === '2') {
@@ -875,21 +874,21 @@ $lrcMenuWrap
           $lrcListWrap.find('.lrc_items').css({
             'text-align': 'left',
           });
-          _setData('lrcState', lrcState);
+          localData.set('lrcState', lrcState);
         } else if (id === '3') {
           close();
           lrcState.position = 'center';
           $lrcListWrap.find('.lrc_items').css({
             'text-align': 'center',
           });
-          _setData('lrcState', lrcState);
+          localData.set('lrcState', lrcState);
         } else if (id === '4') {
           close();
           lrcState.position = 'right';
           $lrcListWrap.find('.lrc_items').css({
             'text-align': 'right',
           });
-          _setData('lrcState', lrcState);
+          localData.set('lrcState', lrcState);
         } else if (id === '5') {
           if (!playingSongInfo.hash) return;
           close();
@@ -972,7 +971,7 @@ $lrcMenuWrap
             }
           });
           resetMenu(data);
-          _setData('songPlaySpeed', curPlaySpeed);
+          localData.set('songPlaySpeed', curPlaySpeed);
           _msg.msg({ message: b + 'X', icon: 'iconfont icon-sudu' });
         }
       },

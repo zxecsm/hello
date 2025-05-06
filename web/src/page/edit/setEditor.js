@@ -1,5 +1,5 @@
+import localData from '../../js/common/localData';
 import rMenu from '../../js/plugins/rightMenu';
-import { _setData } from '../../js/utils/utils';
 
 export function setEditor(e, editor, cb) {
   let editorOption = {
@@ -96,7 +96,7 @@ export function setEditor(e, editor, cb) {
         showGutter: inp.showGutter === 'y',
         useWrapMode: inp.useWrapMode === 'y',
       };
-      _setData('editorOption', editorOption);
+      localData.set('editorOption', editorOption);
       // 启用滚动动画
       editor.setOption('animatedScroll', editorOption.animatedScroll);
       // 显示不可见字符（例如空格、制表符、换行符）。

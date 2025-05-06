@@ -6,8 +6,6 @@ import '../note/md.less';
 import {
   queryURLParams,
   myOpen,
-  _setData,
-  _getData,
   throttle,
   debounce,
   formatDate,
@@ -23,7 +21,6 @@ import {
   isDarkMode,
   isLogin,
   wave,
-  darkMode,
   concurrencyTasks,
   copyText,
   getMinIndex,
@@ -41,7 +38,6 @@ import { reqNoteEdit, reqNoteRead } from '../../api/note';
 import { reqPicRepeat, reqPicUp } from '../../api/pic';
 import rMenu from '../../js/plugins/rightMenu';
 import MdWorker from '../../js/utils/md.worker.js';
-import changeDark from '../../js/utils/changeDark.js';
 import _d from '../../js/common/config.js';
 import md5 from '../../js/utils/md5.js';
 import _path from '../../js/utils/path.js';
@@ -51,6 +47,7 @@ import { percentBar } from '../../js/plugins/percentBar/index.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
 import realtime from '../../js/plugins/realtime/index.js';
 import { otherWindowMsg, waitLogin } from '../home/home.js';
+import localData from '../../js/common/localData.js';
 const mdWorker = new MdWorker();
 const $contentWrap = $('.content_wrap'),
   $headBtns = $contentWrap.find('.head_btns'),
@@ -60,7 +57,7 @@ const $contentWrap = $('.content_wrap'),
   $previewBox = $editWrap.find('.preview_box'),
   $resize = $previewBox.find('.resize');
 
-let editNoteFontSize = _getData('editNoteFontSize');
+let editNoteFontSize = localData.get('editNoteFontSize');
 if (!isIframe()) {
   waitLogin(() => {
     // 同步数据
@@ -93,7 +90,6 @@ window.changeTheme = changeTheme;
 // 创建编辑器
 const editor = createEditer($editBox[0]);
 editor.getSession().setMode('ace/mode/markdown');
-changeTheme(_getData('dark'));
 // 快捷键
 editor.getSession().on(
   'change',
@@ -627,7 +623,7 @@ function settingEdit(e) {
         percentBar(e, editNoteFontSize, (percent) => {
           editNoteFontSize = percent;
           setNoteFontSize();
-          _setData('editNoteFontSize', editNoteFontSize);
+          localData.set('editNoteFontSize', editNoteFontSize, 200);
         });
       } else if (id === 'setEditor') {
         setEditor(e, editor, () => {
@@ -760,9 +756,3 @@ function saveNote() {
     .catch(() => {});
 }
 if (!isIframe()) wave(5);
-changeDark.bind((isDark) => {
-  if (_getData('dark') != 's') return;
-  const dark = isDark ? 'y' : 'n';
-  changeTheme(dark);
-  darkMode(dark);
-});

@@ -1,9 +1,9 @@
 import { reqUserAllowLogin } from '../../api/user';
 import _d from '../../js/common/config';
+import localData from '../../js/common/localData';
 import _msg from '../../js/plugins/message';
 import _pop from '../../js/plugins/popConfirm';
 import {
-  _getData,
   _setTimeout,
   debounce,
   isIframe,
@@ -88,7 +88,7 @@ export function otherWindowMsg(msg) {
     handleAllowLoginMsg(data);
   } else if (type === 'chat') {
     const { flag, from, msgData } = data;
-    if (from.account === _getData('account')) return;
+    if (from.account === localData.get('account')) return;
     let text = '';
     // 新消息处理
     if (flag === 'addmsg') {

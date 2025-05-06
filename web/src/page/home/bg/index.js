@@ -1,8 +1,6 @@
 import $ from 'jquery';
 import loadfailImg from '../../../images/img/loadfail.png';
 import {
-  _setData,
-  _getData,
   debounce,
   _getTarget,
   imgjz,
@@ -42,6 +40,7 @@ import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
 import { BoxSelector } from '../../../js/utils/boxSelector.js';
+import localData from '../../../js/common/localData.js';
 const $allBgWrap = $('.all_bg_wrap'),
   $bgList = $allBgWrap.find('.bg_list'),
   $bgFooter = $allBgWrap.find('.bg_footer');
@@ -322,7 +321,7 @@ export function renderBgList(y) {
     bgLoading();
   }
   let type = isBigScreen() ? 'bg' : 'bgxs',
-    showpage = _getData('bgPageSize');
+    showpage = localData.get('bgPageSize');
   reqBgList({ type, pageNo: bgpage, pageSize: showpage })
     .then((result) => {
       if (result.code === 1) {
@@ -410,7 +409,7 @@ const bgPgnt = pagination($bgList[0], {
     _msg.botMsg(`第 ${bgpage} 页`);
   },
   changeSize(val) {
-    _setData('bgPageSize', val);
+    localData.set('bgPageSize', val);
     bgpage = 1;
     renderBgList(true);
     _msg.botMsg(`第 ${bgpage} 页`);

@@ -34,7 +34,8 @@ import 'ace-builds/src-noconflict/mode-sh';
 import 'ace-builds/src-noconflict/snippets/sh.js';
 import 'ace-builds/src-noconflict/mode-css';
 import 'ace-builds/src-noconflict/snippets/css.js';
-import { _getData, copyText } from './utils';
+import { copyText } from './utils';
+import localData from '../common/localData';
 
 export default function createEditer(el) {
   const editor = ace.edit(el, {
@@ -51,7 +52,7 @@ export default function createEditer(el) {
   editor.setOption('copyWithEmptySelection', true);
   // 空格代替制表符
   editor.setOption('useSoftTabs', true);
-  const editorOption = _getData('editorOption');
+  const editorOption = localData.get('editorOption');
   // 启用滚动动画
   editor.setOption('animatedScroll', editorOption.animatedScroll);
   // 显示不可见字符（例如空格、制表符、换行符）。

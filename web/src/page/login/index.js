@@ -6,18 +6,15 @@ import './index.less';
 import $ from 'jquery';
 import {
   myOpen,
-  _setData,
-  _getData,
-  darkMode,
   wrapInput,
   _setTimeout,
   isInteger,
   debounce,
-  _getDataTem,
   wave,
   throttle,
   loadImg,
   isBigScreen,
+  isLogin,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import validateImg from './validate';
@@ -34,8 +31,8 @@ import {
 } from '../../api/user.js';
 import rMenu from '../../js/plugins/rightMenu/index.js';
 import _pop from '../../js/plugins/popConfirm/index.js';
-import changeDark from '../../js/utils/changeDark.js';
 import md5 from '../../js/utils/md5.js';
+import localData from '../../js/common/localData.js';
 const $bg = $('.bg'),
   $box = $('.box'),
   $title = $box.find('.title'),
@@ -52,11 +49,11 @@ const $bg = $('.bg'),
   $nopd = $box.find('.nopd'),
   $ratify = $('#ratify'),
   $about = $box.find('.about');
-const originurl = _getDataTem('originurl') || '/';
+const originurl = localData.session.get('originurl') || '/';
 $about.on('click', function () {
   myOpen('/note?v=about');
 });
-if (_getData('account')) {
+if (isLogin()) {
   myOpen('/');
 }
 (async () => {
@@ -152,8 +149,8 @@ function hdNopdLogin() {
       .then((res) => {
         if (res.code === 1) {
           const { username, account } = res.data;
-          _setData('username', username);
-          _setData('account', account);
+          localData.set('username', username);
+          localData.set('account', account);
           myOpen(originurl);
           return;
         } else if (res.code === 3) {
@@ -230,8 +227,8 @@ function resetPassword(e) {
                     if (res.code === 1) {
                       const { username, account } = res.data;
                       close();
-                      _setData('username', username);
-                      _setData('account', account);
+                      localData.set('username', username);
+                      localData.set('account', account);
                       _msg.success(res.codeText, () => {
                         myOpen(originurl);
                       });
@@ -274,8 +271,8 @@ function closeRatify() {
 window.addEventListener('load', function () {
   $box.addClass('open');
 });
-accInp.setValue(_getData('username'));
-let showpd = _getData('showpd');
+accInp.setValue(localData.get('username'));
+let showpd = localData.get('showpd');
 // 显示密码切换
 function hdShowPd() {
   if (showpd) {
@@ -291,7 +288,7 @@ function hdShowPd() {
 hdShowPd();
 $showPd.on('click', function () {
   showpd = !showpd;
-  _setData('showpd', showpd);
+  localData.set('showpd', showpd);
   hdShowPd();
 });
 let isLoginState = true;
@@ -326,9 +323,9 @@ $register.on('click', () => {
   }
   checkUserName();
 });
-let dark = _getData('dark');
 // 切换黑暗模式
 $darkState.on('click', function () {
+  let dark = localData.get('dark');
   if (dark === 'y') {
     dark = 'n';
     _msg.success('关闭黑暗模式');
@@ -339,11 +336,9 @@ $darkState.on('click', function () {
     dark = 'y';
     _msg.success('开启黑暗模式');
   }
-  changeTheme(dark);
-  _setData('dark', dark);
+  localData.set('dark', dark);
 });
-function changeTheme(flag) {
-  dark = flag;
+function changeTheme(dark) {
   if (dark === 'y') {
     $darkState.attr('class', 'dark_state iconfont icon-icon_yejian-yueliang');
   } else if (dark === 'n') {
@@ -351,10 +346,8 @@ function changeTheme(flag) {
   } else if (dark === 's') {
     $darkState.attr('class', 'dark_state iconfont icon-xianshiqi');
   }
-  darkMode(dark);
 }
 window.changeTheme = changeTheme;
-changeTheme(dark);
 
 $account.next().on('click', function () {
   accInp.setValue('').focus();
@@ -417,8 +410,8 @@ function hdLogin(obj) {
                       loading.end();
                       if (res.code === 1) {
                         const { account, username } = res.data;
-                        _setData('username', username);
-                        _setData('account', account);
+                        localData.set('username', username);
+                        localData.set('account', account);
                         myOpen(originurl);
                       }
                     })
@@ -431,8 +424,8 @@ function hdLogin(obj) {
                 1
               );
             } else {
-              _setData('username', username);
-              _setData('account', account);
+              localData.set('username', username);
+              localData.set('account', account);
               myOpen(originurl);
             }
           }
@@ -465,8 +458,8 @@ function hdRegister(obj) {
           $loading.stop().fadeOut();
           if (result.code === 1) {
             const { username, account } = result.data;
-            _setData('username', username);
-            _setData('account', account);
+            localData.set('username', username);
+            localData.set('account', account);
             myOpen(originurl);
           }
         })
@@ -530,11 +523,6 @@ function shake() {
   closeShake(box);
 }
 wave();
-changeDark.bind((isDark) => {
-  if (_getData('dark') != 's') return;
-  const dark = isDark ? 'y' : 'n';
-  darkMode(dark);
-});
 window.addEventListener('resize', throttle(setCatSize, 1000));
 function setCatSize() {
   const $cat = $box.find('.cat');

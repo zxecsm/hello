@@ -4,8 +4,6 @@ import imgHistory from '../../../images/img/history.jpg';
 import imgMusic from '../../../images/img/music.jpg';
 import loadSvg from '../../../images/img/loading.svg';
 import {
-  _setData,
-  _getData,
   _setTimeout,
   throttle,
   debounce,
@@ -147,6 +145,7 @@ import {
   BoxSelector,
   MouseElementTracker,
 } from '../../../js/utils/boxSelector.js';
+import localData from '../../../js/common/localData.js';
 const $musicPlayerBox = $('.music_player_box'),
   $musicFootProgress = $musicPlayerBox.find('.music_foot_progress'),
   $musicPlayerBg = $musicPlayerBox.find('.music_palyer_bg'),
@@ -159,14 +158,14 @@ const $musicPlayerBox = $('.music_player_box'),
   $musicFootBox = $musicPlayerBox.find('.music_foot_box'),
   $playingSongLogo = $musicFootBox.find('.logo_img'),
   $miniPlayer = $('.mini_player');
-let mediaVolume = _getData('mediaVolume'),
-  musicPageSize = _getData('songListPageSize'),
-  curSongListSort = _getData('songListSort'),
-  playerIsTop = _getData('playerIsTop');
+let mediaVolume = localData.get('mediaVolume'),
+  musicPageSize = localData.get('songListPageSize'),
+  curSongListSort = localData.get('songListSort'),
+  playerIsTop = localData.get('playerIsTop');
 function switchPlayerTop() {
   playerIsTop = !playerIsTop;
   setTop();
-  _setData('playerIsTop', playerIsTop);
+  localData.set('playerIsTop', playerIsTop);
   setZidx($musicPlayerBox[0], 'music', hideMusicPlayBox, playerIsTop);
 }
 setTop();
@@ -774,7 +773,7 @@ export const remoteVol = debounce(function () {
 export function setPlayVolume() {
   setSongPlayVolume(mediaVolume);
   setMvplayVolume(mediaVolume);
-  _setData('mediaVolume', mediaVolume);
+  localData.set('mediaVolume', mediaVolume, 200);
 
   $musicHeadWrap
     .find('.volume')
@@ -2015,7 +2014,7 @@ function hdSongsSort(e) {
       if (id) {
         curSongListSort = param.value;
         resetMenu(data);
-        _setData('songListSort', curSongListSort);
+        localData.set('songListSort', curSongListSort);
         songPageNo = 1;
         close();
         $msuicContentBox.find('.list_items_wrap')[0].scrollTop = 0;
@@ -2322,7 +2321,7 @@ $msuicContentBox
       { data: [50, 100, 200], active: musicPageSize },
       ({ value, close }) => {
         musicPageSize = value;
-        _setData('songListPageSize', musicPageSize);
+        localData.set('songListPageSize', musicPageSize);
         songPageNo = 1;
         $msuicContentBox.find('.list_items_wrap')[0].scrollTop = 0;
         if ($songListWrap.listId === 'all') {

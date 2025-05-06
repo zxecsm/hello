@@ -11,6 +11,7 @@ import { _tpl } from './template';
 import _path from './path';
 import { UpProgress } from '../plugins/UpProgress';
 import cacheFile from './cacheFile';
+import localData from '../common/localData';
 // 解析url
 export function queryURLParams(url) {
   const obj = {};
@@ -33,69 +34,6 @@ export function myOpen(url, _blank) {
   document.body.appendChild(a);
   a.click();
   a.remove();
-}
-// 本地储存
-export function _setData(key, data) {
-  try {
-    data = JSON.stringify({ data });
-    localStorage.setItem('hello_' + key, encodeURIComponent(data));
-  } catch {}
-}
-export function _getDataSize() {
-  let size = 0;
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i); // 获取当前键名
-      const value = localStorage.getItem(key); // 获取对应的值
-      size += getTextSize(value);
-    }
-  } catch {}
-  return size;
-}
-export function _setDataTem(key, data, flag = '') {
-  try {
-    data = JSON.stringify({ data });
-    sessionStorage.setItem('hello_' + key + flag, encodeURIComponent(data));
-  } catch {}
-}
-//本地读取
-export function _getData(key) {
-  let d = null;
-  try {
-    d = localStorage.getItem('hello_' + key);
-  } catch {}
-  if (d === null) {
-    return _d.localStorageDefaultData[key];
-  }
-  return JSON.parse(decodeURIComponent(d)).data;
-}
-export function _getDataTem(key, flag = '') {
-  let d = null;
-  try {
-    d = sessionStorage.getItem('hello_' + key + flag);
-  } catch {}
-  if (d === null) {
-    return d;
-  }
-  return JSON.parse(decodeURIComponent(d)).data;
-}
-export function _delData(key) {
-  try {
-    if (key) {
-      localStorage.removeItem('hello_' + key);
-    } else {
-      localStorage.clear();
-    }
-  } catch {}
-}
-export function _delDataTem(key) {
-  try {
-    if (key) {
-      sessionStorage.removeItem('hello_' + key);
-    } else {
-      sessionStorage.clear();
-    }
-  } catch {}
 }
 // 定时器
 export function _setTimeout(callback, time) {
@@ -157,7 +95,7 @@ export function debounce(callback, wait, immedia) {
 }
 // 提示音
 export function playSound(src) {
-  if (_getData('pmsound')) {
+  if (localData.get('pmsound')) {
     let sound = document.createElement('audio');
     sound.src = src;
     sound.play();
@@ -796,8 +734,8 @@ export function getFileReader(file, type) {
 }
 // 登录
 export function toLogin() {
-  _delData('account');
-  _setDataTem('originurl', myOpen());
+  localData.remove('account');
+  localData.session.set('originurl', myOpen());
   myOpen('/login');
 }
 // 格式时间日期
@@ -1358,6 +1296,9 @@ export function darkMode(flag) {
     document.documentElement.classList.add('dark');
   } else {
     document.documentElement.classList.remove('dark');
+  }
+  if (window.changeTheme && typeof window.changeTheme === 'function') {
+    window.changeTheme(flag);
   }
 }
 // 改变窗口头部排列
@@ -2555,14 +2496,14 @@ export function isInteger(obj) {
   return Math.floor(obj) === obj;
 }
 export function isRoot() {
-  return _getData('account') === 'root';
+  return localData.get('account') === 'root';
 }
 export function isLogin() {
-  return _getData('account');
+  return localData.get('account');
 }
 // 用户选项
 export function userLogoMenu(e, account, username, email) {
-  const acc = _getData('account');
+  const acc = localData.get('account');
   let data = [];
   if (!isIframe()) {
     data.push({

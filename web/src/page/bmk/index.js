@@ -8,8 +8,6 @@ import loadingSvg from '../../images/img/loading.svg';
 import defaultIcon from '../../images/img/default-icon.png';
 
 import {
-  _setData,
-  _getData,
   throttle,
   pageScrollTop,
   myOpen,
@@ -25,7 +23,6 @@ import {
   hdTitleHighlight,
   isLogin,
   wave,
-  darkMode,
   _getTarget,
   toggleUserSelect,
   LazyLoad,
@@ -50,13 +47,13 @@ import {
 
 import { showBmkInfo } from '../../js/utils/showinfo';
 import rMenu from '../../js/plugins/rightMenu';
-import changeDark from '../../js/utils/changeDark';
 import { _tpl } from '../../js/utils/template';
 import { CreateTabs } from '../notes/tabs';
 import { BoxSelector } from '../../js/utils/boxSelector';
 import { otherWindowMsg, waitLogin } from '../home/home';
 import _path from '../../js/utils/path';
 import cacheFile from '../../js/utils/cacheFile';
+import localData from '../../js/common/localData';
 
 const $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
@@ -67,7 +64,7 @@ let runState = 'own'; // 运行状态
 const urlParams = queryURLParams(myOpen());
 let { HASH } = urlParams;
 
-if (urlParams.acc && urlParams.acc !== _getData('account')) {
+if (urlParams.acc && urlParams.acc !== localData.get('account')) {
   runState = 'other';
   $footer.find('.f_move_to').text('添加到');
   $footer.find('.f_delete').remove();
@@ -80,7 +77,7 @@ waitLogin(() => {
   // 同步数据
   realtime.init().add((res) => {
     res.forEach((item) => {
-      if (!urlParams.acc || urlParams.acc === _getData('account')) {
+      if (!urlParams.acc || urlParams.acc === localData.get('account')) {
         const {
           type,
           data: { flag },
@@ -228,7 +225,7 @@ function listLoading() {
 }
 
 let bmksPageNo = 1;
-let bmPageSize = _getData('bmPageSize');
+let bmPageSize = localData.get('bmPageSize');
 
 $contentWrap.list = [];
 $contentWrap.groupList = [];
@@ -246,7 +243,7 @@ const pgnt = pagination($contentWrap[0], {
   },
   changeSize(val) {
     bmPageSize = val;
-    _setData('bmPageSize', bmPageSize);
+    localData.set('bmPageSize', val);
     bmksPageNo = 1;
     renderList(true);
     _msg.botMsg(`第 ${bmksPageNo} 页`);
@@ -877,8 +874,3 @@ document.addEventListener('keydown', function (e) {
 });
 
 if (!isIframe()) wave();
-changeDark.bind((isDark) => {
-  if (_getData('dark') != 's') return;
-  const dark = isDark ? 'y' : 'n';
-  darkMode(dark);
-});
