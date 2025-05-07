@@ -77,34 +77,37 @@ function encode(obj) {
 function decode(str) {
   return JSON.parse(decodeURIComponent(str));
 }
+function wrapKey(key) {
+  return `hello_${key}`;
+}
+
 const localData = {
   localCache: new Map(),
   debounceTimers: new Map(),
   listeners: new Set(),
   trigger(event) {
+    const rawKey = event.key?.replace(/^hello_/, '');
     this.listeners.forEach((callback) => {
       try {
-        callback(event);
+        callback({ ...event, key: rawKey });
       } catch {}
     });
   },
   onChange(callback) {
-    if (typeof callback === 'function') {
-      this.listeners.add(callback);
-    }
+    if (typeof callback === 'function') this.listeners.add(callback);
   },
   offChange(callback) {
-    if (typeof callback === 'function') {
-      this.listeners.delete(callback);
-    }
+    if (typeof callback === 'function') this.listeners.delete(callback);
   },
   get(key) {
-    if (this.localCache.has(key)) return this.localCache.get(key).data;
+    const storageKey = wrapKey(key);
+    if (this.localCache.has(storageKey))
+      return this.localCache.get(storageKey).data;
     try {
-      const raw = localStorage.getItem(key);
+      const raw = localStorage.getItem(storageKey);
       if (raw !== null) {
         const parsed = decode(raw);
-        this.localCache.set(key, parsed);
+        this.localCache.set(storageKey, parsed);
         return parsed.data;
       }
     } catch {}
@@ -114,30 +117,32 @@ const localData = {
       : null;
   },
   set(key, data, delay = 0) {
-    this.localCache.set(key, { data });
+    const storageKey = wrapKey(key);
+    this.localCache.set(storageKey, { data });
 
-    if (this.debounceTimers.has(key)) {
-      clearTimeout(this.debounceTimers.get(key));
-      this.debounceTimers.delete(key);
+    if (this.debounceTimers.has(storageKey)) {
+      clearTimeout(this.debounceTimers.get(storageKey));
+      this.debounceTimers.delete(storageKey);
     }
 
     const timer = setTimeout(() => {
       try {
         const payload = encode({ data });
-        localStorage.setItem(key, payload);
-        this.trigger({ key, newValue: payload });
+        localStorage.setItem(storageKey, payload);
+        this.trigger({ key: storageKey, newValue: payload });
       } catch {}
-      this.debounceTimers.delete(key);
+      this.debounceTimers.delete(storageKey);
     }, delay);
 
-    this.debounceTimers.set(key, timer);
+    this.debounceTimers.set(storageKey, timer);
   },
   remove(key) {
     try {
       if (key) {
-        localStorage.removeItem(key);
-        this.localCache.delete(key);
-        this.trigger({ key, newValue: null });
+        const storageKey = wrapKey(key);
+        localStorage.removeItem(storageKey);
+        this.localCache.delete(storageKey);
+        this.trigger({ key: storageKey, newValue: null });
       } else {
         localStorage.clear();
         this.localCache.clear();
@@ -149,11 +154,9 @@ const localData = {
     let size = 0;
     try {
       for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i); // 获取当前键名
-        const value = localStorage.getItem(key); // 获取对应的值
-        if (value != null) {
-          size += getTextSize(value);
-        }
+        const key = localStorage.key(i);
+        const value = localStorage.getItem(key);
+        if (value != null) size += getTextSize(value);
       }
     } catch {}
     return size;
@@ -162,48 +165,54 @@ const localData = {
     localCache: new Map(),
     debounceTimers: new Map(),
     get(key) {
-      if (this.localCache.has(key)) return this.localCache.get(key).data;
+      const storageKey = wrapKey(key);
+      if (this.localCache.has(storageKey))
+        return this.localCache.get(storageKey).data;
       try {
-        const raw = sessionStorage.getItem(key);
+        const raw = sessionStorage.getItem(storageKey);
         if (raw !== null) {
           const parsed = decode(raw);
-          this.localCache.set(key, parsed);
+          this.localCache.set(storageKey, parsed);
           return parsed.data;
         }
       } catch {}
       return null;
     },
-    set(key, data, delay = 200) {
-      this.localCache.set(key, { data });
+    set(key, data, delay = 0) {
+      const storageKey = wrapKey(key);
+      this.localCache.set(storageKey, { data });
 
-      if (this.debounceTimers.has(key)) {
-        clearTimeout(this.debounceTimers.get(key));
-        this.debounceTimers.delete(key);
+      if (this.debounceTimers.has(storageKey)) {
+        clearTimeout(this.debounceTimers.get(storageKey));
+        this.debounceTimers.delete(storageKey);
       }
 
       const timer = setTimeout(() => {
         try {
           const payload = encode({ data });
-          sessionStorage.setItem(key, payload);
+          sessionStorage.setItem(storageKey, payload);
         } catch {}
-        this.debounceTimers.delete(key);
+        this.debounceTimers.delete(storageKey);
       }, delay);
 
-      this.debounceTimers.set(key, timer);
+      this.debounceTimers.set(storageKey, timer);
     },
+
     remove(key) {
-      try {
-        if (key) {
-          sessionStorage.removeItem(key);
-          this.localCache.delete(key);
-        } else {
-          sessionStorage.clear();
-          this.localCache.clear();
-        }
-      } catch {}
+      if (key) {
+        const storageKey = wrapKey(key);
+        sessionStorage.removeItem(storageKey);
+        this.localCache.delete(storageKey);
+      } else {
+        sessionStorage.clear();
+        this.localCache.clear();
+      }
     },
   },
   defaultData,
+  encode,
+  decode,
+  wrapKey,
 };
 
 window.addEventListener('storage', ({ key, newValue }) => {

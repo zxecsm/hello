@@ -1,8 +1,8 @@
 @font-face {
   font-family: "iconfont"; /* Project id 2809795 */
-  src: url('iconfont.woff2?t=1742456260141') format('woff2'),
-       url('iconfont.woff?t=1742456260141') format('woff'),
-       url('iconfont.ttf?t=1742456260141') format('truetype');
+  src: url('iconfont.woff2?t=1746578278482') format('woff2'),
+       url('iconfont.woff?t=1746578278482') format('woff'),
+       url('iconfont.ttf?t=1746578278482') format('truetype');
 }
 
 .iconfont {
@@ -11,6 +11,10 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-fontke_svg:before {
+  content: "\e637";
 }
 
 .icon-asterisks-1-copy:before {

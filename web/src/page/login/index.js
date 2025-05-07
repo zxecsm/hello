@@ -72,6 +72,18 @@ function hdKeyUp(e) {
     hdSubmit();
   }
 }
+function hdFocus() {
+  $title
+    .find('.iconfont')
+    .eq(0)
+    .attr('class', 'iconfont icon-shuangxianxiajiantou');
+}
+function hdBlur() {
+  $title
+    .find('.iconfont')
+    .eq(0)
+    .attr('class', 'iconfont icon-shuangxianyoujiantou');
+}
 const accInp = wrapInput($account[0], {
   update(val) {
     if (val === '') {
@@ -82,16 +94,12 @@ const accInp = wrapInput($account[0], {
   },
   focus(e) {
     $(e.target).parent().addClass('focus');
-    $title
-      .find('.iconfont')
-      .attr('class', 'iconfont icon-shuangxianxiajiantou');
+    hdFocus();
   },
   blur(e) {
     checkUserName();
     $(e.target).parent().removeClass('focus');
-    $title
-      .find('.iconfont')
-      .attr('class', 'iconfont icon-shuangxianyoujiantou');
+    hdBlur();
   },
   keyup: hdKeyUp,
 });
@@ -105,16 +113,12 @@ const pdInp = wrapInput($password[0], {
   },
   focus(e) {
     $(e.target).parent().addClass('focus');
-    $title
-      .find('.iconfont')
-      .attr('class', 'iconfont icon-shuangxianxiajiantou');
+    hdFocus();
   },
   blur(e) {
     checkPassword();
     $(e.target).parent().removeClass('focus');
-    $title
-      .find('.iconfont')
-      .attr('class', 'iconfont icon-shuangxianyoujiantou');
+    hdBlur();
   },
   keyup: hdKeyUp,
 });
@@ -128,16 +132,12 @@ const rePdInp = wrapInput($repassword[0], {
   },
   focus(e) {
     $(e.target).parent().addClass('focus');
-    $title
-      .find('.iconfont')
-      .attr('class', 'iconfont icon-shuangxianxiajiantou');
+    hdFocus();
   },
   blur(e) {
     checkPassword();
     $(e.target).parent().removeClass('focus');
-    $title
-      .find('.iconfont')
-      .attr('class', 'iconfont icon-shuangxianyoujiantou');
+    hdBlur();
   },
   keyup: hdKeyUp,
 });
