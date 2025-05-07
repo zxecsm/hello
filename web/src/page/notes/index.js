@@ -144,7 +144,14 @@ function updataCategory() {
     .then((res) => {
       if (res.code === 1) {
         noteCategoryList = res.data;
-        tabsObj.list = categoryToArr(HASH || '');
+        const list = categoryToArr(HASH || '');
+        if (runState === 'own' && HASH && HASH.includes('locked')) {
+          list.unshift({
+            id: 'locked',
+            title: '私密笔记',
+          });
+        }
+        tabsObj.list = list;
         $categoryTag.addClass('open');
       }
     })
@@ -152,7 +159,7 @@ function updataCategory() {
 }
 updataCategory();
 // 添加分类条件
-function hdCategoryAdd(e, cb, hasList) {
+function hdCategoryAdd(e, cb, hasList, hasLocked = false) {
   if (hasList.length >= 10) {
     _msg.error('分类最多10个');
     return;
@@ -161,7 +168,16 @@ function hdCategoryAdd(e, cb, hasList) {
   const filterList = noteCategoryList.filter(
     (item) => !hasList.some((i) => i.id === item.id)
   );
-
+  if (
+    hasLocked &&
+    runState === 'own' &&
+    !hasList.some((item) => item.id === 'locked')
+  ) {
+    filterList.unshift({
+      id: 'locked',
+      title: '私密笔记',
+    });
+  }
   const data = [];
   if (filterList.length === 0) {
     _msg.error('没有可选分类');
@@ -408,7 +424,8 @@ const tabsObj = new CreateTabs({
         close();
         add(param);
       },
-      data
+      data,
+      1
     );
   },
 });

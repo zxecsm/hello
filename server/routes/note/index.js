@@ -156,22 +156,47 @@ route.post('/search', async (req, res) => {
 
     const valArr = [1, acc || account];
 
+    let isOwn = true;
+
     if (acc && acc !== account) {
       // 非自己只能访问公开的
+      isOwn = false;
       where += ` AND share = ?`;
       valArr.push(1);
     }
 
     if (category.length > 0) {
-      // 分类
-      const categorySql = createSearchSql(
-        category,
-        category.map(() => 'category')
-      );
+      let hasLocked = false;
 
-      where += `AND (${categorySql.sql})`;
+      const idx = category.findIndex((item) => item === 'locked');
+      if (idx >= 0) {
+        category.splice(idx, 1);
+        if (isOwn) {
+          where += ` AND (share = ?`;
+          valArr.push(0);
+          hasLocked = true;
+        }
+      }
 
-      valArr.push(...categorySql.valArr);
+      if (category.length > 0) {
+        // 分类
+        const categorySql = createSearchSql(
+          category,
+          category.map(() => 'category')
+        );
+
+        if (hasLocked) {
+          where += ` OR ${categorySql.sql})`;
+        } else {
+          where += ` AND (${categorySql.sql})`;
+        }
+
+        valArr.push(...categorySql.valArr);
+      } else {
+        if (hasLocked) {
+          where += ')';
+        }
+      }
     }
 
     let splitWord = [];
