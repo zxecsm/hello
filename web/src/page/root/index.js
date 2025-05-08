@@ -14,7 +14,6 @@ import {
   isRoot,
   isEmail,
   addCustomCode,
-  wave,
   _myOpen,
   getTextSize,
 } from '../../js/utils/utils';
@@ -1006,4 +1005,3 @@ $('.create_account').on('click', (e) => {
     '创建帐号'
   );
 });
-if (!isIframe()) wave();

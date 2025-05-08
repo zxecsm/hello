@@ -37,7 +37,6 @@ import {
   formatNum,
   isFullScreen,
   isIframe,
-  wave,
   getScreenSize,
   loadImg,
   pageErr,
@@ -1308,4 +1307,3 @@ zidonghide(
   ),
   '.lrc_menu_wrap'
 );
-if (!isIframe()) wave();

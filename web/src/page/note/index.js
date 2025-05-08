@@ -27,7 +27,6 @@ import {
   imgjz,
   LazyLoad,
   isDarkMode,
-  wave,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -541,4 +540,3 @@ const pagepro = (function () {
     div.style.width = percent * 100 + '%';
   };
 })();
-if (!isIframe()) wave();

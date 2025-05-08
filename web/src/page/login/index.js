@@ -10,7 +10,6 @@ import {
   _setTimeout,
   isInteger,
   debounce,
-  wave,
   throttle,
   loadImg,
   isBigScreen,
@@ -523,7 +522,6 @@ function shake() {
   box.classList.add('shake');
   closeShake(box);
 }
-wave();
 window.addEventListener('resize', throttle(setCatSize, 1000));
 function setCatSize() {
   const $cat = $box.find('.cat');

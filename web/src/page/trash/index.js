@@ -22,7 +22,6 @@ import {
   hdTitleHighlight,
   copyText,
   isLogin,
-  wave,
   _getTarget,
   toggleUserSelect,
   LazyLoad,
@@ -759,4 +758,3 @@ document.addEventListener('keydown', function (e) {
     switchCheckAll();
   }
 });
-if (!isIframe()) wave();

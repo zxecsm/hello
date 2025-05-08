@@ -17,7 +17,6 @@ import {
   myOpen,
   pageErr,
   toLogin,
-  wave,
   wrapInput,
 } from '../../js/utils/utils';
 import _msg from '../../js/plugins/message';
@@ -336,4 +335,3 @@ function dellog(e, name) {
     }
   );
 }
-if (!isIframe()) wave();

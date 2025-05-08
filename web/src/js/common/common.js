@@ -21,6 +21,8 @@ import { reqUserCustomCode, reqUserError } from '../../api/user';
 import './codeRain';
 import './stars';
 import localData from './localData';
+import wave from '../plugins/wave';
+import bear from '../plugins/bear';
 window._pageName =
   myOpen()
     .split(/[?#]/)[0]
@@ -262,14 +264,33 @@ changeHeadBtnSort(localData.get('headBtnToRight'));
     }
   });
 })();
-// eslint-disable-next-line no-console
-console.log(`
- __   __  ______  __     __       __ 
-|  | |  ||  ____||  |   |  |    / __ \\
-|  |_|  || |____ |  |   |  |   | |  | |
-|   _   ||  ____||  |   |  |   | |  | |
-|  | |  || |____ |  |__ |  |__ | |__| |
-|__| |__||______||_____||_____| \\ __ / 
-`);
-// eslint-disable-next-line no-console
-console.log(`https://github.com/zxecsm/hello`);
+if (!isIframe()) {
+  bear(999);
+  let idx = 1;
+  switch (window._pageName) {
+    case 'edit':
+    case 'notepad':
+      idx = 5;
+      break;
+    case 'file':
+      idx = 11;
+      break;
+    case 'notes':
+      idx = 6;
+      break;
+    default:
+      break;
+  }
+  wave(idx);
+  // eslint-disable-next-line no-console
+  console.log(`
+   __   __  ______  __     __       __ 
+  |  | |  ||  ____||  |   |  |    / __ \\
+  |  |_|  || |____ |  |   |  |   | |  | |
+  |   _   ||  ____||  |   |  |   | |  | |
+  |  | |  || |____ |  |__ |  |__ | |__| |
+  |__| |__||______||_____||_____| \\ __ / 
+  `);
+  // eslint-disable-next-line no-console
+  console.log(`https://github.com/zxecsm/hello`);
+}

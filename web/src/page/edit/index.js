@@ -20,7 +20,6 @@ import {
   imgjz,
   isDarkMode,
   isLogin,
-  wave,
   concurrencyTasks,
   copyText,
   getMinIndex,
@@ -756,4 +755,3 @@ function saveNote() {
     })
     .catch(() => {});
 }
-if (!isIframe()) wave(5);

@@ -19,7 +19,6 @@ import {
   showQcode,
   isDarkMode,
   isLogin,
-  wave,
   concurrencyTasks,
   copyText,
   getMinIndex,
@@ -657,4 +656,3 @@ function openNotepad(e) {
 if (isIframe()) {
   $headBtns.find('.h_go_home').remove();
 }
-if (!isIframe()) wave(5);

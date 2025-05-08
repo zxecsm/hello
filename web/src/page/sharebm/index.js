@@ -18,7 +18,6 @@ import {
   getScreenSize,
   hdOnce,
   isIframe,
-  wave,
 } from '../../js/utils/utils';
 
 import defaultIcon from '../../images/img/default-icon.png';
@@ -291,5 +290,3 @@ $box
   .on('mouseleave', '.bm_item', function () {
     toolTip.hide();
   });
-
-if (!isIframe()) wave();

@@ -14,7 +14,6 @@ import {
   getExpState,
   copyText,
   isLogin,
-  wave,
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
@@ -257,4 +256,3 @@ $headBtns
   .on('click', '.h_go_home', function () {
     myOpen('/');
   });
-if (!isIframe()) wave();

@@ -26,7 +26,6 @@ import {
   myShuffle,
   isLogin,
   isRoot,
-  wave,
   getScreenSize,
   _setTimeout,
 } from '../../js/utils/utils.js';
@@ -1044,4 +1043,3 @@ realtime.init('home').add((res) => {
     }
   });
 });
-wave();

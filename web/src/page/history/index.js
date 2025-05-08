@@ -18,7 +18,6 @@ import {
   copyText,
   isLogin,
   pageScrollTop,
-  wave,
   _getTarget,
   toggleUserSelect,
 } from '../../js/utils/utils';
@@ -469,4 +468,3 @@ document.addEventListener('keydown', function (e) {
     switchCheckAll();
   }
 });
-if (!isIframe()) wave();

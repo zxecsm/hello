@@ -22,7 +22,6 @@ import {
   isInteger,
   formatDate,
   isLogin,
-  wave,
   isValidDate,
   formatNum,
   downloadFile,
@@ -1038,4 +1037,3 @@ document.addEventListener('keydown', function (e) {
     switchCheckAll();
   }
 });
-if (!isIframe()) wave(6);

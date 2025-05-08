@@ -18,7 +18,6 @@ import {
   LazyLoad,
   isRoot,
   isLogin,
-  wave,
   concurrencyTasks,
   _getTarget,
   toggleUserSelect,
@@ -640,4 +639,3 @@ $footer
       .css('background-color', che === 'y' ? _d.checkColor : 'transparent');
     _msg.botMsg(`选中：${che === 'y' ? $imgItem.length : 0}项`);
   });
-if (!isIframe()) wave();

@@ -22,7 +22,6 @@ import {
   isMobile,
   hdTitleHighlight,
   isLogin,
-  wave,
   _getTarget,
   toggleUserSelect,
   LazyLoad,
@@ -872,5 +871,3 @@ document.addEventListener('keydown', function (e) {
     hdCheckAll();
   }
 });
-
-if (!isIframe()) wave();

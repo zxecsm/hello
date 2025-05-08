@@ -6,9 +6,7 @@ import {
   debounce,
   getTextSize,
   isDarkMode,
-  isIframe,
   percentToValue,
-  wave,
 } from '../../js/utils/utils';
 import _msg from '../../js/plugins/message';
 import _pop from '../../js/plugins/popConfirm';
@@ -307,4 +305,3 @@ function hdClose() {
   document.documentElement.classList.remove('notScroll');
   init();
 }
-if (!isIframe()) wave(11);
