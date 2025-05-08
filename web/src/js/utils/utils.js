@@ -2803,3 +2803,30 @@ export function toggleUserSelect(enable = true, target = document.body) {
     target.classList.add('no_select');
   }
 }
+export function isTextFile(file, length = 1000) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = function (event) {
+      const buffer = new Uint8Array(event.target.result);
+
+      // 检查文件内容中是否有 NUL 字节
+      for (let i = 0; i < Math.min(buffer.length, length); i++) {
+        if (buffer[i] === 0) {
+          resolve(false); // 发现 NUL 字节，认为是二进制文件
+          return;
+        }
+      }
+
+      resolve(true); // 没有 NUL 字节，认为是文本文件
+    };
+
+    reader.onerror = function () {
+      reject(false); // 读取文件失败，返回 false
+    };
+
+    // 读取文件内容为 ArrayBuffer
+    const blob = file.slice(0, length); // 只读取前 `length` 字节
+    reader.readAsArrayBuffer(blob);
+  });
+}

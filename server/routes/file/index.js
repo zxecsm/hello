@@ -389,7 +389,7 @@ route.post('/read-file', async (req, res) => {
     if (
       stat.isFile() &&
       stat.size <= fieldLenght.textFileSize &&
-      _f.isTextFile(p)
+      (await _f.isTextFile(p))
     ) {
       //文本文件
       _success(res, 'ok', {

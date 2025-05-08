@@ -345,7 +345,7 @@ route.get('/expired', async (req, res) => {
 
       if (await _f.exists(u)) {
         _success(res, 'ok', {
-          isText: _f.isTextFile(u), // 判断是否文本文件
+          isText: await _f.isTextFile(u), // 判断是否文本文件
         });
         return;
       }

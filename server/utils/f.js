@@ -91,24 +91,39 @@ async function del(path, { signal, progress } = {}) {
 }
 
 // 是否文本文件
-function isTextFile(path, length = 1000) {
+async function isTextFile(path, length = 1000) {
   try {
-    let res = true;
-    const fd = fs.openSync(path, 'r');
-    for (let i = 0; i < length; i++) {
-      const buf = new Buffer.alloc(1);
-      const bytes = fs.readSync(fd, buf, 0, 1, i);
-      const char = buf.toString().charCodeAt();
-      if (bytes === 0) {
-        break;
-      } else if (bytes === 1 && char === 0) {
-        res = false;
-        break;
+    // 使用 fs.open 异步打开指定文件，以只读模式 ('r') 打开文件。
+    const fileHandle = await fsp.open(path, 'r');
+
+    // 创建一个指定长度（length）的缓冲区（Buffer），默认 1000 字节。
+    const buffer = Buffer.alloc(length);
+
+    // 从文件中读取内容填充缓冲区：
+    // - buffer：目标缓冲区。
+    // - 0：缓冲区写入的起始位置。
+    // - length：要读取的最大字节数。
+    // - 0：从文件的起始位置（偏移量 0）开始读取。
+    const { bytesRead } = await fileHandle.read(buffer, 0, length, 0);
+
+    // 关闭文件句柄，释放资源。
+    await fileHandle.close();
+
+    // 如果读取的字节数为 0，表示文件为空，直接返回 true（认为是文本文件）。
+    if (bytesRead === 0) return true;
+
+    // 遍历已读取的字节数据：
+    for (let i = 0; i < bytesRead; i++) {
+      // 如果遇到 NUL 字节（0x00）（值为 0），表示文件可能是二进制文件，返回 false。
+      if (buffer[i] === 0) {
+        return false;
       }
     }
-    fs.closeSync(fd);
-    return res;
+
+    // 如果所有字节都没有 NUL 字节，认为是文本文件，返回 true。
+    return true;
   } catch {
+    // 如果出现任何错误（如文件不存在、权限不足等），返回 false。
     return false;
   }
 }

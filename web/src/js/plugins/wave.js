@@ -25,6 +25,19 @@ export default function wave(idx = 1) {
         animation-delay:-4s;
         animation-duration:3s
       }
+      @keyframes rise {
+        0% {
+          transform: translateY(0);
+          opacity: 0;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-100vh);
+          opacity: 0;
+        }
+      }
       @keyframes vh-bolang-item-move{
         0%{
           transform:translate(-90px,0)

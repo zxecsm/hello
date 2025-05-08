@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { CacheByExpire } from './cache';
 import md5 from './md5';
-import { downloadBlob, getFiles } from './utils';
+import { downloadBlob, getFiles, isTextFile } from './utils';
 import _msg from '../plugins/message';
 import _d from '../common/config';
 import localData from '../common/localData';
@@ -83,9 +83,12 @@ const cacheFile = {
       }
 
       if (!this.supported) return null;
-
-      const file = await this.readCache(hash);
+      let file = await this.readCache(hash);
       if (!file) return null;
+
+      if (type === 'image' && (await isTextFile(file))) {
+        file = new Blob([await file.text()], { type: 'image/svg+xml' });
+      }
 
       const objectURL = URL.createObjectURL(file);
       this.urlCache.set(hash, objectURL);
