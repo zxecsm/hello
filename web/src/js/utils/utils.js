@@ -1850,125 +1850,40 @@ export function myResize(opt, minW = 200, minH = 200) {
     });
   };
 }
-// 实现简单的animate
-export function myAnimate(
-  target,
-  keyframes,
-  {
-    duration = 0, // 动画持续时间
-    delay = 0, // 延迟时间
-    easing = 'linear', // 动画的缓动函数，控制动画的速度曲线（如 "ease", "linear", "ease-in", "ease-out", "ease-in-out"）
-    iterations = 1, // 动画的重复次数，默认为 1
-    direction = 'normal', // 动画的播放方向，可以是 "normal"（默认值），"reverse"（反向播放），"alternate"（往复播放），"alternate-reverse"（反向往复播放）
-    fill = 'forwards', // 定义动画结束后的样式状态，常见值有 "forwards"（保留动画结束状态）和 "backwards"（保持动画开始时的状态）
-    composite = 'replace', // 动画的合成方式，'replace' 或 'add'
-    onfinish = null, // 动画完成时的回调
-  } = {}
-) {
-  // 动态生成 CSS 动画
-  const animateName = `h${Math.random().toString().slice(2)}`;
-  let str = `@keyframes ${animateName} {`;
-
-  const totalFrames = keyframes.length;
-  keyframes.forEach((frame, index) => {
-    const offset =
-      frame.offset !== undefined ? frame.offset : index / (totalFrames - 1); // 平分百分比
-    const styles = Object.entries(frame)
-      .filter(([key]) => key !== 'offset') // 去掉 offset
-      .map(([key, value]) => {
-        // 转换驼峰命名为 CSS 风格
-        const cssKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
-        return `${cssKey}: ${value}`;
-      })
-      .join('; ');
-
-    str += `${offset * 100}% {${styles}}`; // 使用 offset 设置关键帧百分比
-  });
-
-  str += '}';
-
-  const style = document.createElement('style');
-  style.innerHTML = str;
-  document.head.appendChild(style);
-
-  // 设置动画样式
-  target.style.animation = `${animateName} ${duration / 1000}s ${
-    delay / 1000
-  }s ${easing} ${
-    iterations === Infinity ? 'infinite' : iterations
-  } ${direction} ${fill}`;
-
-  if (composite === 'add') {
-    target.style.animationComposite = 'add'; // 添加合成方式
-  }
-
-  // 设置动画完成时的回调
-  if (onfinish) {
-    target.addEventListener('animationend', onfinish);
-  }
-
-  // 返回控制对象
-  return {
-    pause() {
-      target.style.animationPlayState = 'paused';
-    },
-    play() {
-      target.style.animationPlayState = 'running';
-    },
-    cancel() {
-      target.style.animation = ''; // 取消动画
-      document.head.removeChild(style); // 移除生成的 <style> 标签
-      if (onfinish) {
-        target.removeEventListener('animationend', onfinish); // 移除回调
-      }
-    },
-  };
-}
-
 export function _animate(
   target,
   {
     from = {},
     to = {},
+    keyframes = [],
     duration = _d.speed,
     easing = 'ease-in-out',
     direction = 'normal',
+    fill = 'forwards',
+    delay = 0,
+    iterations = 1,
   } = {},
   callback
 ) {
-  // 创建动画实例
-  let animation = null;
-  if (target.animate) {
-    animation = target.animate([from, to], {
+  const animation = target.animate(
+    keyframes.length > 0 ? keyframes : [from, to],
+    {
       duration,
       easing,
       direction,
-    });
-  } else {
-    // 简单兼容animate方法
-    animation = myAnimate(target, [from, to], {
-      duration,
-      easing,
-      direction,
-    });
-  }
+      fill,
+      delay,
+      iterations,
+    }
+  );
 
-  // 定义定时器
-  let timer;
-
-  // 取消动画的函数
-  function cancel() {
+  animation.onfinish = () => {
     animation.cancel();
-    callback && callback(target); // 如果有回调，则执行
-    clearTimeout(timer); // 清除定时器
-    timer = null;
-  }
+    animation.onfinish = null;
+    callback && callback(target);
+  };
 
-  // 设置定时器，在动画结束后调用取消
-  timer = setTimeout(cancel, duration - 20);
-
-  // 返回取消函数，以便外部调用
-  return cancel;
+  return animation;
 }
 // 获取中心点坐标
 export function getCenterPoint(target) {

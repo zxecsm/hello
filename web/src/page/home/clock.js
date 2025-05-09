@@ -3,7 +3,6 @@ import {
   formatDate,
   getScreenSize,
   isMobile,
-  myAnimate,
   myDrag,
   percentToValue,
 } from '../../js/utils/utils';
@@ -127,11 +126,7 @@ function clockRun(sec, min, hour) {
       options: { duration: 60 * 1000, iterations: Infinity },
     },
   ].forEach(({ keyframes, options, target }) => {
-    if (target.animate) {
-      animateList.push(target.animate(keyframes, options));
-    } else {
-      animateList.push(myAnimate(target, keyframes, options));
-    }
+    animateList.push(target.animate(keyframes, options));
   });
 }
 // 刻度
