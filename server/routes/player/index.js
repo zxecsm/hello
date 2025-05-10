@@ -1654,7 +1654,7 @@ route.post('/up', async (req, res) => {
 
       await _f.mkdir(tDir);
 
-      await receiveFiles(req, tDir, tName, 30);
+      await receiveFiles(req, tDir, tName, 50);
 
       // 读取歌曲元数据
       const songInfo = await getSongInfo(_path.normalize(`${tDir}/${tName}`));

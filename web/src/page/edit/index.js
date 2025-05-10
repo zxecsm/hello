@@ -502,9 +502,9 @@ async function hdUpFile(files) {
       _msg.error(`图片格式错误`);
       return;
     }
-    if (size <= 0 || size >= 5 * 1024 * 1024) {
+    if (size <= 0 || size >= 10 * 1024 * 1024) {
       pro.fail();
-      _msg.error(`图片限制0-5M`);
+      _msg.error(`图片限制0-10M`);
       return;
     }
     try {

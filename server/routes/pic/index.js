@@ -77,7 +77,7 @@ route.post('/up', async (req, res) => {
     const tName = `${HASH}.${suffix}`;
 
     await _f.mkdir(tDir);
-    await receiveFiles(req, tDir, tName, 5);
+    await receiveFiles(req, tDir, tName, 10);
 
     await getImgInfo(_path.normalize(`${tDir}/${tName}`));
 

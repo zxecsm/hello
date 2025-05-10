@@ -450,8 +450,8 @@ route.post('/add-group', async (req, res) => {
       [account, 1]
     );
 
-    if (total >= 200) {
-      return _err(res, '分组限制200个')(req);
+    if (total >= fieldLenght.bmkGroup) {
+      return _err(res, `分组限制${fieldLenght.bmkGroup}个`)(req);
     }
 
     await insertData('bmk_group', [
