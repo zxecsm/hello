@@ -10,91 +10,99 @@ function mkdir(path) {
 }
 
 // 复制
-async function cp(from, to, { signal, progress } = {}) {
+async function cp(from, to, { signal, fileCount, chunkCopied } = {}) {
   if (from === to) return;
 
-  if (signal && signal.aborted) return;
-  const stat = await fsp.lstat(from);
+  if (!signal && !fileCount && !chunkCopied) {
+    return fsp.cp(from, to, { recursive: true, force: true });
+  }
 
-  if (stat.isDirectory()) {
-    await mkdir(to);
+  const stack = [{ from, to }];
 
-    const list = await fsp.readdir(from);
+  while (stack.length > 0) {
+    const { from: f, to: t } = stack.pop();
 
-    for (const name of list) {
-      const fPath = _path.join(from, name);
-      const tPath = _path.join(to, name);
+    if (signal?.aborted) throw new Error('Operation aborted');
 
-      await cp(fPath, tPath, { signal, progress });
-      if (signal && signal.aborted) return;
+    const stat = await fsp.lstat(f);
+
+    if (stat.isDirectory()) {
+      await mkdir(t);
+      const list = await fsp.readdir(f);
+
+      for (const name of list) {
+        stack.push({ from: _path.join(f, name), to: _path.join(t, name) });
+      }
+    } else {
+      await mkdir(_path.dirname(t));
+      await new Promise((resolve, reject) => {
+        const readStream = fs.createReadStream(f);
+        const writeStream = fs.createWriteStream(t);
+
+        readStream.on('data', (chunk) => {
+          if (signal?.aborted) {
+            readStream.destroy();
+            writeStream.end();
+            reject(new Error('Operation aborted'));
+            return;
+          }
+
+          chunkCopied?.(chunk.length);
+        });
+
+        pipeline(readStream, writeStream, (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+            fileCount?.();
+          }
+        });
+      });
     }
-  } else {
-    // 如果信号已中断，则直接返回
-    if (signal && signal.aborted) return;
-
-    await mkdir(_path.dirname(to));
-    await new Promise((resolve, reject) => {
-      const readStream = fs.createReadStream(from);
-      const writeStream = fs.createWriteStream(to);
-
-      // 监听数据流的 'data' 事件，实时检查中断信号
-      readStream.on('data', () => {
-        // 如果信号已中断，立即停止流的操作
-        if (signal && signal.aborted) {
-          readStream.destroy();
-          writeStream.end();
-          reject(new Error('复制中断'));
-        }
-      });
-
-      // 使用管道流来复制文件
-      pipeline(readStream, writeStream, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-          progress && progress(from);
-        }
-      });
-    });
   }
 }
-// function cp(from, to) {
-//   if (from === to) return;
-//   return fsp.cp(from, to, { recursive: true });
-// }
 
-async function del(path, { signal, progress } = {}) {
+async function del(path, { signal, fileCount } = {}) {
   if (!(await exists(path))) return;
 
-  if (signal && signal.aborted) return;
+  if (!signal && !fileCount) {
+    return fsp.rm(path, { recursive: true, force: true });
+  }
 
-  const s = await fsp.lstat(path);
+  const stack = [path];
+  const dirs = [];
 
-  if (s.isDirectory()) {
-    const list = await fsp.readdir(path);
+  while (stack.length > 0) {
+    const currentPath = stack.pop();
 
-    for (const name of list) {
-      const fullPath = _path.join(path, name);
+    if (signal?.aborted) throw new Error('Operation aborted');
+    const s = await fsp.lstat(currentPath);
 
-      await del(fullPath, { signal, progress });
-      if (signal && signal.aborted) return;
+    if (s.isDirectory()) {
+      dirs.push(currentPath);
+      const list = await fsp.readdir(currentPath);
+
+      for (const name of list) {
+        stack.push(_path.join(currentPath, name));
+      }
+    } else {
+      await fsp.rm(currentPath, { force: true });
+      fileCount?.();
     }
+  }
 
-    await fsp.rm(path, { force: true, recursive: true });
-  } else {
-    if (signal && signal.aborted) return;
-
-    await fsp.rm(path, { force: true, recursive: false });
-    progress && progress(path);
+  for (let i = dirs.length - 1; i >= 0; i--) {
+    await fsp.rm(dirs[i], { recursive: true, force: true });
   }
 }
 
 // 是否文本文件
 async function isTextFile(path, length = 1000) {
+  let fileHandle;
   try {
     // 使用 fs.open 异步打开指定文件，以只读模式 ('r') 打开文件。
-    const fileHandle = await fsp.open(path, 'r');
+    fileHandle = await fsp.open(path, 'r');
 
     // 创建一个指定长度（length）的缓冲区（Buffer），默认 1000 字节。
     const buffer = Buffer.alloc(length);
@@ -105,9 +113,6 @@ async function isTextFile(path, length = 1000) {
     // - length：要读取的最大字节数。
     // - 0：从文件的起始位置（偏移量 0）开始读取。
     const { bytesRead } = await fileHandle.read(buffer, 0, length, 0);
-
-    // 关闭文件句柄，释放资源。
-    await fileHandle.close();
 
     // 如果读取的字节数为 0，表示文件为空，直接返回 true（认为是文本文件）。
     if (bytesRead === 0) return true;
@@ -125,6 +130,9 @@ async function isTextFile(path, length = 1000) {
   } catch {
     // 如果出现任何错误（如文件不存在、权限不足等），返回 false。
     return false;
+  } finally {
+    // 关闭文件句柄，释放资源。
+    if (fileHandle) await fileHandle.close();
   }
 }
 
@@ -139,12 +147,16 @@ async function exists(path) {
 }
 
 // 重命名
-async function rename(oldPath, newPath, { signal, progress } = {}) {
+async function rename(
+  oldPath,
+  newPath,
+  { signal, fileCount, chunkCopied } = {}
+) {
   try {
     await fsp.rename(oldPath, newPath);
   } catch {
-    await cp(oldPath, newPath, { signal, progress });
-    await del(oldPath, { signal, progress });
+    await cp(oldPath, newPath, { signal, fileCount, chunkCopied });
+    await del(oldPath, { signal });
   }
 }
 
@@ -166,9 +178,63 @@ function formatBytes(size) {
 
 // 获取文本大小
 function getTextSize(text) {
-  const encoder = new TextEncoder();
-  const byteArray = encoder.encode(text);
-  return byteArray.length; // 返回字节数
+  return Buffer.byteLength(text, 'utf8');
+}
+
+async function readDirSize(path, { signal, fileCount } = {}) {
+  let size = 0;
+
+  if (!(await exists(path))) return size;
+
+  const stack = [path];
+
+  while (stack.length > 0) {
+    const currentPath = stack.pop();
+
+    if (signal?.aborted) throw new Error('Operation aborted');
+
+    const s = await fsp.lstat(currentPath);
+
+    if (s.isDirectory()) {
+      const list = await fsp.readdir(currentPath);
+
+      for (const name of list) {
+        stack.push(_path.join(currentPath, name));
+      }
+    } else {
+      size += s.size;
+      fileCount?.(s.size);
+    }
+  }
+
+  return size;
+}
+
+function getPermissions(stats) {
+  const mode = stats.mode.toString(8).slice(-3);
+  const permissionMap = [
+    { bit: 0o400, char: 'r' },
+    { bit: 0o200, char: 'w' },
+    { bit: 0o100, char: 'x' },
+    { bit: 0o040, char: 'r' },
+    { bit: 0o020, char: 'w' },
+    { bit: 0o010, char: 'x' },
+    { bit: 0o004, char: 'r' },
+    { bit: 0o002, char: 'w' },
+    { bit: 0o001, char: 'x' },
+  ];
+
+  let permissionString = '';
+  const numericMode = parseInt(mode, 8);
+
+  permissionMap.forEach(({ bit, char }) => {
+    permissionString += numericMode & bit ? char : '-';
+  });
+
+  return {
+    mode: permissionString,
+    numericMode: mode,
+  };
 }
 
 const _f = {
@@ -182,6 +248,8 @@ const _f = {
   exists,
   formatBytes,
   getTextSize,
+  readDirSize,
+  getPermissions,
 };
 
 export default _f;

@@ -34,7 +34,12 @@ import { becomeFriends, cleanUpload } from '../chat/chat.js';
 
 import { fieldLenght } from '../config.js';
 
-import { _delDir, delEmptyFolder, getAllFile, readMenu } from '../file/file.js';
+import {
+  _delDir,
+  cleanEmptyDirectories,
+  getAllFile,
+  readMenu,
+} from '../file/file.js';
 
 import { deleteUser } from '../user/user.js';
 import _path from '../../utils/path.js';
@@ -222,7 +227,7 @@ route.get('/clean-music-file', async (req, res) => {
         }
       });
 
-      await delEmptyFolder(musicDir);
+      await cleanEmptyDirectories(musicDir);
     }
     _success(res, '清理歌曲文件成功')(req);
   } catch (error) {
@@ -247,7 +252,7 @@ route.get('/clean-bg-file', async (req, res) => {
         }
       });
 
-      await delEmptyFolder(bgDir);
+      await cleanEmptyDirectories(bgDir);
     }
     _success(res, '清理壁纸文件成功')(req);
   } catch (error) {
@@ -272,7 +277,7 @@ route.get('/clean-pic-file', async (req, res) => {
         }
       });
 
-      await delEmptyFolder(picDir);
+      await cleanEmptyDirectories(picDir);
     }
     _success(res, '清理图床文件成功')(req);
   } catch (error) {
@@ -514,7 +519,7 @@ route.get('/clean-logo-file', async (req, res) => {
       }
     });
 
-    await delEmptyFolder(dir);
+    await cleanEmptyDirectories(dir);
     _success(res, '清理LOGO文件成功')(req);
   } catch (error) {
     _err(res)(req, error);

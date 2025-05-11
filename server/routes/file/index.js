@@ -246,22 +246,22 @@ route.post('/read-dir', async (req, res) => {
       let count = 0;
 
       if (await _f.exists(p)) {
-        async function readDir(p) {
-          if (signal.aborted) return;
+        const stack = [p];
 
-          const list = await readMenu(p);
+        while (stack.length > 0 && !signal.aborted) {
+          const currentPath = stack.pop();
+          const list = await readMenu(currentPath);
 
           for (const item of list) {
-            if (signal.aborted) return;
+            if (signal.aborted) break;
 
             count++;
             taskState.update(taskKey, `${hdType}...${count}`);
 
             const fullPath = _path.normalize(`${item.path}/${item.name}`);
 
-            // 递归获取子目录
             if (item.type === 'dir' && subDir === 1 && word) {
-              await readDir(fullPath);
+              stack.push(fullPath);
             }
 
             // 去除路径前缀
@@ -281,8 +281,6 @@ route.post('/read-dir', async (req, res) => {
             }
           }
         }
-
-        await readDir(p);
       }
 
       taskState.delete(taskKey);
@@ -439,26 +437,17 @@ route.get('/read-dir-size', async (req, res) => {
       let size = 0;
       let count = 0;
 
-      if (await _f.exists(p)) {
-        async function readDirSize(p) {
-          if (signal.aborted) return;
-          const list = await readMenu(p);
-
-          for (const item of list) {
-            if (signal.aborted) return;
-
-            if (item.type === 'dir') {
-              await readDirSize(_path.normalize(`${item.path}/${item.name}`));
-            } else {
-              size += item.size;
-              count++;
-              taskState.update(taskKey, `读取文件夹大小...${count}`);
-            }
-          }
-        }
-
-        await readDirSize(p);
-      }
+      await _f.readDirSize(p, {
+        signal,
+        fileCount(s) {
+          size += s;
+          count++;
+          taskState.update(
+            taskKey,
+            `读取文件夹大小...${count} (${_f.formatBytes(size)})`
+          );
+        },
+      });
 
       taskState.delete(taskKey);
       if (!signal.aborted) {
@@ -674,6 +663,7 @@ route.post('/copy', async (req, res) => {
 
     try {
       let count = 0;
+      let size = 0;
 
       const trashDir = getTrashDir(account);
 
@@ -697,9 +687,15 @@ route.post('/copy', async (req, res) => {
 
         await _f.cp(f, to, {
           signal,
-          progress() {
+          fileCount() {
             count++;
-            taskState.update(taskKey, `复制文件...${count}`);
+          },
+          chunkCopied(chunk) {
+            size += chunk;
+            taskState.update(
+              taskKey,
+              `复制文件...${count} (${_f.formatBytes(size)})`
+            );
           },
         });
 
@@ -804,6 +800,7 @@ route.post('/move', async (req, res) => {
 
     try {
       let count = 0;
+      let size = 0;
 
       const trashDir = getTrashDir(account);
 
@@ -824,9 +821,18 @@ route.post('/move', async (req, res) => {
 
         await _f.rename(f, t, {
           signal,
-          progress() {
+          fileCount() {
             count++;
-            taskState.update(taskKey, `移动文件...${count}`);
+            if (size === 0) {
+              taskState.update(taskKey, `移动文件...${count}`);
+            }
+          },
+          chunkCopied(chunk) {
+            size += chunk;
+            taskState.update(
+              taskKey,
+              `移动文件...${count} (${_f.formatBytes(size)})`
+            );
           },
         });
 
@@ -894,8 +900,15 @@ route.post('/zip', async (req, res) => {
     try {
       await zipper.zip([data], t, {
         signal,
-        progress(count) {
-          taskState.update(taskKey, `压缩文件...${count}`);
+        progress(pro) {
+          const {
+            entries: { processed },
+            fs: { processedBytes },
+          } = pro;
+          taskState.update(
+            taskKey,
+            `压缩文件...${processed} (${_f.formatBytes(processedBytes)})`
+          );
         },
       });
 
@@ -1016,6 +1029,7 @@ route.post('/delete', async (req, res) => {
 
     try {
       let count = 0;
+      let size = 0;
 
       const trashDir = getTrashDir(account);
 
@@ -1035,7 +1049,7 @@ route.post('/delete', async (req, res) => {
         ) {
           await _f.del(p, {
             signal,
-            progress() {
+            fileCount() {
               count++;
               taskState.update(taskKey, `删除文件...${count}`);
             },
@@ -1050,9 +1064,18 @@ route.post('/delete', async (req, res) => {
 
           await _f.rename(p, targetPath, {
             signal,
-            progress() {
+            fileCount() {
               count++;
-              taskState.update(taskKey, `放入回收站...${count}`);
+              if (size === 0) {
+                taskState.update(taskKey, `放入回收站...${count}`);
+              }
+            },
+            chunkCopied(chunk) {
+              size += chunk;
+              taskState.update(
+                taskKey,
+                `放入回收站...${count} (${_f.formatBytes(size)})`
+              );
             },
           });
 
@@ -1104,7 +1127,7 @@ route.get('/clear-trash', async (req, res) => {
 
           await _f.del(p, {
             signal,
-            progress() {
+            fileCount() {
               count++;
               taskState.update(taskKey, `删除文件...${count}`);
             },

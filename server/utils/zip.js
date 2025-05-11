@@ -33,7 +33,7 @@ function zip(froms, to, { signal, progress } = {}) {
 
     // 监听进度
     archive.on('progress', (pro) => {
-      progress && progress(pro.entries.processed); // 已压缩的文件个数
+      progress && progress(pro); // 已压缩的文件个数
     });
 
     // 将数据流链接到输出流

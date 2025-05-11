@@ -2612,17 +2612,21 @@ export function parseObjectJson(str) {
 // 限制并行任务
 export async function concurrencyTasks(tasks, concurrency, taskCallback) {
   let index = 0;
+
   async function handleTask() {
-    if (index >= tasks.length) return;
-    const currentIndex = index;
-    index++;
-    taskCallback && (await taskCallback(tasks[currentIndex], currentIndex));
-    await handleTask();
+    while (index < tasks.length) {
+      const currentIndex = index++;
+
+      taskCallback && (await taskCallback(tasks[currentIndex], currentIndex));
+    }
   }
+
   const activeUps = [];
+
   for (let i = 0; i < concurrency; i++) {
     activeUps.push(handleTask());
   }
+
   await Promise.all(activeUps);
 }
 

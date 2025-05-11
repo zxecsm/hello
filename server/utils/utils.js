@@ -522,17 +522,44 @@ export function replaceObjectValue(obj, msg) {
 }
 
 // 深拷贝
-export function deepClone(obj, hash = new WeakMap()) {
+export function deepClone(obj) {
   if (obj === null || typeof obj !== 'object') return obj;
 
-  if (hash.has(obj)) return hash.get(obj);
-
+  const hash = new WeakMap();
+  const stack = [];
   const clone = Array.isArray(obj) ? [] : {};
+
+  // 初始化栈
+  stack.push({
+    source: obj,
+    target: clone,
+  });
   hash.set(obj, clone);
 
-  for (let key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      clone[key] = deepClone(obj[key], hash);
+  while (stack.length > 0) {
+    const { source, target } = stack.pop();
+
+    for (let key in source) {
+      if (source.hasOwnProperty(key)) {
+        const value = source[key];
+
+        if (value === null || typeof value !== 'object') {
+          // 基本类型直接赋值
+          target[key] = value;
+        } else if (hash.has(value)) {
+          // 已克隆过的对象直接引用
+          target[key] = hash.get(value);
+        } else {
+          // 新对象，创建克隆并加入栈
+          const newClone = Array.isArray(value) ? [] : {};
+          target[key] = newClone;
+          hash.set(value, newClone);
+          stack.push({
+            source: value,
+            target: newClone,
+          });
+        }
+      }
     }
   }
 
@@ -803,14 +830,11 @@ export async function concurrencyTasks(tasks, concurrency, taskCallback) {
   let index = 0;
 
   async function handleTask() {
-    if (index >= tasks.length) return;
+    while (index < tasks.length) {
+      const currentIndex = index++;
 
-    const currentIndex = index;
-    index++;
-
-    taskCallback && (await taskCallback(tasks[currentIndex], currentIndex));
-
-    await handleTask();
+      taskCallback && (await taskCallback(tasks[currentIndex], currentIndex));
+    }
   }
 
   const activeUps = [];

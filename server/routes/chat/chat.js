@@ -29,7 +29,7 @@ import { getUserInfo } from '../user/user.js';
 import { _d } from '../../data/data.js';
 import appConfig from '../../data/config.js';
 import _f from '../../utils/f.js';
-import { _delDir, delEmptyFolder } from '../file/file.js';
+import { _delDir, cleanEmptyDirectories } from '../file/file.js';
 import _path from '../../utils/path.js';
 
 // 获取好友备注
@@ -554,7 +554,7 @@ export async function cleanUpload(req = false) {
       return true;
     }, 800);
 
-    await delEmptyFolder(uploadDir);
+    await cleanEmptyDirectories(uploadDir);
 
     if (count) {
       await writelog(req, `清理到期聊天室文件：${count}`, 'user');

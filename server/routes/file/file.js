@@ -61,19 +61,33 @@ export async function _delDir(path) {
 }
 
 // 清理空目录
-export async function delEmptyFolder(path) {
-  const s = await _f.fsp.lstat(path);
+export async function cleanEmptyDirectories(rootDir) {
+  if (!(await _f.exists(rootDir))) return;
 
-  if (s.isDirectory()) {
-    const list = await _f.fsp.readdir(path);
+  const allDirs = new Set();
+  const stack = [rootDir];
 
-    await concurrencyTasks(list, 5, async (item) => {
-      await delEmptyFolder(_path.normalize(`${path}/${item}`));
-    });
+  while (stack.length > 0) {
+    const currentDir = stack.pop();
 
-    // 清除空文件夹
-    if ((await _f.fsp.readdir(path)).length === 0) {
-      await _delDir(path);
+    const files = await _f.fsp.readdir(currentDir);
+    for (const file of files) {
+      const fullPath = _path.join(currentDir, file);
+      const stat = await _f.fsp.lstat(fullPath);
+      if (stat.isDirectory()) {
+        stack.push(fullPath);
+        allDirs.add(fullPath);
+      }
+    }
+  }
+
+  const sortedDirs = Array.from(allDirs).sort((a, b) => {
+    return b.split('/').length - a.split('/').length;
+  });
+
+  for (const dir of sortedDirs) {
+    if ((await _f.fsp.readdir(dir).length) === 0) {
+      await _delDir(dir);
     }
   }
 }
@@ -81,25 +95,27 @@ export async function delEmptyFolder(path) {
 // 获取所有文件
 export async function getAllFile(path) {
   try {
-    const arr = [];
+    const result = [];
+    const stack = [path];
 
-    async function getFile(path) {
+    while (stack.length > 0) {
+      const currentPath = stack.pop();
+
       try {
-        const s = await _f.fsp.lstat(path);
+        const s = await _f.fsp.lstat(currentPath);
 
         if (s.isDirectory()) {
-          const list = await _f.fsp.readdir(path);
-
-          await concurrencyTasks(list, 5, async (item) => {
-            await getFile(_path.normalize(`${path}/${item}`));
-          });
+          const list = await _f.fsp.readdir(currentPath);
+          for (const name of list) {
+            stack.push(_path.normalize(`${currentPath}/${name}`));
+          }
         } else {
-          const name = _path.basename(path)[0];
+          const name = _path.basename(currentPath)[0];
 
           if (name) {
-            arr.push({
+            result.push({
               name,
-              path: _path.dirname(path),
+              path: _path.dirname(currentPath),
               size: s.size,
               atime: s.atimeMs, //最近一次访问文件的时间戳
               ctime: s.ctimeMs, //最近一次文件状态的修改的时间戳
@@ -112,9 +128,7 @@ export async function getAllFile(path) {
       }
     }
 
-    await getFile(path);
-
-    return arr;
+    return result;
   } catch (error) {
     await writelog(false, `[ getAllFile ] - ${error}`, 'error');
     return [];
@@ -165,24 +179,25 @@ export async function readMenu(path) {
         const f = _path.normalize(`${path}/${name}`);
 
         const s = await _f.fsp.lstat(f);
-
+        const { mode, numericMode } = _f.getPermissions(s);
+        const modeStr = `${mode} ${numericMode}`;
         if (s.isDirectory()) {
           arr.push({
             path,
             type: 'dir',
             name,
-            time: s.ctime.getTime(),
+            time: s.ctimeMs,
             size: 0,
-            mode: getPermissions(s),
+            mode: modeStr,
           });
         } else {
           arr.push({
             path,
             type: 'file',
             name,
-            time: s.ctime.getTime(),
+            time: s.ctimeMs,
             size: s.size,
-            mode: getPermissions(s),
+            mode: modeStr,
           });
         }
       } catch (error) {
@@ -197,67 +212,21 @@ export async function readMenu(path) {
   }
 }
 
-// 文件权限
-export function getPermissions(stats) {
-  let permissions = '';
-  // 检查所有者权限
-  if (stats.mode & _f.fs.constants.S_IRUSR) permissions += 'r';
-  else permissions += '-';
-  if (stats.mode & _f.fs.constants.S_IWUSR) permissions += 'w';
-  else permissions += '-';
-  if (stats.mode & _f.fs.constants.S_IXUSR) permissions += 'x';
-  else permissions += '-';
-
-  // 检查所属组权限
-  if (stats.mode & _f.fs.constants.S_IRGRP) permissions += 'r';
-  else permissions += '-';
-  if (stats.mode & _f.fs.constants.S_IWGRP) permissions += 'w';
-  else permissions += '-';
-  if (stats.mode & _f.fs.constants.S_IXGRP) permissions += 'x';
-  else permissions += '-';
-
-  // 检查其他用户权限
-  if (stats.mode & _f.fs.constants.S_IROTH) permissions += 'r';
-  else permissions += '-';
-  if (stats.mode & _f.fs.constants.S_IWOTH) permissions += 'w';
-  else permissions += '-';
-  if (stats.mode & _f.fs.constants.S_IXOTH) permissions += 'x';
-  else permissions += '-';
-
-  const groups = permissions.match(/(.{3})/g).map((group) => {
-    return group
-      .replace(/r/g, '4')
-      .replace(/w/g, '2')
-      .replace(/x/g, '1')
-      .replace(/-/g, '0');
-  });
-
-  const num = groups.reduce((a, b) => {
-    return (a += b.split('').reduce((c, d) => parseInt(c) + parseInt(d), 0));
-  }, '');
-  return permissions + ' ' + num;
-}
-
 // 生成唯一文件名
 export async function getUniqueFilename(path) {
   const dir = _path.dirname(path);
   const filename = _path.basename(path)[0] || 'unknown';
 
   let counter = 0;
-  let newPath = '';
+  let newPath = _path.normalize(
+    `${dir}/${_path.randomFilenameSuffix(filename, ++counter)}`
+  );
 
-  async function rename() {
+  while (await _f.exists(newPath)) {
     newPath = _path.normalize(
       `${dir}/${_path.randomFilenameSuffix(filename, ++counter)}`
     );
-
-    // 文件已存在，继续重命名
-    if (await _f.exists(newPath)) {
-      await rename();
-    }
   }
-
-  await rename();
 
   return newPath;
 }
