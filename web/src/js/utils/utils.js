@@ -1549,7 +1549,7 @@ export function toCenter(el, obj) {
 
   _setTimeout(() => {
     switchBorderRadius(el);
-  }, 550);
+  }, 600);
 }
 export function switchBorderRadius(target) {
   const { top, left } = _position(target, true);
@@ -1597,7 +1597,7 @@ export function myToMax(target) {
   target.style.height = h + 'px';
   _setTimeout(() => {
     switchBorderRadius(target);
-  }, 550);
+  }, 600);
 }
 // 全屏大小状态
 export function isFullScreen(target) {
@@ -1629,7 +1629,7 @@ export function myToRest(target, pointerX) {
   target.style.height = h + 'px';
   _setTimeout(() => {
     switchBorderRadius(target);
-  }, 550);
+  }, 600);
 }
 // 调整窗口大小
 export function myResize(opt, minW = 200, minH = 200) {

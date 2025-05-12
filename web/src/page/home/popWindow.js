@@ -1,25 +1,36 @@
 import _d from '../../js/common/config';
-import { getScreenSize } from '../../js/utils/utils';
+import { debounce, getScreenSize } from '../../js/utils/utils';
+import { removeTagsActive } from './iframe';
 
 let windowList = [];
-// 添加窗口
-function add(id, close, target) {
-  remove(id);
+const updateActiveWindows = debounce(function () {
+  removeTagsActive();
   windowList.forEach((item) => {
     item.target &&
       !['search', 'rightmenu', 'bg'].includes(item.id) &&
       getScreenSize().w > _d.screen &&
       item.target.classList.remove('active-window');
   });
-  windowList.push({ id, close, target });
-  target &&
-    !['search', 'rightmenu', 'bg'].includes(id) &&
-    getScreenSize().w > _d.screen &&
-    target.classList.add('active-window');
+  const topWindow = windowList.slice(-1)[0];
+  if (topWindow) {
+    const { id, target, tagBox } = topWindow;
+    target &&
+      !['search', 'rightmenu', 'bg'].includes(id) &&
+      getScreenSize().w > _d.screen &&
+      target.classList.add('active-window');
+    tagBox && tagBox.classList.add('active-window');
+  }
+}, 100);
+// 添加窗口
+function add(id, close, target, tagBox) {
+  remove(id);
+  windowList.push({ id, close, target, tagBox });
+  updateActiveWindows();
 }
 // 删除窗口
 function remove(id) {
   windowList = windowList.filter((item) => item.id != id);
+  updateActiveWindows();
 }
 // 返回关闭最顶层窗口
 function back() {
@@ -27,6 +38,7 @@ function back() {
   if (obj) {
     obj.close();
   }
+  updateActiveWindows();
 }
 // 窗口数据
 function getList() {
@@ -41,9 +53,9 @@ export const popWindow = {
 let zIdx = 100;
 let topIdx = 9999;
 // 设置窗口层级
-export function setZidx(el, id, close, isTop) {
+export function setZidx(el, id, close, isTop, tagBox) {
   if (id && close) {
-    popWindow.add(id, close, el);
+    popWindow.add(id, close, el, tagBox);
   }
   let tem;
   if (isTop && getScreenSize().w > _d.screen) {

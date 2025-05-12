@@ -150,7 +150,6 @@ class CreateIframe {
         toCenter(this.box);
       }
     }
-    this.hdZindex();
     // 窗口缩放
     this.resizeClose = myResize({
       target: this.box,
@@ -196,6 +195,7 @@ class CreateIframe {
     this.bandEvent();
     this.tagBox = addHideBox(this);
     this.updateTitle(this.name);
+    this.hdZindex();
   }
   onIframeLoad() {
     try {
@@ -214,7 +214,7 @@ class CreateIframe {
   }
   // 处理层级
   hdZindex() {
-    setZidx(this.box, this.id, this.hdHide.bind(this), this.isTop);
+    setZidx(this.box, this.id, this.hdHide.bind(this), this.isTop, this.tagBox);
   }
   // 全屏
   toMax() {
@@ -227,7 +227,7 @@ class CreateIframe {
     this.box.style.height = h + 'px';
     _setTimeout(() => {
       switchBorderRadius(this.box);
-    }, 550);
+    }, 600);
   }
   // 退出全屏
   toRest(pointerX) {
@@ -254,7 +254,7 @@ class CreateIframe {
     this.box.style.height = h + 'px';
     _setTimeout(() => {
       switchBorderRadius(this.box);
-    }, 550);
+    }, 600);
   }
   bandEvent() {
     this.hdClick = this.hdClick.bind(this);
@@ -496,5 +496,10 @@ export function showIframeMask() {
 export function hideIframeMask() {
   openInIframe.iframes.data.forEach((ifram) => {
     ifram.iframeMask.style.display = 'none';
+  });
+}
+export function removeTagsActive() {
+  openInIframe.iframes.data.forEach((ifram) => {
+    ifram.tagBox.classList.remove('active-window');
   });
 }
