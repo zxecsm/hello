@@ -8,7 +8,6 @@ const updateActiveWindows = debounce(function () {
   windowList.forEach((item) => {
     item.target &&
       !['search', 'rightmenu', 'bg'].includes(item.id) &&
-      getScreenSize().w > _d.screen &&
       item.target.classList.remove('active-window');
   });
   const topWindow = windowList.slice(-1)[0];
@@ -16,7 +15,6 @@ const updateActiveWindows = debounce(function () {
     const { id, target, tagBox } = topWindow;
     target &&
       !['search', 'rightmenu', 'bg'].includes(id) &&
-      getScreenSize().w > _d.screen &&
       target.classList.add('active-window');
     tagBox && tagBox.classList.add('active-window');
   }
