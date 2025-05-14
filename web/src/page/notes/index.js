@@ -329,7 +329,7 @@ export function renderList(y) {
                 <li v-html="hdTitleHighlight(splitWord,title)" cursor="y" class="item_title"></li>
                 <li v-if="top != 0 && !word && category.length === 0" class="top_btn iconfont icon-zhiding" style="color: var(--color5);"></li>
                 <li v-if="runState === 'own'" cursor="y" class="lock_state iconfont {{share === 0? 'icon-24gl-unlock2 open': 'icon-24gl-unlock4'}}"></li>
-                <li v-if="runState === 'own'" cursor="y" class="set_btn iconfont icon-icon"></li>
+                <li v-if="runState === 'own'" cursor="y" class="set_btn iconfont icon-maohao"></li>
               </ul>
               <div v-if="categoryArr.length > 0 || (con && con.length > 0)" class="item_info">
                 <template v-if="categoryArr.length > 0">

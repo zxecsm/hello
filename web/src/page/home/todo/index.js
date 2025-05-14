@@ -132,7 +132,7 @@ function renderTodoList(total, toTop) {
           <div v-html="hdTextMsg(content)" class="text {{state === 1 ? '' : 'del'}}"></div>
           <div class="time">更新：{{formatDate({template: '{0}-{1}-{2} {3}:{4}',timestamp: update_at})}}</div>
         </li>
-        <li cursor="y" class="set_btn iconfont icon-icon"></li>
+        <li cursor="y" class="set_btn iconfont icon-maohao"></li>
       </ul>
       <div v-html="getPaging()" class="todo_paging_box"></div> 
     </template>

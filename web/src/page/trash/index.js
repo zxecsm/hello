@@ -239,7 +239,7 @@ function renderList(y) {
                 <div cursor="y" check="n" class="check_state"></div>
                 <li class="item_type iconfont {{slogo}}"></li>
                 <li v-html="getTitle(title,content)" :cursor="HASH !== 'bmk_group' ? 'y' : ''" class="item_title"></li>
-                <li cursor="y" class="set_btn iconfont icon-icon"></li>
+                <li cursor="y" class="set_btn iconfont icon-maohao"></li>
               </ul>
               <div v-if="(categoryArr.length > 0 || (con && con.length > 0)) && HASH === 'note'" class="item_info">
                 <template v-if="categoryArr.length > 0">

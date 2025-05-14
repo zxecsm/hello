@@ -1146,7 +1146,7 @@ async function renderSongs(gao) {
       <div v-if="mv" class="play_mv iconfont icon-shipin2"></div>
       <div v-if="ind != 1" class="like_hear iconfont {{issc(id) ? 'icon-hear-full active' : 'icon-hear'}}"></div>
       <div title="添加到播放列表" class="add_song_playing_btn iconfont icon-icon-test"></div>
-      <div class="set_song_btn iconfont icon-icon"></div>
+      <div class="set_song_btn iconfont icon-maohao"></div>
     </div>
     <div v-if="pageTotal > 1" v-html="getPaging()" style="padding:20px 0;text-align:center;line-height: 26px;" class="song_list_paging no_select"></div>
     <div class="check_all_menu_wrap">

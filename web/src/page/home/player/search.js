@@ -107,7 +107,7 @@ export function getSearchSongs(top, pageNo = searchMusicPageNo) {
                 <div v-if="mv" class="play_mv iconfont icon-shipin2"></div>
                 <div class="add_palying_list iconfont icon-icon-test"></div>
                 <div class="like_hear iconfont {{issc(id) ? 'icon-hear-full active' : 'icon-hear'}}"></div>
-                <div class="set_menu iconfont icon-icon"></div>
+                <div class="set_menu iconfont icon-maohao"></div>
               </li>
               <div v-if="totalPage > 1" v-html="getPaging()" style="padding:20px 0;text-align:center;line-height: 26px;" class="playing_list_paging no_select"></div>
             </template>`,

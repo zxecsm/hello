@@ -44,7 +44,7 @@ export default function imgPreview(arr, idx = 0) {
   const load = document.createElement('div');
   const rotateBtn = document.createElement('div');
 
-  rotateBtn.className = 'rotate_btn iconfont icon--xuanzhuan';
+  rotateBtn.className = 'rotate_btn iconfont icon-shunxuanzhuan';
   load.className = 'load';
   close.className = 'iconfont icon-close-bold close';
   pre.className = 'iconfont icon-zuo pre';

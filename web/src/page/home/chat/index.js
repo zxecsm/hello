@@ -566,7 +566,7 @@ function renderMsgList(list, skip) {
           <div v-if="showTime === 'y'" class="chat_time">{{getDate(create_at)[0]}}</div>
         </div>
         <div class="msg_info_wrap">
-          <li v-if="isRight(_from)" cursor="y" class="chat_menu_btn iconfont icon-icon"></li>
+          <li v-if="isRight(_from)" cursor="y" class="chat_menu_btn iconfont icon-maohao"></li>
           <li v-else cursor="y" class="c_left_logo">
             <div class="c_logo" style="float: left;"></div>
           </li>
@@ -607,7 +607,7 @@ function renderMsgList(list, skip) {
           <li v-if="isRight(_from)" cursor="y" class="c_right_logo">
             <div class="c_logo" style="float: right;"></div>
           </li>
-          <li v-else cursor="y" class="chat_menu_btn iconfont icon-icon"></li>
+          <li v-else cursor="y" class="chat_menu_btn iconfont icon-maohao"></li>
         </div>
       </ul>
     </template>

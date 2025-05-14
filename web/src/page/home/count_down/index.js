@@ -137,7 +137,7 @@ function renderCountList(total, toTop) {
           <span :cursor="link?'y':''" class="iconfont {{link?'icon-link1':'icon-shalou'}} icon"></span>
           <span class="text">{{title}}</span>
           <span v-if="top != 0" class="top_btn iconfont icon-zhiding"></span>
-          <span cursor="y" class="set_btn iconfont icon-icon"></span>
+          <span cursor="y" class="set_btn iconfont icon-maohao"></span>
         </div>
         <div class="info">{{readableTime(tt)}} - {{readableTime(past)}} = <span style="padding-left:4px;" :style="remain<0?'color:var(--btn-danger-color);':''">{{readableTime(remain)}}</span></div>
         <div class="pro">

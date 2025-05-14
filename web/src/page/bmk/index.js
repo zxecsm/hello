@@ -293,7 +293,7 @@ function renderList(y) {
                 <div cursor="y" check="n" class="check_state"></div>
                 <li class="item_type iconfont icon-shuqian"></li>
                 <li v-html="hdTitleHighlight(splitWord, title)" cursor="y" class="item_title"></li>
-                <li cursor="y" class="set_btn iconfont icon-icon"></li>
+                <li cursor="y" class="set_btn iconfont icon-maohao"></li>
               </ul>
               <div class="item_info">
                 <span cursor="y" :data-id="group_id" class="category">
