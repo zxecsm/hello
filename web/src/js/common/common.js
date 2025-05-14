@@ -152,9 +152,11 @@ window.addEventListener('load', function () {
   });
 })();
 window.addEventListener('online', function () {
+  if (isIframe()) return;
   _msg.success('网络连接成功');
 });
 window.addEventListener('offline', function () {
+  if (isIframe()) return;
   _msg.error('断网了，少年');
 });
 ~(function () {

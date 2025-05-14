@@ -20,43 +20,38 @@
     max-width: 100%;
     display: none;
   }
-  .pre {
+  .iconfont {
     display: none;
     position: absolute;
-    left: 10px;
-    top: 50%;
     padding: 10px;
-    font-size: 40px;
-    border-radius: 10px;
+    font-size: 30px;
     background-color: rgb(0 0 0 / 40%);
-    transform: translateY(-50%);
+    border-radius: 10px;
     /*cursor: pointer;*/
   }
   .iconfont:hover {
     color: var(--text-hover-color);
-    font-weight: bold;
   }
+  .pre {
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
   .next {
-    display: none;
-    position: absolute;
     right: 10px;
     top: 50%;
-    padding: 10px;
-    font-size: 40px;
-    border-radius: 10px;
-    background-color: rgb(0 0 0 / 40%);
     transform: translateY(-50%);
-    /*cursor: pointer;*/
   }
   .close {
-    position: absolute;
     top: 0;
     left: 0;
     border-radius: 0 0 50% 0;
-    padding: 10px;
-    font-size: 40px;
-    background-color: rgb(0 0 0 / 40%);
-    /*cursor: pointer;*/
+  }
+  .rotate_btn {
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
   }
   .load {
     pointer-events: none;
