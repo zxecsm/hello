@@ -77,14 +77,10 @@ export function setBookMark(val) {
   bookmark = val;
 }
 const bmMouseElementTracker = new MouseElementTracker($aside.find('.list')[0], {
-  delay: isMobile() ? 500 : 0,
+  delay: 300,
   onStart({ e }) {
     const item = _getTarget($aside[0], e, '.list .bm_item');
-    if (
-      isSelecting() ||
-      !item ||
-      (isMobile() && !e.target.className.includes('bm_logo'))
-    )
+    if (isSelecting() || !item || !e.target.className.includes('bm_logo'))
       return true;
     $aside.bmfromDom = item;
     const obj = getBmItemData(
@@ -142,11 +138,10 @@ function bmListMove(fromId, toId) {
 const bmListMouseElementTracker = new MouseElementTracker(
   $aside.find('.list')[0],
   {
-    delay: isMobile() ? 500 : 0,
+    delay: 300,
     onStart({ e }) {
       const item = _getTarget($aside[0], e, '.list .list_title');
-      if (!item || isSelecting() || (isMobile() && e.target.tagName !== 'I'))
-        return true;
+      if (!item || isSelecting() || e.target.tagName !== 'I') return true;
       $aside.bmListfromDom = item;
       const obj = getBmListTitleData(item.dataset.id);
       bmListMouseElementTracker.changeInfo(obj.title);

@@ -797,14 +797,10 @@ export function getVolumeIcon(mediaVolume) {
 }
 // 拖动歌单
 const songListMouseElementTracker = new MouseElementTracker($songListWrap[0], {
-  delay: isMobile() ? 500 : 0,
+  delay: 300,
   onStart({ e }) {
     const item = _getTarget($songListWrap[0], e, '.song_list_item');
-    if (
-      !item ||
-      $(item).index() < 3 ||
-      (isMobile() && !e.target.className.includes('logo'))
-    )
+    if (!item || $(item).index() < 3 || !e.target.className.includes('logo'))
       return true;
     $songListWrap.songListfromDom = item;
     const obj = getSongListInfo(item.dataset.id);
@@ -2402,7 +2398,7 @@ function playSongList(id, e) {
 const songsMouseElementTracker = new MouseElementTracker(
   $msuicContentBox.find('.list_items_wrap')[0],
   {
-    delay: isMobile() ? 500 : 0,
+    delay: 300,
     onStart({ e }) {
       const item = _getTarget($msuicContentBox[0], e, '.song_item');
       if (
@@ -2411,7 +2407,7 @@ const songsMouseElementTracker = new MouseElementTracker(
         $songListWrap.listId === 'all' ||
         curSongListSort !== 'default' ||
         onlyShowMv === 1 ||
-        (isMobile() && !e.target.className.includes('logo'))
+        !e.target.className.includes('logo')
       )
         return true;
       $songItemsBox.songsfromDom = item;

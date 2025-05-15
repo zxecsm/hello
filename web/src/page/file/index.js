@@ -325,7 +325,7 @@ async function renderList(top) {
 }
 const lazyImg = new LazyLoad();
 const mouseElementTracker = new MouseElementTracker(document, {
-  delay: isMobile() ? 500 : 0,
+  delay: 300,
   onStart({ e }) {
     const item = _getTarget($contentWrap[0], e, '.content_wrap .file_item');
     if (

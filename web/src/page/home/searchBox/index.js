@@ -102,13 +102,14 @@ export function searchBoxIsHide() {
 }
 // 拖动移动书签
 const homeBmMouseElementTracker = new MouseElementTracker($homeBmWrap[0], {
-  delay: isMobile() ? 500 : 0,
+  delay: 300,
   onStart({ e }) {
     const item = _getTarget($homeBmWrap[0], e, '.home_bm_item');
     if (
       !item ||
       !homeFootMenuIsHide() ||
-      (isMobile() && !e.target.className.includes('home_bm_logo'))
+      !e.target.className.includes('home_bm_logo') ||
+      e.target.getAttribute('x') === 'add'
     )
       return true;
 

@@ -244,6 +244,8 @@ export class BoxSelector {
     const el = document.createElement('div');
     Object.assign(el.style, {
       position: 'absolute',
+      top: '-100px',
+      left: '-100px',
       pointerEvents: 'none',
       zIndex: 9999,
       border: '1px dashed var(--icon-color)',
