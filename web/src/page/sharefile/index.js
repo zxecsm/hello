@@ -729,6 +729,32 @@ $header
       closeSearch();
     }
   })
+  .on('click', '.h_history', (e) => {
+    const data = localData
+      .get('fileHistory')
+      .reverse()
+      .map((item, idx) => {
+        return {
+          id: idx + '',
+          beforeIcon: 'iconfont icon-history',
+          text: item,
+          param: { path: item },
+        };
+      });
+    rMenu.selectMenu(
+      e,
+      data,
+      ({ id, close, param }) => {
+        if (id) {
+          close();
+          if (param.path === curFileDirPath) return;
+          updatePageInfo();
+          curmb.toGo(param.path, { pageNo: 1, top: 0 });
+        }
+      },
+      '历史目录'
+    );
+  })
   .on('click', '.h_sort_btn', hdFileSort);
 // 手势右划后退
 _mySlide({

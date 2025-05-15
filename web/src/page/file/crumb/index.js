@@ -1,3 +1,4 @@
+import localData from '../../../js/common/localData';
 import bus from '../../../js/utils/bus';
 import _path from '../../../js/utils/path';
 import { _tpl } from '../../../js/utils/template';
@@ -29,9 +30,20 @@ bus.on('setPageInfo', (info) => (pageInfo = info));
 function updatePageInfo() {
   bus.emit('getPageInfo');
 }
-
+function saveFileHistory(path) {
+  if (!path) return;
+  const list = localData
+    .get('fileHistory')
+    .filter((item) => item && item !== path);
+  list.push(path);
+  if (list.length > 50) {
+    list.shift();
+  }
+  localData.set('fileHistory', list);
+}
 // 生成路径
 function renderCrumb(HASH) {
+  saveFileHistory(HASH);
   const hasBack = hashRouter.hasBack();
   const hasForward = hashRouter.hasForward();
   const html = _tpl(

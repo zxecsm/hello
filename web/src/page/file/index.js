@@ -1144,6 +1144,32 @@ $header
   .on('click', '.paste_btn .text', hdPaste)
   .on('click', '.paste_btn .type', hdPaste)
   .on('click', '.clear_trash_btn', hdClearTrash)
+  .on('click', '.h_history', (e) => {
+    const data = localData
+      .get('fileHistory')
+      .reverse()
+      .map((item, idx) => {
+        return {
+          id: idx + '',
+          beforeIcon: 'iconfont icon-history',
+          text: item,
+          param: { path: item },
+        };
+      });
+    rMenu.selectMenu(
+      e,
+      data,
+      ({ id, close, param }) => {
+        if (id) {
+          close();
+          if (param.path === curFileDirPath) return;
+          updatePageInfo();
+          curmb.toGo(param.path, { pageNo: 1, top: 0 });
+        }
+      },
+      '历史目录'
+    );
+  })
   .on('click', '.paste_btn .close', () => {
     waitObj = {};
     realtime.send({ type: 'pastefiledata', data: waitObj });
