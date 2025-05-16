@@ -43,7 +43,9 @@ export default function imgPreview(arr, idx = 0) {
   const close = document.createElement('div');
   const load = document.createElement('div');
   const rotateBtn = document.createElement('div');
+  const countInfo = document.createElement('div');
 
+  countInfo.className = 'count_info';
   rotateBtn.className = 'rotate_btn iconfont icon-shunxuanzhuan';
   load.className = 'load';
   close.className = 'iconfont icon-close-bold close';
@@ -58,6 +60,7 @@ export default function imgPreview(arr, idx = 0) {
   box.appendChild(next);
   box.appendChild(close);
   box.appendChild(rotateBtn);
+  box.appendChild(countInfo);
   box.appendChild(load);
   document.body.appendChild(box);
 
@@ -74,7 +77,10 @@ export default function imgPreview(arr, idx = 0) {
     }
     close.style.display = rotateBtn.style.display = 'block';
     if (arr.length > 1) {
-      pre.style.display = next.style.display = 'block';
+      pre.style.display =
+        next.style.display =
+        countInfo.style.display =
+          'block';
     }
     timer = setTimeout(() => {
       clearTimeout(timer);
@@ -83,11 +89,13 @@ export default function imgPreview(arr, idx = 0) {
         next.style.display =
         close.style.display =
         rotateBtn.style.display =
+        countInfo.style.display =
           'none';
     }, 6000);
   }
   handleBtnState();
   function cut(idx) {
+    countInfo.innerText = `${idx + 1} / ${arr.length}`;
     scale = 1;
     rotate = 0;
     image.style.opacity = 0;
