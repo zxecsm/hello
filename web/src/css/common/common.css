@@ -173,13 +173,13 @@ html.dark {
   font-family: 'codeFont';
   src: url('../../font/consolas.ttf') format('truetype');
 }
-body {
+html body {
   color: var(--color3);
   background-color: var(--color10);
   font-size: 1.6rem;
   cursor: var(--cursor-default);
 }
-body:before {
+html body:before {
   content: '';
   position: fixed;
   z-index: -1;
