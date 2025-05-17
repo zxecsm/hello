@@ -192,7 +192,7 @@ let isSelectingBm = true; // 选中状态
 
 // 切换书签和分组选中状态
 function switchCheckState() {
-  const $fMenu = $aside.find('.foot_menu');
+  const $fMenu = $aside.find('.foot_menu .flex_wrap');
   if (isSelectingBm) {
     $fMenu.removeClass('liststate');
   } else {
@@ -331,7 +331,7 @@ function renderAsideList(p, delayScroll = 0) {
         const $listTitle = $aList.find('.list_title').eq(curIdx);
         $aList.stop().animate(
           {
-            scrollTop: _position($listTitle[0]).top + $aList[0].scrollTop - 10,
+            scrollTop: _position($listTitle[0]).top + $aList[0].scrollTop,
           },
           _d.speed
         );
@@ -532,7 +532,7 @@ function switchListOpenState() {
 function hdCheckAll() {
   let che = $(this).attr('check');
   che === 'y' ? (che = 'n') : (che = 'y');
-  $aside.find('.foot_menu div').attr({
+  $aside.find('.foot_menu .flex_wrap div').attr({
     class:
       che === 'y'
         ? 'iconfont icon-xuanzeyixuanze'
@@ -632,7 +632,7 @@ $asideWrap
       this.querySelector('.check_bm')
     );
   })
-  .on('click', '.foot_menu div', hdCheckAll)
+  .on('click', '.foot_menu .flex_wrap div', hdCheckAll)
   .on('click', '.check_bm', function (e) {
     e.stopPropagation();
     checkAsideBm(this);
@@ -694,12 +694,12 @@ function updateBmSelectInfo() {
     );
   _msg.botMsg(`选中：${$checkArr.length}项`);
   if ($checkArr.length === $sidenav.length) {
-    $aside.find('.foot_menu div').attr({
+    $aside.find('.foot_menu .flex_wrap div').attr({
       class: 'iconfont icon-xuanzeyixuanze',
       check: 'y',
     });
   } else {
-    $aside.find('.foot_menu div').attr({
+    $aside.find('.foot_menu .flex_wrap div').attr({
       class: 'iconfont icon-xuanzeweixuanze',
       check: 'n',
     });
@@ -724,12 +724,12 @@ function updateBmListSelectInfo() {
     );
   _msg.botMsg(`选中：${$checkArr.length}项`);
   if ($checkArr.length === $sidenav.length) {
-    $aside.find('.foot_menu div').attr({
+    $aside.find('.foot_menu .flex_wrap div').attr({
       class: 'iconfont icon-xuanzeyixuanze',
       check: 'y',
     });
   } else {
-    $aside.find('.foot_menu div').attr({
+    $aside.find('.foot_menu .flex_wrap div').attr({
       class: 'iconfont icon-xuanzeweixuanze',
       check: 'n',
     });
@@ -1457,7 +1457,7 @@ function startSelect() {
       }
       toggleUserSelect(false);
     })
-    .find('div')
+    .find('.flex_wrap div')
     .attr({
       class: 'iconfont icon-xuanzeweixuanze',
       check: 'n',

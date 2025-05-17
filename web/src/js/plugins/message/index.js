@@ -180,10 +180,10 @@ const botMsg = (function () {
   box.style.cssText = `
       width: 100%;
       position: fixed;
-      top: 20px;
-      padding: 0 20px;
+      top: 2rem;
+      padding: 0 2rem;
       transform: translateY(-100%);
-      font-size: 18px;
+      font-size: 1.8rem;
       opacity: 0;
       text-align: right;
       z-index: ${zIndex};
@@ -193,10 +193,10 @@ const botMsg = (function () {
       line-height: 1.5;
       overflow: hidden;
       font-weight: bold;
-      padding: 10px;
-      border-radius: 10px;
+      padding: 1rem;
+      border-radius: 1rem;
       color: var(--color1);
-      box-shadow: 0 0 5px var(--color5);
+      box-shadow: 0 0 .5rem var(--color5);
       background-color: var(--bg-color-o3);`;
   box.appendChild(textbox);
   document.body.appendChild(box);

@@ -27,6 +27,7 @@ import {
   imgjz,
   LazyLoad,
   isDarkMode,
+  getDarkIcon,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -470,19 +471,9 @@ $contentWrap.css({
 });
 // 黑暗模式
 function changeTheme(dark) {
-  if (dark === 'y') {
-    $setBtnsWrap
-      .find('.change_theme_btn')
-      .attr('class', 'change_theme_btn iconfont icon-icon_yejian-yueliang');
-  } else if (dark === 'n') {
-    $setBtnsWrap
-      .find('.change_theme_btn')
-      .attr('class', 'change_theme_btn iconfont icon-taiyangtianqi');
-  } else if (dark === 's') {
-    $setBtnsWrap
-      .find('.change_theme_btn')
-      .attr('class', 'change_theme_btn iconfont icon-xianshiqi');
-  }
+  $setBtnsWrap
+    .find('.change_theme_btn')
+    .attr('class', `change_theme_btn iconfont ${getDarkIcon(dark)}`);
   hdTheme(dark);
 }
 function hdTheme(dark) {
@@ -517,20 +508,20 @@ function hdWindowScroll() {
 }
 const changeToTopState = throttle(function (p) {
   if (p <= 100) {
-    $setBtnsWrap.find('.to_top_btn').stop().slideUp(_d.speed);
+    $setBtnsWrap.find('.to_top_btn').slideUp(_d.speed);
   } else {
-    $setBtnsWrap.find('.to_top_btn').stop().slideDown(_d.speed);
+    $setBtnsWrap.find('.to_top_btn').slideDown(_d.speed);
   }
 }, 500);
 const pagepro = (function () {
   const div = document.createElement('div');
   div.style.cssText = `
     width: 0;
-    height: 3px;
+    height: 0.3rem;
     position: fixed;
     bottom: 0;
     left: 0;
-    border-radio:20px;
+    border-radio:2rem;
     pointer-events: none;
     background-image: linear-gradient(to right, green, orange);
     z-index: 20;

@@ -15,6 +15,7 @@ const defaultData = {
     left: 50,
     top: 100,
   },
+  htmlFontSize: 10,
   mvIsTop: false, // MV置顶
   editLrcIsTop: false, // 编辑歌词置顶
   chatIsTop: false, // 聊天室置顶

@@ -1,5 +1,6 @@
 import '../../css/common/reset.css';
 import '../../css/common/common.css';
+import '../../font/iconfont.css';
 import './index.less';
 import '../../js/common/common';
 import { randomNum } from '../../js/utils/utils';
@@ -11,7 +12,7 @@ const animations = [
     duration: '3s',
     keyframes: `
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-20px); }
+          50% { transform: translateY(-2rem); }
       `,
   },
   {

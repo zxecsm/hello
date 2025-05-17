@@ -30,6 +30,7 @@ import {
   getScreenSize,
   formatBytes,
   _animate,
+  getDarkIcon,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -138,7 +139,7 @@ export function showRightMenu() {
         `
       <template>
       待办事项
-      <em v-if="num>0" style="display: inline-block;background-color: #ffffffd4;width: 20px;line-height: 20px;text-align: center;border-radius: 4px;color: #f56c6c;margin-left: 10px;
+      <em v-if="num>0" style="display: inline-block;background-color: #ffffffd4;width: 2rem;line-height: 2rem;text-align: center;border-radius: 0.4rem;color: #f56c6c;margin-left: 1rem;
     ">{{num}}</em>
       </template>
       `,
@@ -150,7 +151,7 @@ export function showRightMenu() {
       `
     <template>
     倒计时
-    <em v-if="expireCount>0" style="display: inline-block;background-color: #ffffffd4;width: 20px;line-height: 20px;text-align: center;border-radius: 4px;color: #f56c6c;margin-left: 10px;
+    <em v-if="expireCount>0" style="display: inline-block;background-color: #ffffffd4;width: 2rem;line-height: 2rem;text-align: center;border-radius: 0.4rem;color: #f56c6c;margin-left: 1rem;
   ">{{expireCount}}</em>
     </template>
     `,
@@ -765,12 +766,7 @@ function setPageFont(e, loading = { start() {}, end() {} }) {
 export function settingMenu(e, isMain) {
   const dark = localData.get('dark');
   const headBtnToRight = localData.get('headBtnToRight');
-  let icon = 'icon-xianshiqi';
-  if (dark === 'y') {
-    icon = 'icon-icon_yejian-yueliang';
-  } else if (dark === 'n') {
-    icon = 'icon-taiyangtianqi';
-  }
+  const icon = getDarkIcon(dark);
   let data = [
     {
       id: '1',
@@ -1569,7 +1565,7 @@ async function hdVerifyLogin(e, verify, account) {
   const html = _tpl(
     `
     <p style="line-height:1.5;">使用 “Authenticator、1Password” 等手机应用，扫描以下二维码，获取 6 位验证码</p>
-    <img style="width:250px;height:250px" :data-src="url"/>
+    <img style="width:25rem;height:25rem" :data-src="url"/>
     <div cursor="y" title="点击复制密钥" class="item"><i class="title">密钥：</i><span class='text'>{{verify}}</span></div>
     <div style="text-align:left;"><button cursor="y" class="btn btn_primary">开启两步验证</button></div>
     `,

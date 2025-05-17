@@ -16,18 +16,18 @@ html {
     transform: translateX(-50%);
     width: 100%;
     height: 100%;
-    max-width: 1200px;
+    max-width: 120rem;
 
     .uoload_img_btn {
       position: absolute;
-      top: 14px;
-      left: 10px;
+      top: 1.4rem;
+      left: 1rem;
       z-index: 2;
     }
     .go_home {
       position: absolute;
-      top: 14px;
-      left: 80px;
+      top: 1.4rem;
+      left: 8rem;
       z-index: 2;
     }
     .img_list {
@@ -35,8 +35,8 @@ html {
       width: 100%;
       height: 100%;
       overflow-y: auto;
-      padding: 70px 0 50px 0;
-      transform: translateY(100px);
+      padding: 7rem 0 5rem 0;
+      transform: translateY(10rem);
       opacity: 0;
       &.open {
         transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
@@ -47,21 +47,21 @@ html {
         float: left;
         position: relative;
         width: 23.75%;
-        margin: 0 0 10px 1%;
-        height: 200px;
-        border-radius: 5px;
+        margin: 0 0 1rem 1%;
+        height: 20rem;
+        border-radius: 0.5rem;
         overflow: hidden;
 
         @media (max-width: 800px) {
           & {
             width: 47%;
-            margin: 0 0 10px 2%;
-            height: 200px;
+            margin: 0 0 1rem 2%;
+            height: 20rem;
           }
         }
 
         &:hover {
-          box-shadow: 0 0 5px var(--color5);
+          box-shadow: 0 0 0.5rem var(--color5);
           opacity: 0.8;
           .menu_btn {
             transform: scale(1.2);
@@ -80,10 +80,10 @@ html {
           position: absolute;
           top: 0;
           right: 0;
-          font-size: 20px;
-          width: 40px;
-          height: 40px;
-          line-height: 40px;
+          font-size: 2rem;
+          width: 4rem;
+          height: 4rem;
+          line-height: 4rem;
           text-align: center;
           color: var(--icon-color);
           z-index: 1;
@@ -107,7 +107,7 @@ html {
       .pagingbox {
         float: left;
         width: 100%;
-        margin: 30px auto;
+        margin: 3rem auto;
       }
     }
   }
@@ -128,21 +128,21 @@ html {
       transform: translateX(-50%);
       width: 90%;
       max-height: 80%;
-      max-width: 800px;
+      max-width: 80rem;
       overflow-y: auto;
       background-color: var(--color10);
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 0 5px var(--color5);
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 0 0.5rem var(--color5);
 
       .head {
         overflow-x: auto;
         white-space: nowrap;
-        font-size: 18px;
+        font-size: 1.8rem;
 
         span {
           display: inline-block;
-          padding: 10px;
+          padding: 1rem;
 
           &:hover,
           &.active {
@@ -152,7 +152,7 @@ html {
       }
 
       .content {
-        padding: 10px 0;
+        padding: 1rem 0;
       }
       ol,
       li,
@@ -171,10 +171,10 @@ html {
         li {
           position: relative;
           border: 1px solid var(--color9);
-          padding: 20px;
+          padding: 2rem;
           word-break: break-all;
-          line-height: 20px;
-          margin: 10px 0;
+          line-height: 2rem;
+          margin: 1rem 0;
           color: #49a923;
 
           &:hover i {
@@ -184,9 +184,9 @@ html {
           i {
             display: none;
             position: absolute;
-            top: 6px;
-            right: 6px;
-            font-size: 20px;
+            top: 0.6rem;
+            right: 0.6rem;
+            font-size: 2rem;
             color: var(--icon-color);
 
             &:hover {
@@ -211,20 +211,21 @@ html {
 
     div {
       display: flex;
-      flex-flow: row wrap;
+      flex-flow: row nowrap;
+      overflow-y: auto;
       margin: 0 auto;
       width: 95%;
-      max-width: 1200px;
-      padding: 5px 0;
+      max-width: 120rem;
+      padding: 0.5rem 0;
       align-items: center;
 
       span {
         flex: none;
-        font-size: 22px;
-        margin: 5px 10px;
-        width: 25px;
+        font-size: 2.2rem;
+        margin: 0.5rem 1rem;
+        width: 2.5rem;
         text-align: center;
-        line-height: 25px;
+        line-height: 2.5rem;
         &:hover {
           transform: scale(1.2);
           color: var(--text-hover-color);

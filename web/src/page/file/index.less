@@ -5,15 +5,15 @@ html {
   margin: 0;
 }
 body {
-  padding: 10px 0 100px 0;
+  padding: 1rem 0 10rem 0;
 }
 #app {
   .container {
-    border-radius: 5px;
-    margin: 0 auto 10px;
+    border-radius: 0.5rem;
+    margin: 0 auto 1rem;
     width: 98%;
-    padding: 10px;
-    max-width: 1200px;
+    padding: 1rem;
+    max-width: 120rem;
     border: 1px solid var(--color9);
   }
   .search {
@@ -26,12 +26,12 @@ body {
         display: flex;
         align-items: center;
         flex: none;
-        margin-right: 10px;
+        margin-right: 1rem;
         i {
-          margin-right: 5px;
+          margin-right: 0.5rem;
         }
         span {
-          font-size: 14px;
+          font-size: 1.4rem;
           color: var(--color4);
         }
       }
@@ -39,13 +39,13 @@ body {
         display: flex;
         width: 0;
         align-items: center;
-        max-width: 400px;
-        min-width: 100px;
+        max-width: 40rem;
+        min-width: 10rem;
         flex: auto;
         border: 1px solid var(--color9);
-        height: 40px;
-        line-height: 40px;
-        border-radius: 4px;
+        height: 4rem;
+        line-height: 4rem;
+        border-radius: 0.4rem;
 
         &.focus {
           border: 1px solid var(--text-hover-color);
@@ -56,7 +56,7 @@ body {
           width: 0;
           border: none;
           outline: none;
-          font-size: 18px;
+          font-size: 1.8rem;
           background-color: transparent;
         }
 
@@ -71,7 +71,7 @@ body {
     }
   }
   .header {
-    transform: translateY(-100px);
+    transform: translateY(-10rem);
     opacity: 0;
     &.open {
       transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
@@ -83,21 +83,21 @@ body {
       align-items: center;
       flex-flow: row wrap;
       button {
-        height: 40px;
+        height: 4rem;
         padding: 0;
-        font-size: 18px;
-        margin: 5px 10px 5px 0;
+        font-size: 1.8rem;
+        margin: 0.5rem 1rem 0.5rem 0;
         .type,
         .text,
         .close {
           display: inline-block;
-          line-height: 30px;
+          line-height: 3rem;
         }
         .type {
-          width: 30px;
+          width: 3rem;
         }
         .close {
-          width: 30px;
+          width: 3rem;
           &:hover {
             transform: scale(1.2);
           }
@@ -108,13 +108,13 @@ body {
       }
       .h_btn {
         flex: none;
-        margin: 5px 10px 5px 0;
-        width: 40px;
-        height: 40px;
+        margin: 0.5rem 1rem 0.5rem 0;
+        width: 4rem;
+        height: 4rem;
         text-align: center;
-        line-height: 40px;
-        font-size: 22px;
-        border-radius: 5px;
+        line-height: 4rem;
+        font-size: 2.2rem;
+        border-radius: 0.5rem;
         border: 1px solid var(--color9);
 
         color: var(--icon-color);
@@ -130,7 +130,7 @@ body {
     }
   }
   .crumb_box {
-    transform: translateY(100px);
+    transform: translateY(10rem);
     opacity: 0;
     &.open {
       transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
@@ -139,7 +139,7 @@ body {
     }
   }
   .content_wrap {
-    transform: translateY(100px);
+    transform: translateY(10rem);
     opacity: 0;
     &.open {
       transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
@@ -156,9 +156,9 @@ body {
       }
       .file_item {
         display: flex;
-        border-radius: 5px;
+        border-radius: 0.5rem;
         align-items: center;
-        margin-bottom: 5px;
+        margin-bottom: 0.5rem;
         position: relative;
         &:hover {
           background-color: var(--color9);
@@ -178,7 +178,7 @@ body {
         .name {
           flex: auto;
           width: 0;
-          padding: 10px 0 10px 5px;
+          padding: 1rem 0 1rem 0.5rem;
           word-break: break-all;
           line-height: 1.5;
           span {
@@ -192,7 +192,7 @@ body {
         }
         .size {
           flex: none;
-          width: 80px;
+          width: 8rem;
           text-align: center;
           font-size: 0.8em;
           color: var(--icon-color);
@@ -202,19 +202,19 @@ body {
         }
         .date {
           flex: none;
-          width: 150px;
+          width: 15rem;
           text-align: center;
           font-size: 0.8em;
         }
         .logo {
-          padding: 10px;
-          font-size: 30px;
-          border-radius: 4px;
+          padding: 1rem;
+          font-size: 3rem;
+          border-radius: 0.4rem;
           color: var(--icon-color);
           &.is_img {
-            width: 50px;
-            height: 50px;
-            margin: 5px;
+            width: 5rem;
+            height: 5rem;
+            margin: 0.5rem;
             background-size: cover;
             background-image: url('../../images/img/loadImg.png');
             background-repeat: no-repeat;
@@ -228,7 +228,7 @@ body {
         }
       }
       .fill {
-        width: 110px;
+        width: 11rem;
         height: 0;
         pointer-events: none;
       }
@@ -241,27 +241,27 @@ body {
           flex: none;
           display: flex;
           flex-flow: row wrap;
-          width: 110px;
-          height: 135px;
+          width: 11rem;
+          height: 13.5rem;
           .logo {
             flex: none;
-            width: 80px;
-            height: 80px;
-            font-size: 50px;
-            line-height: 80px;
+            width: 8rem;
+            height: 8rem;
+            font-size: 5rem;
+            line-height: 8rem;
             text-align: center;
             padding: 0;
-            margin: 10px 15px 5px 15px;
+            margin: 1rem 1.5rem 0.5rem 1.5rem;
           }
           .name {
             flex: none;
-            width: 110px;
-            height: 40px;
-            line-height: 40px;
-            font-size: 14px;
+            width: 11rem;
+            height: 4rem;
+            line-height: 4rem;
+            font-size: 1.4rem;
             overflow: hidden;
             white-space: nowrap;
-            padding: 0 0 0 5px;
+            padding: 0 0 0 0.5rem;
             text-overflow: ellipsis;
             text-align: center;
           }
@@ -274,14 +274,14 @@ body {
       p {
         width: 100%;
         text-align: center;
-        padding: 20px 0;
+        padding: 2rem 0;
         pointer-events: none;
         color: var(--color4);
       }
     }
   }
   .pagination {
-    transform: translateY(100px);
+    transform: translateY(10rem);
     opacity: 0;
     &.open {
       transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
@@ -304,7 +304,7 @@ body {
       background-color: transparent;
       margin: 0 auto;
       width: 100%;
-      max-width: 1200px;
+      max-width: 120rem;
     }
     .head_btn {
       flex: none;
@@ -316,7 +316,7 @@ body {
       }
       .text {
         flex: auto;
-        padding: 0 10px;
+        padding: 0 1rem;
         overflow: hidden;
         line-height: 1.5;
         white-space: nowrap;
@@ -331,9 +331,9 @@ body {
       .redo {
         -ms-flex: none;
         flex: none;
-        font-size: 20px;
+        font-size: 2rem;
         text-align: center;
-        width: 40px;
+        width: 4rem;
         &:hover {
           color: var(--text-hover-color);
           transform: scale(1.2);
@@ -372,9 +372,9 @@ body {
 
       span {
         flex: none;
-        font-size: 22px;
-        margin: 5px 10px;
-        width: 25px;
+        font-size: 2.2rem;
+        margin: 0.5rem 1rem;
+        width: 2.5rem;
         text-align: center;
         line-height: 1.5;
         &:hover {
@@ -397,18 +397,18 @@ body {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   width: 100%;
-  max-width: 400px;
+  max-width: 40rem;
   max-height: 80%;
   background-color: var(--color10);
   bottom: 0;
   right: 0;
   border: 1px solid var(--color9);
-  border-radius: 4px;
+  border-radius: 0.4rem;
   overflow: hidden;
   .zoom_btn {
     flex: none;
-    height: 30px;
-    line-height: 30px;
+    height: 3rem;
+    line-height: 3rem;
     text-align: center;
     &:hover {
       color: var(--text-hover-color);
@@ -419,30 +419,30 @@ body {
     flex: auto;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 0 10px;
+    padding: 0 1rem;
     .task {
       display: flex;
       flex-flow: row nowrap;
-      margin-bottom: 10px;
+      margin-bottom: 1rem;
       width: 100%;
       align-items: center;
 
-      border-radius: 4px;
-      padding: 5px;
+      border-radius: 0.4rem;
+      padding: 0.5rem;
       border: 1px solid var(--color9);
 
       .progress {
         flex: auto;
         line-height: 1.5;
-        padding: 10px 0 10px 5px;
+        padding: 1rem 0 1rem 0.5rem;
         word-break: break-all;
         color: var(--icon-color);
       }
       .cancel_task {
         flex: none;
-        line-height: 30px;
-        height: 30px;
-        width: 30px;
+        line-height: 3rem;
+        height: 3rem;
+        width: 3rem;
         text-align: center;
         &:hover {
           color: var(--btn-danger-color);

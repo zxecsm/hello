@@ -5,15 +5,15 @@ body {
   margin: 0;
 }
 #app {
-  padding-bottom: 100px;
+  padding-bottom: 10rem;
   .head {
     position: relative;
-    padding: 20px 10px;
+    padding: 2rem 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-flow: row wrap;
-    transform: translateY(-100px);
+    transform: translateY(-10rem);
     opacity: 0;
     &.open {
       transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
@@ -22,22 +22,22 @@ body {
     }
     .logo {
       flex: none;
-      width: 50px;
-      height: 50px;
+      width: 5rem;
+      height: 5rem;
       border-radius: 50%;
       background-position: center;
       background-size: cover;
       background-repeat: no-repeat;
       transition: transform 0.5s ease-in-out;
       &:hover {
-        box-shadow: 0 0 5px var(--color5);
+        box-shadow: 0 0 0.5rem var(--color5);
         transform: rotate(360deg) scale(1.2);
       }
     }
     .des {
       flex: none;
       max-width: 100%;
-      padding: 0 10px;
+      padding: 0 1rem;
       line-height: 1.5;
       word-break: break-all;
       span {
@@ -48,13 +48,13 @@ body {
 
   .box {
     position: relative;
-    margin: 30px auto;
+    margin: 3rem auto;
     width: 100%;
-    max-width: 1200px;
+    max-width: 120rem;
     display: flex;
     flex-flow: row wrap;
     justify-content: center;
-    transform: translateY(100px);
+    transform: translateY(10rem);
     opacity: 0;
 
     &.open {
@@ -64,12 +64,12 @@ body {
     }
 
     .bm_item {
-      margin: 10px;
+      margin: 1rem;
       position: relative;
-      font-size: 16px;
-      width: 250px;
-      height: 120px;
-      border-radius: 5px;
+      font-size: 1.6rem;
+      width: 25rem;
+      height: 12rem;
+      border-radius: 0.5rem;
       border: 1px solid var(--color9);
       overflow: hidden;
 
@@ -83,12 +83,12 @@ body {
 
       .logo {
         position: absolute;
-        top: 5px;
+        top: 0.5rem;
         left: 0;
-        margin-left: 5px;
-        border-radius: 5px;
-        width: 40px;
-        height: 40px;
+        margin-left: 0.5rem;
+        border-radius: 0.5rem;
+        width: 4rem;
+        height: 4rem;
         background-repeat: no-repeat;
         background-position: center;
         background-image: url('../../images/img/loading.svg');
@@ -99,34 +99,34 @@ body {
       }
 
       .bm_title {
-        height: 50px;
-        line-height: 50px;
-        padding-left: 50px;
+        height: 5rem;
+        line-height: 5rem;
+        padding-left: 5rem;
         text-decoration: none;
         overflow: hidden;
         white-space: nowrap;
-        font-size: 20px;
+        font-size: 2rem;
         text-overflow: ellipsis;
         border-bottom: 1px solid var(--color8);
       }
 
       p {
         color: var(--color4);
-        font-size: 14px;
+        font-size: 1.4rem;
         overflow: hidden;
         text-overflow: ellipsis;
         display: -webkit-box;
         -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
         line-height: 1.5;
-        margin: 4px;
+        margin: 0.4rem;
         word-break: break-all;
       }
     }
   }
   .pagination_box {
-    padding: 20px 0;
-    transform: translateY(100px);
+    padding: 2rem 0;
+    transform: translateY(10rem);
     opacity: 0;
 
     &.open {

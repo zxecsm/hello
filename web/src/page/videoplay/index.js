@@ -64,12 +64,12 @@ document.addEventListener('touchstart', showPlayIn);
 function selectPlayIn(e, url) {
   const html = _tpl(
     `<div cursor="y" class="item" data-xi="copy">
-      <img style="width: 40px;height: 40px;border-radius: 4px;" :data-src="videoLinkLogo"/>
-      <span style="margin-left:10px;">复制直链</span>
+      <img style="width: 4rem;height: 4rem;border-radius: 0.4rem;" :data-src="videoLinkLogo"/>
+      <span style="margin-left:1rem;">复制直链</span>
     </div>
     <div v-for="{name,logo},i in playerList" cursor="y" class="item" :data-xi="i">
-      <img style="width: 40px;height: 40px;border-radius: 4px;" :data-src="logo"/>
-      <span style="margin-left:10px;">{{name}}</span>
+      <img style="width: 4rem;height: 4rem;border-radius: 0.4rem;" :data-src="logo"/>
+      <span style="margin-left:1rem;">{{name}}</span>
     </div>
     `,
     {

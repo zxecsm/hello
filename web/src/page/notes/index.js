@@ -210,7 +210,7 @@ $categoryTag
 function listLoading() {
   let str = '';
   new Array(10).fill(null).forEach(() => {
-    str += `<ul style="pointer-events: none;height:40px;margin-bottom:6px;background-color: var(--color9);" class="item_box"></ul>`;
+    str += `<ul style="pointer-events: none;height:4rem;margin-bottom:0.6rem;background-color: var(--color9);" class="item_box"></ul>`;
   });
   $contentWrap.html(str);
   pageScrollTop(0);
@@ -223,8 +223,11 @@ let noteList = [];
 const noteBoxSelector = new BoxSelector(document, {
   selectables: '.item_box',
   onSelectStart({ e }) {
-    const item = _getTarget($contentWrap[0], e, '.item_box');
-    if (item) return true;
+    if (
+      _getTarget($contentWrap[0], e, '.item_box') ||
+      _getTarget($contentWrap[0], e, '.item_info')
+    )
+      return true;
   },
   onSelectEnd() {
     updateSelectInfo();

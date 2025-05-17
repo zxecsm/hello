@@ -217,7 +217,7 @@ const tabsObj = new CreateTabs({
 function listLoading() {
   let str = '';
   new Array(10).fill(null).forEach(() => {
-    str += `<ul style="pointer-events: none;height:40px;margin-bottom:6px;background-color: var(--color9);" class="item_box"></ul>`;
+    str += `<ul style="pointer-events: none;height:4rem;margin-bottom:0.6rem;background-color: var(--color9);" class="item_box"></ul>`;
   });
   $contentWrap.html(str);
   pageScrollTop(0);
@@ -297,7 +297,7 @@ function renderList(y) {
               </ul>
               <div class="item_info">
                 <span cursor="y" :data-id="group_id" class="category">
-                  <span style="color:var(--icon-color);margin-right:4px;">#</span>{{group_title}}
+                  <span style="color:var(--icon-color);margin-right:0.4rem;">#</span>{{group_title}}
                 </span>
                 <br/>
                 <div class="logo"></div>
@@ -787,8 +787,11 @@ function hdBmkMoveList(e) {
 const boxSelector = new BoxSelector(document, {
   selectables: '.content_wrap .item_box',
   onSelectStart({ e }) {
-    const item = _getTarget($contentWrap[0], e, '.content_wrap .item_box');
-    if (item) return true;
+    if (
+      _getTarget($contentWrap[0], e, '.content_wrap .item_box') ||
+      _getTarget($contentWrap[0], e, '.content_wrap .item_info')
+    )
+      return true;
   },
   onSelectEnd() {
     updateSelectInfo();

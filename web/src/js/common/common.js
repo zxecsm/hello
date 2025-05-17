@@ -1,3 +1,4 @@
+import './index.less';
 import {
   _setTimeout,
   debounce,
@@ -9,6 +10,9 @@ import {
   isLogin,
   myOpen,
   pageErr,
+  getDarkIcon,
+  _getTarget,
+  throttle,
 } from '../utils/utils';
 import _d from './config';
 import _msg from '../plugins/message';
@@ -82,21 +86,22 @@ window.addEventListener('load', function () {
       const box = document.createElement('div');
       box.style.cssText = `
         position: fixed;
-        width: 20px;
-        height: 20px;
+        width: 1.6rem;
+        height: 1.6rem;
+        margin: -0.8rem 0 0 -0.8rem;
         border-radius: 50%;
         z-index: ${_d.levelObj.clickLove};
         pointer-events: none;
         `;
       document.body.appendChild(box);
 
-      box.style.left = e.clientX - 20 / 2 + 'px';
-      box.style.top = e.clientY - 20 / 2 + 'px';
+      box.style.left = e.clientX + 'px';
+      box.style.top = e.clientY + 'px';
       box.style.backgroundColor = randomc;
       box.clientHeight;
       box.style.transition = '.8s ease-in-out';
       box.style.opacity = 0;
-      box.style.transform = 'scale(2)';
+      box.style.transform = 'scale(1.5)';
       _setTimeout(() => {
         box.remove();
       }, 2000);
@@ -108,22 +113,23 @@ window.addEventListener('load', function () {
     const box3 = document.createElement('div');
     box1.style.cssText = `
           position: fixed;
-          width: 16px;
-          height: 16px;
+          width: 1rem;
+          height: 1rem;
+          margin: -0.5rem 0 0 -0.5rem;
           z-index: ${_d.levelObj.clickLove};
           pointer-events: none;
           transform: rotate(-45deg);
           `;
     box2.style.cssText = `
           position: absolute;
-          top: -8px;
+          top: -0.5rem;
           width: 100%;
           height: 100%;
           border-radius: 50%;
           `;
     box3.style.cssText = `
           position: absolute;
-          left: 8px;
+          left: 0.5rem;
           width: 100%;
           height: 100%;
           border-radius: 50%;
@@ -131,15 +137,15 @@ window.addEventListener('load', function () {
     box1.appendChild(box2);
     box1.appendChild(box3);
     document.body.appendChild(box1);
-    box1.style.left = e.clientX - 16 / 2 + 'px';
-    box1.style.top = e.clientY - 16 / 2 + 'px';
+    box1.style.left = e.clientX + 'px';
+    box1.style.top = e.clientY + 'px';
     box1.style.backgroundColor = randomc;
     box2.style.backgroundColor = randomc;
     box3.style.backgroundColor = randomc;
     box1.clientHeight;
-    box1.style.transition = '2s ease-in-out';
+    box1.style.transition = '1s ease-in-out';
     box1.style.opacity = 0;
-    box1.style.transform = 'rotate(-55deg) translateY(-600%) scale(1.5)';
+    box1.style.transform = 'translateY(-400%) scale(1.5)';
     _setTimeout(() => {
       box1.remove();
     }, 2000);
@@ -164,8 +170,8 @@ window.addEventListener('offline', function () {
     const img = document.createElement('img');
     img.src = imgHechang;
     img.style.cssText = `
-  width: 100px;
-  height: 100px;
+  width: 10rem;
+  height: 10rem;
   position: fixed;
   right: 0;
   bottom: 0;
@@ -176,6 +182,69 @@ window.addEventListener('offline', function () {
     document.body.appendChild(img);
   }
 })();
+const toolBox = (() => {
+  if (isIframe()) return null;
+  const toolBox = document.createElement('div');
+  toolBox.className = 'pub_tools';
+  toolBox.innerHTML = `
+  <div class="head"></div>
+  <div class="btns">
+    <div cursor="y" class="zoom_in iconfont icon-fangdasuoxiao_X"></div>
+    <div cursor="y" class="dark iconfont icon-xianshiqi"></div>
+    <div cursor="y" class="zoom_out iconfont icon-fangdasuoxiao_Y"></div>
+  </div>
+  `;
+  document.body.appendChild(toolBox);
+  toolBox.addEventListener('click', (e) => {
+    if (_getTarget(toolBox, e, '.zoom_in')) {
+      const size = localData.get('htmlFontSize') + 1;
+      localData.set('htmlFontSize', size);
+    } else if (_getTarget(toolBox, e, '.zoom_out')) {
+      const size = localData.get('htmlFontSize') - 1;
+      localData.set('htmlFontSize', size < 6 ? 6 : size);
+    } else if (_getTarget(toolBox, e, '.dark')) {
+      let dark = localData.get('dark');
+      if (dark === 'y') {
+        dark = 'n';
+        _msg.success('关闭黑暗模式');
+      } else if (dark === 'n') {
+        dark = 's';
+        _msg.success('跟随系统');
+      } else if (dark === 's') {
+        dark = 'y';
+        _msg.success('开启黑暗模式');
+      }
+      localData.set('dark', dark);
+    }
+  });
+  toolBox.addEventListener(
+    'wheel',
+    throttle((e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.deltaY > 0) {
+        const size = localData.get('htmlFontSize') - 1;
+        localData.set('htmlFontSize', size < 6 ? 6 : size);
+      } else {
+        const size = localData.get('htmlFontSize') + 1;
+        localData.set('htmlFontSize', size);
+      }
+    }, 200)
+  );
+  return toolBox;
+})();
+function updateToolBoxDarkBtn(dark) {
+  if (toolBox) {
+    toolBox.querySelector('.dark').className = `dark iconfont ${getDarkIcon(
+      dark
+    )}`;
+  }
+}
+updateToolBoxDarkBtn(localData.get('dark'));
+function changeHtmlFontSize(size) {
+  document.documentElement.style.fontSize = size + 'px';
+}
+changeHtmlFontSize(localData.get('htmlFontSize'));
 localData.onChange(({ key }) => {
   if (!key || key === 'pageGrayscale') {
     updateGrayscale();
@@ -186,10 +255,15 @@ localData.onChange(({ key }) => {
     }
   }
   if (!key || key === 'dark') {
-    darkMode(localData.get('dark'));
+    const dark = localData.get('dark');
+    darkMode(dark);
+    updateToolBoxDarkBtn(dark);
   }
   if (!key || key === 'headBtnToRight') {
     changeHeadBtnSort(localData.get('headBtnToRight'));
+  }
+  if (!key || key === 'htmlFontSize') {
+    changeHtmlFontSize(localData.get('htmlFontSize'));
   }
 });
 window

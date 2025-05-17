@@ -8,7 +8,7 @@ body {
   overflow: hidden;
 }
 .active-window {
-  box-shadow: 0 0 10px var(--text-hover-color) !important;
+  box-shadow: 0 0 1rem var(--text-hover-color) !important;
 }
 #app {
   width: 100%;
@@ -31,28 +31,28 @@ body {
 
   .dandelion {
     position: absolute;
-    bottom: -10px;
-    left: 60px;
+    bottom: -1rem;
+    left: 6rem;
     pointer-events: none;
-    width: 40px;
+    width: 4rem;
     opacity: 0;
   }
 
   .dandelionloading {
     position: absolute;
-    bottom: 45px;
-    left: 90px;
+    bottom: 4.5rem;
+    left: 9rem;
     pointer-events: none;
-    width: 90px;
+    width: 9rem;
     opacity: 0;
   }
 
   .grass {
     position: absolute;
     bottom: 0;
-    left: 100px;
+    left: 10rem;
     pointer-events: none;
-    width: 40px;
+    width: 4rem;
     opacity: 0;
   }
 
@@ -61,16 +61,16 @@ body {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    bottom: 20px;
+    bottom: 2rem;
     background-color: var(--bg-color-o2);
     width: 50%;
-    max-width: 120px;
-    border-radius: 6px;
+    max-width: 12rem;
+    border-radius: 0.6rem;
     font-family: codeFont;
     pointer-events: none;
     flex-flow: row nowrap;
     font-size: 0.9em;
-    padding: 5px;
+    padding: 0.5rem;
     justify-content: space-between;
     .cpu,
     .mem {
@@ -82,10 +82,10 @@ body {
     position: fixed;
     left: 0;
     bottom: 0;
-    height: 20px;
+    height: 2rem;
     width: 100%;
     background-image: url(../../images/img/grass.png);
-    background-size: 200px 20px;
+    background-size: 20rem 2rem;
     pointer-events: none;
     opacity: 0.8;
   }
@@ -93,28 +93,28 @@ body {
   /* 随机壁纸 */
   .random_change_bg_btn {
     position: absolute;
-    width: 30px;
-    height: 30px;
-    left: 25px;
-    bottom: 10px;
+    width: 3rem;
+    height: 3rem;
+    left: 2.5rem;
+    bottom: 1rem;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
 
     &.open {
-      width: 40px;
-      height: 40px;
-      left: 20px;
+      width: 4rem;
+      height: 4rem;
+      left: 2rem;
     }
 
     div {
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 2px;
-      height: 50px;
-      margin-left: -1px;
+      width: 0.2rem;
+      height: 5rem;
+      margin-left: -0.1rem;
       background-color: #383838;
       z-index: -1;
     }
@@ -164,9 +164,9 @@ body {
     transform: translateX(-50%);
     width: 100%;
     height: 100%;
-    max-width: 1200px;
+    max-width: 120rem;
     background-color: var(--color10);
-    box-shadow: 0 0 5px var(--color5);
+    box-shadow: 0 0 0.5rem var(--color5);
     .bg_footer {
       position: absolute;
       display: none;
@@ -183,17 +183,17 @@ body {
         flex-flow: row wrap;
         margin: 0 auto;
         width: 95%;
-        max-width: 1200px;
-        padding: 5px 0;
+        max-width: 120rem;
+        padding: 0.5rem 0;
         align-items: center;
 
         span {
           flex: none;
-          font-size: 22px;
-          margin: 5px 10px;
-          width: 25px;
+          font-size: 2.2rem;
+          margin: 0.5rem 1rem;
+          width: 2.5rem;
           text-align: center;
-          line-height: 25px;
+          line-height: 2.5rem;
           &:hover {
             transform: scale(1.2);
             color: var(--text-hover-color);
@@ -208,17 +208,17 @@ body {
 
     .upload_bg,
     .b_close_btn {
-      width: 30px;
-      height: 30px;
-      line-height: 30px;
-      font-size: 20px;
+      width: 3rem;
+      height: 3rem;
+      line-height: 3rem;
+      font-size: 2rem;
       text-align: center;
       border-radius: 50%;
-      box-shadow: 0 0 5px var(--color5);
+      box-shadow: 0 0 0.5rem var(--color5);
       background-color: var(--color9);
       position: absolute;
-      top: 10px;
-      left: 20px;
+      top: 1rem;
+      left: 2rem;
       z-index: 2;
 
       &:hover {
@@ -229,8 +229,8 @@ body {
     }
 
     .upload_bg {
-      top: 10px;
-      left: 60px;
+      top: 1rem;
+      left: 6rem;
     }
 
     .bg_list {
@@ -238,19 +238,19 @@ body {
       width: 100%;
       height: 100%;
       overflow-y: auto;
-      padding: 60px 0;
+      padding: 6rem 0;
 
       .bg_item {
         float: left;
         position: relative;
         width: 23.75%;
-        margin: 0 0 10px 1%;
-        height: 200px;
-        border-radius: 5px;
+        margin: 0 0 1rem 1%;
+        height: 20rem;
+        border-radius: 0.5rem;
         overflow: hidden;
 
         &:hover {
-          box-shadow: 0 0 5px var(--color5);
+          box-shadow: 0 0 0.5rem var(--color5);
           opacity: 0.8;
           .menu_btn {
             transform: scale(1.2);
@@ -261,8 +261,8 @@ body {
         @media (max-width: 800px) {
           & {
             width: 47%;
-            margin: 0 0 10px 2%;
-            height: 400px;
+            margin: 0 0 1rem 2%;
+            height: 40rem;
           }
         }
 
@@ -278,10 +278,10 @@ body {
           position: absolute;
           top: 0;
           right: 0;
-          font-size: 20px;
-          width: 40px;
-          height: 40px;
-          line-height: 40px;
+          font-size: 2rem;
+          width: 4rem;
+          height: 4rem;
+          line-height: 4rem;
           text-align: center;
           color: var(--icon-color);
           z-index: 1;
@@ -306,7 +306,7 @@ body {
       .bg_paging_box {
         float: left;
         width: 100%;
-        margin: 30px auto;
+        margin: 3rem auto;
       }
     }
   }
@@ -322,8 +322,8 @@ body {
     flex-flow: row wrap;
     justify-content: center;
     overflow-y: auto;
-    max-height: 300px;
-    border-radius: 0 0 5px 5px;
+    max-height: 30rem;
+    border-radius: 0 0 0.5rem 0.5rem;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -338,13 +338,13 @@ body {
     .iframe_tag {
       background-color: var(--bg-color-o3);
       float: left;
-      margin: 5px;
-      max-width: 200px;
-      border-radius: 5px;
+      margin: 0.5rem;
+      max-width: 20rem;
+      border-radius: 0.5rem;
       display: flex;
       justify-content: center;
       align-items: center;
-      box-shadow: 0 0 5px var(--color5);
+      box-shadow: 0 0 0.5rem var(--color5);
       &.hide {
         animation: bounceIn 1s;
       }
@@ -353,8 +353,8 @@ body {
       }
       .close_btn {
         flex: none;
-        padding: 0 10px;
-        line-height: 40px;
+        padding: 0 1rem;
+        line-height: 4rem;
         text-align: center;
         color: var(--icon-color);
         &:hover {
@@ -367,8 +367,8 @@ body {
         overflow: hidden;
         white-space: nowrap;
         // text-overflow: ellipsis;
-        padding: 0 5px;
-        line-height: 40px;
+        padding: 0 0.5rem;
+        line-height: 4rem;
       }
       .logo {
         background-position: 50%;
@@ -376,11 +376,11 @@ body {
         background-size: 80%;
         color: var(--icon-color);
         flex: none;
-        font-size: 22px;
-        height: 30px;
-        line-height: 30px;
+        font-size: 2.2rem;
+        height: 3rem;
+        line-height: 3rem;
         text-align: center;
-        width: 30px;
+        width: 3rem;
         &:hover {
           color: var(--text-hover-color);
           transform: scale(1.2);
@@ -397,6 +397,7 @@ body {
     width: 200px;
     height: 200px;
     border: 4px solid #0fddd22e;
+    font-size: 16px;
     border-radius: 50%;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
@@ -539,11 +540,11 @@ body {
   // 右侧设置
   .user_logo_btn {
     position: absolute;
-    right: 10px;
-    top: 10px;
+    right: 1rem;
+    top: 1rem;
     border-radius: 50%;
-    width: 50px;
-    height: 50px;
+    width: 5rem;
+    height: 5rem;
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
@@ -552,14 +553,14 @@ body {
       background: var(--btn-danger-color);
       border-radius: 50%;
       display: none;
-      height: 10px;
-      width: 10px;
+      height: 1rem;
+      width: 1rem;
       position: absolute;
       right: 0;
       top: 0;
     }
     &:hover {
-      box-shadow: 0 0 5px var(--color5);
+      box-shadow: 0 0 0.5rem var(--color5);
       transform: rotate(360deg) scale(1.2);
     }
   }
@@ -574,32 +575,32 @@ body {
 
     .right_box {
       position: absolute;
-      right: 10px;
+      right: 1rem;
       transform-origin: top right;
       transform: rotate(90deg) scale(0);
-      top: 60px;
+      top: 6rem;
       border-radius: 50%;
       transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out,
         border-radius 1s ease-in-out;
       width: 90%;
-      max-width: 300px;
+      max-width: 30rem;
       max-height: 80%;
       overflow-y: auto;
       background-color: var(--bg-color-o2);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      border: 10px solid transparent;
+      border: 1rem solid transparent;
       opacity: 0;
-      box-shadow: 0 0 5px var(--color5);
+      box-shadow: 0 0 0.5rem var(--color5);
 
       &.open {
         transform: none;
         opacity: 1;
-        border-radius: 6px;
+        border-radius: 0.6rem;
       }
 
       span {
-        margin-left: 10px;
+        margin-left: 1rem;
       }
 
       .user_name {
@@ -608,9 +609,9 @@ body {
         color: var(--icon-color);
         white-space: nowrap;
         text-overflow: ellipsis;
-        line-height: 40px;
+        line-height: 4rem;
         text-align: center;
-        font-size: 20px;
+        font-size: 2rem;
 
         &:hover {
           color: var(--text-hover-color);
@@ -619,16 +620,16 @@ body {
       }
 
       .r_list {
-        padding: 10px 4px 0 0;
+        padding: 1rem 0.4rem 0 0;
 
         div {
           display: flex;
           align-items: center;
           width: 100%;
-          line-height: 20px;
-          padding: 10px;
-          margin-bottom: 3px;
-          border-radius: 5px;
+          line-height: 2rem;
+          padding: 1rem;
+          margin-bottom: 0.3rem;
+          border-radius: 0.5rem;
           background-color: var(--bg-color-o1);
 
           &:hover {
@@ -641,11 +642,11 @@ body {
 
           i {
             display: inline-block;
-            font-size: 20px;
+            font-size: 2rem;
             color: var(--icon-color);
-            width: 26px;
-            height: 26px;
-            line-height: 26px;
+            width: 2.6rem;
+            height: 2.6rem;
+            line-height: 2.6rem;
             text-align: center;
           }
         }
@@ -658,26 +659,26 @@ body {
     display: none;
     position: fixed;
     width: 90%;
-    max-width: 500px;
+    max-width: 50rem;
     background-color: var(--bg-color-o2);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    padding: 20px 10px 20px 10px;
+    padding: 2rem 1rem 2rem 1rem;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
-    border-radius: 5px;
-    box-shadow: 0 0 5px var(--color5);
+    border-radius: 0.5rem;
+    box-shadow: 0 0 0.5rem var(--color5);
 
     .u_close_btn {
       position: absolute;
-      top: 10px;
-      left: 10px;
-      width: 30px;
-      line-height: 30px;
+      top: 1rem;
+      left: 1rem;
+      width: 3rem;
+      line-height: 3rem;
       text-align: center;
-      font-size: 20px;
+      font-size: 2rem;
 
       &:hover {
         color: var(--text-hover-color);
@@ -686,14 +687,14 @@ body {
     }
 
     .user_logo {
-      height: 80px;
+      height: 8rem;
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 1rem;
 
       div {
         display: inline-block;
-        width: 80px;
-        height: 80px;
+        width: 8rem;
+        height: 8rem;
         border-radius: 50%;
         background-position: center;
         background-repeat: no-repeat;
@@ -702,7 +703,7 @@ body {
 
         &:hover {
           transform: scale(1.1);
-          box-shadow: 0 0 5px var(--color5);
+          box-shadow: 0 0 0.5rem var(--color5);
         }
       }
     }
@@ -714,10 +715,10 @@ body {
         list-style: none;
       }
       ul {
-        line-height: 40px;
-        height: 40px;
+        line-height: 4rem;
+        height: 4rem;
         background-color: var(--bg-color-o1);
-        margin-bottom: 1px;
+        margin-bottom: 0.1rem;
         display: flex;
         flex-flow: row;
 
@@ -725,7 +726,7 @@ body {
           &:nth-child(3),
           &:nth-child(1) {
             flex: none;
-            width: 70px;
+            width: 7rem;
             text-align: center;
             color: var(--color4);
           }
@@ -748,14 +749,14 @@ body {
   // 聊天室
   .show_chat_room_btn {
     position: absolute;
-    bottom: 20px;
-    right: 25px;
-    font-size: 40px;
+    bottom: 2rem;
+    right: 2.5rem;
+    font-size: 4rem;
     color: #49a923;
     animation: shakeY 20s infinite;
 
     &.run {
-      font-size: 80px;
+      font-size: 8rem;
       animation: tada 1s infinite;
     }
     &:hover {
@@ -770,10 +771,10 @@ body {
     display: none;
     position: fixed;
     overflow: hidden;
-    border-radius: 5px;
-    padding: 2px;
+    border-radius: 0.5rem;
+    padding: 0.2rem;
     background-color: var(--color9);
-    box-shadow: 0 0 5px var(--color5);
+    box-shadow: 0 0 0.5rem var(--color5);
 
     .chat_room_box {
       width: 100%;
@@ -783,14 +784,14 @@ body {
 
       .date_search {
         position: absolute;
-        top: 50px;
-        right: 10px;
+        top: 5rem;
+        right: 1rem;
         z-index: 2;
         opacity: 0.9;
         display: flex;
         align-items: center;
-        padding: 4px;
-        border-radius: 6px;
+        padding: 0.4rem;
+        border-radius: 0.6rem;
         &:hover {
           opacity: 1;
         }
@@ -803,17 +804,17 @@ body {
             display: block;
           }
           & .date_icon {
-            font-size: 18px;
+            font-size: 1.8rem;
           }
         }
         .date_close,
         .date_icon {
           flex: none;
-          width: 30px;
-          height: 30px;
-          line-height: 30px;
+          width: 3rem;
+          height: 3rem;
+          line-height: 3rem;
           text-align: center;
-          font-size: 18px;
+          font-size: 1.8rem;
           color: var(--icon-color);
           &:hover {
             color: var(--text-hover-color);
@@ -821,7 +822,7 @@ body {
           }
         }
         .date_icon {
-          font-size: 30px;
+          font-size: 3rem;
         }
         .date_close {
           display: none;
@@ -830,20 +831,20 @@ body {
           display: none;
           flex: auto;
           word-break: break-all;
-          line-height: 30px;
-          font-size: 14px;
+          line-height: 3rem;
+          font-size: 1.4rem;
         }
       }
       // 用户列表
       .user_list_box {
         display: none;
         position: absolute;
-        top: 40px;
+        top: 4rem;
         right: 0;
         width: 100%;
         height: 70%;
         overflow-y: auto;
-        border-radius: 0 0 5px 5px;
+        border-radius: 0 0 0.5rem 0.5rem;
         background-color: var(--color9);
         z-index: 3;
         .user_list_paging {
@@ -859,10 +860,10 @@ body {
         .user_item {
           display: flex;
           width: 100%;
-          height: 50px;
-          line-height: 50px;
+          height: 5rem;
+          line-height: 5rem;
           position: relative;
-          padding: 5px 10px;
+          padding: 0.5rem 1rem;
           border-bottom: 1px solid var(--color8);
 
           &:hover {
@@ -875,8 +876,8 @@ body {
           .msg_alert {
             display: none;
             position: absolute;
-            width: 10px;
-            height: 10px;
+            width: 1rem;
+            height: 1rem;
             background-color: var(--btn-danger-color);
             left: 0;
             top: 0;
@@ -890,12 +891,12 @@ body {
 
           .user_logo {
             flex: none;
-            width: 40px;
-            height: 40px;
-            line-height: 40px;
+            width: 4rem;
+            height: 4rem;
+            line-height: 4rem;
             text-align: center;
             overflow: hidden;
-            border-radius: 5px;
+            border-radius: 0.5rem;
             background-repeat: no-repeat;
             background-size: cover;
             background-position: center;
@@ -912,10 +913,10 @@ body {
 
           .user_name {
             flex: auto;
-            height: 40px;
-            line-height: 40px;
+            height: 4rem;
+            line-height: 4rem;
             width: 0;
-            padding-left: 10px;
+            padding-left: 1rem;
             text-overflow: ellipsis;
             white-space: nowrap;
             overflow: hidden;
@@ -924,12 +925,12 @@ body {
             }
           }
           .online {
-            line-height: 40px;
+            line-height: 4rem;
             flex: none;
             color: var(--icon-color);
-            width: 30px;
+            width: 3rem;
             text-align: center;
-            font-size: 20px;
+            font-size: 2rem;
             &:hover {
               transform: scale(1.2);
               color: var(--text-hover-color);
@@ -938,7 +939,7 @@ body {
         }
         .paginationBox {
           height: auto;
-          padding: 10px 0;
+          padding: 1rem 0;
           button {
             background-color: transparent;
             border: none;
@@ -953,25 +954,25 @@ body {
         align-items: center;
         width: 100%;
         flex: none;
-        height: 41px;
+        height: 4.1rem;
         position: relative;
-        padding: 0 5px;
+        padding: 0 0.5rem;
         border-bottom: 1px solid var(--color8);
         background-color: var(--color9);
         z-index: 1;
 
         & > div {
-          margin: 0 5px;
+          margin: 0 0.5rem;
         }
         .top,
         .search_btn,
         .c_close_btn,
         .clear_msg_btn {
           flex: none;
-          width: 30px;
-          height: 40px;
-          line-height: 40px;
-          font-size: 20px;
+          width: 3rem;
+          height: 4rem;
+          line-height: 4rem;
+          font-size: 2rem;
           text-align: center;
 
           &:hover {
@@ -988,14 +989,14 @@ body {
           flex: auto;
           display: none;
           align-items: center;
-          margin: 0 5px;
-          max-width: 300px;
-          min-width: 100px;
+          margin: 0 0.5rem;
+          max-width: 30rem;
+          min-width: 10rem;
           width: 0;
           background-color: var(--bg-color-o2);
-          height: 30px;
-          line-height: 30px;
-          border-radius: 2px;
+          height: 3rem;
+          line-height: 3rem;
+          border-radius: 0.2rem;
 
           &.focus {
             background-color: var(--color10);
@@ -1005,9 +1006,9 @@ body {
             flex: auto;
             border: none;
             outline: 0;
-            font-size: 14px;
+            font-size: 1.4rem;
             width: 0;
-            padding-left: 5px;
+            padding-left: 0.5rem;
             background-color: transparent;
           }
 
@@ -1015,7 +1016,7 @@ body {
             display: none;
             flex: none;
             font-size: 1em;
-            padding: 0 4px;
+            padding: 0 0.4rem;
           }
           .inp_search_btn {
             display: block;
@@ -1027,12 +1028,12 @@ body {
           display: flex;
           .online_status {
             display: none;
-            width: 20px;
-            height: 40px;
-            line-height: 40px;
+            width: 2rem;
+            height: 4rem;
+            line-height: 4rem;
             text-align: center;
-            font-size: 18px;
-            padding-right: 4px;
+            font-size: 1.8rem;
+            padding-right: 0.4rem;
             color: var(--color6);
 
             &.active {
@@ -1045,10 +1046,10 @@ body {
           .chat_title {
             flex: auto;
             width: 0;
-            height: 40px;
-            line-height: 40px;
+            height: 4rem;
+            line-height: 4rem;
             font-weight: bold;
-            font-size: 20px;
+            font-size: 2rem;
             overflow: hidden;
             .text_box {
               float: left;
@@ -1060,12 +1061,12 @@ body {
         .chat_home_btn {
           position: relative;
           flex: none;
-          width: 30px;
-          height: 40px;
+          width: 3rem;
+          height: 4rem;
           color: rgb(73 169 35);
-          line-height: 40px;
+          line-height: 4rem;
           text-align: center;
-          font-size: 27px;
+          font-size: 2.7rem;
 
           &:hover {
             color: var(--text-hover-color);
@@ -1074,22 +1075,22 @@ body {
 
           .c_home_msg_alert {
             display: none;
-            width: 7px;
-            height: 7px;
+            width: 0.7rem;
+            height: 0.7rem;
             position: absolute;
-            top: 9px;
+            top: 0.9rem;
             background: var(--btn-danger-color);
             border-radius: 50%;
-            right: 5px;
+            right: 0.5rem;
           }
         }
 
         .c_user_btn {
-          width: 30px;
-          height: 40px;
+          width: 3rem;
+          height: 4rem;
           text-align: center;
-          line-height: 40px;
-          font-size: 23px;
+          line-height: 4rem;
+          font-size: 2.3rem;
           position: relative;
           text-align: center;
 
@@ -1100,13 +1101,13 @@ body {
 
           .c_msg_alert {
             display: none;
-            width: 7px;
-            height: 7px;
+            width: 0.7rem;
+            height: 0.7rem;
             position: absolute;
-            top: 9px;
+            top: 0.9rem;
             background: var(--btn-danger-color);
             border-radius: 50%;
-            right: 5px;
+            right: 0.5rem;
           }
         }
       }
@@ -1115,7 +1116,7 @@ body {
         position: relative;
         width: 100%;
         flex: 1 1 auto;
-        padding: 10px;
+        padding: 1rem;
         background-color: var(--color10);
         overflow-y: auto;
 
@@ -1130,8 +1131,8 @@ body {
               .chat_time {
                 text-align: center;
                 color: var(--icon-color);
-                font-size: 14px;
-                padding-top: 10px;
+                font-size: 1.4rem;
+                padding-top: 1rem;
               }
             }
             .msg_info_wrap {
@@ -1145,13 +1146,13 @@ body {
               }
               .chat_menu_btn {
                 flex: none;
-                width: 20px;
-                height: 30px;
-                line-height: 30px;
+                width: 2rem;
+                height: 3rem;
+                line-height: 3rem;
                 text-align: center;
-                font-size: 18px;
+                font-size: 1.8rem;
                 color: var(--color5);
-                margin-top: 24px;
+                margin-top: 2.4rem;
                 &:hover {
                   color: var(--text-hover-color);
                   transform: scale(1.2);
@@ -1165,24 +1166,24 @@ body {
               .c_left_logo {
                 flex: none;
                 text-align: left;
-                width: 42px;
-                height: 40px;
-                padding: 8px 0;
+                width: 4.2rem;
+                height: 4rem;
+                padding: 0.8rem 0;
               }
 
               .c_right_logo {
                 flex: none;
                 text-align: right;
-                width: 42px;
-                height: 40px;
-                padding: 8px 0;
+                width: 4.2rem;
+                height: 4rem;
+                padding: 0.8rem 0;
               }
 
               .c_left_logo .c_logo,
               .c_right_logo .c_logo {
-                width: 40px;
-                height: 40px;
-                border-radius: 6px;
+                width: 4rem;
+                height: 4rem;
+                border-radius: 0.6rem;
                 background-repeat: no-repeat;
                 background-size: cover;
                 background-position: center;
@@ -1194,31 +1195,31 @@ body {
 
               .c_content_box {
                 flex: auto;
-                padding: 8px 10px;
+                padding: 0.8rem 1rem;
                 width: 0;
 
                 .c_user_name {
                   display: block;
                   width: 100%;
-                  font-size: 12px;
+                  font-size: 1.2rem;
                   word-break: break-all;
-                  margin-bottom: 5px;
+                  margin-bottom: 0.5rem;
 
                   span {
                     display: inline-block;
                     color: var(--icon-color);
-                    padding: 0 4px;
+                    padding: 0 0.4rem;
                   }
                 }
 
                 .c_file_msg_box {
                   position: relative;
-                  padding: 10px;
+                  padding: 1rem;
                   width: 100%;
-                  max-width: 300px;
-                  height: 70px;
+                  max-width: 30rem;
+                  height: 7rem;
                   background-color: var(--color8);
-                  border-radius: 6px;
+                  border-radius: 0.6rem;
                   display: flex;
 
                   .c_file_info {
@@ -1236,33 +1237,33 @@ body {
 
                     .file_name {
                       width: 100%;
-                      height: 30px;
-                      line-height: 30px;
+                      height: 3rem;
+                      line-height: 3rem;
                     }
 
                     .file_size {
                       width: 100%;
-                      height: 20px;
-                      line-height: 20px;
-                      font-size: 14px;
+                      height: 2rem;
+                      line-height: 2rem;
+                      font-size: 1.4rem;
                     }
                   }
 
                   .file_type {
                     float: left;
-                    width: 50px;
-                    height: 50px;
-                    font-size: 40px;
-                    line-height: 50px;
+                    width: 5rem;
+                    height: 5rem;
+                    font-size: 4rem;
+                    line-height: 5rem;
                     text-align: center;
                   }
                 }
 
                 .c_right_triangle {
                   position: absolute;
-                  top: 4px;
-                  right: -15px;
-                  border: 8px solid var(--color8);
+                  top: 0.4rem;
+                  right: -1.5rem;
+                  border: 0.8rem solid var(--color8);
                   border-top-color: transparent;
                   border-right-color: transparent;
                   border-bottom-color: transparent;
@@ -1274,9 +1275,9 @@ body {
 
                 .c_left_triangle {
                   position: absolute;
-                  top: 4px;
-                  left: -15px;
-                  border: 8px solid var(--color8);
+                  top: 0.4rem;
+                  left: -1.5rem;
+                  border: 0.8rem solid var(--color8);
                   border-top-color: transparent;
                   border-left-color: transparent;
                   border-bottom-color: transparent;
@@ -1285,9 +1286,9 @@ body {
                 .c_img_msg_box {
                   position: relative;
                   width: 100%;
-                  max-width: 200px;
-                  height: 200px;
-                  border-radius: 6px;
+                  max-width: 20rem;
+                  height: 20rem;
+                  border-radius: 0.6rem;
                   overflow: hidden;
 
                   .c_img {
@@ -1304,8 +1305,8 @@ body {
                     }
                     span {
                       position: absolute;
-                      bottom: 10px;
-                      right: 10px;
+                      bottom: 1rem;
+                      right: 1rem;
                       color: rgb(209 133 20);
                     }
                   }
@@ -1314,13 +1315,13 @@ body {
                 .c_voice_msg_box {
                   position: relative;
                   max-width: 100%;
-                  min-width: 80px;
-                  padding: 6px;
+                  min-width: 8rem;
+                  padding: 0.6rem;
                   background-color: var(--color8);
-                  border-radius: 6px;
+                  border-radius: 0.6rem;
 
                   i {
-                    font-size: 22px;
+                    font-size: 2.2rem;
                   }
 
                   &.bcolor {
@@ -1331,14 +1332,14 @@ body {
 
                 .c_text_msg_box {
                   position: relative;
-                  padding: 10px;
+                  padding: 1rem;
                   margin: 0;
                   white-space: pre-wrap;
                   word-break: break-word;
                   background-color: var(--color8);
-                  border-radius: 6px;
+                  border-radius: 0.6rem;
                   line-height: 1.5;
-                  font-size: 16px;
+                  font-size: 1.6rem;
 
                   &.bcolor {
                     background-color: #91e5b8;
@@ -1365,18 +1366,18 @@ body {
         .scroll_to_bot_btn {
           display: none;
           position: absolute;
-          width: 30px;
-          height: 30px;
-          line-height: 30px;
+          width: 3rem;
+          height: 3rem;
+          line-height: 3rem;
           text-align: center;
-          top: -40px;
+          top: -4rem;
           left: 50%;
-          margin-left: -15px;
+          margin-left: -1.5rem;
           z-index: 2;
           background-color: var(--color9);
           border-radius: 50%;
-          font-size: 16px;
-          box-shadow: 0 0 5px var(--color5);
+          font-size: 1.6rem;
+          box-shadow: 0 0 0.5rem var(--color5);
           opacity: 0.9;
           &:hover {
             opacity: 1;
@@ -1387,8 +1388,8 @@ body {
         .c_text_msg_box {
           flex: auto;
           position: relative;
-          margin: 5px;
-          font-size: 16px;
+          margin: 0.5rem;
+          font-size: 1.6rem;
           .c_text_msg {
             position: relative;
             line-height: 1.5;
@@ -1397,10 +1398,10 @@ body {
               position: absolute;
               bottom: 0;
               right: 0;
-              width: 30px;
-              height: 30px;
-              font-size: 20px;
-              line-height: 30px;
+              width: 3rem;
+              height: 3rem;
+              font-size: 2rem;
+              line-height: 3rem;
               text-align: center;
               font-size: 1.1em;
               z-index: 5;
@@ -1413,7 +1414,7 @@ body {
               }
             }
             .c_text_content {
-              border-radius: 2px;
+              border-radius: 0.2rem;
               background-color: var(--bg-color-o2);
               position: absolute;
               width: 100%;
@@ -1424,7 +1425,7 @@ body {
               top: 0;
               outline: none;
               border: none;
-              padding: 10px 10px 30px 10px;
+              padding: 1rem 1rem 3rem 1rem;
               font-size: inherit;
               line-height: inherit;
               font-family: inherit;
@@ -1435,9 +1436,9 @@ body {
               }
             }
             .fill_height {
-              max-height: 250px;
-              min-height: 70px;
-              padding: 10px 10px 30px 10px;
+              max-height: 25rem;
+              min-height: 7rem;
+              padding: 1rem 1rem 3rem 1rem;
               visibility: hidden;
               width: 100%;
               white-space: pre-wrap;
@@ -1451,12 +1452,12 @@ body {
             height: 100%;
             background-color: var(--color10);
             text-align: center;
-            line-height: 40px;
+            line-height: 4rem;
 
             &.gren {
               background-color: rgb(37, 201, 124);
               color: var(--color2);
-              font-size: 20px;
+              font-size: 2rem;
             }
           }
         }
@@ -1465,11 +1466,11 @@ body {
         .c_sent_shake_btn,
         .c_change_btn {
           flex: none;
-          font-size: 20px;
+          font-size: 2rem;
           text-align: center;
-          line-height: 50px;
-          width: 50px;
-          height: 50px;
+          line-height: 5rem;
+          width: 5rem;
+          height: 5rem;
 
           &:hover {
             color: var(--text-hover-color);
@@ -1480,13 +1481,13 @@ body {
           display: none;
         }
         .c_sent_msg_btn i {
-          font-size: 28px;
+          font-size: 2.8rem;
         }
         .c_sent_shake_btn i {
-          font-size: 28px;
+          font-size: 2.8rem;
         }
         .c_change_btn i {
-          font-size: 25px;
+          font-size: 2.5rem;
         }
       }
     }
@@ -1495,11 +1496,11 @@ body {
   // 侧边栏
   .aside_btn {
     position: absolute;
-    top: 25px;
-    left: 15px;
-    font-size: 30px;
+    top: 2.5rem;
+    left: 1.5rem;
+    font-size: 3rem;
     color: var(--icon-color);
-    padding: 5px;
+    padding: 0.5rem;
     &:hover {
       color: var(--text-hover-color);
       transform: scale(1.2);
@@ -1526,7 +1527,7 @@ body {
       transform: translateX(-100%);
       transition: transform 0.5s ease-in-out;
       width: 80%;
-      max-width: 600px;
+      max-width: 60rem;
       height: 100%;
       background-color: var(--bg-color-o2);
       backdrop-filter: blur(8px);
@@ -1544,9 +1545,9 @@ body {
           position: relative;
           display: flex;
           align-items: center;
-          margin-top: 10px;
-          font-size: 20px;
-          height: 50px;
+          margin-top: 1rem;
+          font-size: 2rem;
+          height: 5rem;
 
           &:hover {
             background-color: var(--bg-color-o2);
@@ -1571,16 +1572,16 @@ body {
             text-overflow: ellipsis;
             white-space: nowrap;
             overflow: hidden;
-            line-height: 50px;
+            line-height: 5rem;
           }
 
           i {
             flex: none;
             display: inline-block;
-            width: 50px;
-            line-height: 50px;
+            width: 5rem;
+            line-height: 5rem;
             text-align: center;
-            font-size: 20px;
+            font-size: 2rem;
             color: var(--color4);
             &.active {
               color: var(--btn-danger-color);
@@ -1599,10 +1600,10 @@ body {
             position: relative;
             width: 30.6%;
             float: left;
-            font-size: 16px;
-            height: 120px;
-            margin: 5px 0 5px 2%;
-            border-radius: 5px;
+            font-size: 1.6rem;
+            height: 12rem;
+            margin: 0.5rem 0 0.5rem 2%;
+            border-radius: 0.5rem;
             border: 1px solid var(--color9);
             background-color: var(--bg-color-o1);
             overflow: hidden;
@@ -1615,7 +1616,7 @@ body {
 
             .check_bm {
               display: none;
-              border-radius: 5px;
+              border-radius: 0.5rem;
               position: absolute;
               width: 100%;
               height: 100%;
@@ -1632,12 +1633,12 @@ body {
 
             .bm_logo {
               position: absolute;
-              top: 5px;
+              top: 0.5rem;
               left: 0;
-              margin-left: 5px;
-              border-radius: 5px;
-              width: 40px;
-              height: 40px;
+              margin-left: 0.5rem;
+              border-radius: 0.5rem;
+              width: 4rem;
+              height: 4rem;
               background-repeat: no-repeat;
               background-position: center;
               background-image: url('../../images/img/loading.svg');
@@ -1648,10 +1649,10 @@ body {
             }
 
             .bm_name {
-              height: 50px;
-              line-height: 50px;
-              padding-left: 50px;
-              font-size: 20px;
+              height: 5rem;
+              line-height: 5rem;
+              padding-left: 5rem;
+              font-size: 2rem;
               text-decoration: none;
               overflow: hidden;
               white-space: nowrap;
@@ -1661,19 +1662,19 @@ body {
 
             p {
               color: var(--color4);
-              font-size: 14px;
+              font-size: 1.4rem;
               overflow: hidden;
               text-overflow: ellipsis;
               display: -webkit-box;
               -webkit-line-clamp: 3;
               -webkit-box-orient: vertical;
               line-height: 1.5;
-              margin: 4px;
+              margin: 0.4rem;
               word-break: break-all;
             }
           }
           .paginationBox {
-            padding: 10px 0;
+            padding: 1rem 0;
             button {
               background-color: transparent;
               border: none;
@@ -1684,8 +1685,8 @@ body {
 
         .add_list_btn {
           float: right;
-          font-size: 30px;
-          margin: 10px 15px 100px 0;
+          font-size: 3rem;
+          margin: 1rem 1.5rem 10rem 0;
           color: var(--icon-color);
 
           &:hover {
@@ -1699,38 +1700,42 @@ body {
         display: none;
         flex: none;
         width: 100%;
-        padding: 5px 0;
+        padding: 0.5rem 0;
         background-color: var(--bg-color-o4);
         z-index: 5;
-
-        div {
-          display: inline-block;
-          flex: none;
-          font-size: 20px;
-          margin: 5px 5px 5px 10px;
-          text-align: center;
-          width: 25px;
-          height: 25px;
-          line-height: 25px;
-          &:hover {
-            transform: scale(1.2);
-            color: var(--text-hover-color);
-          }
-        }
-        .clock_bm,
-        .open_bm {
-          display: none;
-        }
-        button {
-          flex: none;
-        }
-        &.liststate {
-          .move_bm {
-            display: none;
+        .flex_wrap {
+          width: 100%;
+          display: flex;
+          flex-flow: row wrap;
+          align-items: center;
+          div {
+            flex: none;
+            font-size: 2rem;
+            margin: 0.5rem 0.5rem 0.5rem 1rem;
+            text-align: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            line-height: 2.5rem;
+            &:hover {
+              transform: scale(1.2);
+              color: var(--text-hover-color);
+            }
           }
           .clock_bm,
           .open_bm {
-            display: inline-block;
+            display: none;
+          }
+          button {
+            flex: none;
+          }
+          &.liststate {
+            .move_bm {
+              display: none;
+            }
+            .clock_bm,
+            .open_bm {
+              display: block;
+            }
           }
         }
       }
@@ -1740,12 +1745,12 @@ body {
   // 搜索盒子
   .search_box_btn {
     display: none;
-    width: 100px;
-    height: 100px;
+    width: 10rem;
+    height: 10rem;
     position: absolute;
     left: 50%;
     top: 50%;
-    margin: -50px 0 0 -50px;
+    margin: -5rem 0 0 -5rem;
     background-color: var(--color10);
     border-radius: 50%;
     animation: rubberBand 5s ease-in-out infinite;
@@ -1768,16 +1773,16 @@ body {
     .search_box_wrap {
       width: 80%;
       height: 80%;
-      max-height: 1000px;
-      max-width: 1200px;
+      max-height: 100rem;
+      max-width: 120rem;
       position: absolute;
       left: 50%;
       top: 30%;
       transform: translate(-50%, -30%);
       background-color: var(--bg-color-o2);
-      border-radius: 10px;
-      box-shadow: 0 0 5px var(--color5);
-      padding: 10px 0;
+      border-radius: 1rem;
+      box-shadow: 0 0 0.5rem var(--color5);
+      padding: 1rem 0;
       display: flex;
       flex-flow: column;
       .bg {
@@ -1788,7 +1793,7 @@ body {
         -webkit-backdrop-filter: blur(8px);
         width: 100%;
         height: 100%;
-        border-radius: 10px;
+        border-radius: 10rem;
         z-index: -1;
       }
       @media (max-width: 800px) {
@@ -1801,14 +1806,14 @@ body {
 
       .setting {
         position: absolute;
-        top: 0px;
-        left: 0px;
-        font-size: 30px;
-        line-height: 50px;
+        top: 0rem;
+        left: 0rem;
+        font-size: 3rem;
+        line-height: 5rem;
         text-align: center;
-        width: 50px;
+        width: 5rem;
         color: var(--color4);
-        height: 50px;
+        height: 5rem;
 
         &:hover {
           color: var(--text-hover-color);
@@ -1821,7 +1826,7 @@ body {
         flex: none;
 
         .logo_box {
-          width: 0px;
+          width: 0rem;
           margin: 0 auto;
           overflow: hidden;
 
@@ -1843,7 +1848,7 @@ body {
             }
 
             100% {
-              width: 220px;
+              width: 22rem;
             }
           }
 
@@ -1854,7 +1859,7 @@ body {
             }
 
             100% {
-              width: 220px;
+              width: 22rem;
             }
           }
 
@@ -1864,7 +1869,7 @@ body {
             }
 
             100% {
-              width: 190px;
+              width: 19rem;
             }
           }
 
@@ -1875,18 +1880,18 @@ body {
             }
 
             100% {
-              width: 190px;
+              width: 19rem;
             }
           }
 
           img {
-            width: 220px;
-            height: 88px;
+            width: 22rem;
+            height: 8.8rem;
 
             @media (max-width: 800px) {
               & {
-                width: 190px;
-                height: 76px;
+                width: 19rem;
+                height: 7.6rem;
               }
             }
           }
@@ -1897,14 +1902,14 @@ body {
         flex: none;
         position: relative;
         width: 100%;
-        height: 50px;
-        margin: 10px auto;
+        height: 5rem;
+        margin: 1rem auto;
         .content {
           position: relative;
           margin: 0 auto;
           width: 70%;
           background-color: var(--bg-color-o1);
-          border-radius: 4px 0px 4px 4px;
+          border-radius: 0.4rem 0rem 0.4rem 0.4rem;
           z-index: 6;
           &.active {
             background-color: var(--color10);
@@ -1915,8 +1920,8 @@ body {
             }
           }
           .search_box {
-            height: 50px;
-            line-height: 50px;
+            height: 5rem;
+            line-height: 5rem;
             display: flex;
             flex-flow: row;
             .inp_box {
@@ -1928,7 +1933,7 @@ body {
                 flex: auto;
                 width: 0;
                 outline: none;
-                font-size: 20px;
+                font-size: 2rem;
                 line-height: 1.5;
                 background: transparent;
                 border: none;
@@ -1943,7 +1948,7 @@ body {
             .translate_btn {
               display: none;
               flex: none;
-              width: 40px;
+              width: 4rem;
               text-align: center;
               font-size: 1.2em;
               font-family: Consolas, 'codeFont';
@@ -1957,19 +1962,20 @@ body {
           .search_list_box {
             display: none;
             width: 100%;
-            max-height: 400px;
+            max-height: 40rem;
             overflow-y: auto;
-            font-size: 18px;
-            border-radius: 0 0 4px 4px;
+            font-size: 1.8rem;
+            border-radius: 0 0 0.4rem 0.4rem;
             ol,
             li,
             ul {
               list-style: none;
             }
             ul {
+              position: relative;
               li {
-                height: 40px;
-                line-height: 40px;
+                height: 4rem;
+                line-height: 4rem;
                 display: flex;
                 align-items: center;
                 border-top: 1px solid var(--color9);
@@ -1990,9 +1996,9 @@ body {
                 }
                 .dellss {
                   flex: none;
-                  width: 36px;
-                  height: 40px;
-                  font-size: 17px;
+                  width: 3.6rem;
+                  height: 4rem;
+                  font-size: 1.7rem;
                   text-align: center;
 
                   &:hover {
@@ -2003,9 +2009,9 @@ body {
 
                 .type_logo {
                   flex: none;
-                  width: 36px;
-                  height: 40px;
-                  font-size: 16px;
+                  width: 3.6rem;
+                  height: 4rem;
+                  font-size: 1.6rem;
                   text-align: center;
                   color: var(--icon-color);
                 }
@@ -2020,7 +2026,7 @@ body {
         width: 80%;
         flex: auto;
         display: block;
-        margin: 10px auto auto auto;
+        margin: 1rem auto auto auto;
         overflow-y: auto;
 
         @media (max-width: 800px) {
@@ -2038,7 +2044,7 @@ body {
 
           .home_bm_item {
             position: relative;
-            margin: 5px 0.833%;
+            margin: 0.5rem 0.833%;
             float: left;
             width: 15%;
             text-align: center;
@@ -2046,7 +2052,7 @@ body {
             @media (max-width: 800px) {
               & {
                 width: 15%;
-                margin: 5px 5%;
+                margin: 0.5rem 5%;
               }
             }
 
@@ -2057,7 +2063,7 @@ body {
             &:hover .home_bm_logo {
               transform: scale(1.1);
               opacity: 1;
-              box-shadow: var(--color5) 0 14px 12px -7px;
+              box-shadow: var(--color5) 0 1.4rem 1.2rem -0.7rem;
             }
 
             .check_home_bm {
@@ -2078,7 +2084,7 @@ body {
               margin: 0 auto;
               width: 50%;
               padding-top: 50%;
-              border-radius: 8px;
+              border-radius: 0.8rem;
               overflow: hidden;
               background-color: var(--bg-color-o1);
               opacity: 0.8;
@@ -2104,9 +2110,9 @@ body {
           }
 
           p {
-            font-size: 14px;
+            font-size: 1.4rem;
             line-height: 1.5;
-            margin-top: 5px;
+            margin-top: 0.5rem;
             text-align: center;
             overflow: hidden;
             white-space: nowrap;
@@ -2122,27 +2128,31 @@ body {
         display: none;
         flex: none;
         width: 100%;
-        padding: 5px 0;
+        padding: 0.5rem 0;
         background-color: var(--bg-color-o1);
-        text-align: center;
-
-        div {
-          flex: none;
-          font-size: 20px;
-          display: inline-block;
-          margin: 5px 10px;
-          width: 25px;
-          text-align: center;
-          line-height: 25px;
-          height: 25px;
-          &:hover {
-            transform: scale(1.2);
-            color: var(--text-hover-color);
+        .flex_wrap {
+          display: flex;
+          width: 100%;
+          align-items: center;
+          flex-flow: row wrap;
+          justify-content: center;
+          div {
+            flex: none;
+            font-size: 2rem;
+            margin: 0.5rem 1rem;
+            width: 2.5rem;
+            text-align: center;
+            line-height: 2.5rem;
+            height: 2.5rem;
+            &:hover {
+              transform: scale(1.2);
+              color: var(--text-hover-color);
+            }
           }
-        }
 
-        button {
-          flex: none;
+          button {
+            flex: none;
+          }
         }
       }
     }
@@ -2152,15 +2162,15 @@ body {
   .mini_player {
     display: none;
     position: fixed;
-    bottom: 100px;
-    left: 100px;
-    height: 100px;
-    width: 100px;
+    bottom: 10rem;
+    left: 10rem;
+    height: 10rem;
+    width: 10rem;
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
-    box-shadow: 0 0 5px var(--color5);
-    border-radius: 5px;
+    box-shadow: 0 0 0.5rem var(--color5);
+    border-radius: 0.5rem;
     background-color: var(--color7);
     .mask {
       position: absolute;
@@ -2171,7 +2181,7 @@ body {
       background-color: #00000080;
       opacity: 0;
       pointer-events: none;
-      border-radius: 5px;
+      border-radius: 0.5rem;
       transition: opacity 0.5s ease-in-out;
     }
     @media (min-width: 801px) {
@@ -2185,7 +2195,7 @@ body {
         .prev_btn,
         .to_max {
           display: block;
-          text-shadow: 0 0 5px #000;
+          text-shadow: 0 0 0.5rem #000;
         }
       }
 
@@ -2195,10 +2205,10 @@ body {
         left: 0;
         right: 0;
         bottom: 0;
-        width: 40px;
-        height: 40px;
-        font-size: 40px;
-        line-height: 40px;
+        width: 4rem;
+        height: 4rem;
+        font-size: 4rem;
+        line-height: 4rem;
         margin: auto;
         text-align: center;
         color: #fff;
@@ -2223,7 +2233,7 @@ body {
         position: absolute;
         left: 0;
         top: 0;
-        font-size: 22px;
+        font-size: 2.2rem;
         color: #fff;
 
         &:hover {
@@ -2236,7 +2246,7 @@ body {
         position: absolute;
         right: 0;
         top: 0;
-        font-size: 25px;
+        font-size: 2.5rem;
         color: #fff;
 
         &:hover {
@@ -2250,7 +2260,7 @@ body {
         position: absolute;
         right: 0;
         bottom: 0;
-        font-size: 24px;
+        font-size: 2.4rem;
         color: #fff;
 
         &:hover {
@@ -2262,15 +2272,15 @@ body {
       .next_btn,
       .prev_btn {
         display: none;
-        width: 40px;
-        height: 40px;
-        line-height: 40px;
+        width: 4rem;
+        height: 4rem;
+        line-height: 4rem;
         text-align: center;
         color: #fff;
-        font-size: 30px;
+        font-size: 3rem;
 
         &:hover {
-          font-size: 40px;
+          font-size: 4rem;
           color: var(--text-hover-color);
         }
       }
@@ -2279,14 +2289,14 @@ body {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
-        right: -40px;
+        right: -4rem;
       }
 
       .prev_btn {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
-        left: -40px;
+        left: -4rem;
       }
     }
 
@@ -2300,12 +2310,12 @@ body {
   /* 迷你歌词 */
   .mini_lrc_wrap {
     display: none;
-    width: 700px;
-    font-size: 30px;
+    width: 70rem;
+    font-size: 3rem;
     color: #a1a3a4;
     position: fixed;
-    top: 100px;
-    left: 50px;
+    top: 10rem;
+    left: 5rem;
     border: 1px dotted transparent;
 
     &:hover {
@@ -2324,7 +2334,7 @@ body {
 
     .one,
     .tow {
-      padding: 10px;
+      padding: 1rem;
       transition: color 0.3s ease-in-out, letter-spacing 0.3s ease-in-out;
       line-height: 1.5;
 
@@ -2348,18 +2358,18 @@ body {
 
     .close {
       display: none;
-      width: 20px;
-      height: 20px;
+      width: 2rem;
+      height: 2rem;
       position: absolute;
-      top: -10px;
-      left: -10px;
-      line-height: 20px;
+      top: -1rem;
+      left: -1rem;
+      line-height: 2rem;
       font-weight: bold;
       text-align: center;
       color: var(--color1);
       background-color: var(--color9);
       border-radius: 50%;
-      font-size: 16px;
+      font-size: 1.6rem;
       z-index: 1;
 
       &:hover {
@@ -2370,18 +2380,18 @@ body {
     }
     .top {
       display: none;
-      width: 20px;
-      height: 20px;
+      width: 2rem;
+      height: 2rem;
       position: absolute;
-      top: -10px;
-      left: 16px;
-      line-height: 20px;
+      top: -1rem;
+      left: 1.6rem;
+      line-height: 2rem;
       font-weight: bold;
       text-align: center;
       color: var(--color1);
       background-color: var(--color9);
       border-radius: 50%;
-      font-size: 16px;
+      font-size: 1.6rem;
       z-index: 1;
 
       &:hover {
@@ -2399,16 +2409,16 @@ body {
     position: fixed;
     overflow: hidden;
     background-color: var(--color9);
-    border-radius: 5px;
-    box-shadow: 0 0 5px var(--color5);
-    padding: 2px;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 0.5rem var(--color5);
+    padding: 0.2rem;
 
     // 底部进度条
     .music_foot_progress {
-      height: 1px;
+      height: 0.1rem;
       background-color: var(--icon-color);
       position: absolute;
-      bottom: 51px;
+      bottom: 5.1rem;
       left: 0;
       z-index: 10;
     }
@@ -2432,7 +2442,7 @@ body {
         background-position: center;
         background-color: var(--color9);
         z-index: -1;
-        border-radius: 0 0 5px 5px;
+        border-radius: 0 0 0.5rem 0.5rem;
         opacity: 0.2;
         filter: blur(10px);
         transition: opacity 5s ease-in-out;
@@ -2442,16 +2452,16 @@ body {
       .head_wrap {
         width: 100%;
         flex: none;
-        height: 41px;
+        height: 4.1rem;
         border-bottom: 1px solid var(--color8);
         display: flex;
         align-items: center;
-        padding: 0 5px;
+        padding: 0 0.5rem;
         overflow: hidden;
         background-color: var(--color9);
 
         div {
-          margin: 0 5px;
+          margin: 0 0.5rem;
         }
         .top,
         .close,
@@ -2460,11 +2470,11 @@ body {
         .back,
         .volume {
           flex: none;
-          width: 30px;
-          height: 40px;
-          line-height: 40px;
+          width: 3rem;
+          height: 4rem;
+          line-height: 4rem;
           text-align: center;
-          font-size: 20px;
+          font-size: 2rem;
 
           &:hover {
             color: var(--text-hover-color);
@@ -2477,7 +2487,7 @@ body {
           }
         }
         .back {
-          font-size: 18px;
+          font-size: 1.8rem;
         }
         .hide {
           @media (max-width: 800px) {
@@ -2489,9 +2499,9 @@ body {
 
         .song_list_name {
           flex: auto;
-          height: 40px;
-          line-height: 40px;
-          font-size: 14px;
+          height: 4rem;
+          line-height: 4rem;
+          font-size: 1.4rem;
           overflow: hidden;
           white-space: nowrap;
           text-align: center;
@@ -2507,13 +2517,13 @@ body {
         .search_music_inp {
           flex: auto;
           display: none;
-          max-width: 300px;
-          min-width: 100px;
+          max-width: 30rem;
+          min-width: 10rem;
           width: 0;
           background-color: var(--bg-color-o2);
-          height: 30px;
-          line-height: 30px;
-          border-radius: 2px;
+          height: 3rem;
+          line-height: 3rem;
+          border-radius: 0.2rem;
           align-items: center;
 
           &.focus {
@@ -2526,15 +2536,15 @@ body {
             border: none;
             outline: none;
             background-color: transparent;
-            font-size: 14px;
-            padding-left: 5px;
+            font-size: 1.4rem;
+            padding-left: 0.5rem;
           }
 
           i {
             display: none;
             flex: none;
             font-size: 1em;
-            padding: 0 4px;
+            padding: 0 0.4rem;
           }
           .inp_search_btn {
             display: block;
@@ -2568,7 +2578,7 @@ body {
             list-style: none;
           }
           ul {
-            padding: 10px 10px 50px 10px;
+            padding: 1rem 1rem 5rem 1rem;
             overflow: hidden;
 
             // 项
@@ -2576,9 +2586,9 @@ body {
               position: relative;
               width: 20%;
               float: left;
-              margin-bottom: 10px;
+              margin-bottom: 1rem;
               text-align: center;
-              font-size: 13px;
+              font-size: 1.3rem;
               overflow: hidden;
 
               @media (max-width: 800px) {
@@ -2590,8 +2600,8 @@ body {
 
               &:hover {
                 background-color: var(--color10);
-                border-radius: 5px;
-                box-shadow: 3px 2px 5px var(--color5);
+                border-radius: 0.5rem;
+                box-shadow: 0.3rem 0.2rem 0.5rem var(--color5);
               }
 
               &:hover span {
@@ -2603,19 +2613,19 @@ body {
               }
 
               &:hover .list_logo {
-                top: 3px;
-                box-shadow: 3px 3px 5px transparent;
+                top: 0.3rem;
+                box-shadow: 0.3rem 0.3rem 0.5rem transparent;
               }
 
               .list_logo {
                 position: relative;
                 top: 0;
-                margin: 5px auto;
+                margin: 0.5rem auto;
                 width: 80%;
                 padding-top: 80%;
                 transition: top 0.1s, box-shadow 0.1s;
-                border-radius: 5px;
-                box-shadow: 3px 3px 5px var(--color5);
+                border-radius: 0.5rem;
+                box-shadow: 0.3rem 0.3rem 0.5rem var(--color5);
 
                 .logo {
                   position: absolute;
@@ -2627,7 +2637,7 @@ body {
                   background-position: center;
                   width: 100%;
                   height: 100%;
-                  border-radius: 5px;
+                  border-radius: 0.5rem;
                   &.load {
                     background-color: transparent;
                     background-size: cover;
@@ -2640,8 +2650,8 @@ body {
                 overflow: hidden;
                 white-space: nowrap;
                 text-overflow: ellipsis;
-                height: 28px;
-                line-height: 28px;
+                height: 2.8rem;
+                line-height: 2.8rem;
                 &:hover {
                   text-decoration: var(--text-hover-decoration);
                 }
@@ -2652,7 +2662,7 @@ body {
             .add_song_list {
               width: 20%;
               float: left;
-              margin-bottom: 10px;
+              margin-bottom: 1rem;
               text-align: center;
               opacity: 0.3;
 
@@ -2667,7 +2677,7 @@ body {
               }
 
               img {
-                margin: 5px auto;
+                margin: 0.5rem auto;
                 width: 80%;
                 vertical-align: bottom;
               }
@@ -2685,7 +2695,7 @@ body {
           transform: translateX(100%);
           overflow-y: auto;
           transition: transform 0.5s ease-in-out;
-          padding-top: 5px;
+          padding-top: 0.5rem;
 
           &.open {
             transform: none;
@@ -2696,22 +2706,22 @@ body {
             .check_all_menu_wrap {
               display: none;
               position: fixed;
-              right: 10px;
+              right: 1rem;
               top: 50%;
               transform: translateY(-50%);
               z-index: 10;
-              font-size: 15px;
+              font-size: 1.5rem;
               max-height: 80%;
               overflow-y: auto;
-              padding: 5px;
+              padding: 0.5rem;
 
               div {
-                line-height: 30px;
-                box-shadow: 0 0 5px var(--color5);
+                line-height: 3rem;
+                box-shadow: 0 0 0.5rem var(--color5);
                 background-color: var(--bg-color-o3);
-                padding: 5px;
-                margin-bottom: 8px;
-                border-radius: 5px;
+                padding: 0.5rem;
+                margin-bottom: 0.8rem;
+                border-radius: 0.5rem;
                 text-align: center;
 
                 &:hover {
@@ -2723,29 +2733,25 @@ body {
 
             // 顶部歌单信息框
             .items_list_top_wrap {
-              height: 100px;
-              margin-bottom: 10px;
+              height: 10rem;
+              margin-bottom: 1rem;
               display: flex;
               overflow: hidden;
 
-              &.lbxma {
-                margin-bottom: 50px;
-              }
-
               .song_list_cover {
                 flex: none;
-                width: 100px;
-                height: 100px;
-                margin-left: 5px;
+                width: 10rem;
+                height: 10rem;
+                margin-left: 0.5rem;
 
                 .logo {
                   background-image: url('../../images/img/loading.svg');
                   background-repeat: no-repeat;
                   background-size: 40%;
                   background-position: center;
-                  width: 100px;
+                  width: 10rem;
                   height: 100%;
-                  border-radius: 5px;
+                  border-radius: 0.5rem;
                   &.load {
                     background-color: transparent;
                     background-size: cover;
@@ -2755,7 +2761,7 @@ body {
 
               .song_list_info {
                 flex: auto;
-                padding: 0 20px;
+                padding: 0 2rem;
                 overflow: hidden;
                 display: flex;
                 justify-content: center;
@@ -2764,9 +2770,9 @@ body {
                 // 歌单名
                 .song_list_name {
                   flex: none;
-                  font-size: 22px;
-                  line-height: 40px;
-                  height: 40px;
+                  font-size: 2.2rem;
+                  line-height: 4rem;
+                  height: 4rem;
                   white-space: nowrap;
                   text-overflow: ellipsis;
                   overflow: hidden;
@@ -2777,8 +2783,8 @@ body {
                 .song_list_des {
                   flex: auto;
                   overflow-y: auto;
-                  line-height: 20px;
-                  font-size: 15px;
+                  line-height: 2rem;
+                  font-size: 1.5rem;
                   color: var(--color4);
                   word-break: break-all;
                   overscroll-behavior: contain;
@@ -2786,18 +2792,24 @@ body {
                 }
               }
             }
-
+            .items_list_top_menu_fill {
+              height: 0;
+              width: 100%;
+              &.active {
+                height: 4rem;
+              }
+            }
             // 顶部操作按钮框
             .items_list_top_menu {
-              height: 40px;
+              height: 4rem;
               width: 100%;
               display: flex;
-              padding: 0 3px;
+              padding: 0 0.3rem;
               overflow: hidden;
 
               &.sct {
                 position: fixed;
-                top: 40px;
+                top: 4rem;
                 right: 0px;
                 z-index: 10;
                 background-color: var(--color9);
@@ -2806,11 +2818,11 @@ body {
               // 播放列表按钮
               .play_list_btn {
                 flex: none;
-                margin: 0 5px;
-                height: 40px;
-                line-height: 40px;
+                margin: 0 0.5rem;
+                height: 4rem;
+                line-height: 4rem;
                 color: var(--icon-color);
-                font-size: 20px;
+                font-size: 2rem;
 
                 &:hover {
                   transform: scale(1.2);
@@ -2820,13 +2832,13 @@ body {
               // 列表歌曲数
               .list_total_num {
                 flex: auto;
-                height: 40px;
-                line-height: 40px;
-                font-size: 15px;
+                height: 4rem;
+                line-height: 4rem;
+                font-size: 1.5rem;
                 overflow: hidden;
 
                 span {
-                  margin-left: 5px;
+                  margin-left: 0.5rem;
                 }
               }
 
@@ -2839,14 +2851,14 @@ body {
               .edit_song_list_btn,
               .sort_songs {
                 flex: none;
-                height: 40px;
-                width: 40px;
+                height: 4rem;
+                width: 4rem;
                 text-align: center;
-                line-height: 40px;
+                line-height: 4rem;
                 color: var(--color4);
 
                 i {
-                  font-size: 25px;
+                  font-size: 2.5rem;
                 }
 
                 &:hover {
@@ -2857,17 +2869,17 @@ body {
 
               .share_song_list_btn i,
               .edit_song_list_btn i {
-                font-size: 22px;
+                font-size: 2.2rem;
               }
             }
 
             // 歌曲项
             .song_item {
-              height: 60px;
+              height: 6rem;
               position: relative;
               display: flex;
               flex-flow: row;
-              margin: 6px 2px;
+              margin: 0.6rem 0.2rem;
               overflow: hidden;
 
               &:hover {
@@ -2880,13 +2892,14 @@ body {
 
               &.active {
                 color: var(--text-hover-color);
-                border-radius: 5px;
+                border-radius: 0.5rem;
                 background-color: var(--bg-color-o2);
               }
               .downloaded {
                 position: absolute;
                 top: 0;
                 left: 0;
+                font-size: 1.6rem;
                 pointer-events: none;
                 opacity: 0.8;
                 color: var(--message-success-color);
@@ -2898,7 +2911,7 @@ body {
                 position: absolute;
                 top: 0;
                 left: 0;
-                border-radius: 5px;
+                border-radius: 0.5rem;
                 width: 100%;
                 height: 100%;
                 z-index: 5;
@@ -2911,14 +2924,14 @@ body {
               .set_song_btn {
                 flex: none;
                 color: var(--color4);
-                line-height: 60px;
+                line-height: 6rem;
                 text-align: center;
-                width: 40px;
-                font-size: 20px;
+                width: 4rem;
+                font-size: 2rem;
               }
 
               .like_hear {
-                font-size: 18px;
+                font-size: 1.8rem;
                 color: var(--color4);
                 &:hover {
                   transform: scale(1.2);
@@ -2939,11 +2952,11 @@ body {
               .song_logo_box {
                 position: relative;
                 flex: none;
-                width: 50px;
-                height: 50px;
-                margin: 5px;
+                width: 5rem;
+                height: 5rem;
+                margin: 0.5rem;
                 overflow: hidden;
-                border-radius: 5px;
+                border-radius: 0.5rem;
 
                 .logo {
                   background-image: url('../../images/img/loading.svg');
@@ -2962,8 +2975,8 @@ body {
                   height: 100%;
                   background-image: url(../../images/img/wave.gif);
                   background-repeat: no-repeat;
-                  background-position: bottom 6px left 6px;
-                  background-size: 14px;
+                  background-position: bottom 0.6rem left 0.6rem;
+                  background-size: 1.4rem;
                   background-color: #00000060;
                   pointer-events: none;
                   top: 0;
@@ -2980,31 +2993,31 @@ body {
               .song_info_wrap {
                 flex: auto;
                 width: 0;
-                height: 60px;
-                padding: 5px;
+                height: 6rem;
+                padding: 0.5rem;
                 overflow: hidden;
 
                 span {
                   display: block;
                   width: 100%;
-                  line-height: 25px;
+                  line-height: 2.5rem;
                   overflow: hidden;
                   white-space: nowrap;
                   text-overflow: ellipsis;
                 }
 
                 .song_name {
-                  font-size: 16px;
+                  font-size: 1.6rem;
                 }
 
                 .artist_name {
-                  font-size: 12px;
+                  font-size: 1.2rem;
                   color: var(--color4);
 
                   .viptu {
                     color: rgb(167, 164, 37);
-                    font-size: 13px;
-                    margin-right: 4px;
+                    font-size: 1.3rem;
+                    margin-right: 0.4rem;
                   }
 
                   .artist_name_text {
@@ -3028,13 +3041,13 @@ body {
 
           .position_btn {
             display: none;
-            width: 30px;
+            width: 3rem;
             position: fixed;
-            bottom: 100px;
-            right: 15px;
+            bottom: 10rem;
+            right: 1.5rem;
             z-index: 9;
-            border-radius: 10px;
-            box-shadow: 0 0 5px var(--color5);
+            border-radius: 1rem;
+            box-shadow: 0 0 0.5rem var(--color5);
             background-color: var(--bg-color-o3);
             opacity: 0.9;
             overflow: hidden;
@@ -3043,11 +3056,11 @@ body {
               background-color: var(--bg-color-o5);
             }
             div {
-              width: 30px;
-              height: 30px;
+              width: 3rem;
+              height: 3rem;
               text-align: center;
-              line-height: 30px;
-              font-size: 15px;
+              line-height: 3rem;
+              font-size: 1.5rem;
 
               &:hover {
                 color: var(--text-hover-color);
@@ -3056,7 +3069,7 @@ body {
             }
 
             .get_location {
-              font-size: 17px;
+              font-size: 1.7rem;
             }
           }
         }
@@ -3067,28 +3080,28 @@ body {
         display: flex;
         flex: none;
         flex-direction: row;
-        height: 51px;
+        height: 5.1rem;
         border-top: 1px solid var(--color8);
         overflow: hidden;
         width: 100%;
 
         .playing_song_logo {
-          width: 50px;
+          width: 5rem;
           flex: none;
-          height: 50px;
+          height: 5rem;
           position: relative;
 
           .logo_img {
-            width: 46px;
-            height: 46px;
-            margin: 2px;
+            width: 4.6rem;
+            height: 4.6rem;
+            margin: 0.2rem;
             background-position: center;
             background-repeat: no-repeat;
             background-image: url('../../images/img/loading.svg');
             background-size: 50%;
             border-radius: 50%;
             &.load {
-              box-shadow: 0 0 5px var(--color5);
+              box-shadow: 0 0 0.5rem var(--color5);
               background-size: cover;
             }
           }
@@ -3097,13 +3110,13 @@ body {
         .playing_song_info {
           flex: auto;
           margin: 0 auto;
-          font-size: 16px;
-          height: 50px;
-          line-height: 50px;
+          font-size: 1.6rem;
+          height: 5rem;
+          line-height: 5rem;
           overflow: hidden;
           // animation: fcolor 18s infinite linear alternate;
           overflow: hidden;
-          margin-left: 10px;
+          margin-left: 1rem;
 
           div {
             float: left;
@@ -3139,15 +3152,15 @@ body {
 
         .right_btns {
           flex: none;
-          width: 150px;
-          height: 50px;
+          width: 15rem;
+          height: 5rem;
 
           div {
             float: left;
-            width: 50px;
+            width: 5rem;
             text-align: center;
-            font-size: 30px;
-            line-height: 50px;
+            font-size: 3rem;
+            line-height: 5rem;
 
             &:hover {
               color: var(--text-hover-color);
@@ -3166,7 +3179,7 @@ body {
           }
 
           .playing_list_btn {
-            font-size: 24px;
+            font-size: 2.4rem;
             &.run {
               animation: tada 1s;
               color: var(--text-hover-color);
@@ -3179,7 +3192,7 @@ body {
       .music_lrc_wrap {
         position: absolute;
         background-color: var(--color10);
-        top: 40px;
+        top: 4rem;
         left: 0;
         width: 100%;
         height: 100%;
@@ -3187,7 +3200,7 @@ body {
         z-index: 11;
         transform: translateY(100%);
         transition: transform 0.5s ease-in-out;
-        padding-bottom: 40px;
+        padding-bottom: 4rem;
 
         &.active {
           transform: none;
@@ -3229,16 +3242,16 @@ body {
             display: flex;
             flex-flow: row;
             flex: none;
-            height: 60px;
+            height: 6rem;
 
             .remote_play,
             .close {
               flex: none;
-              width: 60px;
-              height: 60px;
-              line-height: 60px;
+              width: 6rem;
+              height: 6rem;
+              line-height: 6rem;
               text-align: center;
-              font-size: 20px;
+              font-size: 2rem;
             }
 
             .close:hover {
@@ -3247,7 +3260,7 @@ body {
             }
 
             .remote_play {
-              font-size: 30px;
+              font-size: 3rem;
               color: var(--icon-color);
 
               &:hover {
@@ -3265,9 +3278,9 @@ body {
               width: 0;
 
               .song_name {
-                height: 40px;
-                padding-top: 15px;
-                font-size: 20px;
+                height: 4rem;
+                padding-top: 1.5rem;
+                font-size: 2rem;
                 overflow: hidden;
 
                 div {
@@ -3277,8 +3290,8 @@ body {
               }
 
               .artist_name {
-                height: 20px;
-                font-size: 13px;
+                height: 2rem;
+                font-size: 1.3rem;
                 color: var(--color4);
                 overflow: hidden;
 
@@ -3322,7 +3335,7 @@ body {
 
             .lrc_items {
               width: 100%;
-              padding: 0 20px;
+              padding: 0 2rem;
               overflow: hidden;
               transform: translateY(0);
 
@@ -3352,16 +3365,16 @@ body {
           // 设置按钮
           .lrc_menu_wrap {
             flex: none;
-            height: 60px;
+            height: 6rem;
 
             .collect_song_btn {
-              width: 30px;
-              height: 30px;
-              line-height: 30px;
+              width: 3rem;
+              height: 3rem;
+              line-height: 3rem;
               text-align: center;
-              font-size: 24px;
+              font-size: 2.4rem;
               color: var(--color4);
-              margin-left: 20px;
+              margin-left: 2rem;
               float: left;
               &:hover {
                 transform: scale(1.2);
@@ -3373,14 +3386,14 @@ body {
 
             .right_btns {
               float: right;
-              margin-right: 15px;
+              margin-right: 1.5rem;
 
               div {
-                height: 30px;
-                line-height: 30px;
-                margin: 0 5px;
-                font-size: 20px;
-                padding: 0 5px;
+                height: 3rem;
+                line-height: 3rem;
+                margin: 0 0.5rem;
+                font-size: 2rem;
+                padding: 0 0.5rem;
                 text-align: center;
                 float: left;
 
@@ -3400,50 +3413,50 @@ body {
           .lrc_foot_wrap {
             display: none;
             width: 100%;
-            height: 120px;
+            height: 12rem;
             flex: none;
             background-color: transparent;
 
             .progress_bar {
               width: 100%;
-              height: 20px;
+              height: 2rem;
               display: flex;
               align-items: center;
               justify-content: center;
 
               .current_time,
               .total_time {
-                font-size: 16px;
-                line-height: 10px;
+                font-size: 1.6rem;
+                line-height: 1rem;
                 flex: none;
-                padding: 0 10px;
+                padding: 0 1rem;
               }
 
               .probox {
                 flex: auto;
-                height: 10px;
+                height: 1rem;
                 display: flex;
                 align-items: center;
 
                 &:hover .pro1 {
-                  height: 6px;
+                  height: 0.6rem;
                 }
 
                 &:hover .pro1 .pro2 .dolt {
                   display: block;
-                  margin-top: -2px;
-                  width: 6px;
-                  height: 10px;
+                  margin-top: -0.2rem;
+                  width: 0.6rem;
+                  height: 1rem;
                 }
 
                 .pro1 {
                   position: relative;
                   width: 100%;
-                  height: 2px;
+                  height: 0.2rem;
                   background-color: var(--color5);
 
                   &.open {
-                    height: 6px;
+                    height: 0.6rem;
                   }
 
                   .pro2 {
@@ -3458,15 +3471,15 @@ body {
                       display: none;
                       float: right;
                       transform: translateX(50%);
-                      margin-top: -3px;
-                      width: 4px;
-                      height: 8px;
+                      margin-top: -0.3rem;
+                      width: 0.4rem;
+                      height: 0.8rem;
                       background-color: var(--color);
 
                       &:open {
-                        margin-top: -2px;
-                        width: 6px;
-                        height: 10px;
+                        margin-top: -0.2rem;
+                        width: 0.6rem;
+                        height: 1rem;
                       }
 
                       @keyframes bgcolor {
@@ -3486,22 +3499,22 @@ body {
 
             .foot_btn_wrap {
               width: 80%;
-              max-width: 500px;
-              height: 100px;
-              line-height: 50px;
-              padding: 25px 0;
+              max-width: 50rem;
+              height: 10rem;
+              line-height: 5rem;
+              padding: 2.5rem 0;
               display: flex;
               flex-direction: row;
               margin: 0 auto;
               justify-content: space-around;
-              border-radius: 0 0 5px 5px;
+              border-radius: 0 0 0.5rem 0.5rem;
 
               .play_btn,
               .playing_list_btn,
               .random_play_btn,
               .prev_play_btn,
               .next_play {
-                font-size: 25px;
+                font-size: 2.5rem;
 
                 &:hover {
                   color: var(--text-hover-color);
@@ -3510,11 +3523,11 @@ body {
               }
 
               .play_btn {
-                font-size: 40px;
+                font-size: 4rem;
               }
 
               .playing_list_btn {
-                font-size: 22px;
+                font-size: 2.2rem;
               }
 
               @keyframes fontcolor {
@@ -3537,9 +3550,9 @@ body {
         width: 100%;
         height: 100%;
         position: absolute;
-        top: 40px;
+        top: 4rem;
         right: 0;
-        padding-bottom: 40px;
+        padding-bottom: 4rem;
         background-color: var(--bg-color-o4);
         z-index: 13;
 
@@ -3549,7 +3562,7 @@ body {
           right: 0;
           width: 100%;
           height: 80%;
-          border-radius: 0 0 5px 5px;
+          border-radius: 0 0 0.5rem 0.5rem;
           background-color: var(--color8);
           ol,
           li,
@@ -3559,16 +3572,16 @@ body {
           ul {
             text-align: left;
             height: 100%;
-            border-radius: 0 0 5px 5px;
+            border-radius: 0 0 0.5rem 0.5rem;
             overflow-y: auto;
             overflow-x: hidden;
-            padding-bottom: 40px;
+            padding-bottom: 4rem;
 
             .song_item {
               position: relative;
               display: flex;
               width: 100%;
-              height: 60px;
+              height: 6rem;
               border-bottom: 1px solid var(--color9);
 
               &:hover {
@@ -3584,6 +3597,7 @@ body {
                 left: 0;
                 pointer-events: none;
                 opacity: 0.8;
+                font-size: 1.6rem;
                 color: var(--message-success-color);
                 z-index: 6;
               }
@@ -3592,15 +3606,15 @@ body {
               .set_menu,
               .add_palying_list {
                 flex: none;
-                width: 40px;
-                line-height: 60px;
+                width: 4rem;
+                line-height: 6rem;
                 text-align: center;
-                font-size: 20px;
+                font-size: 2rem;
                 color: var(--color4);
               }
 
               .like_hear {
-                font-size: 18px;
+                font-size: 1.8rem;
                 color: var(--color4);
                 &:hover {
                   transform: scale(1.2);
@@ -3624,8 +3638,8 @@ body {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                width: 60px;
-                height: 60px;
+                width: 6rem;
+                height: 6rem;
                 overflow: hidden;
 
                 .logo {
@@ -3646,12 +3660,12 @@ body {
               .song_info_wrap {
                 flex: auto;
                 width: 0;
-                padding: 5px;
+                padding: 0.5rem;
 
                 .song_name,
                 .artist_name {
-                  line-height: 25px;
-                  height: 25px;
+                  line-height: 2.5rem;
+                  height: 2.5rem;
                   display: block;
                   overflow: hidden;
                   white-space: nowrap;
@@ -3660,11 +3674,11 @@ body {
                 }
 
                 .song_name {
-                  font-size: 16px;
+                  font-size: 1.6rem;
                 }
 
                 .artist_name {
-                  font-size: 12px;
+                  font-size: 1.2rem;
                   color: var(--color4);
                 }
               }
@@ -3699,31 +3713,31 @@ body {
           width: 100%;
           height: 70%;
           overflow: hidden;
-          border-radius: 5px 5px 0 0;
-          padding: 0 2px;
+          border-radius: 0.5rem 0.5rem 0 0;
+          padding: 0 0.2rem;
           background-color: var(--color8);
 
           .p_head {
             width: 100%;
-            height: 40px;
-            padding: 5px 0;
+            height: 4rem;
+            padding: 0.5rem 0;
             display: flex;
             align-items: center;
             .left {
               flex: auto;
-              line-height: 40px;
-              margin-left: 5px;
+              line-height: 4rem;
+              margin-left: 0.5rem;
             }
 
             .share_playing_list,
             .check_btn,
             .clear_playing_list {
               flex: none;
-              line-height: 40px;
+              line-height: 4rem;
               text-align: center;
-              height: 40px;
-              width: 40px;
-              font-size: 20px;
+              height: 4rem;
+              width: 4rem;
+              font-size: 2rem;
 
               &:hover {
                 color: var(--text-hover-color);
@@ -3732,7 +3746,7 @@ body {
             }
 
             .share_playing_list {
-              font-size: 18px;
+              font-size: 1.8rem;
             }
           }
 
@@ -3740,14 +3754,14 @@ body {
             position: relative;
             width: 100%;
             height: 100%;
-            padding-bottom: 100px;
+            padding-bottom: 10rem;
             overflow-y: auto;
             overflow-x: hidden;
 
             .song_item {
-              height: 60px;
+              height: 6rem;
               display: flex;
-              margin: 6px 2px;
+              margin: 0.6rem 0.2rem;
               position: relative;
 
               &:hover {
@@ -3760,7 +3774,7 @@ body {
 
               &.active {
                 color: var(--text-hover-color);
-                border-radius: 5px;
+                border-radius: 0.5rem;
                 background-color: var(--bg-color-o2);
               }
               .check_state {
@@ -3768,7 +3782,7 @@ body {
                 position: absolute;
                 top: 0;
                 left: 0;
-                border-radius: 5px;
+                border-radius: 0.5rem;
                 width: 100%;
                 height: 100%;
                 z-index: 5;
@@ -3778,6 +3792,7 @@ body {
                 top: 0;
                 left: 0;
                 pointer-events: none;
+                font-size: 1.6rem;
                 opacity: 0.8;
                 color: var(--message-success-color);
                 z-index: 6;
@@ -3787,16 +3802,16 @@ body {
               .del {
                 flex: none;
                 text-align: center;
-                line-height: 60px;
-                width: 40px;
-                font-size: 20px;
+                line-height: 6rem;
+                width: 4rem;
+                font-size: 2rem;
                 &:hover {
                   transform: scale(1.2);
                 }
               }
 
               .like_hear {
-                font-size: 18px;
+                font-size: 1.8rem;
                 color: var(--color4);
               }
 
@@ -3810,8 +3825,8 @@ body {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                width: 60px;
-                height: 60px;
+                width: 6rem;
+                height: 6rem;
                 overflow: hidden;
 
                 .logo {
@@ -3834,7 +3849,7 @@ body {
                     background-image: url(../../images/img/wave.gif);
                     background-repeat: no-repeat;
                     background-position: center;
-                    background-size: 14px;
+                    background-size: 1.4rem;
                     background-color: #00000060;
                     pointer-events: none;
                     top: 0;
@@ -3861,10 +3876,10 @@ body {
               .song_info_wrap {
                 flex: auto;
                 width: 0;
-                padding: 5px;
+                padding: 0.5rem;
 
                 span {
-                  line-height: 25px;
+                  line-height: 2.5rem;
                   display: block;
                   overflow: hidden;
                   white-space: nowrap;
@@ -3873,12 +3888,12 @@ body {
                 }
 
                 .song_name {
-                  font-size: 16px;
+                  font-size: 1.6rem;
                 }
 
                 .artist_name {
                   color: var(--color4);
-                  font-size: 12px;
+                  font-size: 1.2rem;
 
                   i {
                     &:hover {
@@ -3905,29 +3920,33 @@ body {
             flex: none;
             width: 100%;
             bottom: 0;
-            padding: 5px 0;
+            padding: 0.5rem 0;
             background-color: var(--bg-color-o2);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             z-index: 5;
-
-            div {
-              display: inline-block;
-              flex: none;
-              font-size: 20px;
-              margin: 5px 5px 5px 10px;
-              text-align: center;
-              width: 25px;
-              height: 25px;
-              line-height: 25px;
-              &:hover {
-                transform: scale(1.2);
-                color: var(--text-hover-color);
+            .flex_wrap {
+              width: 100%;
+              display: flex;
+              align-items: center;
+              flex-flow: row wrap;
+              div {
+                flex: none;
+                font-size: 2rem;
+                margin: 0.5rem 0.5rem 0.5rem 1rem;
+                text-align: center;
+                width: 2.5rem;
+                height: 2.5rem;
+                line-height: 2.5rem;
+                &:hover {
+                  transform: scale(1.2);
+                  color: var(--text-hover-color);
+                }
               }
-            }
 
-            button {
-              flex: none;
+              button {
+                flex: none;
+              }
             }
           }
         }
@@ -3941,27 +3960,27 @@ body {
     display: none;
     flex-flow: column;
     position: fixed;
-    border-radius: 4px;
+    border-radius: 0.4rem;
     background-color: var(--color9);
-    box-shadow: 0 0 5px var(--color5);
-    padding: 2px;
+    box-shadow: 0 0 0.5rem var(--color5);
+    padding: 0.2rem;
 
     .e_head_btns {
-      padding: 0 5px;
+      padding: 0 0.5rem;
       display: flex;
-      height: 41px;
+      height: 4.1rem;
       align-items: center;
       border-bottom: 1px solid var(--color8);
       .top,
       .close,
       .save {
         flex: none;
-        width: 30px;
-        height: 40px;
-        line-height: 40px;
+        width: 3rem;
+        height: 4rem;
+        line-height: 4rem;
         text-align: center;
-        font-size: 20px;
-        margin: 0 5px;
+        font-size: 2rem;
+        margin: 0 0.5rem;
 
         &:hover {
           color: var(--text-hover-color);
@@ -3975,11 +3994,11 @@ body {
       }
       .song_info_text {
         flex: auto;
-        height: 40px;
-        line-height: 40px;
+        height: 4rem;
+        line-height: 4rem;
         text-align: center;
-        font-size: 20px;
-        margin: 0 5px;
+        font-size: 2rem;
+        margin: 0 0.5rem;
         overflow: hidden;
         user-select: none;
         -webkit-user-select: none;
@@ -4000,9 +4019,9 @@ body {
       outline: none;
       border: none;
       resize: none;
-      padding: 10px;
-      line-height: 30px;
-      font-size: 18px;
+      padding: 1rem;
+      line-height: 3rem;
+      font-size: 1.8rem;
       overflow-y: auto;
       background-color: var(--color10);
     }
@@ -4015,26 +4034,26 @@ body {
     flex-flow: column;
     position: fixed;
     background-color: var(--color9);
-    border-radius: 5px;
+    border-radius: 0.5rem;
     overflow: hidden;
-    box-shadow: 0 0 5px var(--color5);
-    padding: 2px;
+    box-shadow: 0 0 0.5rem var(--color5);
+    padding: 0.2rem;
 
     .m_head_btns {
       flex: none;
       display: flex;
       width: 100%;
-      height: 41px;
+      height: 4.1rem;
       border-bottom: 1px solid var(--color8);
       align-items: center;
-      padding: 0 5px;
+      padding: 0 0.5rem;
 
       .m_top_space {
         flex: auto;
         overflow: hidden;
-        line-height: 40px;
-        height: 40px;
-        margin: 0 5px;
+        line-height: 4rem;
+        height: 4rem;
+        margin: 0 0.5rem;
 
         p {
           white-space: nowrap;
@@ -4044,11 +4063,11 @@ body {
       .top,
       .m_close {
         flex: none;
-        margin: 0 5px;
-        width: 30px;
-        line-height: 40px;
+        margin: 0 0.5rem;
+        width: 3rem;
+        line-height: 4rem;
         text-align: center;
-        font-size: 20px;
+        font-size: 2rem;
 
         &:hover {
           color: var(--text-hover-color);
@@ -4082,29 +4101,29 @@ body {
     display: none;
     flex-flow: column;
     position: fixed;
-    border-radius: 5px;
+    border-radius: 0.5rem;
     overflow: hidden;
     background-color: var(--color9);
-    box-shadow: 0 0 5px var(--color5);
-    padding: 2px;
+    box-shadow: 0 0 0.5rem var(--color5);
+    padding: 0.2rem;
 
     .t_head_btns {
       flex: none;
       width: 100%;
-      height: 41px;
+      height: 4.1rem;
       border-bottom: 1px solid var(--color8);
-      padding: 0 5px;
+      padding: 0 0.5rem;
       display: flex;
       align-items: center;
 
       div {
-        margin: 0 5px;
-        font-size: 20px;
+        margin: 0 0.5rem;
+        font-size: 2rem;
       }
       .t_space {
         flex: auto;
-        height: 40px;
-        line-height: 40px;
+        height: 4rem;
+        line-height: 4rem;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
@@ -4113,9 +4132,9 @@ body {
       .t_refresh_btn,
       .t_close_btn {
         flex: none;
-        width: 30px;
-        height: 40px;
-        line-height: 40px;
+        width: 3rem;
+        height: 4rem;
+        line-height: 4rem;
         text-align: center;
 
         &:hover {
@@ -4132,7 +4151,7 @@ body {
 
     .todo_list {
       flex: auto;
-      padding: 5px;
+      padding: 0.5rem;
       overflow-y: auto;
       background-color: var(--color10);
       ol,
@@ -4144,9 +4163,9 @@ body {
         width: 100%;
         display: flex;
         flex-flow: row;
-        font-size: 18px;
+        font-size: 1.8rem;
         overflow: hidden;
-        margin: 5px 0;
+        margin: 0.5rem 0;
         border-bottom: 1px solid var(--color9);
         align-items: center;
 
@@ -4157,12 +4176,12 @@ body {
         .todo_text {
           flex: auto;
           line-height: 1.5;
-          padding: 5px;
+          padding: 0.5rem;
           .text {
             white-space: pre-wrap;
             word-break: break-all;
             overflow-y: auto;
-            max-height: 190px;
+            max-height: 19rem;
 
             &.del {
               text-decoration: line-through;
@@ -4172,17 +4191,17 @@ body {
           .time {
             font-size: 0.7em;
             color: var(--color6);
-            margin-top: 5px;
+            margin-top: 0.5rem;
           }
         }
 
         .todo_state,
         .set_btn {
           flex: none;
-          width: 40px;
-          line-height: 40px;
+          width: 4rem;
+          line-height: 4rem;
           text-align: center;
-          font-size: 20px;
+          font-size: 2rem;
 
           &:hover {
             color: var(--text-hover-color);
@@ -4191,7 +4210,7 @@ body {
         }
       }
       .todo_paging_box {
-        padding: 20px 0;
+        padding: 2rem 0;
       }
     }
   }
@@ -4201,29 +4220,29 @@ body {
     display: none;
     flex-flow: column;
     position: fixed;
-    border-radius: 5px;
+    border-radius: 0.5rem;
     overflow: hidden;
     background-color: var(--color9);
-    box-shadow: 0 0 5px var(--color5);
-    padding: 2px;
+    box-shadow: 0 0 0.5rem var(--color5);
+    padding: 0.2rem;
 
     .c_head_btns {
       flex: none;
       width: 100%;
-      height: 41px;
+      height: 4.1rem;
       border-bottom: 1px solid var(--color8);
-      padding: 0 5px;
+      padding: 0 0.5rem;
       display: flex;
       align-items: center;
 
       div {
-        margin: 0 5px;
-        font-size: 20px;
+        margin: 0 0.5rem;
+        font-size: 2rem;
       }
       .c_space {
         flex: auto;
-        height: 40px;
-        line-height: 40px;
+        height: 4rem;
+        line-height: 4rem;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
@@ -4232,9 +4251,9 @@ body {
       .c_refresh_btn,
       .c_close_btn {
         flex: none;
-        width: 30px;
-        height: 40px;
-        line-height: 40px;
+        width: 3rem;
+        height: 4rem;
+        line-height: 4rem;
         text-align: center;
 
         &:hover {
@@ -4251,11 +4270,11 @@ body {
 
     .count_list {
       flex: auto;
-      padding: 10px;
+      padding: 1rem;
       overflow-y: auto;
       background-color: var(--color10);
       .item_box {
-        padding: 10px 0;
+        padding: 1rem 0;
         border-bottom: 1px solid var(--color9);
         &:hover .icon {
           transform: scale(1.2);
@@ -4268,11 +4287,11 @@ body {
           .icon {
             flex: none;
             color: var(--icon-color);
-            width: 30px;
-            height: 30px;
-            line-height: 30px;
+            width: 3rem;
+            height: 3rem;
+            line-height: 3rem;
             text-align: center;
-            font-size: 16px;
+            font-size: 1.6rem;
           }
           .icon:hover {
             color: var(--text-hover-color);
@@ -4280,10 +4299,10 @@ body {
           .text {
             line-height: 1.5;
             word-break: break-all;
-            font-size: 20px;
+            font-size: 2rem;
             flex: auto;
             overflow-y: auto;
-            max-height: 190px;
+            max-height: 19rem;
           }
           .top_btn {
             color: var(--color5);
@@ -4297,7 +4316,7 @@ body {
           }
         }
         .info {
-          font-size: 14px;
+          font-size: 1.4rem;
           line-height: 1.5;
         }
         &.close {
@@ -4308,14 +4327,14 @@ body {
         }
         .pro {
           background-color: var(--color9);
-          height: 20px;
-          line-height: 20px;
+          height: 2rem;
+          line-height: 2rem;
           border-radius: 4px;
           overflow: hidden;
           width: 95%;
-          margin: 10px 0;
+          margin: 1rem 0;
           border: 1px solid var(--color8);
-          font-size: 14px;
+          font-size: 1.4rem;
           .bar {
             width: 1.5em;
             overflow: hidden;
@@ -4331,7 +4350,7 @@ body {
       }
 
       .count_paging_box {
-        padding: 20px 0;
+        padding: 2rem 0;
       }
     }
   }
@@ -4342,28 +4361,28 @@ body {
     display: none;
     flex-flow: column;
     position: fixed;
-    border-radius: 5px;
+    border-radius: 0.5rem;
     overflow: hidden;
     background-color: var(--color9);
-    box-shadow: 0 0 5px var(--color5);
-    padding: 2px;
+    box-shadow: 0 0 0.5rem var(--color5);
+    padding: 0.2rem;
 
     .i_head_btns {
       flex: none;
       width: 100%;
-      height: 41px;
+      height: 4.1rem;
       border-bottom: 1px solid var(--color8);
-      padding: 0 5px;
+      padding: 0 0.5rem;
       display: flex;
       align-items: center;
 
       div {
-        margin: 0 5px;
-        font-size: 20px;
+        margin: 0 0.5rem;
+        font-size: 2rem;
         flex: none;
-        width: 30px;
-        height: 40px;
-        line-height: 40px;
+        width: 3rem;
+        height: 4rem;
+        line-height: 4rem;
         text-align: center;
 
         &:hover {
@@ -4380,20 +4399,20 @@ body {
       }
       .i_title_text {
         flex: auto;
-        height: 40px;
+        height: 4rem;
         overflow: hidden;
-        line-height: 40px;
+        line-height: 4rem;
         width: 0;
         white-space: nowrap;
         .scroll_text {
           float: left;
           color: var(--color1);
-          font-size: 18px;
+          font-size: 1.8rem;
         }
       }
 
       .i_to_max_btn {
-        font-size: 17px;
+        font-size: 1.7rem;
 
         @media (max-width: 800px) {
           & {
@@ -4430,7 +4449,7 @@ body {
         width: 100%;
         height: 100%;
         background-image: url(../../images/img/loading.svg);
-        background-size: 100px 100px;
+        background-size: 10rem 10rem;
         background-position: center;
         background-repeat: no-repeat;
         background-color: var(--color10);
@@ -4472,27 +4491,27 @@ html.head_btn_to_right {
   .mini_lrc_wrap {
     .close {
       left: auto !important;
-      right: -10px;
+      right: -1rem;
     }
     .top {
       left: auto !important;
-      right: 16px;
+      right: 1.6rem;
     }
   }
   .user_info_wrap {
     .u_close_btn {
       left: auto !important;
-      right: 10px;
+      right: 1rem;
     }
   }
   .all_bg_wrap {
     .upload_bg {
       left: auto !important;
-      right: 60px;
+      right: 6rem;
     }
     .b_close_btn {
       left: auto !important;
-      right: 20px;
+      right: 2rem;
     }
   }
   .iframe_warp {

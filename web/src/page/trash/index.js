@@ -98,7 +98,7 @@ const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
 function listLoading() {
   let str = '';
   new Array(10).fill(null).forEach(() => {
-    str += `<ul style="pointer-events: none;height:40px;margin-bottom:6px;background-color: var(--color9);" class="item_box"></ul>`;
+    str += `<ul style="pointer-events: none;height:4rem;margin-bottom:0.6rem;background-color: var(--color9);" class="item_box"></ul>`;
   });
   $contentWrap.html(str);
   pageScrollTop(0);
@@ -112,8 +112,11 @@ function getListItem(id) {
 const trashBoxSelector = new BoxSelector(document, {
   selectables: '.item_box',
   onSelectStart({ e }) {
-    const item = _getTarget($contentWrap[0], e, '.item_box');
-    if (item) return true;
+    if (
+      _getTarget($contentWrap[0], e, '.item_box') ||
+      _getTarget($contentWrap[0], e, '.item_info')
+    )
+      return true;
   },
   onSelectEnd() {
     updateSelectInfo();
@@ -244,7 +247,7 @@ function renderList(y) {
               <div v-if="(categoryArr.length > 0 || (con && con.length > 0)) && HASH === 'note'" class="item_info">
                 <template v-if="categoryArr.length > 0">
                   <span v-for="cgs in categoryArr" class="category">
-                    <span style="color:var(--icon-color);margin-right:4px;">#</span>{{cgs.title}}
+                    <span style="color:var(--icon-color);margin-right:0.4rem;">#</span>{{cgs.title}}
                   </span>
                   <br/>
                 </template>
@@ -253,7 +256,7 @@ function renderList(y) {
               </div>
               <div class="item_info" v-else-if="HASH === 'bmk'">
                 <span class="category">
-                  <span style="color:var(--icon-color);margin-right:4px;">#</span>{{group_title}}
+                  <span style="color:var(--icon-color);margin-right:0.4rem;">#</span>{{group_title}}
                 </span>
                 <br/>
                 <div class="logo"></div>

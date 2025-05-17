@@ -36,7 +36,7 @@ class Pop {
     this.cancelBtn.setAttribute('cursor', '');
     this.cancelBtn.innerText = this.cancel.text;
     this.confirmBtn = document.createElement('button');
-    this.confirmBtn.style.cssText = `margin-left: 20px;`;
+    this.confirmBtn.style.cssText = `margin-left: 2rem;`;
     this.confirmBtn.className = `btn btn_${this.confirm.type}`;
     this.confirmBtn.setAttribute('cursor', '');
     this.confirmBtn.innerText = this.confirm.text;

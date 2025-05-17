@@ -55,7 +55,7 @@ export function setPlayingList(val) {
 function playingListLoading() {
   let str = ``;
   new Array(10).fill(null).forEach(() => {
-    str += `<li style="pointer-events: none;margin: 2px 0;" class="song_item"></li>`;
+    str += `<li style="pointer-events: none;margin: 0.2rem 0;" class="song_item"></li>`;
   });
   $pMusicListBox.find('.p_foot').html(str);
 }
@@ -153,7 +153,7 @@ export async function renderPlayingList() {
       .find('.p_foot')
       .html(
         _tpl(
-          `<p style="padding: 20px 0;text-align: center;pointer-events: none;">{{_d.emptyList}}</p>`,
+          `<p style="padding: 2rem 0;text-align: center;pointer-events: none;">{{_d.emptyList}}</p>`,
           { _d }
         )
       );
@@ -191,7 +191,7 @@ export async function renderPlayingList() {
       <div class="like_hear iconfont {{issc(id) ? 'icon-hear-full active' : 'icon-hear'}}"></div>
       <div cursor="y" class="del iconfont icon-close-bold"></div>
     </li>
-    <div v-if="totalPage > 1" v-html="getPaging()" style="padding:20px 0;text-align:center;line-height: 26px;" class="playing_list_paging no_select"></div>
+    <div v-if="totalPage > 1" v-html="getPaging()" style="padding:2rem 0;text-align:center;line-height: 2.6rem;" class="playing_list_paging no_select"></div>
     `,
     {
       arr,
@@ -259,7 +259,7 @@ function startSelect() {
       playListBoxSelector.start();
       toggleUserSelect(false);
     })
-    .find('div')
+    .find('.flex_wrap div')
     .attr({
       class: 'iconfont icon-xuanzeweixuanze',
       check: 'n',
@@ -281,7 +281,7 @@ longPress($pMusicListBox.find('.p_foot')[0], '.song_item', function () {
 });
 $pMusicListBox
   .on('click', '.check_btn', switchPlayingChecked)
-  .on('click', '.p_foot_menu div', function () {
+  .on('click', '.p_foot_menu .flex_wrap div', function () {
     const $this = $(this);
     let state = $this.attr('check');
     state = state === 'y' ? 'n' : 'y';
@@ -368,12 +368,12 @@ function updateSelectInfo() {
   });
   _msg.botMsg(`选中：${$checkArr.length}项`);
   if ($checkArr.length === $item.length) {
-    $pMusicListBox.find('.p_foot_menu div').attr({
+    $pMusicListBox.find('.p_foot_menu .flex_wrap div').attr({
       class: 'iconfont icon-xuanzeyixuanze',
       check: 'y',
     });
   } else {
-    $pMusicListBox.find('.p_foot_menu div').attr({
+    $pMusicListBox.find('.p_foot_menu .flex_wrap div').attr({
       class: 'iconfont icon-xuanzeweixuanze',
       check: 'n',
     });

@@ -93,7 +93,7 @@ export function getSearchSongs(top, pageNo = searchMusicPageNo) {
           searchMusicList = await hdLoadedSong(searchMusicList);
           const html = _tpl(
             `
-            <p v-if="total === 0" style="padding: 20px 0;text-align: center;pointer-events: none;">${_d.emptyList}</p>
+            <p v-if="total === 0" style="padding: 2rem 0;text-align: center;pointer-events: none;">${_d.emptyList}</p>
             <template v-else>
               <li v-for="{artist,title,mv,id,pic,isLoaded} in searchMusicList" class="song_item" :data-id="id" :data-issc="issc(id)" cursor="y">
                 <div v-if="isLoaded" class="downloaded iconfont icon-jiaobiao"></div>
@@ -109,7 +109,7 @@ export function getSearchSongs(top, pageNo = searchMusicPageNo) {
                 <div class="like_hear iconfont {{issc(id) ? 'icon-hear-full active' : 'icon-hear'}}"></div>
                 <div class="set_menu iconfont icon-maohao"></div>
               </li>
-              <div v-if="totalPage > 1" v-html="getPaging()" style="padding:20px 0;text-align:center;line-height: 26px;" class="playing_list_paging no_select"></div>
+              <div v-if="totalPage > 1" v-html="getPaging()" style="padding:2rem 0;text-align:center;line-height: 2.6rem;" class="playing_list_paging no_select"></div>
             </template>`,
             {
               _d,

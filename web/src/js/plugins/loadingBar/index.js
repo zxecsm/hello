@@ -20,13 +20,13 @@ class LoadingBar {
     this.el = document.createElement('div');
     const { color, size, zIndex } = this.options;
     this.el.style.cssText = `
-    height: ${size}px;
+    height: ${size / 10}rem;
     background-color: ${color};
     position: fixed;
     top: 0;
     left: 0;
     width: 0;
-    border-radio:20px;
+    border-radio:2rem;
     pointer-events: none;
     z-index: ${zIndex};
     background-image: linear-gradient(to right,Orange 90%, red);`;

@@ -14,6 +14,7 @@ import {
   loadImg,
   isBigScreen,
   isLogin,
+  getDarkIcon,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import validateImg from './validate';
@@ -338,13 +339,7 @@ $darkState.on('click', function () {
   localData.set('dark', dark);
 });
 function changeTheme(dark) {
-  if (dark === 'y') {
-    $darkState.attr('class', 'dark_state iconfont icon-icon_yejian-yueliang');
-  } else if (dark === 'n') {
-    $darkState.attr('class', 'dark_state iconfont icon-taiyangtianqi');
-  } else if (dark === 's') {
-    $darkState.attr('class', 'dark_state iconfont icon-xianshiqi');
-  }
+  $darkState.attr('class', `dark_state iconfont ${getDarkIcon(dark)}`);
 }
 window.changeTheme = changeTheme;
 changeTheme(localData.get('dark'));
@@ -529,3 +524,8 @@ function setCatSize() {
   $cat.css('font-size', parseInt(fontSize));
 }
 setCatSize();
+localData.onChange(({ key }) => {
+  if (!key || key === 'htmlFontSize') {
+    setCatSize();
+  }
+});

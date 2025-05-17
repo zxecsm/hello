@@ -88,13 +88,13 @@ function todoLoading() {
   let str = '';
   new Array(5).fill(null).forEach(() => {
     let w = Math.round(Math.random() * (90 - 20) + 20);
-    str += `<p style="pointer-events: none;background-color:var(--color9);height:30px;width:100%;margin:10px 0;"></p>
+    str += `<p style="pointer-events: none;background-color:var(--color9);height:3rem;width:100%;margin:1rem 0;"></p>
               ${
                 w % 2 === 0
-                  ? '<p style="pointer-events: none;background-color:var(--color9);height:30px;width:100%;margin:10px 0;"></p>'
+                  ? '<p style="pointer-events: none;background-color:var(--color9);height:3rem;width:100%;margin:1rem 0;"></p>'
                   : ''
               }
-              <p style="pointer-events: none;background-color:var(--color9);height:30px;width:${w}%;margin:10px 0;"></p>
+              <p style="pointer-events: none;background-color:var(--color9);height:3rem;width:${w}%;margin:1rem 0;"></p>
         `;
   });
   $todoList.html(str).scrollTop(0);
@@ -119,12 +119,12 @@ function renderTodoList(total, toTop) {
   if ($todoBox.is(':hidden')) return;
   const html = _tpl(
     `
-    <div style="padding-bottom: 10px;">
+    <div style="padding-bottom: 1rem;">
       <button cursor="y" class="add_btn btn btn_primary">添加</button>
       <button v-if="hasFinish()" cursor="y" class="clear_btn btn btn_danger">清除已完成</button>
       <button v-if="todoList.length > 0" cursor="y" class="clear_all_btn btn btn_danger">清空</button>
     </div>
-    <p v-if="total === 0" style="padding: 20px 0;pointer-events: none;text-align: center;">暂无待办事项</p>
+    <p v-if="total === 0" style="padding: 2rem 0;pointer-events: none;text-align: center;">暂无待办事项</p>
     <template v-else>
       <ul v-for="{id, content, state, update_at} in todoList" :data-id="id">
         <li cursor="y" class="todo_state iconfont {{state === 1 ? 'icon-xuanzeweixuanze' : 'icon-xuanzeyixuanze'}}"></li>

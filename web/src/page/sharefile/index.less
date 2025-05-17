@@ -1,6 +1,6 @@
 #app {
   .share_info {
-    transform: translateY(-100px);
+    transform: translateY(-10rem);
     opacity: 0;
     &.open {
       transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
@@ -13,22 +13,22 @@
       flex-flow: row wrap;
       .logo {
         flex: none;
-        width: 50px;
-        height: 50px;
+        width: 5rem;
+        height: 5rem;
         border-radius: 50%;
         background-position: center;
         background-size: cover;
         background-repeat: no-repeat;
         transition: transform 0.5s ease-in-out;
         &:hover {
-          box-shadow: 0 0 5px var(--color5);
+          box-shadow: 0 0 0.5rem var(--color5);
           transform: rotate(360deg) scale(1.2);
         }
       }
       .des {
         flex: none;
         max-width: 100%;
-        padding-left: 10px;
+        padding-left: 1rem;
         line-height: 1.5;
         word-break: break-all;
         span {
@@ -38,7 +38,7 @@
     }
   }
   .file_box {
-    transform: translateY(100px);
+    transform: translateY(10rem);
     opacity: 0;
     &.open {
       transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
@@ -47,12 +47,12 @@
     }
     .container {
       line-height: 1.5;
-      padding: 20px 10px;
+      padding: 2rem 1rem;
       display: flex;
       align-items: center;
       flex-flow: row wrap;
       .name {
-        padding: 0 10px;
+        padding: 0 1rem;
         word-break: break-all;
         &:hover {
           text-decoration: underline wavy;
@@ -63,12 +63,12 @@
         }
       }
       .logo {
-        padding: 5px;
-        font-size: 30px;
+        padding: 0.5rem;
+        font-size: 3rem;
         color: var(--icon-color);
         img {
-          max-width: 100px;
-          min-width: 50px;
+          max-width: 10rem;
+          min-width: 5rem;
         }
       }
     }

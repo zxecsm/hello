@@ -455,7 +455,7 @@ export const renderChatMsg = {
         .data('nomore', 1)
         .find('.head')
         .prepend(
-          '<div class="nomore" style="text-align: center;font-size: 14px;color: var(--text-hover-color);">没有更多了<div>'
+          '<div class="nomore" style="text-align: center;font-size: 1.4rem;color: var(--text-hover-color);">没有更多了<div>'
         );
       return;
     }
@@ -582,13 +582,13 @@ function renderMsgList(list, skip) {
               style="float: {{!isRight(_from) ? 'left' : 'right'}};width: {{(size / 30) * 100}}%;text-align:{{isRight(_from) ? 'right' : 'left'}}">
               <template v-if="isRight(_from)">
                 <span class="c_right_triangle bcolor"></span>
-                <span style="font-size:12px;">{{size.toFixed(2)}}s</span>
+                <span style="font-size:1.2rem;">{{size.toFixed(2)}}s</span>
                 <i class="iconfont icon-yuyin-cuxiantiao"></i>
               </template>
               <template v-else>
                 <span class="c_left_triangle"></span>
                 <i class="iconfont icon-yuyin1"></i>
-                <span style="font-size:12px;">{{size.toFixed(2)}}s</span>
+                <span style="font-size:1.2rem;">{{size.toFixed(2)}}s</span>
               </template>
             </div>
             <div v-else-if="type === 'file'" :title="content" class="c_file_msg_box" style="float: {{!isRight(_from) ? 'left' : 'right'}};">

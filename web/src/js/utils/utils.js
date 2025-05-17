@@ -1631,11 +1631,32 @@ export function myToRest(target, pointerX) {
     switchBorderRadius(target);
   }, 600);
 }
+export function pxToRem(px, baseFontSize) {
+  const pxValue = typeof px === 'string' ? parseFloat(px) : px;
+
+  if (isNaN(pxValue)) {
+    return '0rem';
+  }
+
+  let htmlFontSize = baseFontSize;
+
+  if (!htmlFontSize && typeof window !== 'undefined') {
+    try {
+      htmlFontSize = parseFloat(
+        getComputedStyle(document.documentElement).fontSize
+      );
+    } catch {}
+  }
+
+  const finalBaseSize = htmlFontSize || 10;
+
+  return `${(pxValue / finalBaseSize).toFixed(4)}rem`;
+}
 // 调整窗口大小
 export function myResize(opt, minW = 200, minH = 200) {
   let flag;
-  const borderWidth = 5,
-    jWidth = 8,
+  const borderWidth = pxToRem(5),
+    jWidth = pxToRem(8),
     zIndex = 999;
   const { target, down, move, up } = opt;
   target.style.minWidth = minW + 'px';
@@ -1646,9 +1667,9 @@ export function myResize(opt, minW = 200, minH = 200) {
   position: absolute;
   top: 0px;
   left: 0px;
-  width: ${jWidth}px;
-  height: ${jWidth}px;
-  border-radius: 0 0 ${jWidth}px ;
+  width: ${jWidth};
+  height: ${jWidth};
+  border-radius: 0 0 ${jWidth} ;
   z-index: ${zIndex};
   `;
   const trigger2 = document.createElement('div');
@@ -1657,9 +1678,9 @@ export function myResize(opt, minW = 200, minH = 200) {
   position: absolute;
   top: 0px;
   right: 0px;
-  width: ${jWidth}px;
-  height: ${jWidth}px;
-  border-radius: 0 0 0 ${jWidth}px;
+  width: ${jWidth};
+  height: ${jWidth};
+  border-radius: 0 0 0 ${jWidth};
   z-index: ${zIndex};
   `;
   const trigger3 = document.createElement('div');
@@ -1668,9 +1689,9 @@ export function myResize(opt, minW = 200, minH = 200) {
   position: absolute;
   right: 0px;
   bottom: 0px;
-  width: ${jWidth}px;
-  height: ${jWidth}px;
-  border-radius: ${jWidth}px 0 0;
+  width: ${jWidth};
+  height: ${jWidth};
+  border-radius: ${jWidth} 0 0;
   z-index: ${zIndex};
   `;
   const trigger4 = document.createElement('div');
@@ -1679,9 +1700,9 @@ export function myResize(opt, minW = 200, minH = 200) {
   position: absolute;
   bottom: 0px;
   left: 0px;
-  width: ${jWidth}px;
-  height: ${jWidth}px;
-  border-radius: 0 ${jWidth}px 0 0;
+  width: ${jWidth};
+  height: ${jWidth};
+  border-radius: 0 ${jWidth} 0 0;
   z-index: ${zIndex};
   `;
   const trigger5 = document.createElement('div');
@@ -1691,7 +1712,7 @@ export function myResize(opt, minW = 200, minH = 200) {
   top: 0px;
   left: 0px;
   width: 100%;
-  height: ${borderWidth}px;
+  height: ${borderWidth};
   z-index: ${zIndex};
   `;
   const trigger6 = document.createElement('div');
@@ -1700,7 +1721,7 @@ export function myResize(opt, minW = 200, minH = 200) {
   position: absolute;
   top: 0px;
   right: 0px;
-  width: ${borderWidth}px;
+  width: ${borderWidth};
   height: 100%;
   z-index: ${zIndex};
   `;
@@ -1711,7 +1732,7 @@ export function myResize(opt, minW = 200, minH = 200) {
   bottom: 0px;
   left: 0px;
   width: 100%;
-  height: ${borderWidth}px;
+  height: ${borderWidth};
   z-index: ${zIndex};
   `;
   const trigger8 = document.createElement('div');
@@ -1720,7 +1741,7 @@ export function myResize(opt, minW = 200, minH = 200) {
   position: absolute;
   top: 0px;
   left: 0px;
-  width: ${borderWidth}px;
+  width: ${borderWidth};
   height: 100%;
   z-index: ${zIndex};
   `;
@@ -1910,7 +1931,7 @@ export async function showQcode(e, text, title = '展示二维码') {
     }
     const url = await QRCode.toDataURL(text, { width: 500, height: 500 });
     const html = _tpl(
-      `<img style="width:250px;height:250px" data-src="{{url}}"/>
+      `<img style="width:25rem;height:25rem" data-src="{{url}}"/>
         <div cursor="y" class="item" title="点击复制">{{text}}</div>`,
       {
         url,
@@ -1944,7 +1965,7 @@ export function getMinIndex(arr) {
 const oImg = (function () {
   const oImg = document.createElement('img');
   oImg.src = loadSvg;
-  oImg.style.cssText = `width: 40px;margin: 10px;pointer-events: none;`;
+  oImg.style.cssText = `width: 4rem;margin: 1rem;pointer-events: none;`;
   return oImg;
 })();
 export function loadingImg(el) {
@@ -2748,4 +2769,13 @@ export function isTextFile(file, length = 1000) {
     const blob = file.slice(0, length); // 只读取前 `length` 字节
     reader.readAsArrayBuffer(blob);
   });
+}
+export function getDarkIcon(dark) {
+  if (dark === 'y') {
+    return 'icon-icon_yejian-yueliang';
+  } else if (dark === 'n') {
+    return 'icon-taiyangtianqi';
+  } else if (dark === 's') {
+    return 'icon-xianshiqi';
+  }
 }

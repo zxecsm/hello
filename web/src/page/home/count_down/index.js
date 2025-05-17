@@ -94,13 +94,13 @@ function countLoading() {
   let str = '';
   new Array(5).fill(null).forEach(() => {
     let w = Math.round(Math.random() * (90 - 20) + 20);
-    str += `<p style="pointer-events: none;background-color:var(--color9);height:30px;width:100%;margin:10px 0;"></p>
+    str += `<p style="pointer-events: none;background-color:var(--color9);height:3rem;width:100%;margin:1rem 0;"></p>
               ${
                 w % 2 === 0
-                  ? '<p style="pointer-events: none;background-color:var(--color9);height:30px;width:100%;margin:10px 0;"></p>'
+                  ? '<p style="pointer-events: none;background-color:var(--color9);height:3rem;width:100%;margin:1rem 0;"></p>'
                   : ''
               }
-              <p style="pointer-events: none;background-color:var(--color9);height:30px;width:${w}%;margin:10px 0;"></p>
+              <p style="pointer-events: none;background-color:var(--color9);height:3rem;width:${w}%;margin:1rem 0;"></p>
         `;
   });
   $countList.html(str).scrollTop(0);
@@ -125,12 +125,12 @@ function renderCountList(total, toTop) {
   if ($countBox.is(':hidden')) return;
   const html = _tpl(
     `
-    <div style="padding-bottom: 10px;">
+    <div style="padding-bottom: 1rem;">
       <button cursor="y" class="add_btn btn btn_primary">添加</button>
       <button v-if="hasRemain(countList)" cursor="y" class="clear_btn btn btn_danger">清除已到期</button>
       <button v-if="countList.length > 0" cursor="y" class="clear_all_btn btn btn_danger">清空</button>
     </div>
-    <p v-if="total <= 0" style="padding: 20px 0;pointer-events: none;text-align: center;">暂无倒计时项</p>
+    <p v-if="total <= 0" style="padding: 2rem 0;pointer-events: none;text-align: center;">暂无倒计时项</p>
     <template v-else>
       <div v-for="{id, title, total:tt, past, remain, link, state, top} in countList" :data-id="id" class="item_box {{state === 0 ? 'close' : ''}}">
         <div class="title">
@@ -139,7 +139,7 @@ function renderCountList(total, toTop) {
           <span v-if="top != 0" class="top_btn iconfont icon-zhiding"></span>
           <span cursor="y" class="set_btn iconfont icon-maohao"></span>
         </div>
-        <div class="info">{{readableTime(tt)}} - {{readableTime(past)}} = <span style="padding-left:4px;" :style="remain<0?'color:var(--btn-danger-color);':''">{{readableTime(remain)}}</span></div>
+        <div class="info">{{readableTime(tt)}} - {{readableTime(past)}} = <span style="padding-left:0.4rem;" :style="remain<0?'color:var(--btn-danger-color);':''">{{readableTime(remain)}}</span></div>
         <div class="pro">
           <div class="bar">
             <div class="num"></div>

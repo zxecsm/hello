@@ -763,7 +763,7 @@ $playingListWrap.on('click', function (e) {
 function playListLoading() {
   let str = ``;
   new Array(10).fill(null).forEach(() => {
-    str += `<li style="pointer-events: none;margin: 2px 0;" class = "song_item"></li>`;
+    str += `<li style="pointer-events: none;margin: 0.2rem 0;" class = "song_item"></li>`;
   });
   $pMusicListBox.find('.p_foot').html(str);
 }
@@ -778,7 +778,7 @@ function renderPlayList() {
       .find('.p_foot')
       .html(
         _tpl(
-          `<p style="padding: 20px 0;text-align: center;pointer-events: none;">{{_d.emptyList}}</p>`,
+          `<p style="padding: 2rem 0;text-align: center;pointer-events: none;">{{_d.emptyList}}</p>`,
           { _d }
         )
       );
@@ -810,7 +810,7 @@ function renderPlayList() {
       <div v-if="mv" class="play_mv iconfont icon-shipin2"></div>
       <div cursor="y" class="del iconfont icon-close-bold"></div>
     </li>
-    <div v-html="getPaging()" style="padding:20px 0;text-align:center;" class="playing_list_paging no_select"></div>
+    <div v-html="getPaging()" style="padding:2rem 0;text-align:center;" class="playing_list_paging no_select"></div>
     `,
     {
       arr,
@@ -978,8 +978,7 @@ function playingListHighlight(a) {
   if (y < 0) return;
   const cur = $song_item.eq(y);
   if (a) {
-    const sp =
-      $pMusicListBox.find('.p_foot').scrollTop() + cur.position().top - 42;
+    const sp = $pMusicListBox.find('.p_foot').scrollTop() + cur.position().top;
     $pMusicListBox.find('.p_foot').scrollTop(sp);
   }
   cur.addClass('active').find('.play_gif').addClass('show');

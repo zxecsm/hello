@@ -63,7 +63,7 @@ function renderShareList(total, pageNo, top) {
         <div cursor="y" class="edit iconfont icon-bianji"></div>
         <div cursor="y" class="delete iconfont icon-shanchu"></div>
       </li>
-      <div v-html="getPaging()" class="pagination" style="padding: 20px 0"></div>
+      <div v-html="getPaging()" class="pagination" style="padding: 2rem 0"></div>
     </template>
     `,
     {

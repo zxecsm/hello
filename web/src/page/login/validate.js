@@ -60,13 +60,13 @@ class Validate {
     box.style.cssText = `
       margin: auto;
       background-color: var(--color10);
-      box-shadow: 0 0 5px var(--color5);
-      padding: 20px;
+      box-shadow: 0 0 0.5rem var(--color5);
+      padding: 2rem;
       display: flex;
-      border-radius: 10px;
+      border-radius: 1rem;
       place-items: center;
       width: 96%;
-      max-width: 600px;
+      max-width: 60rem;
     `;
     const content = createElement('div');
     content.style.cssText = `
@@ -87,9 +87,9 @@ class Validate {
     sliderContainer.style.cssText = `
       position: relative;
       text-align: center;
-      height: 50px;
-      line-height: 50px;
-      margin-top: 15px;
+      height: 5rem;
+      line-height: 5rem;
+      margin-top: 1.5rem;
       background-color: var(--color9);
     `;
     const sliderMask = createElement('div');
@@ -97,7 +97,7 @@ class Validate {
       position: absolute;
       left: 0;
       top: 0;
-      height: 50px;
+      height: 5rem;
       background-color: var(--color7);
     `;
     const slider = createElement('div');
@@ -106,11 +106,11 @@ class Validate {
       position: absolute;
       left: 0px;
       top: 0px;
-      width: 50px;
-      height: 50px;
+      width: 5rem;
+      height: 5rem;
       text-align: center;
       font-weight: bold;
-      line-height: 50px;
+      line-height: 5rem;
       background: var(--color6);
     `;
     const text = createElement('span');
@@ -215,16 +215,17 @@ class Validate {
         e = e.targetTouches[0];
       }
       let moveX = e.clientX - this.originX;
+      const sliderWidth = this.slider.offsetWidth;
       moveX < 0
         ? (moveX = 0)
-        : moveX > this.cw - 50
-        ? (moveX = this.cw - 50)
+        : moveX > this.cw - sliderWidth
+        ? (moveX = this.cw - sliderWidth)
         : null;
       this.slider.style.left = moveX + 'px';
       this.sliderMask.style.width = moveX + 'px';
       this.puzzle.style.left =
         ((this.cw - this.opt.puzzleSideLength - this.radius * 2) /
-          (this.cw - 50)) *
+          (this.cw - sliderWidth)) *
           moveX +
         'px';
       this.text.style.display = 'none';

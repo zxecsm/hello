@@ -77,7 +77,7 @@ import localData from './localData';
       pointerEvents: 'none',
       touchAction: 'none',
       zIndex: '10000000',
-      fontSize: '25px',
+      fontSize: '2.5rem',
       fontFamily: _d.defaultFontFamily,
       willChange: 'transform',
     };

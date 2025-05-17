@@ -19,6 +19,7 @@ import {
   copyText,
   throttle,
   toggleUserSelect,
+  _position,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
@@ -72,7 +73,7 @@ export function showHomeFootMenu() {
       homeBmBoxSelector.start();
       toggleUserSelect(false);
     })
-    .find('div')
+    .find('.flex_wrap div')
     .attr({
       class: 'iconfont icon-xuanzeweixuanze',
       check: 'n',
@@ -90,7 +91,7 @@ function stopSelect() {
       homeBmBoxSelector.stop();
       toggleUserSelect();
     })
-    .find('div')
+    .find('.flex_wrap div')
     .attr({
       class: 'iconfont icon-xuanzeweixuanze',
       check: 'n',
@@ -375,10 +376,10 @@ $searchBoxMask
       this.parentNode.querySelector('.check_home_bm')
     );
   })
-  .on('click', '.home_foot_menu div', function () {
+  .on('click', '.home_foot_menu .flex_wrap div', function () {
     let che = $(this).attr('check');
     che === 'y' ? (che = 'n') : (che = 'y');
-    $homeFootMenu.find('div').attr({
+    $homeFootMenu.find('.flex_wrap div').attr({
       class:
         che === 'y'
           ? 'iconfont icon-xuanzeyixuanze'
@@ -450,12 +451,12 @@ function updateSelectingInfo() {
     });
   _msg.botMsg(`选中：${$checkArr.length}项`);
   if ($checkArr.length === $bms.length - 1) {
-    $homeFootMenu.find('div').attr({
+    $homeFootMenu.find('.flex_wrap div').attr({
       class: 'iconfont icon-xuanzeyixuanze',
       check: 'y',
     });
   } else {
-    $homeFootMenu.find('div').attr({
+    $homeFootMenu.find('.flex_wrap div').attr({
       class: 'iconfont icon-xuanzeweixuanze',
       check: 'n',
     });
@@ -622,10 +623,14 @@ function selectSearchItem(e) {
   }
   const $searchItem = $searchInpWrap.find('.search_list_box ul .search_item');
   $searchItem.removeClass('active').eq(searchResultIdx).addClass('active');
-  const value = $searchItem.eq(searchResultIdx).text().trim();
-  searchInput.setValue(value);
-  const dw = parseInt(searchResultIdx * 40);
-  $searchInpWrap.find('.search_list_box').scrollTop(dw);
+  const $activeItem = $searchItem.eq(searchResultIdx);
+  if ($activeItem.length > 0) {
+    const value = $activeItem.text().trim();
+    searchInput.setValue(value);
+    $searchInpWrap
+      .find('.search_list_box')
+      .scrollTop(_position($activeItem[0]).top);
+  }
 }
 // 点击搜索项
 function hdClickSearchItem() {
@@ -903,8 +908,8 @@ function selectSearch(e) {
   const html = _tpl(
     `
     <div v-for="{name,icon},i in _d.searchEngineData" cursor="y" class="item {{getSearchEngine().name === name ? 'active' : ''}}" :xi="i">
-      <img style="width: 40px;height: 40px;border-radius: 4px;" :data-src="icon"/>
-      <span style="margin-left:10px;">{{name}}</span>
+      <img style="width: 4rem;height: 4rem;border-radius: 0.4rem;" :data-src="icon"/>
+      <span style="margin-left:1rem;">{{name}}</span>
     </div>
     `,
     {
@@ -973,3 +978,8 @@ function setCatSize() {
   fontSize = fontSize > 150 ? 150 : fontSize < 50 ? 50 : fontSize;
   $cat.css('font-size', parseInt(fontSize));
 }
+localData.onChange(({ key }) => {
+  if (!key || key === 'htmlFontSize') {
+    setCatSize();
+  }
+});

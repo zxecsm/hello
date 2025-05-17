@@ -136,13 +136,13 @@ html.dark {
 }
 ::-webkit-scrollbar {
   background-color: transparent; /* 滚动条轨道颜色 */
-  max-width: 8px;
-  max-height: 8px;
+  max-width: 0.8rem;
+  max-height: 0.8rem;
 }
 
 ::-webkit-scrollbar-thumb {
   background-color: var(--color7); /* 滚动条滑块颜色 */
-  border-radius: 8px;
+  border-radius: 0.8rem;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -176,7 +176,7 @@ html.dark {
 body {
   color: var(--color3);
   background-color: var(--color10);
-  font-size: 16px;
+  font-size: 1.6rem;
   cursor: var(--cursor-default);
 }
 body:before {
@@ -188,7 +188,8 @@ body:before {
   bottom: 0;
   left: 0;
 }
-.iconfont {
+body .iconfont {
+  font-size: 1.6rem;
   text-shadow: 0 0 var(--color5);
 }
 [cursor]:hover {
@@ -213,6 +214,7 @@ button {
   font-family: inherit;
   color: inherit;
   border-radius: 0;
+  font-size: inherit;
 }
 input[type='number']::-webkit-outer-spin-button,
 input[type='number']::-webkit-inner-spin-button {
@@ -259,12 +261,12 @@ textarea:-ms-input-placeholder {
   font-size: 0.9em;
 }
 .btn {
-  margin: 5px;
+  margin: 0.5rem;
   line-height: 1;
-  padding: 10px;
+  padding: 1rem;
   outline: none;
   border: 1px solid;
-  border-radius: 4px;
+  border-radius: 0.4rem;
   cursor: inherit;
 }
 
@@ -316,10 +318,10 @@ textarea:-ms-input-placeholder {
 }
 .inp_box i {
   font-size: 1.1em;
-  padding: 0 6px;
+  padding: 0 0.6rem;
 }
 .inp_box input {
-  padding-left: 10px;
+  padding-left: 1rem;
   line-height: 1.5;
 }
 .inp_box i:hover {

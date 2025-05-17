@@ -556,8 +556,8 @@ export function moveSongToList(e, pid, ar) {
   const html = _tpl(
     `
     <div v-for="v in list" :data-name="v.name" cursor="y" class="item" :data-id="v.id">
-      <img style="width: 40px;height: 40px;border-radius: 4px;" :data-src="v.pic"/>
-      <span style="margin-left:10px;">{{v.name}}</span>
+      <img style="width: 4rem;height: 4rem;border-radius: 0.4rem;" :data-src="v.pic"/>
+      <span style="margin-left:1rem;">{{v.name}}</span>
     </div>
     `,
     {
@@ -976,20 +976,20 @@ function songsLoading() {
   let str = '';
   str += `<div style="pointer-events: none;" class="items_list_top_wrap">
         <div style="background-color:var(--color8);background-image:none" class="song_list_cover"></div>
-        <div style="background-color:var(--color8); height: 40px;width: 100px;margin: 30px;" class="song_list_info"></div>
+        <div style="background-color:var(--color8); height: 4rem;width: 10rem;margin: 3rem;" class="song_list_info"></div>
       </div>
-      <div style="pointer-events: none; height: 40px;width: 100%;padding: 0 5px;overflow:hidden;">
-          <div style="background-color:var(--color8);height: 40px;width:50%;float:left;"></div>
-          <div style="background-color:var(--color8);height: 40px;width:30%;float:right;"></div>
+      <div style="pointer-events: none; height: 4rem;width: 100%;padding: 0 0.5rem;overflow:hidden;">
+          <div style="background-color:var(--color8);height: 4rem;width:50%;float:left;"></div>
+          <div style="background-color:var(--color8);height: 4rem;width:30%;float:right;"></div>
       </div>`;
   new Array(10).fill(null).forEach(() => {
     str += `<div style="pointer-events: none;" data-flag="default" class="song_item">
         <div style="background-color:var(--color8);background-image:none" class="song_logo_box"></div>
         <div class="song_info_wrap">
-          <span style="background-color:var(--color8);margin: 8px 0 0 0;width: 110px;height:15px" class="song_name"></span>
-          <span style="background-color:var(--color8);margin: 5px 0 0 0;width: 110px;height:15px" class="artist_name"></span>
+          <span style="background-color:var(--color8);margin: 0.8rem 0 0 0;width: 11rem;height:1.5rem" class="song_name"></span>
+          <span style="background-color:var(--color8);margin: 0.5rem 0 0 0;width: 11rem;height:1.5rem" class="artist_name"></span>
         </div>
-        <div style="background-color:var(--color8);width:100px;height: 40px;margin: 10px 0 0 10px;" class="set_song_btn"></div>
+        <div style="background-color:var(--color8);width:10rem;height: 4rem;margin: 1rem 0 0 1rem;" class="set_song_btn"></div>
       </div>`;
   });
   $songItemsBox.html(str);
@@ -1112,6 +1112,7 @@ async function renderSongs(gao) {
         <div v-if="songListInfo.des" class="song_list_des">{{songListInfo.des}}</div>
       </div>
     </div>
+    <div class="items_list_top_menu_fill"></div>
     <div class="items_list_top_menu">
       <div v-if="listId !== 'all'" cursor="y" class="play_list_btn iconfont icon-65zanting"></div>
       <div class="list_total_num">{{listId === 'all' ? '一共' : '播放全部'}}
@@ -1144,7 +1145,7 @@ async function renderSongs(gao) {
       <div title="添加到播放列表" class="add_song_playing_btn iconfont icon-icon-test"></div>
       <div class="set_song_btn iconfont icon-maohao"></div>
     </div>
-    <div v-if="pageTotal > 1" v-html="getPaging()" style="padding:20px 0;text-align:center;line-height: 26px;" class="song_list_paging no_select"></div>
+    <div v-if="pageTotal > 1" v-html="getPaging()" style="padding:2rem 0;text-align:center;line-height: 2.6rem;" class="song_list_paging no_select"></div>
     <div class="check_all_menu_wrap">
       <div cursor="y" x='1' class="check_all_song_btn">全选</div>
       <div cursor="y" class="share_all_song_btn">分享</div>
@@ -1739,16 +1740,22 @@ let hidePositionBtn = debounce(function () {
 function hdSongsScroll() {
   $listItemsWarp.find('.position_btn').css('display', 'block');
   hidePositionBtn();
-  if (this.scrollTop > 115) {
-    $msuicContentBox.find('.items_list_top_menu').addClass('sct');
-    $msuicContentBox.find('.items_list_top_wrap').addClass('lbxma');
+  const $itemsListTopMenuFill = $msuicContentBox.find(
+    '.items_list_top_menu_fill'
+  );
+  if ($itemsListTopMenuFill.length === 0) return;
+  const offsetTop = _position($itemsListTopMenuFill[0]).top;
+  const $itemsListTopMenu = $msuicContentBox.find('.items_list_top_menu');
+  if (offsetTop < 0) {
+    $itemsListTopMenu.addClass('sct');
+    $itemsListTopMenuFill.addClass('active');
     $musicHeadWrap
       .find('.song_list_name')
       .text($songItemsBox.find('.song_list_name').text())
       .css('opacity', 1);
-  } else {
-    $msuicContentBox.find('.items_list_top_menu').removeClass('sct');
-    $msuicContentBox.find('.items_list_top_wrap').removeClass('lbxma');
+  } else if (offsetTop > 0) {
+    $itemsListTopMenu.removeClass('sct');
+    $itemsListTopMenuFill.removeClass('active');
     $musicHeadWrap.find('.song_list_name').css('opacity', 0).text('');
   }
 }
@@ -2516,7 +2523,7 @@ export function highlightPlayingSong(isPosition) {
         const sp =
           $msuicContentBox.find('.list_items_wrap').scrollTop() +
           $songs.eq(idx).position().top -
-          100;
+          $songs.height();
         $msuicContentBox.find('.list_items_wrap').scrollTop(sp);
       }
       $songs.eq(idx).addClass('active').find('.play_gif').addClass('show');
@@ -2708,7 +2715,7 @@ export const changePlayingAnimate = (function () {
     oDiv.className = 'iconfont icon-yinle1';
     oDiv.style.cssText = `
     color: var(--icon-color);
-    font-size: 40px;
+    font-size: 4rem;
     position: fixed;
     top: ${y}px;
     left: ${x}px;
