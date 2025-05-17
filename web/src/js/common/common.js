@@ -194,7 +194,11 @@ const toolBox = (() => {
     <div cursor="y" class="zoom_out iconfont icon-fangdasuoxiao_Y"></div>
   </div>
   `;
-  document.body.appendChild(toolBox);
+  if (window._pageName === 'home') {
+    document.querySelector('#main').appendChild(toolBox);
+  } else {
+    document.body.appendChild(toolBox);
+  }
   toolBox.addEventListener('click', (e) => {
     if (_getTarget(toolBox, e, '.zoom_in')) {
       const size = localData.get('htmlFontSize') + 1;

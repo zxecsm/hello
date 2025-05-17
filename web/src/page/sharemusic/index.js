@@ -754,8 +754,8 @@ document.onkeydown = function (e) {
 //隐藏播放列表
 $playingListWrap.on('click', function (e) {
   if (_getTarget(this, e, '.playing_list_mask', 1)) {
-    $pMusicListBox.find('.p_foot').html('');
-    $pMusicListBox.stop().slideUp(_d.speed, () => {
+    $pMusicListBox.stop().slideUp(300, () => {
+      $pMusicListBox.find('.p_foot').html('');
       $playingListWrap.stop().fadeOut(100);
     });
   }
@@ -1221,9 +1221,9 @@ $musicMvWrap.on('click', '.m_close', function () {
 _mySlide({
   el: '.playing_list_mask',
   right() {
-    $pMusicListBox.find('.p_foot').html('');
-    $pMusicListBox.stop().slideUp(_d.speed, () => {
-      $playingListWrap.stop().fadeOut(_d.speed);
+    $pMusicListBox.stop().slideUp(300, () => {
+      $pMusicListBox.find('.p_foot').html('');
+      $playingListWrap.stop().fadeOut(100);
     });
   },
 });

@@ -10,6 +10,7 @@ import {
   _mySlide,
   myShuffle,
   toggleUserSelect,
+  loadingImg,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
@@ -51,14 +52,6 @@ export function setPlayingList(val) {
   }
   playingList = val;
 }
-// 播放列表加载
-function playingListLoading() {
-  let str = ``;
-  new Array(10).fill(null).forEach(() => {
-    str += `<li style="pointer-events: none;margin: 0.2rem 0;" class="song_item"></li>`;
-  });
-  $pMusicListBox.find('.p_foot').html(str);
-}
 let playingPageNo = 1;
 let playingPageSize = 100;
 const playListLazyImg = new LazyLoad();
@@ -92,7 +85,7 @@ export function updateNewPlayList(list) {
 }
 // 显示播放列表
 export function showPlayingList() {
-  playingListLoading();
+  loadingImg($pMusicListBox.find('.p_foot')[0]);
   $playingListWrap.stop().fadeIn(100, () => {
     $pMusicListBox.stop().slideDown(300, async () => {
       if (!playingList) {
