@@ -29,7 +29,6 @@ import {
   getFiles,
   concurrencyTasks,
   _getTarget,
-  toggleUserSelect,
   LazyLoad,
   imgjz,
 } from '../../js/utils/utils';
@@ -263,7 +262,6 @@ function startSelect() {
     .stop()
     .slideDown(_d.speed, () => {
       noteBoxSelector.start();
-      toggleUserSelect(false);
     })
     .find('span')
     .attr({
@@ -281,7 +279,6 @@ function stopSelect() {
     .stop()
     .slideUp(_d.speed, () => {
       noteBoxSelector.stop();
-      toggleUserSelect();
     })
     .find('span')
     .attr({

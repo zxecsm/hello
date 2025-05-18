@@ -23,7 +23,6 @@ import {
   hdTitleHighlight,
   isLogin,
   _getTarget,
-  toggleUserSelect,
   LazyLoad,
   imgjz,
 } from '../../js/utils/utils';
@@ -661,7 +660,6 @@ function stopSelect() {
   $contentWrap.find('.item_box .check_state').css('display', 'none');
   $footer.stop().slideUp(_d.speed, () => {
     boxSelector.stop();
-    toggleUserSelect();
   });
 }
 
@@ -673,7 +671,6 @@ function startSelect() {
     .css('background-color', 'transparent');
   $footer.stop().slideDown(_d.speed, () => {
     boxSelector.start();
-    toggleUserSelect(false);
   });
   footerCheckIocnState('n');
 }

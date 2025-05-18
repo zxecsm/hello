@@ -9,7 +9,6 @@ import {
   LazyLoad,
   _mySlide,
   myShuffle,
-  toggleUserSelect,
   loadingImg,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
@@ -240,7 +239,6 @@ function stopSelect() {
     .stop()
     .slideUp(_d.speed, () => {
       playListBoxSelector.stop();
-      toggleUserSelect();
     });
   $pMusicListBox.find('.check_state').css('display', 'none');
 }
@@ -250,7 +248,6 @@ function startSelect() {
     .stop()
     .slideDown(_d.speed, () => {
       playListBoxSelector.start();
-      toggleUserSelect(false);
     })
     .find('.flex_wrap div')
     .attr({

@@ -19,7 +19,6 @@ import {
   isLogin,
   pageScrollTop,
   _getTarget,
-  toggleUserSelect,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -334,7 +333,6 @@ function startSelect() {
     .stop()
     .slideDown(_d.speed, () => {
       boxSelector.start();
-      toggleUserSelect(false);
     })
     .find('span')
     .attr({
@@ -348,7 +346,6 @@ function stopSelect() {
     .stop()
     .slideUp(_d.speed, () => {
       boxSelector.stop();
-      toggleUserSelect();
     })
     .find('span')
     .attr({

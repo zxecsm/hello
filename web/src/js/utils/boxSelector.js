@@ -1,3 +1,5 @@
+import { toggleUserSelect } from './utils';
+
 export function getEventPoints(e) {
   const event = e.originalEvent || e;
 
@@ -141,6 +143,8 @@ export class BoxSelector {
 
     if (isStop) return;
 
+    toggleUserSelect(false);
+
     const { x, y } = this.getEventPoint(e);
     this.startX = x;
     this.startY = y;
@@ -192,6 +196,8 @@ export class BoxSelector {
 
   onEnd() {
     if (!this.selectBox) return;
+
+    toggleUserSelect();
 
     this.updateSelection(true);
 
@@ -482,6 +488,9 @@ export class MouseElementTracker {
       }
 
       if (isStop) return;
+
+      toggleUserSelect(false);
+
       this.infoBox = this.createInfoBox();
 
       document.body.appendChild(this.infoBox);
@@ -525,6 +534,8 @@ export class MouseElementTracker {
   onEnd(e) {
     this.clear();
     if (!this.infoBox) return;
+
+    toggleUserSelect();
 
     if (typeof this.options.onEnd === 'function') {
       this.options.onEnd({ e, dropElement: getPointElement(e) });

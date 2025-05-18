@@ -18,7 +18,6 @@ import {
   LazyLoad,
   copyText,
   throttle,
-  toggleUserSelect,
   _position,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
@@ -71,7 +70,6 @@ export function showHomeFootMenu() {
     .stop()
     .slideDown(_d.speed, () => {
       homeBmBoxSelector.start();
-      toggleUserSelect(false);
     })
     .find('.flex_wrap div')
     .attr({
@@ -89,7 +87,6 @@ function stopSelect() {
     .stop()
     .slideUp(_d.speed, () => {
       homeBmBoxSelector.stop();
-      toggleUserSelect();
     })
     .find('.flex_wrap div')
     .attr({

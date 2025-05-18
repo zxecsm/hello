@@ -1436,7 +1436,7 @@ export function myDrag(opt) {
   create && create({ trigger, target });
   let ol, ot, x, y, pointerX, pointerY;
   function hdDown(e) {
-    target.classList.add('no_select');
+    toggleUserSelect(false);
     x = target.offsetLeft;
     y = target.offsetTop;
     const l = target.offsetLeft,
@@ -1479,7 +1479,7 @@ export function myDrag(opt) {
     move && move({ e, trigger, target, x, y, pointerX, pointerY });
   }
   function hdUp(e) {
-    target.classList.remove('no_select');
+    toggleUserSelect();
     target.removeEventListener('touchmove', hdMove);
     target.removeEventListener('touchend', hdUp);
     document.removeEventListener('mousemove', hdMove);
@@ -1761,7 +1761,7 @@ export function myResize(opt, minW = 200, minH = 200) {
   let x, y, w, h, ol, ot;
   function hdDown(e) {
     e.stopPropagation();
-    target.classList.add('no_select');
+    toggleUserSelect(false);
     w = target.offsetWidth;
     h = target.offsetHeight;
     ol = target.offsetLeft;
@@ -1853,7 +1853,7 @@ export function myResize(opt, minW = 200, minH = 200) {
     move && move({ target });
   }
   function hdUp() {
-    target.classList.remove('no_select');
+    toggleUserSelect();
     this.removeEventListener('touchmove', hdMove);
     document.removeEventListener('mousemove', hdMove);
     this.removeEventListener('touchend', hdUp);

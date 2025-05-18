@@ -26,6 +26,7 @@ import {
   getScreenSize,
   _myOpen,
   getTextSize,
+  toggleUserSelect,
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
@@ -435,7 +436,7 @@ function pasteImg(e) {
 ~(function () {
   let previeW, editW, x;
   function hdDown(e) {
-    $editWrap.addClass('no_select');
+    toggleUserSelect(false);
     previeW = $previewBox[0].offsetWidth;
     editW = $editBox[0].offsetWidth;
     if (e.type === 'touchstart') {
@@ -470,7 +471,7 @@ function pasteImg(e) {
     }
   }
   function hdUp() {
-    $editWrap.removeClass('no_select');
+    toggleUserSelect();
     this.removeEventListener('touchmove', hdMove);
     document.removeEventListener('mousemove', hdMove);
     this.removeEventListener('touchend', hdUp);

@@ -16,7 +16,6 @@ import {
   LazyLoad,
   _mySlide,
   _setTimeout,
-  toggleUserSelect,
 } from '../../../js/utils/utils.js';
 
 import _d from '../../../js/common/config';
@@ -1431,7 +1430,6 @@ function stopSelect() {
     .slideUp(_d.speed, () => {
       bmListBoxSelector.stop();
       bmBoxSelector.stop();
-      toggleUserSelect();
     });
 }
 function startSelect() {
@@ -1455,7 +1453,6 @@ function startSelect() {
       } else {
         bmListBoxSelector.start();
       }
-      toggleUserSelect(false);
     })
     .find('.flex_wrap div')
     .attr({

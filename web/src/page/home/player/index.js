@@ -44,7 +44,6 @@ import {
   upStr,
   _animate,
   getCenterPointDistance,
-  toggleUserSelect,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -1042,7 +1041,6 @@ let onlyShowMv = 0;
 // 生成歌曲列表
 async function renderSongs(gao) {
   songsBoxSelector.stop();
-  toggleUserSelect();
   const listId = $songListWrap.listId;
   if (!listId) return;
   const ind = musicList.findIndex((item) => item.id === listId);
@@ -1707,7 +1705,6 @@ function startSelectSongs() {
       .attr('check', 'n')
       .css('background-color', 'transparent');
   songsBoxSelector.start();
-  toggleUserSelect(false);
   $msuicContentBox.find('.list_items_wrap .check_all_song_btn').attr('x', '1');
 }
 function stopSelectSongs() {
@@ -1719,7 +1716,6 @@ function stopSelectSongs() {
     .css('background-color', 'transparent');
 
   songsBoxSelector.stop();
-  toggleUserSelect();
   $msuicContentBox.find('.list_items_wrap .check_all_song_btn').attr('x', '1');
 }
 // 播放歌单

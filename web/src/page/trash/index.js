@@ -23,7 +23,6 @@ import {
   copyText,
   isLogin,
   _getTarget,
-  toggleUserSelect,
   LazyLoad,
   imgjz,
 } from '../../js/utils/utils';
@@ -156,7 +155,6 @@ function startSelect() {
     .stop()
     .slideDown(_d.speed, () => {
       trashBoxSelector.start();
-      toggleUserSelect(false);
     })
     .find('span')
     .attr({
@@ -170,7 +168,6 @@ function stopSelect() {
     .stop()
     .slideUp(_d.speed, () => {
       trashBoxSelector.stop();
-      toggleUserSelect();
     })
     .find('span')
     .attr({

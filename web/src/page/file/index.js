@@ -33,7 +33,6 @@ import {
   wrapInput,
   getDuplicates,
   isurl,
-  toggleUserSelect,
   _mySlide,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
@@ -1585,7 +1584,6 @@ function startCheck() {
   $footer.stop().slideDown(_d.speed, () => {
     boxSelector.start();
     mouseElementTracker.start();
-    toggleUserSelect(false);
   });
 }
 // 关闭选中
@@ -1594,7 +1592,6 @@ function closeCheck() {
   $footer.stop().slideUp(_d.speed, () => {
     boxSelector.stop();
     mouseElementTracker.stop();
-    toggleUserSelect();
   });
 }
 // 更新底部菜单

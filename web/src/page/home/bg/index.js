@@ -16,7 +16,6 @@ import {
   LazyLoad,
   isRoot,
   concurrencyTasks,
-  toggleUserSelect,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import pagination from '../../../js/plugins/pagination';
@@ -264,7 +263,6 @@ function startSelect() {
     .stop()
     .slideDown(_d.speed, () => {
       bgBoxSelector.start();
-      toggleUserSelect(false);
     })
     .find('span')
     .attr({
@@ -280,7 +278,6 @@ function stopSelect() {
     .css('background-color', 'transparent');
   $bgFooter.stop().slideUp(_d.speed, () => {
     bgBoxSelector.stop();
-    toggleUserSelect();
   });
 }
 const bgBoxSelector = new BoxSelector($bgList[0], {

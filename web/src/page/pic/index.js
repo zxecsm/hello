@@ -20,7 +20,6 @@ import {
   isLogin,
   concurrencyTasks,
   _getTarget,
-  toggleUserSelect,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -241,7 +240,6 @@ function stopSelect() {
     .css('background-color', 'transparent');
   $footer.stop().slideUp(_d.speed, () => {
     picBoxSelector.stop();
-    toggleUserSelect();
   });
 }
 function startSelect() {
@@ -249,7 +247,6 @@ function startSelect() {
     .stop()
     .slideDown(_d.speed, () => {
       picBoxSelector.start();
-      toggleUserSelect(false);
     })
     .find('span')
     .attr({
