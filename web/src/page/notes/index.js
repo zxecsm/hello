@@ -337,7 +337,7 @@ export function renderList(y) {
               <div v-if="categoryArr.length > 0 || (con && con.length > 0)" class="item_info">
                 <template v-if="categoryArr.length > 0">
                   <span cursor="y" v-for="cgs in categoryArr" :data-id="cgs.id" class="category">
-                    <span style="color:var(--icon-color);margin-right:4px;">#</span>{{cgs.title}}
+                    <span style="color:var(--icon-color);margin-right:0.4rem;">#</span>{{cgs.title}}
                   </span>
                   <br/>
                 </template>
