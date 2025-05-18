@@ -1590,7 +1590,7 @@ export function toSetSize(target, maxW = 900, maxH = 800) {
 export function myToMax(target) {
   const { w, h } = getScreenSize();
   target.style.transition =
-    'left 0.5s ease-in-out, top 0.5s ease-in-out, width 0.5s ease-in-out, height 0.5s ease-in-out';
+    'left var(--speed-duration) var(--speed-timing), top var(--speed-duration) var(--speed-timing), width var(--speed-duration) var(--speed-timing), height var(--speed-duration) var(--speed-timing)';
   target.style.top = 0 + 'px';
   target.style.left = 0 + 'px';
   target.style.width = w + 'px';
@@ -1611,7 +1611,7 @@ export function myToRest(target, pointerX) {
   let { x = 0, y = 0, w = 0, h = 0 } = target.dataset;
   const screen = getScreenSize();
   target.style.transition =
-    'left 0.5s ease-in-out, top 0.5s ease-in-out, width 0.5s ease-in-out, height 0.5s ease-in-out';
+    'left var(--speed-duration) var(--speed-timing), top var(--speed-duration) var(--speed-timing), width var(--speed-duration) var(--speed-timing), height var(--speed-duration) var(--speed-timing)';
   // 如果是全屏
   if (pointerX && isFullScreen(target)) {
     let pes = (pointerX - x) / target.offsetWidth;

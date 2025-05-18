@@ -138,7 +138,7 @@ const chatSearchInput = wrapInput(
       $inpBox.removeClass('focus');
       if (chatSearchInput.getValue().trim() === '') {
         $inpBox.fadeOut(300, () => {
-          $chatHeadBtns.find('.search_btn').slideDown(_d.speed);
+          $chatHeadBtns.find('.search_btn').slideDown(300);
         });
         chatSearchInput.setValue('');
       }
@@ -406,7 +406,7 @@ $chatHeadBtns
     debounce(
       function () {
         userPageNo = 1;
-        $userListBox.stop().slideDown(300, () => {
+        $userListBox.stop().slideDown(_d.speed, () => {
           getUserList(true);
         });
       },
@@ -1309,7 +1309,7 @@ function chatMsgMenu(e, cobj) {
         forwardData = cobj;
         close();
         userPageNo = 1;
-        $userListBox.stop().slideDown(300, () => {
+        $userListBox.stop().slideDown(_d.speed, () => {
           getUserList(true);
         });
       } else if (id === '6') {
@@ -1709,7 +1709,7 @@ function upVoice(blob, duration) {
 })();
 // 收起用户列表
 function hideUserList() {
-  $userListBox.stop().slideUp(300, () => {
+  $userListBox.stop().slideUp(_d.speed, () => {
     $userListBox.html('');
   });
 }

@@ -19,7 +19,8 @@
     box-shadow: 0 0 0.5rem var(--color5);
     opacity: 0;
     transform: translateY(-2rem);
-    transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+    transition: transform var(--speed-duration) var(--speed-timing),
+      opacity var(--speed-duration) var(--speed-timing);
     .percent_box {
       width: 100%;
       text-align: center;

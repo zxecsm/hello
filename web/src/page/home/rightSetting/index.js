@@ -1865,7 +1865,8 @@ myDrag({
   },
   up({ target, x, y }) {
     hideIframeMask();
-    target.style.transition = 'top 0.5s ease-in-out, left 0.5s ease-in-out';
+    target.style.transition =
+      'top var(--speed-duration) var(--speed-timing), left var(--speed-duration) var(--speed-timing)';
     const { h, w } = getScreenSize();
     if (y <= 0 || y >= h || x > w || 0 - x > target.offsetWidth) {
       const { x, y } = target.dataset;

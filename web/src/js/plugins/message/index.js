@@ -128,7 +128,7 @@ class Msg {
     msgArr.push(this.el);
     this.el.style.top = top + 'px';
     this.el.clientHeight;
-    this.el.style.transition = '0.5s ease-in-out';
+    this.el.style.transition = '0.3s ease-in-out';
     this.el.style.marginTop = '20px';
     this.el.style.opacity = 0.9;
     this.hide();
@@ -155,7 +155,7 @@ class Msg {
     const idx = msgArr.findIndex((item) => item === this.el);
     msgArr.splice(idx, 1);
     const h = this.el.offsetHeight + 20;
-    this.el.style.transition = '.5s ease-in-out';
+    this.el.style.transition = '0.3s ease-in-out';
     this.el.style.marginTop = `-${h}px`;
     this.el.style.opacity = 0;
     let timer = setTimeout(() => {
@@ -163,11 +163,11 @@ class Msg {
       timer = null;
       this.el.remove();
       this.callback && this.callback('close');
-    }, 500);
+    }, 300);
     msgArr.forEach((item, i) => {
       if (item.isCheck || i < idx) return;
       const t = parseInt(item.style.top);
-      item.style.transition = '0.5s ease-in-out';
+      item.style.transition = '0.3s ease-in-out';
       item.style.top = t - h + 'px';
     });
   }
@@ -214,7 +214,7 @@ const botMsg = (function () {
 
     textbox.innerText = str;
     box.style.transition =
-      'transform 0.5s ease-in-out,opacity 0.5s ease-in-out';
+      'transform 0.3s ease-in-out,opacity 0.3s ease-in-out';
     box.style.transform = 'none';
     box.style.opacity = '1';
 

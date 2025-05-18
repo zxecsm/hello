@@ -551,7 +551,7 @@ function lrcScroll(immedia) {
     });
   } else {
     $lrc.css({
-      transition: 'transform .5s ease-in-out',
+      transition: 'transform 0.3s ease-in-out',
       transform: `translateY(${mtop}px)`,
     });
   }
@@ -754,7 +754,7 @@ document.onkeydown = function (e) {
 //隐藏播放列表
 $playingListWrap.on('click', function (e) {
   if (_getTarget(this, e, '.playing_list_mask', 1)) {
-    $pMusicListBox.stop().slideUp(300, () => {
+    $pMusicListBox.stop().slideUp(_d.speed, () => {
       $pMusicListBox.find('.p_foot').html('');
       $playingListWrap.stop().fadeOut(100);
     });
@@ -1221,7 +1221,7 @@ $musicMvWrap.on('click', '.m_close', function () {
 _mySlide({
   el: '.playing_list_mask',
   right() {
-    $pMusicListBox.stop().slideUp(300, () => {
+    $pMusicListBox.stop().slideUp(_d.speed, () => {
       $pMusicListBox.find('.p_foot').html('');
       $playingListWrap.stop().fadeOut(100);
     });

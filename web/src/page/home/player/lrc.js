@@ -392,7 +392,7 @@ export function lrcScroll(immedia) {
     });
   } else {
     $lrc.css({
-      transition: 'transform .5s ease-in-out',
+      transition: 'transform 0.3s ease-in-out',
       transform: `translateY(${mtop}px)`,
     });
   }

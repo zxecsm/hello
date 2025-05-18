@@ -75,7 +75,7 @@ const _d = {
   mediaURL,
   defaultFontFamily: 'Roboto, Arial, sans-serif', // 默认字体
   levelObj,
-  speed: 500,
+  speed: 300,
   translator: 'https://bing.com/translator?text={{}}', // 翻译接口
   temid: nanoid(), // 临时id
   screen: 800, // 区分大屏小屏

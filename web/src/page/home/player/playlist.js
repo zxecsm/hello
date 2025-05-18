@@ -86,7 +86,7 @@ export function updateNewPlayList(list) {
 export function showPlayingList() {
   loadingImg($pMusicListBox.find('.p_foot')[0]);
   $playingListWrap.stop().fadeIn(100, () => {
-    $pMusicListBox.stop().slideDown(300, async () => {
+    $pMusicListBox.stop().slideDown(_d.speed, async () => {
       if (!playingList) {
         playingList = [];
       }
@@ -493,7 +493,7 @@ export function unBindPlayListLazyImg() {
 //隐藏播放列表
 $playingListWrap.on('click', function (e) {
   if (_getTarget(this, e, '.playing_list_mask', 1)) {
-    $pMusicListBox.stop().slideUp(300, () => {
+    $pMusicListBox.stop().slideUp(_d.speed, () => {
       $pMusicListBox.find('.p_foot').html('');
       $playingListWrap.stop().fadeOut(100);
       unBindPlayListLazyImg();
@@ -504,7 +504,7 @@ _mySlide({
   el: '.playing_list_mask',
   right() {
     if (isCheckedPlayingList()) return;
-    $pMusicListBox.stop().slideUp(300, () => {
+    $pMusicListBox.stop().slideUp(_d.speed, () => {
       $pMusicListBox.find('.p_foot').html('');
       $playingListWrap.stop().fadeOut(100);
     });

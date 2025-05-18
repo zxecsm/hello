@@ -220,7 +220,7 @@ class CreateIframe {
   toMax() {
     const { w, h } = getScreenSize();
     this.box.style.transition =
-      'top 0.5s ease-in-out, left 0.5s ease-in-out, width 0.5s ease-in-out, height 0.5s ease-in-out';
+      'top var(--speed-duration) var(--speed-timing), left var(--speed-duration) var(--speed-timing), width var(--speed-duration) var(--speed-timing), height var(--speed-duration) var(--speed-timing)';
     this.box.style.top = 0 + 'px';
     this.box.style.left = 0 + 'px';
     this.box.style.width = w + 'px';
@@ -234,7 +234,7 @@ class CreateIframe {
     const screen = getScreenSize();
     let { x = 0, y = 0, w = 0, h = 0 } = this.box.dataset;
     this.box.style.transition =
-      'top 0.5s ease-in-out, left 0.5s ease-in-out, width 0.5s ease-in-out, height 0.5s ease-in-out';
+      'top var(--speed-duration) var(--speed-timing), left var(--speed-duration) var(--speed-timing), width var(--speed-duration) var(--speed-timing), height var(--speed-duration) var(--speed-timing)';
     if (pointerX) {
       // 如果是全屏
       if (isFullScreen(this.box)) {

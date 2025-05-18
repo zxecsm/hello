@@ -9,6 +9,8 @@
   --text-hover-color: #409eff;
   --icon-color: #1389a7;
   --text-hover-decoration: underline wavy;
+  --speed-duration: 0.3s;
+  --speed-timing: ease-in-out;
 }
 
 html {

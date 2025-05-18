@@ -105,7 +105,7 @@ class Progress {
     }, 6000);
   }
   animate() {
-    this.box.style.transition = `transform 0.5s ease-in-out,opacity 0.5s ease-in-out`;
+    this.box.style.transition = `transform 0.3s ease-in-out,opacity 0.3s ease-in-out`;
     this.box.style.transform = `translateX(100%)`;
     this.box.style.opacity = 0;
 
@@ -116,7 +116,7 @@ class Progress {
       if (this.upProgress.proList.innerHTML === '') {
         this.upProgress.cancel();
       }
-    }, 500);
+    }, 300);
   }
 }
 export class UpProgress {

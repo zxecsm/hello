@@ -548,7 +548,7 @@ body {
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
-    transition: transform 0.5s ease-in-out;
+    transition: transform 0.3s ease-in-out;
     .alert_flag {
       background: var(--btn-danger-color);
       border-radius: 50%;
@@ -577,11 +577,11 @@ body {
       position: absolute;
       right: 1rem;
       transform-origin: top right;
-      transform: rotate(90deg) scale(0);
+      transform: translateX(100%);
       top: 6rem;
-      border-radius: 50%;
-      transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out,
-        border-radius 1s ease-in-out;
+      border-radius: 0.6rem;
+      transition: transform var(--speed-duration) var(--speed-timing),
+        opacity var(--speed-duration) var(--speed-timing);
       width: 90%;
       max-width: 30rem;
       max-height: 80%;
@@ -596,7 +596,6 @@ body {
       &.open {
         transform: none;
         opacity: 1;
-        border-radius: 0.6rem;
       }
 
       span {
@@ -1525,7 +1524,7 @@ body {
       flex-flow: column;
       position: relative;
       transform: translateX(-100%);
-      transition: transform 0.5s ease-in-out;
+      transition: transform var(--speed-duration) var(--speed-timing);
       width: 80%;
       max-width: 60rem;
       height: 100%;
@@ -2506,7 +2505,7 @@ body {
           white-space: nowrap;
           text-align: center;
           text-overflow: ellipsis;
-          transition: opacity 0.5s ease-in-out;
+          transition: opacity 0.3s ease-in-out;
           user-select: none;
           -webkit-user-select: none;
           -moz-user-select: none;
@@ -2567,7 +2566,7 @@ body {
           width: 100%;
           height: 100%;
           overflow-y: auto;
-          transition: transform 0.5s ease-in-out;
+          transition: transform var(--speed-duration) var(--speed-timing);
 
           &.open {
             transform: translateX(-100%);
@@ -2694,7 +2693,7 @@ body {
           right: 0;
           transform: translateX(100%);
           overflow-y: auto;
-          transition: transform 0.5s ease-in-out;
+          transition: transform var(--speed-duration) var(--speed-timing);
           padding-top: 0.5rem;
 
           &.open {
@@ -3199,7 +3198,7 @@ body {
         overflow: hidden;
         z-index: 11;
         transform: translateY(100%);
-        transition: transform 0.5s ease-in-out;
+        transition: transform var(--speed-duration) var(--speed-timing);
         padding-bottom: 4rem;
 
         &.active {
@@ -3353,7 +3352,7 @@ body {
                   line-height: 1.5;
                 }
                 .elrc {
-                  transition: letter-spacing 0.5s ease-in-out;
+                  transition: letter-spacing 0.3s ease-in-out;
                 }
                 .lrcfy {
                   font-size: 0.7em;
@@ -4340,7 +4339,7 @@ body {
             overflow: hidden;
             max-width: 100%;
             min-width: 1.5em;
-            transition: width 0.5s ease-in-out;
+            transition: width 0.3s ease-in-out;
             background-color: var(--color8);
           }
           .num {
@@ -4453,7 +4452,7 @@ body {
         background-position: center;
         background-repeat: no-repeat;
         background-color: var(--color10);
-        transition: opacity 0.5s ease-in-out;
+        transition: opacity 0.3s ease-in-out;
         z-index: 2;
       }
     }

@@ -431,7 +431,7 @@ const musicSearchInput = wrapInput(
       $inpBox.removeClass('focus');
       if (musicSearchInput.getValue().trim() === '') {
         $inpBox.fadeOut(300, () => {
-          $musicHeadWrap.find('.search_btn').slideDown(_d.speed);
+          $musicHeadWrap.find('.search_btn').slideDown(300);
         });
         hideMusicSearchList();
       }
