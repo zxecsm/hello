@@ -48,11 +48,14 @@ function renderCrumb(HASH) {
   const hasForward = hashRouter.hasForward();
   const html = _tpl(
     `
-    <i cursor="y" class="back iconfont icon-zuo {{hasBack ? '' : 'deactive'}}"></i>
-    <i cursor="y" class="forward iconfont icon-you {{hasForward ? '' : 'deactive'}}"></i>
-    <span :cursor="pathArr.length > 0 ? 'y' : ''" class='home'>主页</span>
-    <span v-for="item,idx in pathArr" :title="item" :cursor="idx + 1 === pathArr.length ? '' : 'y'" :data-idx="idx + 1">{{item}}</span>
-    <i cursor="y" class="refresh iconfont icon-suijibofang"></i>
+    <div cursor="y" class="back iconfont icon-zuo {{hasBack ? '' : 'deactive'}}"></div>
+    <div cursor="y" class="forward iconfont icon-you {{hasForward ? '' : 'deactive'}}"></div>
+    <div :cursor="pathArr.length > 0 ? 'y' : ''" class='home item'>主页</div>
+    <template v-for="item,idx in pathArr">
+      <div class='line iconfont icon-fenge'></div>
+      <div class='item' :title="item" :cursor="idx + 1 === pathArr.length ? '' : 'y'" :data-idx="idx + 1">{{item}}</div>
+    </template>
+    <div cursor="y" class="refresh iconfont icon-suijibofang"></div>
     `,
     { pathArr: pathToArr(HASH), hasBack, hasForward }
   );
@@ -81,23 +84,20 @@ function toGo(p, param = {}) {
 // 点击事件
 function hdClick(e) {
   const target = e.target;
-  const tag = target.tagName.toLowerCase();
-  if (tag === 'i' || tag === 'span') {
+  if (this === target) {
+    editPath();
+  } else {
+    const className = target.className;
     const route = hashRouter.getRoute();
-    if (tag === 'i') {
-      const className = target.className;
-      if (className.includes('back')) {
-        hashRouter.back();
-      } else if (className.includes('forward')) {
-        hashRouter.forward();
-      } else if (className.includes('refresh')) {
-        callback && callback(route, { pageNo: 1, top: 0, update: 1 });
-      }
-    } else if (tag === 'span') {
+    if (className.includes('back')) {
+      hashRouter.back();
+    } else if (className.includes('forward')) {
+      hashRouter.forward();
+    } else if (className.includes('refresh')) {
+      callback && callback(route, { pageNo: 1, top: 0, update: 1 });
+    } else if (className.includes('item')) {
       let p = [];
-      if (target.className === 'home') {
-        p = [];
-      } else {
+      if (!className.includes('home')) {
         const idx = +target.dataset.idx;
         p = pathToArr(route).slice(0, idx);
       }
@@ -107,8 +107,6 @@ function hdClick(e) {
         hashRouter.push(path);
       }
     }
-  } else if (this === target) {
-    editPath();
   }
 }
 

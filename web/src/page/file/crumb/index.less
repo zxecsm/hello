@@ -2,14 +2,22 @@
   .crumb {
     font-size: 0;
     overflow-y: auto;
-    max-height: 18rem;
+    max-height: 18.8rem;
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    div {
+      font-size: 1.6rem;
+      flex: none;
+      margin: 0.4rem 0;
+      height: 2rem;
+      line-height: 2rem;
+    }
     .refresh,
     .forward,
     .back {
-      padding: 0.5rem 1rem;
+      padding: 0 1rem;
       color: var(--icon-color);
-      display: inline-block;
-      overflow: hidden;
       &:hover {
         color: var(--text-hover-color);
         transform: scale(1.2);
@@ -18,36 +26,29 @@
         color: var(--color9);
       }
     }
-    .refresh {
-      padding: 0.5rem 0;
+    .line {
+      font-size: 1.5rem;
+      color: var(--color5);
     }
-    span {
-      border-right: 0.2rem solid var(--color6);
-      padding: 0 1rem;
-      display: inline-block;
-      font-size: 1.6rem;
-      margin: 0.5rem 0;
-      max-width: 100%;
+    .item {
+      max-width: 90%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       &:hover {
         color: var(--text-hover-color);
       }
-      &:last-of-type {
-        border: none;
-      }
     }
     input {
-      font-size: 1.6rem;
       outline: none;
       border: none;
-      margin: 0;
-      line-height: 1.5;
+      margin: 0.4rem 0;
+      font-size: 1.6rem;
+      height: 2rem;
+      line-height: 2rem;
+      padding: 0;
       width: 100%;
       background-color: transparent;
-      padding: 0.5rem 1rem;
-      border-radius: 0.4rem;
     }
   }
 }
