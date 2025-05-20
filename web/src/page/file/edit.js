@@ -59,7 +59,7 @@ export function openFile(text, path) {
   $editFile.css('display', 'flex');
   document.documentElement.classList.add('notScroll');
   renderTitle(path);
-  setTextType(_path.extname(path)[2]);
+  aceEditor.setMode(editor, path);
   originText = oText = text;
   editor.setValue(text);
   editor.gotoLine(1);
@@ -74,171 +74,6 @@ function renderTitle(path) {
   editTitleContentScroll.init(path);
 }
 
-const typeMappings = {
-  abap: 'abap',
-  abc: 'abc',
-  as: 'actionscript',
-  ada: 'ada',
-  apache: 'apache_conf',
-  apex: 'apex',
-  applescript: 'applescript',
-  adoc: 'asciidoc',
-  asciidoc: 'asciidoc',
-  asm: 'assembly_x86',
-  s: 'assembly_x86',
-  ahk: 'autohotkey',
-  bat: 'batchfile',
-  cmd: 'batchfile',
-  c: 'c_cpp',
-  cpp: 'c_cpp',
-  h: 'c_cpp',
-  hpp: 'c_cpp',
-  cc: 'c_cpp',
-  hh: 'c_cpp',
-  m: 'objectivec', // Objective-C
-  mm: 'objectivec', // Objective-C++
-  clj: 'clojure',
-  cljs: 'clojure',
-  cljc: 'clojure',
-  cob: 'cobol',
-  cbl: 'cobol',
-  coffee: 'coffee',
-  litcoffee: 'coffee',
-  cr: 'crystal',
-  cs: 'csharp',
-  css: 'css',
-  d: 'd',
-  dart: 'dart',
-  diff: 'diff',
-  patch: 'diff',
-  dockerfile: 'dockerfile',
-  ex: 'elixir',
-  exs: 'elixir',
-  elm: 'elm',
-  erl: 'erlang',
-  hrl: 'erlang',
-  f90: 'fortran',
-  f95: 'fortran',
-  f: 'fortran',
-  fs: 'fsharp',
-  gitignore: 'gitignore',
-  glsl: 'glsl',
-  go: 'golang',
-  groovy: 'groovy',
-  haml: 'haml',
-  hbs: 'handlebars',
-  handlebars: 'handlebars',
-  hs: 'haskell',
-  hx: 'haxe',
-  html: 'html',
-  htm: 'html',
-  xhtml: 'html',
-  ini: 'ini',
-  cfg: 'ini',
-  io: 'io',
-  java: 'java',
-  jsp: 'jsp',
-  js: 'javascript',
-  jsx: 'javascript',
-  cjs: 'javascript',
-  mjs: 'javascript',
-  json: 'json',
-  jsonc: 'json',
-  json5: 'json',
-  jl: 'julia',
-  tex: 'latex',
-  bib: 'bibtex',
-  less: 'less',
-  liquid: 'liquid',
-  lisp: 'lisp',
-  cl: 'lisp',
-  el: 'lisp',
-  log: 'text',
-  lua: 'lua',
-  mk: 'makefile',
-  makefile: 'makefile',
-  markdown: 'markdown',
-  md: 'markdown',
-  mdx: 'markdown',
-  nginx: 'nginx',
-  nginxconf: 'nginx',
-  nim: 'nim',
-  nix: 'nix',
-  ocaml: 'ocaml',
-  ml: 'ocaml',
-  pas: 'pascal',
-  pp: 'pascal',
-  pl: 'perl',
-  pm: 'perl',
-  php: 'php',
-  phtml: 'php',
-  powershell: 'powershell',
-  ps1: 'powershell',
-  prisma: 'prisma',
-  properties: 'properties',
-  proto: 'protobuf',
-  py: 'python',
-  pyw: 'python',
-  r: 'r',
-  raku: 'perl6',
-  perl6: 'perl6',
-  rake: 'ruby',
-  rb: 'ruby',
-  erb: 'rhtml',
-  rs: 'rust',
-  sass: 'sass',
-  scss: 'scss',
-  scala: 'scala',
-  scheme: 'scheme',
-  sh: 'sh',
-  bash: 'sh',
-  zsh: 'sh',
-  fish: 'sh',
-  slim: 'slim',
-  styl: 'stylus',
-  stylus: 'stylus',
-  sql: 'sql',
-  sqlite: 'sql',
-  tcl: 'tcl',
-  toml: 'toml',
-  ts: 'typescript',
-  tsx: 'typescript',
-  txt: 'text',
-  text: 'text',
-  csv: 'text',
-  tsv: 'text',
-  vb: 'vbscript',
-  vbs: 'vbscript',
-  v: 'verilog',
-  vhd: 'vhdl',
-  vim: 'vim',
-  vue: 'html',
-  wasm: 'wasm',
-  xml: 'xml',
-  svg: 'xml',
-  rss: 'xml',
-  atom: 'xml',
-  yaml: 'yaml',
-  yml: 'yaml',
-  zig: 'zig',
-
-  // config files
-  dotenv: 'sh',
-  env: 'sh',
-  babelrc: 'json',
-  eslintrc: 'json',
-  prettierrc: 'json',
-  stylelintrc: 'json',
-  npmignore: 'gitignore',
-  gitattributes: 'gitignore',
-  hgignore: 'gitignore',
-  editorconfig: 'ini',
-};
-
-function setTextType(type) {
-  const normalizedType = type.toLowerCase();
-  aceEditor.setMode(editor, typeMappings[normalizedType] || normalizedType);
-}
 // 初始化
 function init() {
   editor.setValue('');
@@ -298,6 +133,7 @@ function settingMenu(e) {
       text: '编辑器配置',
       beforeIcon: 'iconfont icon-liebiao',
     },
+    { id: 'code', text: '语言', beforeIcon: 'iconfont icon-daimakuai' },
   ];
   rMenu.selectMenu(
     e,
@@ -315,6 +151,31 @@ function settingMenu(e) {
         setEditor(e, editor, () => {
           saveState();
         });
+      } else if (id === 'code') {
+        function fn() {
+          const curMode = editor.session.getMode().$id;
+          let data = [];
+          aceEditor.modelist.modes.forEach(({ caption, mode }, idx) => {
+            data.push({
+              id: idx + '',
+              text: caption,
+              active: curMode === mode,
+              param: { mode },
+            });
+          });
+          return data;
+        }
+        rMenu.selectMenu(
+          e,
+          fn(),
+          ({ resetMenu, id, param }) => {
+            if (id) {
+              editor.session.setMode(param.mode);
+              resetMenu(fn());
+            }
+          },
+          '选择语言'
+        );
       }
     },
     '设置'

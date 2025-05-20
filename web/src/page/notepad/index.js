@@ -86,7 +86,7 @@ if (!isIframe()) {
 window.changeTheme = changeTheme;
 // 编辑器
 const editor = aceEditor.createEditor($editBox[0]);
-aceEditor.setMode(editor, 'markdown');
+aceEditor.setMode(editor, 'x.md');
 changeTheme(localData.get('dark'));
 function switchUndoState() {
   if (aceEditor.hasUndo(editor)) {

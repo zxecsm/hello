@@ -89,7 +89,7 @@ function changeTheme(dark) {
 window.changeTheme = changeTheme;
 // 创建编辑器
 const editor = aceEditor.createEditor($editBox[0]);
-aceEditor.setMode(editor, 'markdown');
+aceEditor.setMode(editor, 'x.md');
 changeTheme(localData.get('dark'));
 // 快捷键
 editor.getSession().on(

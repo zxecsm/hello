@@ -1,6 +1,9 @@
 import ace from 'ace-builds';
 import 'ace-builds/webpack-resolver';
+import 'ace-builds/src-noconflict/ext-modelist';
 
+// 获取 modelist
+const modelist = ace.require('ace/ext/modelist');
 // 皮肤
 import 'ace-builds/src-noconflict/theme-chrome';
 import 'ace-builds/src-noconflict/theme-github_dark';
@@ -95,6 +98,7 @@ function createEditor(el) {
 }
 
 const aceEditor = {
+  modelist,
   createEditor,
   hasUndo(editor) {
     return editor.getSession().getUndoManager().hasUndo();
@@ -105,16 +109,8 @@ const aceEditor = {
   reset(editor) {
     editor.getSession().getUndoManager().reset();
   },
-  async setMode(editor, type = 'text') {
-    const modePath = `ace/mode/${type}`;
-    const fallback = 'text';
-
-    try {
-      await import(`ace-builds/src-noconflict/mode-${type}.js`);
-      editor.session.setMode(modePath);
-    } catch {
-      editor.session.setMode(`ace/mode/${fallback}`);
-    }
+  setMode(editor, filePath) {
+    editor.session.setMode(modelist.getModeForPath(filePath).mode);
   },
 };
 
