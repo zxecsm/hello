@@ -1,6 +1,5 @@
 import ace from 'ace-builds';
-// import 'ace-builds/webpack-resolver';
-// import 'ace-builds/src-min-noconflict/ext-language_tools';
+import 'ace-builds/webpack-resolver';
 
 // 皮肤
 import 'ace-builds/src-noconflict/theme-chrome';
@@ -9,35 +8,10 @@ import 'ace-builds/src-noconflict/theme-github_dark';
 import 'ace-builds/src-noconflict/ext-language_tools';
 // 搜索
 import 'ace-builds/src-noconflict/ext-searchbox';
-// 语法高亮
-import 'ace-builds/src-noconflict/mode-javascript';
-import 'ace-builds/src-noconflict/snippets/javascript.js';
-import 'ace-builds/src-noconflict/mode-typescript';
-import 'ace-builds/src-noconflict/snippets/typescript.js';
-import 'ace-builds/src-noconflict/mode-markdown';
-import 'ace-builds/src-noconflict/snippets/markdown.js';
-import 'ace-builds/src-noconflict/mode-yaml';
-import 'ace-builds/src-noconflict/snippets/yaml.js';
-import 'ace-builds/src-noconflict/mode-html';
-import 'ace-builds/src-noconflict/snippets/html.js';
-import 'ace-builds/src-noconflict/mode-json';
-import 'ace-builds/src-noconflict/snippets/json.js';
-import 'ace-builds/src-noconflict/mode-text';
-import 'ace-builds/src-noconflict/snippets/text.js';
-import 'ace-builds/src-noconflict/mode-less';
-import 'ace-builds/src-noconflict/snippets/less.js';
-import 'ace-builds/src-noconflict/mode-nginx';
-import 'ace-builds/src-noconflict/snippets/nginx.js';
-import 'ace-builds/src-noconflict/mode-sql';
-import 'ace-builds/src-noconflict/snippets/sql.js';
-import 'ace-builds/src-noconflict/mode-sh';
-import 'ace-builds/src-noconflict/snippets/sh.js';
-import 'ace-builds/src-noconflict/mode-css';
-import 'ace-builds/src-noconflict/snippets/css.js';
 import { copyText } from './utils';
 import localData from '../common/localData';
 
-export default function createEditer(el) {
+function createEditor(el) {
   const editor = ace.edit(el, {
     tabSize: 2,
   });
@@ -120,12 +94,28 @@ export default function createEditer(el) {
   return editor;
 }
 
-createEditer.hasUndo = function (editor) {
-  return editor.getSession().getUndoManager().hasUndo();
+const aceEditor = {
+  createEditor,
+  hasUndo(editor) {
+    return editor.getSession().getUndoManager().hasUndo();
+  },
+  hasRedo(editor) {
+    return editor.getSession().getUndoManager().hasRedo();
+  },
+  reset(editor) {
+    editor.getSession().getUndoManager().reset();
+  },
+  async setMode(editor, type = 'text') {
+    const modePath = `ace/mode/${type}`;
+    const fallback = 'text';
+
+    try {
+      await import(`ace-builds/src-noconflict/mode-${type}.js`);
+      editor.session.setMode(modePath);
+    } catch {
+      editor.session.setMode(`ace/mode/${fallback}`);
+    }
+  },
 };
-createEditer.hasRedo = function (editor) {
-  return editor.getSession().getUndoManager().hasRedo();
-};
-createEditer.reset = function (editor) {
-  editor.getSession().getUndoManager().reset();
-};
+
+export default aceEditor;

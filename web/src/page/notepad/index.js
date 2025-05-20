@@ -29,7 +29,7 @@ import {
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
 import { UpProgress } from '../../js/plugins/UpProgress';
-import createEditer from '../../js/utils/editor';
+import aceEditor from '../../js/utils/editor';
 import gqImg from '../../images/img/gqimg.png';
 import { reqGetNotePad, reqNotePad } from '../../api/notepad';
 import { reqPicRepeat, reqPicUp } from '../../api/pic';
@@ -85,16 +85,16 @@ if (!isIframe()) {
 }
 window.changeTheme = changeTheme;
 // 编辑器
-const editor = createEditer($editBox[0]);
-editor.getSession().setMode('ace/mode/markdown');
+const editor = aceEditor.createEditor($editBox[0]);
+aceEditor.setMode(editor, 'markdown');
 changeTheme(localData.get('dark'));
 function switchUndoState() {
-  if (createEditer.hasUndo(editor)) {
+  if (aceEditor.hasUndo(editor)) {
     $headBtns.find('.undo_btn').removeClass('deactive');
   } else {
     $headBtns.find('.undo_btn').addClass('deactive');
   }
-  if (createEditer.hasRedo(editor)) {
+  if (aceEditor.hasRedo(editor)) {
     $headBtns.find('.redo_btn').removeClass('deactive');
   } else {
     $headBtns.find('.redo_btn').addClass('deactive');
@@ -217,7 +217,7 @@ let orginData = {
 function initValue(obj) {
   editor.setValue(obj.data);
   editor.gotoLine(1);
-  createEditer.reset(editor);
+  aceEditor.reset(editor);
   switchUndoState();
   if (obj.data === '') {
     editor.focus();

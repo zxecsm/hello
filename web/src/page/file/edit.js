@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import createEditer from '../../js/utils/editor';
+import aceEditor from '../../js/utils/editor';
 import {
   ContentScroll,
   _myOpen,
@@ -24,7 +24,7 @@ const $container = $('#app .container');
 let oText = '';
 let originText = '';
 let readOnly = false;
-const editor = createEditer($editFile.find('.editor')[0]);
+const editor = aceEditor.createEditor($editFile.find('.editor')[0]);
 let fileFontSize = localData.get('fileFontSize');
 export function editFileIsHiden() {
   return $editFile.is(':hidden');
@@ -44,7 +44,6 @@ function changeTheme(dark) {
   }
 }
 let filePath = '';
-let currentCodeType = 'text'; // 语言
 window.changeTheme = changeTheme;
 changeTheme(localData.get('dark'));
 
@@ -60,11 +59,11 @@ export function openFile(text, path) {
   $editFile.css('display', 'flex');
   document.documentElement.classList.add('notScroll');
   renderTitle(path);
-  currentCodeType = setTextType(_path.extname(path)[2]);
+  setTextType(_path.extname(path)[2]);
   originText = oText = text;
   editor.setValue(text);
   editor.gotoLine(1);
-  createEditer.reset(editor);
+  aceEditor.reset(editor);
   switchUndoState();
   if (text === '') {
     editor.focus();
@@ -74,61 +73,171 @@ export function openFile(text, path) {
 function renderTitle(path) {
   editTitleContentScroll.init(path);
 }
-// 语言处理
-const codeTypes = [
-  'text',
-  'js',
-  'ts',
-  'md',
-  'css',
-  'html',
-  'json',
-  'less',
-  'conf',
-  'yaml',
-  'sql',
-  'sh',
-];
+
+const typeMappings = {
+  abap: 'abap',
+  abc: 'abc',
+  as: 'actionscript',
+  ada: 'ada',
+  apache: 'apache_conf',
+  apex: 'apex',
+  applescript: 'applescript',
+  adoc: 'asciidoc',
+  asciidoc: 'asciidoc',
+  asm: 'assembly_x86',
+  s: 'assembly_x86',
+  ahk: 'autohotkey',
+  bat: 'batchfile',
+  cmd: 'batchfile',
+  c: 'c_cpp',
+  cpp: 'c_cpp',
+  h: 'c_cpp',
+  hpp: 'c_cpp',
+  cc: 'c_cpp',
+  hh: 'c_cpp',
+  m: 'objectivec', // Objective-C
+  mm: 'objectivec', // Objective-C++
+  clj: 'clojure',
+  cljs: 'clojure',
+  cljc: 'clojure',
+  cob: 'cobol',
+  cbl: 'cobol',
+  coffee: 'coffee',
+  litcoffee: 'coffee',
+  cr: 'crystal',
+  cs: 'csharp',
+  css: 'css',
+  d: 'd',
+  dart: 'dart',
+  diff: 'diff',
+  patch: 'diff',
+  dockerfile: 'dockerfile',
+  ex: 'elixir',
+  exs: 'elixir',
+  elm: 'elm',
+  erl: 'erlang',
+  hrl: 'erlang',
+  f90: 'fortran',
+  f95: 'fortran',
+  f: 'fortran',
+  fs: 'fsharp',
+  gitignore: 'gitignore',
+  glsl: 'glsl',
+  go: 'golang',
+  groovy: 'groovy',
+  haml: 'haml',
+  hbs: 'handlebars',
+  handlebars: 'handlebars',
+  hs: 'haskell',
+  hx: 'haxe',
+  html: 'html',
+  htm: 'html',
+  xhtml: 'html',
+  ini: 'ini',
+  cfg: 'ini',
+  io: 'io',
+  java: 'java',
+  jsp: 'jsp',
+  js: 'javascript',
+  jsx: 'javascript',
+  cjs: 'javascript',
+  mjs: 'javascript',
+  json: 'json',
+  jsonc: 'json',
+  json5: 'json',
+  jl: 'julia',
+  tex: 'latex',
+  bib: 'bibtex',
+  less: 'less',
+  liquid: 'liquid',
+  lisp: 'lisp',
+  cl: 'lisp',
+  el: 'lisp',
+  log: 'text',
+  lua: 'lua',
+  mk: 'makefile',
+  makefile: 'makefile',
+  markdown: 'markdown',
+  md: 'markdown',
+  mdx: 'markdown',
+  nginx: 'nginx',
+  nginxconf: 'nginx',
+  nim: 'nim',
+  nix: 'nix',
+  ocaml: 'ocaml',
+  ml: 'ocaml',
+  pas: 'pascal',
+  pp: 'pascal',
+  pl: 'perl',
+  pm: 'perl',
+  php: 'php',
+  phtml: 'php',
+  powershell: 'powershell',
+  ps1: 'powershell',
+  prisma: 'prisma',
+  properties: 'properties',
+  proto: 'protobuf',
+  py: 'python',
+  pyw: 'python',
+  r: 'r',
+  raku: 'perl6',
+  perl6: 'perl6',
+  rake: 'ruby',
+  rb: 'ruby',
+  erb: 'rhtml',
+  rs: 'rust',
+  sass: 'sass',
+  scss: 'scss',
+  scala: 'scala',
+  scheme: 'scheme',
+  sh: 'sh',
+  bash: 'sh',
+  zsh: 'sh',
+  fish: 'sh',
+  slim: 'slim',
+  styl: 'stylus',
+  stylus: 'stylus',
+  sql: 'sql',
+  sqlite: 'sql',
+  tcl: 'tcl',
+  toml: 'toml',
+  ts: 'typescript',
+  tsx: 'typescript',
+  txt: 'text',
+  text: 'text',
+  csv: 'text',
+  tsv: 'text',
+  vb: 'vbscript',
+  vbs: 'vbscript',
+  v: 'verilog',
+  vhd: 'vhdl',
+  vim: 'vim',
+  vue: 'html',
+  wasm: 'wasm',
+  xml: 'xml',
+  svg: 'xml',
+  rss: 'xml',
+  atom: 'xml',
+  yaml: 'yaml',
+  yml: 'yaml',
+  zig: 'zig',
+
+  // config files
+  dotenv: 'sh',
+  env: 'sh',
+  babelrc: 'json',
+  eslintrc: 'json',
+  prettierrc: 'json',
+  stylelintrc: 'json',
+  npmignore: 'gitignore',
+  gitattributes: 'gitignore',
+  hgignore: 'gitignore',
+  editorconfig: 'ini',
+};
+
 function setTextType(type) {
-  let res = 'text';
-  if (type === 'js' || type === 'vue' || type === 'jsx') {
-    res = 'js';
-    type = 'ace/mode/javascript';
-  } else if (type === 'ts') {
-    res = 'ts';
-    type = 'ace/mode/typescript';
-  } else if (type === 'md') {
-    res = 'md';
-    type = 'ace/mode/markdown';
-  } else if (type === 'css') {
-    res = 'css';
-    type = 'ace/mode/css';
-  } else if (type === 'html') {
-    res = 'html';
-    type = 'ace/mode/html';
-  } else if (type === 'json') {
-    res = 'json';
-    type = 'ace/mode/json';
-  } else if (type === 'less' || type === 'sass') {
-    res = 'less';
-    type = 'ace/mode/less';
-  } else if (type === 'conf') {
-    res = 'conf';
-    type = 'ace/mode/nginx';
-  } else if (type === 'yaml' || type === 'yml') {
-    res = 'yaml';
-    type = 'ace/mode/yaml';
-  } else if (type === 'sql') {
-    res = 'sql';
-    type = 'ace/mode/sql';
-  } else if (type === 'sh') {
-    res = 'sh';
-    type = 'ace/mode/sh';
-  } else {
-    type = 'ace/mode/text';
-  }
-  editor.getSession().setMode(type);
-  return res;
+  const normalizedType = type.toLowerCase();
+  aceEditor.setMode(editor, typeMappings[normalizedType] || normalizedType);
 }
 // 初始化
 function init() {
@@ -154,12 +263,12 @@ function saveState() {
   }
 }
 function switchUndoState() {
-  if (createEditer.hasUndo(editor)) {
+  if (aceEditor.hasUndo(editor)) {
     $editFile.find('.head_btn .undo').removeClass('deactive');
   } else {
     $editFile.find('.head_btn .undo').addClass('deactive');
   }
-  if (createEditer.hasRedo(editor)) {
+  if (aceEditor.hasRedo(editor)) {
     $editFile.find('.head_btn .redo').removeClass('deactive');
   } else {
     $editFile.find('.head_btn .redo').addClass('deactive');
@@ -189,7 +298,6 @@ function settingMenu(e) {
       text: '编辑器配置',
       beforeIcon: 'iconfont icon-liebiao',
     },
-    { id: 'code', text: '语言', beforeIcon: 'iconfont icon-daimakuai' },
   ];
   rMenu.selectMenu(
     e,
@@ -207,30 +315,6 @@ function settingMenu(e) {
         setEditor(e, editor, () => {
           saveState();
         });
-      } else if (id === 'code') {
-        function fn() {
-          let data = [];
-          codeTypes.forEach((item) => {
-            data.push({
-              id: item,
-              text: item,
-              active: currentCodeType === item,
-            });
-          });
-          return data;
-        }
-        rMenu.selectMenu(
-          e,
-          fn(),
-          ({ resetMenu, id }) => {
-            if (id) {
-              currentCodeType = id;
-              resetMenu(fn());
-              setTextType(currentCodeType);
-            }
-          },
-          '选择语言'
-        );
       }
     },
     '设置'

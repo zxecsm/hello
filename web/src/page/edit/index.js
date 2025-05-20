@@ -31,7 +31,7 @@ import {
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
 import { UpProgress } from '../../js/plugins/UpProgress';
-import createEditer from '../../js/utils/editor';
+import aceEditor from '../../js/utils/editor';
 import _pop from '../../js/plugins/popConfirm';
 import gqImg from '../../images/img/gqimg.png';
 import { reqNoteEdit, reqNoteRead } from '../../api/note';
@@ -88,8 +88,8 @@ function changeTheme(dark) {
 }
 window.changeTheme = changeTheme;
 // 创建编辑器
-const editor = createEditer($editBox[0]);
-editor.getSession().setMode('ace/mode/markdown');
+const editor = aceEditor.createEditor($editBox[0]);
+aceEditor.setMode(editor, 'markdown');
 changeTheme(localData.get('dark'));
 // 快捷键
 editor.getSession().on(
@@ -100,12 +100,12 @@ editor.getSession().on(
   }, 1000)
 );
 function switchUndoState() {
-  if (createEditer.hasUndo(editor)) {
+  if (aceEditor.hasUndo(editor)) {
     $headBtns.find('.undo_btn').removeClass('deactive');
   } else {
     $headBtns.find('.undo_btn').addClass('deactive');
   }
-  if (createEditer.hasRedo(editor)) {
+  if (aceEditor.hasRedo(editor)) {
     $headBtns.find('.redo_btn').removeClass('deactive');
   } else {
     $headBtns.find('.redo_btn').addClass('deactive');
@@ -239,7 +239,7 @@ function initValue(obj) {
   editor.setValue(obj.content);
   wInput.setValue(obj.title);
   editor.gotoLine(1);
-  createEditer.reset(editor);
+  aceEditor.reset(editor);
   switchUndoState();
   if (obj.content === '') {
     editor.focus();
