@@ -96,7 +96,25 @@ function createEditor(el) {
 
   return editor;
 }
-
+const overrides = {
+  conf: 'ace/mode/ini',
+  cfg: 'ace/mode/ini',
+  log: 'ace/mode/text',
+  env: 'ace/mode/sh',
+  dotenv: 'ace/mode/sh',
+  editorconfig: 'ace/mode/ini',
+  eslintrc: 'ace/mode/json',
+  prettierrc: 'ace/mode/json',
+  babelrc: 'ace/mode/json',
+  stylelintrc: 'ace/mode/json',
+  npmignore: 'ace/mode/gitignore',
+  dockerignore: 'ace/mode/gitignore',
+  gitattributes: 'ace/mode/ini',
+  zshrc: 'ace/mode/sh',
+  bashrc: 'ace/mode/sh',
+  profile: 'ace/mode/sh',
+  dockerfile: 'ace/mode/dockerfile',
+};
 const aceEditor = {
   modelist,
   createEditor,
@@ -110,7 +128,11 @@ const aceEditor = {
     editor.getSession().getUndoManager().reset();
   },
   setMode(editor, filePath) {
-    editor.session.setMode(modelist.getModeForPath(filePath).mode);
+    const idx = filePath.lastIndexOf('.');
+    const suffix = idx >= 0 ? filePath.slice(idx + 1) : '';
+    editor.session.setMode(
+      overrides[suffix.toLowerCase()] || modelist.getModeForPath(filePath).mode
+    );
   },
 };
 
