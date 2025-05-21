@@ -11,13 +11,15 @@ import 'ace-builds/src-noconflict/theme-github_dark';
 import 'ace-builds/src-noconflict/ext-language_tools';
 // 搜索
 import 'ace-builds/src-noconflict/ext-searchbox';
-import { copyText } from './utils';
+// import { copyText } from './utils';
 import localData from '../common/localData';
 
 function createEditor(el) {
   const editor = ace.edit(el, {
     tabSize: 2,
   });
+  // 快捷键
+  editor.setKeyboardHandler('ace/keyboard/vscode');
   // editor.getSession().setMode('ace/mode/javascript');
   editor.setOptions({
     // 补全
@@ -55,44 +57,44 @@ function createEditor(el) {
   // editor.setTheme('ace/theme/chrome');
   // editor.setTheme('ace/theme/github_dark');
   // 添加 Ctrl+D 快捷键绑定
-  editor.commands.addCommand({
-    name: 'selectMore',
-    bindKey: { win: 'Ctrl-D', mac: 'Command-D' }, // 为 Windows 绑定 Ctrl+D，为 Mac 绑定 Command+D
-    exec: function (editor) {
-      editor.selectMore(1); // 选择下一个与当前选中内容相同的匹配项
-    },
-  });
-  // 添加 Ctrl+X 快捷键绑定
-  editor.commands.addCommand({
-    name: 'cutCurrentLine',
-    bindKey: { win: 'Ctrl-X', mac: 'Command-X' }, // Windows 使用 Ctrl-X，Mac 使用 Command-X
-    exec: async function (editor) {
-      if (!editor.selection.isEmpty()) {
-        const selectionRange = editor.getSelectionRange();
-        // 如果有选中内容，剪切选中的内容
-        const selectedText = editor.getSelectedText();
-        if (selectedText) {
-          // 将选中内容复制到剪贴板
-          await copyText(selectedText, { stopMsg: true });
+  // editor.commands.addCommand({
+  //   name: 'selectMore',
+  //   bindKey: { win: 'Ctrl-D', mac: 'Command-D' }, // 为 Windows 绑定 Ctrl+D，为 Mac 绑定 Command+D
+  //   exec: function (editor) {
+  //     editor.selectMore(1); // 选择下一个与当前选中内容相同的匹配项
+  //   },
+  // });
+  // // 添加 Ctrl+X 快捷键绑定
+  // editor.commands.addCommand({
+  //   name: 'cutCurrentLine',
+  //   bindKey: { win: 'Ctrl-X', mac: 'Command-X' }, // Windows 使用 Ctrl-X，Mac 使用 Command-X
+  //   exec: async function (editor) {
+  //     if (!editor.selection.isEmpty()) {
+  //       const selectionRange = editor.getSelectionRange();
+  //       // 如果有选中内容，剪切选中的内容
+  //       const selectedText = editor.getSelectedText();
+  //       if (selectedText) {
+  //         // 将选中内容复制到剪贴板
+  //         await copyText(selectedText, { stopMsg: true });
 
-          // 删除选中的内容
-          editor.session.replace(selectionRange, '');
-        }
-      } else {
-        // 如果没有选中内容，剪切当前行
-        const cursorPosition = editor.getCursorPosition();
-        const lineNumber = cursorPosition.row;
+  //         // 删除选中的内容
+  //         editor.session.replace(selectionRange, '');
+  //       }
+  //     } else {
+  //       // 如果没有选中内容，剪切当前行
+  //       const cursorPosition = editor.getCursorPosition();
+  //       const lineNumber = cursorPosition.row;
 
-        // 获取当前行的内容
-        const line = editor.session.getLine(lineNumber) || '\n';
+  //       // 获取当前行的内容
+  //       const line = editor.session.getLine(lineNumber) || '\n';
 
-        // 将当前行内容复制到剪贴板
-        await copyText(line || '\n', { stopMsg: true });
-        // 删除当前行
-        editor.session.removeFullLines(lineNumber, lineNumber);
-      }
-    },
-  });
+  //       // 将当前行内容复制到剪贴板
+  //       await copyText(line || '\n', { stopMsg: true });
+  //       // 删除当前行
+  //       editor.session.removeFullLines(lineNumber, lineNumber);
+  //     }
+  //   },
+  // });
 
   return editor;
 }

@@ -45,6 +45,7 @@ import imgPreview from '../../js/plugins/imgPreview/index.js';
 import realtime from '../../js/plugins/realtime/index.js';
 import { otherWindowMsg, waitLogin } from '../home/home.js';
 import localData from '../../js/common/localData.js';
+import { insertBlock } from '../edit/edit.js';
 const mdWorker = new MdWorker();
 const $contentWrap = $('.content_wrap'),
   $headBtns = $contentWrap.find('.head_btns'),
@@ -108,43 +109,70 @@ editor.getSession().on(
     rende();
   }, 1000)
 );
-editor.commands.addCommand({
-  name: 'createLink',
-  bindKey: { win: 'Ctrl-K', mac: 'Command-K' },
-  exec: function () {
-    createLink();
-  },
+// 1. 获取当前的VSCode键盘处理器
+const vscodeHandler = editor.keyBinding.getKeyboardHandler();
+
+// 2. 批量解绑冲突的快捷键
+const shortcutsToRemove = [
+  'Ctrl-K', // VSCode默认的"快速打开"命令
+  'Ctrl-Shift-K', // VSCode默认的"删除行"命令
+  'Ctrl-B', // VSCode默认的"侧边栏切换"命令
+  'Ctrl-I', // VSCode默认的"转到实现"命令
+];
+
+shortcutsToRemove.forEach((shortcut) => {
+  vscodeHandler.bindKey(shortcut, null); // 解除绑定
 });
-editor.commands.addCommand({
-  name: 'codeBlock',
-  bindKey: { win: 'Ctrl-Shift-K', mac: 'Command-Shift-K' },
-  exec: function () {
-    createCodeBlock();
+
+// 3. 批量添加自定义命令
+const customCommands = [
+  {
+    name: 'createLink',
+    bindKey: { win: 'Ctrl-K', mac: 'Command-K' },
+    exec: function () {
+      insertBlock(editor, 'link');
+    },
   },
-});
-editor.commands.addCommand({
-  name: 'codeTable',
-  bindKey: { win: 'Ctrl-B', mac: 'Command-B' },
-  exec: function () {
-    createTable();
+  {
+    name: 'codeBlock',
+    bindKey: { win: 'Ctrl-Shift-K', mac: 'Command-Shift-K' },
+    exec: function () {
+      insertBlock(editor, 'code');
+    },
   },
-});
-editor.commands.addCommand({
-  name: 'upImg',
-  bindKey: { win: 'Ctrl-I', mac: 'Command-I' },
-  exec: async function () {
-    if (!isLogin()) {
-      toLogin();
-      return;
-    }
-    const files = await getFiles({
-      multiple: true,
-      accept: 'image/*',
-    });
-    if (files.length === 0) return;
-    hdUpFile(files);
+  {
+    name: 'codeTable',
+    bindKey: { win: 'Ctrl-B', mac: 'Command-B' },
+    exec: function () {
+      insertBlock(editor, 'table');
+    },
   },
+  {
+    name: 'upImg',
+    bindKey: { win: 'Ctrl-I', mac: 'Command-I' },
+    exec: async function () {
+      if (!isLogin()) {
+        toLogin();
+        return;
+      }
+      const files = await getFiles({
+        multiple: true,
+        accept: 'image/*',
+      });
+      if (files.length === 0) return;
+      hdUpFile(files);
+    },
+  },
+];
+
+customCommands.forEach((cmd) => {
+  // 两种方式都可以，推荐使用addCommand确保命令注册
+  vscodeHandler.addCommand(cmd);
+  editor.commands.addCommand(cmd); // 双重保险
 });
+
+// 4. 重新应用处理器（确保更改生效）
+editor.setKeyboardHandler(vscodeHandler);
 let previewLines = [];
 // 同步滚动逻辑，基于编辑器当前可见行
 let isSyncingEditorScroll = false;
@@ -493,13 +521,10 @@ async function hdUpFile(files) {
       pro.fail();
     }
   });
-  let str = '';
   fData.forEach((item) => {
     let { filename, url } = item;
-    str += `\n![${filename}](${url})\n`;
+    insertBlock(editor, 'img', { alt: filename, src: url });
   });
-  editor.insert(str);
-  editor.focus();
 }
 // 拖入上传
 ~(function () {
@@ -516,22 +541,6 @@ async function hdUpFile(files) {
     hdUpFile(files);
   });
 })();
-function createLink() {
-  editor.insert(`\n[](https://)\n`);
-  let row = editor.selection.getCursor().row;
-  editor.gotoLine(row, 1);
-  editor.focus();
-}
-function createCodeBlock() {
-  editor.insert(`\n\`\`\`javascript\n\n\`\`\`\n`);
-  let row = editor.selection.getCursor().row;
-  editor.gotoLine(row - 2, 13);
-  editor.focus();
-}
-function createTable() {
-  editor.insert(`\n|列1|列2|列3|\n|:--:|--|--|\n|行1|  |  |\n|行2|  |  |\n`);
-  editor.focus();
-}
 $editWrap.css({
   'font-size': percentToValue(12, 40, editNoteFontSize),
 });
@@ -594,9 +603,9 @@ function previewState() {
 }
 $headBtns
   .on('click', '.setting_btn', settingEdit)
-  .on('click', '.table_btn', createTable)
-  .on('click', '.code_btn', createCodeBlock)
-  .on('click', '.link_btn', createLink)
+  .on('click', '.table_btn', () => insertBlock(editor, 'table'))
+  .on('click', '.code_btn', () => insertBlock(editor, 'code'))
+  .on('click', '.link_btn', () => insertBlock(editor, 'link'))
   .on('click', '.img_btn', async function () {
     if (!isLogin()) {
       toLogin();
