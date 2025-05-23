@@ -548,20 +548,11 @@ body {
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
-    transition: transform 0.3s ease-in-out;
-    .alert_flag {
-      background: var(--btn-danger-color);
-      border-radius: 50%;
-      display: none;
-      height: 1rem;
-      width: 1rem;
-      position: absolute;
-      right: 0;
-      top: 0;
+    &.alert {
+      animation: breathe 2s ease-in-out infinite;
     }
     &:hover {
-      box-shadow: 0 0 0.5rem var(--color5);
-      transform: rotate(360deg) scale(1.2);
+      transform: scale(1.2);
     }
   }
 
@@ -755,8 +746,8 @@ body {
     animation: shakeY 20s infinite;
 
     &.run {
-      font-size: 8rem;
-      animation: tada 1s infinite;
+      font-size: 6rem;
+      animation: tada 2s ease-in-out infinite;
     }
     &:hover {
       animation: none;
@@ -881,6 +872,7 @@ body {
             left: 0;
             top: 0;
             border-radius: 50%;
+            animation: breathe 2s ease-in-out infinite;
             z-index: 2;
 
             &[x='n'] {
@@ -1081,6 +1073,7 @@ body {
             background: var(--btn-danger-color);
             border-radius: 50%;
             right: 0.5rem;
+            animation: breathe 2s ease-in-out infinite;
           }
         }
 
@@ -1107,6 +1100,7 @@ body {
             background: var(--btn-danger-color);
             border-radius: 50%;
             right: 0.5rem;
+            animation: breathe 2s ease-in-out infinite;
           }
         }
       }
@@ -1497,10 +1491,13 @@ body {
     position: absolute;
     top: 2.5rem;
     left: 1.5rem;
-    font-size: 3rem;
+    font-size: 4rem;
+    font-weight: bold;
     color: var(--icon-color);
     padding: 0.5rem;
+    animation: rotate360 6s ease-in-out infinite alternate;
     &:hover {
+      animation: none;
       color: var(--text-hover-color);
       transform: scale(1.2);
     }

@@ -308,3 +308,11 @@
     width: 95%;
   }
 }
+@keyframes breathe {
+  0% {
+    box-shadow: 0 0 0 0 rgba(1, 255, 9, 0.644);
+  }
+  60% {
+    box-shadow: 0 0 0 1rem rgba(0, 255, 8, 0);
+  }
+}

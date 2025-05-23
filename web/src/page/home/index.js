@@ -275,15 +275,14 @@ export function changeLogoAlertStatus() {
   const expireCount = setExpireCount();
   const tipsFlag = setTopsFlag();
   const undoneCount = setTodoUndone();
-  const $alertFlag = $userLogoBtn.find('.alert_flag');
   if (
     expireCount > 0 ||
     undoneCount > 0 ||
     (tipsFlag !== 0 && tipsFlag !== localData.get('tipsFlag'))
   ) {
-    $alertFlag.fadeIn();
+    $userLogoBtn.addClass('alert');
   } else {
-    $alertFlag.fadeOut();
+    $userLogoBtn.removeClass('alert');
   }
 }
 // 关闭页面加载
