@@ -1244,39 +1244,43 @@ route.post('/mode', async (req, res) => {
 
     if (
       !/^[0-7]{3}$/.test(mode) ||
-      !_type.isObject(data) ||
-      !validaString(data.name, 1, fieldLenght.filename) ||
-      !isFilename(data.name) ||
-      !validaString(data.path, 1, fieldLenght.url) ||
-      !validationValue(data.type, ['dir', 'file'])
+      !_type.isArray(data) ||
+      data.length === 0 ||
+      data.length > fieldLenght.maxPagesize ||
+      !data.every(
+        (item) =>
+          _type.isObject(item) &&
+          validaString(item.name, 1, fieldLenght.filename) &&
+          isFilename(item.name) &&
+          validaString(item.path, 1, fieldLenght.url) &&
+          validationValue(item.type, ['dir', 'file'])
+      )
     ) {
       paramErr(res, req);
       return;
     }
 
+    if (!req._hello.isRoot) {
+      _err(res, '无权操作')(req);
+      return;
+    }
+
     const { account } = req._hello.userinfo;
 
-    const dir = getCurPath(account, data.path);
-    const p = _path.normalize(`${dir}/${data.name}`);
-
-    if (!req._hello.isRoot) {
-      _err(res, '无权操作')(req, p, 1);
-      return;
-    }
-
-    const txt = data.type === 'dir' ? '文件夹' : '文件';
-    if (!(await _f.exists(p))) {
-      _err(res, `${txt}不存在`)(req, p, 1);
-      return;
-    }
-
-    await _f.fsp.chmod(p, mode.toString(8));
+    await concurrencyTasks(data, 5, async (task) => {
+      const { path, name } = task;
+      const p = getCurPath(account, `${path}/${name}`);
+      if (await _f.exists(p)) {
+        await _f.fsp.chmod(p, mode.toString(8));
+        await uLog(req, `设置权限为${mode}(${p})`);
+      }
+    });
 
     syncUpdateData(req, 'file');
 
     fileList.clear(account);
 
-    _success(res, `设置${txt}权限成功`)(req, `${p}-${mode}`, 1);
+    _success(res, `设置权限成功`)(req, `${mode}-${data.length}`, 1);
   } catch (error) {
     _err(res)(req, error);
   }

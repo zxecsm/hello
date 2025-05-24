@@ -227,13 +227,14 @@ async function renderList(top) {
   const html = _tpl(
     `
     <template v-if="total > 0">
-      <ul v-for="{type, name, size, time, id} in list" class="file_item" :data-id="id">
+      <ul v-for="{type, name, size, time, id, mode} in list" class="file_item" :data-id="id">
         <li class="check_state" check="n"></li>
         <li cursor="y" class="logo iconfont {{hdLogo(name,type,size) || 'is_img'}}"></li>
         <li cursor="y" class="name">
           <span class="text">{{getText(name,type).a}}<span class="suffix">{{getText(name,type).b}}</span>
           </span>
         </li>
+        <li class='mode'>{{mode}}</li>
         <li :cursor="type === 'file' ? '' : 'cursor'" class="size">{{size ? formatBytes(size) : type === 'file' ? '--' : '计算'}}</li>
         <li class="date">{{formatDate({template: '{0}-{1}-{2} {3}:{4}',timestamp: time})}}</li>
       </ul>
@@ -759,7 +760,7 @@ function rightList(e, obj, el) {
           hdCheckItem(el);
         }
       } else if (id === 'mode') {
-        editFileMode(e, obj);
+        editFileMode(e, [obj]);
       } else if (id === 'copyPath') {
         copyText(_path.normalize(`/${obj.path}/${obj.name}`));
         close();
@@ -769,7 +770,7 @@ function rightList(e, obj, el) {
   );
 }
 // 编辑权限
-function editFileMode(e, obj) {
+function editFileMode(e, data) {
   rMenu.inpMenu(
     e,
     {
@@ -777,7 +778,6 @@ function editFileMode(e, obj) {
         mode: {
           placeholder: '777',
           beforeText: '权限码：',
-          value: obj.mode.split(' ')[1],
           inputType: 'number',
           verify(val) {
             if (!/^[0-7]{3}$/.test(val)) {
@@ -791,7 +791,7 @@ function editFileMode(e, obj) {
       if (!isDiff()) return;
       const mode = inp.mode;
       loading.start();
-      reqFileMode({ data: obj, mode })
+      reqFileMode({ data, mode })
         .then((res) => {
           loading.end();
           if (res.code === 1) {
@@ -1611,6 +1611,7 @@ function renderFoot() {
         <button v-if="isZip()" cursor="y" class="f_decompress btn btn_primary">解压缩</button>
         <button v-else cursor="y" class="f_compress btn btn_primary">压缩</button>
       </template>
+      <button cursor="y" class="f_mode btn btn_primary">权限</button>
       <button v-if="checkIsFile()" cursor="y" class="f_download btn btn_primary">下载</button>
       <button cursor="y" class="f_delete btn btn_danger">删除</button>
     </template>
@@ -1695,6 +1696,9 @@ $footer
   .on('click', '.f_rename', function (e) {
     const obj = getCheckDatas()[0];
     hdRename(e, obj);
+  })
+  .on('click', '.f_mode', function (e) {
+    editFileMode(e, getCheckDatas());
   })
   .on('click', '.f_close', function () {
     closeCheck();

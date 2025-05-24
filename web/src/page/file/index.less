@@ -200,6 +200,11 @@ body {
             color: var(--text-hover-color);
           }
         }
+        .mode {
+          flex: none;
+          width: 10rem;
+          font-size: 0.8em;
+        }
         .date {
           flex: none;
           width: 15rem;
@@ -222,7 +227,8 @@ body {
           }
         }
         @media (max-width: 800px) {
-          .date {
+          .date,
+          .mode {
             display: none;
           }
         }
@@ -266,6 +272,7 @@ body {
             text-align: center;
           }
           .date,
+          .mode,
           .size {
             display: none;
           }
