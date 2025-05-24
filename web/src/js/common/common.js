@@ -245,8 +245,11 @@ function updateToolBoxDarkBtn(dark) {
   }
 }
 updateToolBoxDarkBtn(localData.get('dark'));
-function changeHtmlFontSize(size) {
+function changeHtmlFontSize(size, notify) {
   document.documentElement.style.fontSize = size + 'px';
+  if (notify && !isIframe()) {
+    _msg.botMsg(size, 1);
+  }
 }
 changeHtmlFontSize(localData.get('htmlFontSize'));
 localData.onChange(({ key }) => {
@@ -267,7 +270,7 @@ localData.onChange(({ key }) => {
     changeHeadBtnSort(localData.get('headBtnToRight'));
   }
   if (!key || key === 'htmlFontSize') {
-    changeHtmlFontSize(localData.get('htmlFontSize'));
+    changeHtmlFontSize(localData.get('htmlFontSize'), 1);
   }
 });
 window
