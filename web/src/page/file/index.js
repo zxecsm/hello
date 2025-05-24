@@ -1611,7 +1611,7 @@ function renderFoot() {
         <button v-if="isZip()" cursor="y" class="f_decompress btn btn_primary">解压缩</button>
         <button v-else cursor="y" class="f_compress btn btn_primary">压缩</button>
       </template>
-      <button cursor="y" class="f_mode btn btn_primary">权限</button>
+      <button v-if="isRoot()" cursor="y" class="f_mode btn btn_primary">权限</button>
       <button v-if="checkIsFile()" cursor="y" class="f_download btn btn_primary">下载</button>
       <button cursor="y" class="f_delete btn btn_danger">删除</button>
     </template>
