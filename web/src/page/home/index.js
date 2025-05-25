@@ -147,7 +147,7 @@ import {
 } from '../../js/plugins/percentBar/index.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
 import { reqRootSysStatus } from '../../api/root.js';
-import { handleAllowLoginMsg, shakeChat } from './home.js';
+import { handleAllowLoginMsg, shakeChat, timeMsg } from './home.js';
 import localData from '../../js/common/localData.js';
 const $pageBg = $('.page_bg'),
   $document = $(document),
@@ -246,31 +246,6 @@ function changeBg() {
       windmill.stop();
     });
 }
-function timeMsg() {
-  const hour = new Date().getHours();
-  let msg = '';
-  let icon = '';
-  if (hour < 6) {
-    msg = '晚上好丫';
-    icon = 'iconfont icon-icon_yejian-yueliang';
-  } else if (hour < 11) {
-    msg = '早上好丫';
-    icon = 'iconfont icon-a-056_richu';
-  } else if (hour < 13) {
-    msg = '中午好丫';
-    icon = 'iconfont icon-taiyangtianqi';
-  } else if (hour < 17) {
-    msg = '下午好丫';
-    icon = 'iconfont icon-xiawucha';
-  } else if (hour < 19) {
-    msg = '傍晚好丫';
-    icon = 'iconfont icon-yewan-bangwan';
-  } else {
-    msg = '晚上好丫';
-    icon = 'iconfont icon-icon_yejian-yueliang';
-  }
-  return { msg, icon };
-}
 export function changeLogoAlertStatus() {
   const expireCount = setExpireCount();
   const tipsFlag = setTopsFlag();
@@ -289,8 +264,7 @@ export function changeLogoAlertStatus() {
 function closeLoading() {
   loadingPage.end();
   $searchBoxBtn.stop().slideDown(_d.speed, () => {
-    const { msg, icon } = timeMsg();
-    _msg.msg({ message: `${msg} ${userInfo.username}`, icon });
+    timeMsg();
     // 查看消息
     reqChatNews()
       .then((result) => {

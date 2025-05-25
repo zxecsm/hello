@@ -26,6 +26,7 @@ import './codeRain';
 import './stars';
 import localData from './localData';
 import wave from '../plugins/wave';
+import { timeMsg } from '../../page/home/home';
 import bear from '../plugins/bear';
 window._pageName =
   myOpen()
@@ -77,6 +78,9 @@ window.addEventListener('load', function () {
   }
   if (window._pageName === 'home' || window._pageName === 'note') return;
   loadingPage.end();
+  if (!isIframe()) {
+    timeMsg();
+  }
 });
 //鼠标点击效果
 ~(function () {

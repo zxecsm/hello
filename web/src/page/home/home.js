@@ -127,3 +127,35 @@ export function waitLogin(callback) {
     _setTimeout(() => waitLogin(callback), 5000);
   }
 }
+export function timeMsg() {
+  const hour = new Date().getHours();
+  let msg = '';
+  let icon = '';
+  if (hour <= 5) {
+    msg = '🌙夜深了，星星都困得眨眼啦~早点休息哦，明天又是元气满满的一天！';
+    icon = 'iconfont icon-icon_yejian-yueliang';
+  } else if (hour <= 9) {
+    msg = '🌞早安呀！阳光正好，微风不燥，今天也要像向日葵一样向阳生长呀~';
+    icon = 'iconfont icon-a-056_richu';
+  } else if (hour === 10) {
+    msg = '☕上午黄金时间到！来杯咖啡提提神，今天的你闪闪发光呢✨';
+    icon = 'iconfont icon-a-056_richu';
+  } else if (hour === 11) {
+    msg = '⏰11点啦！坚持就是胜利，午餐已经在向你招手啦~想想待会吃什么美味呢？';
+    icon = 'iconfont icon-taiyangtianqi';
+  } else if (hour <= 14) {
+    msg = '😴午安小憩时间~吃饱饱后记得眯一会儿，下午才能电量满格哦！';
+    icon = 'iconfont icon-taiyangtianqi';
+  } else if (hour <= 18) {
+    msg = '🌈下午茶时间到！来块小蛋糕犒劳自己吧，今天也辛苦啦~';
+    icon = 'iconfont icon-xiawucha';
+  } else if (hour === 19) {
+    msg = '🍽️晚餐时间！19点的钟声敲响啦~今天想宠幸哪家美食呢？';
+    icon = 'iconfont icon-yewan-bangwan';
+  } else {
+    msg = '🌃晚上好呀~卸下一天的疲惫，泡个热水澡，好好享受属于自己的时光吧💖';
+    icon = 'iconfont icon-icon_yejian-yueliang';
+  }
+
+  _msg.msg({ message: msg, icon, duration: 5000 });
+}
