@@ -157,5 +157,13 @@ export function timeMsg() {
     icon = 'iconfont icon-icon_yejian-yueliang';
   }
 
+  const lastMsg = localData.get('timeMsg');
+
+  if (msg === lastMsg) {
+    msg = 'Welcome back!';
+  } else {
+    localData.set('timeMsg', msg);
+  }
+
   _msg.msg({ message: msg, icon, duration: 5000 });
 }
