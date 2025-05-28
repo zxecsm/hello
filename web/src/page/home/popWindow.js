@@ -6,16 +6,18 @@ let windowList = [];
 const updateActiveWindows = debounce(function () {
   removeTagsActive();
   windowList.forEach((item) => {
-    item.target &&
-      !['search', 'rightmenu', 'bg'].includes(item.id) &&
+    if (item.target && !['search', 'rightmenu', 'bg'].includes(item.id)) {
       item.target.classList.remove('active-window');
+      item.target.classList.add('inactive-window');
+    }
   });
   const topWindow = windowList.slice(-1)[0];
   if (topWindow) {
     const { id, target, tagBox } = topWindow;
-    target &&
-      !['search', 'rightmenu', 'bg'].includes(id) &&
+    if (target && !['search', 'rightmenu', 'bg'].includes(id)) {
       target.classList.add('active-window');
+      target.classList.remove('inactive-window');
+    }
     tagBox && tagBox.classList.add('active-window');
   }
 }, 100);

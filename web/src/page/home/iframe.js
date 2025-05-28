@@ -91,7 +91,7 @@ class CreateIframe {
     this.box.className = 'iframe_warp no_select';
     const html = _tpl(
       `
-      <div class="i_head_btns">
+      <div class="i_head_btns window_head">
         <div cursor="y" class="i_close_btn iconfont icon-close-bold"></div>
         <div cursor="y" class="i_to_max_btn iconfont icon-xuanzeweixuanze"></div>
         <div cursor="y" class="i_hide_btn iconfont icon-minus-bold"></div>
