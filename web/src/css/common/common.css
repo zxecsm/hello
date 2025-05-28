@@ -343,3 +343,9 @@ a:hover {
   text-decoration: underline wavy !important;
   color: var(--text-hover-color) !important;
 }
+.active-window {
+  box-shadow: 0 0 1rem var(--text-hover-color) !important;
+}
+.inactive-window .window_head {
+  opacity: 0.5 !important;
+}

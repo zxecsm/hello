@@ -25,6 +25,20 @@ import { _tpl, deepClone } from '../../utils/template';
 import cacheFile from '../../utils/cacheFile';
 // 右键菜单
 let rightBoxList = [];
+const updateActiveWindows = debounce(function () {
+  rightBoxList.forEach((item) => {
+    if (item.rightBox) {
+      item.rightBox.classList.add('inactive-window');
+    }
+  });
+  const topWindow = rightBoxList.slice(-1)[0];
+  if (topWindow) {
+    const { rightBox } = topWindow;
+    if (rightBox) {
+      rightBox.classList.remove('inactive-window');
+    }
+  }
+}, 100);
 class RightM {
   constructor(opt = {}) {
     const defaultOpt = {
@@ -50,7 +64,7 @@ class RightM {
     this.rightBox = document.createElement('div');
     this.rightBox.className = 'right_box max';
     this.head = document.createElement('div');
-    this.head.className = 'head';
+    this.head.className = 'head window_head';
     if (!this.opt.hideCloseBtn) {
       this.hClose = document.createElement('div');
       this.hClose.className = `iconfont icon-close-bold close`;
@@ -250,6 +264,7 @@ class RightM {
     }
     this.opt.beforeClose && this.opt.beforeClose.call(this);
     rightBoxList = rightBoxList.filter((item) => item !== this);
+    updateActiveWindows();
     this.dragClose();
     this.resizeClose();
     this.titleScroll.close();
@@ -262,6 +277,7 @@ class RightM {
 function rightM(opt) {
   const r = new RightM(opt);
   rightBoxList.push(r);
+  updateActiveWindows();
   return r;
 }
 const closeShake = debounce((target) => {
