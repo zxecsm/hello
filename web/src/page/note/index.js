@@ -163,25 +163,16 @@ $setBtnsWrap
     $setBtnsWrap.find('.set_top').stop().slideToggle();
   });
 const noteObj = {};
+let noteInfo = {};
 const highlightWord = new HighlightWord($noteBox[0]);
 if (urlparmes.v) {
   reqNoteRead({ v: urlparmes.v })
     .then((result) => {
       if (result.code === 1) {
-        const {
-          title,
-          content,
-          account,
-          username,
-          create_at,
-          update_at,
-          logo,
-          category,
-          email,
-          visit_count = 0,
-        } = result.data;
+        const { title, content, account, username, logo, category, email } =
+          result.data;
+        noteInfo = result.data;
         noteObj.md = content;
-        const readInfo = noteReadInfo(content);
         titleName = title;
         _setTimeout(() => {
           if (isIframe()) {
@@ -242,50 +233,6 @@ if (urlparmes.v) {
         mdWorker.postMessage(content);
         $noteInfo.find('h1').text(title);
         document.title = title;
-        if (!['about', 'tips'].includes(urlparmes.v)) {
-          const $headInfo = $noteInfo.find('div');
-          $headInfo.html(
-            _tpl(
-              `
-          <span>创建：{{formatDate({template: '{0}-{1}-{2}',timestamp: create_at})}}</span>
-          <span class="iconfont icon-fenge"></span><span :title="formatDate({template: '{0}-{1}-{2}',timestamp: update_at || create_at})">更新：{{getDateDiff(update_at || create_at)}}</span>
-          <span class="iconfont icon-fenge"></span><span>阅读量：{{formatNum(visit_count)}}</span>
-          <span class="iconfont icon-fenge"></span><span>字数：{{readInfo.word}}</span>
-          <span class="iconfont icon-fenge"></span><span>阅读：约 {{readInfo.time}} 分钟</span>
-          `,
-              {
-                formatDate,
-                create_at,
-                visit_count,
-                getDateDiff,
-                formatNum,
-                readInfo,
-                update_at,
-              }
-            )
-          );
-          if (category) {
-            reqNoteCategory({ account })
-              .then((res) => {
-                if (res.code === 1) {
-                  const list = res.data.filter((item) =>
-                    category.includes(item.id)
-                  );
-                  const html = _tpl(
-                    `
-                    <span class="iconfont icon-fenge"></span><span>分类：</span>
-                    <span v-for="{id, title} in list" cursor="y" class="category" :data-id="id">{{title}}</span>
-                    `,
-                    {
-                      list,
-                    }
-                  );
-                  $headInfo.append(html);
-                }
-              })
-              .catch(() => {});
-          }
-        }
       }
     })
     .catch(() => {
@@ -294,10 +241,59 @@ if (urlparmes.v) {
 } else {
   pageErr();
 }
+function updateNoteInfo(
+  { create_at, visit_count, update_at, category, account } = {},
+  content
+) {
+  if (!['about', 'tips'].includes(urlparmes.v)) {
+    const readInfo = noteReadInfo(content);
+    const $headInfo = $noteInfo.find('div');
+    $headInfo.html(
+      _tpl(
+        `
+          <span>创建：{{formatDate({template: '{0}-{1}-{2}',timestamp: create_at})}}</span>
+          <span class="iconfont icon-fenge"></span><span :title="formatDate({template: '{0}-{1}-{2}',timestamp: update_at || create_at})">更新：{{getDateDiff(update_at || create_at)}}</span>
+          <span class="iconfont icon-fenge"></span><span>查看：{{formatNum(visit_count)}}</span>
+          <span class="iconfont icon-fenge"></span><span>字数：{{readInfo.word}}</span>
+          <span class="iconfont icon-fenge"></span><span>阅读：{{readInfo.time === 1 ? '小于' : '约'}} {{readInfo.time}} 分钟</span>
+          `,
+        {
+          formatDate,
+          create_at,
+          visit_count,
+          getDateDiff,
+          formatNum,
+          readInfo,
+          update_at,
+        }
+      )
+    );
+    if (category) {
+      reqNoteCategory({ account })
+        .then((res) => {
+          if (res.code === 1) {
+            const list = res.data.filter((item) => category.includes(item.id));
+            const html = _tpl(
+              `
+              <span class="iconfont icon-fenge"></span><span>分类：</span>
+              <span v-for="{id, title} in list" cursor="y" class="category" :data-id="id">{{title}}</span>
+              `,
+              {
+                list,
+              }
+            );
+            $headInfo.append(html);
+          }
+        })
+        .catch(() => {});
+    }
+  }
+}
 mdWorker.addEventListener('message', (event) => {
   mdWorker.terminate();
   noteObj.html = event.data;
   $noteBox.html(event.data);
+  updateNoteInfo(noteInfo, $noteBox.text());
   hdNoteDirPosition = createNoteDir($noteBox);
   if (!hdNoteDirPosition) {
     $setBtnsWrap.find('.show_navigation_btn').remove();
