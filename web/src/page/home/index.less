@@ -1249,28 +1249,24 @@ body {
                   }
                 }
 
-                .c_right_triangle {
+                .c_right_triangle,
+                .c_left_triangle {
                   position: absolute;
-                  top: 0.4rem;
-                  right: -1.5rem;
-                  border: 0.8rem solid var(--color8);
-                  border-top-color: transparent;
-                  border-right-color: transparent;
-                  border-bottom-color: transparent;
+                  top: 0;
+                  border: 0.6rem solid var(--color8);
+                  border-color: transparent;
+                  border-top-color: var(--color8);
+                }
+                .c_right_triangle {
+                  right: -0.6rem;
                 }
 
                 .c_right_triangle.bcolor {
-                  border-left-color: #91e5b8;
+                  border-top-color: #91e5b8;
                 }
 
                 .c_left_triangle {
-                  position: absolute;
-                  top: 0.4rem;
-                  left: -1.5rem;
-                  border: 0.8rem solid var(--color8);
-                  border-top-color: transparent;
-                  border-left-color: transparent;
-                  border-bottom-color: transparent;
+                  left: -0.6rem;
                 }
 
                 .c_img_msg_box {
