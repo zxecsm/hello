@@ -561,7 +561,7 @@ function renderMsgList(list, skip) {
   const html = _tpl(
     `
     <template v-for="{id,content,create_at,_from,_to,username,size,showTime,type,des = ''} in list">
-      <ul class="chat_item" :data-id="id">
+      <ul class="chat_item {{isRight(_from) ? 'right' : 'left'}}" :data-id="id">
         <div class="head">
           <div v-if="showTime === 'y'" class="chat_time">{{getDate(create_at)[0]}}</div>
         </div>
@@ -571,37 +571,36 @@ function renderMsgList(list, skip) {
             <div class="c_logo" style="float: left;"></div>
           </li>
           <li class="c_content_box">
-            <span :title="getDate(create_at)[0]" class="c_user_name" style="text-align: {{!isRight(_from) ? 'left' : 'right'}};">
+            <span :title="getDate(create_at)[0]" class="c_user_name">
               {{getUsername(username,des,_to)}} <span>{{getDate(create_at)[1]}}</span>
             </span>
-            <div v-if="type === 'image'" cursor="y" class="c_img_msg_box" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
+            <div v-if="type === 'image'" cursor="y" class="c_img_msg_box">
               <div class="c_img"><span>{{formatBytes(size)}}</span></div>
             </div>
             <div v-else-if="type === 'voice'" cursor="y" 
-              class="c_voice_msg_box {{isRight(_from) ? 'bcolor' : ''}}" 
-              style="float: {{!isRight(_from) ? 'left' : 'right'}};width: {{(size / 30) * 100}}%;text-align:{{isRight(_from) ? 'right' : 'left'}}">
+              class="c_voice_msg_box" 
+              style="width: {{(size / 30) * 100}}%;">
+              <span class="c_triangle"></span>
               <template v-if="isRight(_from)">
-                <span class="c_right_triangle bcolor"></span>
                 <span style="font-size:1.2rem;">{{size.toFixed(2)}}s</span>
                 <i class="iconfont icon-yuyin-cuxiantiao"></i>
               </template>
               <template v-else>
-                <span class="c_left_triangle"></span>
                 <i class="iconfont icon-yuyin1"></i>
                 <span style="font-size:1.2rem;">{{size.toFixed(2)}}s</span>
               </template>
             </div>
-            <div v-else-if="type === 'file'" :title="content" class="c_file_msg_box" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
+            <div v-else-if="type === 'file'" :title="content" class="c_file_msg_box">
               <div cursor="y" class="c_file_info">
                 <span class="file_name">{{content}}</span>
                 <span class="file_size">{{formatBytes(size)}}</span>
               </div>
               <div class="file_type iconfont {{fileLogoType(content)}}"></div>
-              <span class="{{isRight(_from) ? 'c_right_triangle' : 'c_left_triangle'}}"></span>
+              <span class="c_triangle"></span>
             </div>
-            <p v-else-if="type === 'text'" class="c_text_msg_box {{isRight(_from) ? 'bcolor' : ''}}" style="float: {{!isRight(_from) ? 'left' : 'right'}};">
+            <p v-else-if="type === 'text'" class="c_text_msg_box">
               <div v-html="hdTextMsg(content)"></div>
-              <span class="{{isRight(_from)?'c_right_triangle bcolor':'c_left_triangle'}}"></span>
+              <span class="c_triangle"></span>
             </p>
           </li>
           <li v-if="isRight(_from)" cursor="y" class="c_right_logo">
