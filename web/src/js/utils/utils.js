@@ -202,6 +202,16 @@ export function isurl(url) {
     return false; // 捕获错误并返回 false
   }
 }
+export function isSafeURL(url) {
+  try {
+    const u = new URL(url);
+    return (
+      ['http:', 'https:', 'ftp:'].includes(u.protocol) && !/[\n\r\t]/.test(url)
+    );
+  } catch {
+    return false;
+  }
+}
 // 拆分字符
 export function splitTextType(str, reg, type) {
   const s = [];
@@ -218,21 +228,20 @@ export function splitTextType(str, reg, type) {
 }
 // 提取邮箱、电话、链接
 export function hdTextMsg(str) {
-  const urlReg = /(http|https|ftp):\/\/[^\s]+/;
-  const phoneReg = /1(3|5|6|7|8|9)[0-9]{9}/;
-  const emailReg =
-    /\w+((-\w+)|(\.\w+))*@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z0-9]+/;
+  const urlReg = /(https?|ftp):\/\/[^\s"'<>]+/i;
+  const phoneReg = /1[3-9]\d{9}/;
+  const emailReg = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
   const s = [];
   splitTextType(str, urlReg, 'link').forEach((item) => {
     const { type, value } = item;
     if (type === 'link') {
       s.push(item);
     } else if (!type) {
-      splitTextType(value, phoneReg, 'tel').forEach((p) => {
-        if (p.type === 'tel') {
+      splitTextType(value, emailReg, 'email').forEach((p) => {
+        if (p.type === 'email') {
           s.push(p);
         } else if (!p.type) {
-          splitTextType(p.value, emailReg, 'email').forEach((e) => {
+          splitTextType(p.value, phoneReg, 'tel').forEach((e) => {
             s.push(e);
           });
         }
@@ -242,13 +251,13 @@ export function hdTextMsg(str) {
   return _tpl(
     `
     <template v-for="{type,value} in s">
-      <a v-if="type === 'link'" cursor="y" target='_blank' :href='value'>{{value}}</a>
+      <a v-if="type === 'link'" cursor="y" target='_blank' :href='isSafeURL(value) ? value : "#"'>{{value}}</a>
       <a v-else-if="type === 'tel'" cursor="y" href='tel:{{value}}'>{{value}}</a>
       <a v-else-if="type === 'email'" cursor="y" href='mailto:{{value}}'>{{value}}</a>
       <template v-else>{{value}}</template>
     </template>
     `,
-    { s }
+    { s, isSafeURL }
   );
 }
 export function mailTo(email) {
