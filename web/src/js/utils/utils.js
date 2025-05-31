@@ -231,6 +231,7 @@ export function hdTextMsg(str) {
   const urlReg = /(https?|ftp):\/\/[^\s"'<>]+/i;
   const phoneReg = /1[3-9]\d{9}/;
   const emailReg = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+  const ipReg = /(\d{1,3}\.){3}\d{1,3}/;
   const s = [];
   splitTextType(str, urlReg, 'link').forEach((item) => {
     const { type, value } = item;
@@ -242,7 +243,13 @@ export function hdTextMsg(str) {
           s.push(p);
         } else if (!p.type) {
           splitTextType(p.value, phoneReg, 'tel').forEach((e) => {
-            s.push(e);
+            if (e.type === 'tel') {
+              s.push(e);
+            } else if (!e.type) {
+              splitTextType(e.value, ipReg, 'ip').forEach((i) => {
+                s.push(i);
+              });
+            }
           });
         }
       });
@@ -254,6 +261,7 @@ export function hdTextMsg(str) {
       <a v-if="type === 'link'" cursor="y" target='_blank' :href='isSafeURL(value) ? value : "#"'>{{value}}</a>
       <a v-else-if="type === 'tel'" cursor="y" href='tel:{{value}}'>{{value}}</a>
       <a v-else-if="type === 'email'" cursor="y" href='mailto:{{value}}'>{{value}}</a>
+      <a v-else-if="type === 'ip'" cursor="y" href='http://{{value}}'>{{value}}</a>
       <template v-else>{{value}}</template>
     </template>
     `,
