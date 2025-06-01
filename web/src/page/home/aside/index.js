@@ -20,7 +20,6 @@ import {
 
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
-import _pop from '../../../js/plugins/popConfirm';
 
 import {
   reqBmkAddBmk,
@@ -484,7 +483,7 @@ function addBmList(e) {
 
 // 删除书签
 export function delBm(e, arr, cb, text, loading = { start() {}, end() {} }) {
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认删除：${text || '选中的书签'}？`,
@@ -769,7 +768,7 @@ export function moveBookMark(e, pid, arr) {
       if (id) {
         const groupId = param.id,
           groupTitle = param.title;
-        _pop({ e, text: `确认移动到：${groupTitle}？` }, (type) => {
+        rMenu.pop({ e, text: `确认移动到：${groupTitle}？` }, (type) => {
           if (type === 'confirm') {
             loading.start();
             reqBmkToGroup({ ids: arr, groupId })
@@ -1026,7 +1025,7 @@ function shareBmList(e, obj) {
 
 // 删除分组
 function delBmList(e, arr, cb, text, loading = { start() {}, end() {} }) {
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认删除：${text || '选中的分组'}？`,
@@ -1297,7 +1296,7 @@ function setBmLogo(e, obj, isHome) {
         close(1);
         upBmLogo(obj, isHome);
       } else if (id === '2') {
-        _pop(
+        rMenu.pop(
           {
             e,
             text: '确认清除：自定义图标，使用自动获取图标？',

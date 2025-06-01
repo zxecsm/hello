@@ -8,7 +8,6 @@ import {
   reqNoteEditCategory,
 } from '../../api/note';
 import _msg from '../../js/plugins/message';
-import _pop from '../../js/plugins/popConfirm';
 import { renderList, setNoteCategoryList } from '.';
 import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';
@@ -142,7 +141,7 @@ function editCategory(e, obj) {
 }
 // 删除分类
 function deleteCategory(e, obj, cb, loading = { start() {}, end() {} }) {
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认删除：${obj.title}？`,

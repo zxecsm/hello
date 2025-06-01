@@ -35,7 +35,6 @@ import {
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
 import _msg from '../../../js/plugins/message';
-import _pop from '../../../js/plugins/popConfirm';
 import {
   reqUerChangename,
   reqUserDeleteAccount,
@@ -80,7 +79,6 @@ import md5 from '../../../js/utils/md5.js';
 import { _tpl } from '../../../js/utils/template.js';
 import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
-import { percentBar } from '../../../js/plugins/percentBar/index.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
 import localData from '../../../js/common/localData.js';
 // local数据
@@ -379,7 +377,7 @@ function hdUserLogo(e) {
           },
         ]);
       } else if (id === '3') {
-        _pop(
+        rMenu.pop(
           {
             e,
             text: '确认删除：头像？',
@@ -424,7 +422,7 @@ function bindEmail(e) {
       },
       function ({ e, inp, close, loading }) {
         const pd = inp.pd;
-        _pop(
+        rMenu.pop(
           {
             e,
             text: '确认解绑：邮箱？',
@@ -903,7 +901,7 @@ export function settingMenu(e, isMain) {
               resizeBgFilter(e);
             } else if (id === '2') {
               // 黑白
-              percentBar(
+              rMenu.percentBar(
                 e,
                 localData.get('pageGrayscale'),
                 throttle(function (per) {
@@ -1114,7 +1112,7 @@ export function settingMenu(e, isMain) {
                       size = await cacheFile.size(param.type);
                     }
                     loading.end();
-                    _pop(
+                    rMenu.pop(
                       {
                         e,
                         text: `确认清空：${param.text}缓存？大约：${formatBytes(
@@ -1154,7 +1152,7 @@ export function settingMenu(e, isMain) {
                 titleText
               );
             } else if (id === '3') {
-              _pop(
+              rMenu.pop(
                 {
                   e,
                   text: `如何处理已存在缓存？`,
@@ -1182,7 +1180,7 @@ export function settingMenu(e, isMain) {
               );
             } else if (id === '4') {
               const size = await cacheFile.size();
-              _pop(
+              rMenu.pop(
                 {
                   e,
                   text: `确认导出：缓存？大约：${formatBytes(size)}`,
@@ -1417,7 +1415,7 @@ function closeAccount(e) {
     },
     function ({ e, inp, close, loading }) {
       const pd = inp.pd;
-      _pop(
+      rMenu.pop(
         {
           e,
           text: '确认注销：账号？',
@@ -1511,7 +1509,7 @@ function hdAccountManage(e) {
             },
             function ({ e, inp, close, loading }) {
               const pd = inp.pd;
-              _pop({ e, text: '确认关闭：两步验证吗？' }, (type) => {
+              rMenu.pop({ e, text: '确认关闭：两步验证吗？' }, (type) => {
                 if (type === 'confirm') {
                   loading.start();
                   reqUserVerify({ password: md5.getStringHash(pd) })
@@ -1662,7 +1660,7 @@ function importBm(cb, loading = { start() {}, end() {} }) {
 }
 // 导出书签
 function exportBm(e, cb, loading = { start() {}, end() {} }) {
-  _pop(
+  rMenu.pop(
     {
       e,
       text: '确认导出？',
@@ -1688,7 +1686,7 @@ function exportBm(e, cb, loading = { start() {}, end() {} }) {
 }
 // 退出
 function userLogout(e) {
-  _pop(
+  rMenu.pop(
     {
       e,
       text: '退出：当前，还是退出：其他登录设备？',

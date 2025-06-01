@@ -45,7 +45,6 @@ import {
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
 import _msg from '../../../js/plugins/message';
-import _pop from '../../../js/plugins/popConfirm';
 import record from '../../../js/utils/recorder.js';
 import {
   reqChatBreakpoint,
@@ -333,7 +332,7 @@ function clearMsg(e) {
     _msg.error('没有权限操作');
     return;
   }
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认清空：聊天记录？`,
@@ -359,7 +358,7 @@ function hdforwardMsg(e, acc) {
     const user = getUserItem(acc);
     text = `确认转发信息给：${user.des || user.username}？`;
   }
-  _pop({ e, text, cancel: { text: '取消转发' } }, (type) => {
+  rMenu.pop({ e, text, cancel: { text: '取消转发' } }, (type) => {
     if (type === 'confirm') {
       reqChatforward({ to: acc, id: forwardData.id })
         .then((res) => {
@@ -1247,7 +1246,7 @@ function chatMsgMenu(e, cobj) {
     data,
     async ({ close, id, e, loading }) => {
       if (id === '4') {
-        _pop(
+        rMenu.pop(
           {
             e,
             text: `确认撤回：消息？`,

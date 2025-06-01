@@ -42,7 +42,6 @@ import MdWorker from '../../js/utils/md.worker.js';
 import loadingPage from '../../js/plugins/loading/index.js';
 import { _tpl } from '../../js/utils/template.js';
 import _path from '../../js/utils/path.js';
-import { percentBar } from '../../js/plugins/percentBar/index.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
 import { otherWindowMsg, timeMsg, waitLogin } from '../home/home.js';
 import localData from '../../js/common/localData.js';
@@ -123,7 +122,7 @@ $setBtnsWrap
     }
   })
   .on('click', '.font_size_btn', (e) => {
-    percentBar(e, noteFontSize, (percent) => {
+    rMenu.percentBar(e, noteFontSize, (percent) => {
       $contentWrap.css({
         'font-size': percentToValue(12, 30, percent),
       });

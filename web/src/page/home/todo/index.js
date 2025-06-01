@@ -19,7 +19,6 @@ import {
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
-import _pop from '../../../js/plugins/popConfirm';
 import {
   reqTodoAdd,
   reqTodoDelete,
@@ -37,7 +36,8 @@ import { _tpl } from '../../../js/utils/template.js';
 import localData from '../../../js/common/localData.js';
 const $todoBox = $('.todo_box'),
   $theadBtns = $todoBox.find('.t_head_btns'),
-  $todoList = $todoBox.find('.todo_list');
+  $todoListWrap = $todoBox.find('.todo_list_wrap'),
+  $todoList = $todoListWrap.find('.todo_list');
 let todoList = [],
   todoPageNo = 1,
   todoPageSize = 40,
@@ -97,7 +97,8 @@ function todoLoading() {
               <p style="pointer-events: none;background-color:var(--color9);height:3rem;width:${w}%;margin:1rem 0;"></p>
         `;
   });
-  $todoList.html(str).scrollTop(0);
+  $todoList.html(str);
+  $todoListWrap.scrollTop(0);
 }
 // 获取待办列表
 export function getTodoList(toTop) {
@@ -157,7 +158,7 @@ function renderTodoList(total, toTop) {
   );
   $todoList.html(html);
   if (toTop) {
-    $todoList.scrollTop(0);
+    $todoListWrap.scrollTop(0);
   }
 }
 // 分页
@@ -175,7 +176,7 @@ const todoPgnt = pagination($todoList[0], {
     _msg.botMsg(`第 ${todoPageNo} 页`);
   },
   toTop() {
-    $todoList.stop().scrollTop(0);
+    $todoListWrap.stop().scrollTop(0);
   },
 });
 // 获取todo数据
@@ -307,7 +308,7 @@ function delTodo(e, id, cb, loading = { start() {}, end() {} }) {
       };
     }
   }
-  _pop(opt, (type) => {
+  rMenu.pop(opt, (type) => {
     if (type === 'confirm') {
       loading.start();
       reqTodoDelete(param)

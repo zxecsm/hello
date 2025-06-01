@@ -40,7 +40,6 @@ import md5 from '../../js/utils/md5.js';
 import _path from '../../js/utils/path.js';
 import { setEditor } from '../edit/setEditor.js';
 import cacheFile from '../../js/utils/cacheFile.js';
-import { percentBar } from '../../js/plugins/percentBar/index.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
 import realtime from '../../js/plugins/realtime/index.js';
 import { otherWindowMsg, waitLogin } from '../home/home.js';
@@ -559,7 +558,7 @@ function settingEdit(e) {
     data,
     ({ e, id }) => {
       if (id === 'size') {
-        percentBar(e, editNoteFontSize, (percent) => {
+        rMenu.percentBar(e, editNoteFontSize, (percent) => {
           $editWrap.css({
             'font-size': percentToValue(12, 30, percent),
           });

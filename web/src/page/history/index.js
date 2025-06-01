@@ -22,7 +22,6 @@ import {
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
-import _pop from '../../js/plugins/popConfirm';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
 import realtime from '../../js/plugins/realtime';
@@ -187,7 +186,7 @@ function getSearchEngine() {
 }
 // 删除
 function deleteHistory(e, ids, isCheck) {
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认删除：${isCheck ? '选中的' : ''}历史记录？`,

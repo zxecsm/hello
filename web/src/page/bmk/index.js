@@ -31,7 +31,6 @@ import _d from '../../js/common/config';
 import '../../js/common/common';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
-import _pop from '../../js/plugins/popConfirm';
 import realtime from '../../js/plugins/realtime';
 
 import {
@@ -408,7 +407,7 @@ function movebmk(e, arr, loading = { start() {}, end() {} }) {
             if (id) {
               let toid = id,
                 groupTitle = param.title;
-              _pop(
+              rMenu.pop(
                 {
                   e,
                   text: `确认${
@@ -578,7 +577,7 @@ function bmMenu(e) {
         movebmk(e, [obj], loading);
       } else if (id === '3') {
         if (runState !== 'own') return;
-        _pop(
+        rMenu.pop(
           {
             e,
             text: `确认删除：${obj.title}？`,
@@ -755,7 +754,7 @@ function getSelectItem() {
 function hdDeleteCheck(e) {
   if (runState !== 'own') return;
   const arr = getSelectItem();
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认删除：选中的书签？`,

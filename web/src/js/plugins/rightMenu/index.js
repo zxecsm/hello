@@ -17,7 +17,6 @@ import {
   toCenter,
   wrapInput,
 } from '../../utils/utils';
-import _pop from '../popConfirm';
 import './index.less';
 import loadFailImg from '../../../images/img/loadfail.png';
 import { CreateTabs } from '../../../page/notes/tabs';
@@ -302,7 +301,7 @@ function selectTabs(e, data, opt = {}, title = '') {
     html,
     readyToCloseAll({ e, close }) {
       if (isDiff()) {
-        _pop({ e, text: '关闭：输入框？' }, (type) => {
+        pop({ e, text: '关闭：输入框？' }, (type) => {
           if (type === 'confirm') {
             close(1, e);
           }
@@ -507,7 +506,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
         return false;
       }
       if (isDiff()) {
-        _pop({ e, text: '关闭：输入框？' }, (type) => {
+        pop({ e, text: '关闭：输入框？' }, (type) => {
           if (type === 'confirm') {
             close(1, e);
           }
@@ -780,7 +779,261 @@ function rightInfo(e, text, title) {
     html,
   });
 }
+
+class Pop {
+  constructor(opt, callback) {
+    this.text = opt.text;
+    this.top = opt.top;
+    this.cancel = {
+      type: 'info',
+      text: '取消',
+      ...(opt.cancel || {}),
+    };
+    this.confirm = {
+      type: 'primary',
+      text: '确认',
+      ...(opt.confirm || {}),
+    };
+    this.callback = callback;
+    this.e = opt.e;
+    this.init();
+  }
+  init() {
+    this.mask = document.createElement('div');
+    this.mask.className = 'pop_confirm_mask';
+    this.mask.style.zIndex = this.top ? 9999 : _d.levelObj.popConfirm;
+    this.box = document.createElement('div');
+    this.box.className = 'box';
+    this.textBox = document.createElement('div');
+    this.textBox.className = 'text_box';
+    this.textBox.innerText = this.text;
+    this.btns = document.createElement('div');
+    this.btns.className = 'btns';
+    this.cancelBtn = document.createElement('button');
+    this.cancelBtn.className = `btn btn_${this.cancel.type}`;
+    this.cancelBtn.setAttribute('cursor', '');
+    this.cancelBtn.innerText = this.cancel.text;
+    this.confirmBtn = document.createElement('button');
+    this.confirmBtn.style.cssText = `margin-left: 2rem;`;
+    this.confirmBtn.className = `btn btn_${this.confirm.type}`;
+    this.confirmBtn.setAttribute('cursor', '');
+    this.confirmBtn.innerText = this.confirm.text;
+    this.btns.appendChild(this.cancelBtn);
+    this.btns.appendChild(this.confirmBtn);
+    this.box.appendChild(this.textBox);
+    this.box.appendChild(this.btns);
+    this.mask.appendChild(this.box);
+    document.body.appendChild(this.mask);
+    this.dragClose = myDrag({
+      trigger: this.box,
+      border: true,
+      down({ target }) {
+        target.style.transition = '0s';
+      },
+    });
+    this.show();
+    this.bindEvent();
+  }
+  show() {
+    this.position();
+    this.mask.clientWidth;
+    this.box.style.opacity = 1;
+    this.box.style.transform = 'none';
+  }
+  bindEvent() {
+    this.hdClick = this.hdClick.bind(this);
+    this.mask.addEventListener('click', this.hdClick);
+  }
+  unBindEvent() {
+    this.mask.removeEventListener('click', this.hdClick);
+  }
+  hdClick(e) {
+    const target = e.target;
+    if (target === this.mask) {
+      this.close();
+      this.callback && this.callback('close');
+    } else if (target === this.cancelBtn) {
+      this.close();
+      this.callback && this.callback('cancel');
+    } else if (target === this.confirmBtn) {
+      this.close();
+      this.callback && this.callback('confirm');
+    }
+  }
+  close() {
+    rightBoxList = rightBoxList.filter((item) => item !== this);
+    updateActiveWindows();
+    this.dragClose();
+    this.unBindEvent();
+    this.mask.remove();
+  }
+  position() {
+    if (!this.e) {
+      toCenter(this.box);
+      return;
+    }
+    let ww = window.innerWidth;
+    let hh = window.innerHeight,
+      mtw = this.box.offsetWidth,
+      mth = this.box.offsetHeight,
+      x = this.e.clientX,
+      y = this.e.clientY;
+    x < ww / 2 ? null : (x = x - mtw);
+    y < hh / 2 ? null : (y = y - mth);
+    x < 0 ? (x = 0) : x + mtw > ww ? (x = ww - mtw) : null;
+    y < 0 ? (y = 0) : y + mth > hh ? (y = hh - mth) : null;
+    this.box.style.top = y + 'px';
+    this.box.style.left = x + 'px';
+  }
+}
+function pop(opt, callback) {
+  const p = new Pop(opt, callback);
+  rightBoxList.push(p);
+  updateActiveWindows();
+  return p;
+}
+pop.p = function (opt) {
+  return new Promise((resolve) => {
+    new Pop(opt, (type) => {
+      resolve(type);
+    });
+  });
+};
+function percentBar(e, percent, callback) {
+  const box = document.createElement('div');
+  rightBoxList.push(box);
+  updateActiveWindows();
+  box.className = 'percent_bar';
+  box.style.zIndex = _d.levelObj.percentBar;
+  const proBox = document.createElement('div');
+  proBox.className = 'pro_box';
+  // 显示百分比
+  const percentBox = document.createElement('div');
+  percentBox.className = 'percent_box';
+  // 进度条盒子
+  const pro1Box = document.createElement('div');
+  pro1Box.className = 'pro1_box';
+  // 进度条内遮罩
+  const pro2Box = document.createElement('div');
+  pro2Box.className = 'pro2_box';
+  // 进度条滑块
+  const dolt = document.createElement('div');
+  dolt.className = 'dolt';
+  // 放入body
+  pro2Box.appendChild(dolt);
+  pro1Box.appendChild(pro2Box);
+  proBox.appendChild(percentBox);
+  proBox.appendChild(pro1Box);
+  box.appendChild(proBox);
+  document.body.appendChild(box);
+  rikey(e);
+  proBox.clientHeight;
+  proBox.style.opacity = 1;
+  proBox.style.transform = 'none';
+  let pro1BoxL; //进度条盒子距离窗口的距离
+  const dragClose = myDrag({
+    trigger: percentBox,
+    target: proBox,
+    border: true,
+  });
+  function rikey(e) {
+    const ww = window.innerWidth;
+    if (!e) {
+      toCenter(proBox);
+      return;
+    }
+    let h = window.innerHeight,
+      mtw = proBox.offsetWidth,
+      mth = proBox.offsetHeight,
+      x = e.clientX,
+      y = e.clientY;
+    x < ww / 2 ? null : (x = x - mtw);
+    y < h / 2 ? null : (y = y - mth);
+    x < 0 ? (x = 0) : x + mtw > ww ? (x = ww - mtw) : null;
+    y < 0 ? (y = 0) : y + mth > h ? (y = h - mth) : null;
+    proBox.style.top = y + 'px';
+    proBox.style.left = x + 'px';
+    proBox.dataset.x = x;
+    proBox.dataset.y = y;
+  }
+  calculationPosition(percent);
+  // 计算进度位置
+  function calculationPosition(per) {
+    per <= 0 ? (per = 0) : per >= 1 ? (per = 1) : null;
+    const val =
+      (pro1Box.offsetWidth - dolt.offsetWidth) * per + dolt.offsetWidth / 2;
+    pro2Box.style.width = val + 'px';
+    percentBox.innerText = parseInt(per * 100) + '%';
+  }
+  function move(e) {
+    percent =
+      (e.clientX - pro1BoxL - dolt.offsetWidth / 2) /
+      (pro1Box.offsetWidth - dolt.offsetWidth);
+    percent <= 0 ? (percent = 0) : percent >= 1 ? (percent = 1) : null;
+    calculationPosition(percent);
+    callback && callback(percent, 'move');
+  }
+  // 桌面端
+  pro1Box.onmousedown = function (e) {
+    pro1BoxL = pro1Box.getBoundingClientRect().left;
+    tmove(e);
+    function tmove(e) {
+      e.preventDefault();
+      move(e);
+    }
+    function up() {
+      callback && callback(percent, 'up');
+      document.removeEventListener('mousemove', tmove);
+      document.removeEventListener('mouseup', up);
+    }
+    document.addEventListener('mousemove', tmove);
+    document.addEventListener('mouseup', up);
+  };
+  // 移动端
+  pro1Box.ontouchstart = function (e) {
+    pro1BoxL = pro1Box.getBoundingClientRect().left;
+    tmove(e);
+    function tmove(e) {
+      e.preventDefault();
+      const ev = e.changedTouches[0];
+      move(ev);
+    }
+    function up() {
+      callback && callback(percent, 'up');
+      pro1Box.removeEventListener('touchmove', tmove);
+      pro1Box.removeEventListener('touchend', up);
+    }
+    pro1Box.addEventListener('touchmove', tmove);
+    pro1Box.addEventListener('touchend', up);
+  };
+  box.onwheel = function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.deltaY > 0) {
+      percent -= 0.05;
+    } else {
+      percent += 0.05;
+    }
+    percent <= 0 ? (percent = 0) : percent >= 1 ? (percent = 1) : null;
+    calculationPosition(percent);
+    callback && callback(percent, 'wheel');
+  };
+  box.onclick = function (e) {
+    if (e.target === box) {
+      rightBoxList = rightBoxList.filter((item) => item !== box);
+      updateActiveWindows();
+      dragClose();
+      pro1Box.onmousedown = null;
+      pro1Box.ontouchstart = null;
+      box.onwheel = null;
+      box.onclick = null;
+      box.remove();
+    }
+  };
+}
 const rMenu = {
+  pop,
+  percentBar,
   rightM,
   selectTabs,
   inpMenu,

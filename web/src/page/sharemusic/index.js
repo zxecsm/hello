@@ -59,7 +59,6 @@ import { initRainCodeSleep } from '../../js/common/codeRain';
 import notifyMusicControlPanel from '../home/player/notifyMusicControlPanel';
 import _path from '../../js/utils/path';
 import { imgCache } from '../../js/utils/imgCache';
-import { percentBar } from '../../js/plugins/percentBar';
 import imgPreview from '../../js/plugins/imgPreview';
 import realtime from '../../js/plugins/realtime';
 import { otherWindowMsg, waitLogin } from '../home/home';
@@ -1086,7 +1085,7 @@ $lrcMenuWrap
         if (id === '1') {
           close();
           let { size } = lrcState;
-          percentBar(e, size, (percent) => {
+          rMenu.percentBar(e, size, (percent) => {
             $lrcListWrap.find('.lrc_items').css({
               'font-size': percentToValue(14, 30, percent) + 'px',
             });

@@ -30,7 +30,6 @@ import {
   reqUserVerifyLogin,
 } from '../../api/user.js';
 import rMenu from '../../js/plugins/rightMenu/index.js';
-import _pop from '../../js/plugins/popConfirm/index.js';
 import md5 from '../../js/utils/md5.js';
 import localData from '../../js/common/localData.js';
 const $bg = $('.bg'),
@@ -190,7 +189,7 @@ function resetPassword(e) {
     shake();
     return;
   }
-  _pop({ e, text: '获取邮箱验证码？' }, (type) => {
+  rMenu.pop({ e, text: '获取邮箱验证码？' }, (type) => {
     if (type === 'confirm') {
       reqUserEmailCode({ username: accInp.getValue().trim() })
         .then((res) => {

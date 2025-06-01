@@ -2,7 +2,7 @@ import { reqUserAllowLogin } from '../../api/user';
 import _d from '../../js/common/config';
 import localData from '../../js/common/localData';
 import _msg from '../../js/plugins/message';
-import _pop from '../../js/plugins/popConfirm';
+import rMenu from '../../js/plugins/rightMenu';
 import {
   _setTimeout,
   debounce,
@@ -26,7 +26,7 @@ export function handleAllowLoginMsg(data) {
     allowLoginPop.close();
   }
 
-  allowLoginPop = _pop(
+  allowLoginPop = rMenu.pop(
     {
       text: msg,
       confirm: {

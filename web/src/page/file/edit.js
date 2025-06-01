@@ -9,14 +9,12 @@ import {
   percentToValue,
 } from '../../js/utils/utils';
 import _msg from '../../js/plugins/message';
-import _pop from '../../js/plugins/popConfirm';
 import { reqFileSaveFile } from '../../api/file';
 import bus from '../../js/utils/bus';
 import rMenu from '../../js/plugins/rightMenu';
 import _path from '../../js/utils/path';
 import { setEditor } from '../edit/setEditor';
 import _d from '../../js/common/config';
-import { percentBar } from '../../js/plugins/percentBar';
 import cacheFile from '../../js/utils/cacheFile';
 import localData from '../../js/common/localData';
 const $editFile = $('.edit_file');
@@ -140,7 +138,7 @@ function settingMenu(e) {
     data,
     ({ e, id }) => {
       if (id === 'size') {
-        percentBar(e, fileFontSize, (percent) => {
+        rMenu.percentBar(e, fileFontSize, (percent) => {
           $editFile.find('.editor').css({
             'font-size': percentToValue(12, 30, percent),
           });
@@ -199,7 +197,7 @@ $editFile
       return;
     }
     if (editor.getValue() != oText) {
-      _pop(
+      rMenu.pop(
         {
           e,
           text: '文件未保存，确认关闭吗？',

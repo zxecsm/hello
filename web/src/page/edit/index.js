@@ -32,7 +32,6 @@ import '../../js/common/common';
 import _msg from '../../js/plugins/message';
 import { UpProgress } from '../../js/plugins/UpProgress';
 import aceEditor from '../../js/utils/editor';
-import _pop from '../../js/plugins/popConfirm';
 import gqImg from '../../images/img/gqimg.png';
 import { reqNoteEdit, reqNoteRead } from '../../api/note';
 import { reqPicRepeat, reqPicUp } from '../../api/pic';
@@ -43,7 +42,6 @@ import md5 from '../../js/utils/md5.js';
 import _path from '../../js/utils/path.js';
 import { setEditor } from './setEditor.js';
 import cacheFile from '../../js/utils/cacheFile.js';
-import { percentBar } from '../../js/plugins/percentBar/index.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
 import realtime from '../../js/plugins/realtime/index.js';
 import { otherWindowMsg, waitLogin } from '../home/home.js';
@@ -321,7 +319,7 @@ if (HASH === 'new') {
           $editWrap.addClass('open');
           const temNoteObj = (await cacheFile.getData('temNote')) || {};
           if (temNoteObj[HASH] && temNoteObj[HASH] != result.data.content) {
-            _pop({ text: '恢复：未保存的笔记？' }, (type) => {
+            rMenu.pop({ text: '恢复：未保存的笔记？' }, (type) => {
               if (type === 'confirm') {
                 editor.setValue(temNoteObj[HASH]);
                 editor.gotoLine(1);
@@ -630,7 +628,7 @@ function settingEdit(e) {
     data,
     ({ e, id }) => {
       if (id === 'size') {
-        percentBar(e, editNoteFontSize, (percent) => {
+        rMenu.percentBar(e, editNoteFontSize, (percent) => {
           editNoteFontSize = percent;
           setNoteFontSize();
           localData.set('editNoteFontSize', editNoteFontSize, 200);

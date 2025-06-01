@@ -17,7 +17,6 @@ import {
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
-import _pop from '../../js/plugins/popConfirm';
 import pagination from '../../js/plugins/pagination';
 import _d from '../../js/common/config';
 import realtime from '../../js/plugins/realtime';
@@ -28,6 +27,7 @@ import {
 } from '../../api/user';
 import { _tpl } from '../../js/utils/template';
 import { otherWindowMsg } from '../home/home';
+import rMenu from '../../js/plugins/rightMenu';
 if (!isLogin()) {
   toLogin();
 }
@@ -155,7 +155,7 @@ function getShareItem(id) {
 getShareList(1);
 // 删除
 function deleteShare(e, obj) {
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认删除：${obj.title}？`,
@@ -233,7 +233,7 @@ if (isIframe()) {
 }
 $headBtns
   .on('click', '.clear_share_list_btn', function (e) {
-    _pop(
+    rMenu.pop(
       {
         e,
         text: `确认清空：当页分享？`,

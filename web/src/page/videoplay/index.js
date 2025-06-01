@@ -14,7 +14,6 @@ import {
 import rMenu from '../../js/plugins/rightMenu';
 import { reqUserFileToken, reqUserPlayerConfig } from '../../api/user';
 import toolTip from '../../js/plugins/tooltip';
-import _pop from '../../js/plugins/popConfirm';
 import { _tpl } from '../../js/utils/template';
 import videoLinkLogo from '../../images/img/videoLink.png';
 import { initRainCodeSleep } from '../../js/common/codeRain';
@@ -113,10 +112,13 @@ function selectPlayIn(e, url) {
 vd.src = url;
 vd.play();
 vd.onerror = function () {
-  _pop({ e: false, text: '播放失败，使用其他应用打开？' }, async (type) => {
-    if (type === 'confirm') {
-      selectPlayIn(false, url);
+  rMenu.pop(
+    { e: false, text: '播放失败，使用其他应用打开？' },
+    async (type) => {
+      if (type === 'confirm') {
+        selectPlayIn(false, url);
+      }
     }
-  });
+  );
 };
 vd.ontimeupdate = initRainCodeSleep;

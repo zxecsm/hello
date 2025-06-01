@@ -21,7 +21,6 @@ import _d from '../../../js/common/config';
 import pagination from '../../../js/plugins/pagination';
 import { UpProgress } from '../../../js/plugins/UpProgress';
 import _msg from '../../../js/plugins/message';
-import _pop from '../../../js/plugins/popConfirm';
 import realtime from '../../../js/plugins/realtime';
 import {
   reqBgDelete,
@@ -141,7 +140,7 @@ $allBgWrap
 })();
 // 删除壁纸
 export function delBg(e, ids, cb, isCheck, loading = { start() {}, end() {} }) {
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认删除：${isCheck ? '选中的' : ''}壁纸？`,

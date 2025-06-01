@@ -8,8 +8,8 @@ import {
 } from '../../js/utils/utils';
 import { setZidx } from './popWindow';
 import { hideIframeMask, showIframeMask } from './iframe';
-import { percentBar } from '../../js/plugins/percentBar';
 import localData from '../../js/common/localData';
+import rMenu from '../../js/plugins/rightMenu';
 const clock = document.querySelector('.clock');
 const domHour = clock.querySelector('.hour');
 const domMin = clock.querySelector('.min');
@@ -181,7 +181,7 @@ const clockData = localData.get('clockData');
 function hdClick(e) {
   clockMove();
   if (e.target.tagName.toLowerCase() === 'i') {
-    percentBar(e, clockData.size, (percent) => {
+    rMenu.percentBar(e, clockData.size, (percent) => {
       clock.style.transform = `scale(${percentToValue(0.5, 4, percent)})`;
       clockData.size = percent;
       localData.set('clockData', clockData, 200);

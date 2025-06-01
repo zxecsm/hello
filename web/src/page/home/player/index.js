@@ -48,7 +48,6 @@ import {
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
 import _msg from '../../../js/plugins/message';
-import _pop from '../../../js/plugins/popConfirm';
 import realtime from '../../../js/plugins/realtime';
 import { popWindow, setZidx } from '../popWindow.js';
 import {
@@ -138,7 +137,6 @@ import notifyMusicControlPanel from './notifyMusicControlPanel.js';
 import md5 from '../../../js/utils/md5.js';
 import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
-import { percentBar } from '../../../js/plugins/percentBar/index.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
 import {
   BoxSelector,
@@ -412,7 +410,7 @@ const handleRemoteVol = debounce(function () {
 }, 500);
 // 音量调节
 function adjustVolume(e) {
-  percentBar(e, mediaVolume, function (per) {
+  rMenu.percentBar(e, mediaVolume, function (per) {
     mediaVolume = per;
     setPlayVolume();
     handleRemoteVol(per);
@@ -510,7 +508,7 @@ export function delSong(
   } else {
     opt = { e, text: `确认移除：${text || '选中歌曲'}？` };
   }
-  _pop(opt, (type) => {
+  rMenu.pop(opt, (type) => {
     if (type === 'confirm') {
       loading.start();
       reqPlayerDeleteSong({
@@ -578,7 +576,7 @@ export function moveSongToList(e, pid, ar) {
           _msg.error(`歌单限制${_d.maxSongList}首`);
           return;
         }
-        _pop(
+        rMenu.pop(
           {
             e,
             text: `确认${
@@ -736,7 +734,7 @@ export function editSongInfo(e, sobj) {
 // 删除MV
 export function delMv(e, id, cb, text, loading = { start() {}, end() {} }) {
   if (!isRoot()) return;
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认删除MV${text ? `：${text}` : ''}？`,
@@ -1307,7 +1305,7 @@ longPress($songListWrap[0], '.song_list_item', function (e) {
 });
 // 删除歌单
 function deleteSongList(e, name, id, cb, loading = { start() {}, end() {} }) {
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认移除歌单：${name}？`,
@@ -1395,7 +1393,7 @@ function songListMenu(e, sid) {
           _msg.error();
         }
       } else if (id === '3') {
-        _pop(
+        rMenu.pop(
           {
             e,
             text: '确认导出？',
@@ -2068,7 +2066,7 @@ $msuicContentBox
   })
   .on('click', '.upload_song_btn', async function (e) {
     // 上传歌曲
-    _pop(
+    rMenu.pop(
       {
         e,
         text: '请阅读上传指南后，再上传歌曲！',
@@ -2176,7 +2174,7 @@ $msuicContentBox
     // 清缓存
     const arr = getCheckSongs();
     if (arr.length === 0) return;
-    _pop({ e, text: '确认清除：选中歌曲缓存文件？' }, (type) => {
+    rMenu.pop({ e, text: '确认清除：选中歌曲缓存文件？' }, (type) => {
       if (type === 'confirm') {
         arr.forEach((item) => {
           cacheFile.delete(getFilePath(`/music/${item.url}`), 'music');

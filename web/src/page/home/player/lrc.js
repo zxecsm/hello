@@ -69,7 +69,6 @@ import notifyMusicControlPanel from './notifyMusicControlPanel.js';
 import _path from '../../../js/utils/path.js';
 import { getSearchSongs } from './search.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
-import { percentBar } from '../../../js/plugins/percentBar/index.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
 import localData from '../../../js/common/localData.js';
 const $myAudio = $(new Audio()),
@@ -860,7 +859,7 @@ $lrcMenuWrap
         if (id === '1') {
           close();
           const { size } = lrcState;
-          percentBar(e, size, (percent) => {
+          rMenu.percentBar(e, size, (percent) => {
             $lrcListWrap.find('.lrc_items').css({
               'font-size': percentToValue(14, 30, percent) + 'px',
             });

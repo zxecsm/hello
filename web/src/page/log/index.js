@@ -20,7 +20,6 @@ import {
   wrapInput,
 } from '../../js/utils/utils';
 import _msg from '../../js/plugins/message';
-import _pop from '../../js/plugins/popConfirm';
 import pagination from '../../js/plugins/pagination/index';
 import _d from '../../js/common/config';
 import { reqRootDeleteLog, reqRootLog, reqRootLogList } from '../../api/root';
@@ -307,7 +306,7 @@ async function hdRender() {
 }
 // 生成日志
 function dellog(e, name) {
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认${name === 'all' ? '清空：所有日志文件' : `删除：${name}`}？`,

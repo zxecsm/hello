@@ -19,7 +19,6 @@ import {
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
-import _pop from '../../js/plugins/popConfirm';
 import pagination from '../../js/plugins/pagination';
 import _d from '../../js/common/config';
 import {
@@ -159,7 +158,7 @@ function getUserInfo(acc) {
 // 修改用户状态
 function changeUserState(e, obj) {
   const { state, account, username } = obj;
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认${state === 1 ? '停用' : '启用'}：${username}(${account})？`,
@@ -184,7 +183,7 @@ function changeUserState(e, obj) {
 // 删除
 function deleteAccount(e, obj) {
   const { username, account } = obj;
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认删除：${username}(${account})？`,
@@ -235,7 +234,7 @@ if (isIframe()) {
 }
 // 清理歌曲文件
 function cleanMusicFile(e, loading = { start() {}, end() {} }) {
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认清理：歌曲文件？`,
@@ -260,7 +259,7 @@ function cleanMusicFile(e, loading = { start() {}, end() {} }) {
 }
 // 清理壁纸文件
 function cleanBgFile(e, loading = { start() {}, end() {} }) {
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认清理：壁纸文件？`,
@@ -285,7 +284,7 @@ function cleanBgFile(e, loading = { start() {}, end() {} }) {
 }
 // 清理logo文件
 function cleanLogoFile(e, loading = { start() {}, end() {} }) {
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认清理：logo文件？`,
@@ -310,7 +309,7 @@ function cleanLogoFile(e, loading = { start() {}, end() {} }) {
 }
 // 清理图床文件
 function cleanPicFile(e, loading = { start() {}, end() {} }) {
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认清理：图床文件？`,
@@ -367,7 +366,7 @@ function cleanThumbFile(e) {
     ({ e, id, close, loading }) => {
       const obj = data.find((item) => item.id === id);
       if (obj) {
-        _pop(
+        rMenu.pop(
           {
             e,
             text: `确认清空：${obj.text} 缩略图？`,
@@ -457,7 +456,7 @@ function changeTrashState(e) {
 }
 // 更新token Key
 function updateTokenKey(e) {
-  _pop({ e, text: `确认更新：tokenKey？` }, (type) => {
+  rMenu.pop({ e, text: `确认更新：tokenKey？` }, (type) => {
     if (type === 'confirm') {
       reqRootUpdateTokenKey().then((res) => {
         if (res.code === 1) {
@@ -469,7 +468,7 @@ function updateTokenKey(e) {
 }
 // 清理数据库空间
 function cleanDatabase(e) {
-  _pop({ e, text: `确认释放：数据库空间？` }, (type) => {
+  rMenu.pop({ e, text: `确认释放：数据库空间？` }, (type) => {
     if (type === 'confirm') {
       reqRootCleanDatabase().then((res) => {
         if (res.code === 1) {

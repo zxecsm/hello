@@ -1,5 +1,5 @@
 import localData from '../../js/common/localData';
-import _pop from '../../js/plugins/popConfirm';
+import rMenu from '../../js/plugins/rightMenu';
 const link = document.createElement('link');
 link.setAttribute('rel', 'manifest');
 link.href = 'manifest.json';
@@ -13,7 +13,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
     const install = localData.get('install') || 0;
     const t = Date.now();
     if (t - install < 5 * 24 * 60 * 60 * 1000) return;
-    _pop(
+    rMenu.pop(
       {
         e: false,
         text: '安装应用？',

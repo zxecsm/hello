@@ -13,7 +13,7 @@ body {
     margin: 0 auto 1rem;
     width: 98%;
     padding: 1rem;
-    max-width: 120rem;
+    max-width: var(--max-width);
     border: 1px solid var(--color9);
   }
   .search {
@@ -241,14 +241,14 @@ body {
       &.grid {
         display: flex;
         flex-flow: row wrap;
-        justify-content: space-between;
+        justify-content: space-around;
         align-content: flex-start;
         .file_item {
           flex: none;
           display: flex;
           flex-flow: row wrap;
-          width: 11rem;
-          height: 13.5rem;
+          width: 10rem;
+          height: 12rem;
           .logo {
             flex: none;
             width: 8rem;
@@ -257,13 +257,13 @@ body {
             line-height: 8rem;
             text-align: center;
             padding: 0;
-            margin: 1rem 1.5rem 0.5rem 1.5rem;
+            margin: 0.5rem auto;
           }
           .name {
             flex: none;
-            width: 11rem;
-            height: 4rem;
-            line-height: 4rem;
+            width: 10rem;
+            height: 3rem;
+            line-height: 3rem;
             font-size: 1.4rem;
             overflow: hidden;
             white-space: nowrap;
@@ -311,7 +311,7 @@ body {
       background-color: transparent;
       margin: 0 auto;
       width: 100%;
-      max-width: 120rem;
+      max-width: var(--max-width);
     }
     .head_btn {
       flex: none;

@@ -30,7 +30,6 @@ import _d from '../../js/common/config';
 import '../../js/common/common';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
-import _pop from '../../js/plugins/popConfirm';
 import realtime from '../../js/plugins/realtime';
 import {
   reqUserDeleteTrash,
@@ -465,31 +464,34 @@ $headWrap
   });
 function hdRecover(e, ids, t, cb, isCheck, loading = { start() {}, end() {} }) {
   const text = getTypeText(t);
-  _pop({ e, text: `确认恢复：${isCheck ? '选中的' : ''}${text}？` }, (type) => {
-    if (type === 'confirm') {
-      loading.start();
-      reqUserRecoverTrash({
-        ids,
-        type: t,
-      })
-        .then((result) => {
-          loading.end();
-          if (result.code === 1) {
-            _msg.success(result.codeText);
-            renderList();
-            cb && cb();
-            return;
-          }
+  rMenu.pop(
+    { e, text: `确认恢复：${isCheck ? '选中的' : ''}${text}？` },
+    (type) => {
+      if (type === 'confirm') {
+        loading.start();
+        reqUserRecoverTrash({
+          ids,
+          type: t,
         })
-        .catch(() => {
-          loading.end();
-        });
+          .then((result) => {
+            loading.end();
+            if (result.code === 1) {
+              _msg.success(result.codeText);
+              renderList();
+              cb && cb();
+              return;
+            }
+          })
+          .catch(() => {
+            loading.end();
+          });
+      }
     }
-  });
+  );
 }
 function hdDel(e, ids, t, cb, isCheck, loading = { start() {}, end() {} }) {
   const text = getTypeText(t);
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认删除：${isCheck ? '选中的' : ''}${text}？`,

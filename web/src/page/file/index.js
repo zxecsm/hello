@@ -41,7 +41,6 @@ import _d from '../../js/common/config';
 import curmb from './crumb/index';
 import { editFileIsHiden, openFile } from './edit';
 import { UpProgress } from '../../js/plugins/UpProgress';
-import _pop from '../../js/plugins/popConfirm';
 import bus from '../../js/utils/bus';
 import loadfailImg from '../../images/img/loadfail.png';
 import {
@@ -862,7 +861,7 @@ document.addEventListener('paste', pasteFile);
 })();
 // 解压
 async function hdDeCompress(e, obj, cb, loading) {
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认解压文件：${obj.name}？`,
@@ -890,7 +889,7 @@ async function hdDeCompress(e, obj, cb, loading) {
 }
 // 压缩
 async function hdCompress(e, obj, cb, loading = { start() {}, end() {} }) {
-  _pop(
+  rMenu.pop(
     {
       e,
       text: `确认压缩${obj.type === 'dir' ? '文件夹' : '文件'}：${obj.name}？`,
@@ -1306,7 +1305,7 @@ function hdPaste(e) {
 }
 // 清空回收站
 function hdClearTrash(e) {
-  _pop(
+  rMenu.pop(
     { e, text: '确认清空回收站？', confirm: { type: 'danger', text: '清空' } },
     (type) => {
       if (type === 'confirm') {
@@ -1389,7 +1388,7 @@ function hdFileSort(e) {
 }
 // 复制
 async function hdCopy(e, data, cb) {
-  const type = await _pop.p({ e, text: '确认粘贴？' });
+  const type = await rMenu.pop.p({ e, text: '确认粘贴？' });
   if (type === 'confirm') {
     try {
       if (getDuplicates(data, ['name']).length > 0) {
@@ -1417,7 +1416,7 @@ async function hdCopy(e, data, cb) {
 
         // 有重名文件
         if (hasSameName) {
-          const type = await _pop.p({
+          const type = await rMenu.pop.p({
             top: true,
             text: '如何处理同名文件？',
             cancel: { text: '重命名' },
@@ -1459,7 +1458,7 @@ async function hdCut(
   toPath = curFileDirPath,
   text = '确认粘贴？'
 ) {
-  const type = await _pop.p({ e, text });
+  const type = await rMenu.pop.p({ e, text });
   if (type === 'confirm') {
     try {
       if (getDuplicates(data, ['name']).length > 0) {
@@ -1487,7 +1486,7 @@ async function hdCut(
 
         // 有重名文件
         if (hasSameName) {
-          const type = await _pop.p({
+          const type = await rMenu.pop.p({
             top: true,
             text: '如何处理同名文件？',
             cancel: { text: '重命名' },
@@ -1743,7 +1742,7 @@ function hdDel(e, arr, cb, loading = { start() {}, end() {} }) {
     opt.cancel = { text: '放入回收站', type: 'primary' };
     opt.confirm.text = '直接删除';
   }
-  _pop(opt, async (type) => {
+  rMenu.pop(opt, async (type) => {
     if (type === 'confirm' || type === 'cancel') {
       try {
         const force = type === 'confirm' ? 1 : 0;

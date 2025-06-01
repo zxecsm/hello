@@ -141,10 +141,7 @@ import {
 import { reqCountList } from '../../api/count.js';
 import { deepClone } from '../../js/utils/template.js';
 import _path from '../../js/utils/path.js';
-import {
-  CircularProgressBar,
-  percentBar,
-} from '../../js/plugins/percentBar/index.js';
+import { CircularProgressBar } from '../../js/plugins/percentBar/index.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
 import { reqRootSysStatus } from '../../api/root.js';
 import { handleAllowLoginMsg, shakeChat, timeMsg } from './home.js';
@@ -190,7 +187,7 @@ function bgFilter(value) {
 bgFilter(curFilterBg);
 // 调节模糊度
 export function resizeBgFilter(e) {
-  percentBar(
+  rMenu.percentBar(
     e,
     curFilterBg / 100,
     throttle(function (per) {

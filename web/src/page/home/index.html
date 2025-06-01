@@ -400,7 +400,9 @@
               class="t_refresh_btn iconfont icon-suijibofang"
             ></div>
           </div>
-          <div class="todo_list"></div>
+          <div class="todo_list_wrap">
+            <div class="todo_list"></div>
+          </div>
         </div>
         <!-- 倒计时 -->
         <div class="count_box">
@@ -413,7 +415,9 @@
               class="c_refresh_btn iconfont icon-suijibofang"
             ></div>
           </div>
-          <div class="count_list"></div>
+          <div class="count_list_wrap">
+            <div class="count_list"></div>
+          </div>
         </div>
         <!-- 右上功能键 -->
         <div cursor="y" class="user_logo_btn"></div>
@@ -516,35 +520,37 @@
             <div class="chat_list_box">
               <div class="chat_list"></div>
             </div>
-            <div class="chat_foot_box">
-              <div
-                cursor="y"
-                class="scroll_to_bot_btn iconfont icon-xiala"
-              ></div>
-              <div cursor="y" x="1" class="c_change_btn">
-                <i class="iconfont icon-yuyin"></i>
-              </div>
-              <div class="c_text_msg_box">
-                <div title="Ctrl+Enter 发送消息" class="c_text_msg">
-                  <div
-                    cursor="y"
-                    class="clean iconfont icon-15qingkong-1"
-                  ></div>
-                  <textarea
-                    class="c_text_content"
-                    placeholder="输入消息..."
-                  ></textarea>
-                  <div class="fill_height"></div>
+            <div class="chat_foot_wrap">
+              <div class="chat_foot_box">
+                <div
+                  cursor="y"
+                  class="scroll_to_bot_btn iconfont icon-xiala"
+                ></div>
+                <div cursor="y" x="1" class="c_change_btn">
+                  <i class="iconfont icon-yuyin"></i>
                 </div>
-                <div cursor="y" class="c_get_voice_btn no_select">
-                  按住 说话
+                <div class="c_text_msg_box">
+                  <div title="Ctrl+Enter 发送消息" class="c_text_msg">
+                    <div
+                      cursor="y"
+                      class="clean iconfont icon-15qingkong-1"
+                    ></div>
+                    <textarea
+                      class="c_text_content"
+                      placeholder="输入消息..."
+                    ></textarea>
+                    <div class="fill_height"></div>
+                  </div>
+                  <div cursor="y" class="c_get_voice_btn no_select">
+                    按住 说话
+                  </div>
                 </div>
-              </div>
-              <div cursor="y" class="c_sent_shake_btn">
-                <i class="iconfont icon-zhendong"></i>
-              </div>
-              <div cursor="y" x="1" class="c_sent_msg_btn">
-                <i class="iconfont icon-tianjia"></i>
+                <div cursor="y" class="c_sent_shake_btn">
+                  <i class="iconfont icon-zhendong"></i>
+                </div>
+                <div cursor="y" x="1" class="c_sent_msg_btn">
+                  <i class="iconfont icon-tianjia"></i>
+                </div>
               </div>
             </div>
           </div>

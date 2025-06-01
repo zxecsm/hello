@@ -23,7 +23,6 @@ import {
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
-import _pop from '../../../js/plugins/popConfirm';
 import { popWindow, setZidx } from '../popWindow.js';
 import pagination from '../../../js/plugins/pagination/index.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
@@ -44,7 +43,8 @@ import { _tpl } from '../../../js/utils/template.js';
 import localData from '../../../js/common/localData.js';
 const $countBox = $('.count_box'),
   $cheadBtns = $countBox.find('.c_head_btns'),
-  $countList = $countBox.find('.count_list');
+  $countListWrap = $countBox.find('.count_list_wrap'),
+  $countList = $countListWrap.find('.count_list');
 let countList = [],
   countPageNo = 1,
   expireCount = 0,
@@ -103,7 +103,8 @@ function countLoading() {
               <p style="pointer-events: none;background-color:var(--color9);height:3rem;width:${w}%;margin:1rem 0;"></p>
         `;
   });
-  $countList.html(str).scrollTop(0);
+  $countList.html(str);
+  $countListWrap.scrollTop(0);
 }
 // 获取列表
 export function getCountList(toTop) {
@@ -168,7 +169,7 @@ function renderCountList(total, toTop) {
   );
   $countList.html(html);
   if (toTop) {
-    $countList.scrollTop(0);
+    $countListWrap.scrollTop(0);
   }
   _setTimeout(() => {
     $countList.find('.item_box').each((_, item) => {
@@ -212,7 +213,7 @@ const countPgnt = pagination($countList[0], {
     _msg.botMsg(`第 ${countPageNo} 页`);
   },
   toTop() {
-    $countList.scrollTop(0);
+    $countListWrap.scrollTop(0);
   },
 });
 // 获取数据
@@ -380,7 +381,7 @@ function delCount(e, id, cb, loading = { start() {}, end() {} }) {
       };
     }
   }
-  _pop(opt, (type) => {
+  rMenu.pop(opt, (type) => {
     if (type === 'confirm') {
       loading.start();
       reqCountDelete(param)

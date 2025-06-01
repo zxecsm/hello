@@ -11,6 +11,7 @@
   --text-hover-decoration: underline wavy;
   --speed-duration: 0.3s;
   --speed-timing: ease-in-out;
+  --max-width: 120rem;
 }
 
 html {

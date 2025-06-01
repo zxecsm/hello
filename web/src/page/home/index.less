@@ -68,7 +68,7 @@ body {
     flex-flow: row nowrap;
     font-size: 0.9em;
     padding: 0.5rem;
-    justify-content: space-between;
+    justify-content: space-around;
     .cpu,
     .mem {
       width: 48%;
@@ -161,7 +161,7 @@ body {
     transform: translateX(-50%);
     width: 100%;
     height: 100%;
-    max-width: 120rem;
+    max-width: var(--max-width);
     background-color: var(--color10);
     box-shadow: 0 0 0.5rem var(--color5);
     .bg_footer {
@@ -180,7 +180,7 @@ body {
         flex-flow: row wrap;
         margin: 0 auto;
         width: 95%;
-        max-width: 120rem;
+        max-width: var(--max-width);
         padding: 0.5rem 0;
         align-items: center;
 
@@ -826,10 +826,12 @@ body {
       .user_list_box {
         display: none;
         position: absolute;
-        top: 4rem;
-        right: 0;
+        top: 4.3rem;
+        left: 50%;
         width: 100%;
         height: 70%;
+        max-width: var(--max-width);
+        transform: translateX(-50%);
         overflow-y: auto;
         border-radius: 0 0 0.5rem 0.5rem;
         background-color: var(--color9);
@@ -1111,6 +1113,8 @@ body {
         overflow-y: auto;
 
         .chat_list {
+          margin: 0 auto;
+          max-width: var(--max-width);
           ol,
           li,
           ul {
@@ -1373,143 +1377,147 @@ body {
           }
         }
       }
-
-      .chat_foot_box {
-        position: relative;
+      .chat_foot_wrap {
         width: 100%;
         flex: none;
-        display: flex;
-        flex-flow: row;
-        align-items: flex-end;
-        background-color: var(--color9);
         border-top: 1px solid var(--color8);
-        z-index: 1;
-        // 回到底部
-        .scroll_to_bot_btn {
-          display: none;
-          position: absolute;
-          width: 3rem;
-          height: 3rem;
-          line-height: 3rem;
-          text-align: center;
-          top: -4rem;
-          left: 50%;
-          margin-left: -1.5rem;
-          z-index: 2;
-          background-color: var(--color9);
-          border-radius: 50%;
-          font-size: 1.6rem;
-          box-shadow: 0 0 0.5rem var(--color5);
-          opacity: 0.9;
-          &:hover {
-            opacity: 1;
-            color: var(--text-hover-color);
-            transform: scale(1.2);
-          }
-        }
-        .c_text_msg_box {
-          flex: auto;
+
+        .chat_foot_box {
           position: relative;
-          margin: 0.5rem;
-          font-size: 1.6rem;
-          .c_text_msg {
+          margin: 0 auto;
+          max-width: var(--max-width);
+          display: flex;
+          flex-flow: row;
+          align-items: flex-end;
+          background-color: var(--color9);
+          z-index: 1;
+          // 回到底部
+          .scroll_to_bot_btn {
+            display: none;
+            position: absolute;
+            width: 3rem;
+            height: 3rem;
+            line-height: 3rem;
+            text-align: center;
+            top: -4rem;
+            left: 50%;
+            margin-left: -1.5rem;
+            z-index: 2;
+            background-color: var(--color9);
+            border-radius: 50%;
+            font-size: 1.6rem;
+            box-shadow: 0 0 0.5rem var(--color5);
+            opacity: 0.9;
+            &:hover {
+              opacity: 1;
+              color: var(--text-hover-color);
+              transform: scale(1.2);
+            }
+          }
+          .c_text_msg_box {
+            flex: auto;
             position: relative;
-            line-height: 1.5;
-            .clean {
-              display: none;
-              position: absolute;
-              bottom: 0;
-              right: 0;
-              width: 3rem;
-              height: 3rem;
-              font-size: 2rem;
-              line-height: 3rem;
-              text-align: center;
-              font-size: 1.1em;
-              z-index: 5;
-              &:hover {
-                color: var(--text-hover-color);
-                transform: scale(1.2);
+            margin: 0.5rem;
+            font-size: 1.6rem;
+            .c_text_msg {
+              position: relative;
+              line-height: 1.5;
+              .clean {
+                display: none;
+                position: absolute;
+                bottom: 0;
+                right: 0;
+                width: 3rem;
+                height: 3rem;
+                font-size: 2rem;
+                line-height: 3rem;
+                text-align: center;
+                font-size: 1.1em;
+                z-index: 5;
+                &:hover {
+                  color: var(--text-hover-color);
+                  transform: scale(1.2);
+                }
+                &.show {
+                  display: block;
+                }
               }
-              &.show {
-                display: block;
+              .c_text_content {
+                border-radius: 0.2rem;
+                background-color: var(--bg-color-o2);
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                white-space: pre-wrap;
+                word-break: break-word;
+                left: 0;
+                top: 0;
+                outline: none;
+                border: none;
+                padding: 1rem 1rem 3rem 1rem;
+                font-size: inherit;
+                line-height: inherit;
+                font-family: inherit;
+                resize: none;
+                margin: 0;
+                &.focus {
+                  background-color: var(--color10);
+                }
+              }
+              .fill_height {
+                max-height: 25rem;
+                min-height: 7rem;
+                padding: 1rem 1rem 3rem 1rem;
+                visibility: hidden;
+                width: 100%;
+                white-space: pre-wrap;
+                word-break: break-word;
               }
             }
-            .c_text_content {
-              border-radius: 0.2rem;
-              background-color: var(--bg-color-o2);
-              position: absolute;
+
+            .c_get_voice_btn {
+              display: none;
               width: 100%;
               height: 100%;
-              white-space: pre-wrap;
-              word-break: break-word;
-              left: 0;
-              top: 0;
-              outline: none;
-              border: none;
-              padding: 1rem 1rem 3rem 1rem;
-              font-size: inherit;
-              line-height: inherit;
-              font-family: inherit;
-              resize: none;
-              margin: 0;
-              &.focus {
-                background-color: var(--color10);
+              background-color: var(--color10);
+              text-align: center;
+              line-height: 4rem;
+
+              &.gren {
+                background-color: rgb(37, 201, 124);
+                color: var(--color2);
+                font-size: 2rem;
               }
             }
-            .fill_height {
-              max-height: 25rem;
-              min-height: 7rem;
-              padding: 1rem 1rem 3rem 1rem;
-              visibility: hidden;
-              width: 100%;
-              white-space: pre-wrap;
-              word-break: break-word;
-            }
           }
 
-          .c_get_voice_btn {
-            display: none;
-            width: 100%;
-            height: 100%;
-            background-color: var(--color10);
+          .c_sent_msg_btn,
+          .c_sent_shake_btn,
+          .c_change_btn {
+            flex: none;
+            font-size: 2rem;
             text-align: center;
-            line-height: 4rem;
+            line-height: 5rem;
+            width: 5rem;
+            height: 5rem;
 
-            &.gren {
-              background-color: rgb(37, 201, 124);
-              color: var(--color2);
-              font-size: 2rem;
+            &:hover {
+              color: var(--text-hover-color);
+              transform: scale(1.2);
             }
           }
-        }
-
-        .c_sent_msg_btn,
-        .c_sent_shake_btn,
-        .c_change_btn {
-          flex: none;
-          font-size: 2rem;
-          text-align: center;
-          line-height: 5rem;
-          width: 5rem;
-          height: 5rem;
-
-          &:hover {
-            color: var(--text-hover-color);
-            transform: scale(1.2);
+          .c_sent_shake_btn {
+            display: none;
           }
-        }
-        .c_sent_shake_btn {
-          display: none;
-        }
-        .c_sent_msg_btn i {
-          font-size: 2.8rem;
-        }
-        .c_sent_shake_btn i {
-          font-size: 2.8rem;
-        }
-        .c_change_btn i {
-          font-size: 2.5rem;
+          .c_sent_msg_btn i {
+            font-size: 2.8rem;
+          }
+          .c_sent_shake_btn i {
+            font-size: 2.8rem;
+          }
+          .c_change_btn i {
+            font-size: 2.5rem;
+          }
         }
       }
     }
@@ -1799,7 +1807,7 @@ body {
       width: 80%;
       height: 80%;
       max-height: 100rem;
-      max-width: 120rem;
+      max-width: var(--max-width);
       position: absolute;
       left: 50%;
       top: 30%;
@@ -2583,6 +2591,8 @@ body {
         flex: auto;
         overflow: hidden;
         position: relative;
+        margin: 0 auto;
+        max-width: var(--max-width);
 
         // 歌单列表
         .song_list_wrap {
@@ -3232,6 +3242,8 @@ body {
         }
 
         .lrc_box {
+          margin: 0 auto;
+          max-width: var(--max-width);
           display: flex;
           flex-direction: column;
           width: 100%;
@@ -3582,11 +3594,10 @@ body {
         z-index: 13;
 
         .s_music_list_box {
-          position: absolute;
-          top: 0;
-          right: 0;
           width: 100%;
           height: 80%;
+          margin: 0 auto;
+          max-width: var(--max-width);
           border-radius: 0 0 0.5rem 0.5rem;
           background-color: var(--color8);
           ol,
@@ -3737,6 +3748,7 @@ body {
           right: 0;
           width: 100%;
           height: 70%;
+          max-width: var(--max-width);
           overflow: hidden;
           border-radius: 0.5rem 0.5rem 0 0;
           padding: 0 0.2rem;
@@ -4174,68 +4186,75 @@ body {
       }
     }
 
-    .todo_list {
+    .todo_list_wrap {
       flex: auto;
       padding: 0.5rem;
       overflow-y: auto;
       background-color: var(--color10);
-      ol,
-      li,
-      ul {
-        list-style: none;
-      }
-      ul {
+      width: 100%;
+
+      .todo_list {
         width: 100%;
-        display: flex;
-        flex-flow: row;
-        font-size: 1.8rem;
-        overflow: hidden;
-        margin: 0.5rem 0;
-        border-bottom: 1px solid var(--color9);
-        align-items: center;
-
-        &:hover {
-          background-color: var(--color9);
+        margin: 0 auto;
+        max-width: var(--max-width);
+        ol,
+        li,
+        ul {
+          list-style: none;
         }
-
-        .todo_text {
-          flex: auto;
-          line-height: 1.5;
-          padding: 0.5rem;
-          .text {
-            white-space: pre-wrap;
-            word-break: break-all;
-            overflow-y: auto;
-            max-height: 19rem;
-
-            &.del {
-              text-decoration: line-through;
-              color: var(--color4);
-            }
-          }
-          .time {
-            font-size: 0.7em;
-            color: var(--color6);
-            margin-top: 0.5rem;
-          }
-        }
-
-        .todo_state,
-        .set_btn {
-          flex: none;
-          width: 4rem;
-          line-height: 4rem;
-          text-align: center;
-          font-size: 2rem;
+        ul {
+          width: 100%;
+          display: flex;
+          flex-flow: row;
+          font-size: 1.8rem;
+          overflow: hidden;
+          margin: 0.5rem 0;
+          border-bottom: 1px solid var(--color9);
+          align-items: center;
 
           &:hover {
-            color: var(--text-hover-color);
-            transform: scale(1.2);
+            background-color: var(--color9);
+          }
+
+          .todo_text {
+            flex: auto;
+            line-height: 1.5;
+            padding: 0.5rem;
+            .text {
+              white-space: pre-wrap;
+              word-break: break-all;
+              overflow-y: auto;
+              max-height: 19rem;
+
+              &.del {
+                text-decoration: line-through;
+                color: var(--color4);
+              }
+            }
+            .time {
+              font-size: 0.7em;
+              color: var(--color6);
+              margin-top: 0.5rem;
+            }
+          }
+
+          .todo_state,
+          .set_btn {
+            flex: none;
+            width: 4rem;
+            line-height: 4rem;
+            text-align: center;
+            font-size: 2rem;
+
+            &:hover {
+              color: var(--text-hover-color);
+              transform: scale(1.2);
+            }
           }
         }
-      }
-      .todo_paging_box {
-        padding: 2rem 0;
+        .todo_paging_box {
+          padding: 2rem 0;
+        }
       }
     }
   }
@@ -4292,90 +4311,96 @@ body {
         }
       }
     }
-
-    .count_list {
+    .count_list_wrap {
       flex: auto;
       padding: 1rem;
       overflow-y: auto;
       background-color: var(--color10);
-      .item_box {
-        padding: 1rem 0;
-        border-bottom: 1px solid var(--color9);
-        &:hover .icon {
-          transform: scale(1.2);
-        }
-        .title {
-          display: flex;
-          align-items: center;
-          .top_btn,
-          .set_btn,
-          .icon {
-            flex: none;
-            color: var(--icon-color);
-            width: 3rem;
-            height: 3rem;
-            line-height: 3rem;
-            text-align: center;
-            font-size: 1.6rem;
+      width: 100%;
+
+      .count_list {
+        width: 100%;
+        margin: 0 auto;
+        max-width: var(--max-width);
+        .item_box {
+          padding: 1rem 0;
+          border-bottom: 1px solid var(--color9);
+          &:hover .icon {
+            transform: scale(1.2);
           }
-          .icon:hover {
-            color: var(--text-hover-color);
-          }
-          .text {
-            line-height: 1.5;
-            word-break: break-all;
-            font-size: 2rem;
-            flex: auto;
-            overflow-y: auto;
-            max-height: 19rem;
-          }
-          .top_btn {
-            color: var(--color5);
-          }
-          .set_btn {
-            color: var(--color3);
-            &:hover {
+          .title {
+            display: flex;
+            align-items: center;
+            .top_btn,
+            .set_btn,
+            .icon {
+              flex: none;
+              color: var(--icon-color);
+              width: 3rem;
+              height: 3rem;
+              line-height: 3rem;
+              text-align: center;
+              font-size: 1.6rem;
+            }
+            .icon:hover {
               color: var(--text-hover-color);
-              transform: scale(1.2);
+            }
+            .text {
+              line-height: 1.5;
+              word-break: break-all;
+              font-size: 2rem;
+              flex: auto;
+              overflow-y: auto;
+              max-height: 19rem;
+            }
+            .top_btn {
+              color: var(--color5);
+            }
+            .set_btn {
+              color: var(--color3);
+              &:hover {
+                color: var(--text-hover-color);
+                transform: scale(1.2);
+              }
+            }
+          }
+          .info {
+            font-size: 1.4rem;
+            line-height: 1.5;
+          }
+          &.close {
+            .title .text {
+              text-decoration: line-through;
+              color: var(--color4);
+            }
+          }
+          .pro {
+            background-color: var(--color9);
+            height: 2rem;
+            line-height: 2rem;
+            border-radius: 4px;
+            overflow: hidden;
+            width: 95%;
+            margin: 1rem 0;
+            border: 1px solid var(--color8);
+            font-size: 1.4rem;
+            .bar {
+              width: 1.5em;
+              overflow: hidden;
+              max-width: 100%;
+              min-width: 1.5em;
+              transition: width 0.3s ease-in-out;
+              background-color: var(--color8);
+            }
+            .num {
+              float: right;
             }
           }
         }
-        .info {
-          font-size: 1.4rem;
-          line-height: 1.5;
-        }
-        &.close {
-          .title .text {
-            text-decoration: line-through;
-            color: var(--color4);
-          }
-        }
-        .pro {
-          background-color: var(--color9);
-          height: 2rem;
-          line-height: 2rem;
-          border-radius: 4px;
-          overflow: hidden;
-          width: 95%;
-          margin: 1rem 0;
-          border: 1px solid var(--color8);
-          font-size: 1.4rem;
-          .bar {
-            width: 1.5em;
-            overflow: hidden;
-            max-width: 100%;
-            min-width: 1.5em;
-            transition: width 0.3s ease-in-out;
-            background-color: var(--color8);
-          }
-          .num {
-            float: right;
-          }
-        }
-      }
 
-      .count_paging_box {
-        padding: 2rem 0;
+        .count_paging_box {
+          padding: 2rem 0;
+        }
       }
     }
   }
