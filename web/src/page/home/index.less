@@ -904,13 +904,26 @@ body {
           .user_name {
             flex: auto;
             height: 4rem;
-            line-height: 4rem;
             width: 0;
-            padding-left: 1rem;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            overflow: hidden;
-            &:hover {
+            display: flex;
+            flex-flow: column;
+            justify-content: center;
+            span {
+              width: 100%;
+              padding-left: 1rem;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+              overflow: hidden;
+            }
+            .name {
+              line-height: 2.2rem;
+            }
+            .msg {
+              line-height: 1.8rem;
+              font-size: 1.4rem;
+              color: var(--color4);
+            }
+            &:hover .name {
               color: var(--text-hover-color);
             }
           }
@@ -1165,16 +1178,7 @@ body {
                 padding: 0.8rem 0;
               }
 
-              .c_right_logo {
-                flex: none;
-                text-align: right;
-                width: 4.2rem;
-                height: 4rem;
-                padding: 0.8rem 0;
-              }
-
-              .c_left_logo .c_logo,
-              .c_right_logo .c_logo {
+              .c_left_logo .c_logo {
                 width: 4rem;
                 height: 4rem;
                 border-radius: 0.6rem;
@@ -1314,9 +1318,6 @@ body {
               }
             }
             &.left {
-              .c_right_logo {
-                display: none;
-              }
               .c_content_box {
                 .c_user_name,
                 .c_voice_msg_box {

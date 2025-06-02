@@ -79,8 +79,7 @@ export function todoMsg() {
       if (type === 'click') {
         showTodoBox();
       }
-    },
-    1
+    }
   );
 }
 // 加载

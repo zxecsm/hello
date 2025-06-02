@@ -78,8 +78,7 @@ export function countMsg() {
       if (type === 'click') {
         showCountBox();
       }
-    },
-    1
+    }
   );
 }
 export function setExpireCount(val) {

@@ -205,7 +205,9 @@ CREATE TABLE IF NOT EXISTS friends (
     read      INTEGER DEFAULT (1) 
                       NOT NULL,
     des       TEXT    NOT NULL
-                      DEFAULT ('') 
+                      DEFAULT (''),
+    msg       TEXT    NOT NULL
+                      DEFAULT ('')
 );
 `,
   `

@@ -659,6 +659,7 @@ route.get('/user-list', async (req, res) => {
         email,
         des,
         read,
+        msg,
       } = u;
 
       const con = cons[acc];
@@ -672,6 +673,7 @@ route.get('/user-list', async (req, res) => {
         email,
         os: con ? con.onlines.map((item) => item.os) : [], // 展示登录设备信息
         read: read === null ? 1 : read,
+        msg,
       };
 
       if (

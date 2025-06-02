@@ -201,19 +201,49 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
       return true;
     }, 200);
   } else {
-    if (flag === 'addmsg' && notifyObj.data.to !== account) {
-      // 标记消息为未读
-      const change = await updateData(
+    let msgText = '';
+    let read = 0;
+    if (flag === 'addmsg') {
+      if (msgData.type === 'image') {
+        msgText = '图片';
+      } else if (msgData.type === 'file') {
+        msgText = '文件';
+      } else {
+        msgText = msgData.content;
+      }
+    } else if (flag === 'del') {
+      read = 1;
+      msgText = '撤回消息';
+    } else if (flag === 'clear') {
+      read = 1;
+      msgText = '清空消息';
+    } else if (flag === 'shake') {
+      read = 1;
+      msgText = '抖了一下';
+    }
+    // 标记消息为未读
+    let change = {};
+    if (notifyObj.data.to !== account) {
+      change = await updateData(
         'friends',
-        { read: 0, update_at: t },
+        { read, update_at: t, msg: msgText },
         `WHERE account = ? AND friend = ?`,
         [notifyObj.data.to, account]
       );
+    }
 
-      // 如果不是好友，成为好友
-      if (change.changes === 0) {
-        await becomeFriends(account, notifyObj.data.to, 1, 0);
-      }
+    const change2 = await updateData(
+      'friends',
+      { msg: msgText },
+      `WHERE account = ? AND friend = ?`,
+      [account, notifyObj.data.to]
+    );
+    // 如果不是好友，成为好友
+    if (
+      (notifyObj.data.to !== account && change.changes === 0) ||
+      change2.changes === 0
+    ) {
+      await becomeFriends(account, notifyObj.data.to, 1, 0, msgText);
     }
 
     if (notifyObj.data.to === account) {
@@ -376,7 +406,13 @@ export async function onlineMsg(req, pass) {
 }
 
 // 成为朋友
-export async function becomeFriends(me, friend, read1 = 1, read2 = 1) {
+export async function becomeFriends(
+  me,
+  friend,
+  read1 = 1,
+  read2 = 1,
+  msg = ''
+) {
   if (
     friend !== 'chang' &&
     friend !== 'hello' &&
@@ -415,6 +451,7 @@ export async function becomeFriends(me, friend, read1 = 1, read2 = 1) {
         account: me,
         friend,
         read: read1,
+        msg,
       },
     ]);
 
@@ -429,6 +466,7 @@ export async function becomeFriends(me, friend, read1 = 1, read2 = 1) {
         account: me,
         friend,
         read: read1,
+        msg,
       },
     ]);
   }
@@ -441,6 +479,7 @@ export async function becomeFriends(me, friend, read1 = 1, read2 = 1) {
         account: friend,
         friend: me,
         read: read2,
+        msg,
       },
     ]);
   }
@@ -505,7 +544,7 @@ export function parseForwardMsgLink(str) {
 
 // 获取成员列表
 export function getChatUserList(account, pageSize, offset) {
-  const sql = `SELECT f.des,f.read,u.update_at,u.username,u.account,u.logo,u.email,u.hide
+  const sql = `SELECT f.des,f.read,f.msg,u.update_at,u.username,u.account,u.logo,u.email,u.hide
    FROM user AS u 
    LEFT JOIN friends AS f 
    ON u.account = f.friend 

@@ -283,8 +283,7 @@ function closeLoading() {
                 if (type === 'click') {
                   showChatRoom();
                 }
-              },
-              1
+              }
             );
           } else {
             $showChatRoomBtn.attr(

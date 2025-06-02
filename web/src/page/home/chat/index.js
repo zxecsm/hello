@@ -179,10 +179,13 @@ function renderUserList(pageNo, total, totalPage, top) {
   if (chatRoomWrapIsHide() || $userListBox.is(':hidden')) return;
   const html = _tpl(
     `
-    <ul v-for="{username, account, online, des = '', read} in userList" :data-account="account" class="user_item">
+    <ul v-for="{username, account, online, des = '', read, msg} in userList" :data-account="account" class="user_item">
       <i :x="read === 1 ? 'y' : 'n'" class="msg_alert"></i>
       <li cursor="y" class="user_logo" style="{{online === 1 ? '' : 'filter: grayscale(1);'}}"></li>
-      <li cursor="y" class="user_name">{{getUsername(account,username,des)}}</li>
+      <li cursor="y" class="user_name">
+        <span class="name">{{getUsername(account,username,des)}}</span>
+        <span v-if="msg" class="msg">{{msg}}</span>
+      </li>
       <li v-if="account !== 'hello'" :cursor="online === 1 ? 'y' : ''" :style=getStyle(account,online) class="online iconfont icon-tuichudenglu1"></li>
     </ul>
     <div v-if="totalPage > 1" v-html="getPaging()"></div>
@@ -602,10 +605,7 @@ function renderMsgList(list, skip) {
               <span class="c_triangle"></span>
             </p>
           </li>
-          <li v-if="isRight(_from)" cursor="y" class="c_right_logo">
-            <div class="c_logo" style="float: right;"></div>
-          </li>
-          <li v-else cursor="y" class="chat_menu_btn iconfont icon-maohao"></li>
+          <li v-if="!isRight(_from)" cursor="y" class="chat_menu_btn iconfont icon-maohao"></li>
         </div>
       </ul>
     </template>
