@@ -348,6 +348,9 @@ changeHeadBtnSort(localData.get('headBtnToRight'));
     // 页面变为可见时触发
     if (document.visibilityState === 'visible') {
       icon.href = icon1logo;
+      if (!isIframe()) {
+        timeMsg();
+      }
     }
   });
 })();
