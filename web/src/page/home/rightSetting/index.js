@@ -359,9 +359,6 @@ function hdUserLogo(e) {
           'userlogo',
           () => {
             close();
-            if (!chatRoomWrapIsHide()) {
-              openFriend(setCurChatAccount(), true);
-            }
             updateUserInfo();
           },
           '',
