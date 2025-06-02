@@ -569,7 +569,7 @@ function renderMsgList(list, skip) {
         </div>
         <div class="msg_info_wrap">
           <li v-if="isRight(_from)" cursor="y" class="chat_menu_btn iconfont icon-maohao"></li>
-          <li v-else cursor="y" class="c_left_logo">
+          <li v-if="!isRight(_from) && _to === 'chang'" cursor="y" class="c_left_logo">
             <div class="c_logo" style="float: left;"></div>
           </li>
           <li class="c_content_box">
