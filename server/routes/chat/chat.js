@@ -314,7 +314,7 @@ export async function sendNotificationsToCustomAddresses(req, obj) {
 
     const fArr = await queryData(
       'friends',
-      'des,account',
+      'des,notify,account',
       `WHERE friend = ? AND account = ?`,
       [obj._from, obj._to]
     );
