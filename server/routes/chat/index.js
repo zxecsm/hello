@@ -40,7 +40,7 @@ import { fieldLenght } from '../config.js';
 import { getUserInfo } from '../user/user.js';
 
 import {
-  getFriendDes,
+  getFriendInfo,
   markAsRead,
   hdHelloMsg,
   saveChatMsg,
@@ -114,6 +114,40 @@ route.use((req, res, next) => {
   }
 });
 
+// 勿扰
+route.post('/dnd-mode', async (req, res) => {
+  try {
+    let { account: acc, notify = 1 } = req.body;
+    notify = parseInt(notify);
+    const { account } = req._hello.userinfo;
+
+    if (
+      !validaString(acc, 1, fieldLenght.id, 1) ||
+      !validationValue(notify, [0, 1]) ||
+      account === acc
+    ) {
+      paramErr(res, req);
+      return;
+    }
+
+    await becomeFriends(account, acc);
+    await updateData(
+      'friends',
+      { notify },
+      `WHERE friend = ? AND account = ?`,
+      [acc, account]
+    );
+
+    _success(res, `${notify === 0 ? '开启' : '关闭'}免打扰成功`)(
+      req,
+      `${acc}-${notify}`,
+      1
+    );
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
 // 设置备注
 route.post('/setdes', async (req, res) => {
   try {
@@ -156,13 +190,41 @@ route.get('/getdes', async (req, res) => {
     const { account: acc } = req.query,
       { account } = req._hello.userinfo;
 
-    if (
-      !validaString(acc, 1, fieldLenght.id, 1) ||
-      acc === account ||
-      acc === 'chang' ||
-      acc === 'hello'
-    ) {
+    if (!validaString(acc, 1, fieldLenght.id, 1)) {
       paramErr(res, req);
+      return;
+    }
+
+    const f = await getFriendInfo(account, acc, 'des,notify');
+    const des = f ? f.des : '';
+    const notify = f ? f.notify : 1;
+
+    if (acc === 'chang') {
+      _success(res, 'ok', {
+        username: '聊天室',
+        des: '聊天室',
+        online: true,
+        os: [],
+        notify,
+      });
+      return;
+    } else if (acc === 'hello') {
+      _success(res, 'ok', {
+        username: 'Hello助手',
+        des: 'Hello助手',
+        online: true,
+        os: [],
+        notify,
+      });
+      return;
+    } else if (acc === account) {
+      _success(res, 'ok', {
+        username: '文件传输助手',
+        des: '文件传输助手',
+        online: true,
+        os: [],
+        notify,
+      });
       return;
     }
 
@@ -173,21 +235,20 @@ route.get('/getdes', async (req, res) => {
       return;
     }
 
-    user.des = await getFriendDes(account, acc);
-
-    user.online = true;
+    let online = true;
 
     if (user.hide === 1 || Date.now() - user.update_at >= 1000 * 30) {
-      user.online = false;
+      online = false;
     }
 
     const con = _connect.get(acc);
 
     _success(res, 'ok', {
       username: user.username,
-      des: user.des,
-      online: user.online,
+      des,
+      online,
       os: con ? con.onlines.map((item) => item.os) : [],
+      notify,
     });
   } catch (error) {
     _err(res)(req, error);
@@ -503,14 +564,14 @@ route.get('/news', async (req, res) => {
 
     const group = await getTableRowCount(
       'friends',
-      `WHERE account = ? AND read = ? AND friend = ?`,
-      [account, 0, 'chang']
+      `WHERE account = ? AND read = ? AND friend = ? AND notify = ?`,
+      [account, 0, 'chang', 1]
     );
 
     const friend = await getTableRowCount(
       'friends',
-      `WHERE account = ? AND read = ? AND friend != ?`,
-      [account, 0, 'chang']
+      `WHERE account = ? AND read = ? AND friend != ? AND notify = ?`,
+      [account, 0, 'chang', 1]
     );
 
     _success(res, 'ok', {
@@ -612,7 +673,7 @@ route.post('/shake-msg', async (req, res) => {
 
     await sendNotifyMsg(req, to, 'shake');
 
-    _success(res, '抖了一下')(req, `${user.username}-${to}`, 1);
+    _success(res, '抖动对方窗口成功')(req, `${user.username}-${to}`, 1);
   } catch (error) {
     _err(res)(req, error);
   }
@@ -675,7 +736,9 @@ route.get('/user-list', async (req, res) => {
         read: read === null ? 1 : read,
         msg,
       };
-
+      if (acc === account) {
+        obj.des = '文件传输助手';
+      }
       if (
         (hide === 1 || n - update_at > 1000 * 30) &&
         account !== acc &&
@@ -1064,7 +1127,7 @@ route.post('/forward-msg-link', async (req, res) => {
 
     if (state === 1) {
       try {
-        await hdForwardToLink(req, [{ forward_msg_link }], [], '测试消息');
+        await hdForwardToLink(req, [{ forward_msg_link }], [], '测试消息', []);
       } catch (error) {
         _err(res, '发送测试消息失败')(req, error, 1);
         return;

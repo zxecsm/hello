@@ -49,6 +49,7 @@ import record from '../../../js/utils/recorder.js';
 import {
   reqChatBreakpoint,
   reqChatDeleteMsg,
+  reqChatDndMode,
   reqChatExpired,
   reqChatforward,
   reqChatGetDes,
@@ -183,7 +184,7 @@ function renderUserList(pageNo, total, totalPage, top) {
       <i :x="read === 1 ? 'y' : 'n'" class="msg_alert"></i>
       <li cursor="y" class="user_logo" style="{{online === 1 ? '' : 'filter: grayscale(1);'}}"></li>
       <li cursor="y" class="user_name">
-        <span class="name">{{getUsername(account,username,des)}}</span>
+        <span class="name">{{des || username}}</span>
         <span v-if="msg" class="msg">{{msg}}</span>
       </li>
       <li v-if="account !== 'hello'" :cursor="online === 1 ? 'y' : ''" :style=getStyle(account,online) class="online iconfont icon-tuichudenglu1"></li>
@@ -193,12 +194,6 @@ function renderUserList(pageNo, total, totalPage, top) {
     {
       userList,
       totalPage,
-      getUsername(account, username, des) {
-        if (setUserInfo().account === account) {
-          username = '文件传输助手';
-        }
-        return des || username;
-      },
       getStyle(account, online) {
         let color = 'var(--color6)';
         if (setUserInfo().account === account) {
@@ -574,7 +569,7 @@ function renderMsgList(list, skip) {
           </li>
           <li class="c_content_box">
             <span :title="getDate(create_at)[0]" class="c_user_name">
-              {{getUsername(username,des,_to)}} <span>{{getDate(create_at)[1]}}</span>
+              {{getUsername(username,des,_to,_from)}} <span>{{getDate(create_at)[1]}}</span>
             </span>
             <div v-if="type === 'image'" cursor="y" class="c_img_msg_box">
               <div class="c_img"><span>{{formatBytes(size)}}</span></div>
@@ -622,11 +617,9 @@ function renderMsgList(list, skip) {
       isRight(_from) {
         return _from === setUserInfo().account ? true : false;
       },
-      getUsername(username, des, _to) {
-        if (_to === 'chang') {
-          return des || username || '未知';
-        }
-        return '';
+      getUsername(username, des, _to, _from) {
+        if (_to !== 'chang' || _from === setUserInfo().account) return '';
+        return des || username || '未知';
       },
       fileLogoType,
       formatBytes,
@@ -1190,6 +1183,30 @@ function changeDateSearchState() {
   }
 }
 $chatRoomWrap
+  .on('click', '.ndn_icon', function (e) {
+    const notify = parseInt(this.dataset.notify) === 1 ? 0 : 1;
+    const { username, des } = curChatUserInfo;
+    rMenu.pop(
+      {
+        e,
+        text: `${notify === 1 ? '关闭' : '开启'}: ${
+          des || username
+        } 的消息免打扰？`,
+      },
+      (type) => {
+        if (type === 'confirm') {
+          reqChatDndMode({ notify, account: curChatAccount })
+            .then((res) => {
+              if (res.code === 1) {
+                _msg.success(res.codeText);
+                setChatTitle(curChatAccount);
+              }
+            })
+            .catch(() => {});
+        }
+      }
+    );
+  })
   .on('click', '.date_search .date_icon', hdDateSearchChat)
   .on('click', '.date_search .date_text', hdDateSearchChat)
   .on('click', '.date_search .date_close', () => {
@@ -1442,7 +1459,7 @@ $chatFootBox
       reqChatShakeMsg({ to: curChatAccount })
         .then((res) => {
           if (res.code === 1) {
-            _msg.success();
+            _msg.success(res.codeText);
           }
         })
         .catch(() => {});
@@ -1745,14 +1762,14 @@ $onlineStatus
     }`;
     rMenu.rightInfo(e, str, '登录信息');
   });
-function updateOnlineStatus() {
+function updateOnlineStatus(duration = 5000) {
   updateOnlineStatus.clear();
   onlineTimer = setTimeout(() => {
     const acc = curChatAccount;
     reqChatGetDes({ account: acc })
       .then((res) => {
         if (res.code === 1) {
-          const { username, des, online } = res.data;
+          const { username, des, online, notify } = res.data;
           curChatUserInfo = res.data;
           if (online) {
             $onlineStatus.addClass('active');
@@ -1760,6 +1777,7 @@ function updateOnlineStatus() {
             $onlineStatus.removeClass('active');
           }
           chatTitleScroll.init(des || username);
+          switchNdnMode(acc, notify);
         } else {
           throw '';
         }
@@ -1767,8 +1785,10 @@ function updateOnlineStatus() {
       .catch(() => {
         $onlineStatus.removeClass('active');
       })
-      .finally(updateOnlineStatus);
-  }, 5000);
+      .finally(() => {
+        updateOnlineStatus();
+      });
+  }, duration);
 }
 updateOnlineStatus.clear = function () {
   if (onlineTimer) {
@@ -1776,52 +1796,56 @@ updateOnlineStatus.clear = function () {
     onlineTimer = null;
   }
 };
+function switchNdnMode(acc, notify) {
+  const $ndn = $chatRoomWrap.find('.ndn_icon');
+  if (acc === setUserInfo().account) {
+    $ndn.css('display', 'none');
+  } else {
+    $ndn.css('display', 'block');
+    if (notify === 1) {
+      $ndn.attr({
+        class: 'ndn_icon iconfont icon-24gl-volumeHigh',
+        'data-notify': notify,
+      });
+    } else {
+      $ndn.attr({
+        class: 'ndn_icon iconfont icon-24gl-volumeCross',
+        'data-notify': notify,
+      });
+    }
+  }
+}
 // 设置消息标题
 function setChatTitle(acc) {
   chatTitleScroll.init('');
-  if (acc === setUserInfo().account) {
-    chatTitleScroll.init('文件传输助手');
+  if ([setUserInfo().account, 'chang', 'hello'].includes(acc)) {
     $onlineStatus.css('display', 'none');
     updateOnlineStatus.clear();
-  } else if (acc === 'chang') {
-    chatTitleScroll.init('聊天室');
-    $onlineStatus.css('display', 'none');
-    updateOnlineStatus.clear();
-  } else if (acc === 'hello') {
-    chatTitleScroll.init('Hello助手');
-    $onlineStatus.css('display', 'none');
-    updateOnlineStatus.clear();
-  } else {
-    $onlineStatus.css('display', 'block');
-    updateOnlineStatus();
     reqChatGetDes({ account: acc })
       .then((res) => {
         if (res.code === 1) {
-          const { username, des, online } = res.data;
+          const { username, des, notify } = res.data;
           curChatUserInfo = res.data;
-          if (online) {
-            $onlineStatus.addClass('active');
-          } else {
-            $onlineStatus.removeClass('active');
-          }
           chatTitleScroll.init(des || username);
-        } else {
-          throw '';
+          switchNdnMode(acc, notify);
         }
       })
-      .catch(() => {
-        $onlineStatus.removeClass('active');
-      });
+      .catch(() => {});
+  } else {
+    $onlineStatus.css('display', 'block');
+    updateOnlineStatus(0);
   }
 }
 // 打开消息
-export async function openFriend(acc, noHideUserList, cb) {
+async function openFriend(acc, noHideUserList, cb) {
   if (curChatAccount !== acc) {
     chatSearchInput.setValue('').focus();
     searchDateLimit = {};
     changeDateSearchState();
     curChatAccount = acc;
   }
+  $onlineStatus.css('display', 'none');
+  $chatRoomWrap.find('.ndn_icon').css('display', 'none');
   setChatTitle(acc);
   switchShakeBtn();
   if (acc === 'chang') {
@@ -1910,9 +1934,6 @@ $userListBox
     }
     if (online === 0) {
       status = '离线';
-    }
-    if (account === setUserInfo().account) {
-      des = '文件传输助手';
     }
     const str = `用户名：${username}\n备注：${
       des || '--'

@@ -29,7 +29,7 @@ import {
   uLog,
 } from '../../utils/utils.js';
 
-import { getFriendDes } from '../chat/chat.js';
+import { getFriendInfo } from '../chat/chat.js';
 import { fieldLenght } from '../config.js';
 import { parseMarkDown, saveNoteHistory } from './note.js';
 import _f from '../../utils/f.js';
@@ -82,7 +82,8 @@ route.get('/read', async (req, res) => {
       // 公开并且未删除 或 是自己的
       if ((share === 1 && state === 1) || acc === account) {
         if (account && note.account !== account) {
-          const des = await getFriendDes(account, acc);
+          const f = await getFriendInfo(account, acc, 'des');
+          const des = f ? f.des : '';
 
           username = des || username;
         }

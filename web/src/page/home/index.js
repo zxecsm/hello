@@ -698,14 +698,14 @@ window.addEventListener(
   }, 500)
 );
 // 处理聊天数据
-function hdChatType(resData) {
+function hdChatType(resData, notify) {
   const { flag, from, to, msgData } = resData;
   const chatAccount = setCurChatAccount(); //当前聊天框
   // 新消息处理
   if (flag === 'addmsg') {
     if (from.account === userInfo.account && from.account === to) {
       // 忽略自己给自己的消息通知
-    } else if (from.account !== userInfo.account) {
+    } else if (from.account !== userInfo.account && notify === 1) {
       chatMessageNotification(
         from.des || from.username,
         msgData.content,
@@ -716,7 +716,7 @@ function hdChatType(resData) {
     }
     // 聊天框是隐藏
     if (chatRoomWrapIsHide()) {
-      if (from.account !== userInfo.account) {
+      if (from.account !== userInfo.account && notify === 1) {
         // 忽略自己发送的
         $showChatRoomBtn.attr(
           'class',
@@ -790,7 +790,7 @@ function hdChatType(resData) {
           .catch(() => {});
       } else {
         //新消息不是是当前聊天框
-        if (from.account !== userInfo.account) {
+        if (from.account !== userInfo.account && notify === 1) {
           if (chatAccount === 'chang') {
             $chatHeadBtns.find('.c_msg_alert').stop().fadeIn(_d.speed);
           } else {
@@ -806,7 +806,7 @@ function hdChatType(resData) {
     // 撤回消息
   } else if (flag === 'del') {
     if (from.account === userInfo.account && from.account === to) {
-    } else if (from.account !== userInfo.account) {
+    } else if (from.account !== userInfo.account && notify === 1) {
       chatMessageNotification(
         from.des || from.username,
         '撤回消息',
@@ -833,7 +833,7 @@ function hdChatType(resData) {
     //清空聊天框
   } else if (flag === 'clear') {
     if (from.account === userInfo.account && from.account === to) {
-    } else if (from.account !== userInfo.account) {
+    } else if (from.account !== userInfo.account && notify === 1) {
       chatMessageNotification(
         from.des || from.username,
         '清空聊天记录',
@@ -854,7 +854,11 @@ function hdChatType(resData) {
     }
   } else if (flag === 'shake') {
     if (from.account === userInfo.account && from.account === to) {
-    } else if (from.account !== userInfo.account && to !== 'chang') {
+    } else if (
+      from.account !== userInfo.account &&
+      to !== 'chang' &&
+      notify === 1
+    ) {
       chatMessageNotification(
         from.des || from.username,
         '抖了你一下',
@@ -982,10 +986,10 @@ if (isRoot()) {
 //同步数据
 realtime.init('home').add((res) => {
   res.forEach((item) => {
-    const { type, data } = item;
+    const { type, data, notify } = item;
     //处理聊天指令
     if (type === 'chat') {
-      hdChatType(data);
+      hdChatType(data, notify);
     } else if (type === 'updatedata') {
       hdUpdatedataType(data);
     } else if (type === 'play') {

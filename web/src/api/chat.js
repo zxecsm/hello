@@ -68,3 +68,7 @@ export function reqChatShakeMsg(data) {
 export function reqChatForwardMsgLink(data) {
   return _postAjax('/chat/forward-msg-link', data);
 }
+// 勿扰
+export function reqChatDndMode(data) {
+  return _postAjax('/chat/dnd-mode', data);
+}

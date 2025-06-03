@@ -30,7 +30,7 @@ import { insertData } from '../../utils/sqlite.js';
 
 import _f from '../../utils/f.js';
 
-import { getFriendDes } from '../chat/chat.js';
+import { getFriendInfo } from '../chat/chat.js';
 
 import fileSize from './cacheFileSize.js';
 
@@ -95,8 +95,8 @@ route.post('/get-share', async (req, res) => {
     } = share.data;
 
     if (account && account != acc) {
-      const des = await getFriendDes(account, acc);
-
+      const f = await getFriendInfo(account, acc, 'des');
+      const des = f ? f.des : '';
       username = des || username;
     }
 

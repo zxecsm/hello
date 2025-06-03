@@ -64,11 +64,6 @@ import {
   updateUserInfo,
 } from '../index.js';
 import { showMusicPlayerBox } from '../player/index.js';
-import {
-  chatRoomWrapIsHide,
-  openFriend,
-  setCurChatAccount,
-} from '../chat/index.js';
 import { popWindow, setZidx } from '../popWindow.js';
 import { reqRootTips } from '../../../api/root.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
@@ -205,9 +200,6 @@ function changeUsername(e) {
           if (result.code === 1) {
             close();
             _msg.success(result.codeText);
-            if (!chatRoomWrapIsHide() && setCurChatAccount() === 'chang') {
-              openFriend(setCurChatAccount(), true);
-            }
             updateUserInfo();
             return;
           }

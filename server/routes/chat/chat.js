@@ -32,16 +32,16 @@ import _f from '../../utils/f.js';
 import { _delDir, cleanEmptyDirectories } from '../file/file.js';
 import _path from '../../utils/path.js';
 
-// 获取好友备注
-export async function getFriendDes(mAcc, fAcc) {
+// 获取好友信息
+export async function getFriendInfo(mAcc, fAcc, fields = '*') {
   const fData = (
-    await queryData('friends', 'des', `WHERE account = ? AND friend = ?`, [
+    await queryData('friends', fields, `WHERE account = ? AND friend = ?`, [
       mAcc,
       fAcc,
     ])
   )[0];
 
-  return fData ? fData.des : '';
+  return fData;
 }
 
 // 标记为已读
@@ -143,6 +143,7 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
         username,
       },
     },
+    notify: 1,
   };
 
   // flag === 'del'  msgData = { msgId: 'xxx' }
@@ -158,8 +159,8 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
         'friends',
         'account',
         { read: 0, update_at: t },
-        `WHERE friend = ?`,
-        ['chang']
+        `WHERE friend = ? AND notify = ?`,
+        ['chang', 1]
       );
     }
 
@@ -175,21 +176,24 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
       const fArr = await queryData(
         'friends',
         'des,account',
-        `WHERE friend = ? AND des != ? AND account IN (${fillString(
-          list.length
-        )})`,
-        [account, '', ...list]
+        `WHERE friend = ? AND account IN (${fillString(list.length)})`,
+        [account, ...list]
+      );
+
+      // 群消息是否勿扰
+      const fList = await queryData(
+        'friends',
+        'notify,account',
+        `WHERE friend = ? AND account IN (${fillString(list.length)})`,
+        ['chang', ...list]
       );
 
       list.forEach((key) => {
-        let des = '';
-        const f = fArr.find((item) => item.account === key);
+        const fe = fArr.find((item) => item.account === key);
+        const fno = fList.find((item) => item.account === key);
 
-        if (f) {
-          des = f.des;
-        }
-
-        notifyObj.data.from.des = des;
+        notifyObj.notify = fno ? fno.notify : 1;
+        notifyObj.data.from.des = fe ? fe.des : '';
 
         _connect.send(
           key,
@@ -221,6 +225,11 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
       read = 1;
       msgText = '抖了一下';
     }
+    const fInfo = await getFriendInfo(notifyObj.data.to, account, 'notify,des');
+    if (fInfo && fInfo.notify === 0) {
+      read = 1;
+    }
+    notifyObj.notify = fInfo ? fInfo.notify : 1;
     // 标记消息为未读
     let change = {};
     if (notifyObj.data.to !== account) {
@@ -250,22 +259,7 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
       // 推送给自己所有在线终端
       _connect.send(account, nanoid(), notifyObj);
     } else {
-      let des = '';
-
-      const f = (
-        await queryData(
-          'friends',
-          'des',
-          `WHERE friend = ? AND des != ? AND account = ?`,
-          [account, '', notifyObj.data.to]
-        )
-      )[0];
-
-      if (f) {
-        des = f.des;
-      }
-
-      notifyObj.data.from.des = des;
+      notifyObj.data.from.des = fInfo ? fInfo.des : '';
 
       _connect.send(notifyObj.data.to, req._hello.temid, notifyObj);
 
@@ -296,13 +290,17 @@ export async function sendNotificationsToCustomAddresses(req, obj) {
       const fArr = await queryData(
         'friends',
         'des,account',
-        `WHERE friend = ? AND des != ? AND account IN (${fillString(
-          list.length
-        )})`,
-        [obj._from, '', ...list.map((item) => item.account)]
+        `WHERE friend = ? AND account IN (${fillString(list.length)})`,
+        [obj._from, ...list.map((item) => item.account)]
+      );
+      const fList = await queryData(
+        'friends',
+        'notify,account',
+        `WHERE friend = ? AND account IN (${fillString(list.length)})`,
+        ['chang', ...list.map((item) => item.account)]
       );
 
-      await hdForwardToLink(req, list, fArr, obj.data);
+      await hdForwardToLink(req, list, fArr, obj.data, fList);
 
       return true;
     }, 200);
@@ -317,16 +315,16 @@ export async function sendNotificationsToCustomAddresses(req, obj) {
     const fArr = await queryData(
       'friends',
       'des,account',
-      `WHERE friend = ? AND des != ? AND account = ?`,
-      [obj._from, '', obj._to]
+      `WHERE friend = ? AND account = ?`,
+      [obj._from, obj._to]
     );
 
-    await hdForwardToLink(req, list, fArr, obj.content);
+    await hdForwardToLink(req, list, fArr, obj.content, fArr);
   }
 }
 
 // 处理转发到自定义地址
-export async function hdForwardToLink(req, list, fArr, text) {
+export async function hdForwardToLink(req, list = [], fArr, text, fList = []) {
   if (list.length > 0) {
     const { username } = req._hello.userinfo;
 
@@ -335,9 +333,10 @@ export async function hdForwardToLink(req, list, fArr, text) {
       let { link, type, header, body } = parseForwardMsgLink(forward_msg_link);
 
       if (!isurl(link)) return;
-      const f = fArr.find((y) => y.account === account);
-
-      const des = f ? f.des : '';
+      const fe = fArr.find((y) => y.account === account);
+      const fno = fList.find((y) => y.account === account);
+      if (fno && fno.notify === 0) return;
+      const des = fe ? fe.des : '';
       const msg = `${des || username}：${text}`;
 
       link = tplReplace(link, { msg: encodeURIComponent(msg) });

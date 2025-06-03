@@ -63,7 +63,7 @@ import {
   nodeID3,
 } from './player.js';
 
-import { getFriendDes } from '../chat/chat.js';
+import { getFriendInfo } from '../chat/chat.js';
 
 import { validShareState, validShareAddUserState } from '../user/user.js';
 
@@ -261,7 +261,8 @@ route.post('/get-share', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     if (account && account != acc) {
-      const des = await getFriendDes(account, acc);
+      const f = await getFriendInfo(account, acc, 'des');
+      const des = f ? f.des : '';
 
       username = des || username;
     }

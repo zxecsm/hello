@@ -77,7 +77,7 @@ export function shakeChat() {
 
 export function otherWindowMsg(msg) {
   if (isIframe()) return;
-  const { type, data } = msg;
+  const { type, data, notify } = msg;
   if (type === 'online') {
     _msg.online(data.text, (type) => {
       if (type === 'click') {
@@ -101,9 +101,11 @@ export function otherWindowMsg(msg) {
       text = '清空聊天记录';
     } else if (flag === 'shake') {
       text = '抖了你一下';
-      shakeChat();
+      if (notify === 1) {
+        shakeChat();
+      }
     }
-    if (text === '') return;
+    if (text === '' || notify === 0) return;
     _msg.msg(
       {
         message: `${from.des || from.username}: ${text}`,

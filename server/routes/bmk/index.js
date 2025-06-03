@@ -47,7 +47,7 @@ import {
 
 import { fieldLenght } from '../config.js';
 import { validShareAddUserState, validShareState } from '../user/user.js';
-import { getFriendDes } from '../chat/chat.js';
+import { getFriendInfo } from '../chat/chat.js';
 import _crypto from '../../utils/crypto.js';
 import _path from '../../utils/path.js';
 import jwt from '../../utils/jwt.js';
@@ -95,7 +95,8 @@ route.post('/get-share', async (req, res) => {
 
     // 如果非自己的分享
     if (account && account != acc) {
-      const des = await getFriendDes(account, acc);
+      const f = await getFriendInfo(account, acc, 'des');
+      const des = f ? f.des : '';
       // 有设置备注则返回备注
       username = des || username;
     }

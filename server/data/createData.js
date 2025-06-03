@@ -204,6 +204,8 @@ CREATE TABLE IF NOT EXISTS friends (
                       NOT NULL,
     read      INTEGER DEFAULT (1) 
                       NOT NULL,
+    notify    INTEGER NOT NULL
+                      DEFAULT (1),
     des       TEXT    NOT NULL
                       DEFAULT (''),
     msg       TEXT    NOT NULL
