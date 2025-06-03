@@ -261,7 +261,7 @@ export function hdTextMsg(str) {
       <a v-if="type === 'link'" cursor="y" target='_blank' :href='isSafeURL(value) ? value : "#"'>{{value}}</a>
       <a v-else-if="type === 'tel'" cursor="y" href='tel:{{value}}'>{{value}}</a>
       <a v-else-if="type === 'email'" cursor="y" href='mailto:{{value}}'>{{value}}</a>
-      <a v-else-if="type === 'ip'" cursor="y" href='http://{{value}}'>{{value}}</a>
+      <a v-else-if="type === 'ip'" cursor="y" target='_blank' href='http://{{value}}'>{{value}}</a>
       <template v-else>{{value}}</template>
     </template>
     `,
