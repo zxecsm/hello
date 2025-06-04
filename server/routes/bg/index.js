@@ -33,6 +33,7 @@ import {
   createPagingData,
   uLog,
   isFilename,
+  nanoid,
 } from '../../utils/utils.js';
 
 import { _delDir } from '../file/file.js';
@@ -42,6 +43,7 @@ import { getRandomBg } from './bg.js';
 import { getImgInfo } from '../../utils/img.js';
 import { fieldLenght } from '../config.js';
 import _path from '../../utils/path.js';
+import _connect from '../../utils/connect.js';
 
 const route = express.Router();
 
@@ -104,6 +106,15 @@ timedTask.add(async (flag) => {
       `WHERE daily_change_bg = ? AND state = ?`,
       [1, 1]
     );
+
+    Object.keys(_connect.getConnects()).forEach((key) => {
+      _connect.send(key, nanoid(), {
+        type: 'updatedata',
+        data: {
+          flag: 'userinfo',
+        },
+      });
+    });
   }
 });
 
