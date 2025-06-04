@@ -403,9 +403,8 @@ $chatHeadBtns
     debounce(
       function () {
         userPageNo = 1;
-        $userListBox.stop().slideDown(_d.speed, () => {
-          getUserList(true);
-        });
+        $userListBox.css('display', 'block');
+        getUserList(true);
       },
       500,
       true
@@ -1324,9 +1323,8 @@ function chatMsgMenu(e, cobj) {
         forwardData = cobj;
         close();
         userPageNo = 1;
-        $userListBox.stop().slideDown(_d.speed, () => {
-          getUserList(true);
-        });
+        $userListBox.css('display', 'block');
+        getUserList(true);
       } else if (id === '6') {
         close();
         await cacheFile.setData('newNote', z);
@@ -1724,9 +1722,7 @@ function upVoice(blob, duration) {
 })();
 // 收起用户列表
 function hideUserList() {
-  $userListBox.stop().slideUp(_d.speed, () => {
-    $userListBox.html('');
-  });
+  $userListBox.css('display', 'none').html('');
 }
 $chatRoomWrap.on('click', function (e) {
   if (
