@@ -2,6 +2,8 @@ import sharp from 'sharp';
 
 import _f from './f.js';
 
+sharp.cache(false);
+
 // 压缩图片
 export async function compressionImg(path, x = 400, y = 400, quality) {
   const inputBuf = await _f.fsp.readFile(path);
