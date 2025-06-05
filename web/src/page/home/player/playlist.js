@@ -390,12 +390,10 @@ $pMusicListBox
     startSelect();
     checkedPlayingListItem(this.querySelector('.check_state'));
   })
-  .on('mouseenter', '.song_item', function () {
-    const $this = $(this);
-    const id = $this.attr('data-id');
-    songTooltip(getPlayingItemData(id));
+  .on('mouseenter', '.song_item .logo_wrap', function () {
+    songTooltip(getPlayingItemData($(this).parent().attr('data-id')));
   })
-  .on('mouseleave', '.song_item', function () {
+  .on('mouseleave', '.song_item .logo_wrap', function () {
     toolTip.hide();
   })
   .on('click', '.song_info_wrap', function (e) {

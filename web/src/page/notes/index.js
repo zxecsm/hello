@@ -766,9 +766,9 @@ $contentWrap
     hdCheckItemBtn();
     checkedItem(this.querySelector('.check_state'));
   })
-  .on('mouseenter', '.item_box', function () {
+  .on('mouseenter', '.item_box .item_type', function () {
     const { create_at, update_at, category, visit_count, top } = getNoteInfo(
-      $(this).attr('data-id')
+      $(this).parent().attr('data-id')
     );
     const arr = categoryToArr(category).map((item) => item.title);
     const str = `创建：${formatDate({
@@ -782,7 +782,7 @@ $contentWrap
     )}\n权重：${top}`;
     toolTip.setTip(str).show();
   })
-  .on('mouseleave', '.item_box', function () {
+  .on('mouseleave', '.item_box .item_type', function () {
     toolTip.hide();
   })
   .on('click', '.item_type', function (e) {

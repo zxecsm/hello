@@ -243,7 +243,7 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
 
     const change2 = await updateData(
       'friends',
-      { msg: msgText },
+      { update_at: t, msg: msgText },
       `WHERE account = ? AND friend = ?`,
       [account, notifyObj.data.to]
     );

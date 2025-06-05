@@ -80,6 +80,7 @@ import imgPreview from '../../../js/plugins/imgPreview/index.js';
 import localData from '../../../js/common/localData.js';
 const $document = $(document),
   $chatRoomWrap = $('.chat_room_wrap'),
+  $userListWrap = $chatRoomWrap.find('.user_list_wrap'),
   $userListBox = $chatRoomWrap.find('.user_list_box'),
   $chatHeadBtns = $chatRoomWrap.find('.c_head_btns'),
   $onlineStatus = $chatHeadBtns.find('.online_status'),
@@ -177,7 +178,7 @@ function getUserList(top) {
 }
 // 展示用户列表
 function renderUserList(pageNo, total, totalPage, top) {
-  if (chatRoomWrapIsHide() || $userListBox.is(':hidden')) return;
+  if (chatRoomWrapIsHide() || $userListWrap.is(':hidden')) return;
   const html = _tpl(
     `
     <ul v-for="{username, account, online, des = '', read, msg} in userList" :data-account="account" class="user_item">
@@ -361,13 +362,13 @@ function hdforwardMsg(e, acc) {
       reqChatforward({ to: acc, id: forwardData.id })
         .then((res) => {
           if (res.code === 1) {
-            isForward = false;
+            hideUserList();
             _msg.success(res.codeText);
           }
         })
         .catch(() => {});
     } else if (type === 'cancel') {
-      isForward = false;
+      hideUserList();
     }
   });
 }
@@ -403,7 +404,7 @@ $chatHeadBtns
     debounce(
       function () {
         userPageNo = 1;
-        $userListBox.css('display', 'block');
+        showUserList();
         getUserList(true);
       },
       500,
@@ -1323,7 +1324,7 @@ function chatMsgMenu(e, cobj) {
         forwardData = cobj;
         close();
         userPageNo = 1;
-        $userListBox.css('display', 'block');
+        showUserList();
         getUserList(true);
       } else if (id === '6') {
         close();
@@ -1722,13 +1723,15 @@ function upVoice(blob, duration) {
 })();
 // 收起用户列表
 function hideUserList() {
-  $userListBox.css('display', 'none').html('');
+  $userListWrap.css('display', 'none');
+  $userListBox.html('');
+  isForward = false;
 }
-$chatRoomWrap.on('click', function (e) {
-  if (
-    !_getTarget(this, e, '.user_list_box') &&
-    !_getTarget(this, e, '.c_user_btn')
-  ) {
+function showUserList() {
+  $userListWrap.css('display', 'block');
+}
+$userListWrap.on('click', function (e) {
+  if (e.target === this) {
     hideUserList();
   }
 });
@@ -1856,8 +1859,7 @@ async function openFriend(acc, noHideUserList, cb) {
   const temChatMsg = (await cacheFile.getData('temChatMsg')) || {};
   chatMsgInp.setValue(temChatMsg[acc] || '');
   if (!noHideUserList) {
-    $userListBox.css('display', 'none');
-    $userListBox.html('');
+    hideUserList();
   }
   const val = chatSearchInput.getValue().trim();
   if (val.length > 100) {
@@ -1916,9 +1918,8 @@ $userListBox
       rMenu.rightInfo(e, str, '登录信息');
     }
   })
-  .on('mouseenter', '.user_item', function () {
-    const $this = $(this);
-    const obj = getUserItem($this.data('account'));
+  .on('mouseenter', '.user_item .user_logo', function () {
+    const obj = getUserItem($(this).parent().data('account'));
     let { account, des, email, username, os, online } = obj;
     if (account === 'hello') {
       toolTip.setTip(helperInfo).show();
@@ -1938,7 +1939,7 @@ $userListBox
     }`;
     toolTip.setTip(str).show();
   })
-  .on('mouseleave', '.user_item', function () {
+  .on('mouseleave', '.user_item .user_logo', function () {
     toolTip.hide();
   });
 // 层级

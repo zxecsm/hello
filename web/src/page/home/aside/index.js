@@ -580,12 +580,12 @@ $asideWrap
     );
     myOpen(link, '_blank');
   })
-  .on('mouseenter', '.bm_item', function () {
+  .on('mouseenter', '.bm_item .bm_logo', function () {
     tooltipBookmark(
-      getBmItemData($asideBtn.activeId, this.getAttribute('data-id'))
+      getBmItemData($asideBtn.activeId, this.parentNode.getAttribute('data-id'))
     );
   })
-  .on('mouseleave', '.bm_item', function () {
+  .on('mouseleave', '.bm_item .bm_logo', function () {
     toolTip.hide();
   })
   .on('click', '.add_list_btn', addBmList)

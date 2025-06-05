@@ -88,7 +88,7 @@ export function otherWindowMsg(msg) {
     handleAllowLoginMsg(data);
   } else if (type === 'chat') {
     const { flag, from, msgData } = data;
-    if (from.account === localData.get('account')) return;
+    if (from.account === localData.get('account') || notify === 0) return;
     let text = '';
     // 新消息处理
     if (flag === 'addmsg') {
@@ -105,7 +105,7 @@ export function otherWindowMsg(msg) {
         shakeChat();
       }
     }
-    if (text === '' || notify === 0) return;
+    if (text === '') return;
     _msg.msg(
       {
         message: `${from.des || from.username}: ${text}`,

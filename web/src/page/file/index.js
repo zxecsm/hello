@@ -540,10 +540,10 @@ $contentWrap
     e.stopPropagation();
     hdCheckItem(this);
   })
-  .on('mouseenter', '.file_item', function () {
-    const $this = $(this);
-    const id = $this.attr('data-id');
-    const { name, type, path, mode, size, time } = getFileItem(id);
+  .on('mouseenter', '.file_item .name', function () {
+    const { name, type, path, mode, size, time } = getFileItem(
+      $(this).parent().attr('data-id')
+    );
     const str = `name：${name}\ntype：${type}\npath：${path}\nmode：${mode}\nsize：${
       size ? formatBytes(size) : '--'
     }\ntime：${formatDate({
@@ -552,7 +552,7 @@ $contentWrap
     })}`;
     toolTip.setTip(str).show();
   })
-  .on('mouseleave', '.file_item', function () {
+  .on('mouseleave', '.file_item .name', function () {
     toolTip.hide();
   })
   .on('contextmenu', function (e) {

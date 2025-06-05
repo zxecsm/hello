@@ -1282,14 +1282,14 @@ $songListWrap
     const id = $(this).attr('data-id');
     songListMenu(e, id);
   })
-  .on('mouseenter', '.song_list_item', function () {
-    const id = $(this).attr('data-id');
+  .on('mouseenter', '.song_list_item span', function () {
+    const id = $(this).parent().attr('data-id');
     const index = musicList.findIndex((item) => item.id === id);
     const { des, name } = musicList[index];
     const str = `名称：${name || '--'}\n描述：${des || '--'}`;
     toolTip.setTip(str).show();
   })
-  .on('mouseleave', '.song_list_item', function () {
+  .on('mouseleave', '.song_list_item span', function () {
     toolTip.hide();
   })
   .on('click', '.song_list_item span', function (e) {
@@ -2260,14 +2260,12 @@ $msuicContentBox
     if (idx < 0) return;
     songMenu(e, idx, sobj);
   })
-  .on('mouseenter', '.song_item', function () {
-    const $this = $(this);
-    const id = $this.attr('data-id');
+  .on('mouseenter', '.song_item .song_logo_box', function () {
     if ($songListWrap.listId) {
-      songTooltip(getSongInfo(id));
+      songTooltip(getSongInfo($(this).parent().attr('data-id')));
     }
   })
-  .on('mouseleave', '.song_item', function () {
+  .on('mouseleave', '.song_item .song_logo_box', function () {
     toolTip.hide();
   })
   .on('contextmenu', '.song_item', function (e) {

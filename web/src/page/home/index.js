@@ -697,15 +697,27 @@ window.addEventListener(
     }
   }, 500)
 );
+function isCurChatRoom(chatAccount, from, to) {
+  return (
+    (chatAccount === 'chang' && to === 'chang') ||
+    (from === userInfo.account &&
+      to === userInfo.account &&
+      chatAccount === userInfo.account) ||
+    (to === userInfo.account &&
+      from !== userInfo.account &&
+      from === chatAccount)
+  );
+}
+function isNotify(from, notify) {
+  return from !== userInfo.account && notify === 1;
+}
 // 处理聊天数据
 function hdChatType(resData, notify) {
   const { flag, from, to, msgData } = resData;
   const chatAccount = setCurChatAccount(); //当前聊天框
   // 新消息处理
   if (flag === 'addmsg') {
-    if (from.account === userInfo.account && from.account === to) {
-      // 忽略自己给自己的消息通知
-    } else if (from.account !== userInfo.account && notify === 1) {
+    if (isNotify(from.account, notify)) {
       chatMessageNotification(
         from.des || from.username,
         msgData.content,
@@ -716,8 +728,7 @@ function hdChatType(resData, notify) {
     }
     // 聊天框是隐藏
     if (chatRoomWrapIsHide()) {
-      if (from.account !== userInfo.account && notify === 1) {
-        // 忽略自己发送的
+      if (isNotify(from.account, notify)) {
         $showChatRoomBtn.attr(
           'class',
           'show_chat_room_btn run iconfont icon-xiaoxi'
@@ -725,18 +736,7 @@ function hdChatType(resData, notify) {
       }
       // 聊天框显示
     } else {
-      if (
-        (chatAccount === from.account && to !== 'chang') ||
-        (chatAccount === 'chang' && to === 'chang') ||
-        (from.account === userInfo.account && chatAccount === to)
-      ) {
-        // 消息是当前聊天框
-        const acc =
-          to === 'chang'
-            ? 'chang'
-            : from.account === userInfo.account && chatAccount === to
-            ? to
-            : from.account;
+      if (isCurChatRoom(chatAccount, from.account, to)) {
         const flag = chatMsgData.last()?.id || '';
         const word = $chatHeadBtns.find('.search_msg_inp input').val().trim();
         if (word.length > 100) {
@@ -746,7 +746,7 @@ function hdChatType(resData, notify) {
         const { start = '', end = '' } = getSearchDateLimit();
         reqChatReadMsg({
           type: 2,
-          account: acc,
+          account: chatAccount,
           flag,
           word,
           start,
@@ -789,8 +789,8 @@ function hdChatType(resData, notify) {
           })
           .catch(() => {});
       } else {
-        //新消息不是是当前聊天框
-        if (from.account !== userInfo.account && notify === 1) {
+        // 新消息不是是当前聊天框
+        if (isNotify(from.account, notify)) {
           if (chatAccount === 'chang') {
             $chatHeadBtns.find('.c_msg_alert').stop().fadeIn(_d.speed);
           } else {
@@ -805,8 +805,7 @@ function hdChatType(resData, notify) {
     }
     // 撤回消息
   } else if (flag === 'del') {
-    if (from.account === userInfo.account && from.account === to) {
-    } else if (from.account !== userInfo.account && notify === 1) {
+    if (isNotify(from.account, notify)) {
       chatMessageNotification(
         from.des || from.username,
         '撤回消息',
@@ -816,11 +815,7 @@ function hdChatType(resData, notify) {
       );
     }
     if (!chatRoomWrapIsHide()) {
-      if (
-        (chatAccount === from.account && to !== 'chang') ||
-        (chatAccount === 'chang' && to === 'chang') ||
-        (from.account === userInfo.account && chatAccount === to)
-      ) {
+      if (isCurChatRoom(chatAccount, from.account, to)) {
         chatMsgData.delete(msgData.msgId);
         const $chatItem = $chatListBox.find(`[data-id=${msgData.msgId}]`);
         if ($chatItem.length > 0) {
@@ -832,8 +827,7 @@ function hdChatType(resData, notify) {
     }
     //清空聊天框
   } else if (flag === 'clear') {
-    if (from.account === userInfo.account && from.account === to) {
-    } else if (from.account !== userInfo.account && notify === 1) {
+    if (isNotify(from.account, notify)) {
       chatMessageNotification(
         from.des || from.username,
         '清空聊天记录',
@@ -843,22 +837,13 @@ function hdChatType(resData, notify) {
       );
     }
     if (!chatRoomWrapIsHide()) {
-      if (
-        (chatAccount === from.account && to !== 'chang') ||
-        (chatAccount === 'chang' && to === 'chang') ||
-        (from.account === userInfo.account && chatAccount === to)
-      ) {
+      if (isCurChatRoom(chatAccount, from.account, to)) {
         chatMsgData.reset();
         $chatListBox.find('.chat_list').html('');
       }
     }
   } else if (flag === 'shake') {
-    if (from.account === userInfo.account && from.account === to) {
-    } else if (
-      from.account !== userInfo.account &&
-      to !== 'chang' &&
-      notify === 1
-    ) {
+    if (isNotify(from.account, notify) && to !== 'chang') {
       chatMessageNotification(
         from.des || from.username,
         '抖了你一下',

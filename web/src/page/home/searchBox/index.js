@@ -312,14 +312,13 @@ $searchBoxMask
       this.querySelector('.check_home_bm')
     );
   })
-  .on('mouseenter', '.home_bm_item', function () {
-    const $this = $(this);
-    const id = $this.attr('data-id');
+  .on('mouseenter', '.home_bm_item p', function () {
+    const id = $(this).parent().attr('data-id');
     if (id) {
       tooltipBookmark(getHomeBmData(id));
     }
   })
-  .on('mouseleave', '.home_bm_item', function () {
+  .on('mouseleave', '.home_bm_item p', function () {
     toolTip.hide();
   })
   .on('click', '.type_logo', function (e) {
@@ -341,10 +340,9 @@ $searchBoxMask
       rMenu.rightInfo(e, str);
     }
   })
-  .on('mouseenter', '.search_item', function () {
-    const $this = $(this);
+  .on('mouseenter', '.search_item .type_logo', function () {
     const { type, content, link, des, title, group_title } = getSearchItem(
-      $this.attr('data-id')
+      $(this).parent().attr('data-id')
     );
     let str = '';
     if (type === 'ss') {
@@ -358,7 +356,7 @@ $searchBoxMask
     }
     toolTip.setTip(str).show();
   })
-  .on('mouseleave', '.search_item', function () {
+  .on('mouseleave', '.search_item .type_logo', function () {
     toolTip.hide();
   })
   .on('click', '.home_bm_item p', function (e) {

@@ -924,9 +924,7 @@ $pMusicListBox
     const sobj = getPlayingListItem($this.attr('data-id'));
     playMv(sobj);
   })
-  .on('mouseenter', '.song_item', function () {
-    const $this = $(this);
-    const id = $this.attr('data-id');
+  .on('mouseenter', '.song_item .logo_wrap', function () {
     const {
       title,
       artist,
@@ -936,7 +934,7 @@ $pMusicListBox
       create_at,
       play_count,
       collect_count,
-    } = getPlayingListItem(id);
+    } = getPlayingListItem($(this).parent().attr('data-id'));
     const str = `歌曲：${title || '--'}\n歌手：${artist || '--'}\n专辑：${
       album || '--'
     }\n发布年份：${year || '--'}\n时长：${formartSongTime(
@@ -949,7 +947,7 @@ $pMusicListBox
     })}`;
     toolTip.setTip(str).show();
   })
-  .on('mouseleave', '.song_item', function () {
+  .on('mouseleave', '.song_item .logo_wrap', function () {
     toolTip.hide();
   })
   .on('click', '.del', function (e) {

@@ -823,130 +823,134 @@ body {
         }
       }
       // 用户列表
-      .user_list_box {
+      .user_list_wrap {
         display: none;
         position: absolute;
         top: 4.3rem;
-        left: 50%;
+        left: 0;
         width: 100%;
-        height: 70%;
-        max-width: var(--max-width);
-        transform: translateX(-50%);
-        overflow-y: auto;
-        border-radius: 0 0 0.5rem 0.5rem;
-        background-color: var(--color9);
+        height: 100%;
+        padding-bottom: 4.3rem;
         z-index: 3;
-        .user_list_paging {
-          span:hover {
-            color: var(--text-hover-color);
-          }
-        }
-        ol,
-        li,
-        ul {
-          list-style: none;
-        }
-        .user_item {
-          display: flex;
-          width: 100%;
-          height: 5rem;
-          line-height: 5rem;
-          position: relative;
-          padding: 0.5rem 1rem;
-          border-bottom: 1px solid var(--color8);
-
-          &:hover {
-            background-color: var(--color8);
-            .user_logo {
-              transform: scale(1.2);
+        .user_list_box {
+          margin: 0 auto;
+          height: 70%;
+          max-width: var(--max-width);
+          overflow-y: auto;
+          border-radius: 0 0 0.5rem 0.5rem;
+          background-color: var(--color9);
+          .user_list_paging {
+            span:hover {
+              color: var(--text-hover-color);
             }
           }
-
-          .msg_alert {
-            display: none;
-            position: absolute;
-            width: 1rem;
-            height: 1rem;
-            background-color: var(--btn-danger-color);
-            left: 0;
-            top: 0;
-            border-radius: 50%;
-            animation: breathe 2s ease-in-out infinite;
-            z-index: 2;
-
-            &[x='n'] {
-              display: block;
-            }
+          ol,
+          li,
+          ul {
+            list-style: none;
           }
-
-          .user_logo {
-            flex: none;
-            width: 4rem;
-            height: 4rem;
-            line-height: 4rem;
-            text-align: center;
-            overflow: hidden;
-            border-radius: 0.5rem;
-            background-repeat: no-repeat;
-            background-size: cover;
-            background-position: center;
-            background-color: var(--color5);
-            &.load {
-              background-color: transparent;
-            }
-            img {
-              width: 100%;
-              height: 100%;
-              vertical-align: bottom;
-            }
-          }
-
-          .user_name {
-            flex: auto;
-            height: 4rem;
-            width: 0;
+          .user_item {
             display: flex;
-            flex-flow: column;
-            justify-content: center;
-            span {
-              width: 100%;
-              padding-left: 1rem;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-              overflow: hidden;
-            }
-            .name {
-              line-height: 2.2rem;
-            }
-            .msg {
-              line-height: 1.8rem;
-              font-size: 1.4rem;
-              color: var(--color4);
-            }
-            &:hover .name {
-              color: var(--text-hover-color);
-            }
-          }
-          .online {
-            line-height: 4rem;
-            flex: none;
-            color: var(--icon-color);
-            width: 3rem;
-            text-align: center;
-            font-size: 2rem;
+            width: 100%;
+            height: 5rem;
+            line-height: 5rem;
+            position: relative;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid var(--color8);
+
             &:hover {
-              transform: scale(1.2);
-              color: var(--text-hover-color);
+              background-color: var(--color8);
+              .user_logo {
+                transform: scale(1.2);
+              }
+            }
+
+            .msg_alert {
+              display: none;
+              position: absolute;
+              width: 1rem;
+              height: 1rem;
+              background-color: var(--btn-danger-color);
+              left: 0;
+              top: 0;
+              border-radius: 50%;
+              animation: breathe 2s ease-in-out infinite;
+              z-index: 2;
+
+              &[x='n'] {
+                display: block;
+              }
+            }
+
+            .user_logo {
+              flex: none;
+              width: 4rem;
+              height: 4rem;
+              line-height: 4rem;
+              text-align: center;
+              overflow: hidden;
+              border-radius: 0.5rem;
+              background-repeat: no-repeat;
+              background-size: cover;
+              background-position: center;
+              background-color: var(--color5);
+              &.load {
+                background-color: transparent;
+              }
+              img {
+                width: 100%;
+                height: 100%;
+                vertical-align: bottom;
+              }
+            }
+
+            .user_name {
+              flex: auto;
+              height: 4rem;
+              width: 0;
+              display: flex;
+              flex-flow: column;
+              justify-content: center;
+              span {
+                width: 100%;
+                padding-left: 1rem;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                overflow: hidden;
+              }
+              .name {
+                line-height: 2.2rem;
+              }
+              .msg {
+                line-height: 1.8rem;
+                font-size: 1.4rem;
+                color: var(--color4);
+              }
+              &:hover .name {
+                color: var(--text-hover-color);
+              }
+            }
+            .online {
+              line-height: 4rem;
+              flex: none;
+              color: var(--icon-color);
+              width: 3rem;
+              text-align: center;
+              font-size: 2rem;
+              &:hover {
+                transform: scale(1.2);
+                color: var(--text-hover-color);
+              }
             }
           }
-        }
-        .paginationBox {
-          height: auto;
-          padding: 1rem 0;
-          button {
-            background-color: transparent;
-            border: none;
-            color: var(--color2);
+          .paginationBox {
+            height: auto;
+            padding: 1rem 0;
+            button {
+              background-color: transparent;
+              border: none;
+              color: var(--color2);
+            }
           }
         }
       }

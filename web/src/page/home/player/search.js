@@ -324,12 +324,10 @@ $searchMusicWrap
     const mobj = getSearchSongItemData($this.attr('data-id'));
     addSongToPlayList(e, [mobj]);
   })
-  .on('mouseenter', '.song_item', function () {
-    const $this = $(this);
-    const id = $this.attr('data-id');
-    songTooltip(getSearchSongItemData(id));
+  .on('mouseenter', '.song_item .logo_wrap', function () {
+    songTooltip(getSearchSongItemData($(this).parent().attr('data-id')));
   })
-  .on('mouseleave', '.song_item', function () {
+  .on('mouseleave', '.song_item .logo_wrap', function () {
     toolTip.hide();
   })
   .on(

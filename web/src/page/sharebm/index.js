@@ -278,15 +278,13 @@ $box
       obj = getBmInfo($this.attr('data-id'));
     showBmkInfo(e, obj);
   })
-  .on('mouseenter', '.bm_item', function () {
-    const $this = $(this);
-    const id = $this.attr('data-id');
-    const { title, link, des } = getBmInfo(id);
+  .on('mouseenter', '.bm_item .logo', function () {
+    const { title, link, des } = getBmInfo($(this).parent().attr('data-id'));
     const str = `名称：${title || '--'}\n链接：${link || '--'}\n描述：${
       des || '--'
     }`;
     toolTip.setTip(str).show();
   })
-  .on('mouseleave', '.bm_item', function () {
+  .on('mouseleave', '.bm_item .logo', function () {
     toolTip.hide();
   });
