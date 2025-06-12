@@ -705,7 +705,9 @@ function isCurChatRoom(chatAccount, from, to) {
       chatAccount === userInfo.account) ||
     (to === userInfo.account &&
       from !== userInfo.account &&
-      from === chatAccount)
+      from === chatAccount) || 
+    (from === userInfo.account &&
+    to === chatAccount)
   );
 }
 function isNotify(from, notify) {
