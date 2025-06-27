@@ -955,7 +955,7 @@ async function hdUp(files) {
     }
     if (size > _d.fieldLenght.maxFileSize) {
       pro.fail();
-      _msg.error(`上传文件限制0-4.8G`);
+      _msg.error(`上传文件限制0-9.7G`);
       return;
     }
     if (skipUpSameNameFiles) {

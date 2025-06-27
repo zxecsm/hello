@@ -1548,7 +1548,7 @@ async function sendfile(files, chatAcc) {
     }
     if (size > _d.fieldLenght.maxFileSize) {
       pro.fail('发送失败');
-      _msg.error(`发送文件限制0-4.8G`);
+      _msg.error(`发送文件限制0-9.7G`);
       return;
     }
     const type = isImgFile(name) ? 'image' : 'file';
