@@ -745,6 +745,7 @@ route.get('/user-list', async (req, res) => {
         acc !== 'hello'
       ) {
         obj.online = 0;
+        obj.os = [];
       }
 
       return obj;
