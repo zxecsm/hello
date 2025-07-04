@@ -52,10 +52,10 @@ function drawString() {
 let timer = null;
 setInterval(() => {
   if (isIframe()) return;
-  let sleep = localData.session.get('sleep');
+  let sleep = localData.get('sleep');
   sleep = sleep === null ? _d.fieldLenght.rainCodeSleep : sleep;
   sleep--;
-  localData.session.set('sleep', sleep);
+  localData.set('sleep', sleep);
   if (sleep === 0) {
     canvas.style.display = 'block';
     if (timer) {
@@ -73,7 +73,7 @@ setInterval(() => {
 }, 1000);
 
 export const initRainCodeSleep = throttle(() => {
-  localData.session.set('sleep', _d.fieldLenght.rainCodeSleep);
+  localData.set('sleep', _d.fieldLenght.rainCodeSleep);
 }, 2000);
 document.addEventListener('mousemove', initRainCodeSleep);
 document.addEventListener('touchstart', initRainCodeSleep);
