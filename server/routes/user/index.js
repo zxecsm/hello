@@ -148,7 +148,7 @@ timedTask.add(async (flag) => {
     });
 
     if (num) {
-      await writelog(false, `删除临时文件缓存：${num}`, 'user');
+      await writelog(false, `清理过期临时文件缓存：${num}`, 'user');
     }
   }
 });
