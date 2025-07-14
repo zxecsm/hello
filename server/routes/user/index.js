@@ -65,7 +65,7 @@ import jwt from '../../utils/jwt.js';
 import { fieldLenght } from '../config.js';
 import _path from '../../utils/path.js';
 import { getNoteHistoryDir, parseMarkDown } from '../note/note.js';
-import { getTrashDir } from '../file/file.js';
+import { _delDir, getTrashDir, readMenu } from '../file/file.js';
 import _crypto from '../../utils/crypto.js';
 import getCity from '../../utils/getCity.js';
 
@@ -125,9 +125,31 @@ route.get('/custom-code', async (req, res) => {
 
 // 注册限制
 let registerCount = 0;
-timedTask.add((flag) => {
-  if (flag.slice(-6) === '000000') {
+timedTask.add(async (flag) => {
+  flag = flag.slice(-6);
+  if (flag === '000000') {
     registerCount = 0;
+  } else if (flag === '004000') {
+    const now = Date.now();
+
+    const threshold = now - 10 * 24 * 60 * 60 * 1000;
+
+    const sList = await readMenu(_path.normalize(`${appConfig.appData}/tem`));
+
+    let num = 0;
+
+    await concurrencyTasks(sList, 5, async (item) => {
+      const { name, path, time } = item;
+
+      if (time < threshold) {
+        await _delDir(_path.normalize(`${path}/${name}`));
+        num++;
+      }
+    });
+
+    if (num) {
+      await writelog(false, `删除临时文件缓存：${num}`, 'user');
+    }
   }
 });
 

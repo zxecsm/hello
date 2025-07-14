@@ -580,10 +580,10 @@ function renderMsgList(list, skip) {
               <span class="c_triangle"></span>
               <template v-if="isRight(_from)">
                 <span style="font-size:1.2rem;">{{size.toFixed(2)}}s</span>
-                <i class="iconfont icon-yuyin-cuxiantiao"></i>
+                <i style="margin-left: 0.4rem;" class="iconfont icon-65zanting"></i>
               </template>
               <template v-else>
-                <i class="iconfont icon-yuyin1"></i>
+                <i style="margin-right: 0.4rem;" class="iconfont icon-65zanting"></i>
                 <span style="font-size:1.2rem;">{{size.toFixed(2)}}s</span>
               </template>
             </div>
@@ -1339,7 +1339,9 @@ function chatMsgMenu(e, cobj) {
 function playVoice(a, _this, id) {
   const pflag = $chatAudio.playflag;
   $chatAudio[0].pause();
-  $chatListBox.find('.c_voice_msg_box i').css('animation', 'none');
+  $chatListBox
+    .find('.c_voice_msg_box i')
+    .attr('class', 'iconfont icon-65zanting');
   if (pflag === id) {
     $chatAudio.playflag = '';
     return;
@@ -1347,19 +1349,21 @@ function playVoice(a, _this, id) {
   $chatAudio.playflag = id;
   $chatAudio[0].src = a;
   $chatAudio[0].play();
-  $(_this)
-    .children('i')
-    .css('animation', 'fontcolor .5s infinite linear alternate');
+  $(_this).children('i').attr('class', 'iconfont icon-zanting');
 }
 $chatAudio
   .on('ended', function () {
     $chatAudio.playflag = '';
-    $chatListBox.find('.c_voice_msg_box i').css('animation', 'none');
+    $chatListBox
+      .find('.c_voice_msg_box i')
+      .attr('class', 'iconfont icon-65zanting');
   })
   .on('error', function () {
     _msg.error('语音已过期');
     $chatAudio.playflag = '';
-    $chatListBox.find('.c_voice_msg_box i').css('animation', 'none');
+    $chatListBox
+      .find('.c_voice_msg_box i')
+      .attr('class', 'iconfont icon-65zanting');
   });
 // 发送文本消息
 function sendTextMsg() {
