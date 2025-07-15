@@ -10,27 +10,27 @@
   "license": "ISC",
   "dependencies": {
     "archiver": "^7.0.1",
-    "axios": "^1.7.9",
-    "cheerio": "1.0.0",
+    "axios": "^1.10.0",
+    "cheerio": "^1.1.0",
     "cookie-parser": "^1.4.7",
-    "express": "^4.21.2",
-    "formidable": "^3.5.2",
+    "express": "^5.1.0",
+    "formidable": "^3.5.4",
     "ip2region": "^2.3.0",
     "jsonwebtoken": "^9.0.2",
     "markdown-it": "^14.1.0",
-    "music-metadata": "^10.7.0",
-    "node-id3": "^0.2.6",
-    "nodemailer": "^6.9.16",
-    "pinyin": "4.0.0-alpha.2",
-    "sharp": "^0.33.5",
+    "music-metadata": "^11.6.0",
+    "node-id3": "^0.2.9",
+    "nodemailer": "^7.0.5",
+    "pinyin": "4.0.0",
+    "sharp": "^0.34.3",
     "speakeasy": "^2.0.0",
     "sqlite3": "^5.1.7",
-    "ua-parser-js": "^2.0.0",
+    "ua-parser-js": "^2.0.4",
     "unzipper": "^0.12.3"
   },
   "description": "This is a favorite",
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.10"
   },
   "type": "module"
 }
