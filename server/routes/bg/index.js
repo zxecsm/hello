@@ -73,7 +73,7 @@ route.get('/r/:type', async (req, res) => {
     const url = _path.normalize(`${appConfig.appData}/bg`, bgData.url);
 
     if (await _f.exists(url)) {
-      res.sendFile(url);
+      res.sendFile(url, { dotfiles: 'allow' });
     } else {
       _err(res, '获取壁纸失败')(req, url, 1);
     }

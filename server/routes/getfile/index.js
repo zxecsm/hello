@@ -208,7 +208,7 @@ route.get('/', async (req, res) => {
       await errLog(req, `生成缩略图失败(${error})-${path}`);
     }
     res.setHeader('X-File-Size', stat.size);
-    res.sendFile(path);
+    res.sendFile(path, { dotfiles: 'allow' });
   } catch (error) {
     _err(res)(req, error);
   }

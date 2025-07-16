@@ -65,12 +65,12 @@ route.get('/', async (req, res) => {
     miss = `${p}.miss`;
 
     if (await _f.exists(p)) {
-      res.sendFile(p);
+      res.sendFile(p, { dotfiles: 'allow' });
       return;
     }
 
     if (await _f.exists(miss)) {
-      res.sendFile(defaultIcon);
+      res.sendFile(defaultIcon, { dotfiles: 'allow' });
       return;
     }
 
@@ -138,7 +138,7 @@ route.get('/', async (req, res) => {
       } catch (error) {
         await errLog(req, `${error}(${iconUrl})`);
       }
-      res.sendFile(p);
+      res.sendFile(p, { dotfiles: 'allow' });
     } else {
       throw new Error(`获取图标失败`);
     }
@@ -153,7 +153,7 @@ route.get('/', async (req, res) => {
 
     await errLog(req, `${error}(${req.query.u})`);
 
-    res.sendFile(defaultIcon);
+    res.sendFile(defaultIcon, { dotfiles: 'allow' });
   }
 });
 
