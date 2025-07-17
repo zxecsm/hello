@@ -28,6 +28,7 @@ import {
   isEmail,
   concurrencyTasks,
   isFilename,
+  isurl,
 } from '../../utils/utils.js';
 
 import { becomeFriends, cleanUpload } from '../chat/chat.js';
@@ -144,8 +145,30 @@ route.get('/user-list', async (req, res) => {
       cacheExp: _d.cacheExp,
       pubApi: _d.pubApi,
       email: _d.email,
+      faviconSpareApi: _d.faviconSpareApi,
       data: list,
     });
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 备用图标api
+route.post('/favicon-spare-api', async (req, res) => {
+  try {
+    const { link = '' } = req.body;
+
+    if (
+      !validaString(link, 0, fieldLenght.url) ||
+      (link !== '' && !isurl(link))
+    ) {
+      paramErr(res, req);
+      return;
+    }
+
+    _d.faviconSpareApi = link;
+
+    _success(res, '设置图标备用api接口成功')(req, link, 1);
   } catch (error) {
     _err(res)(req, error);
   }

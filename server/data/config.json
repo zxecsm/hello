@@ -8,6 +8,7 @@
     "siteInfoApi": true,
     "faviconApi": true
   },
+  "faviconSpareApi": "",
   "cacheExp": {
     "uploadSaveDay": 0,
     "faviconCache": 0,

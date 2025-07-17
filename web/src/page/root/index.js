@@ -16,6 +16,7 @@ import {
   addCustomCode,
   _myOpen,
   getTextSize,
+  isurl,
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
@@ -34,6 +35,7 @@ import {
   reqRootCustomCode,
   reqRootDeleteAccount,
   reqRootEmail,
+  reqRootFaviconSpareApi,
   reqRootPubApiState,
   reqRootRegisterState,
   reqRootTestEmail,
@@ -858,6 +860,11 @@ function handleFileCacheExp(e) {
 // 公开接口状态
 function handlePubApi(e) {
   const data = [
+    {
+      id: 'faviconSpareApi',
+      text: '图标备用api接口',
+      beforeIcon: 'iconfont icon-shezhi',
+    },
     { id: 'info', text: '接口信息', beforeIcon: 'iconfont icon-about' },
     {
       id: 'state',
@@ -865,78 +872,125 @@ function handlePubApi(e) {
       beforeIcon: 'iconfont icon-bangzhu',
     },
   ];
-  rMenu.selectMenu(e, data, ({ id, e }) => {
-    if (id === 'info') {
-      const pre = _d.originURL;
-      rMenu.rightInfo(
-        e,
-        `壁纸：\n  大屏：${pre}/api/bg/r/big\n  小屏：${pre}/api/bg/r/small\n\n获取网站图标：${pre}/api/getfavicon?u=${pre}\n\n获取网站信息：${pre}/api/bmk/parse-site-info?u=${pre}`,
-        '接口信息'
-      );
-    } else if (id === 'state') {
-      const { randomBgApi, siteInfoApi, faviconApi } = dataObj.pubApi;
-      const type = 'select';
-      rMenu.inpMenu(
-        e,
-        {
-          subText: '提交',
-          items: {
-            randomBgApi: {
-              beforeText: '壁纸接口：',
-              type,
-              value: randomBgApi ? 'y' : 'n',
-              selectItem: [
-                { value: 'y', text: '开启' },
-                { value: 'n', text: '关闭' },
-              ],
-            },
-            faviconApi: {
-              beforeText: '获取网站图标接口：',
-              type,
-              value: faviconApi ? 'y' : 'n',
-              selectItem: [
-                { value: 'y', text: '开启' },
-                { value: 'n', text: '关闭' },
-              ],
-            },
-            siteInfoApi: {
-              beforeText: '获取网站信息接口：',
-              type,
-              value: siteInfoApi ? 'y' : 'n',
-              selectItem: [
-                { value: 'y', text: '开启' },
-                { value: 'n', text: '关闭' },
-              ],
+  rMenu.selectMenu(
+    e,
+    data,
+    ({ id, e }) => {
+      if (id === 'info') {
+        const pre = _d.originURL;
+        rMenu.rightInfo(
+          e,
+          `壁纸：\n  大屏：${pre}/api/bg/r/big\n  小屏：${pre}/api/bg/r/small\n\n获取网站图标：${pre}/api/getfavicon?u=${pre}\n\n获取网站信息：${pre}/api/bmk/parse-site-info?u=${pre}`,
+          '接口信息'
+        );
+      } else if (id === 'state') {
+        const { randomBgApi, siteInfoApi, faviconApi } = dataObj.pubApi;
+        const type = 'select';
+        rMenu.inpMenu(
+          e,
+          {
+            subText: '提交',
+            items: {
+              randomBgApi: {
+                beforeText: '壁纸接口：',
+                type,
+                value: randomBgApi ? 'y' : 'n',
+                selectItem: [
+                  { value: 'y', text: '开启' },
+                  { value: 'n', text: '关闭' },
+                ],
+              },
+              faviconApi: {
+                beforeText: '获取网站图标接口：',
+                type,
+                value: faviconApi ? 'y' : 'n',
+                selectItem: [
+                  { value: 'y', text: '开启' },
+                  { value: 'n', text: '关闭' },
+                ],
+              },
+              siteInfoApi: {
+                beforeText: '获取网站信息接口：',
+                type,
+                value: siteInfoApi ? 'y' : 'n',
+                selectItem: [
+                  { value: 'y', text: '开启' },
+                  { value: 'n', text: '关闭' },
+                ],
+              },
             },
           },
-        },
-        function ({ inp, close, loading, isDiff }) {
-          if (!isDiff()) return;
-          const { randomBgApi, siteInfoApi, faviconApi } = inp;
+          function ({ inp, close, loading, isDiff }) {
+            if (!isDiff()) return;
+            const { randomBgApi, siteInfoApi, faviconApi } = inp;
 
-          const obj = {
-            randomBgApi: randomBgApi === 'y' ? 1 : 0,
-            siteInfoApi: siteInfoApi === 'y' ? 1 : 0,
-            faviconApi: faviconApi === 'y' ? 1 : 0,
-          };
-          loading.start();
-          reqRootPubApiState(obj)
-            .then((res) => {
-              if (res.code === 1) {
+            const obj = {
+              randomBgApi: randomBgApi === 'y' ? 1 : 0,
+              siteInfoApi: siteInfoApi === 'y' ? 1 : 0,
+              faviconApi: faviconApi === 'y' ? 1 : 0,
+            };
+            loading.start();
+            reqRootPubApiState(obj)
+              .then((res) => {
+                if (res.code === 1) {
+                  loading.end();
+                  close();
+                  dataObj.pubApi = res.data;
+                  _msg.success(res.codeText);
+                }
+              })
+              .catch(() => {
                 loading.end();
-                close();
-                dataObj.pubApi = res.data;
-                _msg.success(res.codeText);
-              }
-            })
-            .catch(() => {
-              loading.end();
-            });
-        },
-        '更改接口状态'
-      );
-    }
-  });
+              });
+          },
+          '更改接口状态'
+        );
+      } else if (id === 'faviconSpareApi') {
+        rMenu.inpMenu(
+          e,
+          {
+            subText: '提交',
+            items: {
+              link: {
+                type: 'textarea',
+                beforeText: '可用变量：host、port、protocol',
+                value: dataObj.faviconSpareApi,
+                placeholder: 'https://www.xxx.com?url={{host}}',
+                verify(val) {
+                  if (val !== '') {
+                    if (!isurl(val)) {
+                      return '请输入正确的接口地址';
+                    } else if (val.length > _d.fieldLenght.url) {
+                      return `接口地址过长`;
+                    }
+                  }
+                },
+              },
+            },
+          },
+          function ({ inp, close, loading, isDiff }) {
+            if (!isDiff()) return;
+            const { link } = inp;
+            loading.start();
+            reqRootFaviconSpareApi({ link })
+              .then((res) => {
+                if (res.code === 1) {
+                  loading.end();
+                  close();
+                  dataObj.faviconSpareApi = link;
+                  _msg.success(res.codeText);
+                }
+              })
+              .catch(() => {
+                loading.end();
+              });
+          },
+          '设置图标备用api接口'
+        );
+      }
+    },
+    '公开接口配置'
+  );
 }
 $headBtns
   .on('click', '.h_go_home', function () {

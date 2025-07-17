@@ -91,6 +91,10 @@ export function reqRootPubApiState(data) {
 export function reqRootCreateAccount(data) {
   return _postAjax('/root/create-account', data);
 }
+// 图标备用接口
+export function reqRootFaviconSpareApi(data) {
+  return _postAjax('/root/favicon-spare-api', data);
+}
 // 系统状态
 export function reqRootSysStatus() {
   return _getAjax('/root/sys-status', {}, { load: false, stopErrorMsg: true });
