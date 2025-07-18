@@ -13,6 +13,7 @@ import {
   isurl,
   paramErr,
   tplReplace,
+  uLog,
   validaString,
 } from '../../utils/utils.js';
 
@@ -150,6 +151,8 @@ route.get('/', async (req, res) => {
             }),
             iconPath
           );
+
+          await uLog(req, `调用备用接口获取图标(${urlStr})`);
         } else {
           throw err;
         }
