@@ -514,7 +514,7 @@ function bmMenu(e) {
                 verify(val) {
                   if (val === '') {
                     return '请输入书签标题';
-                  } else if (val.length > _d.fieldLenght.title) {
+                  } else if (val.length > _d.fieldLength.title) {
                     return '标题过长';
                   }
                 },
@@ -524,7 +524,7 @@ function bmMenu(e) {
                 placeholder: 'https://',
                 value: obj.link,
                 verify(val) {
-                  if (val.length > _d.fieldLenght.url) {
+                  if (val.length > _d.fieldLength.url) {
                     return '网址过长';
                   } else if (!isurl(val)) {
                     return '请输入正确的网址';
@@ -537,7 +537,7 @@ function bmMenu(e) {
                 type: 'textarea',
                 value: obj.des,
                 verify(val) {
-                  if (val.length > _d.fieldLenght.des) {
+                  if (val.length > _d.fieldLength.des) {
                     return '描述过长';
                   }
                 },

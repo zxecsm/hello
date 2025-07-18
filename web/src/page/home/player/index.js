@@ -625,7 +625,7 @@ export function editSongInfo(e, sobj) {
           verify(val) {
             if (val === '') {
               return '请输入歌手名';
-            } else if (val.length > _d.fieldLenght.title) {
+            } else if (val.length > _d.fieldLength.title) {
               return '歌手名过长';
             }
           },
@@ -637,7 +637,7 @@ export function editSongInfo(e, sobj) {
           verify(val) {
             if (val === '') {
               return '请输入歌曲名';
-            } else if (val.length > _d.fieldLenght.title) {
+            } else if (val.length > _d.fieldLength.title) {
               return '歌曲名过长';
             }
           },
@@ -649,7 +649,7 @@ export function editSongInfo(e, sobj) {
           verify(val) {
             if (val === '') {
               return '请输入专辑名';
-            } else if (val.length > _d.fieldLenght.title) {
+            } else if (val.length > _d.fieldLength.title) {
               return '专辑名过长';
             }
           },
@@ -1220,7 +1220,7 @@ function addSongList(e) {
           verify(val) {
             if (val === '') {
               return '请输入标题';
-            } else if (val.length > _d.fieldLenght.title) {
+            } else if (val.length > _d.fieldLength.title) {
               return '标题过长';
             }
           },
@@ -1230,7 +1230,7 @@ function addSongList(e) {
           beforeText: '描述：',
           placeholder: '描述',
           verify(val) {
-            if (val.length > _d.fieldLenght.des) {
+            if (val.length > _d.fieldLength.des) {
               return '描述过长';
             }
           },
@@ -1459,7 +1459,7 @@ function editSongList(e, obj, sid) {
         verify(val) {
           if (val === '') {
             return '请输入标题';
-          } else if (val.length > _d.fieldLenght.title) {
+          } else if (val.length > _d.fieldLength.title) {
             return '标题过长';
           }
         },
@@ -1470,7 +1470,7 @@ function editSongList(e, obj, sid) {
         placeholder: '描述',
         value: des || '',
         verify(val) {
-          if (val.length > _d.fieldLenght.des) {
+          if (val.length > _d.fieldLength.des) {
             return '描述过长';
           }
         },

@@ -44,7 +44,7 @@ import {
   hasSameNameFile,
 } from './file.js';
 
-import { fieldLenght } from '../config.js';
+import { fieldLength } from '../config.js';
 
 import { validShareState, validShareAddUserState } from '../user/user.js';
 
@@ -63,8 +63,8 @@ route.post('/get-share', async (req, res) => {
     const { id, pass = '' } = req.body;
 
     if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
-      !validaString(pass, 0, fieldLenght.sharePass)
+      !validaString(id, 1, fieldLength.id, 1) ||
+      !validaString(pass, 0, fieldLength.sharePass)
     ) {
       paramErr(res, req);
       return;
@@ -110,7 +110,7 @@ route.post('/get-share', async (req, res) => {
       title,
       token: jwt.set(
         { type: 'share', data: { id, types: ['file', 'dir'] } },
-        fieldLenght.shareTokenExp
+        fieldLength.shareTokenExp
       ),
     })(req, id, 1);
   } catch (error) {
@@ -158,20 +158,20 @@ route.post('/read-dir', async (req, res) => {
     const temid = req._hello.temid;
 
     if (
-      !validaString(path, 1, fieldLenght.url) ||
-      !validaString(token, 0, fieldLenght.url) ||
+      !validaString(path, 1, fieldLength.url) ||
+      !validaString(token, 0, fieldLength.url) ||
       isNaN(pageNo) ||
       isNaN(pageSize) ||
       pageNo < 1 ||
       pageSize < 1 ||
-      pageSize > fieldLenght.maxPagesize ||
+      pageSize > fieldLength.maxPagesize ||
       !validationValue(subDir, [1, 0]) ||
       !validationValue(isDesc, [1, 0]) ||
       !validationValue(update, [1, 0]) ||
       !validationValue(hidden, [1, 0]) ||
-      !validaString(word, 0, fieldLenght.searchWord) ||
+      !validaString(word, 0, fieldLength.searchWord) ||
       !validationValue(sortType, ['name', 'time', 'size', 'type']) ||
-      !validaString(temid, 1, fieldLenght.id, 1)
+      !validaString(temid, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -329,8 +329,8 @@ route.post('/read-file', async (req, res) => {
     const { path = '', token = '' } = req.body;
 
     if (
-      !validaString(path, 0, fieldLenght.url) ||
-      !validaString(token, 0, fieldLenght.url)
+      !validaString(path, 0, fieldLength.url) ||
+      !validaString(token, 0, fieldLength.url)
     ) {
       paramErr(res, req);
       return;
@@ -386,7 +386,7 @@ route.post('/read-file', async (req, res) => {
     // 文本文件并且小于等于10M直接返回
     if (
       stat.isFile() &&
-      stat.size <= fieldLenght.textFileSize &&
+      stat.size <= fieldLength.textFileSize &&
       (await _f.isTextFile(p))
     ) {
       //文本文件
@@ -418,7 +418,7 @@ route.get('/read-dir-size', async (req, res) => {
   try {
     const { path } = req.query;
 
-    if (!validaString(path, 1, fieldLenght.url)) {
+    if (!validaString(path, 1, fieldLength.url)) {
       paramErr(res, req);
       return;
     }
@@ -470,8 +470,8 @@ route.post('/create-file', async (req, res) => {
     const { path, name } = req.body;
 
     if (
-      !validaString(path, 1, fieldLenght.url) ||
-      !validaString(name, 1, fieldLenght.filename)
+      !validaString(path, 1, fieldLength.url) ||
+      !validaString(name, 1, fieldLength.filename)
     ) {
       paramErr(res, req);
       return;
@@ -515,14 +515,14 @@ route.post('/share', async (req, res) => {
     data.path = _path.normalize(data.path);
 
     if (
-      !validaString(title, 1, fieldLenght.title) ||
-      !validaString(pass, 0, fieldLenght.sharePass) ||
+      !validaString(title, 1, fieldLength.title) ||
+      !validaString(pass, 0, fieldLength.sharePass) ||
       isNaN(expireTime) ||
-      expireTime > fieldLenght.expTime ||
+      expireTime > fieldLength.expTime ||
       !_type.isObject(data) ||
-      !validaString(data.name, 1, fieldLenght.filename) ||
+      !validaString(data.name, 1, fieldLength.filename) ||
       !isFilename(data.name) ||
-      !validaString(data.path, 1, fieldLenght.url) ||
+      !validaString(data.path, 1, fieldLength.url) ||
       _path.normalize(`${data.path}/${data.name}`) === '/' ||
       !validationValue(data.type, ['dir', 'file'])
     ) {
@@ -562,9 +562,9 @@ route.post('/save-file', async (req, res) => {
     const { path, text = '' } = req.body;
 
     if (
-      !validaString(path, 1, fieldLenght.url) ||
+      !validaString(path, 1, fieldLength.url) ||
       !validaString(text, 0, 0, 0, 1) ||
-      _f.getTextSize(text) > fieldLenght.textFileSize
+      _f.getTextSize(text) > fieldLength.textFileSize
     ) {
       paramErr(res, req);
       return;
@@ -624,18 +624,18 @@ route.post('/copy', async (req, res) => {
     const { path, data, rename } = req.body;
 
     if (
-      !validaString(path, 1, fieldLenght.url) ||
+      !validaString(path, 1, fieldLength.url) ||
       !_type.isArray(data) ||
       data.length === 0 ||
-      data.length > fieldLenght.maxPagesize ||
+      data.length > fieldLength.maxPagesize ||
       getDuplicates(data, ['name']).length > 0 || // 不能有同名文件或文件夹
       !validationValue(rename, [1, 0]) ||
       !data.every(
         (item) =>
           _type.isObject(item) &&
-          validaString(item.name, 1, fieldLenght.filename) &&
+          validaString(item.name, 1, fieldLength.filename) &&
           isFilename(item.name) &&
-          validaString(item.path, 1, fieldLenght.url) &&
+          validaString(item.path, 1, fieldLength.url) &&
           _path.normalize(`${item.path}/${item.name}`) !== '/' &&
           validationValue(item.type, ['dir', 'file'])
       )
@@ -723,16 +723,16 @@ route.post('/same-name', async (req, res) => {
     const { path, data } = req.body;
 
     if (
-      !validaString(path, 1, fieldLenght.url) ||
+      !validaString(path, 1, fieldLength.url) ||
       !_type.isArray(data) ||
       data.length === 0 ||
-      data.length > fieldLenght.maxPagesize ||
+      data.length > fieldLength.maxPagesize ||
       !data.every(
         (item) =>
           _type.isObject(item) &&
-          validaString(item.name, 1, fieldLenght.filename) &&
+          validaString(item.name, 1, fieldLength.filename) &&
           isFilename(item.name) &&
-          validaString(item.path, 1, fieldLenght.url) &&
+          validaString(item.path, 1, fieldLength.url) &&
           validationValue(item.type, ['dir', 'file'])
       )
     ) {
@@ -761,18 +761,18 @@ route.post('/move', async (req, res) => {
     const { path, data, rename } = req.body;
 
     if (
-      !validaString(path, 1, fieldLenght.url) ||
+      !validaString(path, 1, fieldLength.url) ||
       !_type.isArray(data) ||
       data.length === 0 ||
-      data.length > fieldLenght.maxPagesize ||
+      data.length > fieldLength.maxPagesize ||
       getDuplicates(data, ['name']).length > 0 ||
       !validationValue(rename, [1, 0]) ||
       !data.every(
         (item) =>
           _type.isObject(item) &&
-          validaString(item.name, 1, fieldLenght.filename) &&
+          validaString(item.name, 1, fieldLength.filename) &&
           isFilename(item.name) &&
-          validaString(item.path, 1, fieldLenght.url) &&
+          validaString(item.path, 1, fieldLength.url) &&
           _path.normalize(`${item.path}/${item.name}`) !== '/' &&
           validationValue(item.type, ['dir', 'file'])
       )
@@ -861,9 +861,9 @@ route.post('/zip', async (req, res) => {
 
     if (
       !_type.isObject(data) ||
-      !validaString(data.name, 1, fieldLenght.filename) ||
+      !validaString(data.name, 1, fieldLength.filename) ||
       !isFilename(data.name) ||
-      !validaString(data.path, 1, fieldLenght.url) ||
+      !validaString(data.path, 1, fieldLength.url) ||
       _path.normalize(`${data.path}/${data.name}`) === '/' ||
       !validationValue(data.type, ['file', 'dir'])
     ) {
@@ -933,10 +933,10 @@ route.post('/unzip', async (req, res) => {
 
     if (
       !_type.isObject(data) ||
-      !validaString(data.name, 1, fieldLenght.filename) ||
+      !validaString(data.name, 1, fieldLength.filename) ||
       !isFilename(data.name) ||
       _path.extname(data.name)[2].toLowerCase() !== 'zip' ||
-      !validaString(data.path, 1, fieldLenght.url) ||
+      !validaString(data.path, 1, fieldLength.url) ||
       !validationValue(data.type, ['file'])
     ) {
       paramErr(res, req);
@@ -1000,13 +1000,13 @@ route.post('/delete', async (req, res) => {
       !_type.isArray(data) ||
       !validationValue(force, [1, 0]) ||
       data.length === 0 ||
-      data.length > fieldLenght.maxPagesize ||
+      data.length > fieldLength.maxPagesize ||
       !data.every(
         (item) =>
           _type.isObject(item) &&
-          validaString(item.name, 1, fieldLenght.filename) &&
+          validaString(item.name, 1, fieldLength.filename) &&
           isFilename(item.name) &&
-          validaString(item.path, 1, fieldLenght.url) &&
+          validaString(item.path, 1, fieldLength.url) &&
           _path.normalize(`${item.path}/${item.name}`) !== '/' &&
           _path.normalize(`${item.path}/${item.name}`) !==
             `/${appConfig.trashDirName}` &&
@@ -1154,8 +1154,8 @@ route.post('/create-dir', async (req, res) => {
     const { path, name } = req.body;
 
     if (
-      !validaString(path, 1, fieldLenght.url) ||
-      !validaString(name, 1, fieldLenght.filename)
+      !validaString(path, 1, fieldLength.url) ||
+      !validaString(name, 1, fieldLength.filename)
     ) {
       paramErr(res, req);
       return;
@@ -1193,11 +1193,11 @@ route.post('/rename', async (req, res) => {
     const { data, name } = req.body;
 
     if (
-      !validaString(name, 1, fieldLenght.filename) ||
+      !validaString(name, 1, fieldLength.filename) ||
       !_type.isObject(data) ||
-      !validaString(data.name, 1, fieldLenght.filename) ||
+      !validaString(data.name, 1, fieldLength.filename) ||
       !isFilename(data.name) ||
-      !validaString(data.path, 1, fieldLenght.url) ||
+      !validaString(data.path, 1, fieldLength.url) ||
       !validationValue(data.type, ['dir', 'file'])
     ) {
       paramErr(res, req);
@@ -1246,13 +1246,13 @@ route.post('/mode', async (req, res) => {
       !/^[0-7]{3}$/.test(mode) ||
       !_type.isArray(data) ||
       data.length === 0 ||
-      data.length > fieldLenght.maxPagesize ||
+      data.length > fieldLength.maxPagesize ||
       !data.every(
         (item) =>
           _type.isObject(item) &&
-          validaString(item.name, 1, fieldLenght.filename) &&
+          validaString(item.name, 1, fieldLength.filename) &&
           isFilename(item.name) &&
-          validaString(item.path, 1, fieldLenght.url) &&
+          validaString(item.path, 1, fieldLength.url) &&
           validationValue(item.type, ['dir', 'file'])
       )
     ) {
@@ -1292,7 +1292,7 @@ route.post('/up', async (req, res) => {
     const { HASH, name } = req.query;
 
     if (
-      !validaString(HASH, 1, fieldLenght.id, 1) ||
+      !validaString(HASH, 1, fieldLength.id, 1) ||
       !validaString(name, 1, 20, 1) ||
       !/^_[0-9]+$/.test(name)
     ) {
@@ -1319,18 +1319,18 @@ route.post('/merge', async (req, res) => {
   let timer = setTimeout(() => {
     clearTimeout(timer);
     timer = null;
-  }, fieldLenght.operationTimeout);
+  }, fieldLength.operationTimeout);
 
   try {
     let { HASH, count, path } = req.body;
     count = parseInt(count);
 
     if (
-      !validaString(HASH, 1, fieldLenght.id, 1) ||
-      !validaString(path, 1, fieldLenght.url) ||
+      !validaString(HASH, 1, fieldLength.id, 1) ||
+      !validaString(path, 1, fieldLength.url) ||
       isNaN(count) ||
       count < 1 ||
-      count > fieldLenght.maxFileSlice
+      count > fieldLength.maxFileSlice
     ) {
       paramErr(res, req);
       return;
@@ -1385,7 +1385,7 @@ route.post('/breakpoint', async (req, res) => {
   try {
     const { HASH } = req.body;
 
-    if (!validaString(HASH, 1, fieldLenght.id, 1)) {
+    if (!validaString(HASH, 1, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -1410,7 +1410,7 @@ route.post('/repeat', async (req, res) => {
   try {
     const { path } = req.body;
 
-    if (!validaString(path, 1, fieldLenght.url)) {
+    if (!validaString(path, 1, fieldLength.url)) {
       paramErr(res, req);
       return;
     }
@@ -1434,8 +1434,8 @@ route.post('/download', async (req, res) => {
     const { url, path } = req.body;
 
     if (
-      !validaString(path, 1, fieldLenght.url) ||
-      !validaString(url, 1, fieldLenght.url) ||
+      !validaString(path, 1, fieldLength.url) ||
+      !validaString(url, 1, fieldLength.url) ||
       !isurl(url)
     ) {
       paramErr(res, req);

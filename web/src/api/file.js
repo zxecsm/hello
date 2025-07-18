@@ -43,7 +43,7 @@ export function reqFileUp(data, file, cb, signal) {
 // 合并
 export function reqFileMerge(data) {
   return _postAjax('/file/merge', data, {
-    timeout: _d.fieldLenght.operationTimeout,
+    timeout: _d.fieldLength.operationTimeout,
     parallel: true,
   });
 }

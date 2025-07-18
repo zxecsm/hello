@@ -72,8 +72,8 @@ function addCategory(e) {
           verify(val) {
             if (val === '') {
               return '请输入分类标题';
-            } else if (val.length > _d.fieldLenght.noteCategoryTitle) {
-              return `请输入${_d.fieldLenght.noteCategoryTitle}字以内`;
+            } else if (val.length > _d.fieldLength.noteCategoryTitle) {
+              return `请输入${_d.fieldLength.noteCategoryTitle}字以内`;
             }
           },
         },
@@ -112,8 +112,8 @@ function editCategory(e, obj) {
           verify(val) {
             if (val === '') {
               return '请输入分类标题';
-            } else if (val.length > _d.fieldLenght.noteCategoryTitle) {
-              return `请输入${_d.fieldLenght.noteCategoryTitle}字以内`;
+            } else if (val.length > _d.fieldLength.noteCategoryTitle) {
+              return `请输入${_d.fieldLength.noteCategoryTitle}字以内`;
             }
           },
         },

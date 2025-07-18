@@ -1,4 +1,4 @@
-export const fieldLenght = {
+export const fieldLength = {
   id: 50, // id,hash
   title: 200, // 标题名称
   url: 2000, // 网址路径

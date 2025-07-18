@@ -521,7 +521,7 @@ function setEmail(e) {
             if (items.state.value === 'y') {
               if (val === '') {
                 return '请输入SMTP服务器地址';
-              } else if (val.length > _d.fieldLenght.email) {
+              } else if (val.length > _d.fieldLength.email) {
                 return 'host过长';
               }
             }
@@ -547,7 +547,7 @@ function setEmail(e) {
             if (items.state.value === 'y') {
               if (!isEmail(val)) {
                 return '发件人邮箱格式错误';
-              } else if (val.length > _d.fieldLenght.email) {
+              } else if (val.length > _d.fieldLength.email) {
                 return '邮箱过长';
               }
             }
@@ -612,7 +612,7 @@ function customHtmlCode(e) {
           type: 'textarea',
           trimValue: false,
           verify(val) {
-            if (getTextSize(val) > _d.fieldLenght.customCodeSize) {
+            if (getTextSize(val) > _d.fieldLength.customCodeSize) {
               return '代码过长';
             }
           },
@@ -623,7 +623,7 @@ function customHtmlCode(e) {
           type: 'textarea',
           trimValue: false,
           verify(val) {
-            if (getTextSize(val) > _d.fieldLenght.customCodeSize) {
+            if (getTextSize(val) > _d.fieldLength.customCodeSize) {
               return '代码过长';
             }
           },
@@ -664,7 +664,7 @@ function testEmail(e) {
           verify(val) {
             if (!isEmail(val)) {
               return '邮箱格式错误';
-            } else if (val.length > _d.fieldLenght.email) {
+            } else if (val.length > _d.fieldLength.email) {
               return '邮箱过长';
             }
           },
@@ -803,8 +803,8 @@ function handleFileCacheExp(e) {
   const { uploadSaveDay, faviconCache, siteInfoCache } = dataObj.cacheExp;
   function verify(val) {
     val = parseFloat(val);
-    if (!isInteger(val) || val < 0 || val > _d.fieldLenght.expTime) {
-      return `限制0-${_d.fieldLenght.expTime}`;
+    if (!isInteger(val) || val < 0 || val > _d.fieldLength.expTime) {
+      return `限制0-${_d.fieldLength.expTime}`;
     }
   }
   const placeholder = '0: 无限制';
@@ -953,14 +953,14 @@ function handlePubApi(e) {
             items: {
               link: {
                 type: 'textarea',
-                beforeText: '可用变量：host、port、protocol',
+                beforeText: 'host 变量会替换为目标站点host地址',
                 value: dataObj.faviconSpareApi,
                 placeholder: 'https://www.xxx.com?url={{host}}',
                 verify(val) {
                   if (val !== '') {
                     if (!isurl(val)) {
                       return '请输入正确的接口地址';
-                    } else if (val.length > _d.fieldLenght.url) {
+                    } else if (val.length > _d.fieldLength.url) {
                       return `接口地址过长`;
                     }
                   }

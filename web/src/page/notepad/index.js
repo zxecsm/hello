@@ -263,7 +263,7 @@ if (!k || !/^[\w]+$/.test(k)) {
           verify(val) {
             if (val === '') {
               return '请输入便条Key';
-            } else if (val.length > _d.fieldLenght.filename) {
+            } else if (val.length > _d.fieldLength.filename) {
               return '便条key过长';
             } else if (!/^[\w]+$/.test(val)) {
               return '只能包含数字、字母和下划线';
@@ -299,7 +299,7 @@ function upData() {
     _setTimeout(upData, 1000);
   } else {
     orginData.data = data;
-    if (getTextSize(data) > _d.fieldLenght.noteSize) {
+    if (getTextSize(data) > _d.fieldLength.noteSize) {
       _msg.error('便签内容过长');
       upData();
       return;
@@ -315,7 +315,7 @@ function rende() {
     $previewBox.find('.content').html('');
     return;
   }
-  if (getTextSize(text) > _d.fieldLenght.noteSize) {
+  if (getTextSize(text) > _d.fieldLength.noteSize) {
     $previewBox.find('.content').html(`<h1>便签内容过长</h1>`);
     return;
   }

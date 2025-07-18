@@ -260,7 +260,7 @@ export function closeEditLrcBox() {
 function saveLrc() {
   const val = $editLrcWrap.find('textarea').val();
   if ($editLrcWrap._val === val || !isRoot()) return;
-  if (getTextSize(val) > _d.fieldLenght.lrcSize) {
+  if (getTextSize(val) > _d.fieldLength.lrcSize) {
     _msg.error('歌词文本过长');
     return;
   }

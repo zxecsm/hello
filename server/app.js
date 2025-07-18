@@ -49,7 +49,7 @@ import todoRoute from './routes/todo/index.js';
 import userRoute from './routes/user/index.js';
 import taskRoute from './routes/task/index.js';
 import _path from './utils/path.js';
-import { fieldLenght } from './routes/config.js';
+import { fieldLength } from './routes/config.js';
 
 const __dirname = getDirname(import.meta);
 
@@ -81,7 +81,7 @@ app.use(async (req, res, next) => {
   try {
     // 客户端临时ID格式
     const temid = req.headers['x-tem-id'] || '';
-    if (!validaString(temid, 0, fieldLenght.id, 1)) {
+    if (!validaString(temid, 0, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }

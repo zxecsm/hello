@@ -880,7 +880,7 @@ $pMusicListBox.on('click', '.save_playing_list', function (e) {
           verify(val) {
             if (val === '') {
               return '请输入名称';
-            } else if (val.length > _d.fieldLenght.title) {
+            } else if (val.length > _d.fieldLength.title) {
               return '名称过长';
             }
           },

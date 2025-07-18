@@ -33,7 +33,7 @@ import {
   sendNotificationsToCustomAddresses,
 } from '../chat/chat.js';
 
-import { fieldLenght } from '../config.js';
+import { fieldLength } from '../config.js';
 import { computerDay } from './count.js';
 
 const route = express.Router();
@@ -157,7 +157,7 @@ route.get('/list', async (req, res) => {
       isNaN(pageSize) ||
       pageNo < 1 ||
       pageSize < 1 ||
-      pageSize > fieldLenght.maxPagesize
+      pageSize > fieldLength.maxPagesize
     ) {
       paramErr(res, req);
       return;
@@ -216,10 +216,10 @@ route.post('/add', async (req, res) => {
     let { title, start, end, link = '' } = req.body;
 
     if (
-      !validaString(title, 1, fieldLenght.title) ||
+      !validaString(title, 1, fieldLength.title) ||
       !isValidDate(start) ||
       !isValidDate(end) ||
-      (link && (!validaString(link, 1, fieldLenght.url) || !isurl(link)))
+      (link && (!validaString(link, 1, fieldLength.url) || !isurl(link)))
     ) {
       paramErr(res, req);
       return;
@@ -261,8 +261,8 @@ route.post('/delete', async (req, res) => {
     if (
       !_type.isArray(ids) ||
       ids.length === 0 ||
-      ids.length > fieldLenght.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      ids.length > fieldLength.maxPagesize ||
+      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -290,11 +290,11 @@ route.post('/edit', async (req, res) => {
     let { id, title, start, end, link = '' } = req.body;
 
     if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
-      !validaString(title, 1, fieldLenght.title) ||
+      !validaString(id, 1, fieldLength.id, 1) ||
+      !validaString(title, 1, fieldLength.title) ||
       !isValidDate(start) ||
       !isValidDate(end) ||
-      (link && (!validaString(link, 1, fieldLenght.url) || !isurl(link)))
+      (link && (!validaString(link, 1, fieldLength.url) || !isurl(link)))
     ) {
       paramErr(res, req);
       return;
@@ -339,8 +339,8 @@ route.post('/top', async (req, res) => {
     if (
       isNaN(top) ||
       top < 0 ||
-      top > fieldLenght.top ||
-      !validaString(id, 1, fieldLenght.id, 1)
+      top > fieldLength.top ||
+      !validaString(id, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -368,7 +368,7 @@ route.post('/state', async (req, res) => {
 
     if (
       !validationValue(state, [1, 0]) ||
-      !validaString(id, 1, fieldLenght.id, 1)
+      !validaString(id, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;

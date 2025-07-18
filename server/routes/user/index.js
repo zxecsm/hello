@@ -62,7 +62,7 @@ import {
 import { playInConfig, getUserInfo, deleteUser } from './user.js';
 
 import jwt from '../../utils/jwt.js';
-import { fieldLenght } from '../config.js';
+import { fieldLength } from '../config.js';
 import _path from '../../utils/path.js';
 import { getNoteHistoryDir, parseMarkDown } from '../note/note.js';
 import { _delDir, getTrashDir, readMenu } from '../file/file.js';
@@ -164,8 +164,8 @@ route.post('/register', async (req, res) => {
     const { username, password } = req.body;
 
     if (
-      !validaString(username, 1, fieldLenght.username) ||
-      !validaString(password, 1, fieldLenght.id, 1)
+      !validaString(username, 1, fieldLength.username) ||
+      !validaString(password, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -230,7 +230,7 @@ route.post('/allow-login-req', async (req, res) => {
 
     if (
       !validaString(code, 6, 6, 1) ||
-      !validaString(username, 1, fieldLenght.username)
+      !validaString(username, 1, fieldLength.username)
     ) {
       paramErr(res, req);
       return;
@@ -285,7 +285,7 @@ route.post('/code-login', async (req, res) => {
 
     if (
       !validaString(code, 6, 6, 1) ||
-      !validaString(username, 1, fieldLenght.username)
+      !validaString(username, 1, fieldLength.username)
     ) {
       paramErr(res, req);
       return;
@@ -358,8 +358,8 @@ route.post('/login', async (req, res) => {
       ip = req._hello.ip;
 
     if (
-      !validaString(username, 1, fieldLenght.username) ||
-      !validaString(password, 1, fieldLenght.id, 1)
+      !validaString(username, 1, fieldLength.username) ||
+      !validaString(password, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -435,8 +435,8 @@ route.post('/verify-login', async (req, res) => {
 
     if (
       !validaString(token, 6, 6, 1) ||
-      !validaString(account, 1, fieldLenght.id, 1) ||
-      !validaString(password, 1, fieldLenght.id, 1) ||
+      !validaString(account, 1, fieldLength.id, 1) ||
+      !validaString(password, 1, fieldLength.id, 1) ||
       account === 'hello'
     ) {
       paramErr(res, req);
@@ -497,7 +497,7 @@ route.get('/mail-code', async (req, res) => {
   try {
     const { username } = req.query;
 
-    if (!validaString(username, 1, fieldLenght.username)) {
+    if (!validaString(username, 1, fieldLength.username)) {
       paramErr(res, req);
       return;
     }
@@ -559,10 +559,10 @@ route.post('/reset-pass', async (req, res) => {
     const { email, code, account } = req.body;
 
     if (
-      !validaString(email, 1, fieldLenght.email) ||
+      !validaString(email, 1, fieldLength.email) ||
       !isEmail(email) ||
       !validaString(code, 6, 6, 1) ||
-      !validaString(account, 1, fieldLenght.id, 1)
+      !validaString(account, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -640,7 +640,7 @@ route.get('/file-token', async (req, res) => {
   try {
     const { p } = req.query;
 
-    if (!validaString(p, 1, fieldLenght.url)) {
+    if (!validaString(p, 1, fieldLength.url)) {
       paramErr(res, req);
       return;
     }
@@ -650,7 +650,7 @@ route.get('/file-token', async (req, res) => {
         type: 'temAccessFile',
         data: { account: req._hello.userinfo.account, p },
       },
-      fieldLenght.shareTokenExp
+      fieldLength.shareTokenExp
     );
 
     _success(res, '获取fileToken成功', token)(req, token, 1);
@@ -681,7 +681,7 @@ route.post('/bind-mail-code', async (req, res) => {
   try {
     const { email } = req.body;
 
-    if (!validaString(email, 1, fieldLenght.email) || !isEmail(email)) {
+    if (!validaString(email, 1, fieldLength.email) || !isEmail(email)) {
       paramErr(res, req);
       return;
     }
@@ -720,7 +720,7 @@ route.post('/bind-email', async (req, res) => {
   try {
     const { email, code, password } = req.body;
 
-    if (!validaString(password, 1, fieldLenght.id, 1)) {
+    if (!validaString(password, 1, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -749,7 +749,7 @@ route.post('/bind-email', async (req, res) => {
     }
 
     if (
-      !validaString(email, 1, fieldLenght.email) ||
+      !validaString(email, 1, fieldLength.email) ||
       !isEmail(email) ||
       !validaString(code, 6, 6, 1)
     ) {
@@ -805,7 +805,7 @@ route.post('/verify', async (req, res) => {
   try {
     const { token, password } = req.body;
 
-    if (!validaString(password, 1, fieldLenght.id, 1)) {
+    if (!validaString(password, 1, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -921,8 +921,8 @@ route.post('/change-pd', async (req, res) => {
       { oldpassword, newpassword } = req.body;
 
     if (
-      !validaString(oldpassword, 1, fieldLenght.id, 1) ||
-      !validaString(newpassword, 1, fieldLenght.id, 1)
+      !validaString(oldpassword, 1, fieldLength.id, 1) ||
+      !validaString(newpassword, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -991,7 +991,7 @@ route.post('/changename', async (req, res) => {
   try {
     const { username } = req.body;
 
-    if (!validaString(username, 1, fieldLenght.username)) {
+    if (!validaString(username, 1, fieldLength.username)) {
       paramErr(res, req);
       return;
     }
@@ -1035,7 +1035,7 @@ route.post('/delete-account', async (req, res) => {
   try {
     const { password } = req.body;
 
-    if (!validaString(password, 1, fieldLenght.id, 1)) {
+    if (!validaString(password, 1, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -1152,9 +1152,9 @@ route.post('/up-logo', async (req, res) => {
     if (
       !isFilename(name) ||
       !isImgFile(name) ||
-      !validaString(HASH, 1, fieldLenght.id, 1) ||
+      !validaString(HASH, 1, fieldLength.id, 1) ||
       !validationValue(type, ['bookmark', 'userlogo']) ||
-      (type === 'bookmark' && !validaString(id, 1, fieldLenght.id, 1))
+      (type === 'bookmark' && !validaString(id, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -1352,7 +1352,7 @@ route.get('/real-time', async (req, res) => {
     let { flag = '', page = '' } = req.query; //标识和设备ID
 
     if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
+      !validaString(id, 1, fieldLength.id, 1) ||
       !validaString(flag, 0, 10, 1) ||
       !validaString(page, 0, 20)
     ) {
@@ -1417,7 +1417,7 @@ route.post('/real-time', async (req, res) => {
     const cmd = req.body; //指令内容和登录设备ID
 
     if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
+      !validaString(id, 1, fieldLength.id, 1) ||
       !_type.isObject(cmd) ||
       !validationValue(cmd.type, [
         'updatedata',
@@ -1455,7 +1455,7 @@ route.post('/real-time', async (req, res) => {
           'category',
           'file',
         ]) ||
-        !validaString(id, 0, fieldLenght.id, 1)
+        !validaString(id, 0, fieldLength.id, 1)
       ) {
         paramErr(res, req);
         return;
@@ -1531,7 +1531,7 @@ route.post('/real-time', async (req, res) => {
     // 聊天室
     else if (type === 'chat') {
       if (
-        !validaString(data.to, 1, fieldLenght.id, 1) ||
+        !validaString(data.to, 1, fieldLength.id, 1) ||
         !validationValue(data.flag, ['addmsg', 'del', 'clear'])
       ) {
         paramErr(res, req);
@@ -1542,7 +1542,7 @@ route.post('/real-time', async (req, res) => {
 
       // 如果是删除验证消息id
       if (data.flag === 'del') {
-        if (!validaString(data.msgData.msgId, 1, fieldLenght.id, 1)) {
+        if (!validaString(data.msgData.msgId, 1, fieldLength.id, 1)) {
           paramErr(res, req);
           return;
         }
@@ -1561,12 +1561,12 @@ route.post('/real-time', async (req, res) => {
           !validationValue(t, ['copy', 'cut']) ||
           !_type.isArray(d) ||
           d.length === 0 ||
-          d.length > fieldLenght.maxPagesize ||
+          d.length > fieldLength.maxPagesize ||
           !d.every(
             (item) =>
               _type.isObject(item) &&
-              validaString(item.name, 1, fieldLenght.filename) &&
-              validaString(item.path, 1, fieldLenght.url)
+              validaString(item.name, 1, fieldLength.filename) &&
+              validaString(item.path, 1, fieldLength.url)
           )
         ) {
           paramErr(res, req);
@@ -1595,8 +1595,8 @@ route.post('/delete-share', async (req, res) => {
     if (
       !_type.isArray(ids) ||
       ids.length === 0 ||
-      ids.length > fieldLenght.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      ids.length > fieldLength.maxPagesize ||
+      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -1630,7 +1630,7 @@ route.get('/share-list', async (req, res) => {
       isNaN(pageSize) ||
       pageNo < 1 ||
       pageSize < 1 ||
-      pageSize > fieldLenght.maxPagesize
+      pageSize > fieldLength.maxPagesize
     ) {
       paramErr(res, req);
       return;
@@ -1673,11 +1673,11 @@ route.post('/edit-share', async (req, res) => {
     expireTime = parseInt(expireTime);
 
     if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
-      !validaString(title, 1, fieldLenght.title) ||
-      !validaString(pass, 0, fieldLenght.sharePass) ||
+      !validaString(id, 1, fieldLength.id, 1) ||
+      !validaString(title, 1, fieldLength.title) ||
+      !validaString(pass, 0, fieldLength.sharePass) ||
       isNaN(expireTime) ||
-      expireTime > fieldLenght.expTime
+      expireTime > fieldLength.expTime
     ) {
       paramErr(res, req);
       return;
@@ -1715,12 +1715,12 @@ route.get('/trash-list', async (req, res) => {
 
     if (
       !validationValue(type, ['note', 'bmk', 'bmk_group', 'history']) ||
-      !validaString(word, 0, fieldLenght.searchWord) ||
+      !validaString(word, 0, fieldLength.searchWord) ||
       isNaN(pageNo) ||
       isNaN(pageSize) ||
       pageNo < 1 ||
       pageSize < 1 ||
-      pageSize > fieldLenght.maxPagesize
+      pageSize > fieldLength.maxPagesize
     ) {
       paramErr(res, req);
       return;
@@ -1838,11 +1838,11 @@ route.get('/trash-list', async (req, res) => {
             if (con.length === 0) {
               con = [
                 {
-                  value: content.slice(0, fieldLenght.notePreviewLength),
+                  value: content.slice(0, fieldLength.notePreviewLength),
                   type: 'text',
                 },
               ];
-              if (content.length > fieldLenght.notePreviewLength) {
+              if (content.length > fieldLength.notePreviewLength) {
                 con.push({ type: 'icon', value: '...' });
               }
             }
@@ -1890,8 +1890,8 @@ route.post('/delete-trash', async (req, res) => {
       !validationValue(type, ['bmk_group', 'bmk', 'note', 'history']) ||
       !_type.isArray(ids) ||
       ids.length === 0 ||
-      ids.length > fieldLenght.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      ids.length > fieldLength.maxPagesize ||
+      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -1954,8 +1954,8 @@ route.post('/recover-trash', async (req, res) => {
       !validationValue(type, ['bmk_group', 'bmk', 'note', 'history']) ||
       !_type.isArray(ids) ||
       ids.length === 0 ||
-      ids.length > fieldLenght.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      ids.length > fieldLength.maxPagesize ||
+      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;

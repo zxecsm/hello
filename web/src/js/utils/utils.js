@@ -2342,7 +2342,7 @@ export function createShare(e, opt, cb) {
           verify(val) {
             if (val === '') {
               return '请输入名称';
-            } else if (val.length > _d.fieldLenght.title) {
+            } else if (val.length > _d.fieldLength.title) {
               return '名称过长';
             }
           },
@@ -2357,8 +2357,8 @@ export function createShare(e, opt, cb) {
               return '请输入过期时间（天）';
             }
             val = parseFloat(val);
-            if (!isInteger(val) || val > _d.fieldLenght.expTime) {
-              return `最大限制${_d.fieldLenght.expTime}`;
+            if (!isInteger(val) || val > _d.fieldLength.expTime) {
+              return `最大限制${_d.fieldLength.expTime}`;
             }
           },
         },
@@ -2368,7 +2368,7 @@ export function createShare(e, opt, cb) {
           beforeText: '提取码：',
           placeholder: '为空则不设置提取码',
           verify(val) {
-            if (val.length > _d.fieldLenght.sharePass) {
+            if (val.length > _d.fieldLength.sharePass) {
               return '提取码过长';
             }
           },
@@ -2410,7 +2410,7 @@ export function enterPassCode(cb) {
           verify(val) {
             if (val.length === 0) {
               return '请输入提取码';
-            } else if (val.length > _d.fieldLenght.sharePass) {
+            } else if (val.length > _d.fieldLength.sharePass) {
               return '提取码过长';
             }
           },

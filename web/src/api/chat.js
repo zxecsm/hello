@@ -44,7 +44,7 @@ export function reqChatUpVoice(data, file, cb, signal) {
 // 合并文件
 export function reqChatMerge(data) {
   return _postAjax('/chat/merge', data, {
-    timeout: _d.fieldLenght.operationTimeout,
+    timeout: _d.fieldLength.operationTimeout,
     parallel: true,
   });
 }

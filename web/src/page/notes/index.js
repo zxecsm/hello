@@ -510,9 +510,9 @@ function toTop(e, obj) {
             } else if (
               !isInteger(+val) ||
               val < 0 ||
-              val > _d.fieldLenght.top
+              val > _d.fieldLength.top
             ) {
-              return `最大限制${_d.fieldLenght.top}`;
+              return `最大限制${_d.fieldLength.top}`;
             }
           },
         },
@@ -608,7 +608,7 @@ function editNoteInfo(e, obj) {
           verify(val) {
             if (val === '') {
               return '请输入标题';
-            } else if (val.length > _d.fieldLenght.title) {
+            } else if (val.length > _d.fieldLength.title) {
               return '标题内容过长';
             }
           },
@@ -884,7 +884,7 @@ async function upNote() {
       return;
     }
 
-    if (size > _d.fieldLenght.noteSize) {
+    if (size > _d.fieldLength.noteSize) {
       pro.fail();
       _msg.error(`笔记内容过长`);
       return;

@@ -26,13 +26,13 @@ http://localhost:55555/api/bg/r/small  # 小屛
 获取网站图标
 
 ```
-http://localhost:55555/api/getfavicon?u=https://google.com
+http://localhost:55555/api/getfavicon?u=[https://]google.com
 ```
 
 获取网站信息
 
 ```
-http://localhost:55555/api/bmk/parse-site-info?u=https://google.com
+http://localhost:55555/api/bmk/parse-site-info?u=[https://]google.com
 ```
 
 ![hello](https://raw.githubusercontent.com/zxecsm/hello/main/hello.png)

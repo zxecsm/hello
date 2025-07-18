@@ -6,7 +6,7 @@ import {
   paramErr,
   validaString,
 } from '../../utils/utils.js';
-import { fieldLenght } from '../config.js';
+import { fieldLength } from '../config.js';
 import taskState from '../../utils/taskState.js';
 import { validShareState } from '../user/user.js';
 const route = express.Router();
@@ -22,9 +22,9 @@ route.post('/info', async (req, res) => {
     } = req._hello;
 
     if (
-      !validaString(key, 1, fieldLenght.id * 2, 1) ||
-      !validaString(token, 0, fieldLenght.url) ||
-      !validaString(temid, 1, fieldLenght.id, 1)
+      !validaString(key, 1, fieldLength.id * 2, 1) ||
+      !validaString(token, 0, fieldLength.url) ||
+      !validaString(temid, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -70,9 +70,9 @@ route.post('/cancel', async (req, res) => {
     } = req._hello;
 
     if (
-      !validaString(key, 1, fieldLenght.id * 2, 1) ||
-      !validaString(token, 0, fieldLenght.url) ||
-      !validaString(temid, 1, fieldLenght.id, 1)
+      !validaString(key, 1, fieldLength.id * 2, 1) ||
+      !validaString(token, 0, fieldLength.url) ||
+      !validaString(temid, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -122,8 +122,8 @@ route.post('/list', async (req, res) => {
     } = req._hello;
 
     if (
-      !validaString(token, 0, fieldLenght.url) ||
-      !validaString(temid, 1, fieldLenght.id, 1)
+      !validaString(token, 0, fieldLength.url) ||
+      !validaString(temid, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;

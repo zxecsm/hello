@@ -225,7 +225,7 @@ async function hdSave() {
   try {
     const text = editor.getValue();
     if (text === oText) return;
-    if (getTextSize(text) > _d.fieldLenght.textFileSize) {
+    if (getTextSize(text) > _d.fieldLength.textFileSize) {
       _msg.error('文本内容过长');
       return;
     }

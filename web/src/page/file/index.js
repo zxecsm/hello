@@ -953,7 +953,7 @@ async function hdUp(files) {
       _msg.error(`不能上传空文件`);
       return;
     }
-    if (size > _d.fieldLenght.maxFileSize) {
+    if (size > _d.fieldLength.maxFileSize) {
       pro.fail();
       _msg.error(`上传文件限制0-9.7G`);
       return;
@@ -1028,7 +1028,7 @@ function createFile(e) {
           verify(val) {
             if (val === '') {
               return '请输入名称';
-            } else if (val.length > _d.fieldLenght.filename) {
+            } else if (val.length > _d.fieldLength.filename) {
               return '名称过长';
             } else if (!isFilename(val)) {
               return '名称包含了不允许的特殊字符';
@@ -1071,7 +1071,7 @@ function createDir(e) {
           verify(val) {
             if (val === '') {
               return '请输入名称';
-            } else if (val.length > _d.fieldLenght.filename) {
+            } else if (val.length > _d.fieldLength.filename) {
               return '名称过长';
             } else if (!isFilename(val)) {
               return '名称包含了不允许的特殊字符';
@@ -1776,7 +1776,7 @@ function hdRename(e, obj, cb) {
           verify(val) {
             if (val === '') {
               return '请输入名称';
-            } else if (val.length > _d.fieldLenght.filename) {
+            } else if (val.length > _d.fieldLength.filename) {
               return '名称过长';
             } else if (!isFilename(val)) {
               return '名称包含了不允许的特殊字符';

@@ -35,7 +35,7 @@ import {
   isValidDate,
   isFilename,
 } from '../../utils/utils.js';
-import { fieldLenght } from '../config.js';
+import { fieldLength } from '../config.js';
 
 import { getUserInfo } from '../user/user.js';
 
@@ -76,8 +76,8 @@ route.all('/:chat_id/sendMessage', async (req, res) => {
     const { chat_id } = req.params;
 
     if (
-      !validaString(chat_id, 1, fieldLenght.id, 1) ||
-      !validaString(text, 1, fieldLenght.chatContent)
+      !validaString(chat_id, 1, fieldLength.id, 1) ||
+      !validaString(text, 1, fieldLength.chatContent)
     ) {
       paramErr(res, req);
       return;
@@ -122,7 +122,7 @@ route.post('/dnd-mode', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     if (
-      !validaString(acc, 1, fieldLenght.id, 1) ||
+      !validaString(acc, 1, fieldLength.id, 1) ||
       !validationValue(notify, [0, 1]) ||
       account === acc
     ) {
@@ -154,8 +154,8 @@ route.post('/setdes', async (req, res) => {
     const { account: acc, des = '' } = req.body;
 
     if (
-      !validaString(acc, 1, fieldLenght.id, 1) ||
-      !validaString(des, 0, fieldLenght.chatDes) ||
+      !validaString(acc, 1, fieldLength.id, 1) ||
+      !validaString(des, 0, fieldLength.chatDes) ||
       acc === 'hello'
     ) {
       paramErr(res, req);
@@ -190,7 +190,7 @@ route.get('/getdes', async (req, res) => {
     const { account: acc } = req.query,
       { account } = req._hello.userinfo;
 
-    if (!validaString(acc, 1, fieldLenght.id, 1)) {
+    if (!validaString(acc, 1, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -269,9 +269,9 @@ route.get('/read-msg', async (req, res) => {
     type = parseInt(type);
 
     if (
-      !validaString(acc, 1, fieldLenght.id, 1) ||
-      !validaString(flag, 0, fieldLenght.id, 1) ||
-      !validaString(word, 0, fieldLenght.searchWord) ||
+      !validaString(acc, 1, fieldLength.id, 1) ||
+      !validaString(flag, 0, fieldLength.id, 1) ||
+      !validaString(word, 0, fieldLength.searchWord) ||
       isNaN(type) ||
       !validationValue(type, [0, 1, 2]) ||
       (start && !isValidDate(start)) ||
@@ -340,7 +340,7 @@ route.get('/read-msg', async (req, res) => {
       valArr.push(offsetMsg.create_at, flag);
     }
 
-    const pageSize = fieldLenght.chatPageSize;
+    const pageSize = fieldLength.chatPageSize;
     let list = [];
 
     const fields = `logo,email,username,_from,_to,id,create_at,content,hash,size,type,flag`;
@@ -394,7 +394,7 @@ route.get('/expired', async (req, res) => {
   try {
     const { hash } = req.query;
 
-    if (!validaString(hash, 1, fieldLenght.id, 1)) {
+    if (!validaString(hash, 1, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -431,8 +431,8 @@ route.post('/send-msg', async (req, res) => {
     let { to, content } = req.body;
 
     if (
-      !validaString(to, 1, fieldLenght.id, 1) ||
-      !validaString(content, 1, fieldLenght.chatContent)
+      !validaString(to, 1, fieldLength.id, 1) ||
+      !validaString(content, 1, fieldLength.chatContent)
     ) {
       paramErr(res, req);
       return;
@@ -488,8 +488,8 @@ route.post('/forward', async (req, res) => {
     const { to, id } = req.body;
 
     if (
-      !validaString(to, 1, fieldLenght.id, 1) ||
-      !validaString(id, 1, fieldLenght.id, 1)
+      !validaString(to, 1, fieldLength.id, 1) ||
+      !validaString(id, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -589,8 +589,8 @@ route.post('/delete-msg', async (req, res) => {
     const { id = '', to } = req.body;
 
     if (
-      !validaString(id, 0, fieldLenght.id, 1) ||
-      !validaString(to, 1, fieldLenght.id, 1)
+      !validaString(id, 0, fieldLength.id, 1) ||
+      !validaString(to, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -650,7 +650,7 @@ route.post('/shake-msg', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     if (
-      !validaString(to, 1, fieldLenght.id, 1) ||
+      !validaString(to, 1, fieldLength.id, 1) ||
       to === 'chang' ||
       to === account ||
       to === 'hello'
@@ -691,7 +691,7 @@ route.get('/user-list', async (req, res) => {
       isNaN(pageSize) ||
       pageNo < 1 ||
       pageSize < 1 ||
-      pageSize > fieldLenght.userPageSize
+      pageSize > fieldLength.userPageSize
     ) {
       paramErr(res, req);
       return;
@@ -768,7 +768,7 @@ route.post('/up', async (req, res) => {
     if (
       !validaString(name, 1, 20, 1) ||
       !/^_[0-9]+$/.test(name) ||
-      !validaString(HASH, 1, fieldLenght.id, 1)
+      !validaString(HASH, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -794,10 +794,10 @@ route.post('/up-voice', async (req, res) => {
 
     if (
       !/\.wav$/.test(name) ||
-      !validaString(name, 1, fieldLenght.filename) ||
+      !validaString(name, 1, fieldLength.filename) ||
       !isFilename(name) ||
-      !validaString(HASH, 1, fieldLenght.id, 1) ||
-      !validaString(to, 1, fieldLenght.id, 1)
+      !validaString(HASH, 1, fieldLength.id, 1) ||
+      !validaString(to, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -877,14 +877,14 @@ route.post('/merge', async (req, res) => {
     count = parseInt(count);
 
     if (
-      !validaString(name, 1, fieldLenght.filename) ||
+      !validaString(name, 1, fieldLength.filename) ||
       !isFilename(name) ||
-      !validaString(HASH, 1, fieldLenght.id, 1) ||
-      !validaString(to, 1, fieldLenght.id, 1) ||
+      !validaString(HASH, 1, fieldLength.id, 1) ||
+      !validaString(to, 1, fieldLength.id, 1) ||
       !validationValue(type, ['image', 'file']) ||
       isNaN(count) ||
       count < 1 ||
-      count > fieldLenght.maxFileSlice
+      count > fieldLength.maxFileSlice
     ) {
       paramErr(res, req);
       return;
@@ -977,7 +977,7 @@ route.post('/breakpoint', async (req, res) => {
   try {
     const { HASH } = req.body;
 
-    if (!validaString(HASH, 1, fieldLenght.id, 1)) {
+    if (!validaString(HASH, 1, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -1004,13 +1004,13 @@ route.post('/repeat', async (req, res) => {
     size = parseInt(size);
 
     if (
-      !validaString(HASH, 1, fieldLenght.id, 1) ||
-      !validaString(name, 1, fieldLenght.filename) ||
+      !validaString(HASH, 1, fieldLength.id, 1) ||
+      !validaString(name, 1, fieldLength.filename) ||
       !isFilename(name) ||
       !validationValue(type, ['image', 'file']) ||
-      !validaString(to, 1, fieldLenght.id, 1) ||
+      !validaString(to, 1, fieldLength.id, 1) ||
       isNaN(size) ||
-      size > fieldLenght.maxFileSlice * 50 * 1024 * 1024
+      size > fieldLength.maxFileSlice * 50 * 1024 * 1024
     ) {
       paramErr(res, req);
       return;
@@ -1108,7 +1108,7 @@ route.post('/forward-msg-link', async (req, res) => {
     if (
       !validationValue(state, [1, 0]) ||
       !validationValue(type, ['get', 'post']) ||
-      !validaString(link, 0, fieldLenght.url) ||
+      !validaString(link, 0, fieldLength.url) ||
       !_type.isObject(header) ||
       !_type.isObject(body) ||
       (state === 1 && !isurl(link))

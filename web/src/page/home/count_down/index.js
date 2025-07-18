@@ -291,7 +291,7 @@ function addCount(e) {
           verify(val) {
             if (val === '') {
               return '请输入标题';
-            } else if (val.length > _d.fieldLenght.countTitle) {
+            } else if (val.length > _d.fieldLength.countTitle) {
               return '标题内容过长';
             }
           },
@@ -302,7 +302,7 @@ function addCount(e) {
           verify(val) {
             val = val;
             if (!val) return;
-            if (val.length > _d.fieldLenght.url) {
+            if (val.length > _d.fieldLength.url) {
               return '链接过长';
             } else if (!isurl(val)) {
               return '请输入正确的链接';
@@ -412,7 +412,7 @@ function editCount(e, count) {
           verify(val) {
             if (val === '') {
               return '请输入标题';
-            } else if (val.length > _d.fieldLenght.countTitle) {
+            } else if (val.length > _d.fieldLength.countTitle) {
               return '标题内容过长';
             }
           },
@@ -424,7 +424,7 @@ function editCount(e, count) {
           verify(val) {
             val = val;
             if (!val) return;
-            if (val.length > _d.fieldLenght.url) {
+            if (val.length > _d.fieldLength.url) {
               return '链接过长';
             } else if (!isurl(val)) {
               return '请输入正确的链接';
@@ -567,9 +567,9 @@ function toTop(e, obj) {
             } else if (
               !isInteger(+val) ||
               val < 0 ||
-              val > _d.fieldLenght.top
+              val > _d.fieldLength.top
             ) {
-              return `限制0-${_d.fieldLenght.top}`;
+              return `限制0-${_d.fieldLength.top}`;
             }
           },
         },

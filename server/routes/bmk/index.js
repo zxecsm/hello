@@ -45,7 +45,7 @@ import {
   cleanSiteInfo,
 } from './bmk.js';
 
-import { fieldLenght } from '../config.js';
+import { fieldLength } from '../config.js';
 import { validShareAddUserState, validShareState } from '../user/user.js';
 import { getFriendInfo } from '../chat/chat.js';
 import _crypto from '../../utils/crypto.js';
@@ -61,8 +61,8 @@ route.post('/get-share', async (req, res) => {
     const { id, pass = '' } = req.body;
 
     if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
-      !validaString(pass, 0, fieldLenght.sharePass)
+      !validaString(id, 1, fieldLength.id, 1) ||
+      !validaString(pass, 0, fieldLength.sharePass)
     ) {
       paramErr(res, req);
       return;
@@ -111,7 +111,7 @@ route.post('/get-share', async (req, res) => {
       title,
       token: jwt.set(
         { type: 'share', data: { id, types: ['bookmk'] } },
-        fieldLenght.shareTokenExp
+        fieldLength.shareTokenExp
       ),
     })(req, id, 1);
   } catch (error) {
@@ -133,16 +133,16 @@ route.post('/search', async (req, res) => {
     pageSize = parseInt(pageSize);
 
     if (
-      !validaString(word, 0, fieldLenght.searchWord) ||
-      !validaString(acc, 0, fieldLenght.id, 1) ||
+      !validaString(word, 0, fieldLength.searchWord) ||
+      !validaString(acc, 0, fieldLength.id, 1) ||
       isNaN(pageNo) ||
       isNaN(pageSize) ||
       pageNo < 1 ||
       pageSize < 1 ||
-      pageSize > fieldLenght.maxPagesize ||
+      pageSize > fieldLength.maxPagesize ||
       !_type.isArray(category) ||
       category.length > 10 ||
-      !category.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      !category.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -231,8 +231,8 @@ route.get('/list', async (req, res) => {
     const { id = '', account: acc = '' } = req.query;
 
     if (
-      !validaString(id, 0, fieldLenght.id, 1) ||
-      !validaString(acc, 0, fieldLenght.id, 1)
+      !validaString(id, 0, fieldLength.id, 1) ||
+      !validaString(acc, 0, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -300,76 +300,103 @@ timedTask.add(async (flag) => {
 
 // 获取网站信息
 route.get('/parse-site-info', async (req, res) => {
-  const obj = { title: '', des: '' };
-  let p = '',
-    miss = '';
-
-  const { u } = req.query;
-
   try {
-    if (!isurl(u) || !validaString(u, 1, fieldLenght.url)) {
-      paramErr(res, req);
-      return;
-    }
+    const { u } = req.query;
 
     // 检查接口是否开启
     if (!_d.pubApi.siteInfoApi && !req._hello.userinfo.account) {
       return _err(res, '接口未开放')(req, u, 1);
     }
 
-    await uLog(req, `获取网站信息(${u})`);
-
-    p = _path.normalize(
-      `${appConfig.appData}/siteinfo/${_crypto.getStringHash(u)}.json`
-    );
-
-    miss = p + '.miss';
-
-    // 缓存存在，则使用缓存
-    if (await _f.exists(p)) {
-      _success(res, 'ok', JSON.parse(await _f.fsp.readFile(p)));
+    if (!validaString(u, 1, fieldLength.url)) {
+      paramErr(res, req);
       return;
     }
 
-    if (await _f.exists(miss)) {
-      _success(res, 'ok', obj);
+    let protocol = 'https:'; // 默认https
+    const url = `${u.startsWith('http') ? '' : `${protocol}//`}${u}`;
+
+    if (!isurl(url)) {
+      paramErr(res, req);
       return;
     }
 
-    await _f.mkdir(_path.normalize(`${appConfig.appData}/siteinfo`));
+    const obj = { title: '', des: '' };
+    let p = '',
+      miss = '';
 
-    const result = await axios({
-      method: 'get',
-      url: u,
-      timeout: 5000,
-    });
+    try {
+      await uLog(req, `获取网站信息(${u})`);
+      const { host, pathname } = new URL(url);
 
-    const contentType = result.headers['content-type'];
-    if (!contentType || !contentType.includes('text/html')) {
-      throw new Error(`只允许获取HTML文件`);
-    }
+      p = _path.normalize(
+        `${appConfig.appData}/siteinfo/${_crypto.getStringHash(
+          `${host}${pathname}`
+        )}.json`
+      );
 
-    const $ = cheerio.load(result.data);
-    const $title = $('head title');
-    const $des = $('head meta[name="description"]');
+      miss = p + '.miss';
 
-    obj.title = $title.text() || '';
-    obj.des = $des.attr('content') || '';
-
-    await _f.fsp.writeFile(p, JSON.stringify(obj));
-
-    _success(res, 'ok', obj);
-  } catch (error) {
-    if (miss) {
-      try {
-        await _f.fsp.writeFile(miss, '');
-      } catch (err) {
-        await errLog(req, `${err}(${u})`);
+      // 缓存存在，则使用缓存
+      if (await _f.exists(p)) {
+        _success(res, 'ok', JSON.parse(await _f.fsp.readFile(p)));
+        return;
       }
-    }
 
-    await errLog(req, `${error}(${u})`);
-    _success(res, 'ok', obj);
+      if (await _f.exists(miss)) {
+        _success(res, 'ok', obj);
+        return;
+      }
+
+      await _f.mkdir(_path.normalize(`${appConfig.appData}/siteinfo`));
+
+      let result;
+      try {
+        result = await axios({
+          method: 'get',
+          url: `${protocol}//${host}${pathname}`,
+          timeout: 5000,
+        });
+      } catch {
+        protocol = 'http:';
+        result = await axios({
+          method: 'get',
+          url: `${protocol}//${host}${pathname}`,
+          timeout: 5000,
+        });
+      }
+
+      if (
+        !result?.headers ||
+        !result.headers['content-type']?.includes('text/html')
+      ) {
+        throw new Error('只允许获取HTML文件');
+      }
+
+      const $ = cheerio.load(result.data);
+      const $title = $('head title');
+      const $des = $('head meta[name="description"]');
+
+      obj.title = $title.text() || '';
+      obj.des = $des.attr('content') || '';
+
+      await _f.fsp.writeFile(p, JSON.stringify(obj));
+
+      _success(res, 'ok', obj);
+    } catch (error) {
+      if (miss) {
+        try {
+          await _f.fsp.writeFile(miss, '');
+        } catch (err) {
+          await errLog(req, `${err}(${u})`);
+        }
+      }
+
+      await errLog(req, `${error}(${u})`);
+      _success(res, 'ok', obj);
+    }
+  } catch (error) {
+    _err(res)(req, error);
   }
 });
 
@@ -388,8 +415,8 @@ route.post('/move-group', async (req, res) => {
     const { fromId, toId } = req.body;
 
     if (
-      !validaString(fromId, 1, fieldLenght.id, 1) ||
-      !validaString(toId, 1, fieldLenght.id, 1)
+      !validaString(fromId, 1, fieldLength.id, 1) ||
+      !validaString(toId, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -413,9 +440,9 @@ route.post('/move-bmk', async (req, res) => {
     const { groupId, fromId, toId } = req.body;
 
     if (
-      !validaString(groupId, 1, fieldLenght.id, 1) ||
-      !validaString(fromId, 1, fieldLenght.id, 1) ||
-      !validaString(toId, 1, fieldLenght.id, 1)
+      !validaString(groupId, 1, fieldLength.id, 1) ||
+      !validaString(fromId, 1, fieldLength.id, 1) ||
+      !validaString(toId, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -438,7 +465,7 @@ route.post('/add-group', async (req, res) => {
   try {
     const { title } = req.body;
 
-    if (!validaString(title, 1, fieldLenght.title)) {
+    if (!validaString(title, 1, fieldLength.title)) {
       paramErr(res, req);
       return;
     }
@@ -451,8 +478,8 @@ route.post('/add-group', async (req, res) => {
       [account, 1]
     );
 
-    if (total >= fieldLenght.bmkGroup) {
-      return _err(res, `分组限制${fieldLenght.bmkGroup}个`)(req);
+    if (total >= fieldLength.bmkGroup) {
+      return _err(res, `分组限制${fieldLength.bmkGroup}个`)(req);
     }
 
     await insertData('bmk_group', [
@@ -479,8 +506,8 @@ route.post('/delete-group', async (req, res) => {
     if (
       !_type.isArray(ids) ||
       ids.length === 0 ||
-      ids.length > fieldLenght.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      ids.length > fieldLength.maxPagesize ||
+      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -514,8 +541,8 @@ route.post('/group-share-state', async (req, res) => {
       !validationValue(share, [1, 0]) ||
       !_type.isArray(ids) ||
       ids.length === 0 ||
-      ids.length > fieldLenght.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      ids.length > fieldLength.maxPagesize ||
+      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -547,7 +574,7 @@ route.get('/delete-logo', async (req, res) => {
   try {
     const { id } = req.query;
 
-    if (!validaString(id, 1, fieldLenght.id, 1)) {
+    if (!validaString(id, 1, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -575,9 +602,9 @@ route.post('/edit-group', async (req, res) => {
     const { id, title, toId = '' } = req.body;
 
     if (
-      !validaString(title, 1, fieldLenght.title) ||
-      !validaString(id, 1, fieldLenght.id, 1) ||
-      !validaString(toId, 0, fieldLenght.id, 1)
+      !validaString(title, 1, fieldLength.title) ||
+      !validaString(id, 1, fieldLength.id, 1) ||
+      !validaString(toId, 0, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -610,17 +637,17 @@ route.post('/add-bmk', async (req, res) => {
     let { bms, groupId } = req.body;
 
     if (
-      !validaString(groupId, 1, fieldLenght.id, 1) ||
+      !validaString(groupId, 1, fieldLength.id, 1) ||
       !_type.isArray(bms) ||
       bms.length === 0 ||
-      bms.length > fieldLenght.maxPagesize ||
+      bms.length > fieldLength.maxPagesize ||
       !bms.every(
         (item) =>
           _type.isObject(item) &&
-          validaString(item.title, 1, fieldLenght.title) &&
-          validaString(item.link, 1, fieldLenght.url) &&
+          validaString(item.title, 1, fieldLength.title) &&
+          validaString(item.link, 1, fieldLength.url) &&
           isurl(item.link) &&
-          validaString(item.des, 0, fieldLenght.des)
+          validaString(item.des, 0, fieldLength.des)
       )
     ) {
       paramErr(res, req);
@@ -642,8 +669,8 @@ route.post('/add-bmk', async (req, res) => {
     );
 
     // 计算添加的书签和现有的书签
-    if (total + bms.length > fieldLenght.bmk) {
-      return _err(res, `分组书签限制${fieldLenght.bmk}个`)(req);
+    if (total + bms.length > fieldLength.bmk) {
+      return _err(res, `分组书签限制${fieldLength.bmk}个`)(req);
     }
 
     bms = bms.map((item, i) => ({
@@ -671,13 +698,13 @@ route.post('/edit-bmk', async (req, res) => {
     const { groupId, id, title, link, des = '', toId = '' } = req.body;
 
     if (
-      !validaString(groupId, 1, fieldLenght.id, 1) ||
-      !validaString(id, 1, fieldLenght.id, 1) ||
-      !validaString(toId, 0, fieldLenght.id, 1) ||
-      !validaString(title, 1, fieldLenght.title) ||
-      !validaString(link, 1, fieldLenght.url) ||
+      !validaString(groupId, 1, fieldLength.id, 1) ||
+      !validaString(id, 1, fieldLength.id, 1) ||
+      !validaString(toId, 0, fieldLength.id, 1) ||
+      !validaString(title, 1, fieldLength.title) ||
+      !validaString(link, 1, fieldLength.url) ||
       !isurl(link) ||
-      !validaString(des, 0, fieldLenght.des)
+      !validaString(des, 0, fieldLength.des)
     ) {
       paramErr(res, req);
       return;
@@ -714,11 +741,11 @@ route.post('/bmk-to-group', async (req, res) => {
     const { ids, groupId } = req.body;
 
     if (
-      !validaString(groupId, 1, fieldLenght.id, 1) ||
+      !validaString(groupId, 1, fieldLength.id, 1) ||
       !_type.isArray(ids) ||
       ids.length === 0 ||
-      ids.length > fieldLenght.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      ids.length > fieldLength.maxPagesize ||
+      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -739,8 +766,8 @@ route.post('/bmk-to-group', async (req, res) => {
     );
 
     // 计算分组书签数量
-    if (total + ids.length > fieldLenght.bmk) {
-      return _err(res, `分组书签限制${fieldLenght.bmk}个`)(req);
+    if (total + ids.length > fieldLength.bmk) {
+      return _err(res, `分组书签限制${fieldLength.bmk}个`)(req);
     }
 
     const ob = [
@@ -790,8 +817,8 @@ route.post('/delete-bmk', async (req, res) => {
     if (
       !_type.isArray(ids) ||
       ids.length === 0 ||
-      ids.length > fieldLenght.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      ids.length > fieldLength.maxPagesize ||
+      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -822,11 +849,11 @@ route.post('/share', async (req, res) => {
 
     expireTime = parseInt(expireTime);
     if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
-      !validaString(title, 1, fieldLenght.title) ||
-      !validaString(pass, 0, fieldLenght.sharePass) ||
+      !validaString(id, 1, fieldLength.id, 1) ||
+      !validaString(title, 1, fieldLength.title) ||
+      !validaString(pass, 0, fieldLength.sharePass) ||
       isNaN(expireTime) ||
-      expireTime > fieldLenght.expTime
+      expireTime > fieldLength.expTime
     ) {
       paramErr(res, req);
       return;
@@ -877,8 +904,8 @@ route.post('/save-share', async (req, res) => {
     const { title, token } = req.body;
 
     if (
-      !validaString(title, 1, fieldLenght.title) ||
-      !validaString(token, 0, fieldLenght.url)
+      !validaString(title, 1, fieldLength.title) ||
+      !validaString(token, 0, fieldLength.url)
     ) {
       paramErr(res, req);
       return;
@@ -945,19 +972,19 @@ route.post('/import', async (req, res) => {
 
     if (
       !_type.isArray(list) ||
-      !list.length > fieldLenght.bmkGroup ||
+      !list.length > fieldLength.bmkGroup ||
       !list.every(
         (item) =>
           _type.isObject(item) &&
-          validaString(item.title, 1, fieldLenght.title) &&
+          validaString(item.title, 1, fieldLength.title) &&
           _type.isArray(item.list) &&
-          item.list.length <= fieldLenght.bmk &&
+          item.list.length <= fieldLength.bmk &&
           item.list.every(
             (y) =>
-              validaString(y.title, 1, fieldLenght.title) &&
+              validaString(y.title, 1, fieldLength.title) &&
               isurl(y.link) &&
-              validaString(y.link, 1, fieldLenght.url) &&
-              validaString(y.des, 0, fieldLenght.des)
+              validaString(y.link, 1, fieldLength.url) &&
+              validaString(y.des, 0, fieldLength.des)
           )
       )
     ) {
@@ -973,8 +1000,8 @@ route.post('/import', async (req, res) => {
       [account, 1]
     );
 
-    if (total + list.length > fieldLenght.bmkGroup) {
-      return _err(res, `分组限制${fieldLenght.bmkGroup}个`)(req);
+    if (total + list.length > fieldLength.bmkGroup) {
+      return _err(res, `分组限制${fieldLength.bmkGroup}个`)(req);
     }
 
     let count = 0;

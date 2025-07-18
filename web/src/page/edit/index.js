@@ -353,7 +353,7 @@ async function rende() {
     $previewBox.find('.content').html('');
     return;
   }
-  if (getTextSize(text) > _d.fieldLenght.noteSize) {
+  if (getTextSize(text) > _d.fieldLength.noteSize) {
     $previewBox.find('.content').html(`<h1>笔记内容过长</h1>`);
     return;
   }
@@ -727,11 +727,11 @@ function saveNote() {
     _msg.error('请输入标题');
     return;
   }
-  if (title > _d.fieldLenght.title) {
+  if (title > _d.fieldLength.title) {
     _msg.error('标题过长');
     return;
   }
-  if (getTextSize(content) > _d.fieldLenght.noteSize) {
+  if (getTextSize(content) > _d.fieldLength.noteSize) {
     _msg.error('笔记内容过长');
     return;
   }

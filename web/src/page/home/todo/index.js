@@ -254,7 +254,7 @@ function addTodo(e) {
           verify(val) {
             if (val === '') {
               return '请输入待办内容';
-            } else if (val.length > _d.fieldLenght.todoContent) {
+            } else if (val.length > _d.fieldLength.todoContent) {
               return '待办内容过长';
             }
           },
@@ -340,7 +340,7 @@ function editTodo(e, todo) {
           verify(val) {
             if (val === '') {
               return '请输入待办内容';
-            } else if (val.length > _d.fieldLenght.todoContent) {
+            } else if (val.length > _d.fieldLength.todoContent) {
               return '待办内容过长';
             }
           },

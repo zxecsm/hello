@@ -19,7 +19,7 @@ import { getCurPath, getRootDir } from '../file/file.js';
 
 import { getCompressionSize, compressionImg } from '../../utils/img.js';
 import { validShareState } from '../user/user.js';
-import { fieldLenght } from '../config.js';
+import { fieldLength } from '../config.js';
 import _path from '../../utils/path.js';
 import jwt from '../../utils/jwt.js';
 
@@ -32,8 +32,8 @@ route.get('/', async (req, res) => {
 
     if (
       !validaString(t, 0, 1, 1) ||
-      !validaString(token, 0, fieldLenght.url) ||
-      !validaString(p, 1, fieldLenght.url)
+      !validaString(token, 0, fieldLength.url) ||
+      !validaString(p, 1, fieldLength.url)
     ) {
       paramErr(res, req);
       return;

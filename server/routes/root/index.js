@@ -33,7 +33,7 @@ import {
 
 import { becomeFriends, cleanUpload } from '../chat/chat.js';
 
-import { fieldLenght } from '../config.js';
+import { fieldLength } from '../config.js';
 
 import {
   _delDir,
@@ -69,11 +69,11 @@ route.post('/email', async (req, res) => {
       !validationValue(state, [1, 0]) ||
       !validationValue(secure, [1, 0]) ||
       port < 0 ||
-      !validaString(user, 0, fieldLenght.email) ||
-      !validaString(host, 0, fieldLenght.email) ||
+      !validaString(user, 0, fieldLength.email) ||
+      !validaString(host, 0, fieldLength.email) ||
       !validaString(pass, 0, 100) ||
       (state === 1 && !isEmail(user)) ||
-      (state === 1 && !validaString(host, 1, fieldLenght.email))
+      (state === 1 && !validaString(host, 1, fieldLength.email))
     ) {
       paramErr(res, req);
       return;
@@ -106,7 +106,7 @@ route.get('/user-list', async (req, res) => {
       isNaN(pageSize) ||
       pageNo < 1 ||
       pageSize < 1 ||
-      pageSize > fieldLenght.userPageSize
+      pageSize > fieldLength.userPageSize
     ) {
       paramErr(res, req);
       return;
@@ -159,7 +159,7 @@ route.post('/favicon-spare-api', async (req, res) => {
     const { link = '' } = req.body;
 
     if (
-      !validaString(link, 0, fieldLenght.url) ||
+      !validaString(link, 0, fieldLength.url) ||
       (link !== '' && !isurl(link))
     ) {
       paramErr(res, req);
@@ -180,7 +180,7 @@ route.post('/account-state', async (req, res) => {
     const { account, state = 1 } = req.body;
 
     if (
-      !validaString(account, 1, fieldLenght.id, 1) ||
+      !validaString(account, 1, fieldLength.id, 1) ||
       !validationValue(state, [1, 0]) ||
       account === 'hello' ||
       account === 'root'
@@ -214,7 +214,7 @@ route.post('/delete-account', async (req, res) => {
     const { account } = req.body;
 
     if (
-      !validaString(account, 1, fieldLenght.id, 1) ||
+      !validaString(account, 1, fieldLength.id, 1) ||
       account === 'root' ||
       account === 'hello'
     ) {
@@ -363,7 +363,7 @@ route.get('/log', async (req, res) => {
   try {
     const { name } = req.query;
 
-    if (!validaString(name, 1, fieldLenght.filename) || !isFilename(name)) {
+    if (!validaString(name, 1, fieldLength.filename) || !isFilename(name)) {
       paramErr(res, req);
       return;
     }
@@ -401,7 +401,7 @@ route.get('/log-list', async (req, res) => {
 route.post('/delete-log', async (req, res) => {
   try {
     const { name } = req.body;
-    if (!validaString(name, 1, fieldLenght.filename) || !isFilename(name)) {
+    if (!validaString(name, 1, fieldLength.filename) || !isFilename(name)) {
       paramErr(res, req);
       return;
     }
@@ -470,13 +470,13 @@ route.post('/change-cache-time', async (req, res) => {
     if (
       isNaN(uploadSaveDay) ||
       uploadSaveDay < 0 ||
-      uploadSaveDay > fieldLenght.expTime ||
+      uploadSaveDay > fieldLength.expTime ||
       isNaN(faviconCache) ||
       faviconCache < 0 ||
-      faviconCache > fieldLenght.expTime ||
+      faviconCache > fieldLength.expTime ||
       isNaN(siteInfoCache) ||
       siteInfoCache < 0 ||
-      siteInfoCache > fieldLenght.expTime
+      siteInfoCache > fieldLength.expTime
     ) {
       paramErr(res, req);
       return;
@@ -557,8 +557,8 @@ route.post('/custom-code', async (req, res) => {
     if (
       !validaString(body, 0, 0, 0, 1) ||
       !validaString(head, 0, 0, 0, 1) ||
-      _f.getTextSize(body) > fieldLenght.customCodeSize ||
-      _f.getTextSize(head) > fieldLenght.customCodeSize
+      _f.getTextSize(body) > fieldLength.customCodeSize ||
+      _f.getTextSize(head) > fieldLength.customCodeSize
     ) {
       paramErr(res, req);
       return;
@@ -614,7 +614,7 @@ route.post('/test-email', async (req, res) => {
   try {
     const { email } = req.body;
 
-    if (!validaString(email, 1, fieldLenght.email) || !isEmail(email)) {
+    if (!validaString(email, 1, fieldLength.email) || !isEmail(email)) {
       paramErr(res, req);
       return;
     }
@@ -660,8 +660,8 @@ route.post('/create-account', async (req, res) => {
     const { username, password } = req.body;
 
     if (
-      !validaString(username, 1, fieldLenght.username) ||
-      !validaString(password, 1, fieldLenght.id, 1)
+      !validaString(username, 1, fieldLength.username) ||
+      !validaString(password, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;

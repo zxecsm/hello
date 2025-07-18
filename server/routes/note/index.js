@@ -30,7 +30,7 @@ import {
 } from '../../utils/utils.js';
 
 import { getFriendInfo } from '../chat/chat.js';
-import { fieldLenght } from '../config.js';
+import { fieldLength } from '../config.js';
 import { parseMarkDown, saveNoteHistory } from './note.js';
 import _f from '../../utils/f.js';
 
@@ -43,7 +43,7 @@ route.get('/read', async (req, res) => {
     download = parseInt(download);
 
     if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
+      !validaString(id, 1, fieldLength.id, 1) ||
       !validationValue(download, [0, 1])
     ) {
       paramErr(res, req);
@@ -131,16 +131,16 @@ route.post('/search', async (req, res) => {
     pageSize = parseInt(pageSize);
 
     if (
-      !validaString(acc, 0, fieldLenght.id, 1) ||
-      !validaString(word, 0, fieldLenght.searchWord) ||
+      !validaString(acc, 0, fieldLength.id, 1) ||
+      !validaString(word, 0, fieldLength.searchWord) ||
       isNaN(pageNo) ||
       isNaN(pageSize) ||
       pageNo < 1 ||
       pageSize < 1 ||
-      pageSize > fieldLenght.maxPagesize ||
+      pageSize > fieldLength.maxPagesize ||
       !_type.isArray(category) ||
       category.length > 10 ||
-      !category.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      !category.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -294,11 +294,11 @@ route.post('/search', async (req, res) => {
           if (con.length === 0) {
             con = [
               {
-                value: content.slice(0, fieldLenght.notePreviewLength),
+                value: content.slice(0, fieldLength.notePreviewLength),
                 type: 'text',
               },
             ];
-            if (content.length > fieldLenght.notePreviewLength) {
+            if (content.length > fieldLength.notePreviewLength) {
               con.push({ type: 'icon', value: '...' });
             }
           }
@@ -340,7 +340,7 @@ route.get('/category', async (req, res) => {
   try {
     const { account: acc = '' } = req.query;
 
-    if (!validaString(acc, 0, fieldLenght.id, 1)) {
+    if (!validaString(acc, 0, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -378,8 +378,8 @@ route.post('/state', async (req, res) => {
       !_type.isArray(ids) ||
       !validationValue(share, [0, 1]) ||
       ids.length === 0 ||
-      ids.length > fieldLenght.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      ids.length > fieldLength.maxPagesize ||
+      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -414,8 +414,8 @@ route.post('/delete', async (req, res) => {
     if (
       !_type.isArray(ids) ||
       ids.length === 0 ||
-      ids.length > fieldLenght.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      ids.length > fieldLength.maxPagesize ||
+      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -448,9 +448,9 @@ route.post('/up-note', async (req, res) => {
     let { title, content = '' } = req.body;
 
     if (
-      !validaString(title, 1, fieldLenght.title) ||
+      !validaString(title, 1, fieldLength.title) ||
       !validaString(content, 0, 0, 0, 1) ||
-      _f.getTextSize(content) > fieldLenght.noteSize
+      _f.getTextSize(content) > fieldLength.noteSize
     ) {
       paramErr(res, req);
       return;
@@ -479,10 +479,10 @@ route.post('/edit', async (req, res) => {
     let { id, title, content = '' } = req.body;
 
     if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
-      !validaString(title, 1, fieldLenght.title) ||
+      !validaString(id, 1, fieldLength.id, 1) ||
+      !validaString(title, 1, fieldLength.title) ||
       !validaString(content, 0, 0, 0, 1) ||
-      _f.getTextSize(content) > fieldLenght.noteSize
+      _f.getTextSize(content) > fieldLength.noteSize
     ) {
       paramErr(res, req);
       return;
@@ -550,8 +550,8 @@ route.post('/edit-info', async (req, res) => {
     visit_count = parseInt(visit_count);
 
     if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
-      !validaString(title, 1, fieldLenght.title) ||
+      !validaString(id, 1, fieldLength.id, 1) ||
+      !validaString(title, 1, fieldLength.title) ||
       !isValidDate(create_at) ||
       !isValidDate(update_at) ||
       isNaN(visit_count) ||
@@ -602,8 +602,8 @@ route.post('/top', async (req, res) => {
     if (
       isNaN(top) ||
       top < 0 ||
-      top > fieldLenght.top ||
-      !validaString(id, 1, fieldLenght.id, 1)
+      top > fieldLength.top ||
+      !validaString(id, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -630,10 +630,10 @@ route.post('/set-category', async (req, res) => {
     const { id, category } = req.body;
 
     if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
+      !validaString(id, 1, fieldLength.id, 1) ||
       !_type.isArray(category) ||
       category.length > 10 ||
-      !category.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      !category.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -663,8 +663,8 @@ route.post('/edit-category', async (req, res) => {
     const { title, id } = req.body;
 
     if (
-      !validaString(title, 1, fieldLenght.noteCategoryTitle) ||
-      !validaString(id, 1, fieldLenght.id, 1)
+      !validaString(title, 1, fieldLength.noteCategoryTitle) ||
+      !validaString(id, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -692,7 +692,7 @@ route.post('/add-category', async (req, res) => {
   try {
     const { title } = req.body;
 
-    if (!validaString(title, 1, fieldLenght.noteCategoryTitle)) {
+    if (!validaString(title, 1, fieldLength.noteCategoryTitle)) {
       paramErr(res, req);
       return;
     }
@@ -701,8 +701,8 @@ route.post('/add-category', async (req, res) => {
 
     const total = await getTableRowCount('note_category');
 
-    if (total >= fieldLenght.maxNoteCategory) {
-      _err(res, `类型限制${fieldLenght.maxNoteCategory}`)(req);
+    if (total >= fieldLength.maxNoteCategory) {
+      _err(res, `类型限制${fieldLength.maxNoteCategory}`)(req);
       return;
     }
 
@@ -721,7 +721,7 @@ route.get('/delete-category', async (req, res) => {
   try {
     const { id } = req.query;
 
-    if (!validaString(id, 1, fieldLenght.id, 1)) {
+    if (!validaString(id, 1, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }

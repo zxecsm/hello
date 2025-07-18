@@ -24,7 +24,7 @@ import {
   createPagingData,
 } from '../../utils/utils.js';
 
-import { fieldLenght } from '../config.js';
+import { fieldLength } from '../config.js';
 import { getSearchConfig } from './search.js';
 
 const route = express.Router();
@@ -52,7 +52,7 @@ route.get('/split-word', async (req, res) => {
   try {
     const { word } = req.query;
 
-    if (!validaString(word, 1, fieldLenght.searchWord)) {
+    if (!validaString(word, 1, fieldLength.searchWord)) {
       paramErr(res, req);
       return;
     }
@@ -71,12 +71,12 @@ route.get('/history-list', async (req, res) => {
     pageSize = parseInt(pageSize);
 
     if (
-      !validaString(word, 0, fieldLenght.searchWord) ||
+      !validaString(word, 0, fieldLength.searchWord) ||
       isNaN(pageNo) ||
       isNaN(pageSize) ||
       pageNo < 1 ||
       pageSize < 1 ||
-      pageSize > fieldLenght.maxPagesize
+      pageSize > fieldLength.maxPagesize
     ) {
       paramErr(res, req);
       return;
@@ -135,7 +135,7 @@ route.post('/save', async (req, res) => {
   try {
     const { content } = req.body;
 
-    if (!validaString(content, 1, fieldLenght.searchHistory)) {
+    if (!validaString(content, 1, fieldLength.searchHistory)) {
       paramErr(res, req);
       return;
     }
@@ -168,7 +168,7 @@ route.get('/list', async (req, res) => {
   try {
     const { word = '' } = req.query;
 
-    if (!validaString(word, 0, fieldLenght.searchWord)) {
+    if (!validaString(word, 0, fieldLength.searchWord)) {
       paramErr(res, req);
       return;
     }
@@ -314,8 +314,8 @@ route.post('/delete', async (req, res) => {
     if (
       !_type.isArray(ids) ||
       ids.length === 0 ||
-      ids.length > fieldLenght.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      ids.length > fieldLength.maxPagesize ||
+      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;

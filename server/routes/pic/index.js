@@ -31,7 +31,7 @@ import {
   isFilename,
 } from '../../utils/utils.js';
 
-import { fieldLenght } from '../config.js';
+import { fieldLength } from '../config.js';
 
 import { _delDir } from '../file/file.js';
 import _path from '../../utils/path.js';
@@ -53,9 +53,9 @@ route.post('/up', async (req, res) => {
     const { HASH, name } = req.query;
 
     if (
-      !validaString(HASH, 1, fieldLenght.id, 1) ||
+      !validaString(HASH, 1, fieldLength.id, 1) ||
       !isImgFile(name) ||
-      !validaString(name, 1, fieldLenght.filename) ||
+      !validaString(name, 1, fieldLength.filename) ||
       !isFilename(name)
     ) {
       paramErr(res, req);
@@ -100,7 +100,7 @@ route.post('/repeat', async (req, res) => {
   try {
     const { HASH } = req.body;
 
-    if (!validaString(HASH, 1, fieldLenght.id, 1)) {
+    if (!validaString(HASH, 1, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -144,7 +144,7 @@ route.get('/list', async (req, res) => {
       isNaN(pageSize) ||
       pageNo < 1 ||
       pageSize < 1 ||
-      pageSize > fieldLenght.bgPageSize
+      pageSize > fieldLength.bgPageSize
     ) {
       paramErr(res, req);
       return;
@@ -183,8 +183,8 @@ route.post('/delete', async (req, res) => {
     if (
       !_type.isArray(ids) ||
       ids.length === 0 ||
-      ids.length > fieldLenght.bgPageSize ||
-      !ids.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      ids.length > fieldLength.bgPageSize ||
+      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;

@@ -181,8 +181,8 @@ function changeUsername(e) {
           placeholder: '用户名',
           value: setUserInfo().username,
           verify(val) {
-            if (val.length < 1 || val.length > _d.fieldLenght.username) {
-              return `限制1-${_d.fieldLenght.username}位`;
+            if (val.length < 1 || val.length > _d.fieldLength.username) {
+              return `限制1-${_d.fieldLength.username}位`;
             }
           },
         },
@@ -450,7 +450,7 @@ function bindEmail(e) {
             verify(val) {
               if (!isEmail(val)) {
                 return '请输入正确的邮箱';
-              } else if (val.length > _d.fieldLenght.email) {
+              } else if (val.length > _d.fieldLength.email) {
                 return '邮箱过长';
               }
             },
@@ -562,7 +562,7 @@ function handleForwardMsg(e) {
             if (
               items.state.value === 'y' &&
               !isurl(val) &&
-              val.length > _d.fieldLenght.url
+              val.length > _d.fieldLength.url
             ) {
               return '请输入正确的接口地址';
             }

@@ -21,7 +21,7 @@ import {
   validationValue,
 } from '../../utils/utils.js';
 
-import { fieldLenght } from '../config.js';
+import { fieldLength } from '../config.js';
 
 const route = express.Router();
 
@@ -46,7 +46,7 @@ route.get('/list', async (req, res) => {
       isNaN(pageSize) ||
       pageNo < 1 ||
       pageSize < 1 ||
-      pageSize > fieldLenght.maxPagesize
+      pageSize > fieldLength.maxPagesize
     ) {
       paramErr(res, req);
       return;
@@ -96,7 +96,7 @@ route.post('/add', async (req, res) => {
   try {
     const { content } = req.body;
 
-    if (!validaString(content, 1, fieldLenght.todoContent)) {
+    if (!validaString(content, 1, fieldLength.todoContent)) {
       paramErr(res, req);
       return;
     }
@@ -126,8 +126,8 @@ route.post('/delete', async (req, res) => {
     if (
       !_type.isArray(ids) ||
       ids.length === 0 ||
-      ids.length > fieldLenght.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      ids.length > fieldLength.maxPagesize ||
+      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -156,7 +156,7 @@ route.get('/state', async (req, res) => {
     state = +state;
 
     if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
+      !validaString(id, 1, fieldLength.id, 1) ||
       !validationValue(state, [1, 0])
     ) {
       paramErr(res, req);
@@ -186,8 +186,8 @@ route.post('/edit', async (req, res) => {
     const { id, content } = req.body;
 
     if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
-      !validaString(content, 1, fieldLenght.todoContent)
+      !validaString(id, 1, fieldLength.id, 1) ||
+      !validaString(content, 1, fieldLength.todoContent)
     ) {
       paramErr(res, req);
       return;

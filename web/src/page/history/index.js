@@ -364,7 +364,7 @@ function addHistory(e) {
           verify(val) {
             if (val === '') {
               return '请输入需要添加的内容';
-            } else if (val.length > _d.fieldLenght.searchHistory) {
+            } else if (val.length > _d.fieldLength.searchHistory) {
               return '内容过长';
             }
           },

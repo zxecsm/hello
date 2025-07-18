@@ -53,7 +53,7 @@ let timer = null;
 setInterval(() => {
   if (isIframe()) return;
   let sleep = localData.get('sleep');
-  sleep = sleep === null ? _d.fieldLenght.rainCodeSleep : sleep;
+  sleep = sleep === null ? _d.fieldLength.rainCodeSleep : sleep;
   sleep--;
   localData.set('sleep', sleep);
   if (sleep === 0) {
@@ -73,7 +73,7 @@ setInterval(() => {
 }, 1000);
 
 export const initRainCodeSleep = throttle(() => {
-  localData.set('sleep', _d.fieldLenght.rainCodeSleep);
+  localData.set('sleep', _d.fieldLength.rainCodeSleep);
 }, 2000);
 document.addEventListener('mousemove', initRainCodeSleep);
 document.addEventListener('touchstart', initRainCodeSleep);

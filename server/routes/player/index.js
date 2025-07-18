@@ -67,7 +67,7 @@ import { getFriendInfo } from '../chat/chat.js';
 
 import { validShareState, validShareAddUserState } from '../user/user.js';
 
-import { fieldLenght } from '../config.js';
+import { fieldLength } from '../config.js';
 import _path from '../../utils/path.js';
 import pinyin from '../../utils/pinyin.js';
 import jwt from '../../utils/jwt.js';
@@ -88,7 +88,7 @@ route.post('/lrc', async (req, res) => {
   try {
     const { id, token = '' } = req.body;
 
-    if (!validaString(id, 1, fieldLenght.id, 1)) {
+    if (!validaString(id, 1, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -96,7 +96,7 @@ route.post('/lrc', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     if (!account) {
-      if (!validaString(token, 1, fieldLenght.url)) {
+      if (!validaString(token, 1, fieldLength.url)) {
         paramErr(res, req);
         return;
       }
@@ -158,7 +158,7 @@ route.post('/song-info', async (req, res) => {
   try {
     const { id, token = '' } = req.body;
 
-    if (!validaString(id, 1, fieldLenght.id, 1)) {
+    if (!validaString(id, 1, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -166,7 +166,7 @@ route.post('/song-info', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     if (!account) {
-      if (!validaString(token, 1, fieldLenght.url)) {
+      if (!validaString(token, 1, fieldLength.url)) {
         paramErr(res, req);
         return;
       }
@@ -212,8 +212,8 @@ route.post('/get-share', async (req, res) => {
     const { id, pass = '' } = req.body;
 
     if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
-      !validaString(pass, 0, fieldLenght.sharePass)
+      !validaString(id, 1, fieldLength.id, 1) ||
+      !validaString(pass, 0, fieldLength.sharePass)
     ) {
       paramErr(res, req);
       return;
@@ -277,7 +277,7 @@ route.post('/get-share', async (req, res) => {
       title,
       token: jwt.set(
         { type: 'share', data: { id, types: ['music'] } },
-        fieldLenght.shareTokenExp
+        fieldLength.shareTokenExp
       ),
     })(req, id, 1);
   } catch (error) {
@@ -301,7 +301,7 @@ route.get('/search', async (req, res) => {
     pageNo = parseInt(pageNo);
 
     if (
-      !validaString(word, 1, fieldLenght.searchWord) ||
+      !validaString(word, 1, fieldLength.searchWord) ||
       isNaN(pageNo) ||
       pageNo < 1
     ) {
@@ -360,7 +360,7 @@ route.get('/list', async (req, res) => {
       onlyMv = 0,
     } = req.query;
 
-    if (!validaString(id, 0, fieldLenght.id, 1)) {
+    if (!validaString(id, 0, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -382,12 +382,12 @@ route.get('/list', async (req, res) => {
           'collectCount',
         ]) ||
         !validationValue(onlyMv, [0, 1]) ||
-        !validaString(playId, 0, fieldLenght.id, 1) ||
+        !validaString(playId, 0, fieldLength.id, 1) ||
         isNaN(pageNo) ||
         isNaN(pageSize) ||
         pageNo < 1 ||
         pageSize < 1 ||
-        pageSize > fieldLenght.maxPagesize
+        pageSize > fieldLength.maxPagesize
       ) {
         paramErr(res, req);
         return;
@@ -591,7 +591,7 @@ route.get('/export', async (req, res) => {
   try {
     const { id } = req.query;
 
-    if (!validaString(id, 1, fieldLenght.id, 1)) {
+    if (!validaString(id, 1, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -629,10 +629,10 @@ route.post('/import', async (req, res) => {
     const { list, id } = req.body;
 
     if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
+      !validaString(id, 1, fieldLength.id, 1) ||
       !_type.isArray(list) ||
       list.length > maxSonglistCount ||
-      !list.every((song) => validaString(song.id, 1, fieldLenght.id, 1))
+      !list.every((song) => validaString(song.id, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -685,7 +685,7 @@ route.post('/last-play', async (req, res) => {
     if (
       !validationValue(history, [1, 0]) ||
       !_type.isObject(lastplay) ||
-      !validaString(lastplay.id, 1, fieldLenght.id, 1) ||
+      !validaString(lastplay.id, 1, fieldLength.id, 1) ||
       isNaN(duration) ||
       isNaN(currentTime) ||
       duration < 0 ||
@@ -827,7 +827,7 @@ route.post('/playlist', async (req, res) => {
     if (
       !_type.isArray(data) ||
       data.length > maxSonglistCount ||
-      !data.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      !data.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -902,8 +902,8 @@ route.post('/move-list', async (req, res) => {
     const { fromId, toId } = req.body;
 
     if (
-      !validaString(fromId, 1, fieldLenght.id, 1) ||
-      !validaString(toId, 1, fieldLenght.id, 1)
+      !validaString(fromId, 1, fieldLength.id, 1) ||
+      !validaString(toId, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -926,7 +926,7 @@ route.post('/delete-list', async (req, res) => {
   try {
     const { id } = req.body;
 
-    if (!validaString(id, 1, fieldLenght.id, 1)) {
+    if (!validaString(id, 1, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -961,10 +961,10 @@ route.post('/edit-list', async (req, res) => {
     const { id, name, des = '', toId = '' } = req.body;
 
     if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
-      !validaString(name, 1, fieldLenght.title) ||
-      !validaString(des, 0, fieldLenght.des) ||
-      !validaString(toId, 0, fieldLenght.id, 1)
+      !validaString(id, 1, fieldLength.id, 1) ||
+      !validaString(name, 1, fieldLength.title) ||
+      !validaString(des, 0, fieldLength.des) ||
+      !validaString(toId, 0, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -1025,10 +1025,10 @@ route.post('/edit-song', async (req, res) => {
     play_count = parseInt(play_count);
 
     if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
-      !validaString(title, 1, fieldLenght.title) ||
-      !validaString(artist, 1, fieldLenght.title) ||
-      !validaString(album, 1, fieldLenght.title) ||
+      !validaString(id, 1, fieldLength.id, 1) ||
+      !validaString(title, 1, fieldLength.title) ||
+      !validaString(artist, 1, fieldLength.title) ||
+      !validaString(album, 1, fieldLength.title) ||
       !validaString(year, 0, 10) ||
       isNaN(duration) ||
       duration < 0 ||
@@ -1115,8 +1115,8 @@ route.post('/add-list', async (req, res) => {
     const { name, des = '' } = req.body;
 
     if (
-      !validaString(name, 1, fieldLenght.title) ||
-      !validaString(des, 0, fieldLenght.des)
+      !validaString(name, 1, fieldLength.title) ||
+      !validaString(des, 0, fieldLength.des)
     ) {
       paramErr(res, req);
       return;
@@ -1126,8 +1126,8 @@ route.post('/add-list', async (req, res) => {
 
     const list = await getMusicList(account);
 
-    if (list.length >= fieldLenght.songList + 2) {
-      _err(res, `歌单限制${fieldLenght.songList}`)(req);
+    if (list.length >= fieldLength.songList + 2) {
+      _err(res, `歌单限制${fieldLength.songList}`)(req);
       return;
     }
 
@@ -1159,9 +1159,9 @@ route.post('/move-song', async (req, res) => {
     const { fromId, toId, listId } = req.body;
 
     if (
-      !validaString(listId, 1, fieldLenght.id, 1) ||
-      !validaString(fromId, 1, fieldLenght.id, 1) ||
-      !validaString(toId, 1, fieldLenght.id, 1)
+      !validaString(listId, 1, fieldLength.id, 1) ||
+      !validaString(fromId, 1, fieldLength.id, 1) ||
+      !validaString(toId, 1, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
@@ -1187,8 +1187,8 @@ route.post('/collect-song', async (req, res) => {
     if (
       !_type.isArray(ids) ||
       ids.length === 0 ||
-      ids.length > fieldLenght.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      ids.length > fieldLength.maxPagesize ||
+      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -1232,7 +1232,7 @@ route.post('/close-collect-song', async (req, res) => {
   try {
     const { id } = req.body;
 
-    if (!validaString(id, 1, fieldLenght.id, 1)) {
+    if (!validaString(id, 1, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -1259,11 +1259,11 @@ route.post('/delete-song', async (req, res) => {
     const { listId, ids } = req.body;
 
     if (
-      !validaString(listId, 1, fieldLenght.id, 1) ||
+      !validaString(listId, 1, fieldLength.id, 1) ||
       !_type.isArray(ids) ||
       ids.length === 0 ||
       ids.length > maxSonglistCount ||
-      !ids.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -1273,7 +1273,7 @@ route.post('/delete-song', async (req, res) => {
 
     if (listId === 'all') {
       // 限制删除数量
-      if (ids.length > fieldLenght.maxPagesize) {
+      if (ids.length > fieldLength.maxPagesize) {
         paramErr(res, req);
         return;
       }
@@ -1336,12 +1336,12 @@ route.post('/song-to-list', async (req, res) => {
     let { fromId, toId, ids } = req.body;
 
     if (
-      !validaString(fromId, 1, fieldLenght.id, 1) ||
-      !validaString(toId, 1, fieldLenght.id, 1) ||
+      !validaString(fromId, 1, fieldLength.id, 1) ||
+      !validaString(toId, 1, fieldLength.id, 1) ||
       !_type.isArray(ids) ||
       ids.length === 0 ||
-      ids.length > fieldLenght.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      ids.length > fieldLength.maxPagesize ||
+      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -1416,7 +1416,7 @@ route.post('/delete-mv', async (req, res) => {
       return;
     }
 
-    if (!validaString(id, 1, fieldLenght.id, 1)) {
+    if (!validaString(id, 1, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -1448,7 +1448,7 @@ route.get('/read-lrc', async (req, res) => {
   try {
     const { id } = req.query;
 
-    if (!validaString(id, 1, fieldLenght.id, 1)) {
+    if (!validaString(id, 1, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -1488,9 +1488,9 @@ route.post('/edit-lrc', async (req, res) => {
     }
 
     if (
-      !validaString(id, 1, fieldLenght.id, 1) ||
+      !validaString(id, 1, fieldLength.id, 1) ||
       !validaString(text, 0, 0, 0, 1) ||
-      _f.getTextSize(text) > fieldLenght.lrcSize
+      _f.getTextSize(text) > fieldLength.lrcSize
     ) {
       paramErr(res, req);
       return;
@@ -1565,14 +1565,14 @@ route.post('/share', async (req, res) => {
     expireTime = parseInt(expireTime);
 
     if (
-      !validaString(title, 1, fieldLenght.title) ||
-      !validaString(pass, 0, fieldLenght.sharePass) ||
+      !validaString(title, 1, fieldLength.title) ||
+      !validaString(pass, 0, fieldLength.sharePass) ||
       isNaN(expireTime) ||
-      expireTime > fieldLenght.expTime ||
+      expireTime > fieldLength.expTime ||
       !_type.isArray(list) ||
       list.length === 0 ||
       list.length > maxSonglistCount ||
-      !list.every((item) => validaString(item, 1, fieldLenght.id, 1))
+      !list.every((item) => validaString(item, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -1612,18 +1612,18 @@ route.post('/up', async (req, res) => {
     const { HASH = '', name, type, id = '' } = req.query;
 
     if (
-      !validaString(name, 1, fieldLenght.filename) ||
+      !validaString(name, 1, fieldLength.filename) ||
       !isFilename(name) ||
-      !validaString(HASH, 0, fieldLenght.id, 1) ||
+      !validaString(HASH, 0, fieldLength.id, 1) ||
       !validationValue(type, ['song', 'cover', 'mv']) ||
-      !validaString(id, 0, fieldLenght.id, 1)
+      !validaString(id, 0, fieldLength.id, 1)
     ) {
       paramErr(res, req);
       return;
     }
 
     if (type === 'song') {
-      if (!validaString(HASH, 1, fieldLenght.id, 1)) {
+      if (!validaString(HASH, 1, fieldLength.id, 1)) {
         paramErr(res, req);
         return;
       }
@@ -1704,7 +1704,7 @@ route.post('/up', async (req, res) => {
 
       _success(res, '上传歌曲成功')(req, `${songId}-${artist}-${title}`, 1);
     } else if (type === 'cover') {
-      if (!validaString(id, 1, fieldLenght.id, 1)) {
+      if (!validaString(id, 1, fieldLength.id, 1)) {
         paramErr(res, req);
         return;
       }
@@ -1791,7 +1791,7 @@ route.post('/up', async (req, res) => {
 
       _success(res, '上传封面成功')(req, `${id}-${artist}-${title}`, 1);
     } else if (type === 'mv') {
-      if (!validaString(id, 1, fieldLenght.id, 1)) {
+      if (!validaString(id, 1, fieldLength.id, 1)) {
         paramErr(res, req);
         return;
       }
@@ -1851,7 +1851,7 @@ route.post('/repeat', async (req, res) => {
   try {
     const { HASH } = req.body;
 
-    if (!validaString(HASH, 1, fieldLenght.id, 1)) {
+    if (!validaString(HASH, 1, fieldLength.id, 1)) {
       paramErr(res, req);
       return;
     }
@@ -1886,8 +1886,8 @@ route.post('/save-share', async function (req, res) {
     const { name, token = '' } = req.body;
 
     if (
-      !validaString(name, 1, fieldLenght.title) ||
-      !validaString(token, 0, fieldLenght.url)
+      !validaString(name, 1, fieldLength.title) ||
+      !validaString(token, 0, fieldLength.url)
     ) {
       paramErr(res, req);
       return;

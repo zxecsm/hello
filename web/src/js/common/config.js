@@ -41,7 +41,7 @@ const searchWord = [
     link: 'https://suggestion.baidu.com/su?wd={{}}&cb=window.baidu.sug',
   },
 ];
-const fieldLenght = {
+const fieldLength = {
   title: 200, // 标题名称
   expTime: 999, // 过期时间天
   sharePass: 20, // 分享提取码
@@ -69,7 +69,7 @@ const fieldLenght = {
 const _d = {
   trashDirName: '.trash', // 垃圾回收站目录名
   noteHistoryDirName: '.noteHistory', // 笔记历史记录目录名
-  fieldLenght,
+  fieldLength,
   serverURL,
   originURL,
   mediaURL,

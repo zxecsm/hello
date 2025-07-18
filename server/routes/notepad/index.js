@@ -14,7 +14,7 @@ import _f from '../../utils/f.js';
 
 import { _delDir } from '../file/file.js';
 import _path from '../../utils/path.js';
-import { fieldLenght } from '../config.js';
+import { fieldLength } from '../config.js';
 
 const route = express.Router();
 
@@ -23,7 +23,7 @@ route.get('/', async (req, res) => {
   try {
     const { k } = req.query;
 
-    if (!validaString(k, 1, fieldLenght.filename, 1)) {
+    if (!validaString(k, 1, fieldLength.filename, 1)) {
       paramErr(res, req);
       return;
     }
@@ -48,9 +48,9 @@ route.post('/', async (req, res) => {
     const { k, data = '' } = req.body;
 
     if (
-      !validaString(k, 1, fieldLenght.filename, 1) ||
+      !validaString(k, 1, fieldLength.filename, 1) ||
       !validaString(data, 0, 0, 0, 1) ||
-      _f.getTextSize(data) > fieldLenght.noteSize
+      _f.getTextSize(data) > fieldLength.noteSize
     ) {
       paramErr(res, req);
       return;

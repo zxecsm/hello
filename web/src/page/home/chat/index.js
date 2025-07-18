@@ -417,12 +417,12 @@ function getChatItem(id) {
 }
 function sliceChatList(isPush, $item) {
   const $chatItems = $chatListBox.find('.chat_item');
-  const excessItems = $chatItems.length - _d.fieldLenght.chatPageSize * 2;
+  const excessItems = $chatItems.length - _d.fieldLength.chatPageSize * 2;
   if (excessItems > 0) {
     if (isPush) {
       $chatItems.slice(0, excessItems).remove();
     } else {
-      $chatItems.slice(_d.fieldLenght.chatPageSize * 2).remove();
+      $chatItems.slice(_d.fieldLength.chatPageSize * 2).remove();
     }
   }
   if (isPush) {
@@ -470,7 +470,7 @@ export const renderChatMsg = {
     $chatListBox
       .find('.chat_list')
       .html(
-        renderMsgList(chatMsgData.get().slice(-_d.fieldLenght.chatPageSize), 1)
+        renderMsgList(chatMsgData.get().slice(-_d.fieldLength.chatPageSize), 1)
       );
     $chatListBox.scrollTop($chatListBox[0].scrollHeight);
     chatimgLoad();
@@ -894,8 +894,8 @@ function userMenu(e, msgObj, isUserList) {
                       placeholder: '备注（为空则不设置）',
                       value: des,
                       verify(val) {
-                        if (val.length > _d.fieldLenght.chatDes) {
-                          return `限制1-${_d.fieldLenght.chatDes}位`;
+                        if (val.length > _d.fieldLength.chatDes) {
+                          return `限制1-${_d.fieldLength.chatDes}位`;
                         }
                       },
                     },
@@ -1047,7 +1047,7 @@ function scrollTopMsg() {
       renderChatMsg.unshift(
         chatMsgData
           .get()
-          .slice(Math.max(idx - _d.fieldLenght.chatPageSize, 0), idx),
+          .slice(Math.max(idx - _d.fieldLength.chatPageSize, 0), idx),
         firstItem
       );
     }
@@ -1064,7 +1064,7 @@ function scrollBottomMsg() {
     if (idx > 0 && idx < list.length - 1) {
       if (chatRoomWrapIsHide()) return;
       renderChatMsg.push(
-        list.slice(idx + 1, idx + 1 + _d.fieldLenght.chatPageSize),
+        list.slice(idx + 1, idx + 1 + _d.fieldLength.chatPageSize),
         lastItem
       );
     }
@@ -1369,7 +1369,7 @@ $chatAudio
 function sendTextMsg() {
   const chatAcc = curChatAccount,
     content = chatMsgInp.getValue().trim();
-  if (content.length > _d.fieldLenght.chatContent) {
+  if (content.length > _d.fieldLength.chatContent) {
     _msg.error('发送内容过长');
     return;
   }
@@ -1408,8 +1408,8 @@ const chatMsgInp = wrapInput(
   $chatFootBox.find('.c_text_msg .c_text_content')[0],
   {
     update(val) {
-      if (val.length > _d.fieldLenght.chatContent) {
-        val = val.slice(0, _d.fieldLenght.chatContent);
+      if (val.length > _d.fieldLength.chatContent) {
+        val = val.slice(0, _d.fieldLength.chatContent);
       }
       $chatFootBox.find('.c_text_msg .fill_height').text(val);
       saveTemChatMsg(val);
@@ -1550,7 +1550,7 @@ async function sendfile(files, chatAcc) {
       _msg.error(`不能发送空文件`);
       return;
     }
-    if (size > _d.fieldLenght.maxFileSize) {
+    if (size > _d.fieldLength.maxFileSize) {
       pro.fail('发送失败');
       _msg.error(`发送文件限制0-9.7G`);
       return;
