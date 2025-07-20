@@ -11,6 +11,8 @@ import 'ace-builds/src-noconflict/theme-github_dark';
 import 'ace-builds/src-noconflict/ext-language_tools';
 // 搜索
 import 'ace-builds/src-noconflict/ext-searchbox';
+// 引用vscode的键盘绑定
+import 'ace-builds/src-noconflict/keybinding-vscode.js';
 // import { copyText } from './utils';
 import localData from '../common/localData';
 
