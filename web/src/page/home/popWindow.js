@@ -59,10 +59,10 @@ export function setZidx(el, id, close, isTop, tagBox) {
   }
   let tem;
   if (isTop && getScreenSize().w > _d.screen) {
-    topIdx++;
+    topIdx = topIdx >= 100000 ? 9999 : topIdx + 1;
     tem = topIdx;
   } else {
-    zIdx++;
+    zIdx = zIdx >= 9999 ? 100 : zIdx + 1;
     tem = zIdx;
   }
   el.style.zIndex = tem;
