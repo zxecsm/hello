@@ -147,6 +147,7 @@ import { reqRootSysStatus } from '../../api/root.js';
 import { handleAllowLoginMsg, shakeChat, timeMsg } from './home.js';
 import localData from '../../js/common/localData.js';
 const $pageBg = $('.page_bg'),
+  $pageBgFilter = $('.page_bg_filter'),
   $document = $(document),
   $userLogoBtn = $('.user_logo_btn'),
   $rightMenuMask = $('.right_menu_mask'),
@@ -174,13 +175,9 @@ if (!isLogin()) {
 // 背景模糊
 function bgFilter(value) {
   curFilterBg = value;
-  if (value <= 0) {
-    $pageBg.removeClass('mh');
-  } else {
-    $pageBg.addClass('mh');
-  }
-  $pageBg.css({
-    filter: `blur(${value}px)`,
+  $pageBgFilter.css({
+    backdropFilter: `blur(${value}px)`,
+    WebkitBackdropFilter: `blur(${value}px)`, // 兼容Safari
   });
   localData.set('filterbg', value);
 }
@@ -705,9 +702,8 @@ function isCurChatRoom(chatAccount, from, to) {
       chatAccount === userInfo.account) ||
     (to === userInfo.account &&
       from !== userInfo.account &&
-      from === chatAccount) || 
-    (from === userInfo.account &&
-    to === chatAccount)
+      from === chatAccount) ||
+    (from === userInfo.account && to === chatAccount)
   );
 }
 function isNotify(from, notify) {
