@@ -49,8 +49,7 @@ async function downFile(url, path) {
     url,
     responseType: 'arraybuffer',
     timeout: 5000,
-    maxContentLength: 1024 * 200,
-    maxBodyLength: 1024 * 200,
+    maxContentLength: 1024 * 1024
   });
 
   if (res.data && res.data.length > 0) {
