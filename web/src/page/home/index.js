@@ -186,9 +186,9 @@ bgFilter(curFilterBg);
 export function resizeBgFilter(e) {
   rMenu.percentBar(
     e,
-    curFilterBg / 100,
+    curFilterBg / 20,
     throttle(function (per) {
-      bgFilter(parseInt(per * 100));
+      bgFilter(parseInt(per * 20));
     }, 500)
   );
 }
