@@ -1108,6 +1108,9 @@ $chatListBox
     if (getSelectText() !== '') return;
     openChatImg(this);
   })
+  .on('click', 'a', (e) => {
+    e.stopPropagation();
+  })
   .on('scroll', switchScrollToBottom)
   .on('scroll', debounce(scrollTopMsg, 200))
   .on('scroll', debounce(scrollBottomMsg, 200));
