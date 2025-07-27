@@ -34,6 +34,7 @@ import {
   getSongInfo,
   isValidDate,
   isFilename,
+  isTooDeep,
 } from '../../utils/utils.js';
 import { fieldLength } from '../config.js';
 
@@ -1111,6 +1112,8 @@ route.post('/forward-msg-link', async (req, res) => {
       !validaString(link, 0, fieldLength.url) ||
       !_type.isObject(header) ||
       !_type.isObject(body) ||
+      isTooDeep(body, 10) ||
+      isTooDeep(header, 5) ||
       (state === 1 && !isurl(link))
     ) {
       paramErr(res, req);
@@ -1125,6 +1128,11 @@ route.post('/forward-msg-link', async (req, res) => {
       body,
       header,
     });
+
+    if (_f.getTextSize(forward_msg_link) > 10 * 1024) {
+      paramErr(res, req);
+      return;
+    }
 
     if (state === 1) {
       try {

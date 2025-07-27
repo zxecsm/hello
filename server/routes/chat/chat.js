@@ -337,10 +337,13 @@ export async function hdForwardToLink(req, list = [], fArr, text, fList = []) {
       const fno = fList.find((y) => y.account === account);
       if (fno && fno.notify === 0) return;
       const des = fe ? fe.des : '';
-      const msg = `${des || username}：${text}`;
+      const title = des || username;
 
-      link = tplReplace(link, { msg: encodeURIComponent(msg) });
-      body = replaceObjectValue(body, msg);
+      link = tplReplace(link, {
+        text: encodeURIComponent(text),
+        title: encodeURIComponent(title),
+      });
+      body = replaceObjectValue(body, { title, text });
 
       if (type === 'get') {
         await axios({

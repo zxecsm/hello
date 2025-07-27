@@ -556,8 +556,7 @@ function handleForwardMsg(e) {
           beforeText: '接口地址：',
           value: link,
           type: 'textarea',
-          placeholder:
-            'https://api.xxx.com/xxx?text={{msg}} {{msg}} 会被替换为消息文本',
+          placeholder: 'https://api.xxx.com/xxx?title={{title}}?text={{text}}',
           verify(val, items) {
             if (
               items.state.value === 'y' &&
@@ -583,7 +582,7 @@ function handleForwardMsg(e) {
           beforeText: 'Body：',
           type: 'textarea',
           value: JSON.stringify(body, null, 2),
-          placeholder: `{"text": "{{msg}}"}\n{{msg}} 会被替换为消息文本`,
+          placeholder: `{"title": "{{title}}", "text": "{{text}}"}`,
           verify(val, items) {
             if (items.state.value === 'y' && !parseObjectJson(val)) {
               return 'Body格式错误';

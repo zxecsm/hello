@@ -497,7 +497,23 @@ export function getSplitWord(str) {
   }, []);
 }
 
-export function replaceObjectValue(obj, msg) {
+export function isTooDeep(obj, maxDepth) {
+  function check(node, depth) {
+    if (depth > maxDepth) return true;
+    if (node === null || typeof node !== 'object') return false;
+
+    const values = Array.isArray(node) ? node : Object.values(node);
+    for (const val of values) {
+      if (check(val, depth + 1)) return true;
+    }
+
+    return false;
+  }
+
+  return check(obj, 1);
+}
+
+export function replaceObjectValue(obj, data) {
   return (function fn(obj) {
     const res = Array.isArray(obj) ? [] : {};
     for (let key in obj) {
@@ -511,7 +527,7 @@ export function replaceObjectValue(obj, msg) {
             res[key] = fn(value);
           }
         } else if (typeof value === 'string') {
-          res[key] = tplReplace(value, { msg });
+          res[key] = tplReplace(value, data);
         } else {
           res[key] = value;
         }
