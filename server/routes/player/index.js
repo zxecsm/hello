@@ -120,6 +120,11 @@ route.post('/lrc', async (req, res) => {
       }
     }
 
+    if (token) {
+      // 自增播放次数
+      await incrementField('songs', { play_count: 1 }, `where id = ?`, [id]);
+    }
+
     const songInfo = (await queryData('songs', 'lrc', `WHERE id = ?`, [id]))[0];
 
     if (!songInfo) {

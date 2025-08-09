@@ -105,6 +105,7 @@ let playingList = null,
   playingSongInfo = null,
   curPlaySpeed = localData.get('songPlaySpeed'),
   lrcState = localData.get('lrcState'),
+  mediaVolume = localData.get('mediaVolume'),
   userInfo = null,
   passCode = localData.session.get('passCode', shareId) || '',
   shareToken = '';
@@ -115,6 +116,38 @@ const verifyCode = hdOnce(() => {
     getShareData(close, loading);
   });
 });
+function adjustVolume(e) {
+  rMenu.percentBar(e, mediaVolume, function (per) {
+    mediaVolume = per;
+    setPlayVolume();
+  });
+}
+export function setPlayVolume() {
+  $myAudio[0].volume = mediaVolume;
+  $myVideo[0].volume = mediaVolume;
+  localData.set('mediaVolume', mediaVolume, 200);
+
+  $lrcMenuWrap
+    .find('.volume_btn')
+    .attr('class', `volume_btn iconfont ${getVolumeIcon(mediaVolume)}`);
+}
+setPlayVolume();
+export function getVolumeIcon(mediaVolume) {
+  let icon = '';
+  if (mediaVolume <= 0) {
+    icon = 'icon-24gl-volumeCross';
+  } else if (mediaVolume < 0.2) {
+    icon = 'icon-24gl-volumeZero';
+  } else if (mediaVolume < 0.5) {
+    icon = 'icon-24gl-volumeLow';
+  } else if (mediaVolume < 0.8) {
+    icon = 'icon-24gl-volumeMiddle';
+  } else {
+    icon = 'icon-24gl-volumeHigh';
+  }
+
+  return icon;
+}
 // 获取分享数据
 function getShareData(close, loading = { start() {}, end() {} }) {
   loading.start();
@@ -1140,6 +1173,7 @@ $lrcMenuWrap
       playingSongInfo.artist + ' - ' + playingSongInfo.title
     );
   })
+  .on('click', '.volume_btn', adjustVolume)
   .on('click', '.play_speed_btn', function (e) {
     const data = [];
     [2, 1.75, 1.5, 1.25, 1, 0.75, 0.25].forEach((item, idx) => {
