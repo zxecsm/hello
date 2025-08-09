@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     volumes:
       - /:/root/helloFiles # 管理员文件管理根目录
-      - $HOME/hello:/root/helloData # 应用数据存放目录
+      - ./data:/root/helloData # 应用数据存放目录
       - /etc/timezone:/etc/timezone:ro # 时区同步
       - /etc/localtime:/etc/localtime:ro
     ports:
@@ -15,6 +15,8 @@ services:
 
 - username：`admin`
 - password：
+
+> 注意歌词格式：`[00:00.00]歌词<=>翻译`
 
 随机壁纸
 
