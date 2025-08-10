@@ -239,7 +239,7 @@ app.use((_, res) => {
 });
 
 app.listen(appConfig.port, () => {
-  const arr = getLocahost().map(
+  const arr = getLocalhost().map(
     (item) =>
       `http://${item}${appConfig.port === 80 ? '' : `:${appConfig.port}`}`
   );
@@ -256,7 +256,7 @@ app.listen(appConfig.port, () => {
   console.log(`服务开启成功，访问地址为：\n${arr.join('\n')}`);
 });
 
-function getLocahost() {
+function getLocalhost() {
   const obj = os.networkInterfaces();
   let arr = [];
   Object.keys(obj).forEach((item) => {
