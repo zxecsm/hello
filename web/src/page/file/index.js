@@ -1143,17 +1143,15 @@ $header
   .on('click', '.paste_btn .type', hdPaste)
   .on('click', '.clear_trash_btn', hdClearTrash)
   .on('click', '.h_history', (e) => {
-    const data = localData
-      .get('fileHistory')
-      .reverse()
-      .map((item, idx) => {
-        return {
-          id: idx + '',
-          beforeIcon: 'iconfont icon-history',
-          text: item,
-          param: { path: item },
-        };
-      });
+    const data = localData.get('fileHistory').map((item, idx) => {
+      return {
+        id: idx + '',
+        beforeIcon: 'iconfont icon-history',
+        text: item,
+        param: { path: item },
+      };
+    });
+    data.reverse();
     rMenu.selectMenu(
       e,
       data,
