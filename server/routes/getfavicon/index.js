@@ -9,6 +9,7 @@ import axios from 'axios';
 import {
   _err,
   errLog,
+  extractFullHead,
   getDirname,
   isurl,
   paramErr,
@@ -49,7 +50,7 @@ async function downFile(url, path) {
     url,
     responseType: 'arraybuffer',
     timeout: 5000,
-    maxContentLength: 1024 * 1024
+    maxContentLength: 500 * 1024,
   });
 
   if (res.data && res.data.length > 0) {
@@ -139,7 +140,13 @@ route.get('/', async (req, res) => {
           throw new Error('只允许获取HTML文件');
         }
 
-        const $ = cheerio.load(htmlResp.data);
+        const head = extractFullHead(htmlResp.data);
+
+        if (_f.getTextSize(head) > 300 * 1024) {
+          throw new Error('HTML文件过大');
+        }
+
+        const $ = cheerio.load(head);
         await downFile(extractIconUrl($, host, protocol), iconPath);
       } catch (err) {
         // 调用备用接口获取图标

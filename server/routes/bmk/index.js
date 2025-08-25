@@ -29,6 +29,7 @@ import {
   createPagingData,
   uLog,
   getSplitWord,
+  extractFullHead,
 } from '../../utils/utils.js';
 
 import cheerio from './cheerio.js';
@@ -373,9 +374,15 @@ route.get('/parse-site-info', async (req, res) => {
         throw new Error('只允许获取HTML文件');
       }
 
-      const $ = cheerio.load(result.data);
-      const $title = $('head title');
-      const $des = $('head meta[name="description"]');
+      const head = extractFullHead(result.data);
+
+      if (_f.getTextSize(head) > 300 * 1024) {
+        throw new Error('HTML文件过大');
+      }
+
+      const $ = cheerio.load(head);
+      const $title = $('title');
+      const $des = $('meta[name="description"]');
 
       obj.title = $title.text() || '';
       obj.des = $des.attr('content') || '';

@@ -912,3 +912,9 @@ export function getOrigin(req) {
     return 'https://xxx.com';
   }
 }
+
+// 返回完整的<head>标签
+export function extractFullHead(html) {
+  const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+  return headMatch ? headMatch[0] : '<head></head>';
+}
