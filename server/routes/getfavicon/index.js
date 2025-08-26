@@ -61,6 +61,9 @@ async function downFile(url, path) {
 // 提取图标
 function extractIconUrl($, host, protocol) {
   const prefix = `${protocol}//${host}`;
+  const defaultIcon = `${prefix}/favicon.ico`;
+
+  if (!$) return defaultIcon;
 
   for (const el of $('link')) {
     const { rel, href } = el.attribs;
@@ -75,7 +78,7 @@ function extractIconUrl($, host, protocol) {
     // img/xxx.png
     return `${prefix}/${href}`;
   }
-  return `${prefix}/favicon.ico`;
+  return defaultIcon;
 }
 
 route.get('/', async (req, res) => {
@@ -142,11 +145,8 @@ route.get('/', async (req, res) => {
 
         const head = extractFullHead(htmlResp.data);
 
-        if (_f.getTextSize(head) > 300 * 1024) {
-          throw new Error('HTML文件过大');
-        }
+        const $ = _f.getTextSize(head) > 300 * 1024 ? null : cheerio.load(head);
 
-        const $ = cheerio.load(head);
         await downFile(extractIconUrl($, host, protocol), iconPath);
       } catch (err) {
         // 调用备用接口获取图标
