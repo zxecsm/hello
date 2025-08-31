@@ -50,10 +50,13 @@ export function parseMarkDown(content) {
   try {
     const $ = cheerio.load(md.render(content));
     res.text = $.text();
+    let count = 0;
     $('img').each((_, el) => {
+      if (count >= 6) return false;
       const src = $(el).attr('src');
       if (src) {
         res.images.push(src);
+        count++;
       }
     });
   } catch {}
