@@ -2064,24 +2064,7 @@ $msuicContentBox
     const arr = musicList[index].item.map((item) => item.id);
     shareSongList(e, arr);
   })
-  .on('click', '.upload_song_btn', async function (e) {
-    // 上传歌曲
-    rMenu.pop(
-      {
-        e,
-        text: '请阅读上传指南后，再上传歌曲！',
-        confirm: { text: '开始上传' },
-        cancel: { text: '查看指南' },
-      },
-      (type) => {
-        if (type === 'confirm') {
-          upSong();
-        } else if (type === 'cancel') {
-          openInIframe('/note?v=about', '关于');
-        }
-      }
-    );
-  })
+  .on('click', '.upload_song_btn', upSong)
   .on('scroll', hdSongsScroll)
   .on('click', '.play_list_btn', (e) => {
     playSongListBtn(e, temPlaylist);
