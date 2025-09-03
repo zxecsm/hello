@@ -16,6 +16,7 @@ import {
   isFullScreen,
   getCenterPointDistance,
   _animate,
+  savePopLocationInfo,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
@@ -195,7 +196,7 @@ export function showTodoBox() {
     toSetSize(tBox, 800, 800);
     toCenter(tBox);
   } else {
-    myToRest(tBox);
+    myToRest(tBox, false, false);
   }
   if (isHide) {
     const screen = getScreenSize();
@@ -475,8 +476,7 @@ myDrag({
     if (y <= 0 || y >= h || x > w || 0 - x > target.offsetWidth) {
       myToMax(target);
     } else {
-      target.dataset.x = x;
-      target.dataset.y = y;
+      savePopLocationInfo(target, { x, y });
       myToRest(target, pointerX);
     }
   },
@@ -490,10 +490,12 @@ myResize({
   },
   up({ target, x, y }) {
     hideIframeMask();
-    target.dataset.w = target.offsetWidth;
-    target.dataset.h = target.offsetHeight;
-    target.dataset.x = x;
-    target.dataset.y = y;
+    savePopLocationInfo(target, {
+      x,
+      y,
+      w: target.offsetWidth,
+      h: target.offsetHeight,
+    });
   },
 });
 // 手势关闭

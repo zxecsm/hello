@@ -14,6 +14,7 @@ import {
   myDrag,
   myResize,
   myToRest,
+  savePopLocationInfo,
   toCenter,
   wrapInput,
 } from '../../utils/utils';
@@ -141,8 +142,7 @@ class RightM {
         if (y <= 0 || y >= h || x > w || 0 - x > target.offsetWidth) {
           myToRest(target);
         } else {
-          target.dataset.x = x;
-          target.dataset.y = y;
+          savePopLocationInfo(target, { x, y });
         }
       },
     });
@@ -154,10 +154,12 @@ class RightM {
           target.style.transition = '0s';
         },
         up: ({ target, x, y }) => {
-          target.dataset.w = target.offsetWidth;
-          target.dataset.h = target.offsetHeight;
-          target.dataset.x = x;
-          target.dataset.y = y;
+          savePopLocationInfo(target, {
+            x,
+            y,
+            w: target.offsetWidth,
+            h: target.offsetHeight,
+          });
         },
       },
       200,
@@ -199,8 +201,7 @@ class RightM {
     rh > maxH ? (rh = maxH) : null;
     this.rightBox.style.width = rw + 'px';
     this.rightBox.style.height = rh + 'px';
-    this.rightBox.dataset.w = rw;
-    this.rightBox.dataset.h = rh;
+    savePopLocationInfo(this.rightBox, { w: rw, h: rh });
 
     if (!e) {
       toCenter(this.rightBox);
@@ -214,8 +215,7 @@ class RightM {
     y < 0 ? (y = 0) : y + rh > h ? (y = h - rh) : null;
     this.rightBox.style.top = y + 'px';
     this.rightBox.style.left = x + 'px';
-    this.rightBox.dataset.x = x;
-    this.rightBox.dataset.y = y;
+    savePopLocationInfo(this.rightBox, { x, y });
   }
   hdClick(e) {
     const close = this.close.bind(this);
@@ -953,8 +953,7 @@ function percentBar(e, percent, callback) {
     y < 0 ? (y = 0) : y + mth > h ? (y = h - mth) : null;
     proBox.style.top = y + 'px';
     proBox.style.left = x + 'px';
-    proBox.dataset.x = x;
-    proBox.dataset.y = y;
+    savePopLocationInfo(proBox, { x, y });
   }
   calculationPosition(percent);
   // 计算进度位置

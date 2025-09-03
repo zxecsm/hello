@@ -1561,8 +1561,7 @@ export function toCenter(el, obj) {
 
   el.style.left = x + 'px';
   el.style.top = y + 'px';
-  el.dataset.x = x;
-  el.dataset.y = y;
+  savePopLocationInfo(el, { x, y });
 
   _setTimeout(() => {
     switchBorderRadius(el);
@@ -1600,8 +1599,14 @@ export function toSetSize(target, maxW = 900, maxH = 800) {
   }
   target.style.width = w + 'px';
   target.style.height = h + 'px';
-  target.dataset.w = w;
-  target.dataset.h = h;
+  savePopLocationInfo(target, { w, h });
+}
+export function savePopLocationInfo(target, info = {}) {
+  const { x, y, w, h } = info;
+  if (x !== undefined) target.dataset.x = x;
+  if (y !== undefined) target.dataset.y = y;
+  if (w !== undefined) target.dataset.w = w;
+  if (h !== undefined) target.dataset.h = h;
 }
 // 窗口全屏
 export function myToMax(target) {
@@ -1612,6 +1617,9 @@ export function myToMax(target) {
   target.style.left = 0 + 'px';
   target.style.width = w + 'px';
   target.style.height = h + 'px';
+  if (!isBigScreen()) {
+    savePopLocationInfo(target, { w, h, x: 0, y: 0 });
+  }
   _setTimeout(() => {
     switchBorderRadius(target);
   }, 600);
@@ -1624,26 +1632,30 @@ export function isFullScreen(target) {
   return w === fw && h === fh;
 }
 // 重置位置
-export function myToRest(target, pointerX) {
+export function myToRest(target, pointerX, isToMin = true) {
   let { x = 0, y = 0, w = 0, h = 0 } = target.dataset;
   const screen = getScreenSize();
   target.style.transition =
     'left var(--speed-duration) var(--speed-timing), top var(--speed-duration) var(--speed-timing), width var(--speed-duration) var(--speed-timing), height var(--speed-duration) var(--speed-timing)';
-  // 如果是全屏
-  if (pointerX && isFullScreen(target)) {
-    let pes = (pointerX - x) / target.offsetWidth;
-    x = pointerX - w * pes;
-    target.dataset.x = x;
+  if (pointerX && isToMin) {
+    const tw = target.offsetWidth;
+    if (w != tw) {
+      const pes = (pointerX - x) / tw;
+      x = pointerX - w * pes;
+      savePopLocationInfo(target, { x });
+    }
   }
   // 超出屏幕居中
   if (x > screen.w || y > screen.h || 0 - x > w || y < 0) {
     toCenter(target);
     return;
   }
-  target.style.top = y + 'px';
-  target.style.left = x + 'px';
-  target.style.width = w + 'px';
-  target.style.height = h + 'px';
+  if (isToMin) {
+    target.style.top = y + 'px';
+    target.style.left = x + 'px';
+    target.style.width = w + 'px';
+    target.style.height = h + 'px';
+  }
   _setTimeout(() => {
     switchBorderRadius(target);
   }, 600);

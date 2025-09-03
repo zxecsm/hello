@@ -41,6 +41,7 @@ import {
   loadImg,
   pageErr,
   _animate,
+  savePopLocationInfo,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -192,9 +193,15 @@ function getShareData(close, loading = { start() {}, end() {} }) {
 
         playingList = resObj.data.data;
         curPlayingList = deepClone(playingList);
-        playingSongInfo = initSongInfo(
-          localData.session.get('playingSongInfo') || playingList[0]
-        );
+        const pSongInfo = localData.session.get('playingSongInfo');
+        if (pSongInfo) {
+          playingSongInfo = initSongInfo(
+            playingList.find((item) => item.id === pSongInfo.id) ||
+              playingList[0]
+          );
+        } else {
+          playingSongInfo = initSongInfo(playingList[0]);
+        }
         toggleMvBtnState();
         updateSongInfo();
         $lrcProgressBar
@@ -436,7 +443,7 @@ function playMv(obj) {
     toSetSize(mvBox, 600, 600);
     toCenter(mvBox);
   } else {
-    myToRest(mvBox);
+    myToRest(mvBox, false, false);
   }
   if (isHide) {
     _animate(mvBox, {
@@ -1031,8 +1038,7 @@ myDrag({
     if (y <= 0 || y >= h || x > w || 0 - x > target.offsetWidth) {
       myToMax(target);
     } else {
-      target.dataset.x = x;
-      target.dataset.y = y;
+      savePopLocationInfo(target, { x, y });
       myToRest(target, pointerX);
     }
   },
@@ -1043,10 +1049,12 @@ myResize({
     target.style.transition = '0s';
   },
   up({ target, x, y }) {
-    target.dataset.w = target.offsetWidth;
-    target.dataset.h = target.offsetHeight;
-    target.dataset.x = x;
-    target.dataset.y = y;
+    savePopLocationInfo(target, {
+      x,
+      y,
+      w: target.offsetWidth,
+      h: target.offsetHeight,
+    });
   },
 });
 $lrcMenuWrap

@@ -15,6 +15,7 @@ import {
   myResize,
   myToMax,
   myToRest,
+  savePopLocationInfo,
   toCenter,
   toSetSize,
 } from '../../../js/utils/utils';
@@ -316,7 +317,7 @@ export function showEditLrc(sobj) {
     toSetSize(editBox, 800, 800);
     toCenter(editBox);
   } else {
-    myToRest(editBox);
+    myToRest(editBox, false, false);
   }
   if (isHide) {
     _animate(editBox, {
@@ -377,7 +378,7 @@ export async function playMv(obj) {
     toSetSize(mvBox, 600, 600);
     toCenter(mvBox);
   } else {
-    myToRest(mvBox);
+    myToRest(mvBox, false, false);
   }
   if (isHide) {
     _animate(mvBox, {
@@ -460,8 +461,7 @@ myDrag({
     if (y <= 0 || y >= h || x > w || 0 - x > target.offsetWidth) {
       myToMax(target);
     } else {
-      target.dataset.x = x;
-      target.dataset.y = y;
+      savePopLocationInfo(target, { x, y });
       myToRest(target, pointerX);
     }
   },
@@ -474,10 +474,12 @@ myResize({
   },
   up({ target, x, y }) {
     hideIframeMask();
-    target.dataset.w = target.offsetWidth;
-    target.dataset.h = target.offsetHeight;
-    target.dataset.x = x;
-    target.dataset.y = y;
+    savePopLocationInfo(target, {
+      x,
+      y,
+      w: target.offsetWidth,
+      h: target.offsetHeight,
+    });
   },
 });
 myDrag({
@@ -500,8 +502,7 @@ myDrag({
     if (y <= 0 || y >= h || x > w || 0 - x > target.offsetWidth) {
       myToMax(target);
     } else {
-      target.dataset.x = x;
-      target.dataset.y = y;
+      savePopLocationInfo(target, { x, y });
       myToRest(target, pointerX);
     }
   },
@@ -514,10 +515,12 @@ myResize({
   },
   up({ target, x, y }) {
     hideIframeMask();
-    target.dataset.w = target.offsetWidth;
-    target.dataset.h = target.offsetHeight;
-    target.dataset.x = x;
-    target.dataset.y = y;
+    savePopLocationInfo(target, {
+      x,
+      y,
+      w: target.offsetWidth,
+      h: target.offsetHeight,
+    });
   },
 });
 // 层级

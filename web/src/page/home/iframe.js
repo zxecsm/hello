@@ -8,6 +8,7 @@ import {
   getCenterPointDistance,
   getScreenSize,
   imgjz,
+  isBigScreen,
   isFullScreen,
   isMobile,
   longPress,
@@ -15,6 +16,7 @@ import {
   myOpen,
   myResize,
   nanoid,
+  savePopLocationInfo,
   switchBorderRadius,
   toCenter,
   toSetSize,
@@ -159,10 +161,12 @@ class CreateIframe {
       },
       up({ target, x, y }) {
         hideIframeMask();
-        target.dataset.w = target.offsetWidth;
-        target.dataset.h = target.offsetHeight;
-        target.dataset.x = x;
-        target.dataset.y = y;
+        savePopLocationInfo(target, {
+          x,
+          y,
+          w: target.offsetWidth,
+          h: target.offsetHeight,
+        });
       },
     });
     // 拖动窗口
@@ -186,8 +190,7 @@ class CreateIframe {
         if (y <= 0 || y >= h || x > w || 0 - x > target.offsetWidth) {
           this.toMax();
         } else {
-          target.dataset.x = x;
-          target.dataset.y = y;
+          savePopLocationInfo(target, { x, y });
           this.toRest(pointerX);
         }
       },
@@ -225,22 +228,25 @@ class CreateIframe {
     this.box.style.left = 0 + 'px';
     this.box.style.width = w + 'px';
     this.box.style.height = h + 'px';
+    if (!isBigScreen()) {
+      savePopLocationInfo(this.box, { x: 0, y: 0, w, h });
+    }
     _setTimeout(() => {
       switchBorderRadius(this.box);
     }, 600);
   }
   // 退出全屏
-  toRest(pointerX) {
+  toRest(pointerX, isToMin = true) {
     const screen = getScreenSize();
     let { x = 0, y = 0, w = 0, h = 0 } = this.box.dataset;
     this.box.style.transition =
       'top var(--speed-duration) var(--speed-timing), left var(--speed-duration) var(--speed-timing), width var(--speed-duration) var(--speed-timing), height var(--speed-duration) var(--speed-timing)';
-    if (pointerX) {
-      // 如果是全屏
-      if (isFullScreen(this.box)) {
-        let percent = (pointerX - x) / this.box.offsetWidth;
+    if (pointerX && isToMin) {
+      const bw = this.box.offsetWidth;
+      if (bw != w) {
+        const percent = (pointerX - x) / bw;
         x = pointerX - w * percent;
-        this.box.dataset.x = x;
+        savePopLocationInfo(this.box, { x });
       }
     }
     // 超出屏幕则居中
@@ -248,10 +254,12 @@ class CreateIframe {
       toCenter(this.box);
       return;
     }
-    this.box.style.top = y + 'px';
-    this.box.style.left = x + 'px';
-    this.box.style.width = w + 'px';
-    this.box.style.height = h + 'px';
+    if (isToMin) {
+      this.box.style.top = y + 'px';
+      this.box.style.left = x + 'px';
+      this.box.style.width = w + 'px';
+      this.box.style.height = h + 'px';
+    }
     _setTimeout(() => {
       switchBorderRadius(this.box);
     }, 600);
@@ -413,7 +421,7 @@ function switchIframeBox() {
       });
     }
     ifram.scrollT.init(ifram.name);
-    ifram.toRest();
+    ifram.toRest(false, false);
     _this.classList.remove('hide');
     return;
   }

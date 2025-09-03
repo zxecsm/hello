@@ -31,6 +31,7 @@ import {
   formatBytes,
   _animate,
   getDarkIcon,
+  savePopLocationInfo,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -1859,8 +1860,7 @@ myDrag({
       target.style.top = y + 'px';
       target.style.left = x + 'px';
     } else {
-      target.dataset.x = x;
-      target.dataset.y = y;
+      savePopLocationInfo(target, { x, y });
     }
   },
 });
