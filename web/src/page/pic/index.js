@@ -447,7 +447,7 @@ function picMenu(e, pobj, el) {
   );
 }
 $imgList
-  .on('click', '.img', function () {
+  .on('click', '.img', function (e) {
     const $this = $(this);
     const idx = $this.index('.img');
     const arr = [];
@@ -461,7 +461,7 @@ $imgList
         u1,
       });
     });
-    imgPreview(arr, idx);
+    imgPreview(arr, idx, { x: e.clientX, y: e.clientY });
   })
   .on('contextmenu', '.img', function (e) {
     e.preventDefault();

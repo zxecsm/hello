@@ -448,7 +448,7 @@ reqTaskList()
   })
   .catch(() => {});
 // 读取文件和目录
-async function readFileAndDir(obj) {
+async function readFileAndDir(obj, e) {
   const { type, name, path, size } = obj;
   const p = `${path}/${name}`;
   if (type === 'dir') {
@@ -478,7 +478,8 @@ async function readFileAndDir(obj) {
             if (arr.length === 0) return;
             imgPreview(
               arr,
-              list.findIndex((item) => item.id === obj.id)
+              list.findIndex((item) => item.id === obj.id),
+              { x: e.clientX, y: e.clientY }
             );
           } else if (isVideoFile(p)) {
             // 视频
@@ -502,7 +503,7 @@ $contentWrap
   .on('click', '.logo', function (e) {
     const id = this.parentNode.dataset.id;
     if (fileShowGrid) {
-      readFileAndDir(getFileItem(id));
+      readFileAndDir(getFileItem(id), e);
     } else {
       rightList(
         e,
@@ -533,7 +534,7 @@ $contentWrap
         this.parentNode.querySelector('.check_state')
       );
     } else {
-      readFileAndDir(getFileItem(id));
+      readFileAndDir(getFileItem(id), e);
     }
   })
   .on('click', '.check_state', function (e) {

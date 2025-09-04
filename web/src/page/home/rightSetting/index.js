@@ -359,13 +359,17 @@ function hdUserLogo(e) {
         );
       } else if (id === '2') {
         close();
-        imgPreview([
-          {
-            u1: _path.normalize(
-              `/api/pub/logo/${setUserInfo().account}/${setUserInfo().logo}`
-            ),
-          },
-        ]);
+        imgPreview(
+          [
+            {
+              u1: _path.normalize(
+                `/api/pub/logo/${setUserInfo().account}/${setUserInfo().logo}`
+              ),
+            },
+          ],
+          0,
+          { x: e.clientX, y: e.clientY }
+        );
       } else if (id === '3') {
         rMenu.pop(
           {

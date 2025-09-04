@@ -524,12 +524,16 @@ function hdHomeBgBtn(e, obj) {
         );
       } else if (id === '2') {
         close();
-        imgPreview([
-          {
-            u1: getFilePath(`/bg/${obj.url}`),
-            u2: getFilePath(`/bg/${obj.url}`, 1),
-          },
-        ]);
+        imgPreview(
+          [
+            {
+              u1: getFilePath(`/bg/${obj.url}`),
+              u2: getFilePath(`/bg/${obj.url}`, 1),
+            },
+          ],
+          0,
+          { x: e.clientX, y: e.clientY }
+        );
       } else if (id === '3') {
         close();
         downloadFile(

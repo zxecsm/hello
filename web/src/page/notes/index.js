@@ -742,7 +742,7 @@ $contentWrap
       title
     );
   })
-  .on('click', 'img', function () {
+  .on('click', 'img', function (e) {
     const imgs = $contentWrap.find('img');
     let idx = 0;
     const arr = [];
@@ -754,7 +754,7 @@ $contentWrap
         u1: item.getAttribute('data-src'),
       });
     });
-    imgPreview(arr, idx);
+    imgPreview(arr, idx, { x: e.clientX, y: e.clientY });
   })
   .on('click', '.item_info .category', function () {
     tabsObj.list = categoryToArr(this.dataset.id);

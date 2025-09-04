@@ -428,7 +428,7 @@ function hdPreview() {
       u1,
     });
   });
-  imgPreview(arr, idx);
+  imgPreview(arr, idx, this);
 }
 $bgList
   .on('contextmenu', '.bg_img', function (e) {

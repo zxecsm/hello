@@ -941,7 +941,11 @@ function userMenu(e, msgObj, isUserList) {
         close();
         openInIframe(`/bmk?acc=${_from}`, (des || username) + '的书签夹');
       } else if (id === '5') {
-        imgPreview([{ u1: _path.normalize(`/api/pub/logo/${_from}/${logo}`) }]);
+        imgPreview(
+          [{ u1: _path.normalize(`/api/pub/logo/${_from}/${logo}`) }],
+          0,
+          { x: e.clientX, y: e.clientY }
+        );
         close();
       }
     },
@@ -994,12 +998,16 @@ function openChatImg(target) {
   reqChatExpired({ hash: obj.hash })
     .then((result) => {
       if (result.code === 1) {
-        imgPreview([
-          {
-            u1: getFilePath(`/upload/${id}`),
-            u2: getFilePath(`/upload/${id}/${obj.hash}`, 1),
-          },
-        ]);
+        imgPreview(
+          [
+            {
+              u1: getFilePath(`/upload/${id}`),
+              u2: getFilePath(`/upload/${id}/${obj.hash}`, 1),
+            },
+          ],
+          0,
+          target
+        );
         return;
       }
       _msg.error('图片已过期');

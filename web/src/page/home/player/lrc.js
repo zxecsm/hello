@@ -895,12 +895,16 @@ $lrcMenuWrap
         } else if (id === '6') {
           close();
           let u1 = playingSongInfo.ppic;
-          imgPreview([
-            {
-              u1,
-              u2: `${u1}&t=1`,
-            },
-          ]);
+          imgPreview(
+            [
+              {
+                u1,
+                u2: `${u1}&t=1`,
+              },
+            ],
+            0,
+            { x: e.clientX, y: e.clientY }
+          );
         } else if (id === '7') {
           close();
           copyText(playingSongInfo.artist + ' - ' + playingSongInfo.title);

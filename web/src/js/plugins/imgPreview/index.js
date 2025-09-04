@@ -1,11 +1,11 @@
 import _d from '../../common/config';
 import './index.less';
 import cacheFile from '../../utils/cacheFile';
-import { _animate, imgjz } from '../../utils/utils';
+import { _animate, getCenterPointDistance, imgjz } from '../../utils/utils';
 import { _loadingBar } from '../loadingBar';
 import _msg from '../message';
 
-export default function imgPreview(arr, idx = 0) {
+export default function imgPreview(arr, idx = 0, triggerEl) {
   let result, //图片宽高
     x, //偏移
     y,
@@ -63,9 +63,16 @@ export default function imgPreview(arr, idx = 0) {
   box.appendChild(countInfo);
   box.appendChild(load);
   document.body.appendChild(box);
-
+  let transformStr = 'translateY(100%) scale(0)';
+  if (triggerEl) {
+    const { x: tx, y: ty } = getCenterPointDistance(box, triggerEl);
+    transformStr = `translate(${tx}px,${ty}px) scale(0)`;
+  }
   _animate(box, {
-    to: { transform: 'translateY(100%) scale(0)', opacity: 0 },
+    to: {
+      transform: transformStr,
+      opacity: 0,
+    },
     direction: 'reverse',
   });
 

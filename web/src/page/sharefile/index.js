@@ -453,7 +453,7 @@ async function openDir(path, { top, update = 0 }) {
 function getFileItem(id) {
   return fileListData.data.find((item) => item.id === id + '') || {};
 }
-async function readFileAndDir(obj) {
+async function readFileAndDir(obj, e) {
   const { type, name, path } = obj;
   const p = `${path}/${name}`;
   if (type === 'dir') {
@@ -493,7 +493,8 @@ async function readFileAndDir(obj) {
             if (arr.length === 0) return;
             imgPreview(
               arr,
-              list.findIndex((item) => item.id === obj.id)
+              list.findIndex((item) => item.id === obj.id),
+              { x: e.clientX, y: e.clientY }
             );
           } else if (isVideoFile(p)) {
             _myOpen(`/videoplay#${encodeURIComponent(fPath)}`, obj.name);
@@ -516,7 +517,7 @@ $fileBox
     downloadFile([{ fileUrl: fPath, filename: shareObj.name }]);
   });
 // 读取文件
-async function readFile() {
+async function readFile(e) {
   if (shareObj.type === 'file') {
     try {
       const res = await reqFileReadFile({
@@ -531,15 +532,19 @@ async function readFile() {
             '&token=' +
             encodeURIComponent(shareToken);
           if (isImgFile(shareObj.name)) {
-            imgPreview([
-              {
-                u1: fPath,
-                u2:
-                  getFilePath(`/sharefile/`, 1) +
-                  '&token=' +
-                  encodeURIComponent(shareToken),
-              },
-            ]);
+            imgPreview(
+              [
+                {
+                  u1: fPath,
+                  u2:
+                    getFilePath(`/sharefile/`, 1) +
+                    '&token=' +
+                    encodeURIComponent(shareToken),
+                },
+              ],
+              0,
+              { x: e.clientX, y: e.clientY }
+            );
           } else if (isVideoFile(shareObj.name)) {
             _myOpen(`/videoplay#${encodeURIComponent(fPath)}`, shareObj.name);
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(shareObj.name)) {
@@ -556,7 +561,7 @@ $contentWrap
   .on('click', '.logo', function (e) {
     const id = this.parentNode.dataset.id;
     if (fileShowGrid) {
-      readFileAndDir(getFileItem(id));
+      readFileAndDir(getFileItem(id), e);
     } else {
       rightList(e, getFileItem(id));
     }
@@ -566,7 +571,7 @@ $contentWrap
     if (fileShowGrid) {
       rightList(e, getFileItem(id));
     } else {
-      readFileAndDir(getFileItem(id));
+      readFileAndDir(getFileItem(id), e);
     }
   })
   .on('mouseenter', '.file_item .name', function () {

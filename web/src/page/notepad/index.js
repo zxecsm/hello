@@ -348,7 +348,7 @@ mdWorker.addEventListener('message', (event) => {
 });
 const imgLazy = new LazyLoad();
 $previewBox
-  .on('click', 'img', function () {
+  .on('click', 'img', function (e) {
     const imgs = $previewBox.find('img');
     let idx = 0;
     const arr = [];
@@ -360,7 +360,7 @@ $previewBox
         u1: item.getAttribute('data-src'),
       });
     });
-    imgPreview(arr, idx);
+    imgPreview(arr, idx, { x: e.clientX, y: e.clientY });
   })
   .on('click', '.codeCopy', function () {
     const str = $(this).parent().find('code').text();

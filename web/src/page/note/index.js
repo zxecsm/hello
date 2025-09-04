@@ -357,7 +357,7 @@ $noteBox
     }
     hdWindowScroll();
   })
-  .on('click', 'img', function () {
+  .on('click', 'img', function (e) {
     const imgs = $noteBox.find('img');
     let idx = 0;
     const arr = [];
@@ -369,7 +369,7 @@ $noteBox
         u1: item.getAttribute('data-src'),
       });
     });
-    imgPreview(arr, idx);
+    imgPreview(arr, idx, { x: e.clientX, y: e.clientY });
   });
 const searchInp = wrapInput($pageSearchWrap.find('.inp_box .search_inp')[0], {
   focus() {

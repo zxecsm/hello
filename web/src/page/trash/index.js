@@ -636,7 +636,7 @@ $contentWrap
       _myOpen(`/note?v=${encodeURIComponent(obj.id)}`, obj.title);
     }
   })
-  .on('click', 'img', function () {
+  .on('click', 'img', function (e) {
     if (HASH !== 'note') return;
     const imgs = $contentWrap.find('img');
     let idx = 0;
@@ -649,7 +649,7 @@ $contentWrap
         u1: item.getAttribute('data-src'),
       });
     });
-    imgPreview(arr, idx);
+    imgPreview(arr, idx, { x: e.clientX, y: e.clientY });
   })
   .on('click', '.check_state', function () {
     checkedItem(this);
