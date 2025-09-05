@@ -24,7 +24,7 @@ export function getRootDir(acc) {
 
 // 获取回收站目录
 export function getTrashDir(account) {
-  return _path.normalize(`${getRootDir(account)}/${appConfig.trashDirName}`);
+  return _path.normalize(getRootDir(account), appConfig.trashDirName);
 }
 
 // 删除站点文件
@@ -72,7 +72,7 @@ export async function cleanEmptyDirectories(rootDir) {
 
     const files = await _f.fsp.readdir(currentDir);
     for (const file of files) {
-      const fullPath = _path.join(currentDir, file);
+      const fullPath = _path.normalize(currentDir, file);
       const stat = await _f.fsp.lstat(fullPath);
       if (stat.isDirectory()) {
         stack.push(fullPath);
@@ -107,7 +107,7 @@ export async function getAllFile(path) {
         if (s.isDirectory()) {
           const list = await _f.fsp.readdir(currentPath);
           for (const name of list) {
-            stack.push(_path.normalize(`${currentPath}/${name}`));
+            stack.push(_path.normalize(currentPath, name));
           }
         } else {
           const name = _path.basename(currentPath)[0];
@@ -176,7 +176,7 @@ export async function readMenu(path) {
 
     await concurrencyTasks(list, 5, async (name) => {
       try {
-        const f = _path.normalize(`${path}/${name}`);
+        const f = _path.normalize(path, name);
 
         const s = await _f.fsp.lstat(f);
         const { mode, numericMode } = _f.getPermissions(s);
@@ -219,12 +219,14 @@ export async function getUniqueFilename(path) {
 
   let counter = 0;
   let newPath = _path.normalize(
-    `${dir}/${_path.randomFilenameSuffix(filename, ++counter)}`
+    dir,
+    _path.randomFilenameSuffix(filename, ++counter)
   );
 
   while (await _f.exists(newPath)) {
     newPath = _path.normalize(
-      `${dir}/${_path.randomFilenameSuffix(filename, ++counter)}`
+      dir,
+      _path.randomFilenameSuffix(filename, ++counter)
     );
   }
 

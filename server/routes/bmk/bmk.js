@@ -97,7 +97,7 @@ export async function cleanSiteInfo(req = false) {
     const threshold = now - _d.cacheExp.siteInfoCache * 24 * 60 * 60 * 1000;
 
     const sList = await readMenu(
-      _path.normalize(`${appConfig.appData}/siteinfo`)
+      _path.normalize(appConfig.appData, 'siteinfo')
     );
 
     let num = 0;
@@ -107,7 +107,7 @@ export async function cleanSiteInfo(req = false) {
 
       if (type === 'file') {
         if (time < threshold) {
-          await _delDir(_path.normalize(`${path}/${name}`));
+          await _delDir(_path.normalize(path, name));
           num++;
         }
       }
@@ -126,9 +126,7 @@ export async function cleanFavicon(req = false) {
 
     const threshold = now - _d.cacheExp.faviconCache * 24 * 60 * 60 * 1000;
 
-    const fList = await readMenu(
-      _path.normalize(`${appConfig.appData}/favicon`)
-    );
+    const fList = await readMenu(_path.normalize(appConfig.appData, 'favicon'));
 
     let num = 0;
 
@@ -137,7 +135,7 @@ export async function cleanFavicon(req = false) {
 
       if (type === 'file') {
         if (time < threshold) {
-          await _delDir(_path.normalize(`${path}/${name}`));
+          await _delDir(_path.normalize(path, name));
           num++;
         }
       }

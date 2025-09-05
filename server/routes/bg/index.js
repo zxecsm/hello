@@ -70,7 +70,7 @@ route.get('/r/:type', async (req, res) => {
     }
 
     // 获取壁纸 URL 并返回
-    const url = _path.normalize(`${appConfig.appData}/bg`, bgData.url);
+    const url = _path.normalize(appConfig.appData, 'bg', bgData.url);
 
     if (await _f.exists(url)) {
       res.sendFile(url, { dotfiles: 'allow' });
@@ -247,7 +247,7 @@ route.post('/delete', async (req, res) => {
 
     await concurrencyTasks(dels, 5, async (del) => {
       const { url } = del;
-      await _delDir(_path.normalize(`${appConfig.appData}/bg`, url));
+      await _delDir(_path.normalize(appConfig.appData, 'bg', url));
       await uLog(req, `删除壁纸(${url})`);
     });
 
@@ -284,7 +284,7 @@ route.post('/up', async (req, res) => {
 
     const timePath = getTimePath(Date.now());
 
-    const tDir = _path.normalize(`${appConfig.appData}/bg/${timePath}`);
+    const tDir = _path.normalize(appConfig.appData, 'bg', timePath);
     const tName = `${HASH}.${suffix}`;
 
     await _f.mkdir(tDir);
@@ -292,12 +292,10 @@ route.post('/up', async (req, res) => {
     await receiveFiles(req, tDir, tName, 10);
 
     // 获取壁纸尺寸进行分类
-    const { width, height } = await getImgInfo(
-      _path.normalize(`${tDir}/${tName}`)
-    );
+    const { width, height } = await getImgInfo(_path.normalize(tDir, tName));
     const type = width < height ? 'bgxs' : 'bg';
 
-    const url = _path.normalize(`${timePath}/${tName}`);
+    const url = _path.normalize(timePath, tName);
 
     await insertData('bg', [
       {
@@ -327,7 +325,7 @@ route.post('/repeat', async (req, res) => {
     const bg = (await queryData('bg', 'url,id', `WHERE hash = ?`, [HASH]))[0];
 
     if (bg) {
-      if (await _f.exists(_path.normalize(`${appConfig.appData}/bg`, bg.url))) {
+      if (await _f.exists(_path.normalize(appConfig.appData, 'bg', bg.url))) {
         _success(res);
         return;
       }

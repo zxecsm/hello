@@ -257,7 +257,7 @@ function lazyLoadChatLogo() {
         des = '',
       } = getUserItem($item.parent().data('account'));
       if (logo) {
-        logo = _path.normalize(`/api/pub/logo/${account}/${logo}`);
+        logo = _path.normalize('/api/pub/logo', account, logo);
       }
       if (account === 'hello') {
         logo = imgHelloLogo;
@@ -284,7 +284,7 @@ function lazyLoadChatLogo() {
       des = '',
     } = getUserItem($item.parent().data('account'));
     if (logo) {
-      logo = _path.normalize(`/api/pub/logo/${account}/${logo}`);
+      logo = _path.normalize('/api/pub/logo', account, logo);
     }
     if (account === 'hello') {
       logo = imgHelloLogo;
@@ -658,7 +658,7 @@ function chatimgLoad() {
       _from,
     } = getChatItem($item.parent().parent().parent().data('id'));
     if (logo) {
-      logo = _path.normalize(`/api/pub/logo/${_from}/${logo}`);
+      logo = _path.normalize('/api/pub/logo', _from, logo);
     }
     if (_from === 'hello') {
       logo = imgHelloLogo;
@@ -706,7 +706,7 @@ export function chatMessageNotification(name, data, from, to, logo) {
     1
   );
   if (logo) {
-    logo = _path.normalize(`/api/pub/logo/${from}/${logo}`);
+    logo = _path.normalize('/api/pub/logo', from, logo);
   }
   if (from === 'hello') {
     logo = imgHelloLogo;
@@ -941,11 +941,10 @@ function userMenu(e, msgObj, isUserList) {
         close();
         openInIframe(`/bmk?acc=${_from}`, (des || username) + '的书签夹');
       } else if (id === '5') {
-        imgPreview(
-          [{ u1: _path.normalize(`/api/pub/logo/${_from}/${logo}`) }],
-          0,
-          { x: e.clientX, y: e.clientY }
-        );
+        imgPreview([{ u1: _path.normalize('/api/pub/logo', _from, logo) }], 0, {
+          x: e.clientX,
+          y: e.clientY,
+        });
         close();
       }
     },

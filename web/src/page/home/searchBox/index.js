@@ -247,7 +247,7 @@ function lazyLoadHomeBmLogo() {
     let { logo, link } = getHomeBmData($item.attr('data-id'));
     const $homeBmLogo = $item.find('.home_bm_logo');
     if (logo) {
-      logo = _path.normalize(`/api/pub/${logo}`);
+      logo = _path.normalize('/api/pub', logo);
     } else {
       logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
     }
@@ -268,7 +268,7 @@ function lazyLoadHomeBmLogo() {
     let { logo, link } = getHomeBmData($item.attr('data-id'));
     const $homeBmLogo = $item.find('.home_bm_logo');
     if (logo) {
-      logo = _path.normalize(`/api/pub/${logo}`);
+      logo = _path.normalize('/api/pub', logo);
     } else {
       logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
     }

@@ -326,7 +326,7 @@ function renderList(y) {
               );
 
               if (logo) {
-                logo = _path.normalize(`/api/pub/${logo}`);
+                logo = _path.normalize('/api/pub', logo);
               } else {
                 logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
               }
@@ -343,7 +343,7 @@ function renderList(y) {
               );
 
               if (logo) {
-                logo = _path.normalize(`/api/pub/${logo}`);
+                logo = _path.normalize('/api/pub', logo);
               } else {
                 logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
               }

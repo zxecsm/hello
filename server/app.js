@@ -139,42 +139,42 @@ app.use(async (req, res, next) => {
 
 app.use(
   '/api/pub/font',
-  express.static(_path.normalize(`${appConfig.appData}/font`), {
+  express.static(_path.normalize(appConfig.appData, 'font'), {
     dotfiles: 'allow',
     maxAge: 2592000000,
   })
 );
 app.use(
   '/api/pub/share',
-  express.static(_path.normalize(`${appConfig.appData}/share`), {
+  express.static(_path.normalize(appConfig.appData, 'share'), {
     dotfiles: 'allow',
     maxAge: 2592000000,
   })
 );
 app.use(
   '/api/pub/logo',
-  express.static(_path.normalize(`${appConfig.appData}/logo`), {
+  express.static(_path.normalize(appConfig.appData, 'logo'), {
     dotfiles: 'allow',
     maxAge: 2592000000,
   })
 );
 app.use(
   '/api/pub/picture',
-  express.static(_path.normalize(`${appConfig.appData}/pic`), {
+  express.static(_path.normalize(appConfig.appData, 'pic'), {
     dotfiles: 'allow',
     maxAge: 2592000000,
   })
 );
 app.use(
   '/api/pub/searchlogo',
-  express.static(_path.normalize(`${appConfig.appData}/searchlogo`), {
+  express.static(_path.normalize(appConfig.appData, 'searchlogo'), {
     dotfiles: 'allow',
     maxAge: 2592000000,
   })
 );
 app.use(
   '/api/pub/playerlogo',
-  express.static(_path.normalize(`${appConfig.appData}/playerlogo`), {
+  express.static(_path.normalize(appConfig.appData, 'playerlogo'), {
     dotfiles: 'allow',
     maxAge: 2592000000,
   })

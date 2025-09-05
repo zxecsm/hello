@@ -461,12 +461,12 @@ function handleHideBox(e, _this) {
     },
     {
       id: '2',
-      text: '隐藏所有窗口',
+      text: '隐藏其他窗口',
       beforeIcon: 'iconfont icon-minus-bold',
     },
     {
       id: '3',
-      text: '关闭所有窗口',
+      text: '关闭其他窗口',
       beforeIcon: 'iconfont icon-shibai',
     },
   ];
@@ -478,22 +478,26 @@ function handleHideBox(e, _this) {
       if (id === '1') {
         myOpen(url, '_blank');
       } else if (id === '2') {
-        hideAllwindow();
+        hideAllIframe(ifram);
       } else if (id === '3') {
-        closeAllwindow();
+        closeAllIframe(ifram);
       }
     },
     _this.innerText
   );
 }
-export function closeAllIframe() {
+export function closeAllIframe(ignoreIframe) {
   openInIframe.iframes.data.forEach((ifram) => {
-    ifram.close();
+    if (!ignoreIframe || ignoreIframe.id != ifram.id) {
+      ifram.close();
+    }
   });
 }
-export function hideAllIframe() {
+export function hideAllIframe(ignoreIframe) {
   openInIframe.iframes.data.forEach((ifram) => {
-    ifram.hdHide();
+    if (!ignoreIframe || ignoreIframe.id != ifram.id) {
+      ifram.hdHide();
+    }
   });
 }
 export function showIframeMask() {

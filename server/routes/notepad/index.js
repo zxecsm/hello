@@ -30,7 +30,7 @@ route.get('/', async (req, res) => {
 
     let note = '';
 
-    const p = _path.normalize(`${appConfig.appData}/notepad/${k}.md`);
+    const p = _path.normalize(appConfig.appData, 'notepad', `${k}.md`);
 
     if (await _f.exists(p)) {
       note = (await _f.fsp.readFile(p)).toString();
@@ -56,7 +56,7 @@ route.post('/', async (req, res) => {
       return;
     }
 
-    const p = _path.normalize(`${appConfig.appData}/notepad/${k}.md`);
+    const p = _path.normalize(appConfig.appData, 'notepad', `${k}.md`);
 
     if (data) {
       if (!(await _f.exists(p))) {

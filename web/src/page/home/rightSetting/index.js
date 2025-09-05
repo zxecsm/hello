@@ -363,7 +363,9 @@ function hdUserLogo(e) {
           [
             {
               u1: _path.normalize(
-                `/api/pub/logo/${setUserInfo().account}/${setUserInfo().logo}`
+                '/api/pub/logo',
+                setUserInfo().account,
+                setUserInfo().logo
               ),
             },
           ],
@@ -654,7 +656,7 @@ export function renderUserinfo() {
   );
   $userInfoWrap.find('.user_list').html(html);
   if (logo) {
-    imgjz(_path.normalize(`/api/pub/logo/${account}/${logo}`))
+    imgjz(_path.normalize('/api/pub/logo', account, logo))
       .then((cache) => {
         $userInfoWrap
           .find('.user_logo div')

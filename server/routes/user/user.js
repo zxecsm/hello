@@ -31,9 +31,9 @@ export async function getUserInfo(account, fields = '*') {
 
 // 获取外部播放器配置
 export async function playInConfig() {
-  const p = _path.normalize(`${appConfig.appData}/data/playIn.json`);
+  const p = _path.normalize(appConfig.appData, '/data/playIn.json');
 
-  const logop = _path.normalize(`${appConfig.appData}/playerlogo`);
+  const logop = _path.normalize(appConfig.appData, 'playerlogo');
 
   if (!(await _f.exists(logop))) {
     await _f.cp(resolve(__dirname, `../../img/playerlogo`), logop);
@@ -82,7 +82,7 @@ export async function deleteUser(account) {
 
   await batchDeleteData('todo', 'id', `WHERE account = ?`, [account]);
 
-  await _delDir(_path.normalize(`${appConfig.appData}/logo/${account}`));
+  await _delDir(_path.normalize(appConfig.appData, 'logo', account));
 }
 
 // 验证分享

@@ -762,7 +762,7 @@ function rightList(e, obj, el) {
       } else if (id === 'mode') {
         editFileMode(e, [obj]);
       } else if (id === 'copyPath') {
-        copyText(_path.normalize(`/${obj.path}/${obj.name}`));
+        copyText(_path.normalize('/', obj.path, obj.name));
         close();
       }
     },
@@ -1398,8 +1398,8 @@ async function hdCopy(e, data, cb) {
       if (
         !data.every((item) => {
           const { path, name } = item;
-          const f = _path.normalize(`${path}/${name}`);
-          const t = _path.normalize(`${curFileDirPath}/${name}`);
+          const f = _path.normalize(path, name);
+          const t = _path.normalize(curFileDirPath, name);
           return !_path.isPathWithin(f, t);
         })
       ) {
@@ -1468,8 +1468,8 @@ async function hdCut(
       if (
         !data.every((item) => {
           const { path, name } = item;
-          const f = _path.normalize(`${path}/${name}`);
-          const t = _path.normalize(`${toPath}/${name}`);
+          const f = _path.normalize(path, name);
+          const t = _path.normalize(toPath, name);
           return f !== t && !_path.isPathWithin(f, t);
         })
       ) {
@@ -1717,8 +1717,7 @@ $footer
 function hdDel(e, arr, cb, loading = { start() {}, end() {} }) {
   if (
     arr.some(
-      (item) =>
-        _path.normalize(`${item.path}/${item.name}`) === `/${_d.trashDirName}`
+      (item) => _path.normalize(item.path, item.name) === `/${_d.trashDirName}`
     )
   ) {
     _msg.error(`不能删除回收站目录：/${_d.trashDirName}`);

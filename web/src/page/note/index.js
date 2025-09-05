@@ -210,7 +210,7 @@ if (urlparmes.v) {
         });
 
         if (logo) {
-          imgjz(_path.normalize(`/api/pub/logo/${account}/${logo}`))
+          imgjz(_path.normalize('/api/pub/logo', account, logo))
             .then((cache) => {
               $authorInfo
                 .find('.logo')

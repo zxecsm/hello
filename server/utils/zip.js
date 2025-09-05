@@ -63,7 +63,7 @@ async function unzip(from, to, { signal, progress } = {}) {
   await concurrencyTasks(directory.files, 5, async (file) => {
     if (signal && signal.aborted) return; // 中断
 
-    const outputPath = _path.normalize(`${to}/${file.path}`); // 保存文件的路径
+    const outputPath = _path.normalize(to, file.path); // 保存文件的路径
 
     if (file.type === 'Directory') {
       await _f.mkdir(outputPath);

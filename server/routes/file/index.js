@@ -121,7 +121,7 @@ route.post('/get-share', async (req, res) => {
 // 读取目录
 function fileListSortAndCacheSize(list, rootP, sortType, isDesc, hidden) {
   list = list.reduce((pre, cur) => {
-    const fullPath = _path.normalize(`${rootP}/${cur.path}/${cur.name}`);
+    const fullPath = _path.normalize(rootP, cur.path, cur.name);
 
     // 隐藏隐藏文件
     if (hidden === 1 && cur.name.startsWith('.')) return pre;
@@ -201,7 +201,7 @@ route.post('/read-dir', async (req, res) => {
       const { name } = data;
 
       // 用户根目录
-      rootP = _path.normalize(getRootDir(account), `${data.path}/${name}`);
+      rootP = _path.normalize(getRootDir(account), data.path, name);
 
       p = _path.normalize(rootP, path);
     } else {
@@ -258,7 +258,7 @@ route.post('/read-dir', async (req, res) => {
             count++;
             taskState.update(taskKey, `${hdType}...${count}`);
 
-            const fullPath = _path.normalize(`${item.path}/${item.name}`);
+            const fullPath = _path.normalize(item.path, item.name);
 
             if (item.type === 'dir' && subDir === 1 && word) {
               stack.push(fullPath);
@@ -357,10 +357,7 @@ route.post('/read-file', async (req, res) => {
 
       const { name, type } = data;
 
-      const rootP = _path.normalize(
-        getRootDir(account),
-        `${data.path}/${name}`
-      );
+      const rootP = _path.normalize(getRootDir(account), data.path, name);
 
       if (type === 'file') {
         p = rootP;
@@ -483,7 +480,7 @@ route.post('/create-file', async (req, res) => {
     }
 
     const dir = getCurPath(req._hello.userinfo.account, path);
-    const fpath = _path.normalize(`${dir}/${name}`);
+    const fpath = _path.normalize(dir, name);
 
     const { account } = req._hello.userinfo;
 
@@ -523,7 +520,7 @@ route.post('/share', async (req, res) => {
       !validaString(data.name, 1, fieldLength.filename) ||
       !isFilename(data.name) ||
       !validaString(data.path, 1, fieldLength.url) ||
-      _path.normalize(`${data.path}/${data.name}`) === '/' ||
+      _path.normalize(data.path, data.name) === '/' ||
       !validationValue(data.type, ['dir', 'file'])
     ) {
       paramErr(res, req);
@@ -548,7 +545,7 @@ route.post('/share', async (req, res) => {
 
     _success(res, `分享${data.type === 'dir' ? '文件夹' : '文件'}成功`)(
       req,
-      _path.normalize(`${data.path}/${data.name}`),
+      _path.normalize(data.path, data.name),
       1
     );
   } catch (error) {
@@ -591,7 +588,8 @@ route.post('/save-file', async (req, res) => {
         const [, filename, , suffix] = _path.basename(fpath);
 
         const historyDir = _path.normalize(
-          `${_path.dirname(fpath)}/${appConfig.textFileHistoryDirName}`
+          _path.dirname(fpath),
+          appConfig.textFileHistoryDirName
         );
 
         await _f.mkdir(historyDir);
@@ -600,7 +598,7 @@ route.post('/save-file', async (req, res) => {
           template: `{0}{1}{2}-{3}{4}{5}`,
         })}${suffix ? `.${suffix}` : ''}`;
 
-        await _f.cp(fpath, _path.normalize(`${historyDir}/${newName}`));
+        await _f.cp(fpath, _path.normalize(historyDir, newName));
       }
     } catch (error) {
       await errLog(req, `保存文件历史版本失败(${error})`);
@@ -636,7 +634,7 @@ route.post('/copy', async (req, res) => {
           validaString(item.name, 1, fieldLength.filename) &&
           isFilename(item.name) &&
           validaString(item.path, 1, fieldLength.url) &&
-          _path.normalize(`${item.path}/${item.name}`) !== '/' &&
+          _path.normalize(item.path, item.name) !== '/' &&
           validationValue(item.type, ['dir', 'file'])
       )
     ) {
@@ -674,7 +672,7 @@ route.post('/copy', async (req, res) => {
 
         const f = getCurPath(account, `${path}/${name}`);
 
-        let to = _path.normalize(`${p}/${name}`);
+        let to = _path.normalize(p, name);
 
         if (_path.isPathWithin(f, to) || !name) return;
 
@@ -773,7 +771,7 @@ route.post('/move', async (req, res) => {
           validaString(item.name, 1, fieldLength.filename) &&
           isFilename(item.name) &&
           validaString(item.path, 1, fieldLength.url) &&
-          _path.normalize(`${item.path}/${item.name}`) !== '/' &&
+          _path.normalize(item.path, item.name) !== '/' &&
           validationValue(item.type, ['dir', 'file'])
       )
     ) {
@@ -811,7 +809,7 @@ route.post('/move', async (req, res) => {
 
         const f = getCurPath(account, `${path}/${name}`);
 
-        let t = _path.normalize(`${p}/${name}`);
+        let t = _path.normalize(p, name);
 
         if (_path.isPathWithin(f, t, true)) return;
 
@@ -864,7 +862,7 @@ route.post('/zip', async (req, res) => {
       !validaString(data.name, 1, fieldLength.filename) ||
       !isFilename(data.name) ||
       !validaString(data.path, 1, fieldLength.url) ||
-      _path.normalize(`${data.path}/${data.name}`) === '/' ||
+      _path.normalize(data.path, data.name) === '/' ||
       !validationValue(data.type, ['file', 'dir'])
     ) {
       paramErr(res, req);
@@ -879,11 +877,11 @@ route.post('/zip', async (req, res) => {
 
     data.path = p;
 
-    const f = _path.normalize(`${p}/${name}`);
+    const f = _path.normalize(p, name);
 
     const fname = (_path.extname(name)[0] || name) + '.zip';
 
-    let t = _path.normalize(`${p}/${fname}`);
+    let t = _path.normalize(p, fname);
 
     if ((await _f.exists(t)) || t === getTrashDir(account)) {
       t = await getUniqueFilename(t);
@@ -948,11 +946,11 @@ route.post('/unzip', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     const p = getCurPath(account, path);
-    const f = _path.normalize(`${p}/${name}`);
+    const f = _path.normalize(p, name);
 
     const fname = _path.extname(name)[0] || name;
 
-    let t = _path.normalize(`${p}/${fname}`);
+    let t = _path.normalize(p, fname);
 
     const controller = new AbortController();
     const signal = controller.signal;
@@ -1007,8 +1005,8 @@ route.post('/delete', async (req, res) => {
           validaString(item.name, 1, fieldLength.filename) &&
           isFilename(item.name) &&
           validaString(item.path, 1, fieldLength.url) &&
-          _path.normalize(`${item.path}/${item.name}`) !== '/' &&
-          _path.normalize(`${item.path}/${item.name}`) !==
+          _path.normalize(item.path, item.name) !== '/' &&
+          _path.normalize(item.path, item.name) !==
             `/${appConfig.trashDirName}` &&
           validationValue(item.type, ['dir', 'file'])
       )
@@ -1057,7 +1055,7 @@ route.post('/delete', async (req, res) => {
         } else {
           await _f.mkdir(trashDir);
 
-          let targetPath = _path.normalize(`${trashDir}/${name}`);
+          let targetPath = _path.normalize(trashDir, name);
           if (await _f.exists(targetPath)) {
             targetPath = await getUniqueFilename(targetPath);
           }
@@ -1123,7 +1121,7 @@ route.get('/clear-trash', async (req, res) => {
         await concurrencyTasks(list, 5, async (item) => {
           if (signal.aborted) return;
 
-          const p = _path.normalize(`${trashDir}/${item}`);
+          const p = _path.normalize(trashDir, item);
 
           await _f.del(p, {
             signal,
@@ -1213,8 +1211,8 @@ route.post('/rename', async (req, res) => {
 
     const dir = getCurPath(account, data.path);
 
-    const p = _path.normalize(`${dir}/${data.name}`),
-      t = _path.normalize(`${dir}/${name}`);
+    const p = _path.normalize(dir, data.name),
+      t = _path.normalize(dir, name);
 
     if ((await _f.exists(t)) || getTrashDir(account) === t) {
       _err(res, '已存在重名文件')(req, t, 1);
@@ -1302,7 +1300,11 @@ route.post('/up', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const path = _path.normalize(`${appConfig.appData}/tem/${account}_${HASH}`);
+    const path = _path.normalize(
+      appConfig.appData,
+      'tem',
+      `${account}_${HASH}`
+    );
 
     await _f.mkdir(path);
 
@@ -1353,7 +1355,7 @@ route.post('/merge', async (req, res) => {
 
     await mergefile(
       count,
-      _path.normalize(`${appConfig.appData}/tem/${account}_${HASH}`),
+      _path.normalize(appConfig.appData, 'tem', `${account}_${HASH}`),
       targetPath
     );
 
@@ -1392,7 +1394,7 @@ route.post('/breakpoint', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    let path = _path.normalize(`${appConfig.appData}/tem/${account}_${HASH}`),
+    let path = _path.normalize(appConfig.appData, 'tem', `${account}_${HASH}`),
       list = [];
 
     if (await _f.exists(path)) {
@@ -1452,7 +1454,8 @@ route.post('/download', async (req, res) => {
     }
 
     let outputFilePath = _path.normalize(
-      `${targetPath}/${_path.basename(url)[0] || 'unknown'}`
+      targetPath,
+      _path.basename(url)[0] || 'unknown'
     );
 
     // 已存在添加后缀

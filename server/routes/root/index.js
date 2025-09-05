@@ -233,7 +233,7 @@ route.post('/delete-account', async (req, res) => {
 // 清理歌曲文件
 route.get('/clean-music-file', async (req, res) => {
   try {
-    const musicDir = _path.normalize(`${appConfig.appData}/music`);
+    const musicDir = _path.normalize(appConfig.appData, 'music');
 
     if (await _f.exists(musicDir)) {
       const songs = await queryData('songs', 'url');
@@ -246,7 +246,7 @@ route.get('/clean-music-file', async (req, res) => {
           _path.extname(name)[0]
         }`;
         if (!songs.some((item) => _path.extname(item.url)[0] === url)) {
-          await _delDir(_path.normalize(`${path}/${name}`));
+          await _delDir(_path.normalize(path, name));
         }
       });
 
@@ -261,7 +261,7 @@ route.get('/clean-music-file', async (req, res) => {
 // 清理壁纸文件
 route.get('/clean-bg-file', async (req, res) => {
   try {
-    const bgDir = _path.normalize(`${appConfig.appData}/bg`);
+    const bgDir = _path.normalize(appConfig.appData, 'bg');
 
     if (await _f.exists(bgDir)) {
       const bgs = await queryData('bg', '*');
@@ -269,9 +269,9 @@ route.get('/clean-bg-file', async (req, res) => {
 
       await concurrencyTasks(allBgFile, 5, async (item) => {
         const { path, name } = item;
-        const url = _path.normalize(`${path.slice(bgDir.length + 1)}/${name}`);
+        const url = _path.normalize(path.slice(bgDir.length + 1), name);
         if (!bgs.some((item) => item.url === url)) {
-          await _delDir(_path.normalize(`${path}/${name}`));
+          await _delDir(_path.normalize(path, name));
         }
       });
 
@@ -286,7 +286,7 @@ route.get('/clean-bg-file', async (req, res) => {
 // 清理图床文件
 route.get('/clean-pic-file', async (req, res) => {
   try {
-    const picDir = _path.normalize(`${appConfig.appData}/pic`);
+    const picDir = _path.normalize(appConfig.appData, 'pic');
 
     if (await _f.exists(picDir)) {
       const pics = await queryData('pic', '*');
@@ -294,9 +294,9 @@ route.get('/clean-pic-file', async (req, res) => {
 
       await concurrencyTasks(allPicFile, 5, async (item) => {
         const { path, name } = item;
-        const url = _path.normalize(`${path.slice(picDir.length + 1)}/${name}`);
+        const url = _path.normalize(path.slice(picDir.length + 1), name);
         if (!pics.some((item) => item.url === url)) {
-          await _delDir(_path.normalize(`${path}/${name}`));
+          await _delDir(_path.normalize(path, name));
         }
       });
 
@@ -321,8 +321,8 @@ route.get('/clean-thumb-file', async (req, res) => {
 
     const delP =
       type === 'all'
-        ? _path.normalize(`${appConfig.appData}/thumb`)
-        : _path.normalize(`${appConfig.appData}/thumb/${type}`);
+        ? _path.normalize(appConfig.appData, 'thumb')
+        : _path.normalize(appConfig.appData, 'thumb', type);
 
     await _delDir(delP);
 
@@ -369,7 +369,7 @@ route.get('/log', async (req, res) => {
     }
 
     const log = (
-      await _f.fsp.readFile(_path.normalize(`${appConfig.appData}/log/${name}`))
+      await _f.fsp.readFile(_path.normalize(appConfig.appData, 'log', name))
     )
       .toString()
       .split('\n');
@@ -387,7 +387,7 @@ route.get('/log', async (req, res) => {
 route.get('/log-list', async (req, res) => {
   try {
     const list = (
-      await readMenu(_path.normalize(`${appConfig.appData}/log`))
+      await readMenu(_path.normalize(appConfig.appData, 'log'))
     ).filter((f) => f.type === 'file');
 
     list.sort((a, b) => b.time - a.time);
@@ -407,9 +407,9 @@ route.post('/delete-log', async (req, res) => {
     }
 
     if (name === 'all') {
-      await _delDir(_path.normalize(`${appConfig.appData}/log`));
+      await _delDir(_path.normalize(appConfig.appData, 'log'));
     } else {
-      await _delDir(_path.normalize(`${appConfig.appData}/log/${name}`));
+      await _delDir(_path.normalize(appConfig.appData, 'log', name));
     }
 
     _success(res, '删除日志成功')(req, name, 1);
@@ -530,13 +530,13 @@ route.get('/clean-logo-file', async (req, res) => {
     user = user.map((item) => _path.basename(item.logo)[0]);
 
     const logos = [...bmk, ...user];
-    const dir = _path.normalize(`${appConfig.appData}/logo`);
+    const dir = _path.normalize(appConfig.appData, 'logo');
 
     const logoFiles = await getAllFile(dir);
 
     await concurrencyTasks(logoFiles, 5, async (item) => {
       const { name, path } = item;
-      const p = _path.normalize(`${path}/${name}`);
+      const p = _path.normalize(path, name);
       if (!logos.some((item) => item === name)) {
         await _delDir(p);
       }
@@ -564,11 +564,11 @@ route.post('/custom-code', async (req, res) => {
       return;
     }
 
-    const u = _path.normalize(`${appConfig.appData}/custom`);
+    const u = _path.normalize(appConfig.appData, 'custom');
 
     await _f.mkdir(u);
-    await _f.fsp.writeFile(_path.normalize(`${u}/custom_head.html`), head);
-    await _f.fsp.writeFile(_path.normalize(`${u}/custom_body.html`), body);
+    await _f.fsp.writeFile(_path.normalize(u, 'custom_head.html'), head);
+    await _f.fsp.writeFile(_path.normalize(u, 'custom_body.html'), body);
 
     _success(res, '添加自定义代码成功')(req);
   } catch (error) {
@@ -722,14 +722,14 @@ timedTask.add(async (flag) => {
 
     // 定期清理LOG文件
     const list = (
-      await readMenu(_path.normalize(`${appConfig.appData}/log`))
+      await readMenu(_path.normalize(appConfig.appData, 'log'))
     ).filter((f) => f.type === 'file');
 
     if (list.length > 200) {
       list.sort((a, b) => b.time - a.time);
       for (const item of list.slice(200)) {
         const { name, path } = item;
-        const p = _path.normalize(`${path}/${name}`);
+        const p = _path.normalize(path, name);
         await _delDir(p);
       }
     }

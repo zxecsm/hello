@@ -31,7 +31,10 @@ async function cp(from, to, { signal, fileCount, chunkCopied } = {}) {
       const list = await fsp.readdir(f);
 
       for (const name of list) {
-        stack.push({ from: _path.join(f, name), to: _path.join(t, name) });
+        stack.push({
+          from: _path.normalize(f, name),
+          to: _path.normalize(t, name),
+        });
       }
     } else {
       await mkdir(_path.dirname(t));
@@ -84,7 +87,7 @@ async function del(path, { signal, fileCount } = {}) {
       const list = await fsp.readdir(currentPath);
 
       for (const name of list) {
-        stack.push(_path.join(currentPath, name));
+        stack.push(_path.normalize(currentPath, name));
       }
     } else {
       await fsp.rm(currentPath, { force: true });
@@ -199,7 +202,7 @@ async function readDirSize(path, { signal, fileCount } = {}) {
       const list = await fsp.readdir(currentPath);
 
       for (const name of list) {
-        stack.push(_path.join(currentPath, name));
+        stack.push(_path.normalize(currentPath, name));
       }
     } else {
       size += s.size;

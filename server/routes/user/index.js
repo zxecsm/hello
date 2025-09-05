@@ -105,9 +105,9 @@ route.get('/custom-code', async (req, res) => {
   try {
     const obj = { head: '', body: '' };
 
-    const u = _path.normalize(`${appConfig.appData}/custom`);
-    const headPath = _path.normalize(`${u}/custom_head.html`);
-    const bodyPath = _path.normalize(`${u}/custom_body.html`);
+    const u = _path.normalize(appConfig.appData, 'custom');
+    const headPath = _path.normalize(u, 'custom_head.html');
+    const bodyPath = _path.normalize(u, 'custom_body.html');
 
     if (await _f.exists(headPath)) {
       obj.head = (await _f.fsp.readFile(headPath)).toString();
@@ -134,7 +134,7 @@ timedTask.add(async (flag) => {
 
     const threshold = now - 10 * 24 * 60 * 60 * 1000;
 
-    const sList = await readMenu(_path.normalize(`${appConfig.appData}/tem`));
+    const sList = await readMenu(_path.normalize(appConfig.appData, 'tem'));
 
     let num = 0;
 
@@ -142,7 +142,7 @@ timedTask.add(async (flag) => {
       const { name, path, time } = item;
 
       if (time < threshold) {
-        await _delDir(_path.normalize(`${path}/${name}`));
+        await _delDir(_path.normalize(path, name));
         num++;
       }
     });
@@ -664,7 +664,7 @@ route.get('/font-list', async (req, res) => {
   try {
     let list = [];
 
-    const p = _path.normalize(`${appConfig.appData}/font`);
+    const p = _path.normalize(appConfig.appData, 'font');
 
     if (await _f.exists(p)) {
       list = await _f.fsp.readdir(p);
@@ -1164,21 +1164,17 @@ route.post('/up-logo', async (req, res) => {
 
     const timePath = getTimePath();
 
-    const path = _path.normalize(
-      `${appConfig.appData}/logo/${account}/${timePath}`
-    );
+    const path = _path.normalize(appConfig.appData, 'logo', account, timePath);
 
     await _f.mkdir(path);
     await receiveFiles(req, path, `${HASH}.${_path.extname(name)[2]}`, 5);
 
-    const logo = _path.normalize(
-      `${timePath}/${HASH}.${_path.extname(name)[2]}`
-    );
+    const logo = _path.normalize(timePath, `${HASH}.${_path.extname(name)[2]}`);
 
     if (type === 'bookmark') {
       await updateData(
         'bmk',
-        { logo: _path.normalize(`/logo/${account}/${logo}`) },
+        { logo: _path.normalize('/logo', account, logo) },
         `WHERE account = ? AND id = ? AND state = ?`,
         [account, id, 1]
       );
@@ -1932,7 +1928,7 @@ route.post('/delete-trash', async (req, res) => {
         if (await _f.exists(noteHistoryDir)) {
           await _f.mkdir(trashDir);
 
-          await _f.rename(noteHistoryDir, _path.normalize(`${trashDir}/${id}`));
+          await _f.rename(noteHistoryDir, _path.normalize(trashDir, id));
         }
       });
     }

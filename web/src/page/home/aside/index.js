@@ -369,7 +369,7 @@ function hdAsideListItemLogo() {
     );
 
     if (logo) {
-      logo = _path.normalize(`/api/pub/${logo}`);
+      logo = _path.normalize('/api/pub', logo);
     } else {
       logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
     }
@@ -388,7 +388,7 @@ function hdAsideListItemLogo() {
     );
 
     if (logo) {
-      logo = _path.normalize(`/api/pub/${logo}`);
+      logo = _path.normalize('/api/pub', logo);
     } else {
       logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
     }

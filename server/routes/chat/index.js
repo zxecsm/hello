@@ -403,7 +403,7 @@ route.get('/expired', async (req, res) => {
     const file = (await queryData('upload', 'url', `WHERE id = ?`, [hash]))[0];
 
     if (file) {
-      const u = _path.normalize(`${appConfig.appData}/upload`, file.url);
+      const u = _path.normalize(appConfig.appData, 'upload', file.url);
 
       if (await _f.exists(u)) {
         _success(res, 'ok', {
@@ -777,7 +777,11 @@ route.post('/up', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const path = _path.normalize(`${appConfig.appData}/tem/${account}_${HASH}`);
+    const path = _path.normalize(
+      appConfig.appData,
+      'tem',
+      `${account}_${HASH}`
+    );
 
     await _f.mkdir(path);
     await receiveFiles(req, path, name, 50);
@@ -830,7 +834,7 @@ route.post('/up-voice', async (req, res) => {
     const time = Date.now();
 
     const timePath = getTimePath(time);
-    const tDir = _path.normalize(`${appConfig.appData}/upload/${timePath}`);
+    const tDir = _path.normalize(appConfig.appData, 'upload', timePath);
     const tName = `${HASH}.${_path.extname(name)[2]}`;
 
     await _f.mkdir(tDir);
@@ -838,11 +842,11 @@ route.post('/up-voice', async (req, res) => {
 
     const fobj = {
       id: HASH,
-      url: _path.normalize(`${timePath}/${tName}`),
+      url: _path.normalize(timePath, tName),
       update_at: time,
     };
 
-    const { duration } = await getSongInfo(_path.normalize(`${tDir}/${tName}`));
+    const { duration } = await getSongInfo(_path.normalize(tDir, tName));
 
     const obj = {
       _to: to,
@@ -918,21 +922,21 @@ route.post('/merge', async (req, res) => {
     const time = Date.now();
     const timePath = getTimePath(time);
 
-    const tDir = _path.normalize(`${appConfig.appData}/upload/${timePath}`);
+    const tDir = _path.normalize(appConfig.appData, 'upload', timePath);
     const tName = `${HASH}${suffix ? `.${suffix}` : ''}`;
 
     await _f.mkdir(tDir);
-    const targetPath = _path.normalize(`${tDir}/${tName}`);
+    const targetPath = _path.normalize(tDir, tName);
 
     await mergefile(
       count,
-      _path.normalize(`${appConfig.appData}/tem/${account}_${HASH}`),
+      _path.normalize(appConfig.appData, 'tem', `${account}_${HASH}`),
       targetPath
     );
 
     const fobj = {
       id: HASH,
-      url: _path.normalize(`${timePath}/${tName}`),
+      url: _path.normalize(timePath, tName),
       update_at: time,
     };
 
@@ -985,7 +989,7 @@ route.post('/breakpoint', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    let path = _path.normalize(`${appConfig.appData}/tem/${account}_${HASH}`),
+    let path = _path.normalize(appConfig.appData, 'tem', `${account}_${HASH}`),
       arr = [];
 
     if (await _f.exists(path)) {
@@ -1023,7 +1027,7 @@ route.post('/repeat', async (req, res) => {
 
     if (upload) {
       // 文件已存在则，跳过上传
-      const p = _path.normalize(`${appConfig.appData}/upload`, upload.url);
+      const p = _path.normalize(appConfig.appData, 'upload', upload.url);
 
       if (await _f.exists(p)) {
         const stats = await _f.fsp.lstat(p);

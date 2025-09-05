@@ -352,7 +352,7 @@ export function updateUserInfo(cb) {
         updateRightBoxUsername(username);
         // 更新头像
         if (logo) {
-          imgjz(_path.normalize(`/api/pub/logo/${account}/${logo}`))
+          imgjz(_path.normalize('/api/pub/logo', account, logo))
             .then((cache) => {
               $userLogoBtn.css('background-image', `url(${cache})`);
             })

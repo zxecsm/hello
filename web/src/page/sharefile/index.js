@@ -110,7 +110,7 @@ function getShareData(close, loading = { start() {}, end() {} }) {
         uObj = { username, account, email };
         shareObj = data;
         if (logo) {
-          imgjz(_path.normalize(`/api/pub/logo/${account}/${logo}`))
+          imgjz(_path.normalize('/api/pub/logo', account, logo))
             .then((cache) => {
               $shareInfo.find('.logo').css('background-image', `url(${cache})`);
             })

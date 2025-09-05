@@ -331,9 +331,9 @@ route.get('/parse-site-info', async (req, res) => {
       const { host, pathname } = new URL(url);
 
       p = _path.normalize(
-        `${appConfig.appData}/siteinfo/${_crypto.getStringHash(
-          `${host}${pathname}`
-        )}.json`
+        appConfig.appData,
+        'siteinfo',
+        `${_crypto.getStringHash(`${host}${pathname}`)}.json`
       );
 
       miss = p + '.miss';
@@ -349,7 +349,7 @@ route.get('/parse-site-info', async (req, res) => {
         return;
       }
 
-      await _f.mkdir(_path.normalize(`${appConfig.appData}/siteinfo`));
+      await _f.mkdir(_path.normalize(appConfig.appData, 'siteinfo'));
 
       let result;
       try {

@@ -22,7 +22,7 @@ export function handleMusicList(arr) {
     }
     const m = v.item[0];
     if (v.len > 0 && m && m.pic) {
-      v.pic = _path.normalize(`/music`, m.pic);
+      v.pic = _path.normalize('/music', m.pic);
     } else {
       v.pic = 'default';
     }

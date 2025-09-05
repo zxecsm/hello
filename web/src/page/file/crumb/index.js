@@ -143,7 +143,7 @@ function getHash() {
 }
 
 function arrToPath(arr) {
-  return _path.normalize('/' + arr.join('/'));
+  return _path.normalize('/', arr.join('/'));
 }
 
 function pathToArr(path) {

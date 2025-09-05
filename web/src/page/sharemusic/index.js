@@ -164,7 +164,7 @@ function getShareData(close, loading = { start() {}, end() {} }) {
         shareToken = token;
         userInfo = { account, username, email };
         if (logo) {
-          imgjz(_path.normalize(`/api/pub/logo/${account}/${logo}`))
+          imgjz(_path.normalize('/api/pub/logo', account, logo))
             .then((cache) => {
               $lrcHead
                 .find('.user_logo')

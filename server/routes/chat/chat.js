@@ -560,7 +560,7 @@ export function getChatUserList(account, pageSize, offset) {
 // 清理到期聊天文件
 export async function cleanUpload(req = false) {
   if (_d.cacheExp.uploadSaveDay > 0) {
-    const uploadDir = _path.normalize(`${appConfig.appData}/upload`);
+    const uploadDir = _path.normalize(appConfig.appData, 'upload');
 
     if (!(await _f.exists(uploadDir))) return;
 

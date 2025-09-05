@@ -55,7 +55,7 @@ export async function writelog(req, str, flag = 'hello') {
       str = `[${date}] - ${str}\n`;
     }
 
-    const targetPath = _path.normalize(`${appConfig.appData}/log/${flag}.log`);
+    const targetPath = _path.normalize(appConfig.appData, 'log', `${flag}.log`);
 
     await _f.mkdir(_path.dirname(targetPath));
 
@@ -68,7 +68,9 @@ export async function writelog(req, str, flag = 'hello') {
       await _f.rename(
         targetPath,
         _path.normalize(
-          `${appConfig.appData}/log/${formatDate({
+          appConfig.appData,
+          'log',
+          `${formatDate({
             template: '{0}{1}{2}_{3}{4}{5}',
           })}_${flag}.log`
         )
@@ -268,10 +270,8 @@ export function receiveFiles(req, path, filename, maxFileSize = 5) {
       if (err) {
         reject(err);
       } else {
-        const newPath = _path.normalize(
-            `${path}/${files.attrname[0].newFilename}`
-          ),
-          originalPath = _path.normalize(`${path}/${filename}`);
+        const newPath = _path.normalize(path, files.attrname[0].newFilename),
+          originalPath = _path.normalize(path, filename);
 
         _f.fs.rename(newPath, originalPath, function (err) {
           if (err) {
@@ -302,7 +302,7 @@ export async function mergefile(count, from, to) {
   const temFile = `${to}_${nanoid()}`;
 
   for (let i = 0; i < list.length; i++) {
-    const u = _path.normalize(`${from}/${list[i]}`);
+    const u = _path.normalize(from, list[i]);
     const f = await _f.fsp.readFile(u);
     await _f.fsp.appendFile(temFile, f);
     await _f.del(u);

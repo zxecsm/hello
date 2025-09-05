@@ -8,8 +8,8 @@ const __dirname = getDirname(import.meta);
 
 // 获取搜索引擎和翻译接口配置
 export async function getSearchConfig() {
-  const p = _path.normalize(`${appConfig.appData}/data/searchConfig.json`);
-  const logop = _path.normalize(`${appConfig.appData}/searchlogo`);
+  const p = _path.normalize(appConfig.appData, '/data/searchConfig.json');
+  const logop = _path.normalize(appConfig.appData, 'searchlogo');
   if (!(await _f.exists(logop))) {
     await _f.cp(resolve(__dirname, `../../img/searchlogo`), logop);
   }

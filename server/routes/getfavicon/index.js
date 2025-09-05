@@ -110,7 +110,9 @@ route.get('/', async (req, res) => {
       const { host } = new URL(url);
 
       iconPath = _path.normalize(
-        `${appConfig.appData}/favicon/${_crypto.getStringHash(host)}.png`
+        appConfig.appData,
+        'favicon',
+        `${_crypto.getStringHash(host)}.png`
       );
 
       missFlagPath = `${iconPath}.miss`;

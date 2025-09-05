@@ -86,7 +86,7 @@ route.get('/', async (req, res) => {
         (msg.flag === 'chang' || msg.flag.includes(account))
       ) {
         // 消息文件存在，并且是群和自己发送或收到的消息
-        path = _path.normalize(`${appConfig.appData}/upload`, msg.url);
+        path = _path.normalize(appConfig.appData, 'upload', msg.url);
       } else {
         _err(res, '无权访问')(req, `${dir}-${id}`, 1);
         return;
@@ -108,19 +108,22 @@ route.get('/', async (req, res) => {
 
         const rootP = _path.normalize(
           getRootDir(share.data.account),
-          `${obj.path}/${name}`
+          obj.path,
+          name
         );
 
         if (type === 'file') {
           path = rootP;
         } else if (type === 'dir') {
-          path = _path.normalize(`${rootP}/${pArr.join('/')}`);
+          path = _path.normalize(rootP, pArr.join('/'));
         }
       }
     } else if (dir === 'sharemusic') {
       if (account) {
         path = _path.normalize(
-          `${appConfig.appData}/music/${pArr.slice(1).join('/')}`
+          appConfig.appData,
+          'music',
+          pArr.slice(1).join('/')
         );
       } else {
         const sid = pArr[0];
@@ -133,13 +136,15 @@ route.get('/', async (req, res) => {
         if (share.state === 1) {
           if (share.data.data.some((item) => item === sid)) {
             path = _path.normalize(
-              `${appConfig.appData}/music/${pArr.slice(1).join('/')}`
+              appConfig.appData,
+              'music',
+              pArr.slice(1).join('/')
             );
           }
         }
       }
     } else {
-      path = _path.normalize(`${appConfig.appData}${url}`);
+      path = _path.normalize(appConfig.appData, url);
     }
 
     if (!path || !(await _f.exists(path))) {
@@ -180,15 +185,16 @@ route.get('/', async (req, res) => {
         let thumbP = '';
         if (dir === 'file') {
           thumbP = _path.normalize(
-            `${appConfig.appData}/thumb/${dir}/${_path.basename(path)[1]}_${
-              stat.size
-            }.png`
+            appConfig.appData,
+            'thumb',
+            dir,
+            `${_path.basename(path)[1]}_${stat.size}.png`
           );
         } else {
           thumbP = _path.normalize(
-            `${appConfig.appData}/thumb/${
-              _path.extname(path.slice(appConfig.appData.length))[0]
-            }.png`
+            appConfig.appData,
+            'thumb',
+            `${_path.extname(path.slice(appConfig.appData.length))[0]}.png`
           );
         }
 

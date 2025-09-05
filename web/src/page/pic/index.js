@@ -97,7 +97,7 @@ async function hdUpFile(files) {
         const { url } = isrepeat.data;
         fData.push({
           filename: _path.extname(name)[0],
-          url: _d.originURL + _path.normalize(`/api/pub/picture/${url}`),
+          url: _d.originURL + _path.normalize('/api/pub/picture', url),
         });
         //文件已经存在操作
         return;
@@ -117,7 +117,7 @@ async function hdUpFile(files) {
         const { url } = result.data;
         fData.push({
           filename: _path.extname(name)[0],
-          url: _d.originURL + _path.normalize(`/api/pub/picture/${url}`),
+          url: _d.originURL + _path.normalize('/api/pub/picture', url),
         });
         pro.close();
       } else {
@@ -362,7 +362,7 @@ const pgnt = pagination($imgList[0], {
 function copyLink(e, pobj) {
   const data = [];
   const obj = {
-    url: _d.originURL + _path.normalize(`/api/pub/picture/${pobj.url}`),
+    url: _d.originURL + _path.normalize('/api/pub/picture', pobj.url),
     filename: pobj.hash,
   };
   typeTemplateArr.forEach((item, idx) => {

@@ -179,7 +179,7 @@ function getShareData(close, loading = { start() {}, end() {} }) {
         $head._uObj = { username, account, email };
         defaultTitle = title;
         if (logo) {
-          imgjz(_path.normalize(`/api/pub/logo/${account}/${logo}`))
+          imgjz(_path.normalize('/api/pub/logo', account, logo))
             .then((cache) => {
               $head.find('.logo').css('background-image', `url(${cache})`);
             })

@@ -8,13 +8,13 @@ import { batchTask, nanoid } from './utils.js';
 import _path from './path.js';
 
 // 如果目录不存在则创建目录
-_f.fs.mkdirSync(_path.normalize(`${appConfig.appData}/data/db`), {
+_f.fs.mkdirSync(_path.normalize(appConfig.appData, '/data/db'), {
   recursive: true,
 });
 
 // 初始化数据库连接
 const db = new sqlite3.Database(
-  _path.normalize(`${appConfig.appData}/data/db/hello.db`),
+  _path.normalize(appConfig.appData, '/data/db/hello.db'),
   (err) => {
     if (err) {
       // eslint-disable-next-line no-console
