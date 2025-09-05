@@ -613,18 +613,25 @@ longPress($contentWrap[0], function (e) {
 });
 // 操作菜单
 function rightList(e, obj, el) {
-  let data = [
+  const data = [
     {
       id: 'copyPath',
       text: '复制路径',
       beforeIcon: 'iconfont icon-fuzhi',
     },
-    {
-      id: 'share',
-      text: '分享',
-      beforeIcon: 'iconfont icon-fenxiang_2',
-    },
   ];
+  if (obj.type === 'dir') {
+    data.push({
+      id: 'newPage',
+      text: '新窗口打开',
+      beforeIcon: 'iconfont icon-24gl-minimize',
+    });
+  }
+  data.push({
+    id: 'share',
+    text: '分享',
+    beforeIcon: 'iconfont icon-fenxiang_2',
+  });
   if (obj.type === 'file') {
     data.push({
       id: 'download',
@@ -632,8 +639,7 @@ function rightList(e, obj, el) {
       beforeIcon: 'iconfont icon-download',
     });
   }
-  data = [
-    ...data,
+  data.push(
     {
       id: 'check',
       text: '选中',
@@ -653,8 +659,8 @@ function rightList(e, obj, el) {
       id: 'cut',
       text: '剪切',
       beforeIcon: 'iconfont icon-jiandao',
-    },
-  ];
+    }
+  );
   if (_path.extname(obj.name)[2].toLowerCase() === 'zip') {
     data.push({
       id: 'decompress',
@@ -764,6 +770,13 @@ function rightList(e, obj, el) {
       } else if (id === 'copyPath') {
         copyText(_path.normalize('/', obj.path, obj.name));
         close();
+      } else if (id === 'newPage') {
+        close();
+        e.stopPropagation();
+        _myOpen(
+          `/file#${_path.normalize('/', obj.path, obj.name)}`,
+          '文件管理'
+        );
       }
     },
     obj.name
