@@ -44,6 +44,11 @@ html {
   .box {
     position: relative;
     background-color: var(--bg-color-o2);
+    background-image: url('../../images/img/left_open.png'),
+      url('../../images/img/right_open.png');
+    background-repeat: no-repeat;
+    background-size: 10%;
+    background-position: 0 100%, 100% 100%;
     width: 90%;
     max-width: 45rem;
     padding: 3rem;
@@ -62,6 +67,10 @@ html {
       transform: none;
       opacity: 1;
     }
+    &.close {
+      background-image: url('../../images/img/left_close.png'),
+        url('../../images/img/right_close.png');
+    }
     .title {
       font-size: 3rem;
       text-align: center;
@@ -73,7 +82,7 @@ html {
         padding: 0 0.5rem;
         &:nth-child(1) {
           color: var(--text-hover-color);
-          font-size: 1em;
+          font-size: 1.5em;
           opacity: 0.8;
         }
         &:nth-child(3) {

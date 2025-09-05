@@ -17,8 +17,8 @@ import {
 import _d from './config';
 import _msg from '../plugins/message';
 import { _loadingBar } from '../plugins/loadingBar';
-import icon1logo from '../../images/img/icon1.svg';
-import iconlogo from '../../images/img/icon.svg';
+import icon1logo from '../../images/img/icon1.png';
+import iconlogo from '../../images/img/icon.png';
 import imgHechang from '../../images/img/hechang.png';
 import loadingPage from '../plugins/loading';
 import { reqUserCustomCode, reqUserError } from '../../api/user';
@@ -343,11 +343,11 @@ changeHeadBtnSort(localData.get('headBtnToRight'));
   document.addEventListener('visibilitychange', function () {
     // 页面变为不可见时触发
     if (document.visibilityState === 'hidden') {
-      icon.href = iconlogo;
+      icon.href = icon1logo;
     }
     // 页面变为可见时触发
     if (document.visibilityState === 'visible') {
-      icon.href = icon1logo;
+      icon.href = iconlogo;
       if (!isIframe()) {
         timeMsg();
       }

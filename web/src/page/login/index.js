@@ -72,16 +72,10 @@ function hdKeyUp(e) {
   }
 }
 function hdFocus() {
-  $title
-    .find('.iconfont')
-    .eq(0)
-    .attr('class', 'iconfont icon-shuangxianxiajiantou');
+  $box.addClass('close');
 }
 function hdBlur() {
-  $title
-    .find('.iconfont')
-    .eq(0)
-    .attr('class', 'iconfont icon-shuangxianyoujiantou');
+  $box.removeClass('close');
 }
 const accInp = wrapInput($account[0], {
   update(val) {
@@ -93,12 +87,10 @@ const accInp = wrapInput($account[0], {
   },
   focus(e) {
     $(e.target).parent().addClass('focus');
-    hdFocus();
   },
   blur(e) {
     checkUserName();
     $(e.target).parent().removeClass('focus');
-    hdBlur();
   },
   keyup: hdKeyUp,
 });

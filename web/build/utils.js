@@ -58,6 +58,10 @@ function getPlugins(isDev) {
             from: resolve(__dirname, '..', 'src/manifest.json'),
             to: resolve(__dirname, '../../server/static'),
           },
+          {
+            from: resolve(__dirname, '..', 'src/icons'),
+            to: resolve(__dirname, '../../server/static/icons'),
+          },
         ],
       }),
       new GenerateSW({
