@@ -23,7 +23,6 @@ import {
 } from '../../js/utils/utils';
 import { popWindow, setZidx } from './popWindow';
 import defaultIcon from '../../images/img/default-icon.png';
-import { closeAllwindow, hideAllwindow } from './index';
 import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';
 import _path from '../../js/utils/path';
@@ -459,17 +458,21 @@ function handleHideBox(e, _this) {
       text: '新标签打开',
       beforeIcon: 'iconfont icon-link1',
     },
-    {
-      id: '2',
-      text: '隐藏其他窗口',
-      beforeIcon: 'iconfont icon-minus-bold',
-    },
-    {
-      id: '3',
-      text: '关闭其他窗口',
-      beforeIcon: 'iconfont icon-shibai',
-    },
   ];
+  if (openInIframe.iframes.data.size > 1) {
+    data.push(
+      {
+        id: '2',
+        text: '隐藏其他窗口',
+        beforeIcon: 'iconfont icon-minus-bold',
+      },
+      {
+        id: '3',
+        text: '关闭其他窗口',
+        beforeIcon: 'iconfont icon-shibai',
+      }
+    );
+  }
   rMenu.selectMenu(
     e,
     data,
