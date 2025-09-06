@@ -566,7 +566,7 @@ async function insertInitialData() {
     {
       update_at: nowTime,
       account: 'hello',
-      username: 'Hello助手',
+      username: 'hello',
       chat_id: nanoid(),
     },
   ];

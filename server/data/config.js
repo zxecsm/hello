@@ -13,6 +13,8 @@ const appConfig = {
   trashDirName: '.trash', // 垃圾回收站目录名
   noteHistoryDirName: '.noteHistory', // 笔记历史记录目录名
   textFileHistoryDirName: '.history', // 文本文件历史记录目录名
+  helloDes: '服务通知',
+  userDes: '文件传输助手',
 };
 
 export default appConfig;

@@ -100,7 +100,7 @@ export function otherWindowMsg(msg) {
     } else if (flag === 'clear') {
       text = '清空聊天记录';
     } else if (flag === 'shake') {
-      text = '抖了你一下';
+      text = '抖了一下窗口';
       if (notify === 1) {
         shakeChat();
       }

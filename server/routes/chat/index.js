@@ -94,13 +94,13 @@ route.all('/:chat_id/sendMessage', async (req, res) => {
     )[0];
 
     if (!user) {
-      _err(res, 'Hello助手未开启收信接口')(req);
+      _err(res, `${appConfig.helloDes}未开启收信接口`)(req);
       return;
     }
 
     await heperMsgAndForward(req, user.account, text);
 
-    _success(res, '接收Hello助手消息成功')(req, text, 1);
+    _success(res, `接收${appConfig.helloDes}消息成功`)(req, text, 1);
   } catch (error) {
     _err(res)(req, error);
   }
@@ -189,7 +189,7 @@ route.post('/setdes', async (req, res) => {
 route.get('/getdes', async (req, res) => {
   try {
     const { account: acc } = req.query,
-      { account } = req._hello.userinfo;
+      { account, username } = req._hello.userinfo;
 
     if (!validaString(acc, 1, fieldLength.id, 1)) {
       paramErr(res, req);
@@ -211,8 +211,8 @@ route.get('/getdes', async (req, res) => {
       return;
     } else if (acc === 'hello') {
       _success(res, 'ok', {
-        username: 'Hello助手',
-        des: 'Hello助手',
+        username: 'hello',
+        des: appConfig.helloDes,
         online: true,
         os: [],
         notify,
@@ -220,8 +220,8 @@ route.get('/getdes', async (req, res) => {
       return;
     } else if (acc === account) {
       _success(res, 'ok', {
-        username: '文件传输助手',
-        des: '文件传输助手',
+        username,
+        des: appConfig.userDes,
         online: true,
         os: [],
         notify,
@@ -738,7 +738,11 @@ route.get('/user-list', async (req, res) => {
         msg,
       };
       if (acc === account) {
-        obj.des = '文件传输助手';
+        obj.des = appConfig.userDes;
+      }
+      if (acc === 'hello') {
+        obj.username = 'hello';
+        obj.des = appConfig.helloDes;
       }
       if (
         (hide === 1 || n - update_at > 1000 * 30) &&

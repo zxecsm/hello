@@ -844,7 +844,7 @@ function hdChatType(resData, notify) {
     if (isNotify(from.account, notify) && to !== 'chang') {
       chatMessageNotification(
         from.des || from.username,
-        '抖了你一下',
+        '抖了一下窗口',
         from.account,
         to,
         from.logo

@@ -131,7 +131,8 @@ timedTask.add(async () => {
         {
           _hello: {
             userinfo: {
-              username: 'Hello助手',
+              username: 'hello',
+              account: 'hello',
             },
           },
         },

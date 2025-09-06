@@ -219,7 +219,7 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
     } else if (flag === 'clear') {
       msgText = '清空消息';
     } else if (flag === 'shake') {
-      msgText = '抖了一下';
+      msgText = '抖了一下窗口';
     }
     const fInfo = await getFriendInfo(notifyObj.data.to, account, 'notify,des');
     notifyObj.notify = fInfo ? fInfo.notify : 1;
@@ -241,7 +241,7 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
 
     const change2 = await updateData(
       'friends',
-      { update_at: t, msg: msgText },
+      { update_at: t, msg: `您：${msgText}` },
       `WHERE account = ? AND friend = ?`,
       [account, notifyObj.data.to]
     );
@@ -257,7 +257,8 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
       // 推送给自己所有在线终端
       _connect.send(account, nanoid(), notifyObj);
     } else {
-      notifyObj.data.from.des = fInfo ? fInfo.des : '';
+      notifyObj.data.from.des =
+        account === 'hello' ? appConfig.helloDes : fInfo ? fInfo.des : '';
 
       _connect.send(notifyObj.data.to, req._hello.temid, notifyObj);
 
@@ -298,7 +299,7 @@ export async function sendNotificationsToCustomAddresses(req, obj) {
         ['chang', ...list.map((item) => item.account)]
       );
 
-      await hdForwardToLink(req, list, fArr, obj.data, fList);
+      await hdForwardToLink(req, list, fArr, obj.content, fList);
 
       return true;
     }, 200);
@@ -324,7 +325,7 @@ export async function sendNotificationsToCustomAddresses(req, obj) {
 // 处理转发到自定义地址
 export async function hdForwardToLink(req, list = [], fArr, text, fList = []) {
   if (list.length > 0) {
-    const { username } = req._hello.userinfo;
+    const { username, account: fromAccount } = req._hello.userinfo;
 
     await concurrencyTasks(list, 3, async (item) => {
       const { forward_msg_link, account } = item;
@@ -335,7 +336,8 @@ export async function hdForwardToLink(req, list = [], fArr, text, fList = []) {
       const fno = fList.find((y) => y.account === account);
       if (fno && fno.notify === 0) return;
       const des = fe ? fe.des : '';
-      const title = des || username;
+      const title =
+        fromAccount === 'hello' ? appConfig.helloDes : des || username;
 
       link = tplReplace(link, {
         text: encodeURIComponent(text),
@@ -493,7 +495,8 @@ export async function heperMsgAndForward(req, to, text) {
     {
       _hello: {
         userinfo: {
-          username: 'Hello助手',
+          username: 'hello',
+          account: 'hello',
         },
       },
     },
@@ -518,7 +521,7 @@ export async function helloHelperMsg(to, text) {
       _hello: {
         userinfo: {
           account: 'hello',
-          username: 'Hello助手',
+          username: 'hello',
         },
       },
     },
