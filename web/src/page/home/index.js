@@ -730,12 +730,10 @@ function hdChatType(resData, notify) {
     }
     // 聊天框是隐藏
     if (chatRoomWrapIsHide()) {
-      if (isNotify(from.account, notify)) {
-        $showChatRoomBtn.attr(
-          'class',
-          'show_chat_room_btn run iconfont icon-xiaoxi'
-        );
-      }
+      $showChatRoomBtn.attr(
+        'class',
+        'show_chat_room_btn run iconfont icon-xiaoxi'
+      );
       // 聊天框显示
     } else {
       if (isCurChatRoom(chatAccount, from.account, to)) {
@@ -792,15 +790,13 @@ function hdChatType(resData, notify) {
           .catch(() => {});
       } else {
         // 新消息不是是当前聊天框
-        if (isNotify(from.account, notify)) {
-          if (chatAccount === 'chang') {
-            $chatHeadBtns.find('.c_msg_alert').stop().fadeIn(_d.speed);
+        if (chatAccount === 'chang') {
+          $chatHeadBtns.find('.c_msg_alert').stop().fadeIn(_d.speed);
+        } else {
+          if (to === 'chang') {
+            $chatHeadBtns.find('.c_home_msg_alert').stop().fadeIn(_d.speed);
           } else {
-            if (to === 'chang') {
-              $chatHeadBtns.find('.c_home_msg_alert').stop().fadeIn(_d.speed);
-            } else {
-              $chatHeadBtns.find('.c_msg_alert').stop().fadeIn(_d.speed);
-            }
+            $chatHeadBtns.find('.c_msg_alert').stop().fadeIn(_d.speed);
           }
         }
       }

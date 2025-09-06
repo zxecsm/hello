@@ -565,14 +565,14 @@ route.get('/news', async (req, res) => {
 
     const group = await getTableRowCount(
       'friends',
-      `WHERE account = ? AND read = ? AND friend = ? AND notify = ?`,
-      [account, 0, 'chang', 1]
+      `WHERE account = ? AND read = ? AND friend = ?`,
+      [account, 0, 'chang']
     );
 
     const friend = await getTableRowCount(
       'friends',
-      `WHERE account = ? AND read = ? AND friend != ? AND notify = ?`,
-      [account, 0, 'chang', 1]
+      `WHERE account = ? AND read = ? AND friend != ?`,
+      [account, 0, 'chang']
     );
 
     _success(res, 'ok', {

@@ -143,7 +143,7 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
         username,
       },
     },
-    notify: 1,
+    notify: 1, // 默认不勿扰
   };
 
   // flag === 'del'  msgData = { msgId: 'xxx' }
@@ -151,22 +151,22 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
 
   const t = Date.now();
 
+  // 群消息
   if (notifyObj.data.to === 'chang') {
-    //群消息
     if (flag === 'addmsg') {
-      // 给所有人标记群消息为未读
+      // 给所有人只标记新增消息为未读，忽略删除，清空，抖一下
       await batchUpdateData(
         'friends',
         'account',
         { read: 0, update_at: t },
-        `WHERE friend = ? AND notify = ?`,
-        ['chang', 1]
+        `WHERE friend = ?`,
+        ['chang']
       );
     }
 
     const accs = Object.keys(_connect.getConnects());
 
-    // 分批推送
+    // 分批推送正在线的用户通知消息
     await batchTask(async (offset, limit) => {
       const list = accs.slice(offset, offset + limit);
 
@@ -206,7 +206,6 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
     }, 200);
   } else {
     let msgText = '';
-    let read = 0;
     if (flag === 'addmsg') {
       if (msgData.type === 'image') {
         msgText = '图片';
@@ -216,26 +215,25 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
         msgText = msgData.content;
       }
     } else if (flag === 'del') {
-      read = 1;
       msgText = '撤回消息';
     } else if (flag === 'clear') {
-      read = 1;
       msgText = '清空消息';
     } else if (flag === 'shake') {
-      read = 1;
       msgText = '抖了一下';
     }
     const fInfo = await getFriendInfo(notifyObj.data.to, account, 'notify,des');
-    if (fInfo && fInfo.notify === 0) {
-      read = 1;
-    }
     notifyObj.notify = fInfo ? fInfo.notify : 1;
     // 标记消息为未读
     let change = {};
     if (notifyObj.data.to !== account) {
+      const updateObj = { update_at: t, msg: msgText };
+      if (flag === 'addmsg') {
+        // 新增消息才标记未读
+        updateObj.read = 0;
+      }
       change = await updateData(
         'friends',
-        { read, update_at: t, msg: msgText },
+        updateObj,
         `WHERE account = ? AND friend = ?`,
         [notifyObj.data.to, account]
       );
