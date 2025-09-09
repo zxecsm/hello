@@ -44,7 +44,7 @@ export function _setTimeout(callback, time) {
   }, time);
   return timer;
 }
-//节流
+// 节流
 export function throttle(callback, wait) {
   let timer = null,
     pretime = 0,
@@ -52,16 +52,16 @@ export function throttle(callback, wait) {
   return function (...args) {
     if (timer) clearTimeout(timer);
     const now = Date.now(),
-      tt = wait - (now - pretime);
-    if (tt <= 0) {
-      res = callback.call(this, ...args);
+      waitTime = wait - (now - pretime);
+    if (waitTime <= 0) {
+      res = callback.apply(this, args);
       pretime = now;
     } else {
       timer = setTimeout(() => {
         timer = null;
-        res = callback.call(this, ...args);
-        pretime = now;
-      }, tt);
+        res = callback.apply(this, args);
+        pretime = Date.now();
+      }, waitTime);
     }
     return res;
   };
@@ -76,19 +76,18 @@ export function hdOnce(cb) {
     }
   };
 }
-//防抖
+// 防抖
 export function debounce(callback, wait, immedia) {
   let timer = null,
     res = null;
   return function (...args) {
-    if (timer) {
-      clearTimeout(timer);
-    } else {
-      if (immedia) res = callback.call(this, ...args);
+    if (timer) clearTimeout(timer);
+    if (!timer && immedia) {
+      res = callback.apply(this, args);
     }
     timer = setTimeout(() => {
       timer = null;
-      if (!immedia) res = callback.call(this, ...args);
+      if (!immedia) res = callback.apply(this, args);
     }, wait);
     return res;
   };
@@ -106,8 +105,8 @@ export function playSound(src) {
   }
 }
 // 随机数
-export function randomNum(x, y) {
-  return Math.round(Math.random() * (y - x) + x);
+export function randomNum(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min);
 }
 // 随机颜色
 export function randomColor() {

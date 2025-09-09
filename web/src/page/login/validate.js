@@ -302,7 +302,7 @@ class Validate {
   // 验证
   verify() {
     const left = parseInt(this.puzzle.style.left);
-    return Math.abs(left - this.x) < 10;
+    return Math.abs(left - this.x) <= 2;
   }
 }
 export default function validateImg(opt) {

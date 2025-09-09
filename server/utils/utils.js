@@ -321,10 +321,6 @@ export function nanoid() {
     Number(String(Math.random()).slice(2)).toString(36)
   );
 }
-// 随机数
-export function randomNum(x, y) {
-  return Math.round(Math.random() * (y - x) + x);
-}
 
 // 检查是否为有效的 HTTP/HTTPS URL
 export function isurl(url) {
@@ -828,14 +824,13 @@ export function debounce(callback, wait, immedia) {
   let timer = null,
     res = null;
   return function (...args) {
-    if (timer) {
-      clearTimeout(timer);
-    } else {
-      if (immedia) res = callback.call(this, ...args);
+    if (timer) clearTimeout(timer);
+    if (!timer && immedia) {
+      res = callback.apply(this, args);
     }
     timer = setTimeout(() => {
       timer = null;
-      if (!immedia) res = callback.call(this, ...args);
+      if (!immedia) res = callback.apply(this, args);
     }, wait);
     return res;
   };
