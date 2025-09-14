@@ -2484,7 +2484,7 @@ export function highlightPlayingSong(isPosition) {
   if (!$songListWrap.listId) return;
   if (temPlaylist != undefined) {
     if (
-      $songListWrap.listId === 'all' ||
+      ($songListWrap.listId === 'all' && temPlaylist.length > 0) ||
       temPlaylist.some((item) => item.id === setPlayingSongInfo().id)
     ) {
       $listItemsWarp.find('.get_location').stop().slideDown(_d.speed);
