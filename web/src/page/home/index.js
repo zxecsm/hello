@@ -906,6 +906,7 @@ function hdUpdatedataType(resData) {
               if (!lastplay || (setRemotePlayState() && getPlaytimer())) return;
               setPlayingSongInfo(hdSongInfo(lastplay));
               updateSongInfo();
+              initMusicLrc();
               setSongCurrentTime(parseFloat(currentTime) || 0);
               updateSongProgress();
               updatePlayingSongTotalTime(parseFloat(duration) || 0);
