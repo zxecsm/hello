@@ -823,6 +823,7 @@ export function settingMenu(e, isMain) {
     e,
     data,
     async ({ e, resetMenu, close, id, param }) => {
+      const curItem = data.find((item) => item.id === id);
       if (id === '1') {
         close();
         showBgBox();
@@ -830,7 +831,7 @@ export function settingMenu(e, isMain) {
         setGentlemanLock(e);
       } else if (id === '3') {
         const clickLove = localData.get('clickLove');
-        const showStars = localData.get('showStars');
+        // const showStars = localData.get('showStars');
         const pmsound = localData.get('pmsound');
         const tip = localData.get('toolTip');
         const data = [
@@ -858,18 +859,18 @@ export function settingMenu(e, isMain) {
               (clickLove ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
             param: { value: clickLove },
           },
-          {
-            id: '5',
-            text: '小星星',
-            beforeIcon: 'iconfont icon-asterisks-1-copy',
-            afterIcon:
-              'iconfont ' +
-              (showStars ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
-            param: { value: showStars },
-          },
+          // {
+          //   id: '5',
+          //   text: '小星星',
+          //   beforeIcon: 'iconfont icon-asterisks-1-copy',
+          //   afterIcon:
+          //     'iconfont ' +
+          //     (showStars ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+          //   param: { value: showStars },
+          // },
           {
             id: '6',
-            text: '提示音',
+            text: '通知提示音',
             beforeIcon: 'iconfont icon-tongzhi',
             afterIcon:
               'iconfont ' +
@@ -880,7 +881,7 @@ export function settingMenu(e, isMain) {
         if (!isMobile()) {
           data.push({
             id: '7',
-            text: '鼠标移入提示窗',
+            text: '鼠标移入显示提示信息',
             beforeIcon: 'iconfont icon-tishi',
             afterIcon:
               'iconfont ' + (tip ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
@@ -891,6 +892,7 @@ export function settingMenu(e, isMain) {
           e,
           data,
           ({ e, id, resetMenu, param, loading }) => {
+            const curItem = data.find((item) => item.id === id);
             if (id === '1') {
               // 模糊背景
               resizeBgFilter(e);
@@ -909,41 +911,41 @@ export function settingMenu(e, isMain) {
             } else if (id === '4') {
               // 点击效果设置
               if (param.value) {
-                data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
-                data[id - 1].param.value = false;
+                curItem.afterIcon = 'iconfont icon-kaiguan-guan';
+                curItem.param.value = false;
                 _msg.success('关闭成功');
                 localData.set('clickLove', false);
               } else {
-                data[id - 1].afterIcon = 'iconfont icon-kaiguan-kai1';
-                data[id - 1].param.value = true;
+                curItem.afterIcon = 'iconfont icon-kaiguan-kai1';
+                curItem.param.value = true;
                 _msg.success('开启成功');
                 localData.set('clickLove', true);
               }
               resetMenu(data);
-            } else if (id === '5') {
-              // 小星星
-              if (param.value) {
-                data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
-                data[id - 1].param.value = false;
-                _msg.success('关闭成功');
-                localData.set('showStars', false);
-              } else {
-                data[id - 1].afterIcon = 'iconfont icon-kaiguan-kai1';
-                data[id - 1].param.value = true;
-                _msg.success('开启成功');
-                localData.set('showStars', true);
-              }
-              resetMenu(data);
+              // } else if (id === '5') {
+              //   // 小星星
+              //   if (param.value) {
+              //     curItem.afterIcon = 'iconfont icon-kaiguan-guan';
+              //     curItem.param.value = false;
+              //     _msg.success('关闭成功');
+              //     localData.set('showStars', false);
+              //   } else {
+              //     curItem.afterIcon = 'iconfont icon-kaiguan-kai1';
+              //     curItem.param.value = true;
+              //     _msg.success('开启成功');
+              //     localData.set('showStars', true);
+              //   }
+              //   resetMenu(data);
             } else if (id === '6') {
               // 提示音
               if (param.value) {
-                data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
-                data[id - 1].param.value = false;
+                curItem.afterIcon = 'iconfont icon-kaiguan-guan';
+                curItem.param.value = false;
                 _msg.success('关闭成功');
                 localData.set('pmsound', false);
               } else {
-                data[id - 1].afterIcon = 'iconfont icon-kaiguan-kai1';
-                data[id - 1].param.value = true;
+                curItem.afterIcon = 'iconfont icon-kaiguan-kai1';
+                curItem.param.value = true;
                 _msg.success('开启成功');
                 localData.set('pmsound', true);
               }
@@ -951,13 +953,13 @@ export function settingMenu(e, isMain) {
             } else if (id === '7') {
               // 提示工具
               if (param.value) {
-                data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
-                data[id - 1].param.value = false;
+                curItem.afterIcon = 'iconfont icon-kaiguan-guan';
+                curItem.param.value = false;
                 _msg.success('关闭成功');
                 localData.set('toolTip', false);
               } else {
-                data[id - 1].afterIcon = 'iconfont icon-kaiguan-kai1';
-                data[id - 1].param.value = true;
+                curItem.afterIcon = 'iconfont icon-kaiguan-kai1';
+                curItem.param.value = true;
                 _msg.success('开启成功');
                 localData.set('toolTip', true);
               }
@@ -972,31 +974,31 @@ export function settingMenu(e, isMain) {
         const flag = param.value;
         if (flag === 'y') {
           dark = 'n';
-          data[id - 1].beforeIcon = 'iconfont icon-taiyangtianqi';
-          data[id - 1].param.value = dark;
+          curItem.beforeIcon = 'iconfont icon-taiyangtianqi';
+          curItem.param.value = dark;
           _msg.success('关闭成功');
         } else if (flag === 'n') {
           dark = 's';
-          data[id - 1].beforeIcon = 'iconfont icon-xianshiqi';
-          data[id - 1].param.value = dark;
+          curItem.beforeIcon = 'iconfont icon-xianshiqi';
+          curItem.param.value = dark;
           _msg.success('跟随系统');
         } else if (flag === 's') {
           dark = 'y';
-          data[id - 1].beforeIcon = 'iconfont icon-icon_yejian-yueliang';
-          data[id - 1].param.value = dark;
+          curItem.beforeIcon = 'iconfont icon-icon_yejian-yueliang';
+          curItem.param.value = dark;
           _msg.success('开启成功');
         }
         localData.set('dark', dark);
         resetMenu(data);
       } else if (id === '5') {
         if (param.value) {
-          data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
-          data[id - 1].param.value = false;
+          curItem.afterIcon = 'iconfont icon-kaiguan-guan';
+          curItem.param.value = false;
           _msg.success('关闭成功');
           localData.set('headBtnToRight', false);
         } else {
-          data[id - 1].afterIcon = 'iconfont icon-kaiguan-kai1';
-          data[id - 1].param.value = true;
+          curItem.afterIcon = 'iconfont icon-kaiguan-kai1';
+          curItem.param.value = true;
           _msg.success('开启成功');
           localData.set('headBtnToRight', true);
         }
@@ -1044,15 +1046,16 @@ export function settingMenu(e, isMain) {
           e,
           data,
           async ({ e, id, loading, resetMenu, param }) => {
+            const curItem = data.find((item) => item.id === id);
             if (id === '1') {
               if (param.value) {
-                data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
-                data[id - 1].param.value = false;
+                curItem.afterIcon = 'iconfont icon-kaiguan-guan';
+                curItem.param.value = false;
                 _msg.success('关闭成功');
                 cacheFile.setCacheState(false);
               } else {
-                data[id - 1].afterIcon = 'iconfont icon-kaiguan-kai1';
-                data[id - 1].param.value = true;
+                curItem.afterIcon = 'iconfont icon-kaiguan-kai1';
+                curItem.param.value = true;
                 _msg.success('开启成功');
                 cacheFile.setCacheState(true);
               }

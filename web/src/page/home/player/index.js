@@ -2012,10 +2012,9 @@ function hdSongsSort(e) {
   rMenu.selectMenu(
     e,
     data,
-    ({ resetMenu, close, id, param }) => {
+    ({ close, id, param }) => {
       if (id) {
         curSongListSort = param.value;
-        resetMenu(data);
         localData.set('songListSort', curSongListSort);
         songPageNo = 1;
         close();

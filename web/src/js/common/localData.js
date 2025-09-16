@@ -31,7 +31,7 @@ const defaultData = {
   dark: 's', // 黑暗模式 s：随系统 y：开启 n：关闭
   headBtnToRight: true, // 窗口头部按钮排序
   clickLove: true, // 点击♥
-  showStars: true, // 显示星星
+  // showStars: true, // 显示星星
   pmsound: true, // 提示音
   pageGrayscale: 0, // 页面灰度
   mediaVolume: 0.7, // 媒体音量

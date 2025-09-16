@@ -23,7 +23,7 @@ import imgHechang from '../../images/img/hechang.png';
 import loadingPage from '../plugins/loading';
 import { reqUserCustomCode, reqUserError } from '../../api/user';
 import './codeRain';
-import './stars';
+// import './stars';
 import localData from './localData';
 import wave from '../plugins/wave';
 import { timeMsg } from '../../page/home/home';
@@ -87,28 +87,28 @@ window.addEventListener('load', function () {
   function handle(e) {
     const randomc = randomColor();
     if (!localData.get('clickLove')) {
-      const box = document.createElement('div');
-      box.style.cssText = `
-        position: fixed;
-        width: 1.6rem;
-        height: 1.6rem;
-        margin: -0.8rem 0 0 -0.8rem;
-        border-radius: 50%;
-        z-index: ${_d.levelObj.clickLove};
-        pointer-events: none;
-        `;
-      document.body.appendChild(box);
+      // const box = document.createElement('div');
+      // box.style.cssText = `
+      //   position: fixed;
+      //   width: 1.6rem;
+      //   height: 1.6rem;
+      //   margin: -0.8rem 0 0 -0.8rem;
+      //   border-radius: 50%;
+      //   z-index: ${_d.levelObj.clickLove};
+      //   pointer-events: none;
+      //   `;
+      // document.body.appendChild(box);
 
-      box.style.left = e.clientX + 'px';
-      box.style.top = e.clientY + 'px';
-      box.style.backgroundColor = randomc;
-      box.clientHeight;
-      box.style.transition = '.8s ease-in-out';
-      box.style.opacity = 0;
-      box.style.transform = 'scale(1.5)';
-      _setTimeout(() => {
-        box.remove();
-      }, 2000);
+      // box.style.left = e.clientX + 'px';
+      // box.style.top = e.clientY + 'px';
+      // box.style.backgroundColor = randomc;
+      // box.clientHeight;
+      // box.style.transition = '.8s ease-in-out';
+      // box.style.opacity = 0;
+      // box.style.transform = 'scale(1.5)';
+      // _setTimeout(() => {
+      //   box.remove();
+      // }, 2000);
       return;
     }
     // 心形状

@@ -433,6 +433,7 @@ function changeTrashState(e) {
     e,
     data,
     ({ id, resetMenu, close, loading }) => {
+      const curItem = data.find((item) => item.id === id);
       if (id === 'toTrash') {
         _myOpen(`/file#/${_d.trashDirName}`, '文件管理');
         close();
@@ -443,7 +444,7 @@ function changeTrashState(e) {
             loading.end();
             if (res.code === 1) {
               dataObj.trashState = res.data;
-              data[1].afterIcon = dataObj.trashState ? openIcon : closeIcon;
+              curItem.afterIcon = dataObj.trashState ? openIcon : closeIcon;
               resetMenu(data);
               _msg.success(res.codeText);
             }

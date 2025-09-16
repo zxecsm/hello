@@ -866,18 +866,19 @@ function searchSetting(e) {
     e,
     data,
     ({ e, close, resetMenu, id, param }) => {
+      const curItem = data.find((item) => item.id === id);
       if (id === '1') {
         switchSearchCallWord(e);
       } else if (id === '2') {
         const flag = param.openInPop;
         if (flag) {
-          data[4].param.openInPop = false;
-          data[4].afterIcon = 'iconfont icon-kaiguan-guan';
+          curItem.param.openInPop = false;
+          curItem.afterIcon = 'iconfont icon-kaiguan-guan';
           localData.set('searchOpenPop', false);
           _msg.success('关闭成功');
         } else {
-          data[4].param.openInPop = true;
-          data[4].afterIcon = 'iconfont icon-kaiguan-kai1';
+          curItem.param.openInPop = true;
+          curItem.afterIcon = 'iconfont icon-kaiguan-kai1';
           localData.set('searchOpenPop', true);
           _msg.success('开启成功');
         }

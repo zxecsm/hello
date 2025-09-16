@@ -1252,6 +1252,7 @@ function upFileAndDir(e) {
     e,
     data,
     async ({ close, id, param, resetMenu }) => {
+      const curItem = data.find((item) => item.id === id);
       if (id === '1') {
         const files = await getFiles({
           multiple: true,
@@ -1268,13 +1269,13 @@ function upFileAndDir(e) {
         close(1);
       } else if (id === '3') {
         if (param.value) {
-          data[id - 1].afterIcon = 'iconfont icon-kaiguan-guan';
-          data[id - 1].param.value = false;
+          curItem.afterIcon = 'iconfont icon-kaiguan-guan';
+          curItem.param.value = false;
           skipUpSameNameFiles = false;
           localData.set('skipUpSameNameFiles', false);
         } else {
-          data[id - 1].afterIcon = 'iconfont icon-kaiguan-kai1';
-          data[id - 1].param.value = true;
+          curItem.afterIcon = 'iconfont icon-kaiguan-kai1';
+          curItem.param.value = true;
           skipUpSameNameFiles = true;
           localData.set('skipUpSameNameFiles', true);
         }
