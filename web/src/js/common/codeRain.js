@@ -54,6 +54,7 @@ setInterval(() => {
   if (isIframe()) return;
   let sleep = localData.get('sleep');
   sleep = sleep === null ? _d.fieldLength.rainCodeSleep : sleep;
+  if (sleep < 0) return;
   sleep--;
   localData.set('sleep', sleep);
   if (sleep === 0) {
