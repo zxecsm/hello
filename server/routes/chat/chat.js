@@ -46,11 +46,9 @@ export async function getFriendInfo(mAcc, fAcc, fields = '*') {
 
 // 标记为已读
 export async function markAsRead(mAcc, fAcc) {
-  const time = Date.now();
-
   const change = await updateData(
     'friends',
-    { read: 1, update_at: time },
+    { read: 1 },
     `WHERE friend = ? AND account = ?`,
     [fAcc, mAcc]
   );
@@ -424,8 +422,6 @@ export async function becomeFriends(
     // 朋友不存在
     return;
 
-  const time = Date.now();
-
   // 检查是否已经互为朋友
   const frs = await queryData(
     'friends',
@@ -449,7 +445,7 @@ export async function becomeFriends(
     await insertData('friends', [
       {
         id: `${me}_${friend}`,
-        update_at: time,
+        update_at: 0,
         account: me,
         friend,
         read: read1,
@@ -464,7 +460,7 @@ export async function becomeFriends(
     await insertData('friends', [
       {
         id: `${me}_${friend}`,
-        update_at: time,
+        update_at: 0,
         account: me,
         friend,
         read: read1,
@@ -477,7 +473,7 @@ export async function becomeFriends(
     await insertData('friends', [
       {
         id: `${friend}_${me}`,
-        update_at: time,
+        update_at: 0,
         account: friend,
         friend: me,
         read: read2,

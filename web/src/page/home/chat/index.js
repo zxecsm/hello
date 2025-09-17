@@ -153,7 +153,7 @@ const chatSearchInput = wrapInput(
   }
 );
 let userPageNo = 1,
-  userPageSize = 10,
+  userPageSize = localData.get('userListPageSize'),
   isForward = false, // 转发状态
   forwardData = null;
 // 获取用户信息
@@ -241,6 +241,7 @@ const pgnt = pagination($userListBox[0], {
   },
   changeSize(val) {
     userPageSize = val;
+    localData.set('userListPageSize', val);
     userPageNo = 1;
     getUserList(true);
   },
@@ -918,8 +919,7 @@ function userMenu(e, msgObj, isUserList) {
                           setChatTitle(curChatAccount);
                         }
                         if (isUserList) {
-                          userPageNo = 1;
-                          getUserList(true);
+                          getUserList();
                         }
                       }
                     })

@@ -61,7 +61,7 @@ const $contentWrap = $('.content_wrap'),
 let dataObj = {};
 let pageNo = 1;
 let userList = [];
-let uPageSize = 10;
+let uPageSize = localData.get('userListPageSize');
 const closeIcon = 'iconfont icon-kaiguan-guan',
   openIcon = 'iconfont icon-kaiguan-kai1';
 if (isRoot()) {
@@ -119,6 +119,7 @@ const pgnt = pagination($paginationBox[0], {
   },
   changeSize(val) {
     uPageSize = val;
+    localData.set('userListPageSize', val);
     pageNo = 1;
     getUserList(1);
     _msg.botMsg(`第 ${pageNo} 页`);

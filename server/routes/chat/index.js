@@ -172,12 +172,10 @@ route.post('/setdes', async (req, res) => {
     }
 
     await becomeFriends(account, acc);
-    await updateData(
-      'friends',
-      { des, update_at: Date.now() },
-      `WHERE friend = ? AND account = ?`,
-      [acc, account]
-    );
+    await updateData('friends', { des }, `WHERE friend = ? AND account = ?`, [
+      acc,
+      account,
+    ]);
 
     _success(res, '设置备注成功')(req, `${acc}-${des}`, 1);
   } catch (error) {

@@ -61,6 +61,7 @@ const defaultData = {
   songListPageSize: 50, // 歌曲每页显示
   asidePageSize: 6, // 侧边书签每页显示
   noteFontSize: 0.22, // 笔记文本大小
+  userListPageSize: 10, // 用户列表每页显示
   tipsFlag: 0, // tips标识
   toolTip: true, // 提示工具
   editorOption: {
