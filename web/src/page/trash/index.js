@@ -427,6 +427,11 @@ $headWrap
         beforeIcon: 'iconfont icon-history',
         param: { value: 'history' },
       },
+      {
+        text: '文件',
+        beforeIcon: 'iconfont icon-24gl-fileText',
+        param: { value: 'file' },
+      },
     ];
     data.forEach((item, idx) => {
       item.id = idx + 1 + '';
@@ -442,6 +447,10 @@ $headWrap
       ({ close, id, param }) => {
         if (id) {
           close();
+          if (param.value === 'file') {
+            _myOpen(`/file#/${_d.trashDirName}`, '文件管理');
+            return;
+          }
           if (HASH !== param.value) {
             wInput.setValue('');
             HASH = param.value;

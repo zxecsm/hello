@@ -45,6 +45,7 @@ import {
   openCheckState,
   getHomeBmList,
   showHomeFootMenu,
+  hideSearchBox,
 } from '../searchBox/index.js';
 
 import { popWindow } from '../popWindow.js';
@@ -1472,6 +1473,7 @@ $asideBtn.on('click', toggleAside);
 
 // 显示和隐藏侧栏
 export function showAside() {
+  hideSearchBox();
   popWindow.add('aside', hideAside);
   loadingImg($aside.find('.list')[0]);
   $asideWrap.outerWidth();
@@ -1480,7 +1482,7 @@ export function showAside() {
   getBookMarkList($asideBtn.activeId, 1, 0);
 }
 
-function hideAside() {
+export function hideAside() {
   popWindow.remove('aside');
   $asideBtn.fadeIn(_d.speed);
   $asideWrap

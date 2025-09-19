@@ -27,6 +27,7 @@ import {
   bookMarkSetting,
   delBm,
   dragMoveBookmark,
+  hideAside,
   moveBookMark,
   setBookMark,
   tooltipBookmark,
@@ -412,7 +413,7 @@ $searchBoxMask
     }
   });
 // 隐藏搜索框
-function hideSearchBox() {
+export function hideSearchBox() {
   popWindow.remove('search');
   homeLoadImg.unBind();
   $homeBmWrap.find('ul').html('');
@@ -473,6 +474,7 @@ longPress($searchBoxMask[0], '.home_bm_item', function (e) {
 });
 // 显示搜索框
 export function showSearchBox() {
+  hideAside();
   $searchBoxMask.stop().show(_d.speed, () => {
     getHomeBmList();
     setCatSize();
