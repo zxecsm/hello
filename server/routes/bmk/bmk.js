@@ -9,6 +9,59 @@ import {
 import { concurrencyTasks, writelog } from '../../utils/utils.js';
 import { _delDir, readMenu } from '../file/file.js';
 
+// 更新顺序
+export async function updateBmkGroupOrder(account) {
+  const list = await queryData(
+    'bmk_group',
+    'id',
+    `WHERE account = ? AND state = ? ORDER BY num ASC`,
+    [account, 1]
+  );
+
+  if (!list.length) return;
+
+  const data = [
+    {
+      where: 'id',
+      key: 'num',
+      data: list.map((item, i) => ({ id: item.id, num: i })),
+    },
+  ];
+
+  await batchDiffUpdateData(
+    'bmk_group',
+    data,
+    `WHERE id IN (${fillString(list.length)})`,
+    list.map((item) => item.id)
+  );
+}
+
+export async function updateBmkOrder(account, groupId) {
+  const bms = await queryData(
+    'bmk',
+    'id',
+    `WHERE account = ? AND state = ? AND group_id = ? ORDER BY num ASC`,
+    [account, 1, groupId]
+  );
+
+  if (!bms.length) return;
+
+  const data = [
+    {
+      where: 'id',
+      key: 'num',
+      data: bms.map((item, i) => ({ id: item.id, num: i })),
+    },
+  ];
+
+  await batchDiffUpdateData(
+    'bmk',
+    data,
+    `WHERE id IN (${fillString(bms.length)})`,
+    bms.map((item) => item.id)
+  );
+}
+
 // 移动分组位置
 export async function bookListMoveLocation(account, fromId, toId) {
   if (fromId === toId) return;

@@ -44,6 +44,8 @@ import {
   bookmarkMoveLocation,
   bmkGroupExist,
   cleanSiteInfo,
+  updateBmkGroupOrder,
+  updateBmkOrder,
 } from './bmk.js';
 
 import { fieldLength } from '../config.js';
@@ -489,6 +491,8 @@ route.post('/add-group', async (req, res) => {
       return _err(res, `分组限制${fieldLength.bmkGroup}个`)(req);
     }
 
+    await updateBmkGroupOrder(account);
+
     await insertData('bmk_group', [
       {
         title,
@@ -680,6 +684,8 @@ route.post('/add-bmk', async (req, res) => {
       return _err(res, `分组书签限制${fieldLength.bmk}个`)(req);
     }
 
+    await updateBmkOrder(account, groupId);
+
     bms = bms.map((item, i) => ({
       account,
       num: total + i + 1,
@@ -776,6 +782,8 @@ route.post('/bmk-to-group', async (req, res) => {
     if (total + ids.length > fieldLength.bmk) {
       return _err(res, `分组书签限制${fieldLength.bmk}个`)(req);
     }
+
+    await updateBmkOrder(account, groupId);
 
     const ob = [
       {
@@ -941,6 +949,8 @@ route.post('/save-share', async (req, res) => {
 
     const pid = nanoid();
 
+    await updateBmkGroupOrder(account);
+
     await insertData('bmk_group', [
       {
         id: pid,
@@ -1010,6 +1020,8 @@ route.post('/import', async (req, res) => {
     if (total + list.length > fieldLength.bmkGroup) {
       return _err(res, `分组限制${fieldLength.bmkGroup}个`)(req);
     }
+
+    await updateBmkGroupOrder(account);
 
     let count = 0;
     for (let i = 0; i < list.length; i++) {
