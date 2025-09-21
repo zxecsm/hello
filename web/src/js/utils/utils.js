@@ -900,13 +900,27 @@ export function _each(obj, callback, context) {
   return _obj;
 }
 // id生成
-export function nanoid() {
-  return (
-    'h' +
-    Date.now().toString(36) +
-    Number(String(Math.random()).slice(2)).toString(36)
-  );
-}
+export const nanoid = (() => {
+  let lastMs = 0;
+  let counter = 0;
+
+  return () => {
+    const now = Date.now();
+
+    if (now === lastMs) {
+      counter++;
+    } else {
+      lastMs = now;
+      counter = 0;
+    }
+
+    const timePart = now.toString(36);
+
+    const countPart = counter > 0 ? counter.toString(36) : '';
+
+    return 'h' + timePart + countPart;
+  };
+})();
 // 图片尺寸
 export async function _imgSize(file) {
   const url = await getFileReader(file, 'url');
