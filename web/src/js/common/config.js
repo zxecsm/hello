@@ -1,4 +1,4 @@
-import { nanoid } from '../utils/utils';
+import nanoid from '../utils/nanoid';
 const levelObj = {
   upProgressbox: 100, // 上传进度（静）
   rightBox: 101, // 右键菜单（静）
@@ -77,7 +77,7 @@ const _d = {
   levelObj,
   speed: 300,
   translator: 'https://bing.com/translator?text={{}}', // 翻译接口
-  temid: nanoid(), // 临时id
+  temid: nanoid(true), // 临时id
   screen: 800, // 区分大屏小屏
   searchEngineData, // 搜索引擎
   searchWord, // 搜索提示服务

@@ -25,7 +25,6 @@ import {
   createPagingData,
   isValidDate,
   getSplitWord,
-  nanoid,
   uLog,
 } from '../../utils/utils.js';
 
@@ -33,6 +32,7 @@ import { getFriendInfo } from '../chat/chat.js';
 import { fieldLength } from '../config.js';
 import { parseMarkDown, saveNoteHistory } from './note.js';
 import _f from '../../utils/f.js';
+import nanoid from '../../utils/nanoid.js';
 
 const route = express.Router();
 

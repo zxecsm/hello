@@ -4,8 +4,9 @@ import appConfig from '../data/config.js';
 
 import _f from './f.js';
 
-import { batchTask, nanoid } from './utils.js';
+import { batchTask } from './utils.js';
 import _path from './path.js';
+import nanoid from './nanoid.js';
 
 // 如果目录不存在则创建目录
 _f.fs.mkdirSync(_path.normalize(appConfig.appData, '/data/db'), {

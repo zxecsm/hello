@@ -1,4 +1,4 @@
-import { nanoid } from './utils.js';
+import nanoid from './nanoid.js';
 
 const taskState = {
   tasks: new Map(),

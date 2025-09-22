@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import nanoid from '../../js/utils/nanoid';
 import {
   ContentScroll,
   _animate,
@@ -15,7 +16,6 @@ import {
   myDrag,
   myOpen,
   myResize,
-  nanoid,
   savePopLocationInfo,
   switchBorderRadius,
   toCenter,

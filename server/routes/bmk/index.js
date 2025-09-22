@@ -17,7 +17,6 @@ import {
   _success,
   _nologin,
   _err,
-  nanoid,
   isurl,
   validaString,
   _type,
@@ -55,6 +54,7 @@ import _crypto from '../../utils/crypto.js';
 import _path from '../../utils/path.js';
 import jwt from '../../utils/jwt.js';
 import { _d } from '../../data/data.js';
+import nanoid from '../../utils/nanoid.js';
 
 const route = express.Router();
 

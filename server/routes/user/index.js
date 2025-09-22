@@ -12,7 +12,6 @@ import {
   _nologin,
   _nothing,
   _err,
-  nanoid,
   validaString,
   validationValue,
   _type,
@@ -68,6 +67,7 @@ import { getNoteHistoryDir, parseMarkDown } from '../note/note.js';
 import { _delDir, getTrashDir, readMenu } from '../file/file.js';
 import _crypto from '../../utils/crypto.js';
 import getCity from '../../utils/getCity.js';
+import nanoid from '../../utils/nanoid.js';
 
 const verifyCode = new Map();
 

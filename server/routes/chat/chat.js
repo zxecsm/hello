@@ -12,7 +12,6 @@ import {
 } from '../../utils/sqlite.js';
 
 import {
-  nanoid,
   uLog,
   concurrencyTasks,
   tplReplace,
@@ -31,6 +30,7 @@ import appConfig from '../../data/config.js';
 import _f from '../../utils/f.js';
 import { _delDir, cleanEmptyDirectories } from '../file/file.js';
 import _path from '../../utils/path.js';
+import nanoid from '../../utils/nanoid.js';
 
 // 获取好友信息
 export async function getFriendInfo(mAcc, fAcc, fields = '*') {

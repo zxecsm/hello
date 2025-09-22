@@ -24,7 +24,6 @@ import {
   validationValue,
   paramErr,
   createPagingData,
-  nanoid,
   isEmail,
   concurrencyTasks,
   isFilename,
@@ -47,6 +46,7 @@ import _path from '../../utils/path.js';
 import { cleanFavicon, cleanSiteInfo } from '../bmk/bmk.js';
 import _crypto from '../../utils/crypto.js';
 import { getSystemUsage } from '../../utils/sys.js';
+import nanoid from '../../utils/nanoid.js';
 
 const route = express.Router();
 

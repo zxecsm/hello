@@ -16,7 +16,6 @@ import {
   uLog,
   concurrencyTasks,
   errorNotifyMsg,
-  nanoid,
   formatDate,
   errLog,
   createPagingData,
@@ -54,6 +53,7 @@ import taskState from '../../utils/taskState.js';
 import zipper from '../../utils/zip.js';
 import fileList from './cacheFileList.js';
 import axios from 'axios';
+import nanoid from '../../utils/nanoid.js';
 
 const route = express.Router();
 

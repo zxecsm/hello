@@ -33,7 +33,6 @@ import {
   createPagingData,
   uLog,
   isFilename,
-  nanoid,
 } from '../../utils/utils.js';
 
 import { _delDir } from '../file/file.js';
@@ -44,6 +43,7 @@ import { getImgInfo } from '../../utils/img.js';
 import { fieldLength } from '../config.js';
 import _path from '../../utils/path.js';
 import _connect from '../../utils/connect.js';
+import nanoid from '../../utils/nanoid.js';
 
 const route = express.Router();
 

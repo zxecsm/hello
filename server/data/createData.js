@@ -9,9 +9,10 @@ import {
 
 import { resolve } from 'path';
 
-import { writelog, nanoid, getDirname } from '../utils/utils.js';
+import { writelog, getDirname } from '../utils/utils.js';
 
 import { becomeFriends } from '../routes/chat/chat.js';
+import nanoid from '../utils/nanoid.js';
 
 const __dirname = getDirname(import.meta);
 

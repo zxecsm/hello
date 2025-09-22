@@ -21,7 +21,6 @@ import {
   _nothing,
   _err,
   receiveFiles,
-  nanoid,
   isImgFile,
   isMusicFile,
   validaString,
@@ -71,6 +70,7 @@ import { fieldLength } from '../config.js';
 import _path from '../../utils/path.js';
 import pinyin from '../../utils/pinyin.js';
 import jwt from '../../utils/jwt.js';
+import nanoid from '../../utils/nanoid.js';
 const maxSonglistCount = 2000;
 
 const route = express.Router();

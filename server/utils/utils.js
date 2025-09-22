@@ -15,6 +15,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import _path from './path.js';
 import Lock from './lock.js';
+import nanoid from './nanoid.js';
 
 // 获取模块目录
 export function getDirname(meta) {
@@ -312,29 +313,6 @@ export async function mergefile(count, from, to) {
 
   await _f.rename(temFile, to);
 }
-
-// 生成id
-export const nanoid = (() => {
-  let lastMs = 0;
-  let counter = 0;
-
-  return () => {
-    const now = Date.now();
-
-    if (now === lastMs) {
-      counter++;
-    } else {
-      lastMs = now;
-      counter = 0;
-    }
-
-    const timePart = now.toString(36);
-
-    const countPart = counter > 0 ? counter.toString(36) : '';
-
-    return 'h' + timePart + countPart;
-  };
-})();
 
 // 检查是否为有效的 HTTP/HTTPS URL
 export function isurl(url) {
