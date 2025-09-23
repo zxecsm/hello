@@ -796,8 +796,6 @@ route.get('/last-play', async (req, res) => {
 // 随机播放200
 route.get('/random-list', async (req, res) => {
   try {
-    const limit = 200;
-
     // 获取总行数
     let total = await getTableRowCount('songs');
 
@@ -809,13 +807,13 @@ route.get('/random-list', async (req, res) => {
     let offset = 0;
 
     // 计算随机偏移
-    if (total > limit) {
-      total -= limit;
+    if (total > maxSonglistCount) {
+      total -= maxSonglistCount;
       offset = Math.floor(Math.random() * total);
     }
 
     const list = await queryData('songs', '*', `LIMIT ? OFFSET ?`, [
-      limit,
+      maxSonglistCount,
       offset,
     ]);
 
