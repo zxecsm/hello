@@ -32,12 +32,12 @@ function changeTheme(dark) {
   if (dark === 'y') {
     editor.setTheme('ace/theme/github_dark');
   } else if (dark === 'n') {
-    editor.setTheme('ace/theme/chrome');
+    editor.setTheme('ace/theme/github_light_default');
   } else if (dark === 's') {
     if (isDarkMode()) {
       editor.setTheme('ace/theme/github_dark');
     } else {
-      editor.setTheme('ace/theme/chrome');
+      editor.setTheme('ace/theme/github_light_default');
     }
   }
 }

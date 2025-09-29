@@ -53,10 +53,10 @@ function createEditor(el) {
   // 打印边距
   editor.setShowPrintMargin(false);
   // 行高亮
-  // editor.setHighlightActiveLine(false);
+  editor.setHighlightActiveLine(false);
   // 语法检查
   editor.getSession().setUseWorker(false);
-  // editor.setTheme('ace/theme/chrome');
+  // editor.setTheme('ace/theme/github_light_default');
   // editor.setTheme('ace/theme/github_dark');
   // 添加 Ctrl+D 快捷键绑定
   // editor.commands.addCommand({
