@@ -56,9 +56,11 @@ export function parseMarkDown(content) {
     let count = 0;
     $('img').each((_, el) => {
       if (count >= 6) return false;
-      const src = $(el).attr('src');
+      const $el = $(el);
+      const src = $el.attr('src');
       if (src) {
-        res.images.push(src);
+        const alt = $el.attr('alt') || '';
+        res.images.push({ src, alt });
         count++;
       }
     });

@@ -247,7 +247,7 @@ function renderList(y) {
                   </span>
                   <br/>
                 </template>
-                <img class="default_size" v-for="img in images" :src="loadingSvg" cursor="y" :data-src="img" />
+                <img class="default_size" v-for="img in images" :src="loadingSvg" cursor="y" :data-src="img.src" :alt="img.alt" :title="img.alt" />
                 <span v-if="con && con.length > 0" v-html="hdHighlight(con)"></span>
               </div>
               <div class="item_info" v-else-if="HASH === 'bmk'">

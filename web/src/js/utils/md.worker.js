@@ -44,7 +44,7 @@ md.renderer.rules.image = (tokens, idx) => {
   });
   const src = srcItem[1];
   const alt = tokens[idx].content;
-  return `<img cursor="" data-src="${src}" src="${imgLoadImg}" alt="${alt}" />`;
+  return `<img cursor="y" data-src="${src}" src="${imgLoadImg}" alt="${alt}" title="${alt}" />`;
 };
 
 // 自定义代码块渲染规则
