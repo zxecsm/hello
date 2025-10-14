@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 import { _d } from '../data/data.js';
 import { CacheByExpire } from './cache.js';
 
-const cache = new CacheByExpire(10 * 60 * 1000, 20 * 60 * 1000);
+const cache = new CacheByExpire(10 * 60 * 1000, 10 * 60 * 1000);
 
 function sendMail(to, title, html) {
   return new Promise((resolve, reject) => {

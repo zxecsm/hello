@@ -2,7 +2,7 @@ import { CacheByExpire } from '../../utils/cache.js';
 
 // 缓存文件列表
 const fileList = {
-  cache: new CacheByExpire(20 * 60 * 1000, 30 * 60 * 1000),
+  cache: new CacheByExpire(10 * 60 * 1000, 10 * 60 * 1000),
 
   // 添加缓存
   add(account, key, list) {

@@ -13,7 +13,7 @@ const cacheFile = {
     localData.set('cacheState', val);
   },
   // URL对象缓存
-  urlCache: new CacheByExpire(30 * 60 * 1000, 40 * 60 * 1000, {
+  urlCache: new CacheByExpire(5 * 60 * 1000, 5 * 60 * 1000, {
     onDelete: (_, url) => {
       // 清除url缓存，释放URL对象
       if (url) {
@@ -83,15 +83,19 @@ const cacheFile = {
       }
 
       if (!this.supported) return null;
+
       let file = await this.readCache(hash);
       if (!file) return null;
 
+      let ttl = 30 * 60 * 1000;
+
       if (type === 'image' && (await isTextFile(file))) {
         file = new Blob([await file.text()], { type: 'image/svg+xml' });
+        ttl = undefined;
       }
 
       const objectURL = URL.createObjectURL(file);
-      this.urlCache.set(hash, objectURL);
+      this.urlCache.set(hash, objectURL, ttl);
 
       return objectURL;
     } catch {

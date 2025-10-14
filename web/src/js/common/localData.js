@@ -1,3 +1,4 @@
+import _msg from '../plugins/message';
 import { getTextSize } from '../utils/utils';
 
 const defaultData = {
@@ -133,7 +134,9 @@ const localData = {
         const payload = encode({ data });
         localStorage.setItem(storageKey, payload);
         this.trigger({ key: storageKey, newValue: payload });
-      } catch {}
+      } catch {
+        _msg.error('本地配置缓存已满，请清理缓存');
+      }
       this.debounceTimers.delete(storageKey);
     }, delay);
 
@@ -194,7 +197,9 @@ const localData = {
         try {
           const payload = encode({ data });
           sessionStorage.setItem(storageKey, payload);
-        } catch {}
+        } catch {
+          _msg.error('本地配置缓存已满，请清理缓存');
+        }
         this.debounceTimers.delete(storageKey);
       }, delay);
 

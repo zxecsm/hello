@@ -798,6 +798,12 @@ export function settingMenu(e, isMain) {
       text: '缓存管理',
       beforeIcon: `iconfont icon-yidongyingpan`,
     });
+  } else {
+    data.push({
+      id: '10',
+      text: '清理本地配置缓存',
+      beforeIcon: `iconfont icon-15qingkong-1`,
+    });
   }
   if (isMain) {
     data = [
@@ -822,7 +828,7 @@ export function settingMenu(e, isMain) {
   rMenu.selectMenu(
     e,
     data,
-    async ({ e, resetMenu, close, id, param }) => {
+    async ({ e, resetMenu, close, id, param, loading }) => {
       const curItem = data.find((item) => item.id === id);
       if (id === '1') {
         close();
@@ -1062,7 +1068,7 @@ export function settingMenu(e, isMain) {
               resetMenu(data);
             } else if (id === '2') {
               const { quota } = await cacheFile.getEstimateSize();
-              const titleText = `选择要清除的缓存：剩余空间大约(${formatBytes(
+              const titleText = `选择要清除的缓存：可用缓存空间大约(${formatBytes(
                 quota
               )})`;
               const data = [
@@ -1200,6 +1206,30 @@ export function settingMenu(e, isMain) {
             }
           },
           '缓存管理(关闭缓存后，会停止新增歌曲和图片的缓存文件。已缓存的文件不受影响)'
+        );
+      } else if (id === '10') {
+        rMenu.pop(
+          {
+            e,
+            text: `确认清空: 本地配置缓存？大约：${formatBytes(
+              localData.getSize()
+            )}`,
+          },
+          (type) => {
+            if (type === 'confirm') {
+              try {
+                loading.start();
+                localData.remove();
+                localData.set('account', setUserInfo().account);
+                localData.set('username', setUserInfo().username);
+                loading.end();
+                _msg.success();
+              } catch {
+                loading.end();
+                _msg.error();
+              }
+            }
+          }
         );
       }
     },

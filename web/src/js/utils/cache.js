@@ -1,12 +1,17 @@
 export class CacheByExpire {
-  constructor(ttl, cleanupInterval = 0, { onDelete } = {}) {
+  constructor(ttl, cleanupInterval = 0, hooks = {}) {
     if (ttl <= 0) {
       throw new Error('TTL must be positive numbers');
     }
 
     this.ttl = ttl; // 存储缓存过期时间
-    this.onDelete = onDelete;
     this.cache = new Map(); // 使用 Map 来存储缓存
+
+    // 注册钩子
+    this.hooks = {
+      onSet: hooks.onSet || null, // 设置缓存时的钩子
+      onDelete: hooks.onDelete || null, // 删除缓存时的钩子
+    };
 
     if (cleanupInterval > 0) {
       this.cleanupIntervalId = setInterval(
@@ -20,25 +25,27 @@ export class CacheByExpire {
   }
 
   // 重置条目的过期时间
-  resetExpireTime(key) {
+  resetExpireTime(key, ttl = this.ttl) {
     if (this.isDestroyed) return;
 
     const entry = this.cache.get(key);
     if (entry) {
-      entry.expireTime = Date.now() + this.ttl;
+      entry.expireTime = Date.now() + ttl;
     }
   }
 
   // 保存缓存条目
-  set(key, value) {
+  set(key, value, ttl = this.ttl) {
     if (this.isDestroyed) return;
 
-    const expireTime = Date.now() + this.ttl; // 设置条目的过期时间
+    const expireTime = Date.now() + ttl; // 设置条目的过期时间
     this.cache.set(key, { value, expireTime });
 
     if (this.cleanupInterval === 0) {
       this.cleanup();
     }
+
+    this.hooks.onSet?.(key, value);
   }
 
   // 获取缓存条目
@@ -51,8 +58,13 @@ export class CacheByExpire {
     }
 
     // 如果条目过期或不存在，删除该条目
-    this.delete(key, entry ? entry.value : '');
+    this.delete(key, entry ? entry.value : undefined);
     return null; // 缓存已过期或不存在
+  }
+
+  // 获取缓存条目数
+  size() {
+    return this.cache.size;
   }
 
   // 获取缓存的数据
@@ -96,17 +108,14 @@ export class CacheByExpire {
   // 清空缓存数据
   clear() {
     if (this.isDestroyed) return;
-    for (const [key, { value }] of this.cache) {
-      this.delete(key, value);
-    }
-    // this.cache.clear();
+    this.clearByValue(() => true);
   }
 
   // 删除缓存条目
   delete(key, value) {
     if (this.isDestroyed) return;
     this.cache.delete(key);
-    this.onDelete && this.onDelete(key, value);
+    this.hooks.onDelete?.(key, value);
   }
 
   // 销毁

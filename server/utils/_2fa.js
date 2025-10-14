@@ -1,7 +1,7 @@
 import speakeasy from 'speakeasy';
 import { CacheByExpire } from './cache.js';
 
-const cache = new CacheByExpire(10 * 60 * 1000, 30 * 60 * 1000);
+const cache = new CacheByExpire(10 * 60 * 1000, 10 * 60 * 1000);
 
 function create(acc) {
   const data = cache.get(acc);

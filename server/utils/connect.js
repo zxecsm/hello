@@ -1,6 +1,6 @@
 import { CacheByExpire } from './cache.js';
 
-const cache = new CacheByExpire(60 * 1000, 10 * 60 * 1000);
+const cache = new CacheByExpire(60 * 1000, 60 * 1000);
 
 // 获取随机 flag
 function getFlag() {
