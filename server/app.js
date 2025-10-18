@@ -86,17 +86,6 @@ app.use(async (req, res, next) => {
       return;
     }
 
-    // 客户端信息
-    const _clientConfig = new UAParser(req.headers['user-agent']).getResult(); //获取访问设备信息
-
-    const osName = `${getIn(_clientConfig, ['os', 'name']) || 'other'}${
-      getIn(_clientConfig, ['os', 'version']) || ''
-    }`;
-    const browser = getIn(_clientConfig, ['browser', 'name']);
-    const osVendor = getIn(_clientConfig, ['device', 'vendor']);
-    const osModel = getIn(_clientConfig, ['device', 'model']);
-    const cpu = getIn(_clientConfig, ['cpu', 'architecture']);
-
     const ip = getClientIp(req); // 客户端ip
     const method = req.method.toLocaleLowerCase(); // 请求类型
 
@@ -112,9 +101,7 @@ app.use(async (req, res, next) => {
       path: req.path,
       temid,
       ip,
-      os: `${osName} (${browser || ''}${cpu ? ' ' + cpu : ''}${
-        osVendor ? ' ' + osVendor + ' ' + osModel : ''
-      })`,
+      os: formatClientInfo(req.headers['user-agent']),
       method,
       jwtData,
     };
@@ -271,4 +258,26 @@ function getLocalhost() {
     }
   });
   return arr;
+}
+
+// 格式化客户端信息
+function formatClientInfo(userAgent) {
+  const config = new UAParser(userAgent).getResult();
+
+  const osName = getIn(config, ['os', 'name'], '未知系统');
+  const browser = getIn(config, ['browser', 'name'], '');
+  const osVendor = getIn(config, ['device', 'vendor'], '');
+  const osModel = getIn(config, ['device', 'model'], '');
+  const cpu = getIn(config, ['cpu', 'architecture'], '');
+
+  const mainParts = [osName];
+  if (cpu) mainParts.push(cpu);
+
+  const deviceParts = [osVendor, osModel, browser].filter(Boolean);
+
+  if (deviceParts.length > 0) {
+    mainParts.push(`(${deviceParts.join(' ')})`);
+  }
+
+  return mainParts.join(' ');
 }

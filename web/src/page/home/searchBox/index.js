@@ -773,12 +773,12 @@ function hdSearchWord(res) {
       res = [];
     }
   } else if (type === 'Baidu') {
-    res = getIn(res, ['s']) || [];
+    res = getIn(res, ['s'], []);
   } else if (type === 'Bing') {
-    res = getIn(res, ['AS', 'Results']) || [];
+    res = getIn(res, ['AS', 'Results'], []);
     let arr = [];
     res.forEach((item) => {
-      let ar = getIn(item, ['Suggests']) || [];
+      let ar = getIn(item, ['Suggests'], []);
       ar.forEach((titem) => {
         arr.push(titem.Txt);
       });

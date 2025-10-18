@@ -573,18 +573,18 @@ export function deepClone(obj) {
 // 歌曲标签信息
 export async function getSongInfo(path) {
   const metadata = await parseFile(path);
-  let duration = getIn(metadata, ['format', 'duration']) || 0,
-    artist = getIn(metadata, ['common', 'artist']) || '未知',
-    title = getIn(metadata, ['common', 'title']) || '未知',
-    album = getIn(metadata, ['common', 'album']) || '--',
-    year = getIn(metadata, ['common', 'year']) || '--',
-    pic = getIn(metadata, ['common', 'picture', '0', 'data']) || '',
-    picFormat = getIn(metadata, ['common', 'picture', '0', 'format']) || '',
-    lrc = getIn(metadata, ['native', `ID3v2.3`]) || [];
+  let duration = getIn(metadata, ['format', 'duration'], 0),
+    artist = getIn(metadata, ['common', 'artist'], '未知'),
+    title = getIn(metadata, ['common', 'title'], '未知'),
+    album = getIn(metadata, ['common', 'album'], '--'),
+    year = getIn(metadata, ['common', 'year'], '--'),
+    pic = getIn(metadata, ['common', 'picture', '0', 'data'], ''),
+    picFormat = getIn(metadata, ['common', 'picture', '0', 'format'], ''),
+    lrc = getIn(metadata, ['native', `ID3v2.3`], []);
   lrc = lrc.find(
     (item) => item !== null && typeof item === 'object' && item.id === 'USLT'
   );
-  lrc = (lrc && getIn(lrc, ['value', 'text'])) || '';
+  lrc = lrc && getIn(lrc, ['value', 'text'], '');
   return {
     duration,
     pic,
@@ -682,20 +682,29 @@ export function getTimePath(timestamp) {
 }
 
 // 读取深层值
-export function getIn(target, keys) {
-  return keys.reduce((obj, key) => (obj ? obj[key] : undefined), target);
+export function getIn(target, keys, defaultValue = undefined) {
+  if (!target) return defaultValue;
+
+  const keyArray = Array.isArray(keys) ? keys : keys.split('.');
+
+  let current = target;
+  for (const key of keyArray) {
+    if (current == null) return defaultValue;
+    current = current[key];
+  }
+
+  return current !== undefined ? current : defaultValue;
 }
 
 export function tplReplace(tpl, data) {
   return tpl.replace(/\{\{(.*?)\}\}/g, (_, k) => {
-    return (
-      getIn(
-        data,
-        k
-          .trim()
-          .split('.')
-          .filter((item) => item)
-      ) || ''
+    return getIn(
+      data,
+      k
+        .trim()
+        .split('.')
+        .filter((item) => item),
+      ''
     );
   });
 }

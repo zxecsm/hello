@@ -909,19 +909,28 @@ export async function _imgSize(file) {
   };
 }
 // 读取深层属性
-export function getIn(target, keys) {
-  return keys.reduce((obj, key) => (obj ? obj[key] : undefined), target);
+export function getIn(target, keys, defaultValue = undefined) {
+  if (!target) return defaultValue;
+
+  const keyArray = Array.isArray(keys) ? keys : keys.split('.');
+
+  let current = target;
+  for (const key of keyArray) {
+    if (current == null) return defaultValue;
+    current = current[key];
+  }
+
+  return current !== undefined ? current : defaultValue;
 }
 export function tplReplace(tpl, data) {
   return tpl.replace(/\{\{(.*?)\}\}/g, (_, k) => {
-    return (
-      getIn(
-        data,
-        k
-          .trim()
-          .split('.')
-          .filter((item) => item)
-      ) || ''
+    return getIn(
+      data,
+      k
+        .trim()
+        .split('.')
+        .filter((item) => item),
+      ''
     );
   });
 }

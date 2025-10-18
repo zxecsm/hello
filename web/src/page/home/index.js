@@ -375,9 +375,9 @@ export function updateUserInfo(cb) {
           // 更新壁纸
           let bgUrl = '';
           if (isBig) {
-            bgUrl = getFilePath(`/bg/${getIn(bgObj, [bg, 'url']) || ''}`);
+            bgUrl = getFilePath(`/bg/${getIn(bgObj, [bg, 'url'], '')}`);
           } else {
-            bgUrl = getFilePath(`/bg/${getIn(bgObj, [bgxs, 'url']) || ''}`);
+            bgUrl = getFilePath(`/bg/${getIn(bgObj, [bgxs, 'url'], '')}`);
           }
           imgjz(bgUrl)
             .then((cache) => {
