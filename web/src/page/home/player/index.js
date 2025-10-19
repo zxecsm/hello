@@ -2214,10 +2214,9 @@ $msuicContentBox
     musicSearchInput.setValue(this.innerText).focus();
     getSearchSongs(1, 1);
   })
-  .on('click', '.song_logo_box', function () {
+  .on('click', '.song_logo_box', function (e) {
     const $this = $(this).parent();
-    playSongList($this.attr('data-id'));
-    showLrcBox();
+    showSongInfo(e, getSongInfo($this.attr('data-id')));
   })
   .on('click', '.play_mv', function (e) {
     const $this = $(this).parent();
