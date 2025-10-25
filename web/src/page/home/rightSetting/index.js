@@ -837,6 +837,7 @@ export function settingMenu(e, isMain) {
         setGentlemanLock(e);
       } else if (id === '3') {
         const clickLove = localData.get('clickLove');
+        const windowMoveOpacity = localData.get('windowMoveOpacity');
         // const showStars = localData.get('showStars');
         const pmsound = localData.get('pmsound');
         const tip = localData.get('toolTip');
@@ -864,6 +865,15 @@ export function settingMenu(e, isMain) {
               'iconfont ' +
               (clickLove ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
             param: { value: clickLove },
+          },
+          {
+            id: '7',
+            text: '窗口移动透明',
+            beforeIcon: 'iconfont icon-opacity',
+            afterIcon:
+              'iconfont ' +
+              (windowMoveOpacity ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+            param: { value: windowMoveOpacity },
           },
           // {
           //   id: '5',
@@ -942,6 +952,20 @@ export function settingMenu(e, isMain) {
               //     localData.set('showStars', true);
               //   }
               //   resetMenu(data);
+            } else if (id === '7') {
+              // 窗口移动透明
+              if (param.value) {
+                curItem.afterIcon = 'iconfont icon-kaiguan-guan';
+                curItem.param.value = false;
+                _msg.success('关闭成功');
+                localData.set('windowMoveOpacity', false);
+              } else {
+                curItem.afterIcon = 'iconfont icon-kaiguan-kai1';
+                curItem.param.value = true;
+                _msg.success('开启成功');
+                localData.set('windowMoveOpacity', true);
+              }
+              resetMenu(data);
             } else if (id === '6') {
               // 提示音
               if (param.value) {

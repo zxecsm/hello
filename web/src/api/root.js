@@ -1,3 +1,4 @@
+import _d from '../js/common/config';
 import { _getAjax, _postAjax } from '../js/utils/utils';
 // 日志列表
 export function reqRootLogList() {
@@ -25,23 +26,41 @@ export function reqRootDeleteAccount(data) {
 }
 // 清理音乐文件
 export function reqRootCleanMusicFile() {
-  return _getAjax('/root/clean-music-file');
+  return _getAjax(
+    '/root/clean-music-file',
+    {},
+    { timeout: _d.fieldLength.operationTimeout }
+  );
 }
 // 清理壁纸文件
 export function reqRootCleanBgFile() {
-  return _getAjax('/root/clean-bg-file');
+  return _getAjax(
+    '/root/clean-bg-file',
+    {},
+    { timeout: _d.fieldLength.operationTimeout }
+  );
 }
 // 清理logo文件
 export function reqRootCleanLogoFile() {
-  return _getAjax('/root/clean-logo-file');
+  return _getAjax(
+    '/root/clean-logo-file',
+    {},
+    { timeout: _d.fieldLength.operationTimeout }
+  );
 }
 // 清理pic文件
 export function reqRootCleanPicFile() {
-  return _getAjax('/root/clean-pic-file');
+  return _getAjax(
+    '/root/clean-pic-file',
+    {},
+    { timeout: _d.fieldLength.operationTimeout }
+  );
 }
 // 清空缩略图
 export function reqRootCleanThumbFile(data) {
-  return _getAjax('/root/clean-thumb-file', data);
+  return _getAjax('/root/clean-thumb-file', data, {
+    timeout: _d.fieldLength.operationTimeout,
+  });
 }
 // 注册状态
 export function reqRootRegisterState() {
@@ -57,7 +76,11 @@ export function reqRootUpdateTokenKey() {
 }
 // 清理数据库
 export function reqRootCleanDatabase() {
-  return _postAjax('/root/clean-database');
+  return _postAjax(
+    '/root/clean-database',
+    {},
+    { timeout: _d.fieldLength.operationTimeout }
+  );
 }
 // tips
 export function reqRootTips(data) {
@@ -81,7 +104,9 @@ export function reqRootTestTfa(data) {
 }
 // 文件缓存时间
 export function reqRootChangeCacheTime(data) {
-  return _postAjax('/root/change-cache-time', data);
+  return _postAjax('/root/change-cache-time', data, {
+    timeout: _d.fieldLength.operationTimeout,
+  });
 }
 // 公开接口状态
 export function reqRootPubApiState(data) {

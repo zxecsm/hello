@@ -235,6 +235,21 @@ $list
 if (isIframe()) {
   $headBtns.find('.h_go_home').remove();
 }
+function timeoutMsg(text = '操作后台处理中，可在日志中查看处理结果') {
+  _msg.msg(
+    {
+      message: text,
+      type: 'warning',
+      duration: 8000,
+      icon: 'iconfont icon-warning-circle',
+    },
+    (type) => {
+      if (type === 'click') {
+        _myOpen(`/log`, '日志');
+      }
+    }
+  );
+}
 // 清理歌曲文件
 function cleanMusicFile(e, loading = { start() {}, end() {} }) {
   rMenu.pop(
@@ -253,8 +268,11 @@ function cleanMusicFile(e, loading = { start() {}, end() {} }) {
               return;
             }
           })
-          .catch(() => {
+          .catch((error) => {
             loading.end();
+            if (error.statusText === 'timeout') {
+              timeoutMsg();
+            }
           });
       }
     }
@@ -278,8 +296,11 @@ function cleanBgFile(e, loading = { start() {}, end() {} }) {
               return;
             }
           })
-          .catch(() => {
+          .catch((error) => {
             loading.end();
+            if (error.statusText === 'timeout') {
+              timeoutMsg();
+            }
           });
       }
     }
@@ -303,8 +324,11 @@ function cleanLogoFile(e, loading = { start() {}, end() {} }) {
               return;
             }
           })
-          .catch(() => {
+          .catch((error) => {
             loading.end();
+            if (error.statusText === 'timeout') {
+              timeoutMsg();
+            }
           });
       }
     }
@@ -328,8 +352,11 @@ function cleanPicFile(e, loading = { start() {}, end() {} }) {
               return;
             }
           })
-          .catch(() => {
+          .catch((error) => {
             loading.end();
+            if (error.statusText === 'timeout') {
+              timeoutMsg();
+            }
           });
       }
     }
@@ -386,8 +413,11 @@ function cleanThumbFile(e) {
                     return;
                   }
                 })
-                .catch(() => {
+                .catch((error) => {
                   loading.end();
+                  if (error.statusText === 'timeout') {
+                    timeoutMsg();
+                  }
                 });
             }
           }
@@ -474,11 +504,17 @@ function updateTokenKey(e) {
 function cleanDatabase(e) {
   rMenu.pop({ e, text: `确认释放：数据库空间？` }, (type) => {
     if (type === 'confirm') {
-      reqRootCleanDatabase().then((res) => {
-        if (res.code === 1) {
-          _msg.success(res.codeText);
-        }
-      });
+      reqRootCleanDatabase()
+        .then((res) => {
+          if (res.code === 1) {
+            _msg.success(res.codeText);
+          }
+        })
+        .catch((error) => {
+          if (error.statusText === 'timeout') {
+            timeoutMsg();
+          }
+        });
     }
   });
 }
@@ -851,8 +887,11 @@ function handleFileCacheExp(e) {
             _msg.success(res.codeText);
           }
         })
-        .catch(() => {
+        .catch((error) => {
           loading.end();
+          if (error.statusText === 'timeout') {
+            timeoutMsg();
+          }
         });
     },
     '设置文件缓存时间（天）'

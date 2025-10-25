@@ -1493,9 +1493,15 @@ export function myDrag(opt) {
     }
     target.style.left = x + 'px';
     target.style.top = y + 'px';
+    if (localData.get('windowMoveOpacity')) {
+      target.style.opacity = 0.8;
+    }
     move && move({ e, trigger, target, x, y, pointerX, pointerY });
   }
   function hdUp(e) {
+    if (localData.get('windowMoveOpacity')) {
+      target.style.opacity = '';
+    }
     toggleUserSelect();
     target.removeEventListener('touchmove', hdMove);
     target.removeEventListener('touchend', hdUp);
