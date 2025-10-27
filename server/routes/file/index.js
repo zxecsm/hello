@@ -272,6 +272,12 @@ route.post('/read-dir', async (req, res) => {
               path,
             };
 
+            if (!req._hello.isRoot) {
+              delete obj.mode;
+              delete obj.gid;
+              delete obj.uid;
+            }
+
             // 关键词过滤
             if (
               !word ||
@@ -1238,10 +1244,12 @@ route.post('/rename', async (req, res) => {
 // 文件权限
 route.post('/mode', async (req, res) => {
   try {
-    const { data, mode } = req.body;
+    const { data, mode, r = 0 } = req.body;
 
     if (
+      !_type.isString(mode) ||
       !/^[0-7]{3}$/.test(mode) ||
+      !validationValue(r, [0, 1]) ||
       !_type.isArray(data) ||
       data.length === 0 ||
       data.length > fieldLength.maxPagesize ||
@@ -1265,20 +1273,122 @@ route.post('/mode', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await concurrencyTasks(data, 5, async (task) => {
-      const { path, name } = task;
-      const p = getCurPath(account, `${path}/${name}`);
-      if (await _f.exists(p)) {
-        await _f.fsp.chmod(p, mode.toString(8));
-        await uLog(req, `设置权限为${mode}(${p})`);
-      }
-    });
-
-    syncUpdateData(req, 'file');
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const taskKey = taskState.add(account, `设置权限...0`, controller);
 
     fileList.clear(account);
 
-    _success(res, `设置权限成功`)(req, `${mode}-${data.length}`, 1);
+    _success(res, 'ok', { key: taskKey });
+
+    try {
+      let count = 0;
+
+      await concurrencyTasks(data, 5, async (task) => {
+        if (signal.aborted) return;
+
+        const { name, path } = task;
+
+        const p = getCurPath(account, `${path}/${name}`);
+
+        await _f.chmod(p, mode, {
+          signal,
+          fileCount() {
+            count++;
+            taskState.update(taskKey, `设置权限...${count}`);
+          },
+          recursive: r,
+        });
+
+        await uLog(req, `${r ? '递归' : ''}设置权限为${mode}(${p})`);
+      });
+
+      taskState.delete(taskKey);
+      syncUpdateData(req, 'file');
+    } catch (error) {
+      taskState.delete(taskKey);
+      await errLog(req, `设置权限失败(${error})`);
+      errorNotifyMsg(req, `设置权限失败`);
+    }
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 文件用户组
+route.post('/chown', async (req, res) => {
+  try {
+    let { data, uid = 0, gid = 0, r = 0 } = req.body;
+    uid = parseInt(uid);
+    gid = parseInt(gid);
+
+    if (
+      uid < 0 ||
+      gid < 0 ||
+      !validationValue(r, [0, 1]) ||
+      !_type.isArray(data) ||
+      data.length === 0 ||
+      data.length > fieldLength.maxPagesize ||
+      !data.every(
+        (item) =>
+          _type.isObject(item) &&
+          validaString(item.name, 1, fieldLength.filename) &&
+          isFilename(item.name) &&
+          validaString(item.path, 1, fieldLength.url) &&
+          validationValue(item.type, ['dir', 'file'])
+      )
+    ) {
+      paramErr(res, req);
+      return;
+    }
+
+    if (!req._hello.isRoot) {
+      _err(res, '无权操作')(req);
+      return;
+    }
+
+    const { account } = req._hello.userinfo;
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const taskKey = taskState.add(account, `设置用户组...0`, controller);
+
+    fileList.clear(account);
+
+    _success(res, 'ok', { key: taskKey });
+
+    try {
+      let count = 0;
+
+      await concurrencyTasks(data, 5, async (task) => {
+        if (signal.aborted) return;
+
+        const { name, path } = task;
+
+        const p = getCurPath(account, `${path}/${name}`);
+
+        await _f.chown(p, uid, gid, {
+          signal,
+          fileCount() {
+            count++;
+            taskState.update(taskKey, `设置用户组...${count}`);
+          },
+          recursive: r,
+        });
+
+        await uLog(
+          req,
+          `${r ? '递归' : ''}设置用户组为uid：${uid} gid：${gid}(${p})`
+        );
+      });
+
+      taskState.delete(taskKey);
+      syncUpdateData(req, 'file');
+    } catch (error) {
+      taskState.delete(taskKey);
+      await errLog(req, `设置用户组失败(${error})`);
+      errorNotifyMsg(req, `设置用户组失败`);
+    }
   } catch (error) {
     _err(res)(req, error);
   }

@@ -136,7 +136,7 @@ export function showCountInfo(e, obj) {
 }
 // 显示文件信息
 export function showFileInfo(e, obj) {
-  let data = [
+  const data = [
     {
       text: obj.name,
       beforeText: 'name：',
@@ -149,10 +149,24 @@ export function showFileInfo(e, obj) {
       text: obj.path,
       beforeText: 'path：',
     },
-    {
-      text: obj.mode,
-      beforeText: 'mode：',
-    },
+  ];
+  if (obj.mode) {
+    data.push(
+      {
+        text: obj.mode,
+        beforeText: 'mode：',
+      },
+      {
+        text: obj.uid,
+        beforeText: 'uid：',
+      },
+      {
+        text: obj.gid,
+        beforeText: 'gid：',
+      }
+    );
+  }
+  data.push(
     {
       text: obj.size ? formatBytes(obj.size) : '--',
       beforeText: 'size：',
@@ -163,8 +177,8 @@ export function showFileInfo(e, obj) {
         timestamp: obj.time,
       }),
       beforeText: 'time：',
-    },
-  ];
+    }
+  );
   data.forEach((item, idx) => {
     (item.pointer = false), (item.id = idx + 1 + '');
   });

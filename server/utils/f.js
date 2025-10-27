@@ -66,6 +66,77 @@ async function cp(from, to, { signal, fileCount, chunkCopied } = {}) {
   }
 }
 
+// 修改权限
+async function chmod(
+  path,
+  mode,
+  { signal, fileCount, recursive = false } = {}
+) {
+  if (!(await exists(path))) return;
+
+  if (!recursive) {
+    await fsp.chmod(path, mode);
+    fileCount?.();
+    return;
+  }
+
+  const stack = [path];
+
+  while (stack.length > 0) {
+    const currentPath = stack.pop();
+
+    if (signal?.aborted) throw new Error('Operation aborted');
+    const s = await fsp.lstat(currentPath);
+
+    await fsp.chmod(currentPath, mode);
+    fileCount?.();
+
+    if (s.isDirectory()) {
+      const list = await fsp.readdir(currentPath);
+
+      for (const name of list) {
+        stack.push(_path.normalize(currentPath, name));
+      }
+    }
+  }
+}
+
+// 设置用户组
+async function chown(
+  path,
+  uid,
+  gid,
+  { signal, fileCount, recursive = false } = {}
+) {
+  if (!(await exists(path))) return;
+
+  if (!recursive) {
+    await fsp.lchown(path, uid, gid);
+    fileCount?.();
+    return;
+  }
+
+  const stack = [path];
+
+  while (stack.length > 0) {
+    const currentPath = stack.pop();
+
+    if (signal?.aborted) throw new Error('Operation aborted');
+    const s = await fsp.lstat(currentPath);
+
+    await fsp.lchown(currentPath, uid, gid);
+    fileCount?.();
+
+    if (s.isDirectory()) {
+      const list = await fsp.readdir(currentPath);
+
+      for (const name of list) {
+        stack.push(_path.normalize(currentPath, name));
+      }
+    }
+  }
+}
+
 async function del(path, { signal, fileCount } = {}) {
   if (!(await exists(path))) return;
 
@@ -237,6 +308,8 @@ function getPermissions(stats) {
   return {
     mode: permissionString,
     numericMode: mode,
+    uid: stats.uid,
+    gid: stats.gid,
   };
 }
 
@@ -247,6 +320,8 @@ const _f = {
   del,
   mkdir,
   cp,
+  chmod,
+  chown,
   isTextFile,
   exists,
   formatBytes,

@@ -34,6 +34,7 @@ import {
   getDuplicates,
   isurl,
   _mySlide,
+  isInteger,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
@@ -45,6 +46,7 @@ import bus from '../../js/utils/bus';
 import loadfailImg from '../../images/img/loadfail.png';
 import {
   reqFileBreakpoint,
+  reqFileChown,
   reqFileClearTrash,
   reqFileCopy,
   reqFileCreateDir,
@@ -226,14 +228,14 @@ async function renderList(top) {
   const html = _tpl(
     `
     <template v-if="total > 0">
-      <ul v-for="{type, name, size, time, id, mode} in list" class="file_item" :data-id="id">
+      <ul v-for="{type, name, size, time, id, mode, gid, uid} in list" class="file_item" :data-id="id">
         <li class="check_state" check="n"></li>
         <li cursor="y" class="logo iconfont {{hdLogo(name,type,size) || 'is_img'}}"></li>
         <li cursor="y" class="name">
           <span class="text">{{getText(name,type).a}}<span class="suffix">{{getText(name,type).b}}</span>
           </span>
         </li>
-        <li class='mode'>{{mode}}</li>
+        <li v-if="mode" class='mode'>{{mode}} {{uid}}:{{gid}}</li>
         <li :cursor="type === 'file' ? '' : 'cursor'" class="size">{{size ? formatBytes(size) : type === 'file' ? '--' : '计算'}}</li>
         <li class="date">{{formatDate({template: '{0}-{1}-{2} {3}:{4}',timestamp: time})}}</li>
       </ul>
@@ -542,12 +544,12 @@ $contentWrap
     hdCheckItem(this);
   })
   .on('mouseenter', '.file_item .name', function () {
-    const { name, type, path, mode, size, time } = getFileItem(
+    const { name, type, path, mode, size, time, uid, gid } = getFileItem(
       $(this).parent().attr('data-id')
     );
-    const str = `name：${name}\ntype：${type}\npath：${path}\nmode：${mode}\nsize：${
-      size ? formatBytes(size) : '--'
-    }\ntime：${formatDate({
+    const str = `name：${name}\ntype：${type}\npath：${path}${
+      mode ? `\nmode：${mode}\nuid：${uid}\ngid：${gid}` : ''
+    }\nsize：${size ? formatBytes(size) : '--'}\ntime：${formatDate({
       template: '{0}-{1}-{2} {3}:{4}',
       timestamp: time,
     })}`;
@@ -680,11 +682,18 @@ function rightList(e, obj, el) {
     beforeIcon: 'iconfont icon-about',
   });
   if (isRoot()) {
-    data.push({
-      id: 'mode',
-      text: '权限',
-      beforeIcon: 'iconfont icon-user_root',
-    });
+    data.push(
+      {
+        id: 'mode',
+        text: '权限',
+        beforeIcon: 'iconfont icon-user_root',
+      },
+      {
+        id: 'user',
+        text: '用户组',
+        beforeIcon: 'iconfont icon-chengyuan',
+      }
+    );
   }
   data.push({
     id: 'del',
@@ -767,6 +776,8 @@ function rightList(e, obj, el) {
         }
       } else if (id === 'mode') {
         editFileMode(e, [obj]);
+      } else if (id === 'user') {
+        editFileChown(e, [obj]);
       } else if (id === 'copyPath') {
         copyText(_path.normalize('/', obj.path, obj.name));
         close();
@@ -784,40 +795,131 @@ function rightList(e, obj, el) {
 }
 // 编辑权限
 function editFileMode(e, data) {
+  const firstItem = data[0];
   rMenu.inpMenu(
     e,
     {
       items: {
         mode: {
           placeholder: '777',
-          beforeText: '权限码：',
+          beforeText: '权限码：r=4,w=2,x=1',
           inputType: 'number',
+          value: data.length > 1 ? '' : `${firstItem.mode.slice(-3)}`,
           verify(val) {
             if (!/^[0-7]{3}$/.test(val)) {
               return '请输入正确权限码';
             }
           },
         },
+        r: {
+          beforeText: '递归修改子文件和文件夹：',
+          type: 'select',
+          value: 'n',
+          selectItem: [
+            { value: 'y', text: '开启' },
+            { value: 'n', text: '关闭' },
+          ],
+        },
       },
     },
-    function ({ close, inp, loading, isDiff }) {
+    function ({ close, inp, loading, isDiff, e }) {
       if (!isDiff()) return;
-      const mode = inp.mode;
-      loading.start();
-      reqFileMode({ data, mode })
-        .then((res) => {
-          loading.end();
-          if (res.code === 1) {
-            close(1);
-            updateCurPage();
-            _msg.success(res.codeText);
+      const filename = data.length > 1 ? '' : ` ${firstItem.name} `;
+      const { mode, r } = inp;
+      rMenu.pop(
+        {
+          e,
+          text: `确认修改${filename}权限：(${mode})？`,
+        },
+        async (type) => {
+          if (type === 'confirm') {
+            loading.start();
+            reqFileMode({ data, mode, r: r === 'y' ? 1 : 0 })
+              .then((res) => {
+                loading.end();
+                if (res.code === 1) {
+                  close(1);
+                  addTask(res.data.key, updateCurPage);
+                }
+              })
+              .catch(() => {
+                loading.end();
+              });
           }
-        })
-        .catch(() => {
-          loading.end();
-        });
+        }
+      );
     },
     '修改权限'
+  );
+}
+// 编辑用户组
+function editFileChown(e, data) {
+  const firstItem = data[0];
+  rMenu.inpMenu(
+    e,
+    {
+      items: {
+        uid: {
+          beforeText: '用户ID：',
+          inputType: 'number',
+          value: data.length > 1 ? '' : `${firstItem.uid}`,
+          verify(val) {
+            val = parseFloat(val);
+            if (!isInteger(val) || val < 0) {
+              return '请输入正整数';
+            }
+          },
+        },
+        gid: {
+          beforeText: '用户组ID：',
+          inputType: 'number',
+          value: data.length > 1 ? '' : `${firstItem.gid}`,
+          verify(val) {
+            val = parseFloat(val);
+            if (!isInteger(val) || val < 0) {
+              return '请输入正整数';
+            }
+          },
+        },
+        r: {
+          beforeText: '递归修改子文件和文件夹：',
+          type: 'select',
+          value: 'n',
+          selectItem: [
+            { value: 'y', text: '开启' },
+            { value: 'n', text: '关闭' },
+          ],
+        },
+      },
+    },
+    function ({ close, inp, loading, isDiff, e }) {
+      if (!isDiff()) return;
+      const { gid, uid, r } = inp;
+      const filename = data.length > 1 ? '' : ` ${firstItem.name} `;
+      rMenu.pop(
+        {
+          e,
+          text: `确认修改${filename}用户组：(UID：${uid} GID：${gid})？`,
+        },
+        async (type) => {
+          if (type === 'confirm') {
+            loading.start();
+            reqFileChown({ data, uid, gid, r: r === 'y' ? 1 : 0 })
+              .then((res) => {
+                loading.end();
+                if (res.code === 1) {
+                  close(1);
+                  addTask(res.data.key, updateCurPage);
+                }
+              })
+              .catch(() => {
+                loading.end();
+              });
+          }
+        }
+      );
+    },
+    '修改用户组'
   );
 }
 // 分享
@@ -1624,6 +1726,7 @@ function renderFoot() {
         <button v-else cursor="y" class="f_compress btn btn_primary">压缩</button>
       </template>
       <button v-if="isRoot()" cursor="y" class="f_mode btn btn_primary">权限</button>
+      <button v-if="isRoot()" cursor="y" class="f_user btn btn_primary">用户组</button>
       <button v-if="checkIsFile()" cursor="y" class="f_download btn btn_primary">下载</button>
       <button cursor="y" class="f_delete btn btn_danger">删除</button>
     </template>
@@ -1711,6 +1814,9 @@ $footer
   })
   .on('click', '.f_mode', function (e) {
     editFileMode(e, getCheckDatas());
+  })
+  .on('click', '.f_user', function (e) {
+    editFileChown(e, getCheckDatas());
   })
   .on('click', '.f_close', function () {
     closeCheck();

@@ -179,7 +179,7 @@ export async function readMenu(path) {
         const f = _path.normalize(path, name);
 
         const s = await _f.fsp.lstat(f);
-        const { mode, numericMode } = _f.getPermissions(s);
+        const { mode, numericMode, uid, gid } = _f.getPermissions(s);
         const modeStr = `${mode} ${numericMode}`;
         if (s.isDirectory()) {
           arr.push({
@@ -189,6 +189,8 @@ export async function readMenu(path) {
             time: s.ctimeMs,
             size: 0,
             mode: modeStr,
+            uid,
+            gid,
           });
         } else {
           arr.push({
@@ -198,6 +200,8 @@ export async function readMenu(path) {
             time: s.ctimeMs,
             size: s.size,
             mode: modeStr,
+            uid,
+            gid,
           });
         }
       } catch (error) {

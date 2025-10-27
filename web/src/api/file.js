@@ -16,6 +16,10 @@ export function reqFileSaveFile(data) {
 export function reqFileMode(data) {
   return _postAjax('/file/mode', data);
 }
+// 用户组
+export function reqFileChown(data) {
+  return _postAjax('/file/chown', data);
+}
 // 分享
 export function reqFileShare(data) {
   return _postAjax('/file/share', data);

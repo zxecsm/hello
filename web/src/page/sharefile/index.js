@@ -292,11 +292,11 @@ async function renderList(top) {
   const html = _tpl(
     `
     <template v-if="total > 0">
-      <ul v-for="{type,name,size,time,id,mode} in paging.list" class="file_item" :data-id="id">
+      <ul v-for="{type,name,size,time,id,mode,uid,gid} in paging.list" class="file_item" :data-id="id">
         <li class="check_state" check="n"></li>
         <li cursor="y" class="logo iconfont {{getLogo(name,type,size) || 'is_img'}}"></li>
         <li cursor="y" class="name"><span class="text">{{getText(name,type).a}}<span class="suffix">{{getText(name,type).b}}</span></span></li>
-        <li class='mode'>{{mode}}</li>
+        <li v-if="mode" class='mode'>{{mode}} {{uid}}:{{gid}}</li>
         <li class="size">{{size ? formatBytes(size) : '--'}}</li>
         <li class="date">{{formatDate({template: '{0}-{1}-{2} {3}:{4}',timestamp: time})}}</li>
       </ul>
@@ -575,12 +575,12 @@ $contentWrap
     }
   })
   .on('mouseenter', '.file_item .name', function () {
-    const { name, type, path, mode, size, time } = getFileItem(
+    const { name, type, path, mode, size, time, uid, gid } = getFileItem(
       $(this).parent().attr('data-id')
     );
-    const str = `name：${name}\ntype：${type}\npath：${path}\nmode：${mode}\nsize：${
-      size ? formatBytes(size) : '--'
-    }\ntime：${formatDate({
+    const str = `name：${name}\ntype：${type}\npath：${path}${
+      mode ? `\nmode：${mode}\nuid：${uid}\ngid：${gid}` : ''
+    }\nsize：${size ? formatBytes(size) : '--'}\ntime：${formatDate({
       template: '{0}-{1}-{2} {3}:{4}',
       timestamp: time,
     })}`;
