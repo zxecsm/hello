@@ -139,44 +139,50 @@ export function showFileInfo(e, obj) {
   const data = [
     {
       text: obj.name,
-      beforeText: 'name：',
+      beforeText: '名称：',
     },
     {
-      text: obj.type,
-      beforeText: 'type：',
+      text: obj.type === 'dir' ? '文件夹' : '文件',
+      beforeText: '类型：',
     },
     {
       text: obj.path,
-      beforeText: 'path：',
+      beforeText: '路径：',
     },
   ];
   if (obj.mode) {
     data.push(
       {
         text: obj.mode,
-        beforeText: 'mode：',
+        beforeText: '权限：',
       },
       {
         text: obj.uid,
-        beforeText: 'uid：',
+        beforeText: '用户ID：',
       },
       {
         text: obj.gid,
-        beforeText: 'gid：',
+        beforeText: '用户组ID：',
       }
     );
+  }
+  if (obj.favorite !== undefined && obj.type === 'dir') {
+    data.push({
+      text: obj.favorite ? '已收藏' : '未收藏',
+      beforeText: '收藏状态：',
+    });
   }
   data.push(
     {
       text: obj.size ? formatBytes(obj.size) : '--',
-      beforeText: 'size：',
+      beforeText: '大小：',
     },
     {
       text: formatDate({
         template: '{0}-{1}-{2} {3}:{4}',
         timestamp: obj.time,
       }),
-      beforeText: 'time：',
+      beforeText: '更新时间：',
     }
   );
   data.forEach((item, idx) => {

@@ -242,3 +242,33 @@ export async function hasSameNameFile(targetPath, list) {
   const targetList = await readMenu(targetPath);
   return targetList.some(({ name }) => list.some((item) => item.name === name));
 }
+
+// 读取收藏目录
+export async function readFavorites(account) {
+  const favoritesDir = _path.normalize(getRootDir(account), '.favorites');
+  return (await _f.readFile(favoritesDir, null, ''))
+    .toString()
+    .split('\n')
+    .filter(Boolean);
+}
+
+// 写入收藏目录
+export async function writeFavorites(account, list) {
+  const favoritesDir = _path.normalize(getRootDir(account), '.favorites');
+  await _f.fsp.writeFile(favoritesDir, list.join('\n'));
+}
+
+// 读取历史目录
+export async function readHistoryDirs(account) {
+  const cdHistoryDir = _path.normalize(getRootDir(account), '.cdHistory');
+  return (await _f.readFile(cdHistoryDir, null, ''))
+    .toString()
+    .split('\n')
+    .filter(Boolean);
+}
+
+// 写入历史目录
+export async function writeHistoryDirs(account, list) {
+  const cdHistoryDir = _path.normalize(getRootDir(account), '.cdHistory');
+  await _f.fsp.writeFile(cdHistoryDir, list.join('\n'));
+}

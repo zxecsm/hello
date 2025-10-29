@@ -578,9 +578,11 @@ $contentWrap
     const { name, type, path, mode, size, time, uid, gid } = getFileItem(
       $(this).parent().attr('data-id')
     );
-    const str = `name：${name}\ntype：${type}\npath：${path}${
-      mode ? `\nmode：${mode}\nuid：${uid}\ngid：${gid}` : ''
-    }\nsize：${size ? formatBytes(size) : '--'}\ntime：${formatDate({
+    const str = `名称：${name}\n类型：${
+      type === 'dir' ? '文件夹' : '文件'
+    }\n路径：${path}${
+      mode ? `\n权限：${mode}\n用户ID：${uid}\n用户组ID：${gid}` : ''
+    }\n大小：${size ? formatBytes(size) : '--'}\n更新时间：${formatDate({
       template: '{0}-{1}-{2} {3}:{4}',
       timestamp: time,
     })}`;

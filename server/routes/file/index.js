@@ -41,6 +41,10 @@ import {
   getUniqueFilename,
   sortFileList,
   hasSameNameFile,
+  readFavorites,
+  readHistoryDirs,
+  writeHistoryDirs,
+  writeFavorites,
 } from './file.js';
 
 import { fieldLength } from '../config.js';
@@ -209,14 +213,13 @@ route.post('/read-dir', async (req, res) => {
       rootP = getRootDir(account);
     }
 
+    let favorites = null;
     if (account && !token) {
-      // 保存路径历史
       try {
-        const cdHistoryDir = _path.normalize(rootP, '.cdHistory');
-        const list = (await _f.readFile(cdHistoryDir, null, ''))
-          .toString()
-          .split('\n')
-          .filter((item) => item && item !== path);
+        // 保存路径历史
+        const list = (await readHistoryDirs(account)).filter(
+          (item) => item !== path
+        );
 
         list.push(path);
 
@@ -224,7 +227,9 @@ route.post('/read-dir', async (req, res) => {
           list.slice(-fieldLength.cdHistoryLength);
         }
 
-        await _f.fsp.writeFile(cdHistoryDir, list.join('\n'));
+        await writeHistoryDirs(account, list);
+
+        favorites = await readFavorites(account);
       } catch (error) {
         await errLog(req, error);
       }
@@ -292,6 +297,14 @@ route.post('/read-dir', async (req, res) => {
               ...item,
               path,
             };
+
+            if (favorites && item.type === 'dir') {
+              obj.favorite = favorites.includes(
+                _path.normalize(path, item.name)
+              )
+                ? 1
+                : 0;
+            }
 
             if (!req._hello.isRoot) {
               delete obj.mode;
@@ -441,14 +454,59 @@ route.use((req, res, next) => {
 route.get('/cd-history', async (req, res) => {
   try {
     const { account } = req._hello.userinfo;
-    const cdHistoryDir = _path.normalize(getRootDir(account), '.cdHistory');
+    _success(res, 'ok', await readHistoryDirs(account));
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
 
-    const list = (await _f.readFile(cdHistoryDir, null, ''))
-      .toString()
-      .split('\n')
-      .filter(Boolean);
+// 获取收藏目录
+route.get('/favorites', async (req, res) => {
+  try {
+    const { account } = req._hello.userinfo;
+    _success(res, 'ok', await readFavorites(account));
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
 
-    _success(res, 'ok', list);
+// 收藏目录
+route.post('/favorites', async (req, res) => {
+  try {
+    const { data, type = 'add' } = req.body;
+
+    if (
+      !validationValue(type, ['add', 'del']) ||
+      !_type.isObject(data) ||
+      !validaString(data.name, 1, fieldLength.filename) ||
+      !isFilename(data.name) ||
+      !validaString(data.path, 1, fieldLength.url) ||
+      !validationValue(data.type, ['dir'])
+    ) {
+      paramErr(res, req);
+      return;
+    }
+
+    const path = _path.normalize(data.path, data.name);
+
+    const { account } = req._hello.userinfo;
+    const list = (await readFavorites(account)).filter((item) => item !== path);
+
+    if (type === 'add') {
+      list.push(path);
+    }
+
+    await writeFavorites(account, list);
+
+    syncUpdateData(req, 'file');
+
+    fileList.clear(account);
+
+    _success(res, `${type === 'add' ? '' : '移除'}收藏文件夹成功`)(
+      req,
+      _path.normalize(getRootDir(account), path),
+      1
+    );
   } catch (error) {
     _err(res)(req, error);
   }

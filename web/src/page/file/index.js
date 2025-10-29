@@ -54,6 +54,8 @@ import {
   reqFileCreateFile,
   reqFileDelete,
   reqFileDownload,
+  reqFileFavorites,
+  reqFileGetFavorites,
   reqFileMerge,
   reqFileMode,
   reqFileMove,
@@ -229,9 +231,10 @@ async function renderList(top) {
   const html = _tpl(
     `
     <template v-if="total > 0">
-      <ul v-for="{type, name, size, time, id, mode, gid, uid} in list" class="file_item" :data-id="id">
+      <ul v-for="{type, name, size, time, id, mode, gid, uid, favorite} in list" class="file_item" :data-id="id">
         <li class="check_state" check="n"></li>
         <li cursor="y" class="logo iconfont {{hdLogo(name,type,size) || 'is_img'}}"></li>
+        <li v-if="favorite" class='favorite iconfont icon-shoucang'></li>
         <li cursor="y" class="name">
           <span class="text">{{getText(name,type).a}}<span class="suffix">{{getText(name,type).b}}</span>
           </span>
@@ -545,12 +548,17 @@ $contentWrap
     hdCheckItem(this);
   })
   .on('mouseenter', '.file_item .name', function () {
-    const { name, type, path, mode, size, time, uid, gid } = getFileItem(
-      $(this).parent().attr('data-id')
-    );
-    const str = `name：${name}\ntype：${type}\npath：${path}${
-      mode ? `\nmode：${mode}\nuid：${uid}\ngid：${gid}` : ''
-    }\nsize：${size ? formatBytes(size) : '--'}\ntime：${formatDate({
+    const { name, type, path, mode, size, time, uid, gid, favorite } =
+      getFileItem($(this).parent().attr('data-id'));
+    const str = `名称：${name}\n类型：${
+      type === 'dir' ? '文件夹' : '文件'
+    }\n路径：${path}${
+      mode ? `\n权限：${mode}\n用户ID：${uid}\n用户组ID：${gid}` : ''
+    }${
+      type === 'dir' && favorite !== undefined
+        ? `\n收藏状态：${favorite ? '已收藏' : '未收藏'}`
+        : ''
+    }\n大小：${size ? formatBytes(size) : '--'}\n更新时间：${formatDate({
       template: '{0}-{1}-{2} {3}:{4}',
       timestamp: time,
     })}`;
@@ -624,11 +632,18 @@ function rightList(e, obj, el) {
     },
   ];
   if (obj.type === 'dir') {
-    data.push({
-      id: 'newPage',
-      text: '新窗口打开',
-      beforeIcon: 'iconfont icon-24gl-minimize',
-    });
+    data.push(
+      {
+        id: 'favorite',
+        text: `${obj.favorite ? '取消' : ''}收藏`,
+        beforeIcon: 'iconfont icon-shoucang',
+      },
+      {
+        id: 'newPage',
+        text: '新窗口打开',
+        beforeIcon: 'iconfont icon-24gl-minimize',
+      }
+    );
   }
   data.push({
     id: 'share',
@@ -720,6 +735,33 @@ function rightList(e, obj, el) {
         );
       } else if (id === 'share') {
         hdShare(e, obj);
+      } else if (id === 'favorite') {
+        rMenu.pop(
+          {
+            e,
+            text: `${obj.favorite ? '取消' : ''}收藏文件夹：${obj.name}？`,
+            type: 'confirm',
+          },
+          (type) => {
+            if (type === 'confirm') {
+              loading.start();
+              reqFileFavorites({
+                data: obj,
+                type: obj.favorite ? 'del' : 'add',
+              })
+                .then((res) => {
+                  if (res.code === 1) {
+                    loading.end();
+                    close();
+                    updateCurPage();
+                  }
+                })
+                .catch(() => {
+                  loading.end();
+                });
+            }
+          }
+        );
       } else if (id === 'rename') {
         hdRename(e, obj, () => {
           close();
@@ -1271,6 +1313,10 @@ $header
         data = localData.get('fileHistory');
       })
       .finally(() => {
+        if (data.length === 0) {
+          _msg.error('暂无历史记录');
+          return;
+        }
         data = data.map((item, idx) => {
           return {
             id: idx + '',
@@ -1291,9 +1337,44 @@ $header
               curmb.toGo(param.path, { pageNo: 1, top: 0 });
             }
           },
-          '历史目录'
+          '历史文件夹'
         );
       });
+  })
+  .on('click', '.h_favorite_btn', (e) => {
+    reqFileGetFavorites()
+      .then((res) => {
+        if (res.code === 1) {
+          const data = res.data.map((item, idx) => {
+            return {
+              id: idx + '',
+              beforeIcon: 'iconfont icon-shoucang',
+              text: item,
+              param: { path: item },
+            };
+          });
+
+          if (data.length === 0) {
+            _msg.error('暂无收藏文件夹');
+            return;
+          }
+
+          rMenu.selectMenu(
+            e,
+            data,
+            ({ id, close, param }) => {
+              if (id) {
+                close();
+                if (param.path === curFileDirPath) return;
+                updatePageInfo();
+                curmb.toGo(param.path, { pageNo: 1, top: 0 });
+              }
+            },
+            '收藏文件夹'
+          );
+        }
+      })
+      .catch(() => {});
   })
   .on('click', '.paste_btn .close', () => {
     waitObj = {};

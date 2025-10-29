@@ -99,3 +99,11 @@ export function reqFileReadDirSize(data) {
 export function reqFileCdHistory() {
   return _getAjax('/file/cd-history');
 }
+// 获取收藏目录
+export function reqFileGetFavorites() {
+  return _getAjax('/file/favorites');
+}
+// 收藏目录
+export function reqFileFavorites(data) {
+  return _postAjax('/file/favorites', data);
+}
