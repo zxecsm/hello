@@ -549,13 +549,14 @@ route.get('/read-dir-size', async (req, res) => {
       });
 
       taskState.delete(taskKey);
+      await uLog(req, `读取文件夹大小成功(${p}-${_f.formatBytes(size)})`);
       if (!signal.aborted) {
         fileSize.add(p, size);
         syncUpdateData(req, 'file');
       }
     } catch (error) {
       taskState.delete(taskKey);
-      await errLog(req, `读取文件夹大小失败(${error})`);
+      await errLog(req, `读取文件夹大小失败(${p}-${error})`);
       errorNotifyMsg(req, `读取文件夹大小失败`);
     }
   } catch (error) {
@@ -647,7 +648,7 @@ route.post('/share', async (req, res) => {
 
     _success(res, `分享${data.type === 'dir' ? '文件夹' : '文件'}成功`)(
       req,
-      _path.normalize(data.path, data.name),
+      _path.normalize(getRootDir(account), data.path, data.name),
       1
     );
   } catch (error) {
@@ -703,7 +704,7 @@ route.post('/save-file', async (req, res) => {
         await _f.cp(fpath, _path.normalize(historyDir, newName));
       }
     } catch (error) {
-      await errLog(req, `保存文件历史版本失败(${error})`);
+      await errLog(req, `保存文件历史版本失败(${fpath}-${error})`);
     }
 
     await _f.fsp.writeFile(fpath, text);
@@ -1018,7 +1019,7 @@ route.post('/zip', async (req, res) => {
       syncUpdateData(req, 'file');
     } catch (error) {
       taskState.delete(taskKey);
-      await errLog(req, `压缩文件失败(${error})`);
+      await errLog(req, `压缩文件失败(${f}-${error})`);
       errorNotifyMsg(req, `压缩文件失败`);
     }
   } catch (error) {
@@ -1083,7 +1084,7 @@ route.post('/unzip', async (req, res) => {
       syncUpdateData(req, 'file');
     } catch (error) {
       taskState.delete(taskKey);
-      await errLog(req, `解压文件失败(${error})`);
+      await errLog(req, `解压文件失败(${f}-${error})`);
       errorNotifyMsg(req, `解压文件失败`);
     }
   } catch (error) {
