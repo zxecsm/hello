@@ -66,6 +66,24 @@ async function cp(from, to, { signal, fileCount, chunkCopied } = {}) {
   }
 }
 
+// 读取文件
+async function readFile(path, options, defaultValue) {
+  try {
+    return await fsp.readFile(path, options);
+  } catch {
+    return defaultValue;
+  }
+}
+
+// 读取目录
+async function readdir(path, options) {
+  try {
+    return await fsp.readdir(path, options);
+  } catch {
+    return [];
+  }
+}
+
 // 修改权限
 async function chmod(
   path,
@@ -319,6 +337,8 @@ const _f = {
   rename,
   del,
   mkdir,
+  readFile,
+  readdir,
   cp,
   chmod,
   chown,

@@ -369,13 +369,16 @@ route.get('/log', async (req, res) => {
     }
 
     const log = (
-      await _f.fsp.readFile(_path.normalize(appConfig.appData, 'log', name))
+      await _f.readFile(
+        _path.normalize(appConfig.appData, 'log', name),
+        null,
+        ''
+      )
     )
       .toString()
-      .split('\n');
-
-    log.pop();
-    log.reverse();
+      .split('\n')
+      .filter(Boolean)
+      .reverse();
 
     _success(res, 'ok', log);
   } catch (error) {

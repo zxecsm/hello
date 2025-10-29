@@ -65,6 +65,7 @@ const fieldLength = {
   lrcSize: 20 * 1024, // 歌词大小
   chatPageSize: 50, // 消息分页
   customCodeSize: 100 * 1024, // 自定义代码大小
+  cdHistoryLength: 100, // 文件操作历史记录个数
 };
 const _d = {
   trashDirName: '.trash', // 垃圾回收站目录名

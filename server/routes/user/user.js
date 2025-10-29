@@ -10,7 +10,7 @@ import {
 } from '../../utils/sqlite.js';
 
 import _f from '../../utils/f.js';
-import { _delDir } from '../file/file.js';
+import { _delDir, getRootDir } from '../file/file.js';
 
 import shareVerify from '../../utils/shareVerify.js';
 import { isValidShare, errLog, getDirname } from '../../utils/utils.js';
@@ -83,6 +83,8 @@ export async function deleteUser(account) {
   await batchDeleteData('todo', 'id', `WHERE account = ?`, [account]);
 
   await _delDir(_path.normalize(appConfig.appData, 'logo', account));
+
+  await _delDir(getRootDir(account));
 }
 
 // 验证分享

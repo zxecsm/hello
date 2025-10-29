@@ -209,6 +209,27 @@ route.post('/read-dir', async (req, res) => {
       rootP = getRootDir(account);
     }
 
+    if (account && !token) {
+      // 保存路径历史
+      try {
+        const cdHistoryDir = _path.normalize(rootP, '.cdHistory');
+        const list = (await _f.readFile(cdHistoryDir, null, ''))
+          .toString()
+          .split('\n')
+          .filter((item) => item && item !== path);
+
+        list.push(path);
+
+        if (list.length > fieldLength.cdHistoryLength) {
+          list.slice(-fieldLength.cdHistoryLength);
+        }
+
+        await _f.fsp.writeFile(cdHistoryDir, list.join('\n'));
+      } catch (error) {
+        await errLog(req, error);
+      }
+    }
+
     const controller = new AbortController();
     const signal = controller.signal;
     const hdType = word ? '搜索文件' : '读取文件列表';
@@ -395,7 +416,7 @@ route.post('/read-file', async (req, res) => {
       //文本文件
       _success(res, 'ok', {
         type: 'text',
-        data: (await _f.fsp.readFile(p)).toString(),
+        data: (await _f.readFile(p, null, '')).toString(),
       });
     } else {
       _success(res, 'ok', {
@@ -413,6 +434,23 @@ route.use((req, res, next) => {
     next();
   } else {
     _nologin(res);
+  }
+});
+
+// 获取访问路径历史
+route.get('/cd-history', async (req, res) => {
+  try {
+    const { account } = req._hello.userinfo;
+    const cdHistoryDir = _path.normalize(getRootDir(account), '.cdHistory');
+
+    const list = (await _f.readFile(cdHistoryDir, null, ''))
+      .toString()
+      .split('\n')
+      .filter(Boolean);
+
+    _success(res, 'ok', list);
+  } catch (error) {
+    _err(res)(req, error);
   }
 });
 
@@ -1504,12 +1542,12 @@ route.post('/breakpoint', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    let path = _path.normalize(appConfig.appData, 'tem', `${account}_${HASH}`),
-      list = [];
-
-    if (await _f.exists(path)) {
-      list = await _f.fsp.readdir(path);
-    }
+    const path = _path.normalize(
+        appConfig.appData,
+        'tem',
+        `${account}_${HASH}`
+      ),
+      list = _f.readdir(path);
 
     _success(res, 'ok', list);
   } catch (error) {

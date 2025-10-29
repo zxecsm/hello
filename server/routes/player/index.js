@@ -135,7 +135,7 @@ route.post('/lrc', async (req, res) => {
     const url = _path.normalize(appConfig.appData, 'music', songInfo.lrc);
 
     if (await _f.exists(url)) {
-      const str = (await _f.fsp.readFile(url)).toString(),
+      const str = (await _f.readFile(url, null, '')).toString(),
         lrcList = parseLrc(str);
 
       lrcList.unshift({
@@ -1464,7 +1464,7 @@ route.get('/read-lrc', async (req, res) => {
     const url = _path.normalize(appConfig.appData, 'music', musicinfo.lrc);
 
     if (await _f.exists(url)) {
-      const str = (await _f.fsp.readFile(url)).toString();
+      const str = (await _f.readFile(url, null, '')).toString();
       _success(res, 'ok', str);
     } else {
       await _f.mkdir(_path.dirname(url));

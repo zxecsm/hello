@@ -991,12 +991,12 @@ route.post('/breakpoint', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    let path = _path.normalize(appConfig.appData, 'tem', `${account}_${HASH}`),
-      arr = [];
-
-    if (await _f.exists(path)) {
-      arr = await _f.fsp.readdir(path);
-    }
+    const path = _path.normalize(
+        appConfig.appData,
+        'tem',
+        `${account}_${HASH}`
+      ),
+      arr = await _f.readdir(path);
 
     _success(res, 'ok', arr);
   } catch (error) {

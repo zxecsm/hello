@@ -201,7 +201,11 @@ function deleteAccount(e, obj) {
               getUserList();
             }
           })
-          .catch(() => {});
+          .catch((error) => {
+            if (error.statusText === 'timeout') {
+              timeoutMsg();
+            }
+          });
       }
     }
   );

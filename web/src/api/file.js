@@ -95,3 +95,7 @@ export function reqFileGetShare(data) {
 export function reqFileReadDirSize(data) {
   return _getAjax('/file/read-dir-size', data);
 }
+// 获取访问历史
+export function reqFileCdHistory() {
+  return _getAjax('/file/cd-history');
+}

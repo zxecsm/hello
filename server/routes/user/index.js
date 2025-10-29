@@ -103,19 +103,14 @@ route.get('/player-config', async (req, res) => {
 // 获取自定义code
 route.get('/custom-code', async (req, res) => {
   try {
-    const obj = { head: '', body: '' };
-
     const u = _path.normalize(appConfig.appData, 'custom');
     const headPath = _path.normalize(u, 'custom_head.html');
     const bodyPath = _path.normalize(u, 'custom_body.html');
 
-    if (await _f.exists(headPath)) {
-      obj.head = (await _f.fsp.readFile(headPath)).toString();
-    }
-
-    if (await _f.exists(bodyPath)) {
-      obj.body = (await _f.fsp.readFile(bodyPath)).toString();
-    }
+    const obj = {
+      head: (await _f.readFile(headPath, null, '')).toString(),
+      body: (await _f.readFile(bodyPath, null, '')).toString(),
+    };
 
     _success(res, 'ok', obj);
   } catch (error) {
@@ -662,13 +657,9 @@ route.get('/file-token', async (req, res) => {
 // 获取字体列表
 route.get('/font-list', async (req, res) => {
   try {
-    let list = [];
-
     const p = _path.normalize(appConfig.appData, 'font');
 
-    if (await _f.exists(p)) {
-      list = await _f.fsp.readdir(p);
-    }
+    const list = _f.readdir(p);
 
     _success(res, 'ok', list);
   } catch (error) {

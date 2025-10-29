@@ -580,7 +580,7 @@ async function insertInitialData() {
       title: 'About',
       share: 1,
       content: (
-        await _f.fsp.readFile(resolve(__dirname, './default_about.md'))
+        await _f.readFile(resolve(__dirname, './default_about.md'), null, '')
       ).toString(),
     },
     {

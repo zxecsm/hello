@@ -28,13 +28,9 @@ route.get('/', async (req, res) => {
       return;
     }
 
-    let note = '';
-
     const p = _path.normalize(appConfig.appData, 'notepad', `${k}.md`);
 
-    if (await _f.exists(p)) {
-      note = (await _f.fsp.readFile(p)).toString();
-    }
+    const note = (await _f.readFile(p, null, '')).toString();
 
     _success(res, '读取便条成功', note)(req, k, 1);
   } catch (error) {

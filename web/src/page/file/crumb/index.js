@@ -1,3 +1,4 @@
+import _d from '../../../js/common/config';
 import localData from '../../../js/common/localData';
 import bus from '../../../js/utils/bus';
 import _path from '../../../js/utils/path';
@@ -36,8 +37,8 @@ function saveFileHistory(path) {
     .get('fileHistory')
     .filter((item) => item && item !== path);
   list.push(path);
-  if (list.length > 50) {
-    list.shift();
+  if (list.length > _d.fieldLength.cdHistoryLength) {
+    list.slice(-_d.fieldLength.cdHistoryLength);
   }
   localData.set('fileHistory', list);
 }

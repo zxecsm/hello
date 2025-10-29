@@ -32,4 +32,5 @@ export const fieldLength = {
   lrcSize: 20 * 1024, // 歌词大小
   customCodeSize: 100 * 1024, // 自定义代码大小
   notePreviewLength: 200, // 笔记预览长度
+  cdHistoryLength: 100, // 文件操作历史记录个数
 };

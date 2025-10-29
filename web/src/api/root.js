@@ -22,7 +22,9 @@ export function reqRootAccountState(data) {
 }
 // 删除账号
 export function reqRootDeleteAccount(data) {
-  return _postAjax('/root/delete-account', data);
+  return _postAjax('/root/delete-account', data, {
+    timeout: _d.fieldLength.operationTimeout,
+  });
 }
 // 清理音乐文件
 export function reqRootCleanMusicFile() {
