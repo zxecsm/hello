@@ -29,6 +29,7 @@ import {
   uLog,
   getSplitWord,
   extractFullHead,
+  parseJson,
 } from '../../utils/utils.js';
 
 import cheerio from './cheerio.js';
@@ -342,7 +343,11 @@ route.get('/parse-site-info', async (req, res) => {
 
       // 缓存存在，则使用缓存
       if (await _f.exists(p)) {
-        _success(res, 'ok', JSON.parse(await _f.fsp.readFile(p)));
+        _success(
+          res,
+          'ok',
+          parseJson((await _f.fsp.readFile(p)).toString(), {})
+        );
         return;
       }
 

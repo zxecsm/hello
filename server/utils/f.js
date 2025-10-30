@@ -11,6 +11,7 @@ function mkdir(path) {
 
 // 复制
 async function cp(from, to, { signal, fileCount, chunkCopied } = {}) {
+  if (!(await exists(from))) return;
   if (from === to) return;
 
   if (!signal && !fileCount && !chunkCopied) {
@@ -24,6 +25,7 @@ async function cp(from, to, { signal, fileCount, chunkCopied } = {}) {
 
     if (signal?.aborted) throw new Error('Operation aborted');
 
+    if (!(await exists(f))) continue;
     const stat = await fsp.lstat(f);
 
     if (stat.isDirectory()) {
@@ -169,6 +171,7 @@ async function del(path, { signal, fileCount } = {}) {
     const currentPath = stack.pop();
 
     if (signal?.aborted) throw new Error('Operation aborted');
+    if (!(await exists(currentPath))) continue;
     const s = await fsp.lstat(currentPath);
 
     if (s.isDirectory()) {
@@ -244,7 +247,9 @@ async function rename(
   newPath,
   { signal, fileCount, chunkCopied } = {}
 ) {
+  if (!(await exists(oldPath))) return;
   try {
+    await mkdir(_path.dirname(newPath));
     await fsp.rename(oldPath, newPath);
   } catch {
     await cp(oldPath, newPath, { signal, fileCount, chunkCopied });
@@ -285,6 +290,7 @@ async function readDirSize(path, { signal, fileCount } = {}) {
 
     if (signal?.aborted) throw new Error('Operation aborted');
 
+    if (!(await exists(currentPath))) continue;
     const s = await fsp.lstat(currentPath);
 
     if (s.isDirectory()) {

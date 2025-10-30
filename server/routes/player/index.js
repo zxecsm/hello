@@ -39,6 +39,7 @@ import {
   myShuffle,
   normalizePageNo,
   isFilename,
+  parseJson,
 } from '../../utils/utils.js';
 
 import { _d } from '../../data/data.js';
@@ -879,7 +880,7 @@ route.get('/playlist', async (req, res) => {
     let list = [];
 
     if (playing) {
-      list = JSON.parse(playing.data);
+      list = parseJson(playing.data, []);
 
       const mObj = await batchGetMusics(list);
 

@@ -2657,12 +2657,17 @@ export const _type = (function () {
 export function parseObjectJson(str) {
   try {
     const res = JSON.parse(str);
-    if (_type.isString(res) || !_type.isObject(res)) {
-      throw new Error();
-    }
-    return res;
+    if (_type.isObject(res)) return res;
+    throw new Error();
   } catch {
     return '';
+  }
+}
+export function parseJson(str, defaultValue) {
+  try {
+    return JSON.parse(str);
+  } catch {
+    return defaultValue;
   }
 }
 // 限制并行任务

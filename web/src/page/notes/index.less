@@ -148,8 +148,10 @@ html {
       -ms-user-select: none;
       user-select: none;
       align-items: center;
-      border-bottom: 1px solid var(--color9);
       margin: 0.4rem 0;
+      &:not(:first-of-type) {
+        border-top: 1px solid var(--color9);
+      }
       &:hover {
         background-color: var(--color9);
         .item_type {

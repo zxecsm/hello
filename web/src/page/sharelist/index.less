@@ -85,7 +85,9 @@ body {
         display: flex;
         padding: 0.5rem;
         align-items: center;
-        border-bottom: 1px solid var(--color9);
+        &:not(:first-of-type) {
+          border-top: 1px solid var(--color9);
+        }
         &:hover {
           background-color: var(--color9);
           .item_type_logo {

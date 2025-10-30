@@ -1809,7 +1809,10 @@ export function showTrash() {
 }
 export function showNote() {
   hideRightMenu();
-  openInIframe(`/notes`, '笔记本');
+  openInIframe(
+    `/notes?acc=${encodeURIComponent(localData.get('account'))}`,
+    '笔记本'
+  );
 }
 export function showHistory() {
   hideRightMenu();
@@ -1817,7 +1820,10 @@ export function showHistory() {
 }
 export function showBmk() {
   hideRightMenu();
-  openInIframe('/bmk', '书签夹');
+  openInIframe(
+    `/bmk?acc=${encodeURIComponent(localData.get('account'))}`,
+    '书签夹'
+  );
 }
 export function showFileManage() {
   hideRightMenu();

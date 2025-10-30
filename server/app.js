@@ -55,6 +55,8 @@ const __dirname = getDirname(import.meta);
 
 const app = express();
 
+app.set('trust proxy', 'loopback');
+
 // Cookie
 app.use(cookieParser());
 app.use(express.json({ limit: '10250kb' }));

@@ -972,7 +972,9 @@ route.post('/zip', async (req, res) => {
       return;
     }
 
-    const { name, path, type } = data;
+    const flag = data.type === 'dir' ? '文件夹' : '文件';
+
+    const { name, path } = data;
 
     const { account } = req._hello.userinfo;
 
@@ -981,6 +983,11 @@ route.post('/zip', async (req, res) => {
     data.path = p;
 
     const f = _path.normalize(p, name);
+
+    if (!(await _f.exists(f))) {
+      _err(res, `${flag}不存在`)(req, f, 1);
+      return;
+    }
 
     const fname = (_path.extname(name)[0] || name) + '.zip';
 
@@ -1013,14 +1020,14 @@ route.post('/zip', async (req, res) => {
         },
       });
 
-      await uLog(req, `压缩${type === 'dir' ? '文件夹' : '文件'}(${f}=>${t})`);
+      await uLog(req, `压缩${flag}(${f}=>${t})`);
 
       taskState.delete(taskKey);
       syncUpdateData(req, 'file');
     } catch (error) {
       taskState.delete(taskKey);
-      await errLog(req, `压缩文件失败(${f}-${error})`);
-      errorNotifyMsg(req, `压缩文件失败`);
+      await errLog(req, `压缩${flag}失败(${f}-${error})`);
+      errorNotifyMsg(req, `压缩${flag}失败`);
     }
   } catch (error) {
     _err(res)(req, error);
@@ -1050,6 +1057,11 @@ route.post('/unzip', async (req, res) => {
 
     const p = getCurPath(account, path);
     const f = _path.normalize(p, name);
+
+    if (!(await _f.exists(f))) {
+      _err(res, '解压文件不存在')(req, f, 1);
+      return;
+    }
 
     const fname = _path.extname(name)[0] || name;
 
@@ -1310,12 +1322,19 @@ route.post('/rename', async (req, res) => {
       return;
     }
 
+    const flag = data.type === 'dir' ? '文件夹' : '文件';
+
     const { account } = req._hello.userinfo;
 
     const dir = getCurPath(account, data.path);
 
     const p = _path.normalize(dir, data.name),
       t = _path.normalize(dir, name);
+
+    if (!(await _f.exists(p))) {
+      _err(res, `${flag}不存在`)(req, p, 1);
+      return;
+    }
 
     if ((await _f.exists(t)) || getTrashDir(account) === t) {
       _err(res, '已存在重名文件')(req, t, 1);
@@ -1328,11 +1347,7 @@ route.post('/rename', async (req, res) => {
 
     fileList.clear(account);
 
-    _success(res, `重命名${data.type === 'dir' ? '文件夹' : '文件'}成功`)(
-      req,
-      `${p}=>${t}`,
-      1
-    );
+    _success(res, `重命名${flag}成功`)(req, `${p}=>${t}`, 1);
   } catch (error) {
     _err(res)(req, error);
   }

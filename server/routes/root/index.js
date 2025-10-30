@@ -718,6 +718,19 @@ route.get('/sys-status', async (req, res) => {
   }
 });
 
+route.get('/info', async (req, res) => {
+  try {
+    _success(res, 'ok', {
+      headers: req.headers,
+      ip: req.ip,
+      ips: req.ips,
+      hello: req._hello,
+    });
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
 // 定期清理聊天过期文件
 timedTask.add(async (flag) => {
   if (flag.slice(-6) === '003000') {

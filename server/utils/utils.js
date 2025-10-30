@@ -117,36 +117,33 @@ export function paramErr(res, req) {
 }
 
 // 客户端ip获取
+const IP_REGEX =
+  /\b(?:\d{1,3}\.){3}\d{1,3}\b|(?:[0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}\b/;
+
 export function getClientIp(req) {
   try {
-    const ip =
-      req.headers['x-forwarded-for'] ||
-      req.ip ||
-      req.connection?.remoteAddress ||
-      req.socket?.remoteAddress ||
-      req.connection?.socket?.remoteAddress ||
-      '';
+    let ip = '';
 
-    if (!ip) return '0.0.0.0';
+    if (req.ip) {
+      ip = req.ip;
+    } else if (req.headers['x-forwarded-for']) {
+      ip = String(req.headers['x-forwarded-for']).split(',')[0].trim();
+    } else {
+      ip =
+        req.connection?.remoteAddress ||
+        req.socket?.remoteAddress ||
+        req.connection?.socket?.remoteAddress ||
+        '';
+    }
 
-    const formattedIp = ip.startsWith('::ffff:') ? ip.slice(7) : ip;
+    if (ip.startsWith('::ffff:')) ip = ip.slice(7);
+    if (ip === '::1') return '127.0.0.1';
 
-    const extractedIp = extractIP(formattedIp);
-    return extractedIp ? extractedIp[0] : '0.0.0.0';
+    const match = ip.match(IP_REGEX);
+    return match ? match[0] : '0.0.0.0';
   } catch {
     return '0.0.0.0';
   }
-}
-
-export function extractIP(text) {
-  const ipv4Regex = /\b(?:\d{1,3}\.){3}\d{1,3}\b/;
-  const ipv6Regex = /\b([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}\b/;
-  const ipRegex = new RegExp(
-    `(${ipv4Regex.source})|(${ipv6Regex.source})`,
-    'g'
-  );
-
-  return text.match(ipRegex) || null;
 }
 
 // 格式时间日期
@@ -812,12 +809,18 @@ export function myShuffle(arr) {
 export function parseObjectJson(str) {
   try {
     const res = JSON.parse(str);
-    if (_type.isString(res) || !_type.isObject(res)) {
-      throw new Error();
-    }
-    return res;
+    if (_type.isObject(res)) return res;
+    throw new Error();
   } catch {
     return '';
+  }
+}
+
+export function parseJson(str, defaultValue) {
+  try {
+    return JSON.parse(str);
+  } catch {
+    return defaultValue;
   }
 }
 

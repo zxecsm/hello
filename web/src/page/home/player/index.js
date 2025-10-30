@@ -45,6 +45,7 @@ import {
   _animate,
   getCenterPointDistance,
   savePopLocationInfo,
+  parseJson,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -1382,7 +1383,7 @@ function songListMenu(e, sid) {
         try {
           const text = await upStr('.json');
           if (text) {
-            const list = JSON.parse(text);
+            const list = parseJson(text, []);
             const res = await reqPlayerImport({ id: sid, list });
 
             if (res.code === 1) {

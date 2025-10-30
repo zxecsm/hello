@@ -7,7 +7,7 @@ import {
   updateData,
 } from '../../utils/sqlite.js';
 
-import { batchTask, unique } from '../../utils/utils.js';
+import { batchTask, parseJson, unique } from '../../utils/utils.js';
 import _path from '../../utils/path.js';
 
 export const nodeID3 = NodeID3.Promise;
@@ -81,11 +81,11 @@ export async function getMusicList(account) {
   let songListObj = (
     await queryData('song_list', 'data', `WHERE account = ?`, [account])
   )[0];
+  const list = [
+    { name: '播放历史', pic: 'img/history.jpg', item: [], id: 'history' },
+    { name: '收藏', pic: 'img/music.jpg', item: [], id: 'favorites' },
+  ];
   if (!songListObj) {
-    const list = [
-      { name: '播放历史', pic: 'img/history.jpg', item: [], id: 'history' },
-      { name: '收藏', pic: 'img/music.jpg', item: [], id: 'favorites' },
-    ];
     await insertData(
       'song_list',
       [
@@ -98,7 +98,7 @@ export async function getMusicList(account) {
     );
     return list;
   }
-  return JSON.parse(songListObj.data);
+  return parseJson(songListObj.data, list);
 }
 
 // 更新歌曲列表

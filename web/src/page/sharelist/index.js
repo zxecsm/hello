@@ -233,6 +233,7 @@ if (isIframe()) {
 }
 $headBtns
   .on('click', '.clear_share_list_btn', function (e) {
+    if (sList.length === 0) return;
     rMenu.pop(
       {
         e,
