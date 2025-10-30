@@ -116,36 +116,6 @@ export function paramErr(res, req) {
   _err(res, '参数错误')(req, param || '', 1);
 }
 
-// 客户端ip获取
-const IP_REGEX =
-  /\b(?:\d{1,3}\.){3}\d{1,3}\b|(?:[0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}\b/;
-
-export function getClientIp(req) {
-  try {
-    let ip = '';
-
-    if (req.ip) {
-      ip = req.ip;
-    } else if (req.headers['x-forwarded-for']) {
-      ip = String(req.headers['x-forwarded-for']).split(',')[0].trim();
-    } else {
-      ip =
-        req.connection?.remoteAddress ||
-        req.socket?.remoteAddress ||
-        req.connection?.socket?.remoteAddress ||
-        '';
-    }
-
-    if (ip.startsWith('::ffff:')) ip = ip.slice(7);
-    if (ip === '::1') return '127.0.0.1';
-
-    const match = ip.match(IP_REGEX);
-    return match ? match[0] : '0.0.0.0';
-  } catch {
-    return '0.0.0.0';
-  }
-}
-
 // 格式时间日期
 export function formatDate({
   template = '{0}-{1}-{2} {3}:{4}:{5}',

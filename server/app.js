@@ -9,7 +9,6 @@ import { UAParser } from 'ua-parser-js';
 
 import {
   writelog,
-  getClientIp,
   getIn,
   _err,
   debounce,
@@ -50,12 +49,11 @@ import userRoute from './routes/user/index.js';
 import taskRoute from './routes/task/index.js';
 import _path from './utils/path.js';
 import { fieldLength } from './routes/config.js';
+import getClientIp from './utils/getClientIp.js';
 
 const __dirname = getDirname(import.meta);
 
 const app = express();
-
-app.set('trust proxy', 'loopback');
 
 // Cookie
 app.use(cookieParser());
