@@ -66,28 +66,47 @@ import {
 } from '../index.js';
 import { showMusicPlayerBox } from '../player/index.js';
 import { popWindow, setZidx } from '../popWindow.js';
-import { reqRootTips } from '../../../api/root.js';
+import { reqRootSysStatus, reqRootTips } from '../../../api/root.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { setExpireCount, showCountBox } from '../count_down/index.js';
 import { hideIframeMask, showIframeMask } from '../iframe.js';
 import { reqChatForwardMsgLink } from '../../../api/chat.js';
+import { CircularProgressBar } from '../../../js/plugins/percentBar/index.js';
 import md5 from '../../../js/utils/md5.js';
 import { _tpl } from '../../../js/utils/template.js';
 import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
 import localData from '../../../js/common/localData.js';
+import { setTop } from '../player/widget.js';
 // local数据
 let tipsFlag = 0;
 const $rightMenuMask = $('.right_menu_mask'),
   $rightBox = $rightMenuMask.find('.right_box'),
-  $userInfoWrap = $('.user_info_wrap');
+  $userInfoWrap = $('.user_info_wrap'),
+  $sysInfoWrap = $('.sys_info_wrap');
 // 隐藏菜单
 $rightMenuMask.on('click', function (e) {
   if (_getTarget(this, e, '.right_menu_mask', 1)) {
     hideRightMenu();
   }
 });
+let sysInfoIsTop = localData.get('sysInfoIsTop'),
+  userInfoIsTop = localData.get('userInfoIsTop');
+function switchSysInfoTopState() {
+  sysInfoIsTop = !sysInfoIsTop;
+  setTop($sysInfoWrap, sysInfoIsTop);
+  localData.set('sysInfoIsTop', sysInfoIsTop);
+  setZidx($sysInfoWrap[0], 'sysinfo', hideSysInfo, sysInfoIsTop);
+}
+function switchUserInfoState() {
+  userInfoIsTop = !userInfoIsTop;
+  setTop($userInfoWrap, userInfoIsTop);
+  localData.set('userInfoIsTop', userInfoIsTop);
+  setZidx($userInfoWrap[0], 'userinfo', hideUserInfo, userInfoIsTop);
+}
+setTop($sysInfoWrap, sysInfoIsTop);
+setTop($userInfoWrap, userInfoIsTop);
 export function setTopsFlag(val) {
   if (val === undefined) {
     return tipsFlag;
@@ -261,6 +280,22 @@ export function hideUserInfo() {
     },
     (target) => {
       target.style.display = 'none';
+    }
+  );
+}
+export function hideSysInfo() {
+  popWindow.remove('sysinfo');
+  _animate(
+    $sysInfoWrap[0],
+    {
+      to: {
+        transform: `translateY(100%) scale(0)`,
+        opacity: 0,
+      },
+    },
+    (target) => {
+      target.style.display = 'none';
+      sysStatus.end();
     }
   );
 }
@@ -636,7 +671,11 @@ $userInfoWrap
   .on('click', '.hide', hdHideState)
   .on('click', '.remote_login', hdRemoteLoginState)
   .on('click', '.u_close_btn', hideUserInfo)
-  .on('click', '.user_logo div', hdUserLogo);
+  .on('click', '.user_logo div', hdUserLogo)
+  .on('click', '.top', switchUserInfoState);
+$sysInfoWrap
+  .on('click', '.c_close_btn', hideSysInfo)
+  .on('click', '.top', switchSysInfoTopState);
 // 更新用户信息
 export function renderUserinfo() {
   const { username, logo, account } = setUserInfo();
@@ -1685,7 +1724,14 @@ export function showUserInfo() {
   renderUserinfo();
   $userInfoWrap.stop().fadeIn(_d.speed);
   toCenter($userInfoWrap[0]);
-  setZidx($userInfoWrap[0], 'userinfo', hideUserInfo);
+  setZidx($userInfoWrap[0], 'userinfo', hideUserInfo, userInfoIsTop);
+}
+export function showSysInfo() {
+  hideRightMenu();
+  sysStatus.start();
+  $sysInfoWrap.stop().fadeIn(_d.speed);
+  toCenter($sysInfoWrap[0]);
+  setZidx($sysInfoWrap[0], 'sysinfo', hideSysInfo, sysInfoIsTop);
 }
 // 导入书签
 function importBm(cb, loading = { start() {}, end() {} }) {
@@ -1837,9 +1883,78 @@ export function showPicture() {
   hideRightMenu();
   openInIframe(`/pic`, '图床');
 }
+function getPercentColor(percent) {
+  if (percent <= 60) {
+    return 'var(--message-success-color)';
+  } else if (percent <= 80) {
+    return 'var(--message-warning-color)';
+  } else {
+    return 'var(--message-error-color)';
+  }
+}
+const sysStatus = (() => {
+  if (!isRoot()) {
+    $rightBox.find('.show_sysinfo').remove();
+    return { start() {}, end() {} };
+  }
+  const options = {
+    color: 'var(--message-success-color)',
+    bgColor: '#88888880',
+    strokeWidth: 8,
+  };
+  const sys = [
+    { type: 'cpu' },
+    { type: 'mem' },
+    { type: 'swap' },
+    { type: 'disk' },
+  ].map(({ type }) => {
+    return {
+      type,
+      text: $sysInfoWrap.find(`.list .${type} .text`)[0],
+      bar: new CircularProgressBar(
+        $sysInfoWrap.find(`.list .${type} .progress`)[0],
+        options
+      ),
+    };
+  });
+  let timer = null;
+  function start() {
+    end();
+    reqRootSysStatus()
+      .then((res) => {
+        if (res.code === 1) {
+          sys.forEach(({ type, text, bar }) => {
+            const { percent, used, total, cores, arch } = res.data[type];
+            bar.setProgress(percent, type).setColor(getPercentColor(percent));
+            if (type === 'cpu') {
+              text.innerText = `${cores}核 ${arch}`;
+            } else {
+              text.innerText = `${formatBytes(used)} / ${formatBytes(total)}`;
+            }
+          });
+          timer = setTimeout(start, 1000);
+        }
+      })
+      .catch(() => {
+        timer = setTimeout(start, 5000);
+      });
+  }
+  function end() {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+  }
+
+  return {
+    start,
+    end,
+  };
+})();
 // 事件绑定
 $rightBox
   .on('click', '.tools', hdTools)
+  .on('click', '.show_sysinfo', showSysInfo)
   .on('click', '.account_manage', hdAccountManage)
   .on('click', '.user_name', showUserInfo)
   .on('click', '.r_about', function () {
@@ -1933,10 +2048,32 @@ myDrag({
     }
   },
 });
+myDrag({
+  trigger: $sysInfoWrap[0],
+  down({ target }) {
+    target.style.transition = '0s';
+    showIframeMask();
+  },
+  up({ target, x, y }) {
+    hideIframeMask();
+    target.style.transition =
+      'top var(--speed-duration) var(--speed-timing), left var(--speed-duration) var(--speed-timing)';
+    const { h, w } = getScreenSize();
+    if (y <= 0 || y >= h || x > w || 0 - x > target.offsetWidth) {
+      const { x, y } = target.dataset;
+      target.style.top = y + 'px';
+      target.style.left = x + 'px';
+    } else {
+      savePopLocationInfo(target, { x, y });
+    }
+  },
+});
 // 层级
 function hdIndex(e) {
   if (_getTarget(this, e, '.user_info_wrap')) {
-    setZidx($userInfoWrap[0], 'userinfo', hideUserInfo);
+    setZidx($userInfoWrap[0], 'userinfo', hideUserInfo, userInfoIsTop);
+  } else if (_getTarget(this, e, '.sys_info_wrap')) {
+    setZidx($sysInfoWrap[0], 'sysinfo', hideSysInfo, sysInfoIsTop);
   }
 }
 document.addEventListener('mousedown', (e) => {

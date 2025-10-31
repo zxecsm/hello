@@ -714,7 +714,7 @@ route.post('/create-account', async (req, res) => {
 // 系统状态
 route.get('/sys-status', async (req, res) => {
   try {
-    _success(res, 'ok', getSystemUsage());
+    _success(res, 'ok', await getSystemUsage());
   } catch (error) {
     _err(res)(req, error);
   }

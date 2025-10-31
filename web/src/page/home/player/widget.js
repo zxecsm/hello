@@ -96,7 +96,7 @@ setTop($miniLrcWrap, miniLrcCoord.isTop);
 setTop($editLrcWrap, editLrcIsTop);
 setTop($musicMvWrap, mvIsTop);
 setTop($miniPlayer, miniPlayerCoord.isTop);
-function setTop(el, isTop) {
+export function setTop(el, isTop) {
   if (isTop) {
     el.find('.top').attr('class', 'top iconfont icon-zhiding1');
   } else {

@@ -6,6 +6,7 @@ export class CircularProgressBar {
     this.strokeWidth = options.strokeWidth || 10;
     this.max = options.max || 100;
     this.value = options.value || 0;
+    this.title = options.title || '';
 
     this.createElements();
     this.setProgress(this.value);
@@ -41,7 +42,10 @@ export class CircularProgressBar {
       stroke-dashoffset="${circumference}"
     />
   </svg>
-  <div class="progress-text">${this.value}%</div>
+  <div class="progress-text">
+    <div class="progress-value">${this.value}</div>
+    <div class="title">${this.title}</div>
+  </div>
 `;
 
     const textDiv = wrapper.querySelector('.progress-text');
@@ -50,6 +54,10 @@ export class CircularProgressBar {
       top: '50%',
       left: '50%',
       transform: 'translate(-50%, -50%)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexFlow: 'column',
     });
 
     this.wrapper = wrapper;
@@ -58,6 +66,9 @@ export class CircularProgressBar {
       'stroke-dashoffset 0.6s ease, stroke 0.3s ease';
     this.setColor(this.color);
     this.progressText = textDiv;
+    this.titleDiv = wrapper.querySelector('.title');
+    this.valueDiv = wrapper.querySelector('.progress-value');
+    this.titleDiv.style.fontSize = '0.6em';
     this.circumference = circumference;
 
     this.container.appendChild(wrapper);
@@ -67,12 +78,13 @@ export class CircularProgressBar {
     this.progressCircle.style.stroke = color;
     return this;
   }
-  setProgress(value) {
+  setProgress(value = 0, title = '') {
     this.value = Math.min(Math.max(value, 0), this.max);
     const percent = this.value / this.max;
     const offset = this.circumference * (1 - percent);
     this.progressCircle.style.strokeDashoffset = offset;
-    this.progressText.textContent = `${Math.round(percent * 100)}%`;
+    this.valueDiv.textContent = `${Math.round(percent * 100)}%`;
+    this.titleDiv.textContent = title;
     return this;
   }
 }

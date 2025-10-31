@@ -425,6 +425,9 @@
           <div class="right_box no_select">
             <div cursor="y" class="user_name"></div>
             <div class="r_list">
+              <div cursor="y" class="show_sysinfo">
+                <i class="iconfont icon-a-ziyuan60"></i><span>系统状态</span>
+              </div>
               <div cursor="y" class="show_music_player">
                 <i class="iconfont icon-Music"></i><span>播放器</span>
               </div>
@@ -471,10 +474,37 @@
             cursor="y"
             class="u_close_btn iconfont icon-close-bold window_head"
           ></div>
+          <div cursor="y" class="top iconfont icon-zhiding"></div>
           <div class="user_logo">
             <div cursor></div>
           </div>
           <div class="user_list"></div>
+        </div>
+        <!-- 系统信息 -->
+        <div class="sys_info_wrap">
+          <div
+            cursor="y"
+            class="c_close_btn iconfont icon-close-bold window_head"
+          ></div>
+          <div cursor="y" class="top iconfont icon-zhiding"></div>
+          <div class="list">
+            <div class="cpu">
+              <div class="progress"></div>
+              <div class="text"></div>
+            </div>
+            <div class="mem">
+              <div class="progress"></div>
+              <div class="text"></div>
+            </div>
+            <div class="swap">
+              <div class="progress"></div>
+              <div class="text"></div>
+            </div>
+            <div class="disk">
+              <div class="progress"></div>
+              <div class="text"></div>
+            </div>
+          </div>
         </div>
         <!-- 聊天室 -->
         <audio preload="none" class="chat_ausio"></audio>
@@ -596,10 +626,6 @@
               <button cursor="y" class="f_close btn btn_info">取消</button>
             </div>
           </div>
-        </div>
-        <div class="sys_status">
-          <div class="cpu"></div>
-          <div class="mem"></div>
         </div>
       </div>
     </div>

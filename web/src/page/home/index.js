@@ -27,7 +27,6 @@ import {
   isLogin,
   isRoot,
   getScreenSize,
-  _setTimeout,
 } from '../../js/utils/utils.js';
 import _d from '../../js/common/config';
 import _msg from '../../js/plugins/message';
@@ -40,6 +39,7 @@ import { reqBgRandom, reqChangeBg } from '../../api/bg.js';
 // 时钟
 import './clock.js';
 import {
+  hideSysInfo,
   hideUserInfo,
   renderUserinfo,
   settingMenu,
@@ -141,9 +141,7 @@ import {
 import { reqCountList } from '../../api/count.js';
 import { deepClone } from '../../js/utils/template.js';
 import _path from '../../js/utils/path.js';
-import { CircularProgressBar } from '../../js/plugins/percentBar/index.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
-import { reqRootSysStatus } from '../../api/root.js';
 import { handleAllowLoginMsg, shakeChat, timeMsg } from './home.js';
 import localData from '../../js/common/localData.js';
 const $pageBg = $('.page_bg'),
@@ -157,8 +155,7 @@ const $pageBg = $('.page_bg'),
   $chatListBox = $chatRoomWrap.find('.chat_list_box'),
   $showChatRoomBtn = $('.show_chat_room_btn'),
   $randomChangeBgBtn = $('.random_change_bg_btn'),
-  $searchBoxBtn = $('.search_box_btn'),
-  $sysStatus = $('.sys_status');
+  $searchBoxBtn = $('.search_box_btn');
 let curFilterBg = localData.get('filterbg');
 let userInfo = {};
 // 设置用户数据
@@ -446,6 +443,7 @@ export function closeAllwindow(all) {
     closeTodoBox();
     closeCountBox();
     hideUserInfo();
+    hideSysInfo();
     closeBgBox();
   }
 }
@@ -460,6 +458,7 @@ export function hideAllwindow(all) {
     closeEditLrcBox();
     closeMvBox();
     hideUserInfo();
+    hideSysInfo();
     closeBgBox();
   }
 }
@@ -940,39 +939,6 @@ function handleOnlineMsg(data) {
       showChatRoom(account);
     }
   });
-}
-function getPercentColor(percent) {
-  if (percent <= 60) {
-    return 'var(--message-success-color)';
-  } else if (percent <= 80) {
-    return 'var(--message-warning-color)';
-  } else {
-    return 'var(--message-error-color)';
-  }
-}
-if (isRoot()) {
-  $sysStatus.css('display', 'flex');
-  const options = {
-    color: 'var(--message-success-color)',
-    bgColor: '#88888880',
-    strokeWidth: 8,
-  };
-  const cpuBar = new CircularProgressBar($sysStatus.find('.cpu')[0], options);
-  const memBar = new CircularProgressBar($sysStatus.find('.mem')[0], options);
-  (function updateSysStatus() {
-    reqRootSysStatus()
-      .then((res) => {
-        const { cpu = 0, memory = { usedPercent: 0 } } = res.data;
-        cpuBar.setProgress(cpu).setColor(getPercentColor(cpu));
-        memBar
-          .setProgress(memory.usedPercent)
-          .setColor(getPercentColor(memory.usedPercent));
-        _setTimeout(updateSysStatus, 1000);
-      })
-      .catch(() => {
-        _setTimeout(updateSysStatus, 5000);
-      });
-  })();
 }
 //同步数据
 realtime.init('home').add((res) => {

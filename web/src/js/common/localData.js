@@ -20,6 +20,8 @@ const defaultData = {
   mvIsTop: false, // MV置顶
   editLrcIsTop: false, // 编辑歌词置顶
   chatIsTop: false, // 聊天室置顶
+  sysInfoIsTop: false, // 系统信息置顶
+  userInfoIsTop: false, // 用户信息置顶
   playerIsTop: false, // 播放器置顶
   countDownIsTop: false, // 倒计时置顶
   todoIsTop: false, // 待办置顶
