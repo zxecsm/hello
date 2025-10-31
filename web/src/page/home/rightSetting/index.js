@@ -22,6 +22,8 @@ import {
   isMobile,
   longPress,
   copyText,
+  myToRest,
+  getCenterPointDistance,
   isRoot,
   isEmail,
   isurl,
@@ -284,18 +286,24 @@ export function hideUserInfo() {
   );
 }
 export function hideSysInfo() {
-  popWindow.remove('sysinfo');
+  const sysBox = $sysInfoWrap[0];
+  const screen = getScreenSize();
+  const { x, y } = getCenterPointDistance(sysBox, {
+    x: screen.w,
+    y: screen.h / 2,
+  });
   _animate(
-    $sysInfoWrap[0],
+    sysBox,
     {
       to: {
-        transform: `translateY(100%) scale(0)`,
+        transform: `translate(${x}px,${y}px) scale(0)`,
         opacity: 0,
       },
     },
     (target) => {
       target.style.display = 'none';
       sysStatus.end();
+      popWindow.remove('sysinfo');
     }
   );
 }
@@ -1727,11 +1735,32 @@ export function showUserInfo() {
   setZidx($userInfoWrap[0], 'userinfo', hideUserInfo, userInfoIsTop);
 }
 export function showSysInfo() {
+  const sysBox = $sysInfoWrap[0];
   hideRightMenu();
+  const isHide = $sysInfoWrap.is(':hidden');
+  $sysInfoWrap.css('display', 'block');
+  setZidx(sysBox, 'sysinfo', hideSysInfo, sysInfoIsTop);
   sysStatus.start();
-  $sysInfoWrap.stop().fadeIn(_d.speed);
-  toCenter($sysInfoWrap[0]);
-  setZidx($sysInfoWrap[0], 'sysinfo', hideSysInfo, sysInfoIsTop);
+  if (!$sysInfoWrap._once) {
+    $sysInfoWrap._once = true;
+    toCenter(sysBox);
+  } else {
+    myToRest(sysBox, false, false);
+  }
+  if (isHide) {
+    const screen = getScreenSize();
+    const { x, y } = getCenterPointDistance(sysBox, {
+      x: screen.w,
+      y: screen.h / 2,
+    });
+    _animate(sysBox, {
+      to: {
+        transform: `translate(${x}px,${y}px) scale(0)`,
+        opacity: 0,
+      },
+      direction: 'reverse',
+    });
+  }
 }
 // 导入书签
 function importBm(cb, loading = { start() {}, end() {} }) {
