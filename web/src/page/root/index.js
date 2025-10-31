@@ -925,11 +925,12 @@ function handlePubApi(e) {
         const pre = _d.originURL;
         rMenu.rightInfo(
           e,
-          `壁纸：\n  大屏：${pre}/api/bg/r/big\n  小屏：${pre}/api/bg/r/small\n\n获取网站图标：${pre}/api/getfavicon?u=${pre}\n\n获取网站信息：${pre}/api/bmk/parse-site-info?u=${pre}`,
+          `壁纸：\n  大屏：${pre}/api/bg/r/big\n  小屏：${pre}/api/bg/r/small\n\n获取网站图标：${pre}/api/getfavicon?u=${pre}\n\n获取网站信息：${pre}/api/bmk/parse-site-info?u=${pre}\n\n回显接口：${pre}/api/echo`,
           '接口信息'
         );
       } else if (id === 'state') {
-        const { randomBgApi, siteInfoApi, faviconApi } = dataObj.pubApi;
+        const { randomBgApi, siteInfoApi, faviconApi, echoApi } =
+          dataObj.pubApi;
         const type = 'select';
         rMenu.inpMenu(
           e,
@@ -963,16 +964,26 @@ function handlePubApi(e) {
                   { value: 'n', text: '关闭' },
                 ],
               },
+              echoApi: {
+                beforeText: '回显接口：',
+                type,
+                value: echoApi ? 'y' : 'n',
+                selectItem: [
+                  { value: 'y', text: '开启' },
+                  { value: 'n', text: '关闭' },
+                ],
+              },
             },
           },
           function ({ inp, close, loading, isDiff }) {
             if (!isDiff()) return;
-            const { randomBgApi, siteInfoApi, faviconApi } = inp;
+            const { randomBgApi, siteInfoApi, faviconApi, echoApi } = inp;
 
             const obj = {
               randomBgApi: randomBgApi === 'y' ? 1 : 0,
               siteInfoApi: siteInfoApi === 'y' ? 1 : 0,
               faviconApi: faviconApi === 'y' ? 1 : 0,
+              echoApi: echoApi === 'y' ? 1 : 0,
             };
             loading.start();
             reqRootPubApiState(obj)

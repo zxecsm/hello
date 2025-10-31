@@ -230,7 +230,7 @@ export function showCountBox() {
   getCountList(true);
   if (!$countBox._once) {
     $countBox._once = true;
-    toSetSize(cBox, 800, 800);
+    toSetSize(cBox, 700, 700);
     toCenter(cBox);
   } else {
     myToRest(cBox, false, false);

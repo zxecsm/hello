@@ -94,6 +94,7 @@ function getLogList(e) {
             text: `${name} - ${formatBytes(size)}`,
             param: { name },
             beforeIcon: 'iconfont icon-rizhi',
+            active: curName === name,
           });
         });
         rMenu.selectMenu(

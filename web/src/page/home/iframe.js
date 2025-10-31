@@ -123,7 +123,7 @@ class CreateIframe {
     document.querySelector('#main').append(this.box);
     this.box.style.display = 'flex';
     this.box.style.visibility = 'visible';
-    toSetSize(this.box, 1250);
+    toSetSize(this.box, 900);
     const windows = popWindow.getList();
     const lastWindow = windows.slice(-1)[0];
     if (!lastWindow) {

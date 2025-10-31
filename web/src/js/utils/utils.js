@@ -1589,7 +1589,7 @@ export function getScreenSize() {
   };
 }
 // 窗口大小设置
-export function toSetSize(target, maxW = 900, maxH = 800) {
+export function toSetSize(target, maxW = 800, maxH = 800) {
   // maxW = randomNum(maxW - 100, maxW + 100);
   // maxH = randomNum(maxH - 100, maxH + 100);
   const { w: ww, h: wh } = getScreenSize();

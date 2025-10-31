@@ -193,7 +193,7 @@ export function showTodoBox() {
   getTodoList(true);
   if (!$todoBox._once) {
     $todoBox._once = true;
-    toSetSize(tBox, 800, 800);
+    toSetSize(tBox, 700, 700);
     toCenter(tBox);
   } else {
     myToRest(tBox, false, false);

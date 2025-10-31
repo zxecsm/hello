@@ -6,7 +6,8 @@
   "pubApi": {
     "randomBgApi": true,
     "siteInfoApi": true,
-    "faviconApi": true
+    "faviconApi": true,
+    "echoApi": true
   },
   "faviconSpareApi": "",
   "cacheExp": {

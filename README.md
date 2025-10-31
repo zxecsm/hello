@@ -37,4 +37,10 @@ http://localhost:55555/api/getfavicon?u=[https://]google.com
 http://localhost:55555/api/bmk/parse-site-info?u=[https://]google.com
 ```
 
+回显接口
+
+```
+http://localhost:55555/api/echo?msg=hello
+```
+
 ![hello](https://raw.githubusercontent.com/zxecsm/hello/main/hello.png)

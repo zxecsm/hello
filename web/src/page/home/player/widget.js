@@ -314,7 +314,7 @@ export function showEditLrc(sobj) {
     .catch(() => {});
   if (!$editLrcWrap._once) {
     $editLrcWrap._once = true;
-    toSetSize(editBox, 800, 800);
+    toSetSize(editBox, 600, 600);
     toCenter(editBox);
   } else {
     myToRest(editBox, false, false);

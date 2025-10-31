@@ -47,6 +47,7 @@ import searchRoute from './routes/search/index.js';
 import todoRoute from './routes/todo/index.js';
 import userRoute from './routes/user/index.js';
 import taskRoute from './routes/task/index.js';
+import echoRoute from './routes/echo/index.js';
 import _path from './utils/path.js';
 import { fieldLength } from './routes/config.js';
 import getClientIp from './utils/getClientIp.js';
@@ -220,6 +221,7 @@ app.use('/api/file', fileRoute);
 app.use('/api/notepad', notepadRoute);
 app.use('/api/task', taskRoute);
 app.use('/api/getfavicon', getfaviconRoute);
+app.use('/api/echo', echoRoute);
 
 app.use((_, res) => {
   res.status(404).redirect('/404');

@@ -439,11 +439,12 @@ route.post('/trash-state', async (req, res) => {
 // 公开api状态
 route.post('/pub-api-state', async (req, res) => {
   try {
-    const { randomBgApi, siteInfoApi, faviconApi } = req.body;
+    const { randomBgApi, siteInfoApi, faviconApi, echoApi } = req.body;
     if (
       !validationValue(randomBgApi, [0, 1]) ||
       !validationValue(siteInfoApi, [0, 1]) ||
-      !validationValue(faviconApi, [0, 1])
+      !validationValue(faviconApi, [0, 1]) ||
+      !validationValue(echoApi, [0, 1])
     ) {
       paramErr(res, req);
       return;
@@ -453,6 +454,7 @@ route.post('/pub-api-state', async (req, res) => {
       randomBgApi: !!randomBgApi,
       siteInfoApi: !!siteInfoApi,
       faviconApi: !!faviconApi,
+      echoApi: !!echoApi,
     };
 
     _success(res, `修改接口状态成功`, _d.pubApi)(req);
@@ -713,19 +715,6 @@ route.post('/create-account', async (req, res) => {
 route.get('/sys-status', async (req, res) => {
   try {
     _success(res, 'ok', getSystemUsage());
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-route.get('/info', async (req, res) => {
-  try {
-    _success(res, 'ok', {
-      headers: req.headers,
-      ip: req.ip,
-      ips: req.ips,
-      hello: req._hello,
-    });
   } catch (error) {
     _err(res)(req, error);
   }
