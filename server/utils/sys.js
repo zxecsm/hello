@@ -24,9 +24,9 @@ const getRawCpuUsage = (() => {
     prevIdle = totalIdle;
     prevTotal = totalTick;
 
-    if (totalDiff === 0) return 0;
+    const percent = totalDiff ? ((totalDiff - idleDiff) / totalDiff) * 100 : 0;
     return {
-      percent: ((totalDiff - idleDiff) / totalDiff) * 100,
+      percent,
       cores: cpus.length,
       arch: os.arch(),
     };
@@ -38,11 +38,12 @@ const getRawMemoryUsage = () => {
   const total = os.totalmem();
   const free = os.freemem();
   const used = total - free;
+  const percent = total ? (used / total) * 100 : 0;
   return {
     total,
     free,
     used,
-    percent: (used / total) * 100,
+    percent,
   };
 };
 
@@ -59,7 +60,7 @@ async function getDiskUsage(path = '/') {
     const total = parseInt(parts[1]) * 1024;
     const used = parseInt(parts[2]) * 1024;
     const available = parseInt(parts[3]) * 1024;
-    const percent = parseFloat(parts[4]);
+    const percent = total ? (used / total) * 100 : 0;
 
     return { total, used, available, percent };
   } catch {
