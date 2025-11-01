@@ -659,9 +659,7 @@ route.get('/font-list', async (req, res) => {
   try {
     const p = _path.normalize(appConfig.appData, 'font');
 
-    const list = _f.readdir(p);
-
-    _success(res, 'ok', list);
+    _success(res, 'ok', await _f.readdir(p));
   } catch (error) {
     _err(res)(req, error);
   }

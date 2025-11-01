@@ -1621,7 +1621,7 @@ route.post('/breakpoint', async (req, res) => {
         'tem',
         `${account}_${HASH}`
       ),
-      list = _f.readdir(path);
+      list = await _f.readdir(path);
 
     _success(res, 'ok', list);
   } catch (error) {
