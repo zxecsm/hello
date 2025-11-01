@@ -59,7 +59,5 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            docker.io/${{ secrets.DOCKER_USERNAME }}/myapp:latest
-            docker.io/${{ secrets.DOCKER_USERNAME }}/myapp:${{ github.sha }}
-            ghcr.io/${{ github.repository_owner }}/myapp:latest
-            ghcr.io/${{ github.repository_owner }}/myapp:${{ github.sha }}
+            docker.io/${{ secrets.DOCKER_USERNAME }}/hello:latest
+            ghcr.io/${{ github.repository_owner }}/hello:latest
