@@ -80,7 +80,6 @@ import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
 import localData from '../../../js/common/localData.js';
-import { setTop } from '../player/widget.js';
 // local数据
 let tipsFlag = 0;
 const $rightMenuMask = $('.right_menu_mask'),
@@ -93,6 +92,13 @@ $rightMenuMask.on('click', function (e) {
     hideRightMenu();
   }
 });
+function setTop(el, isTop) {
+  if (isTop) {
+    el.find('.top').attr('class', 'top iconfont icon-zhiding1 window_head');
+  } else {
+    el.find('.top').attr('class', 'top iconfont icon-zhiding window_head');
+  }
+}
 let sysInfoIsTop = localData.get('sysInfoIsTop'),
   userInfoIsTop = localData.get('userInfoIsTop');
 function switchSysInfoTopState() {
