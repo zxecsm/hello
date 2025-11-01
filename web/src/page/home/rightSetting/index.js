@@ -1949,6 +1949,7 @@ const sysStatus = (() => {
   let timer = null;
   function start() {
     end();
+    if ($sysInfoWrap.is(':hidden')) return;
     reqRootSysStatus()
       .then((res) => {
         if (res.code === 1) {

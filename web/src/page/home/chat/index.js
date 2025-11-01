@@ -1778,6 +1778,7 @@ $onlineStatus
   });
 function updateOnlineStatus(duration = 5000) {
   updateOnlineStatus.clear();
+  if (chatRoomWrapIsHide()) return;
   onlineTimer = setTimeout(() => {
     const acc = curChatAccount;
     reqChatGetDes({ account: acc })

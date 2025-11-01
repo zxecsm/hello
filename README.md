@@ -1,7 +1,8 @@
 ```
 services:
   hello:
-    image: 'zxecsm/hello:latest'
+    image: 'ghcr.io/zxecsm/hello:latest'
+    # image: 'zxecsm/hello:latest'
     container_name: hello
     restart: unless-stopped
     environment:
