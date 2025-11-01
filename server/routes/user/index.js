@@ -58,7 +58,7 @@ import {
   parseForwardMsgLink,
 } from '../chat/chat.js';
 
-import { playInConfig, getUserInfo, deleteUser } from './user.js';
+import { playInConfig, getUserInfo, deleteUser, getFontList } from './user.js';
 
 import jwt from '../../utils/jwt.js';
 import { fieldLength } from '../config.js';
@@ -657,9 +657,7 @@ route.get('/file-token', async (req, res) => {
 // 获取字体列表
 route.get('/font-list', async (req, res) => {
   try {
-    const p = _path.normalize(appConfig.appData, 'font');
-
-    _success(res, 'ok', await _f.readdir(p));
+    _success(res, 'ok', await getFontList());
   } catch (error) {
     _err(res)(req, error);
   }

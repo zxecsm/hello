@@ -19,6 +19,15 @@ import jwt from '../../utils/jwt.js';
 
 const __dirname = getDirname(import.meta);
 
+// 获取字体列表
+export async function getFontList() {
+  const p = _path.normalize(appConfig.appData, 'font');
+  if (!(await _f.exists(p))) {
+    await _f.cp(resolve(__dirname, `../../font`), p);
+  }
+  return _f.readdir(p);
+}
+
 // 获取用户信息
 export async function getUserInfo(account, fields = '*') {
   return (
