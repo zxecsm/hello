@@ -99,7 +99,7 @@ app.use(async (req, res, next) => {
 
     req._hello = {
       userinfo,
-      path: req.path,
+      path: decodeURIComponent(req.path),
       temid,
       ip,
       os: formatClientInfo(req.headers['user-agent']),
@@ -226,7 +226,9 @@ app.use(async (req, res, next) => {
   const path = req._hello.path;
   const routePath = '/api/getfile';
   if (path.startsWith(routePath)) {
-    await getFile(req, res, path.slice(routePath.length));
+    const filePath = path.slice(routePath.length);
+    req._hello.path = routePath;
+    await getFile(req, res, filePath);
   } else {
     next();
   }
