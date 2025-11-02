@@ -16,6 +16,8 @@ import {
   LazyLoad,
   _mySlide,
   _setTimeout,
+  getStaticPath,
+  getFaviconPath,
 } from '../../../js/utils/utils.js';
 
 import _d from '../../../js/common/config';
@@ -53,7 +55,6 @@ import pagination from '../../../js/plugins/pagination/index.js';
 import toolTip from '../../../js/plugins/tooltip/index.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl } from '../../../js/utils/template.js';
-import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import {
   BoxSelector,
@@ -370,9 +371,9 @@ function hdAsideListItemLogo() {
     );
 
     if (logo) {
-      logo = _path.normalize('/api/pub', logo);
+      logo = getStaticPath(logo);
     } else {
-      logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
+      logo = getFaviconPath(link);
     }
     let $bm_logo = $item.find('.bm_logo');
     const cache = cacheFile.hasUrl(logo, 'image');
@@ -389,9 +390,9 @@ function hdAsideListItemLogo() {
     );
 
     if (logo) {
-      logo = _path.normalize('/api/pub', logo);
+      logo = getStaticPath(logo);
     } else {
-      logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
+      logo = getFaviconPath(link);
     }
     const $bm_logo = $item.find('.bm_logo');
     imgjz(logo)

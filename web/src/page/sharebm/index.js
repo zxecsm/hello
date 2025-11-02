@@ -18,6 +18,8 @@ import {
   getScreenSize,
   hdOnce,
   isIframe,
+  getStaticPath,
+  getFaviconPath,
 } from '../../js/utils/utils';
 
 import defaultIcon from '../../images/img/default-icon.png';
@@ -30,7 +32,6 @@ import toolTip from '../../js/plugins/tooltip/index';
 import rMenu from '../../js/plugins/rightMenu';
 import { showBmkInfo } from '../../js/utils/showinfo';
 import { _tpl } from '../../js/utils/template';
-import _path from '../../js/utils/path';
 import cacheFile from '../../js/utils/cacheFile';
 import realtime from '../../js/plugins/realtime';
 import { otherWindowMsg, waitLogin } from '../home/home';
@@ -94,7 +95,7 @@ function renderList() {
   const bmItems = [...$box[0].querySelectorAll('.bm_item')].filter((item) => {
     const $item = $(item),
       { link } = getBmInfo($item.attr('data-id')),
-      url = `/api/getfavicon?u=${encodeURIComponent(link)}`;
+      url = getFaviconPath(link);
 
     const cache = cacheFile.hasUrl(url, 'image');
     if (cache) {
@@ -110,7 +111,7 @@ function renderList() {
   bmLoadImg.bind(bmItems, (item) => {
     const $item = $(item),
       { link } = getBmInfo($item.attr('data-id')),
-      url = `/api/getfavicon?u=${encodeURIComponent(link)}`;
+      url = getFaviconPath(link);
 
     const $img = $item.find('.logo');
     imgjz(url)
@@ -179,7 +180,7 @@ function getShareData(close, loading = { start() {}, end() {} }) {
         $head._uObj = { username, account, email };
         defaultTitle = title;
         if (logo) {
-          imgjz(_path.normalize('/api/pub/logo', account, logo))
+          imgjz(getStaticPath(`/logo/${account}/${logo}`))
             .then((cache) => {
               $head.find('.logo').css('background-image', `url(${cache})`);
             })

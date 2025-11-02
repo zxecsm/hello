@@ -28,6 +28,7 @@ import {
   LazyLoad,
   isDarkMode,
   getDarkIcon,
+  getStaticPath,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -41,7 +42,6 @@ import rMenu from '../../js/plugins/rightMenu';
 import MdWorker from '../../js/utils/md.worker.js';
 import loadingPage from '../../js/plugins/loading/index.js';
 import { _tpl } from '../../js/utils/template.js';
-import _path from '../../js/utils/path.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
 import { otherWindowMsg, timeMsg, waitLogin } from '../home/home.js';
 import localData from '../../js/common/localData.js';
@@ -210,7 +210,7 @@ if (urlparmes.v) {
         });
 
         if (logo) {
-          imgjz(_path.normalize('/api/pub/logo', account, logo))
+          imgjz(getStaticPath(`/logo/${account}/${logo}`))
             .then((cache) => {
               $authorInfo
                 .find('.logo')

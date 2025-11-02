@@ -637,7 +637,7 @@ function chatimgLoad() {
     const $v = $(item);
     const id = $v.parent().parent().parent().parent().data('id');
     const msgObj = getChatItem(id);
-    const url = getFilePath(`/upload/${id}/${msgObj.hash}`, 1);
+    const url = getFilePath(`/upload/${id}/${msgObj.content}`, 1);
     imgjz(url)
       .then((cache) => {
         $v.css({
@@ -964,21 +964,29 @@ function openChatFile(target) {
         const { isText } = result.data;
         if (isText) {
           downloadFile([
-            { fileUrl: getFilePath(`/upload/${msgId}`), filename: content },
+            {
+              fileUrl: getFilePath(`/upload/${msgId}/${content}`),
+              filename: content,
+            },
           ]);
         } else {
           if (isVideoFile(content)) {
             openInIframe(
               `/videoplay#${encodeURIComponent(
-                getFilePath(`/upload/${msgId}`)
+                getFilePath(`/upload/${msgId}/${content}`)
               )}`,
               content
             );
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(content)) {
-            openInIframe(getFilePath(`/upload/${msgId}`), content);
+            openInIframe(getFilePath(`/upload/${msgId}/${content}`), content);
           } else {
             downloadFile(
-              [{ fileUrl: getFilePath(`/upload/${msgId}`), filename: content }],
+              [
+                {
+                  fileUrl: getFilePath(`/upload/${msgId}/${content}`),
+                  filename: content,
+                },
+              ],
               'image'
             );
           }
@@ -1000,8 +1008,8 @@ function openChatImg(target) {
         imgPreview(
           [
             {
-              u1: getFilePath(`/upload/${id}`),
-              u2: getFilePath(`/upload/${id}/${obj.hash}`, 1),
+              u1: getFilePath(`/upload/${id}/${obj.content}`),
+              u2: getFilePath(`/upload/${id}/${obj.content}`, 1),
             },
           ],
           0,
@@ -1110,7 +1118,11 @@ $chatListBox
   .on('click', '.c_voice_msg_box', function () {
     if (getSelectText() !== '') return;
     const id = $(this).parent().parent().parent().attr('data-id');
-    playVoice(getFilePath(`/upload/${id}`), this, id);
+    playVoice(
+      getFilePath(`/upload/${id}/${getChatItem(id).content}`),
+      this,
+      id
+    );
   })
   .on('click', '.c_img', function () {
     if (getSelectText() !== '') return;
@@ -1320,7 +1332,7 @@ function chatMsgMenu(e, cobj) {
             if (result.code === 1) {
               close();
               downloadFile(
-                [{ fileUrl: getFilePath(`/upload/${tt}`), filename: z }],
+                [{ fileUrl: getFilePath(`/upload/${tt}/${z}`), filename: z }],
                 'image'
               );
               return;

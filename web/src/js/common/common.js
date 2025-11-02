@@ -13,6 +13,7 @@ import {
   getDarkIcon,
   _getTarget,
   throttle,
+  getStaticPath,
 } from '../utils/utils';
 import _d from './config';
 import _msg from '../plugins/message';
@@ -33,7 +34,7 @@ window._pageName =
     .split(/[?#]/)[0]
     .replace(_d.originURL, '')
     .split('/')
-    .filter((item) => item)[0] || 'home';
+    .filter(Boolean)[0] || 'home';
 if (isIframe() && window._pageName !== '404') {
   if (window._pageName === 'home') {
     pageErr();
@@ -310,7 +311,7 @@ window.onerror = function (message, url, line, column) {
         return;
       }
       _loadingBar.start();
-      const fontUrl = `/api/pub/font/${fontType}`;
+      const fontUrl = getStaticPath(`/font/${fontType}`);
       const ff = new FontFace('changfont', `url(${fontUrl})`);
       // 添加到全局的 FontFaceSet 中
       document.fonts.add(ff);

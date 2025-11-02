@@ -665,14 +665,7 @@ export function getIn(target, keys, defaultValue = undefined) {
 
 export function tplReplace(tpl, data) {
   return tpl.replace(/\{\{(.*?)\}\}/g, (_, k) => {
-    return getIn(
-      data,
-      k
-        .trim()
-        .split('.')
-        .filter((item) => item),
-      ''
-    );
+    return getIn(data, k.trim().split('.').filter(Boolean), '');
   });
 }
 

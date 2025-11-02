@@ -20,6 +20,7 @@ import {
   isLogin,
   concurrencyTasks,
   _getTarget,
+  getStaticPath,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -97,7 +98,7 @@ async function hdUpFile(files) {
         const { url } = isrepeat.data;
         fData.push({
           filename: _path.extname(name)[0],
-          url: _d.originURL + _path.normalize('/api/pub/picture', url),
+          url: getStaticPath(`/picture/${url}`, 1),
         });
         //文件已经存在操作
         return;
@@ -117,7 +118,7 @@ async function hdUpFile(files) {
         const { url } = result.data;
         fData.push({
           filename: _path.extname(name)[0],
-          url: _d.originURL + _path.normalize('/api/pub/picture', url),
+          url: getStaticPath(`/picture/${url}`, 1),
         });
         pro.close();
       } else {
@@ -362,7 +363,7 @@ const pgnt = pagination($imgList[0], {
 function copyLink(e, pobj) {
   const data = [];
   const obj = {
-    url: _d.originURL + _path.normalize('/api/pub/picture', pobj.url),
+    url: getStaticPath(`/picture/${pobj.url}`, 1),
     filename: pobj.hash,
   };
   typeTemplateArr.forEach((item, idx) => {
@@ -454,7 +455,7 @@ $imgList
     $imgList.find('.img').each((_, item) => {
       const $item = $(item);
       const obj = getPicItem($item.parent().attr('data-id'));
-      const u1 = `/api/pub/picture/${obj.url}`;
+      const u1 = getStaticPath(`/picture/${obj.url}`);
       const u2 = getFilePath(`/pic/${obj.url}`, 1);
       arr.push({
         u2,

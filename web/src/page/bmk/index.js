@@ -25,6 +25,8 @@ import {
   _getTarget,
   LazyLoad,
   imgjz,
+  getStaticPath,
+  getFaviconPath,
 } from '../../js/utils/utils';
 
 import _d from '../../js/common/config';
@@ -48,7 +50,6 @@ import { _tpl } from '../../js/utils/template';
 import { CreateTabs } from '../notes/tabs';
 import { BoxSelector } from '../../js/utils/boxSelector';
 import { otherWindowMsg, waitLogin } from '../home/home';
-import _path from '../../js/utils/path';
 import cacheFile from '../../js/utils/cacheFile';
 import localData from '../../js/common/localData';
 
@@ -123,7 +124,7 @@ function updataCategory() {
 }
 
 function categoryToArr(category) {
-  const c = category.split('-').filter((item) => item);
+  const c = category.split('-').filter(Boolean);
   const res = [];
   c.forEach((id) => {
     const cInfo = $contentWrap.groupList.find((item) => item.id === id);
@@ -339,9 +340,9 @@ function renderList(y) {
             );
 
             if (logo) {
-              logo = _path.normalize('/api/pub', logo);
+              logo = getStaticPath(logo);
             } else {
-              logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
+              logo = getFaviconPath(link);
             }
             const cache = cacheFile.hasUrl(logo, 'image');
             if (cache) {
@@ -356,9 +357,9 @@ function renderList(y) {
             );
 
             if (logo) {
-              logo = _path.normalize('/api/pub', logo);
+              logo = getStaticPath(logo);
             } else {
-              logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
+              logo = getFaviconPath(link);
             }
             imgjz(logo)
               .then((cache) => {

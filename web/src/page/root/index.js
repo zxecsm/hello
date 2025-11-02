@@ -922,10 +922,11 @@ function handlePubApi(e) {
     data,
     ({ id, e }) => {
       if (id === 'info') {
-        const pre = _d.originURL;
+        const originURL = _d.originURL;
+        const pre = originURL + _d.apiPath;
         rMenu.rightInfo(
           e,
-          `壁纸：\n  大屏：${pre}/api/bg/r/big\n  小屏：${pre}/api/bg/r/small\n\n获取网站图标：${pre}/api/getfavicon?u=${pre}\n\n获取网站信息：${pre}/api/bmk/parse-site-info?u=${pre}\n\n回显接口：${pre}/api/echo`,
+          `壁纸：\n  大屏：${pre}/bg/r/big\n  小屏：${pre}/bg/r/small\n\n获取网站图标：${originURL}${_d.faviconURL}?u=${originURL}\n\n获取网站信息：${pre}/bmk/parse-site-info?u=${originURL}\n\n回显接口：${pre}/echo`,
           '接口信息'
         );
       } else if (id === 'state') {

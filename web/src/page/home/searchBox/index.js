@@ -19,6 +19,8 @@ import {
   copyText,
   throttle,
   _position,
+  getStaticPath,
+  getFaviconPath,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
@@ -44,7 +46,6 @@ import toolTip from '../../../js/plugins/tooltip/index.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { showBmk, showHistory } from '../rightSetting/index.js';
 import { _tpl } from '../../../js/utils/template.js';
-import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import {
   BoxSelector,
@@ -248,9 +249,9 @@ function lazyLoadHomeBmLogo() {
     let { logo, link } = getHomeBmData($item.attr('data-id'));
     const $homeBmLogo = $item.find('.home_bm_logo');
     if (logo) {
-      logo = _path.normalize('/api/pub', logo);
+      logo = getStaticPath(logo);
     } else {
-      logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
+      logo = getFaviconPath(link);
     }
     const cache = cacheFile.hasUrl(logo, 'image');
     if (cache) {
@@ -269,9 +270,9 @@ function lazyLoadHomeBmLogo() {
     let { logo, link } = getHomeBmData($item.attr('data-id'));
     const $homeBmLogo = $item.find('.home_bm_logo');
     if (logo) {
-      logo = _path.normalize('/api/pub', logo);
+      logo = getStaticPath(logo);
     } else {
-      logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
+      logo = getFaviconPath(link);
     }
     imgjz(logo)
       .then((cache) => {

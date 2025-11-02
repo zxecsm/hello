@@ -1,5 +1,3 @@
-import express from 'express';
-
 import appConfig from '../../data/config.js';
 
 import {
@@ -23,12 +21,9 @@ import { fieldLength } from '../config.js';
 import _path from '../../utils/path.js';
 import jwt from '../../utils/jwt.js';
 
-const route = express.Router();
-
-// 读取文件
-route.get('/', async (req, res) => {
+export default async function getFile(req, res, p) {
   try {
-    let { t = '', p, token = '' } = req.query;
+    const { t = '', token = '' } = req.query;
 
     if (
       !validaString(t, 0, 1, 1) ||
@@ -44,7 +39,7 @@ route.get('/', async (req, res) => {
     const jwtData = token ? jwt.get(token) : '';
 
     // 验证外部播放器临时访问权限
-    if (!account && jwtData && jwtData.data.type === 'temAccessFile') {
+    if (jwtData && jwtData.data.type === 'temAccessFile') {
       account = jwtData.data.data.account;
       p = jwtData.data.data.p;
     }
@@ -52,7 +47,7 @@ route.get('/', async (req, res) => {
     const url = _path.normalize('/' + p);
 
     // 获取访问目录
-    const pArr = url.split('/').filter((item) => item);
+    const pArr = url.split('/').filter(Boolean);
 
     let dir = pArr.shift();
 
@@ -218,6 +213,4 @@ route.get('/', async (req, res) => {
   } catch (error) {
     _err(res)(req, error);
   }
-});
-
-export default route;
+}

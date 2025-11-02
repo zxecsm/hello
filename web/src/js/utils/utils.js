@@ -500,7 +500,7 @@ export function _postAjax(url, data = {}, opt = {}, callback) {
   }
   const k = 'post' + url;
   data = JSON.stringify(data);
-  url = `${_d.serverURL}${url}`;
+  url = `${_d.apiPath}${url}`;
   return new Promise((resolve, reject) => {
     const x = $.ajax({
       type: 'post',
@@ -581,7 +581,7 @@ export function _getAjax(url, data = {}, opt = {}) {
     _loadingBar.start();
   }
   const k = 'get' + url;
-  url = `${_d.serverURL}${url}`;
+  url = `${_d.apiPath}${url}`;
   return new Promise((resolve, reject) => {
     const x = $.ajax({
       type: 'get',
@@ -640,7 +640,7 @@ export function _getAjax(url, data = {}, opt = {}) {
 }
 // 上传文件
 export function _upFile(url, data = {}, file, callback, signal) {
-  url = `${_d.serverURL}${url}?${qs.stringify(data)}`;
+  url = `${_d.apiPath}${url}?${qs.stringify(data)}`;
   return new Promise((resolve, reject) => {
     const formData = new FormData();
     formData.append('attrname', file);
@@ -924,14 +924,7 @@ export function getIn(target, keys, defaultValue = undefined) {
 }
 export function tplReplace(tpl, data) {
   return tpl.replace(/\{\{(.*?)\}\}/g, (_, k) => {
-    return getIn(
-      data,
-      k
-        .trim()
-        .split('.')
-        .filter((item) => item),
-      ''
-    );
+    return getIn(data, k.trim().split('.').filter(Boolean), '');
   });
 }
 // 压缩图片
@@ -2444,9 +2437,23 @@ export function enterPassCode(cb) {
   );
 }
 // 生成文件路径
-export function getFilePath(p, t) {
-  p = _path.normalize('/' + p);
-  return `${_d.mediaURL}?${qs.stringify({ p, t })}`;
+export function getFilePath(p, t = '', prefix = false) {
+  const path = `${_d.getFileURL}${_path.normalize('/' + p)}?${qs.stringify({
+    t,
+  })}`;
+  if (prefix) return `${_d.originURL}${path}`;
+  return path;
+}
+// 生成静态路径
+export function getStaticPath(p, prefix = false) {
+  const path = `${_d.staticURL}${_path.normalize('/' + p)}`;
+  if (prefix) return `${_d.originURL}${path}`;
+  return path;
+}
+export function getFaviconPath(u, prefix = false) {
+  const path = `${_d.faviconURL}?${qs.stringify({ u })}`;
+  if (prefix) return `${_d.originURL}${path}`;
+  return path;
 }
 // 格式歌曲时间
 export function formartSongTime(time) {

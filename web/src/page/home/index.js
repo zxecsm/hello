@@ -27,6 +27,7 @@ import {
   isLogin,
   isRoot,
   getScreenSize,
+  getStaticPath,
 } from '../../js/utils/utils.js';
 import _d from '../../js/common/config';
 import _msg from '../../js/plugins/message';
@@ -349,7 +350,7 @@ export function updateUserInfo(cb) {
         updateRightBoxUsername(username);
         // 更新头像
         if (logo) {
-          imgjz(_path.normalize('/api/pub/logo', account, logo))
+          imgjz(getStaticPath(`/logo/${account}/${logo}`))
             .then((cache) => {
               $userLogoBtn.css('background-image', `url(${cache})`);
             })

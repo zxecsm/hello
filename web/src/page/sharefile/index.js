@@ -32,6 +32,7 @@ import {
   loadImg,
   _mySlide,
   isIframe,
+  getStaticPath,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
@@ -110,7 +111,7 @@ function getShareData(close, loading = { start() {}, end() {} }) {
         uObj = { username, account, email };
         shareObj = data;
         if (logo) {
-          imgjz(_path.normalize('/api/pub/logo', account, logo))
+          imgjz(getStaticPath(`/logo/${account}/${logo}`))
             .then((cache) => {
               $shareInfo.find('.logo').css('background-image', `url(${cache})`);
             })
@@ -155,7 +156,7 @@ function getShareData(close, loading = { start() {}, end() {} }) {
           $fileBox.find('.download').text(`下载 (${formatBytes(data.size)})`);
           if (isImgFile(data.name)) {
             const url =
-              getFilePath(`/sharefile/`, 1) +
+              getFilePath(`/sharefile/${data.path}/${data.name}`, 1) +
               '&token=' +
               encodeURIComponent(shareToken);
             loadImg(url)
@@ -512,7 +513,7 @@ $fileBox
   .on('click', '.name', readFile)
   .on('click', '.logo', readFile)
   .on('click', '.download', function () {
-    const p = `/sharefile/`;
+    const p = `/sharefile/${shareObj.path}/${shareObj.name}`;
     const fPath = getFilePath(p) + '&token=' + encodeURIComponent(shareToken);
     downloadFile([{ fileUrl: fPath, filename: shareObj.name }]);
   });
@@ -528,7 +529,7 @@ async function readFile(e) {
           openFile(res.data.data, shareObj.name);
         } else if (res.data.type === 'other') {
           const fPath =
-            getFilePath(`/sharefile/`) +
+            getFilePath(`/sharefile/${shareObj.path}/${shareObj.name}`) +
             '&token=' +
             encodeURIComponent(shareToken);
           if (isImgFile(shareObj.name)) {
@@ -537,7 +538,10 @@ async function readFile(e) {
                 {
                   u1: fPath,
                   u2:
-                    getFilePath(`/sharefile/`, 1) +
+                    getFilePath(
+                      `/sharefile/${shareObj.path}/${shareObj.name}`,
+                      1
+                    ) +
                     '&token=' +
                     encodeURIComponent(shareToken),
                 },

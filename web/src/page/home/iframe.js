@@ -7,6 +7,7 @@ import {
   _position,
   _setTimeout,
   getCenterPointDistance,
+  getFaviconPath,
   getScreenSize,
   imgjz,
   isBigScreen,
@@ -384,7 +385,7 @@ function addHideBox(iframeBox) {
     isOuterLink ? '' : getTagFont(_path.basename(iframeBox.url)[0])
   }`;
   if (isOuterLink) {
-    const u = `/api/getfavicon?u=${encodeURIComponent(iframeBox.url)}`;
+    const u = getFaviconPath(iframeBox.url);
     imgjz(u)
       .then((cache) => {
         logo.style.backgroundImage = `url(${cache})`;

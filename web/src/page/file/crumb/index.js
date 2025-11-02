@@ -148,7 +148,7 @@ function arrToPath(arr) {
 }
 
 function pathToArr(path) {
-  return path.split('/').filter((item) => item);
+  return path.split('/').filter(Boolean);
 }
 
 const curmb = {

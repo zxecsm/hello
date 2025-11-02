@@ -25,6 +25,8 @@ import {
   _getTarget,
   LazyLoad,
   imgjz,
+  getStaticPath,
+  getFaviconPath,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -46,7 +48,6 @@ import imgPreview from '../../js/plugins/imgPreview';
 import cacheFile from '../../js/utils/cacheFile';
 import loadingSvg from '../../images/img/loading.svg';
 import defaultIcon from '../../images/img/default-icon.png';
-import _path from '../../js/utils/path';
 import localData from '../../js/common/localData';
 if (!isLogin()) {
   toLogin();
@@ -326,9 +327,9 @@ function renderList(y) {
               );
 
               if (logo) {
-                logo = _path.normalize('/api/pub', logo);
+                logo = getStaticPath(logo);
               } else {
-                logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
+                logo = getFaviconPath(link);
               }
               const cache = cacheFile.hasUrl(logo, 'image');
               if (cache) {
@@ -343,9 +344,9 @@ function renderList(y) {
               );
 
               if (logo) {
-                logo = _path.normalize('/api/pub', logo);
+                logo = getStaticPath(logo);
               } else {
-                logo = `/api/getfavicon?u=${encodeURIComponent(link)}`;
+                logo = getFaviconPath(link);
               }
               imgjz(logo)
                 .then((cache) => {

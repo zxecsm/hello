@@ -34,6 +34,7 @@ import {
   _animate,
   getDarkIcon,
   savePopLocationInfo,
+  getStaticPath,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -76,7 +77,6 @@ import { reqChatForwardMsgLink } from '../../../api/chat.js';
 import { CircularProgressBar } from '../../../js/plugins/percentBar/index.js';
 import md5 from '../../../js/utils/md5.js';
 import { _tpl } from '../../../js/utils/template.js';
-import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
 import localData from '../../../js/common/localData.js';
@@ -411,10 +411,8 @@ function hdUserLogo(e) {
         imgPreview(
           [
             {
-              u1: _path.normalize(
-                '/api/pub/logo',
-                setUserInfo().account,
-                setUserInfo().logo
+              u1: getStaticPath(
+                `/logo/${setUserInfo().account}/${setUserInfo().logo}`
               ),
             },
           ],
@@ -709,7 +707,7 @@ export function renderUserinfo() {
   );
   $userInfoWrap.find('.user_list').html(html);
   if (logo) {
-    imgjz(_path.normalize('/api/pub/logo', account, logo))
+    imgjz(getStaticPath(`/logo/${account}/${logo}`))
       .then((cache) => {
         $userInfoWrap
           .find('.user_logo div')

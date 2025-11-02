@@ -25,6 +25,7 @@ import {
   getScreenSize,
   getTextSize,
   toggleUserSelect,
+  getStaticPath,
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
@@ -490,7 +491,7 @@ async function hdUpFile(files) {
         const { url } = isrepeat.data;
         fData.push({
           filename: _path.extname(name)[0],
-          url: `/api/pub/picture/${url}`,
+          url: getStaticPath(`/picture/${url}`),
         });
         //文件已经存在操作
         return;
@@ -510,7 +511,7 @@ async function hdUpFile(files) {
         const { url } = result.data;
         fData.push({
           filename: _path.extname(name)[0],
-          url: `/api/pub/picture/${url}`,
+          url: getStaticPath(`/picture/${url}`),
         });
         pro.close();
       } else {

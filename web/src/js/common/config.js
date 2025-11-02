@@ -11,14 +11,16 @@ const levelObj = {
   clickLove: 107, // 点击（动）
 };
 const originURL = window.location.origin;
-const serverURL = originURL + '/api';
-const mediaURL = serverURL + '/getfile';
+const apiPath = '/api';
+const getFileURL = apiPath + '/getfile';
+const staticURL = apiPath + '/pub';
+const faviconURL = apiPath + '/getfavicon';
 // 搜索引擎
 const searchEngineData = [
   {
     name: 'Bing',
-    icon: '/api/pub/searchlogo/bing-xs.png',
-    logo: '/api/pub/searchlogo/bing.png', // 图片h / w = 40%
+    icon: staticURL + '/searchlogo/bing-xs.png',
+    logo: staticURL + '/searchlogo/bing.png', // 图片h / w = 40%
     searchlink: 'https://bing.com/search?q={{}}',
     color: '#1B8473',
   },
@@ -71,9 +73,11 @@ const _d = {
   trashDirName: '.trash', // 垃圾回收站目录名
   noteHistoryDirName: '.noteHistory', // 笔记历史记录目录名
   fieldLength,
-  serverURL,
+  apiPath,
   originURL,
-  mediaURL,
+  getFileURL,
+  staticURL,
+  faviconURL,
   defaultFontFamily: 'Roboto, Arial, sans-serif', // 默认字体
   levelObj,
   speed: 300,

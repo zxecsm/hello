@@ -304,7 +304,7 @@ route.post('/search', async (req, res) => {
           }
         }
 
-        const cArr = category.split('-').filter((item) => item);
+        const cArr = category.split('-').filter(Boolean);
         const categoryArr = noteCategory.filter((item) =>
           cArr.includes(item.id)
         );

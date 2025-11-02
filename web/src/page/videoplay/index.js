@@ -19,6 +19,7 @@ import videoLinkLogo from '../../images/img/videoLink.png';
 import { initRainCodeSleep } from '../../js/common/codeRain';
 import realtime from '../../js/plugins/realtime';
 import { otherWindowMsg, waitLogin } from '../home/home';
+import _d from '../../js/common/config';
 const vd = document.querySelector('video'),
   playIn = document.querySelector('.playIn');
 const url = queryURLParams(myOpen()).HASH;
@@ -83,18 +84,22 @@ function selectPlayIn(e, url) {
       const _this = _getTarget(box, e, '.item');
       if (_this) {
         let path = url;
-        if (!queryURLParams(url).token && isLogin()) {
+        const ourl = url.slice(_d.getFileURL.length);
+        const p = ourl.split('?')[0];
+        if (!queryURLParams(ourl).token && isLogin()) {
           let token = '';
           loading.start();
           try {
-            const res = await reqUserFileToken({ p: queryURLParams(url).p });
+            const res = await reqUserFileToken({ p });
             if (res.code === 1) {
               token = res.data;
             }
           } catch {}
           loading.end();
-          path = url + `&token=${token}`;
+          if (!token) return;
+          path = url + (url.includes('?') ? '&' : '?') + `token=${token}`;
         }
+        path = `${_d.originURL}${path}`;
         const xi = _this.dataset.xi;
         if (xi === 'copy') {
           copyText(path);
@@ -109,7 +114,7 @@ function selectPlayIn(e, url) {
     '选择播放视频应用'
   );
 }
-vd.src = url;
+vd.src = _d.originURL + url;
 vd.play();
 vd.onerror = function () {
   rMenu.pop(

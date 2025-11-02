@@ -539,7 +539,7 @@ function toTop(e, obj) {
   );
 }
 function categoryToArr(category) {
-  const cArr = category.split('-').filter((item) => item);
+  const cArr = category.split('-').filter(Boolean);
   return noteCategoryList.filter((item) => cArr.includes(item.id));
 }
 // 笔记添加分类

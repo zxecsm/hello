@@ -37,7 +37,6 @@ import chatRoute from './routes/chat/index.js';
 import countRoute from './routes/count/index.js';
 import fileRoute from './routes/file/index.js';
 import getfaviconRoute from './routes/getfavicon/index.js';
-import getfileRoute from './routes/getfile/index.js';
 import noteRoute from './routes/note/index.js';
 import notepadRoute from './routes/notepad/index.js';
 import picRoute from './routes/pic/index.js';
@@ -51,6 +50,7 @@ import echoRoute from './routes/echo/index.js';
 import _path from './utils/path.js';
 import { fieldLength } from './routes/config.js';
 import getClientIp from './utils/getClientIp.js';
+import getFile from './routes/getfile/index.js';
 
 const __dirname = getDirname(import.meta);
 
@@ -214,7 +214,6 @@ app.use('/api/bmk', bmkRoute);
 app.use('/api/chat', chatRoute);
 app.use('/api/search', searchRoute);
 app.use('/api/note', noteRoute);
-app.use('/api/getfile', getfileRoute);
 app.use('/api/todo', todoRoute);
 app.use('/api/count', countRoute);
 app.use('/api/file', fileRoute);
@@ -222,6 +221,16 @@ app.use('/api/notepad', notepadRoute);
 app.use('/api/task', taskRoute);
 app.use('/api/getfavicon', getfaviconRoute);
 app.use('/api/echo', echoRoute);
+
+app.use(async (req, res, next) => {
+  const path = req._hello.path;
+  const routePath = '/api/getfile';
+  if (path.startsWith(routePath)) {
+    await getFile(req, res, path.slice(routePath.length));
+  } else {
+    next();
+  }
+});
 
 app.use((_, res) => {
   res.status(404).redirect('/404');
