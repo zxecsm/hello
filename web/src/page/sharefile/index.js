@@ -155,10 +155,10 @@ function getShareData(close, loading = { start() {}, end() {} }) {
           );
           $fileBox.find('.download').text(`下载 (${formatBytes(data.size)})`);
           if (isImgFile(data.name)) {
-            const url =
-              getFilePath(`/sharefile/${data.path}/${data.name}`, 1) +
-              '&token=' +
-              encodeURIComponent(shareToken);
+            const url = getFilePath(`/sharefile/${data.path}/${data.name}`, {
+              t: 1,
+              token: shareToken,
+            });
             loadImg(url)
               .then((img) => {
                 $fileBox.find('.logo').html(img);
@@ -359,10 +359,10 @@ async function renderList(top) {
       const $item = $(item);
       const { path, name } = getFileItem($item.parent().data('id'));
       if (isImgFile(name)) {
-        const url =
-          getFilePath(`/sharefile/${path}/${name}`, 1) +
-          '&token=' +
-          encodeURIComponent(shareToken);
+        const url = getFilePath(`/sharefile/${path}/${name}`, {
+          t: 1,
+          token: shareToken,
+        });
         const cache = imgCache.get(url);
         if (cache) {
           $item.css('background-image', `url(${cache})`);
@@ -376,10 +376,10 @@ async function renderList(top) {
     const $item = $(item);
     const { path, name } = getFileItem($item.parent().data('id'));
     if (isImgFile(name)) {
-      const url =
-        getFilePath(`/sharefile/${path}/${name}`, 1) +
-        '&token=' +
-        encodeURIComponent(shareToken);
+      const url = getFilePath(`/sharefile/${path}/${name}`, {
+        t: 1,
+        token: shareToken,
+      });
       loadImg(url)
         .then(() => {
           $item.css('background-image', `url(${url})`);
@@ -470,10 +470,7 @@ async function readFileAndDir(obj, e) {
         if (res.data.type === 'text') {
           openFile(res.data.data, p);
         } else if (res.data.type === 'other') {
-          const fPath =
-            getFilePath(`/sharefile/${p}`) +
-            '&token=' +
-            encodeURIComponent(shareToken);
+          const fPath = getFilePath(`/sharefile/${p}`, { token: shareToken });
           if (isImgFile(p)) {
             const list = fileListData.data.filter(
               (item) => item.type === 'file' && isImgFile(item.name)
@@ -481,14 +478,8 @@ async function readFileAndDir(obj, e) {
             const arr = list.map((item) => {
               const p = `${item.path}/${item.name}`;
               return {
-                u1:
-                  getFilePath(`/sharefile/${p}`) +
-                  '&token=' +
-                  encodeURIComponent(shareToken),
-                u2:
-                  getFilePath(`/sharefile/${p}`, 1) +
-                  '&token=' +
-                  encodeURIComponent(shareToken),
+                u1: getFilePath(`/sharefile/${p}`, { token: shareToken }),
+                u2: getFilePath(`/sharefile/${p}`, { t: 1, token: shareToken }),
               };
             });
             if (arr.length === 0) return;
@@ -514,7 +505,7 @@ $fileBox
   .on('click', '.logo', readFile)
   .on('click', '.download', function () {
     const p = `/sharefile/${shareObj.path}/${shareObj.name}`;
-    const fPath = getFilePath(p) + '&token=' + encodeURIComponent(shareToken);
+    const fPath = getFilePath(p, { token: shareToken });
     downloadFile([{ fileUrl: fPath, filename: shareObj.name }]);
   });
 // 读取文件
@@ -528,22 +519,19 @@ async function readFile(e) {
         if (res.data.type === 'text') {
           openFile(res.data.data, shareObj.name);
         } else if (res.data.type === 'other') {
-          const fPath =
-            getFilePath(`/sharefile/${shareObj.path}/${shareObj.name}`) +
-            '&token=' +
-            encodeURIComponent(shareToken);
+          const fPath = getFilePath(
+            `/sharefile/${shareObj.path}/${shareObj.name}`,
+            { token: shareToken }
+          );
           if (isImgFile(shareObj.name)) {
             imgPreview(
               [
                 {
                   u1: fPath,
-                  u2:
-                    getFilePath(
-                      `/sharefile/${shareObj.path}/${shareObj.name}`,
-                      1
-                    ) +
-                    '&token=' +
-                    encodeURIComponent(shareToken),
+                  u2: getFilePath(
+                    `/sharefile/${shareObj.path}/${shareObj.name}`,
+                    { t: 1, token: shareToken }
+                  ),
                 },
               ],
               0,
@@ -633,18 +621,21 @@ function rightList(e, obj) {
       if (id === 'copy') {
         close();
         copyText(
-          getFilePath(`/sharefile/${obj.path}/${obj.name}`) +
-            '&token=' +
-            encodeURIComponent(shareToken)
+          getFilePath(
+            `/sharefile/${obj.path}/${obj.name}`,
+            {
+              token: shareToken,
+            },
+            1
+          )
         );
       } else if (id === 'download') {
         close();
         downloadFile([
           {
-            fileUrl:
-              getFilePath(`/sharefile/${obj.path}/${obj.name}`) +
-              '&token=' +
-              encodeURIComponent(shareToken),
+            fileUrl: getFilePath(`/sharefile/${obj.path}/${obj.name}`, {
+              token: shareToken,
+            }),
             filename: obj.name,
           },
         ]);

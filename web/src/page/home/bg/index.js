@@ -332,7 +332,7 @@ export function renderBgList(y) {
             <div v-for="{id, url} in data" class="bg_item" :data-id="id">
               <div check="n" class="check_level"></div>
               <i cursor="y" class="menu_btn iconfont icon-shoucang"></i>
-              <div class="bg_img" :data-src="getFilePath('/bg/'+url)"></div>
+              <div class="bg_img"></div>
             </div>
             <div v-html="getPaging()" class="bg_paging_box"></div>
           </template>
@@ -341,7 +341,6 @@ export function renderBgList(y) {
             total,
             data,
             _d,
-            getFilePath,
             getPaging() {
               return bgPgnt.getHTML({
                 pageNo,
@@ -360,7 +359,10 @@ export function renderBgList(y) {
         const bgImgs = [...$bgList[0].querySelectorAll('.bg_img')].filter(
           (item) => {
             const $img = $(item);
-            const url = $img.attr('data-src') + '&t=1';
+            const url = getFilePath(
+              `/bg/${getBgItem($img.parent().data('id')).url}`,
+              { t: 1 }
+            );
             const cache = cacheFile.hasUrl(url, 'image');
             if (cache) {
               $img
@@ -374,7 +376,10 @@ export function renderBgList(y) {
         );
         bglazyImg.bind(bgImgs, async (item) => {
           const $img = $(item);
-          const url = $img.attr('data-src') + '&t=1';
+          const url = getFilePath(
+            `/bg/${getBgItem($img.parent().data('id')).url}`,
+            { t: 1 }
+          );
           imgjz(url)
             .then((cache) => {
               $img
@@ -421,8 +426,9 @@ function hdPreview() {
   const arr = [];
   $bgList.find('.bg_img').each((_, item) => {
     const $item = $(item);
-    const u1 = $item.attr('data-src');
-    const u2 = `${u1}&t=1`;
+    const { url } = getBgItem($item.parent().data('id'));
+    const u1 = getFilePath(`/bg/${url}`);
+    const u2 = getFilePath(`/bg/${url}`, { t: 1 });
     arr.push({
       u2,
       u1,

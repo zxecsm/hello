@@ -236,15 +236,15 @@ function toggleMvBtnState() {
 // 处理音乐信息
 function initSongInfo(obj) {
   obj = deepClone(obj);
-  obj.ppic =
-    getFilePath(`sharemusic/${obj.id}/${obj.pic}`) +
-    `&token=${encodeURIComponent(shareToken)}`;
-  obj.uurl =
-    getFilePath(`sharemusic/${obj.id}/${obj.url}`) +
-    `&token=${encodeURIComponent(shareToken)}`;
-  obj.mmv =
-    getFilePath(`sharemusic/${obj.id}/${obj.mv}`) +
-    `&token=${encodeURIComponent(shareToken)}`;
+  obj.ppic = getFilePath(`sharemusic/${obj.id}/${obj.pic}`, {
+    token: shareToken,
+  });
+  obj.uurl = getFilePath(`sharemusic/${obj.id}/${obj.url}`, {
+    token: shareToken,
+  });
+  obj.mmv = getFilePath(`sharemusic/${obj.id}/${obj.mv}`, {
+    token: shareToken,
+  });
   return obj;
 }
 // 更新音乐信息
@@ -855,10 +855,10 @@ function renderPlayList() {
     {
       arr,
       getPath(id, pic) {
-        return (
-          getFilePath(`sharemusic/${id}/${pic}`, 1) +
-          `&token=${encodeURIComponent(shareToken)}`
-        );
+        return getFilePath(`sharemusic/${id}/${pic}`, {
+          token: shareToken,
+          t: 1,
+        });
       },
       getPaging() {
         return pgnt.getHTML({

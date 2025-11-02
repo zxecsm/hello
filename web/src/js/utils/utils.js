@@ -2437,10 +2437,11 @@ export function enterPassCode(cb) {
   );
 }
 // 生成文件路径
-export function getFilePath(p, t = '', prefix = false) {
-  const path = `${_d.getFileURL}${_path.normalize('/' + p)}?${qs.stringify({
-    t,
-  })}`;
+export function getFilePath(p, query = {}, prefix = false) {
+  const queryStr = qs.stringify(query);
+  const path = `${_d.getFileURL}${_path.normalize('/' + p)}${
+    queryStr ? '?' + queryStr : ''
+  }`;
   if (prefix) return `${_d.originURL}${path}`;
   return path;
 }

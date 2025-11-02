@@ -8,7 +8,6 @@ import {
 } from '../../utils/sqlite.js';
 
 import { batchTask, parseJson, unique } from '../../utils/utils.js';
-import _path from '../../utils/path.js';
 
 export const nodeID3 = NodeID3.Promise;
 
@@ -22,7 +21,7 @@ export function handleMusicList(arr) {
     }
     const m = v.item[0];
     if (v.len > 0 && m && m.pic) {
-      v.pic = _path.normalize('/music', m.pic);
+      v.pic = m.pic;
     } else {
       v.pic = 'default';
     }

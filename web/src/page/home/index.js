@@ -528,7 +528,7 @@ function hdHomeBgBtn(e, obj) {
           [
             {
               u1: getFilePath(`/bg/${obj.url}`),
-              u2: getFilePath(`/bg/${obj.url}`, 1),
+              u2: getFilePath(`/bg/${obj.url}`, { t: 1 }),
             },
           ],
           0,

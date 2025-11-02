@@ -50,6 +50,19 @@ const $contentWrap = $('.content_wrap'),
 let pageNo = 1;
 let sList = [];
 let sPageSize = 20;
+function getState(exp_time) {
+  let v = '永久';
+  const state = getExpState(exp_time);
+  if (state > 0) {
+    v = formatDate({
+      template: '{0}-{1}-{2} {3}:{4}',
+      timestamp: exp_time,
+    });
+  } else if (state < 0) {
+    v = '已过期';
+  }
+  return v;
+}
 // 生成列表
 function renderShareList(total, pageNo, top) {
   const html = _tpl(
@@ -89,19 +102,7 @@ function renderShareList(total, pageNo, top) {
         return { logo, url };
       },
       getExpState,
-      getState(exp_time) {
-        let v = '永久';
-        const state = getExpState(exp_time);
-        if (state > 0) {
-          v = formatDate({
-            template: '{0}-{1}-{2} {3}:{4}',
-            timestamp: exp_time,
-          });
-        } else if (state < 0) {
-          v = '已过期';
-        }
-        return v;
-      },
+      getState,
       getPaging() {
         return pgnt.getHTML({
           pageNo,
@@ -225,7 +226,7 @@ $shareList
     const obj = getShareItem(id);
     const str = `分享名称：${obj.title}\n分享链接：${url}\n访问密码：${
       obj.pass || '无'
-    }`;
+    }\n有效期：${getState(obj.exp_time)}`;
     copyText(str);
   });
 if (isIframe()) {

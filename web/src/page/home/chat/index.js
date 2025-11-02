@@ -637,7 +637,7 @@ function chatimgLoad() {
     const $v = $(item);
     const id = $v.parent().parent().parent().parent().data('id');
     const msgObj = getChatItem(id);
-    const url = getFilePath(`/upload/${id}/${msgObj.content}`, 1);
+    const url = getFilePath(`/upload/${id}/${msgObj.content}`, { t: 1 });
     imgjz(url)
       .then((cache) => {
         $v.css({
@@ -1009,7 +1009,7 @@ function openChatImg(target) {
           [
             {
               u1: getFilePath(`/upload/${id}/${obj.content}`),
-              u2: getFilePath(`/upload/${id}/${obj.content}`, 1),
+              u2: getFilePath(`/upload/${id}/${obj.content}`, { t: 1 }),
             },
           ],
           0,

@@ -98,7 +98,7 @@ export function getSearchSongs(top, pageNo = searchMusicPageNo) {
               <li v-for="{artist,title,mv,id,pic,isLoaded} in searchMusicList" class="song_item" :data-id="id" :data-issc="issc(id)" cursor="y">
                 <div v-if="isLoaded" class="downloaded iconfont icon-jiaobiao"></div>
                 <div class="logo_wrap">
-                  <div class="logo" :data-src="getFilePath('/music/'+pic, 1)"></div>
+                  <div class="logo" :data-src="getFilePath('/music/'+pic, {t:1})"></div>
                 </div>
                 <div class="song_info_wrap">
                   <span v-html="hdTitleHighlight(splitWord, title)" class="song_name"></span>
@@ -272,7 +272,7 @@ function searchListSongSetting(e, sobj) {
           [
             {
               u1,
-              u2: `${u1}&t=1`,
+              u2: getFilePath(`/music/${sobj.pic}`, { t: 1 }),
             },
           ],
           0,

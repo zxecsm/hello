@@ -304,7 +304,7 @@ function renderImgList(y) {
             const $img = $(item);
             const obj = getPicItem($img.parent().attr('data-id'));
             if (!obj) return;
-            const url = getFilePath(`/pic/${obj.url}`, 1);
+            const url = getFilePath(`/pic/${obj.url}`, { t: 1 });
             const cache = cacheFile.hasUrl(url, 'image');
             if (cache) {
               $img
@@ -320,7 +320,7 @@ function renderImgList(y) {
           const $img = $(item);
           const obj = getPicItem($img.parent().attr('data-id'));
           if (!obj) return;
-          const url = getFilePath(`/pic/${obj.url}`, 1);
+          const url = getFilePath(`/pic/${obj.url}`, { t: 1 });
           imgjz(url)
             .then((cache) => {
               $img
@@ -456,7 +456,7 @@ $imgList
       const $item = $(item);
       const obj = getPicItem($item.parent().attr('data-id'));
       const u1 = getStaticPath(`/picture/${obj.url}`);
-      const u2 = getFilePath(`/pic/${obj.url}`, 1);
+      const u2 = getFilePath(`/pic/${obj.url}`, { t: 1 });
       arr.push({
         u2,
         u1,
