@@ -1733,8 +1733,11 @@ async function hdVerifyLogin(e, verify, account) {
 // 显示个人信息
 export function showUserInfo() {
   hideRightMenu();
-  renderUserinfo();
-  $userInfoWrap.stop().fadeIn(_d.speed);
+  const isHide = $userInfoWrap.is(':hidden');
+
+  $userInfoWrap.stop().fadeIn(_d.speed, () => {
+    if (isHide) updateUserInfo();
+  });
   toCenter($userInfoWrap[0]);
   setZidx($userInfoWrap[0], 'userinfo', hideUserInfo, userInfoIsTop);
 }
@@ -1744,7 +1747,7 @@ export function showSysInfo() {
   const isHide = $sysInfoWrap.is(':hidden');
   $sysInfoWrap.css('display', 'block');
   setZidx(sysBox, 'sysinfo', hideSysInfo, sysInfoIsTop);
-  sysStatus.start();
+  if (isHide) sysStatus.start();
   if (!$sysInfoWrap._once) {
     $sysInfoWrap._once = true;
     toCenter(sysBox);

@@ -2648,7 +2648,7 @@ export function showMusicPlayerBox(cb) {
   const isHide = musicPlayerIsHide();
   hideMiniPlayer();
   mBox.style.display = 'block';
-  getSongList(cb);
+  if (isHide) getSongList(cb);
   lrcScroll(true);
   if (!$musicPlayerBox._once) {
     $musicPlayerBox._once = true;

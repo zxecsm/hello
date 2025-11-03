@@ -522,10 +522,11 @@ $bgFooter
 // 显示壁纸库
 export function showBgBox() {
   hideRightMenu();
-  $allBgWrap.stop().slideDown(_d.speed, () => {
-    renderBgList(true);
-  });
   setZidx($allBgWrap[0], 'bg', closeBgBox);
+  const isHide = bgBoxIsHide();
+  $allBgWrap.stop().slideDown(_d.speed, () => {
+    if (isHide) renderBgList(true);
+  });
 }
 let curScreenWidth = getScreenSize().w;
 window.addEventListener(

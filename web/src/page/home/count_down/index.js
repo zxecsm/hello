@@ -227,7 +227,7 @@ export function showCountBox() {
   const isHide = $countBox.is(':hidden');
   cBox.style.display = 'flex';
   setZidx(cBox, 'count', closeCountBox, countDownIsTop);
-  getCountList(true);
+  if (isHide) getCountList(true);
   if (!$countBox._once) {
     $countBox._once = true;
     toSetSize(cBox, 700, 700);

@@ -190,7 +190,7 @@ export function showTodoBox() {
   const isHide = $todoBox.is(':hidden');
   $todoBox.css('display', 'flex');
   setZidx(tBox, 'todo', closeTodoBox, todoIsTop);
-  getTodoList(true);
+  if (isHide) getTodoList(true);
   if (!$todoBox._once) {
     $todoBox._once = true;
     toSetSize(tBox, 700, 700);

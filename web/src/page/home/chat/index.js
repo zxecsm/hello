@@ -772,25 +772,26 @@ export function showChatRoom(chatAcc = curChatAccount) {
       direction: 'reverse',
     });
   }
-  openFriend(chatAcc, false, () => {
-    reqChatNews()
-      .then((result) => {
-        if (result.code === 1) {
-          const { group, friend } = result.data;
-          if (friend > 0) {
-            $chatHeadBtns.find('.c_msg_alert').stop().fadeIn(_d.speed);
-          } else {
-            $chatHeadBtns.find('.c_msg_alert').stop().fadeOut(_d.speed);
+  if (isHide)
+    openFriend(chatAcc, false, () => {
+      reqChatNews()
+        .then((result) => {
+          if (result.code === 1) {
+            const { group, friend } = result.data;
+            if (friend > 0) {
+              $chatHeadBtns.find('.c_msg_alert').stop().fadeIn(_d.speed);
+            } else {
+              $chatHeadBtns.find('.c_msg_alert').stop().fadeOut(_d.speed);
+            }
+            if (group > 0) {
+              $chatHeadBtns.find('.c_home_msg_alert').stop().fadeIn(_d.speed);
+            } else {
+              $chatHeadBtns.find('.c_home_msg_alert').stop().fadeOut(_d.speed);
+            }
           }
-          if (group > 0) {
-            $chatHeadBtns.find('.c_home_msg_alert').stop().fadeIn(_d.speed);
-          } else {
-            $chatHeadBtns.find('.c_home_msg_alert').stop().fadeOut(_d.speed);
-          }
-        }
-      })
-      .catch(() => {});
-  });
+        })
+        .catch(() => {});
+    });
   if (!$chatRoomWrap._once) {
     $chatRoomWrap._once = true;
     toSetSize(chatRoom, 600, 800);
