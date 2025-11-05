@@ -16,6 +16,7 @@ import { dirname } from 'path';
 import _path from './path.js';
 import Lock from './lock.js';
 import nanoid from './nanoid.js';
+import _crypto from './crypto.js';
 
 // 获取模块目录
 export function getDirname(meta) {
@@ -223,62 +224,92 @@ export function _setTimeout(callback, time) {
 }
 
 //接收文件
-export function receiveFiles(req, path, filename, maxFileSize = 5) {
-  return new Promise((resolve, reject) => {
-    req.setTimeout(1000 * 60 * 10);
+export async function receiveFiles(
+  req,
+  uploadDir,
+  filename,
+  maxFileSizeMB = 5,
+  HASH
+) {
+  req.setTimeout(1000 * 60 * 10); // 10分钟超时
 
-    maxFileSize = maxFileSize * 1024 * 1024;
+  const maxFileSize = maxFileSizeMB * 1024 * 1024;
 
-    formidable({
-      multiples: false,
-      uploadDir: path, //上传路径
-      keepExtensions: true, //包含原始文件的扩展名
-      maxFileSize, //限制上传文件的大小。
-    }).parse(req, function (err, fields, files) {
-      if (err) {
-        reject(err);
-      } else {
-        const newPath = _path.normalize(path, files.attrname[0].newFilename),
-          originalPath = _path.normalize(path, filename);
+  const form = formidable({
+    multiples: false,
+    uploadDir,
+    keepExtensions: true,
+    maxFileSize,
+  });
 
-        _f.fs.rename(newPath, originalPath, function (err) {
-          if (err) {
-            reject(err);
-            return;
-          }
-          resolve();
-        });
-      }
+  const { files } = await new Promise((resolve, reject) => {
+    form.parse(req, (err, fields, files) => {
+      if (err) return reject(err);
+      resolve({ fields, files });
     });
   });
+
+  const fileKey = Object.keys(files)[0];
+  if (!fileKey || !files[fileKey]) {
+    throw new Error('No file uploaded');
+  }
+
+  const uploadedFile = Array.isArray(files[fileKey])
+    ? files[fileKey][0]
+    : files[fileKey];
+  const newPath = _path.normalize(uploadDir, uploadedFile.newFilename);
+  const originalPath = _path.normalize(uploadDir, filename);
+
+  const hash = HASH ? await _crypto.getFileMD5Hash(newPath) : '';
+  await _f.fsp.rename(newPath, originalPath);
+
+  if (HASH && HASH !== hash) {
+    await _f.del(originalPath);
+    throw new Error('hash error');
+  }
 }
 
 // 合并切片
-export async function mergefile(count, from, to) {
+export async function mergefile(count, from, to, HASH) {
   const list = await _f.fsp.readdir(from);
 
-  if (list.length < count) {
-    throw `文件数据错误`;
-  }
+  if (list.length < count) throw new Error('file chunks error');
 
   list.sort((a, b) => {
-    a = a.split('_')[1];
-    b = b.split('_')[1];
-    return a - b;
+    const na = a.split('_')[1];
+    const nb = b.split('_')[1];
+    return Number(na) - Number(nb);
   });
 
   const temFile = `${to}_${nanoid()}`;
+  const hash = HASH ? _crypto.createHash('md5') : null;
 
-  for (let i = 0; i < list.length; i++) {
-    const u = _path.normalize(from, list[i]);
-    const f = await _f.fsp.readFile(u);
-    await _f.fsp.appendFile(temFile, f);
-    await _f.del(u);
+  for (const filename of list) {
+    const filePath = _path.normalize(from, filename);
+    const readStream = _f.fs.createReadStream(filePath);
+
+    await _f.streamp.pipeline(
+      readStream,
+      new _f.stream.Transform({
+        transform(chunk, _, callback) {
+          if (HASH) hash.update(chunk);
+          callback(null, chunk);
+        },
+      }),
+      _f.fs.createWriteStream(temFile, { flags: 'a' }) // 'a' 追加模式
+    );
+
+    await _f.del(filePath);
   }
 
   await _f.del(from);
 
   await _f.rename(temFile, to);
+
+  if (HASH && HASH !== hash.digest('hex')) {
+    await _f.del(to);
+    throw new Error('hash error');
+  }
 }
 
 // 检查是否为有效的 HTTP/HTTPS URL

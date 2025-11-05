@@ -1,25 +1,24 @@
 import { createHash, randomBytes, pbkdf2 } from 'crypto';
-import fs from 'fs';
+import { createReadStream } from 'fs';
+import { Writable } from 'stream';
+import { pipeline } from 'stream/promises';
 
 // 计算文件的 MD5 值
-function getFileMD5Hash(filePath) {
-  return new Promise((resolve, reject) => {
-    const hash = createHash('md5');
-    const stream = fs.createReadStream(filePath);
+async function getFileMD5Hash(filePath, signal) {
+  const hash = createHash('md5');
 
-    stream.on('data', (chunk) => {
-      hash.update(chunk); // 更新哈希值
-    });
+  await pipeline(
+    createReadStream(filePath),
+    new Writable({
+      write(chunk, _, callback) {
+        hash.update(chunk);
+        callback();
+      },
+    }),
+    { signal }
+  );
 
-    stream.on('end', () => {
-      resolve(hash.digest('hex')); // 返回最终的哈希值
-    });
-
-    stream.on('error', (err) => {
-      reject(err); // 错误处理
-      stream.destroy(); // 在发生错误时，销毁流
-    });
-  });
+  return hash.digest('hex');
 }
 
 // 生成安全密钥
@@ -87,6 +86,7 @@ function verifyPassword(inputPassword, hashWithSalt) {
 }
 
 const _crypto = {
+  createHash,
   getFileMD5Hash,
   getStringHash,
   hashPassword,

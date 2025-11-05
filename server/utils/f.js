@@ -1,8 +1,8 @@
 import fs from 'fs';
-import { pipeline } from 'stream';
+import fsp from 'fs/promises';
+import stream from 'stream';
+import streamp from 'stream/promises';
 import _path from './path.js';
-
-const fsp = fs.promises;
 
 // 创建目录
 function mkdir(path) {
@@ -10,11 +10,11 @@ function mkdir(path) {
 }
 
 // 复制
-async function cp(from, to, { signal, fileCount, chunkCopied } = {}) {
+async function cp(from, to, { signal, progress } = {}) {
   if (!(await exists(from))) return;
   if (from === to) return;
 
-  if (!signal && !fileCount && !chunkCopied) {
+  if (!signal && !progress) {
     return fsp.cp(from, to, { recursive: true, force: true });
   }
 
@@ -40,30 +40,23 @@ async function cp(from, to, { signal, fileCount, chunkCopied } = {}) {
       }
     } else {
       await mkdir(_path.dirname(t));
-      await new Promise((resolve, reject) => {
-        const readStream = fs.createReadStream(f);
-        const writeStream = fs.createWriteStream(t);
+      const readStream = fs.createReadStream(f);
+      const writeStream = fs.createWriteStream(t);
 
-        readStream.on('data', (chunk) => {
-          if (signal?.aborted) {
-            readStream.destroy();
-            writeStream.end();
-            reject(new Error('Operation aborted'));
-            return;
-          }
-
-          chunkCopied?.(chunk.length);
-        });
-
-        pipeline(readStream, writeStream, (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-            fileCount?.();
-          }
-        });
-      });
+      await streamp.pipeline(
+        readStream,
+        new stream.Transform({
+          transform(chunk, _, callback) {
+            progress?.({
+              size: chunk.length,
+            });
+            callback(null, chunk);
+          },
+        }),
+        writeStream,
+        { signal }
+      );
+      progress?.({ count: 1 });
     }
   }
 }
@@ -87,16 +80,12 @@ async function readdir(path, options) {
 }
 
 // 修改权限
-async function chmod(
-  path,
-  mode,
-  { signal, fileCount, recursive = false } = {}
-) {
+async function chmod(path, mode, { signal, progress, recursive = false } = {}) {
   if (!(await exists(path))) return;
 
   if (!recursive) {
     await fsp.chmod(path, mode);
-    fileCount?.();
+    progress?.({ count: 1 });
     return;
   }
 
@@ -109,7 +98,7 @@ async function chmod(
     const s = await fsp.lstat(currentPath);
 
     await fsp.chmod(currentPath, mode);
-    fileCount?.();
+    progress?.({ count: 1 });
 
     if (s.isDirectory()) {
       const list = await fsp.readdir(currentPath);
@@ -126,13 +115,13 @@ async function chown(
   path,
   uid,
   gid,
-  { signal, fileCount, recursive = false } = {}
+  { signal, progress, recursive = false } = {}
 ) {
   if (!(await exists(path))) return;
 
   if (!recursive) {
     await fsp.lchown(path, uid, gid);
-    fileCount?.();
+    progress?.({ count: 1 });
     return;
   }
 
@@ -145,7 +134,7 @@ async function chown(
     const s = await fsp.lstat(currentPath);
 
     await fsp.lchown(currentPath, uid, gid);
-    fileCount?.();
+    progress?.({ count: 1 });
 
     if (s.isDirectory()) {
       const list = await fsp.readdir(currentPath);
@@ -157,10 +146,10 @@ async function chown(
   }
 }
 
-async function del(path, { signal, fileCount } = {}) {
+async function del(path, { signal, progress } = {}) {
   if (!(await exists(path))) return;
 
-  if (!signal && !fileCount) {
+  if (!signal && !progress) {
     return fsp.rm(path, { recursive: true, force: true });
   }
 
@@ -183,7 +172,7 @@ async function del(path, { signal, fileCount } = {}) {
       }
     } else {
       await fsp.rm(currentPath, { force: true });
-      fileCount?.();
+      progress?.({ count: 1, size: s.size });
     }
   }
 
@@ -242,17 +231,13 @@ async function exists(path) {
 }
 
 // 重命名
-async function rename(
-  oldPath,
-  newPath,
-  { signal, fileCount, chunkCopied } = {}
-) {
+async function rename(oldPath, newPath, { signal, progress } = {}) {
   if (!(await exists(oldPath))) return;
   try {
     await mkdir(_path.dirname(newPath));
     await fsp.rename(oldPath, newPath);
   } catch {
-    await cp(oldPath, newPath, { signal, fileCount, chunkCopied });
+    await cp(oldPath, newPath, { signal, progress });
     await del(oldPath, { signal });
   }
 }
@@ -278,7 +263,7 @@ function getTextSize(text) {
   return Buffer.byteLength(text, 'utf8');
 }
 
-async function readDirSize(path, { signal, fileCount } = {}) {
+async function readDirSize(path, { signal, progress } = {}) {
   let size = 0;
 
   if (!(await exists(path))) return size;
@@ -300,8 +285,7 @@ async function readDirSize(path, { signal, fileCount } = {}) {
         stack.push(_path.normalize(currentPath, name));
       }
     } else {
-      size += s.size;
-      fileCount?.(s.size);
+      progress?.({ count: 1, size: s.size });
     }
   }
 
@@ -340,6 +324,8 @@ function getPermissions(stats) {
 const _f = {
   fsp,
   fs,
+  stream,
+  streamp,
   rename,
   del,
   mkdir,

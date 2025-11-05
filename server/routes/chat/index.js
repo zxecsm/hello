@@ -840,7 +840,7 @@ route.post('/up-voice', async (req, res) => {
     const tName = `${HASH}.${_path.extname(name)[2]}`;
 
     await _f.mkdir(tDir);
-    await receiveFiles(req, tDir, tName, 3);
+    await receiveFiles(req, tDir, tName, 3, HASH);
 
     const fobj = {
       id: HASH,
@@ -933,7 +933,8 @@ route.post('/merge', async (req, res) => {
     await mergefile(
       count,
       _path.normalize(appConfig.appData, 'tem', `${account}_${HASH}`),
-      targetPath
+      targetPath,
+      HASH
     );
 
     const fobj = {

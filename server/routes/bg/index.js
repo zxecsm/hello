@@ -289,7 +289,7 @@ route.post('/up', async (req, res) => {
 
     await _f.mkdir(tDir);
 
-    await receiveFiles(req, tDir, tName, 10);
+    await receiveFiles(req, tDir, tName, 10, HASH);
 
     // 获取壁纸尺寸进行分类
     const { width, height } = await getImgInfo(_path.normalize(tDir, tName));

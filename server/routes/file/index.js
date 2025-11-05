@@ -238,7 +238,7 @@ route.post('/read-dir', async (req, res) => {
     const controller = new AbortController();
     const signal = controller.signal;
     const hdType = word ? '搜索文件' : '读取文件列表';
-    const taskKey = taskState.add(acc, `${hdType}...0`, controller);
+    const taskKey = taskState.add(acc, `${hdType}...`, controller);
 
     const cacheList = fileList.get(acc, `${p}_${word}`);
 
@@ -528,7 +528,7 @@ route.get('/read-dir-size', async (req, res) => {
 
     const controller = new AbortController();
     const signal = controller.signal;
-    const taskKey = taskState.add(account, `读取文件夹大小...0`, controller);
+    const taskKey = taskState.add(account, `读取文件夹大小...`, controller);
 
     _success(res, 'ok', { key: taskKey });
 
@@ -538,9 +538,9 @@ route.get('/read-dir-size', async (req, res) => {
 
       await _f.readDirSize(p, {
         signal,
-        fileCount(s) {
-          size += s;
-          count++;
+        progress({ size: s, count: c }) {
+          if (s) size += s;
+          if (c) count++;
           taskState.update(
             taskKey,
             `读取文件夹大小...${count} (${_f.formatBytes(size)})`
@@ -756,7 +756,7 @@ route.post('/copy', async (req, res) => {
 
     const controller = new AbortController();
     const signal = controller.signal;
-    const taskKey = taskState.add(account, `复制文件...0`, controller);
+    const taskKey = taskState.add(account, `复制文件...`, controller);
 
     fileList.clear(account);
 
@@ -788,11 +788,9 @@ route.post('/copy', async (req, res) => {
 
         await _f.cp(f, to, {
           signal,
-          fileCount() {
-            count++;
-          },
-          chunkCopied(chunk) {
-            size += chunk;
+          progress({ size: s, count: c }) {
+            if (s) size += s;
+            if (c) count++;
             taskState.update(
               taskKey,
               `复制文件...${count} (${_f.formatBytes(size)})`
@@ -893,7 +891,7 @@ route.post('/move', async (req, res) => {
 
     const controller = new AbortController();
     const signal = controller.signal;
-    const taskKey = taskState.add(account, `移动文件...0`, controller);
+    const taskKey = taskState.add(account, `移动文件...`, controller);
 
     fileList.clear(account);
 
@@ -922,14 +920,10 @@ route.post('/move', async (req, res) => {
 
         await _f.rename(f, t, {
           signal,
-          fileCount() {
-            count++;
-            if (size === 0) {
-              taskState.update(taskKey, `移动文件...${count}`);
-            }
-          },
-          chunkCopied(chunk) {
-            size += chunk;
+          progress({ size: s, count: c }) {
+            if (!s && !c) return;
+            if (s) size += s;
+            if (c) count++;
             taskState.update(
               taskKey,
               `移动文件...${count} (${_f.formatBytes(size)})`
@@ -999,7 +993,7 @@ route.post('/zip', async (req, res) => {
 
     const controller = new AbortController();
     const signal = controller.signal;
-    const taskKey = taskState.add(account, `压缩文件...0`, controller);
+    const taskKey = taskState.add(account, `压缩文件...`, controller);
 
     fileList.clear(account);
 
@@ -1008,14 +1002,10 @@ route.post('/zip', async (req, res) => {
     try {
       await zipper.zip([data], t, {
         signal,
-        progress(pro) {
-          const {
-            entries: { processed },
-            fs: { processedBytes },
-          } = pro;
+        progress({ size, count }) {
           taskState.update(
             taskKey,
-            `压缩文件...${processed} (${_f.formatBytes(processedBytes)})`
+            `压缩文件...${count} (${_f.formatBytes(size)})`
           );
         },
       });
@@ -1069,24 +1059,24 @@ route.post('/unzip', async (req, res) => {
 
     const controller = new AbortController();
     const signal = controller.signal;
-    const taskKey = taskState.add(account, `解压文件...0`, controller);
+    const taskKey = taskState.add(account, `解压文件...`, controller);
 
     fileList.clear(account);
 
     _success(res, 'ok', { key: taskKey });
 
     try {
-      let count = 0;
-
       if ((await _f.exists(t)) || t === getTrashDir(account)) {
         t = await getUniqueFilename(t);
       }
 
       await zipper.unzip(f, t, {
         signal,
-        progress() {
-          count++;
-          taskState.update(taskKey, `解压文件...${count}`);
+        progress({ size, count }) {
+          taskState.update(
+            taskKey,
+            `解压文件...${count} (${_f.formatBytes(size)})`
+          );
         },
       });
 
@@ -1134,7 +1124,7 @@ route.post('/delete', async (req, res) => {
 
     const controller = new AbortController();
     const signal = controller.signal;
-    const taskKey = taskState.add(account, `删除文件...0`, controller);
+    const taskKey = taskState.add(account, `删除文件...`, controller);
 
     fileList.clear(account);
 
@@ -1162,9 +1152,13 @@ route.post('/delete', async (req, res) => {
         ) {
           await _f.del(p, {
             signal,
-            fileCount() {
-              count++;
-              taskState.update(taskKey, `删除文件...${count}`);
+            progress({ size: s, count: c }) {
+              if (s) size += s;
+              if (c) count++;
+              taskState.update(
+                taskKey,
+                `删除文件...${count} (${_f.formatBytes(size)})`
+              );
             },
           });
         } else {
@@ -1175,16 +1169,13 @@ route.post('/delete', async (req, res) => {
             targetPath = await getUniqueFilename(targetPath);
           }
 
+          taskState.update(taskKey, `放入回收站...`);
           await _f.rename(p, targetPath, {
             signal,
-            fileCount() {
-              count++;
-              if (size === 0) {
-                taskState.update(taskKey, `放入回收站...${count}`);
-              }
-            },
-            chunkCopied(chunk) {
-              size += chunk;
+            progress({ size: s, count: c }) {
+              if (!s && !c) return;
+              if (s) size += s;
+              if (c) count++;
               taskState.update(
                 taskKey,
                 `放入回收站...${count} (${_f.formatBytes(size)})`
@@ -1220,7 +1211,7 @@ route.get('/clear-trash', async (req, res) => {
 
     const controller = new AbortController();
     const signal = controller.signal;
-    const taskKey = taskState.add(account, `清空回收站...0`, controller);
+    const taskKey = taskState.add(account, `清空回收站...`, controller);
 
     fileList.clear(account);
 
@@ -1228,6 +1219,8 @@ route.get('/clear-trash', async (req, res) => {
 
     try {
       let count = 0;
+      let size = 0;
+
       const trashDir = getTrashDir(account);
 
       if (await _f.exists(trashDir)) {
@@ -1240,9 +1233,13 @@ route.get('/clear-trash', async (req, res) => {
 
           await _f.del(p, {
             signal,
-            fileCount() {
-              count++;
-              taskState.update(taskKey, `删除文件...${count}`);
+            progress({ size: s, count: c }) {
+              if (s) size += s;
+              if (c) count++;
+              taskState.update(
+                taskKey,
+                `删除文件...${count} (${_f.formatBytes(size)})`
+              );
             },
           });
         });
@@ -1387,7 +1384,7 @@ route.post('/mode', async (req, res) => {
 
     const controller = new AbortController();
     const signal = controller.signal;
-    const taskKey = taskState.add(account, `设置权限...0`, controller);
+    const taskKey = taskState.add(account, `设置权限...`, controller);
 
     fileList.clear(account);
 
@@ -1405,8 +1402,8 @@ route.post('/mode', async (req, res) => {
 
         await _f.chmod(p, mode, {
           signal,
-          fileCount() {
-            count++;
+          progress({ count: c }) {
+            if (c) count++;
             taskState.update(taskKey, `设置权限...${count}`);
           },
           recursive: r,
@@ -1463,7 +1460,7 @@ route.post('/chown', async (req, res) => {
 
     const controller = new AbortController();
     const signal = controller.signal;
-    const taskKey = taskState.add(account, `设置用户组...0`, controller);
+    const taskKey = taskState.add(account, `设置用户组...`, controller);
 
     fileList.clear(account);
 
@@ -1481,8 +1478,8 @@ route.post('/chown', async (req, res) => {
 
         await _f.chown(p, uid, gid, {
           signal,
-          fileCount() {
-            count++;
+          progress({ count: c }) {
+            if (c) count++;
             taskState.update(taskKey, `设置用户组...${count}`);
           },
           recursive: r,
@@ -1578,7 +1575,8 @@ route.post('/merge', async (req, res) => {
     await mergefile(
       count,
       _path.normalize(appConfig.appData, 'tem', `${account}_${HASH}`),
-      targetPath
+      targetPath,
+      HASH
     );
 
     if (timer) {
@@ -1692,66 +1690,43 @@ route.post('/download', async (req, res) => {
 
     const controller = new AbortController();
     const signal = controller.signal;
-    const taskKey = taskState.add(
-      account,
-      `下载文件: ${filename}(0)`,
-      controller
-    );
+    const taskKey = taskState.add(account, `下载文件: ${filename}`, controller);
 
     _success(res, 'ok', { key: taskKey });
-
-    async function handleError(error, responseData, writer) {
-      // 销毁流
-      if (responseData) responseData.destroy();
-      if (writer) writer.destroy();
-      taskState.delete(taskKey);
-      await errLog(req, `下载文件失败: ${url}(${error})`);
-      errorNotifyMsg(req, `下载文件失败`);
-    }
 
     try {
       const response = await axios({
         method: 'get',
         url,
-        responseType: 'stream', // 以流的形式接收数据
-        signal, // 绑定 AbortController
+        responseType: 'stream',
+        signal,
       });
 
-      // 创建一个可写流，将文件保存到本地
-      const writer = _f.fs.createWriteStream(outputFilePath);
-
-      // 监听下载进度
       let downloadedBytes = 0;
-      response.data.on('data', (chunk) => {
-        downloadedBytes += chunk.length;
 
-        taskState.update(
-          taskKey,
-          `下载文件: ${filename}(${_f.formatBytes(downloadedBytes)})`
-        );
-      });
+      await _f.streamp.pipeline(
+        response.data,
+        new _f.stream.Transform({
+          transform(chunk, _, callback) {
+            downloadedBytes += chunk.length;
+            taskState.update(
+              taskKey,
+              `下载文件: ${filename} (${_f.formatBytes(downloadedBytes)})`
+            );
+            callback(null, chunk);
+          },
+        }),
+        _f.fs.createWriteStream(outputFilePath),
+        { signal }
+      );
 
-      // 将响应数据流通过管道传输到文件
-      response.data.pipe(writer);
-
-      // 监听流的结束事件
-      writer.on('finish', () => {
-        taskState.delete(taskKey);
-        uLog(req, `离线下载文件: ${url}=>${outputFilePath}`);
-        syncUpdateData(req, 'file');
-      });
-
-      // 监听流的错误事件
-      writer.on('error', (err) => {
-        handleError(err, response.data, writer);
-      });
-
-      // 监听响应流的错误事件
-      response.data.on('error', (err) => {
-        handleError(err, response.data, writer);
-      });
+      taskState.delete(taskKey);
+      uLog(req, `离线下载文件: ${url}=>${outputFilePath}`);
+      syncUpdateData(req, 'file');
     } catch (error) {
-      handleError(error);
+      taskState.delete(taskKey);
+      await errLog(req, `下载文件失败: ${url}(${error})`);
+      errorNotifyMsg(req, `下载文件失败`);
     }
   } catch (error) {
     _err(res)(req, error);

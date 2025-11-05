@@ -68,7 +68,7 @@ class Progress {
     this.box2.style.width = percent * 100 + '%';
   }
   loading(percent) {
-    this.title.innerText = `加载中...${parseInt(percent * 100)}%`;
+    this.title.innerText = `校验文件...${parseInt(percent * 100)}%`;
   }
   close(title) {
     this.title.innerText = this.name;

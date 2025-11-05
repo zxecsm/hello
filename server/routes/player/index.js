@@ -1660,7 +1660,7 @@ route.post('/up', async (req, res) => {
 
       await _f.mkdir(tDir);
 
-      await receiveFiles(req, tDir, tName, 50);
+      await receiveFiles(req, tDir, tName, 50, HASH);
 
       // 读取歌曲元数据
       const songInfo = await getSongInfo(_path.normalize(tDir, tName));
@@ -1747,7 +1747,7 @@ route.post('/up', async (req, res) => {
 
       await _f.mkdir(tDir);
 
-      await receiveFiles(req, tDir, tName, 5);
+      await receiveFiles(req, tDir, tName, 5, HASH);
 
       // 如果上传封面文件和现有的封面文件名不同，删除现有的
       if (_path.basename(pic)[0] !== tName) {
@@ -1830,7 +1830,7 @@ route.post('/up', async (req, res) => {
       const tName = `${_path.basename(url)[1]}.${_path.extname(name)[2]}`;
 
       await _f.mkdir(tDir);
-      await receiveFiles(req, tDir, tName, 200);
+      await receiveFiles(req, tDir, tName, 200, HASH);
 
       if (_path.basename(mv)[0] != tName) {
         // 上传和现有文件名不同上传现有的
