@@ -603,8 +603,8 @@ $countList
   .on('click', '.clear_all_btn', function (e) {
     delCount(e, 'all');
   })
-  .on('mouseenter', '.item_box', function () {
-    const $this = $(this);
+  .on('mouseenter', '.pro', function () {
+    const $this = $(this).parent();
     const id = $this.attr('data-id');
     const { start, end, link, state, top } = getCount(id);
     const str = `状态：${state === 1 ? '开启' : '关闭'}\n开始日期：${formatDate(
@@ -618,7 +618,7 @@ $countList
     })}\n权重：${top}\n链接：${link || '--'}`;
     toolTip.setTip(str).show();
   })
-  .on('mouseleave', '.item_box', function () {
+  .on('mouseleave', '.pro', function () {
     toolTip.hide();
   })
   .on('click', '.icon', function () {
