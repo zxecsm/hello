@@ -10,12 +10,14 @@ function mkdir(path) {
 }
 
 // 复制
-async function cp(from, to, { signal, progress } = {}) {
+async function cp(from, to, { signal, progress, renameMode = false } = {}) {
   if (!(await exists(from))) return;
   if (from === to) return;
 
   if (!signal && !progress) {
-    return fsp.cp(from, to, { recursive: true, force: true });
+    await fsp.cp(from, to, { recursive: true, force: true });
+    if (renameMode) await del(from);
+    return;
   }
 
   const stack = [{ from, to }];
@@ -56,6 +58,7 @@ async function cp(from, to, { signal, progress } = {}) {
         writeStream,
         { signal }
       );
+      if (renameMode) await del(f);
       progress?.({ count: 1 });
     }
   }
@@ -237,7 +240,7 @@ async function rename(oldPath, newPath, { signal, progress } = {}) {
     await mkdir(_path.dirname(newPath));
     await fsp.rename(oldPath, newPath);
   } catch {
-    await cp(oldPath, newPath, { signal, progress });
+    await cp(oldPath, newPath, { signal, progress, renameMode: true });
     await del(oldPath, { signal });
   }
 }
