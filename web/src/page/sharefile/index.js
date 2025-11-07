@@ -605,7 +605,7 @@ function rightList(e, obj) {
       {
         id: 'copy',
         text: '复制链接',
-        beforeIcon: 'iconfont icon-fuzhi',
+        beforeIcon: 'iconfont icon-link1',
       }
     );
   }

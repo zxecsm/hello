@@ -38,7 +38,7 @@ export default async function getFile(req, res, p) {
 
     const jwtData = token ? jwt.get(token) : '';
 
-    // 验证外部播放器临时访问权限
+    // 以指定的用户身份访问指定的文件
     if (jwtData && jwtData.data.type === 'temAccessFile') {
       account = jwtData.data.data.account;
       p = jwtData.data.data.p;

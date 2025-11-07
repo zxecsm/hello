@@ -88,6 +88,7 @@ import {
 } from '../../js/utils/boxSelector';
 import { otherWindowMsg } from '../home/home';
 import localData from '../../js/common/localData';
+import { reqUserFileToken } from '../../api/user';
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
 const $curmbBox = $('.crumb_box');
@@ -631,6 +632,13 @@ function rightList(e, obj, el) {
       beforeIcon: 'iconfont icon-fuzhi',
     },
   ];
+  if (obj.type === 'file') {
+    data.push({
+      id: 'copyLink',
+      text: '复制链接',
+      beforeIcon: 'iconfont icon-link1',
+    });
+  }
   if (obj.type === 'dir') {
     data.push(
       {
@@ -733,6 +741,24 @@ function rightList(e, obj, el) {
           ],
           'image'
         );
+      } else if (id === 'copyLink') {
+        loading.start();
+        const p = _path.normalize('/file', obj.path, obj.name);
+        reqUserFileToken({ p })
+          .then((res) => {
+            if (res.code === 1) {
+              loading.end();
+              close();
+              copyText(
+                `${_d.originURL}${getFilePath(p, {
+                  token: res.data,
+                })}`
+              );
+            }
+          })
+          .catch(() => {
+            loading.end();
+          });
       } else if (id === 'share') {
         hdShare(e, obj);
       } else if (id === 'favorite') {
