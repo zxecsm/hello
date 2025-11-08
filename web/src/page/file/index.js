@@ -20,7 +20,6 @@ import {
   pageScrollTop,
   getScreenSize,
   imgjz,
-  isFilename,
   isIframe,
   isImgFile,
   isLogin,
@@ -1215,7 +1214,7 @@ function createFile(e) {
               return '请输入名称';
             } else if (val.length > _d.fieldLength.filename) {
               return '名称过长';
-            } else if (!isFilename(val)) {
+            } else if (!_path.isFilename(val)) {
               return '名称包含了不允许的特殊字符';
             }
           },
@@ -1258,7 +1257,7 @@ function createDir(e) {
               return '请输入名称';
             } else if (val.length > _d.fieldLength.filename) {
               return '名称过长';
-            } else if (!isFilename(val)) {
+            } else if (!_path.isFilename(val)) {
               return '名称包含了不允许的特殊字符';
             }
           },
@@ -2016,7 +2015,7 @@ function hdRename(e, obj, cb) {
               return '请输入名称';
             } else if (val.length > _d.fieldLength.filename) {
               return '名称过长';
-            } else if (!isFilename(val)) {
+            } else if (!_path.isFilename(val)) {
               return '名称包含了不允许的特殊字符';
             }
           },

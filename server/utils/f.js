@@ -43,7 +43,7 @@ async function cp(from, to, { signal, progress, renameMode = false } = {}) {
     } else {
       await mkdir(_path.dirname(t));
       const readStream = fs.createReadStream(f);
-      const writeStream = fs.createWriteStream(t);
+      const writeStream = fs.createWriteStream(t, { flags: 'w' });
 
       await streamp.pipeline(
         readStream,
@@ -98,6 +98,7 @@ async function chmod(path, mode, { signal, progress, recursive = false } = {}) {
     const currentPath = stack.pop();
 
     if (signal?.aborted) throw new Error('Operation aborted');
+    if (!(await exists(currentPath))) continue;
     const s = await fsp.lstat(currentPath);
 
     await fsp.chmod(currentPath, mode);
@@ -134,6 +135,7 @@ async function chown(
     const currentPath = stack.pop();
 
     if (signal?.aborted) throw new Error('Operation aborted');
+    if (!(await exists(currentPath))) continue;
     const s = await fsp.lstat(currentPath);
 
     await fsp.lchown(currentPath, uid, gid);

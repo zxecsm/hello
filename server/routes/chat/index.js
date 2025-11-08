@@ -33,7 +33,6 @@ import {
   unique,
   getSongInfo,
   isValidDate,
-  isFilename,
   isTooDeep,
 } from '../../utils/utils.js';
 import { fieldLength } from '../config.js';
@@ -801,8 +800,6 @@ route.post('/up-voice', async (req, res) => {
 
     if (
       !/\.wav$/.test(name) ||
-      !validaString(name, 1, fieldLength.filename) ||
-      !isFilename(name) ||
       !validaString(HASH, 1, fieldLength.id, 1) ||
       !validaString(to, 1, fieldLength.id, 1)
     ) {
@@ -884,8 +881,6 @@ route.post('/merge', async (req, res) => {
     count = parseInt(count);
 
     if (
-      !validaString(name, 1, fieldLength.filename) ||
-      !isFilename(name) ||
       !validaString(HASH, 1, fieldLength.id, 1) ||
       !validaString(to, 1, fieldLength.id, 1) ||
       !validationValue(type, ['image', 'file']) ||
@@ -896,6 +891,8 @@ route.post('/merge', async (req, res) => {
       paramErr(res, req);
       return;
     }
+
+    name = _path.sanitizeFilename(name);
 
     let log = to;
     if (to !== 'chang' && to !== 'hello') {
@@ -1013,8 +1010,6 @@ route.post('/repeat', async (req, res) => {
 
     if (
       !validaString(HASH, 1, fieldLength.id, 1) ||
-      !validaString(name, 1, fieldLength.filename) ||
-      !isFilename(name) ||
       !validationValue(type, ['image', 'file']) ||
       !validaString(to, 1, fieldLength.id, 1) ||
       isNaN(size) ||
@@ -1023,6 +1018,8 @@ route.post('/repeat', async (req, res) => {
       paramErr(res, req);
       return;
     }
+
+    name = _path.sanitizeFilename(name);
 
     const upload = (
       await queryData('upload', 'url', `WHERE id = ?`, [HASH])

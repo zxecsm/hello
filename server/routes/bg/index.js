@@ -32,7 +32,6 @@ import {
   concurrencyTasks,
   createPagingData,
   uLog,
-  isFilename,
 } from '../../utils/utils.js';
 
 import { _delDir } from '../file/file.js';
@@ -262,17 +261,14 @@ route.post('/delete', async (req, res) => {
 // 上传
 route.post('/up', async (req, res) => {
   try {
-    const { HASH, name } = req.query;
+    let { HASH, name } = req.query;
 
-    if (
-      !validaString(HASH, 1, fieldLength.id, 1) ||
-      !isImgFile(name) ||
-      !validaString(name, 1, fieldLength.filename) ||
-      !isFilename(name)
-    ) {
+    if (!validaString(HASH, 1, fieldLength.id, 1) || !isImgFile(name)) {
       paramErr(res, req);
       return;
     }
+
+    name = _path.sanitizeFilename(name);
 
     const bg = (await queryData('bg', 'url', `WHERE hash = ?`, [HASH]))[0];
     if (bg) {

@@ -117,6 +117,32 @@ function randomFilenameSuffix(
   return a ? `${a}${r}${b}${c}` : `${b}${c}${r}`;
 }
 
+// 清理文件名
+function sanitizeFilename(name, rep = '_', maxLen = 255) {
+  if (!name) return 'unnamed';
+
+  const [filename, dot, ext] = extname(
+    name
+      .trim()
+      .replace(/[<>:"/\\|?*\x00-\x1F]/g, rep)
+      .replace(/[ .]+$/g, '') || 'unnamed'
+  );
+
+  const fullExt = dot + ext;
+  return filename.slice(0, maxLen - fullExt.length) + fullExt;
+}
+
+// 是否为合法文件名
+function isFilename(name, maxLen = 255) {
+  return (
+    !!name &&
+    name.trim().length > 0 &&
+    name.length <= maxLen &&
+    !/[<>:"/\\|?*\x00-\x1F]/.test(name) &&
+    !/[ .]$/.test(name)
+  );
+}
+
 const _path = {
   toUnixPath,
   normalize,
@@ -126,6 +152,8 @@ const _path = {
   extname,
   isPathWithin,
   randomFilenameSuffix,
+  sanitizeFilename,
+  isFilename,
 };
 
 export default _path;

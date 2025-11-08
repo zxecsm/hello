@@ -26,7 +26,6 @@ import {
   createPagingData,
   isEmail,
   concurrencyTasks,
-  isFilename,
   isurl,
 } from '../../utils/utils.js';
 
@@ -363,7 +362,7 @@ route.get('/log', async (req, res) => {
   try {
     const { name } = req.query;
 
-    if (!validaString(name, 1, fieldLength.filename) || !isFilename(name)) {
+    if (!validaString(name, 1, fieldLength.filename)) {
       paramErr(res, req);
       return;
     }
@@ -404,7 +403,7 @@ route.get('/log-list', async (req, res) => {
 route.post('/delete-log', async (req, res) => {
   try {
     const { name } = req.body;
-    if (!validaString(name, 1, fieldLength.filename) || !isFilename(name)) {
+    if (!validaString(name, 1, fieldLength.filename)) {
       paramErr(res, req);
       return;
     }

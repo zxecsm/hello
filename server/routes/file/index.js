@@ -12,7 +12,6 @@ import {
   _type,
   _nothing,
   syncUpdateData,
-  isFilename,
   uLog,
   concurrencyTasks,
   errorNotifyMsg,
@@ -479,7 +478,6 @@ route.post('/favorites', async (req, res) => {
       !validationValue(type, ['add', 'del']) ||
       !_type.isObject(data) ||
       !validaString(data.name, 1, fieldLength.filename) ||
-      !isFilename(data.name) ||
       !validaString(data.path, 1, fieldLength.url) ||
       !validationValue(data.type, ['dir'])
     ) {
@@ -577,7 +575,7 @@ route.post('/create-file', async (req, res) => {
       return;
     }
 
-    if (!isFilename(name)) {
+    if (!_path.isFilename(name)) {
       _err(res, '名称包含了不允许的特殊字符')(req, name, 1);
       return;
     }
@@ -621,7 +619,6 @@ route.post('/share', async (req, res) => {
       expireTime > fieldLength.expTime ||
       !_type.isObject(data) ||
       !validaString(data.name, 1, fieldLength.filename) ||
-      !isFilename(data.name) ||
       !validaString(data.path, 1, fieldLength.url) ||
       _path.normalize(data.path, data.name) === '/' ||
       !validationValue(data.type, ['dir', 'file'])
@@ -735,7 +732,6 @@ route.post('/copy', async (req, res) => {
         (item) =>
           _type.isObject(item) &&
           validaString(item.name, 1, fieldLength.filename) &&
-          isFilename(item.name) &&
           validaString(item.path, 1, fieldLength.url) &&
           _path.normalize(item.path, item.name) !== '/' &&
           validationValue(item.type, ['dir', 'file'])
@@ -775,7 +771,7 @@ route.post('/copy', async (req, res) => {
 
         const f = getCurPath(account, `${path}/${name}`);
 
-        let to = _path.normalize(p, name);
+        let to = _path.normalize(p, _path.sanitizeFilename(name));
 
         if (_path.isPathWithin(f, to) || !name) return;
 
@@ -830,7 +826,6 @@ route.post('/same-name', async (req, res) => {
         (item) =>
           _type.isObject(item) &&
           validaString(item.name, 1, fieldLength.filename) &&
-          isFilename(item.name) &&
           validaString(item.path, 1, fieldLength.url) &&
           validationValue(item.type, ['dir', 'file'])
       )
@@ -870,7 +865,6 @@ route.post('/move', async (req, res) => {
         (item) =>
           _type.isObject(item) &&
           validaString(item.name, 1, fieldLength.filename) &&
-          isFilename(item.name) &&
           validaString(item.path, 1, fieldLength.url) &&
           _path.normalize(item.path, item.name) !== '/' &&
           validationValue(item.type, ['dir', 'file'])
@@ -910,7 +904,7 @@ route.post('/move', async (req, res) => {
 
         const f = getCurPath(account, `${path}/${name}`);
 
-        let t = _path.normalize(p, name);
+        let t = _path.normalize(p, _path.sanitizeFilename(name));
 
         if (_path.isPathWithin(f, t, true)) return;
 
@@ -957,7 +951,6 @@ route.post('/zip', async (req, res) => {
     if (
       !_type.isObject(data) ||
       !validaString(data.name, 1, fieldLength.filename) ||
-      !isFilename(data.name) ||
       !validaString(data.path, 1, fieldLength.url) ||
       _path.normalize(data.path, data.name) === '/' ||
       !validationValue(data.type, ['file', 'dir'])
@@ -985,7 +978,7 @@ route.post('/zip', async (req, res) => {
 
     const fname = (_path.extname(name)[0] || name) + '.zip';
 
-    let t = _path.normalize(p, fname);
+    let t = _path.normalize(p, _path.sanitizeFilename(fname));
 
     if ((await _f.exists(t)) || t === getTrashDir(account)) {
       t = await getUniqueFilename(t);
@@ -1032,7 +1025,6 @@ route.post('/unzip', async (req, res) => {
     if (
       !_type.isObject(data) ||
       !validaString(data.name, 1, fieldLength.filename) ||
-      !isFilename(data.name) ||
       _path.extname(data.name)[2].toLowerCase() !== 'zip' ||
       !validaString(data.path, 1, fieldLength.url) ||
       !validationValue(data.type, ['file'])
@@ -1055,7 +1047,7 @@ route.post('/unzip', async (req, res) => {
 
     const fname = _path.extname(name)[0] || name;
 
-    let t = _path.normalize(p, fname);
+    let t = _path.normalize(p, _path.sanitizeFilename(fname));
 
     const controller = new AbortController();
     const signal = controller.signal;
@@ -1108,7 +1100,6 @@ route.post('/delete', async (req, res) => {
         (item) =>
           _type.isObject(item) &&
           validaString(item.name, 1, fieldLength.filename) &&
-          isFilename(item.name) &&
           validaString(item.path, 1, fieldLength.url) &&
           _path.normalize(item.path, item.name) !== '/' &&
           _path.normalize(item.path, item.name) !==
@@ -1164,7 +1155,10 @@ route.post('/delete', async (req, res) => {
         } else {
           await _f.mkdir(trashDir);
 
-          let targetPath = _path.normalize(trashDir, name);
+          let targetPath = _path.normalize(
+            trashDir,
+            _path.sanitizeFilename(name)
+          );
           if (await _f.exists(targetPath)) {
             targetPath = await getUniqueFilename(targetPath);
           }
@@ -1271,7 +1265,7 @@ route.post('/create-dir', async (req, res) => {
       return;
     }
 
-    if (!isFilename(name)) {
+    if (!_path.isFilename(name)) {
       _err(res, '名称包含了不允许的特殊字符')(req, name, 1);
       return;
     }
@@ -1306,7 +1300,6 @@ route.post('/rename', async (req, res) => {
       !validaString(name, 1, fieldLength.filename) ||
       !_type.isObject(data) ||
       !validaString(data.name, 1, fieldLength.filename) ||
-      !isFilename(data.name) ||
       !validaString(data.path, 1, fieldLength.url) ||
       !validationValue(data.type, ['dir', 'file'])
     ) {
@@ -1314,7 +1307,7 @@ route.post('/rename', async (req, res) => {
       return;
     }
 
-    if (!isFilename(name)) {
+    if (!_path.isFilename(name)) {
       _err(res, '名称包含了不允许的特殊字符')(req, name, 1);
       return;
     }
@@ -1366,7 +1359,6 @@ route.post('/mode', async (req, res) => {
         (item) =>
           _type.isObject(item) &&
           validaString(item.name, 1, fieldLength.filename) &&
-          isFilename(item.name) &&
           validaString(item.path, 1, fieldLength.url) &&
           validationValue(item.type, ['dir', 'file'])
       )
@@ -1442,7 +1434,6 @@ route.post('/chown', async (req, res) => {
         (item) =>
           _type.isObject(item) &&
           validaString(item.name, 1, fieldLength.filename) &&
-          isFilename(item.name) &&
           validaString(item.path, 1, fieldLength.url) &&
           validationValue(item.type, ['dir', 'file'])
       )
@@ -1559,7 +1550,10 @@ route.post('/merge', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    let targetPath = getCurPath(account, path);
+    let targetPath = getCurPath(
+      account,
+      _path.dirname(path) + _path.sanitizeFilename(_path.basename(path)[0])
+    );
 
     if (targetPath === getTrashDir(account)) {
       targetPath = await getUniqueFilename(targetPath);
@@ -1675,7 +1669,7 @@ route.post('/download', async (req, res) => {
 
     let outputFilePath = _path.normalize(
       targetPath,
-      _path.basename(url)[0] || 'unknown'
+      _path.sanitizeFilename(_path.basename(url)[0])
     );
 
     // 已存在添加后缀

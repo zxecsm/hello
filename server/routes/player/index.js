@@ -38,7 +38,6 @@ import {
   tplReplace,
   myShuffle,
   normalizePageNo,
-  isFilename,
   parseJson,
 } from '../../utils/utils.js';
 
@@ -794,7 +793,7 @@ route.get('/last-play', async (req, res) => {
   }
 });
 
-// 随机播放200
+// 随机播放列表
 route.get('/random-list', async (req, res) => {
   try {
     // 获取总行数
@@ -1615,7 +1614,6 @@ route.post('/up', async (req, res) => {
 
     if (
       !validaString(name, 1, fieldLength.filename) ||
-      !isFilename(name) ||
       !validaString(HASH, 0, fieldLength.id, 1) ||
       !validationValue(type, ['song', 'cover', 'mv']) ||
       !validaString(id, 0, fieldLength.id, 1)

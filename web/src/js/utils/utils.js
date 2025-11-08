@@ -2576,21 +2576,6 @@ export function noteReadInfo(str) {
     word,
   };
 }
-// 文件名验证
-export function isFilename(name) {
-  // 检查空字符串
-  if (!name || name.trim() === '') {
-    return false;
-  }
-
-  // 检查长度限制（例如255个字符）
-  if (name.length > 255) {
-    return false;
-  }
-
-  // 检查非法字符
-  return !/[?\\\\/<>*|:"]/g.test(name);
-}
 // 创建一个切换状态函数
 export function createStateSwitch(cb, state = false) {
   function fn() {

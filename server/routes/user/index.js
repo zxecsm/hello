@@ -25,7 +25,6 @@ import {
   getSplitWord,
   batchTask,
   concurrencyTasks,
-  isFilename,
   getWordContent,
 } from '../../utils/utils.js';
 
@@ -1137,7 +1136,6 @@ route.post('/up-logo', async (req, res) => {
     const { name, HASH, type, id } = req.query;
 
     if (
-      !isFilename(name) ||
       !isImgFile(name) ||
       !validaString(HASH, 1, fieldLength.id, 1) ||
       !validationValue(type, ['bookmark', 'userlogo']) ||

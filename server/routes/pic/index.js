@@ -28,7 +28,6 @@ import {
   createPagingData,
   concurrencyTasks,
   uLog,
-  isFilename,
 } from '../../utils/utils.js';
 
 import { fieldLength } from '../config.js';
@@ -50,17 +49,14 @@ route.use((req, res, next) => {
 // 上传图片
 route.post('/up', async (req, res) => {
   try {
-    const { HASH, name } = req.query;
+    let { HASH, name } = req.query;
 
-    if (
-      !validaString(HASH, 1, fieldLength.id, 1) ||
-      !isImgFile(name) ||
-      !validaString(name, 1, fieldLength.filename) ||
-      !isFilename(name)
-    ) {
+    if (!validaString(HASH, 1, fieldLength.id, 1) || !isImgFile(name)) {
       paramErr(res, req);
       return;
     }
+
+    name = _path.sanitizeFilename(name);
 
     const pic = (await queryData('pic', 'hash', `WHERE hash = ?`, [HASH]))[0];
 
