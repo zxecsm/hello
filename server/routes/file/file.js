@@ -73,8 +73,7 @@ export async function cleanEmptyDirectories(rootDir) {
     const files = await _f.fsp.readdir(currentDir);
     for (const file of files) {
       const fullPath = _path.normalize(currentDir, file);
-      const stat = await _f.fsp.lstat(fullPath);
-      if (stat.isDirectory()) {
+      if ((await _f.getType(fullPath)) === 'dir') {
         stack.push(fullPath);
         allDirs.add(fullPath);
       }
@@ -180,30 +179,26 @@ export async function readMenu(path) {
 
         const s = await _f.fsp.lstat(f);
         const { mode, numericMode, uid, gid } = _f.getPermissions(s);
+        const type = await _f.getType(s);
         const modeStr = `${mode} ${numericMode}`;
-        if (s.isDirectory()) {
-          arr.push({
-            path,
-            type: 'dir',
-            name,
-            time: s.ctimeMs,
-            size: 0,
-            mode: modeStr,
-            uid,
-            gid,
-          });
-        } else {
-          arr.push({
-            path,
-            type: 'file',
-            name,
-            time: s.ctimeMs,
-            size: s.size,
-            mode: modeStr,
-            uid,
-            gid,
-          });
+        const info = {
+          path,
+          type: type === 'dir' ? 'dir' : 'file',
+          name,
+          time: s.ctimeMs,
+          size: s.size,
+          mode: modeStr,
+          uid,
+          gid,
+        };
+        if (info.type === 'file') {
+          info.fileType = type;
+          if (type === 'symlink') {
+            info.linkTarget = await _f.fsp.readlink(f);
+            info.linkTargetType = await _f.getType(info.linkTarget);
+          }
         }
+        arr.push(info);
       } catch (error) {
         await writelog(false, `[ readMenu ] - ${error}`, 'error');
       }

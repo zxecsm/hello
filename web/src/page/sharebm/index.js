@@ -231,7 +231,7 @@ function saveBm(e) {
       items: {
         title: {
           value: defaultTitle,
-          placeholder: '书签分组名称',
+          beforeText: '书签分组名称：',
           verify(val) {
             if (val === '') {
               return '请输入名称';

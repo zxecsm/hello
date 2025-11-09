@@ -452,7 +452,7 @@ function addBmList(e) {
       subText: '提交',
       items: {
         text: {
-          placeholder: '标题',
+          beforeText: '分组标题：',
           verify(val) {
             if (val === '') {
               return '请输入标题';
@@ -858,7 +858,6 @@ export function addBookMark(e, pid) {
                 subText: '提交',
                 items: {
                   title: {
-                    placeholder: '标题',
                     beforeText: '标题：',
                     value: title,
                     verify(val) {
@@ -885,7 +884,6 @@ export function addBookMark(e, pid) {
                     beforeText: '描述：',
                     value: des,
                     type: 'textarea',
-                    placeholder: '描述',
                     verify(val) {
                       if (val.length > _d.fieldLength.des) {
                         return '描述过长';
@@ -946,9 +944,8 @@ function editBmList(e, obj) {
       subText: '提交',
       items: {
         idx: {
-          beforeText: '序号',
+          beforeText: '序号：',
           inputType: 'number',
-          placeholder: '序号',
           value: obj.num + 1,
           verify(val) {
             const value = parseFloat(val);
@@ -958,8 +955,7 @@ function editBmList(e, obj) {
           },
         },
         text: {
-          beforeText: '标题',
-          placeholder: '标题',
+          beforeText: '标题：',
           value: obj.title,
           verify(val) {
             if (val === '') {
@@ -1175,7 +1171,6 @@ function editBm(e, obj, isHome) {
       subText: '提交',
       items: {
         idx: {
-          placeholder: '序号',
           inputType: 'number',
           beforeText: '序号：',
           value: obj.num + 1,
@@ -1187,7 +1182,6 @@ function editBm(e, obj, isHome) {
           },
         },
         title: {
-          placeholder: '标题',
           beforeText: '标题：',
           value: obj.title,
           verify(val) {
@@ -1213,7 +1207,6 @@ function editBm(e, obj, isHome) {
         des: {
           beforeText: '描述：',
           type: 'textarea',
-          placeholder: '描述',
           value: obj.des,
           verify(val) {
             if (val.length > _d.fieldLength.des) {

@@ -51,6 +51,7 @@ import {
   reqFileCopy,
   reqFileCreateDir,
   reqFileCreateFile,
+  reqFileCreateLink,
   reqFileDelete,
   reqFileDownload,
   reqFileFavorites,
@@ -231,12 +232,14 @@ async function renderList(top) {
   const html = _tpl(
     `
     <template v-if="total > 0">
-      <ul v-for="{type, name, size, time, id, mode, gid, uid, favorite} in list" class="file_item" :data-id="id">
+      <ul v-for="{type, fileType, name, size, time, id, mode, gid, uid, favorite, linkTarget} in list" class="file_item" :data-id="id">
         <li class="check_state" check="n"></li>
-        <li cursor="y" class="logo iconfont {{hdLogo(name,type,size) || 'is_img'}}"></li>
+        <li cursor="y" class="logo {{logoColor(type,fileType)}} iconfont {{hdLogo(name,type,size) || 'is_img'}}"></li>
         <li v-if="favorite" class='favorite iconfont icon-shoucang'></li>
         <li cursor="y" class="name">
-          <span class="text">{{getText(name,type).a}}<span class="suffix">{{getText(name,type).b}}</span>
+          <span class="text">{{getText(name,type).a}}
+            <span class="suffix">{{getText(name,type).b}}</span>
+            <span v-if="type === 'file' && fileType === 'symlink'" class="link_target">=> {{linkTarget}}</span>
           </span>
         </li>
         <li v-if="mode" class='mode'>{{mode}} {{uid}}:{{gid}}</li>
@@ -251,6 +254,12 @@ async function renderList(top) {
       total: fileListData.total,
       formatDate,
       list: fileListData.data,
+      logoColor(type, fileType) {
+        if (type === 'dir') return type;
+        if (type === 'file' && (fileType === 'symlink' || fileType === 'file'))
+          return '';
+        return 'other';
+      },
       hdLogo(name, type, size) {
         let logo = '';
         if (!isImgFile(name)) {
@@ -462,6 +471,15 @@ async function readFileAndDir(obj, e) {
     curmb.toGo(p, { pageNo: 1, top: 0 });
   } else if (type === 'file') {
     try {
+      if (
+        obj.fileType === 'symlink' &&
+        obj.linkTargetType === 'dir' &&
+        obj.linkTarget
+      ) {
+        updatePageInfo();
+        curmb.toGo(obj.linkTarget, { pageNo: 1, top: 0 });
+        return;
+      }
       const res = await reqFileReadFile({ path: p });
       if (res.code === 1) {
         if (res.data.type === 'text') {
@@ -548,13 +566,26 @@ $contentWrap
     hdCheckItem(this);
   })
   .on('mouseenter', '.file_item .name', function () {
-    const { name, type, path, mode, size, time, uid, gid, favorite } =
-      getFileItem($(this).parent().attr('data-id'));
+    const {
+      name,
+      type,
+      path,
+      mode,
+      size,
+      time,
+      uid,
+      gid,
+      favorite,
+      fileType,
+      linkTarget,
+    } = getFileItem($(this).parent().attr('data-id'));
     const str = `名称：${name}\n类型：${
       type === 'dir' ? '文件夹' : '文件'
     }\n路径：${path}${
-      mode ? `\n权限：${mode}\n用户ID：${uid}\n用户组ID：${gid}` : ''
-    }${
+      type === 'file' && fileType === 'symlink'
+        ? `\n符号链接：${linkTarget}`
+        : ''
+    }${mode ? `\n权限：${mode}\n用户ID：${uid}\n用户组ID：${gid}` : ''}${
       type === 'dir' && favorite !== undefined
         ? `\n收藏状态：${favorite ? '已收藏' : '未收藏'}`
         : ''
@@ -1208,7 +1239,7 @@ function createFile(e) {
       subText: '提交',
       items: {
         name: {
-          placeholder: '文件名',
+          beforeText: '文件名：',
           verify(val) {
             if (val === '') {
               return '请输入名称';
@@ -1251,7 +1282,7 @@ function createDir(e) {
       subText: '提交',
       items: {
         name: {
-          placeholder: '文件夹名',
+          beforeText: '文件夹名：',
           verify(val) {
             if (val === '') {
               return '请输入名称';
@@ -1429,6 +1460,7 @@ function handleDownloadFile(e) {
       subText: '提交',
       items: {
         url: {
+          beforeText: '下载文件链接地址：',
           placeholder: '仅支持http/https网络链接',
           verify(val) {
             if (!isurl(val)) {
@@ -1514,6 +1546,11 @@ function createFileAndDir(e) {
       text: '新建文件夹',
       beforeIcon: 'iconfont icon-24gl-folderPlus',
     },
+    {
+      id: '3',
+      text: '新建符号链接',
+      beforeIcon: 'iconfont icon-link1',
+    },
   ];
   rMenu.selectMenu(
     e,
@@ -1523,9 +1560,74 @@ function createFileAndDir(e) {
         createFile(e);
       } else if (id === '2') {
         createDir(e);
+      } else if (id === '3') {
+        createSymlink(e);
       }
     },
     '新建选项'
+  );
+}
+function createSymlink(e) {
+  rMenu.inpMenu(
+    e,
+    {
+      subText: '提交',
+      items: {
+        name: {
+          beforeText: '文件名：',
+          verify(val) {
+            if (val === '') {
+              return '请输入名称';
+            } else if (val.length > _d.fieldLength.filename) {
+              return '名称过长';
+            } else if (!_path.isFilename(val)) {
+              return '名称包含了不允许的特殊字符';
+            }
+          },
+        },
+        targetPath: {
+          beforeText: '目标路径：',
+          placeholder: '硬链接不支持文件夹',
+          verify(val) {
+            if (val === '') {
+              return '请输入目标路径';
+            } else if (val.length > _d.fieldLength.url) {
+              return '路径过长';
+            }
+          },
+        },
+        isSymlink: {
+          beforeText: '链接类型：',
+          type: 'select',
+          value: 'y',
+          selectItem: [
+            { value: 'y', text: '软链接' },
+            { value: 'n', text: '硬链接' },
+          ],
+        },
+      },
+    },
+    async function ({ close, inp, loading }) {
+      try {
+        const { name, targetPath, isSymlink } = inp;
+        loading.start();
+        const res = await reqFileCreateLink({
+          path: curFileDirPath,
+          name,
+          targetPath,
+          isSymlink: isSymlink === 'y' ? 1 : 0,
+        });
+        loading.end();
+        if (res.code === 1) {
+          _msg.success(res.codeText);
+          updateCurPage();
+          close(1);
+        }
+      } catch {
+        loading.end();
+      }
+    },
+    '新建符号链接'
   );
 }
 // 处理粘贴
@@ -2008,7 +2110,7 @@ function hdRename(e, obj, cb) {
       subText: '提交',
       items: {
         name: {
-          placeholder: `${obj.type === 'file' ? '文件名' : '文件夹名'}`,
+          beforeText: `${obj.type === 'file' ? '文件' : '文件夹'}名：`,
           value: obj.name,
           verify(val) {
             if (val === '') {

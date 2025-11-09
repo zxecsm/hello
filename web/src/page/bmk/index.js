@@ -509,7 +509,6 @@ function bmMenu(e) {
             subText: '提交',
             items: {
               title: {
-                placeholder: '标题',
                 beforeText: '标题：',
                 value: obj.title,
                 verify(val) {
@@ -534,7 +533,6 @@ function bmMenu(e) {
               },
               des: {
                 beforeText: '描述：',
-                placeholder: '描述',
                 type: 'textarea',
                 value: obj.des,
                 verify(val) {

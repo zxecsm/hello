@@ -150,6 +150,12 @@ export function showFileInfo(e, obj) {
       beforeText: '路径：',
     },
   ];
+  if (obj.type === 'file' && obj.fileType === 'symlink') {
+    data.push({
+      text: obj.linkTarget,
+      beforeText: '符号链接：',
+    });
+  }
   if (obj.mode) {
     data.push(
       {

@@ -12,6 +12,7 @@ import {
   getTableRowCount,
   batchDeleteData,
   fillString,
+  batchUpdateData,
 } from '../../utils/sqlite.js';
 
 import {
@@ -558,7 +559,22 @@ route.post('/forward', async (req, res) => {
 // 未读消息
 route.get('/news', async (req, res) => {
   try {
+    let { clear = 0 } = req.query;
+    clear = parseInt(clear);
+    if (!validationValue(clear, [0, 1])) {
+      paramErr(res, req);
+      return;
+    }
+
     const { account } = req._hello.userinfo;
+
+    if (clear === 1) {
+      await batchUpdateData('friends', 'id', { read: 1 }, `WHERE account = ?`, [
+        account,
+      ]);
+      _success(res, '消息标记已读成功')(req);
+      return;
+    }
 
     const group = await getTableRowCount(
       'friends',
@@ -1057,14 +1073,12 @@ route.post('/repeat', async (req, res) => {
 
           const tName = `${HASH}${suffix ? `.${suffix}` : ''}`;
 
-          const stat = await _f.fsp.lstat(p);
-
           const obj = {
             _to: to,
             content: name,
             hash: HASH,
             type,
-            size: stat.size,
+            size,
           };
 
           if (type === 'image') {

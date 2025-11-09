@@ -259,7 +259,6 @@ if (!k || !/^[\w]+$/.test(k)) {
     {
       items: {
         key: {
-          placeholder: '请输入便条Key',
           beforeText: '便条Key：',
           verify(val) {
             if (val === '') {
@@ -642,7 +641,6 @@ function openNotepad(e) {
     {
       items: {
         key: {
-          placeholder: '请输入便条Key',
           beforeText: '便条Key：',
           verify(val) {
             if (val === '') {

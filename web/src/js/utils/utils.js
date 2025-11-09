@@ -2415,7 +2415,6 @@ export function enterPassCode(cb) {
     {
       items: {
         pass: {
-          placeholder: '请输入提取码',
           beforeText: '提取码：',
           inputType: 'password',
           verify(val) {

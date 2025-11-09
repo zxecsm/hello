@@ -9,13 +9,29 @@ function mkdir(path) {
   return fsp.mkdir(path, { recursive: true });
 }
 
+// 创建硬链接
+async function link(target, path) {
+  await mkdir(_path.dirname(path));
+  await fsp.link(target, path);
+}
+
+// 创建符号链接
+async function symlink(target, path) {
+  await mkdir(_path.dirname(path));
+  await fsp.symlink(target, path);
+}
+
 // 复制
 async function cp(from, to, { signal, progress, renameMode = false } = {}) {
-  if (!(await exists(from))) return;
+  if (!(await getType(from))) return;
   if (from === to) return;
 
   if (!signal && !progress) {
-    await fsp.cp(from, to, { recursive: true, force: true });
+    await fsp.cp(from, to, {
+      recursive: true,
+      force: true,
+      dereference: false, // 复制符号链接本身，而不是它指向的文件
+    });
     if (renameMode) await del(from);
     return;
   }
@@ -27,10 +43,10 @@ async function cp(from, to, { signal, progress, renameMode = false } = {}) {
 
     if (signal?.aborted) throw new Error('Operation aborted');
 
-    if (!(await exists(f))) continue;
-    const stat = await fsp.lstat(f);
+    const type = await getType(f);
+    if (!type) continue;
 
-    if (stat.isDirectory()) {
+    if (type === 'dir') {
       await mkdir(t);
       const list = await fsp.readdir(f);
 
@@ -40,6 +56,13 @@ async function cp(from, to, { signal, progress, renameMode = false } = {}) {
           to: _path.normalize(t, name),
         });
       }
+    } else if (type === 'symlink') {
+      await fsp.cp(f, t, {
+        force: true,
+        dereference: false,
+      });
+      if (renameMode) await del(f);
+      progress?.({ count: 1 });
     } else {
       await mkdir(_path.dirname(t));
       const readStream = fs.createReadStream(f);
@@ -84,7 +107,7 @@ async function readdir(path, options) {
 
 // 修改权限
 async function chmod(path, mode, { signal, progress, recursive = false } = {}) {
-  if (!(await exists(path))) return;
+  if (!(await getType(path))) return;
 
   if (!recursive) {
     await fsp.chmod(path, mode);
@@ -98,13 +121,13 @@ async function chmod(path, mode, { signal, progress, recursive = false } = {}) {
     const currentPath = stack.pop();
 
     if (signal?.aborted) throw new Error('Operation aborted');
-    if (!(await exists(currentPath))) continue;
-    const s = await fsp.lstat(currentPath);
+    const type = await getType(currentPath);
+    if (!type) continue;
 
     await fsp.chmod(currentPath, mode);
     progress?.({ count: 1 });
 
-    if (s.isDirectory()) {
+    if (type === 'dir') {
       const list = await fsp.readdir(currentPath);
 
       for (const name of list) {
@@ -121,7 +144,7 @@ async function chown(
   gid,
   { signal, progress, recursive = false } = {}
 ) {
-  if (!(await exists(path))) return;
+  if (!(await getType(path))) return;
 
   if (!recursive) {
     await fsp.lchown(path, uid, gid);
@@ -135,13 +158,13 @@ async function chown(
     const currentPath = stack.pop();
 
     if (signal?.aborted) throw new Error('Operation aborted');
-    if (!(await exists(currentPath))) continue;
-    const s = await fsp.lstat(currentPath);
+    const type = await getType(currentPath);
+    if (!type) continue;
 
     await fsp.lchown(currentPath, uid, gid);
     progress?.({ count: 1 });
 
-    if (s.isDirectory()) {
+    if (type === 'dir') {
       const list = await fsp.readdir(currentPath);
 
       for (const name of list) {
@@ -151,8 +174,24 @@ async function chown(
   }
 }
 
+async function getType(stat) {
+  try {
+    if (typeof stat === 'string') stat = await fsp.lstat(stat);
+  } catch {
+    return '';
+  }
+  if (stat.isFile()) return 'file';
+  if (stat.isDirectory()) return 'dir';
+  if (stat.isSymbolicLink()) return 'symlink';
+  if (stat.isSocket()) return 'socket';
+  if (stat.isFIFO()) return 'fifo';
+  if (stat.isCharacterDevice()) return 'chardev';
+  if (stat.isBlockDevice()) return 'blockdev';
+  return 'unknown';
+}
+
 async function del(path, { signal, progress } = {}) {
-  if (!(await exists(path))) return;
+  if (!(await getType(path))) return;
 
   if (!signal && !progress) {
     return fsp.rm(path, { recursive: true, force: true });
@@ -165,10 +204,10 @@ async function del(path, { signal, progress } = {}) {
     const currentPath = stack.pop();
 
     if (signal?.aborted) throw new Error('Operation aborted');
-    if (!(await exists(currentPath))) continue;
-    const s = await fsp.lstat(currentPath);
+    const type = await getType(currentPath);
+    if (!type) continue;
 
-    if (s.isDirectory()) {
+    if (type === 'dir') {
       dirs.push(currentPath);
       const list = await fsp.readdir(currentPath);
 
@@ -176,8 +215,11 @@ async function del(path, { signal, progress } = {}) {
         stack.push(_path.normalize(currentPath, name));
       }
     } else {
+      const size = (await fsp.lstat(currentPath)).size;
       await fsp.rm(currentPath, { force: true });
-      progress?.({ count: 1, size: s.size });
+      if (type === 'file') {
+        progress?.({ count: 1, size });
+      }
     }
   }
 
@@ -227,17 +269,12 @@ async function isTextFile(path, length = 1000) {
 
 // 文件或文件夹是否存在
 async function exists(path) {
-  try {
-    await fsp.access(path, fs.constants.F_OK);
-    return true;
-  } catch {
-    return false;
-  }
+  return (await getType(path)) !== '';
 }
 
 // 重命名
 async function rename(oldPath, newPath, { signal, progress } = {}) {
-  if (!(await exists(oldPath))) return;
+  if (!(await getType(oldPath))) return;
   try {
     await mkdir(_path.dirname(newPath));
     await fsp.rename(oldPath, newPath);
@@ -271,7 +308,7 @@ function getTextSize(text) {
 async function readDirSize(path, { signal, progress } = {}) {
   let size = 0;
 
-  if (!(await exists(path))) return size;
+  if (!(await getType(path))) return size;
 
   const stack = [path];
 
@@ -280,17 +317,18 @@ async function readDirSize(path, { signal, progress } = {}) {
 
     if (signal?.aborted) throw new Error('Operation aborted');
 
-    if (!(await exists(currentPath))) continue;
-    const s = await fsp.lstat(currentPath);
+    const type = await getType(currentPath);
+    if (!type) continue;
 
-    if (s.isDirectory()) {
+    if (type === 'dir') {
       const list = await fsp.readdir(currentPath);
 
       for (const name of list) {
         stack.push(_path.normalize(currentPath, name));
       }
-    } else {
-      progress?.({ count: 1, size: s.size });
+    } else if (type === 'file') {
+      const size = (await fsp.lstat(currentPath)).size;
+      progress?.({ count: 1, size });
     }
   }
 
@@ -334,6 +372,9 @@ const _f = {
   rename,
   del,
   mkdir,
+  getType,
+  symlink,
+  link,
   readFile,
   readdir,
   cp,

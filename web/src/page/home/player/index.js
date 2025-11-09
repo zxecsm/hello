@@ -623,7 +623,6 @@ export function editSongInfo(e, sobj) {
         artist: {
           value: sobj.artist,
           beforeText: '歌手名：',
-          placeholder: '歌手名',
           verify(val) {
             if (val === '') {
               return '请输入歌手名';
@@ -635,7 +634,6 @@ export function editSongInfo(e, sobj) {
         title: {
           value: sobj.title,
           beforeText: '歌曲名：',
-          placeholder: '歌曲名',
           verify(val) {
             if (val === '') {
               return '请输入歌曲名';
@@ -646,7 +644,6 @@ export function editSongInfo(e, sobj) {
         },
         album: {
           value: sobj.album,
-          placeholder: '专辑',
           beforeText: '专辑：',
           verify(val) {
             if (val === '') {
@@ -658,7 +655,6 @@ export function editSongInfo(e, sobj) {
         },
         year: {
           value: sobj.year,
-          placeholder: '年份',
           beforeText: '年份：',
           inputType: 'number',
           verify(val) {
@@ -669,7 +665,6 @@ export function editSongInfo(e, sobj) {
         },
         duration: {
           value: sobj.duration,
-          placeholder: '时长(秒)',
           beforeText: '时长(秒)：',
           inputType: 'number',
           verify(val) {
@@ -683,7 +678,6 @@ export function editSongInfo(e, sobj) {
         },
         play_count: {
           value: sobj.play_count,
-          placeholder: '播放量',
           beforeText: '播放量：',
           inputType: 'number',
           verify(val) {
@@ -697,7 +691,6 @@ export function editSongInfo(e, sobj) {
         },
         collect_count: {
           value: sobj.collect_count,
-          placeholder: '收藏量',
           beforeText: '收藏量：',
           inputType: 'number',
           verify(val) {
@@ -1217,7 +1210,6 @@ function addSongList(e) {
       subText: '提交',
       items: {
         title: {
-          placeholder: '标题',
           beforeText: '标题：',
           verify(val) {
             if (val === '') {
@@ -1230,7 +1222,6 @@ function addSongList(e) {
         des: {
           type: 'textarea',
           beforeText: '描述：',
-          placeholder: '描述',
           verify(val) {
             if (val.length > _d.fieldLength.des) {
               return '描述过长';
@@ -1443,9 +1434,8 @@ function editSongList(e, obj, sid) {
     subText: '提交',
     items: {
       idx: {
-        beforeText: '序号',
+        beforeText: '序号：',
         inputType: 'number',
-        placeholder: '序号',
         value: obj.num + 1,
         verify(val) {
           let value = parseFloat(val);
@@ -1456,7 +1446,6 @@ function editSongList(e, obj, sid) {
       },
       title: {
         beforeText: '标题：',
-        placeholder: '标题',
         value: name,
         verify(val) {
           if (val === '') {
@@ -1469,7 +1458,6 @@ function editSongList(e, obj, sid) {
       des: {
         beforeText: '描述：',
         type: 'textarea',
-        placeholder: '描述',
         value: des || '',
         verify(val) {
           if (val.length > _d.fieldLength.des) {

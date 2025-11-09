@@ -55,6 +55,10 @@ export function reqFileMerge(data) {
 export function reqFileCreateFile(data) {
   return _postAjax('/file/create-file', data);
 }
+// 创建符号链接
+export function reqFileCreateLink(data) {
+  return _postAjax('/file/create-link', data);
+}
 // 创建目录
 export function reqFileCreateDir(data) {
   return _postAjax('/file/create-dir', data);

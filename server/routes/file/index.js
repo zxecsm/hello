@@ -297,6 +297,12 @@ route.post('/read-dir', async (req, res) => {
               path,
             };
 
+            if (obj.type === 'file' && obj.fileType === 'symlink') {
+              obj.linkTarget = _path.normalize(
+                '/' + item.linkTarget.slice(rootP.length)
+              );
+            }
+
             if (favorites && item.type === 'dir') {
               obj.favorite = favorites.includes(
                 _path.normalize(path, item.name)
@@ -414,17 +420,13 @@ route.post('/read-file', async (req, res) => {
 
     const stat = await _f.fsp.lstat(p);
 
-    if (stat.isDirectory()) {
+    if ((await _f.getType(stat)) === 'dir') {
       _err(res, '文件不存在')(req, p, 1);
       return;
     }
 
     // 文本文件并且小于等于10M直接返回
-    if (
-      stat.isFile() &&
-      stat.size <= fieldLength.textFileSize &&
-      (await _f.isTextFile(p))
-    ) {
+    if (stat.size <= fieldLength.textFileSize && (await _f.isTextFile(p))) {
       //文本文件
       _success(res, 'ok', {
         type: 'text',
@@ -580,10 +582,10 @@ route.post('/create-file', async (req, res) => {
       return;
     }
 
-    const dir = getCurPath(req._hello.userinfo.account, path);
-    const fpath = _path.normalize(dir, name);
-
     const { account } = req._hello.userinfo;
+
+    const dir = getCurPath(account, path);
+    const fpath = _path.normalize(dir, name);
 
     // 过滤回收站
     if ((await _f.exists(fpath)) || getTrashDir(account) === fpath) {
@@ -599,6 +601,53 @@ route.post('/create-file', async (req, res) => {
     fileList.clear(account);
 
     _success(res, '新建文件成功')(req, fpath, 1);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 创建符号链接
+route.post('/create-link', async (req, res) => {
+  try {
+    const { path, name, targetPath, isSymlink = 1 } = req.body;
+
+    if (
+      !validaString(path, 1, fieldLength.url) ||
+      !validaString(targetPath, 1, fieldLength.url) ||
+      !validaString(name, 1, fieldLength.filename) ||
+      !validationValue(isSymlink, [0, 1])
+    ) {
+      paramErr(res, req);
+      return;
+    }
+
+    if (!_path.isFilename(name)) {
+      _err(res, '名称包含了不允许的特殊字符')(req, name, 1);
+      return;
+    }
+
+    const { account } = req._hello.userinfo;
+
+    const curPath = getCurPath(account, `${path}/${name}`);
+    const tPath = getCurPath(account, targetPath);
+
+    // 过滤回收站
+    if ((await _f.exists(curPath)) || getTrashDir(account) === curPath) {
+      _err(res, '已存在重名文件')(req, curPath, 1);
+      return;
+    }
+
+    if (isSymlink) {
+      await _f.symlink(tPath, curPath);
+    } else {
+      await _f.link(tPath, curPath);
+    }
+
+    syncUpdateData(req, 'file');
+
+    fileList.clear(account);
+
+    _success(res, '新建符号链接成功')(req, `${curPath}=>${tPath}`, 1);
   } catch (error) {
     _err(res)(req, error);
   }
@@ -671,37 +720,36 @@ route.post('/save-file', async (req, res) => {
 
     const fpath = getCurPath(account, path);
 
-    const stat = await _f.fsp.lstat(fpath);
-
-    if (
-      !(await _f.exists(fpath)) ||
-      stat.isDirectory() ||
-      getTrashDir(account) === fpath
-    ) {
+    const type = await _f.getType(fpath);
+    if (!type || type === 'dir' || getTrashDir(account) === fpath) {
       _err(res, '文件不存在')(req, fpath, 1);
       return;
     }
 
-    try {
-      if (stat.size > 0) {
-        // 保存编辑历史版本
-        const [, filename, , suffix] = _path.basename(fpath);
+    const stat = await _f.fsp.lstat(fpath);
 
-        const historyDir = _path.normalize(
-          _path.dirname(fpath),
-          appConfig.textFileHistoryDirName
-        );
+    if (type === 'file') {
+      try {
+        if (stat.size > 0) {
+          // 保存编辑历史版本
+          const [, filename, , suffix] = _path.basename(fpath);
 
-        await _f.mkdir(historyDir);
+          const historyDir = _path.normalize(
+            _path.dirname(fpath),
+            appConfig.textFileHistoryDirName
+          );
 
-        const newName = `${filename}_${formatDate({
-          template: `{0}{1}{2}-{3}{4}{5}`,
-        })}${suffix ? `.${suffix}` : ''}`;
+          await _f.mkdir(historyDir);
 
-        await _f.cp(fpath, _path.normalize(historyDir, newName));
+          const newName = `${filename}_${formatDate({
+            template: `{0}{1}{2}-{3}{4}{5}`,
+          })}${suffix ? `.${suffix}` : ''}`;
+
+          await _f.cp(fpath, _path.normalize(historyDir, newName));
+        }
+      } catch (error) {
+        await errLog(req, `保存文件历史版本失败(${fpath}-${error})`);
       }
-    } catch (error) {
-      await errLog(req, `保存文件历史版本失败(${fpath}-${error})`);
     }
 
     await _f.fsp.writeFile(fpath, text);
@@ -771,7 +819,7 @@ route.post('/copy', async (req, res) => {
 
         const f = getCurPath(account, `${path}/${name}`);
 
-        let to = _path.normalize(p, _path.sanitizeFilename(name));
+        let to = _path.normalize(p, name);
 
         if (_path.isPathWithin(f, to) || !name) return;
 
@@ -904,7 +952,7 @@ route.post('/move', async (req, res) => {
 
         const f = getCurPath(account, `${path}/${name}`);
 
-        let t = _path.normalize(p, _path.sanitizeFilename(name));
+        let t = _path.normalize(p, name);
 
         if (_path.isPathWithin(f, t, true)) return;
 
@@ -978,7 +1026,7 @@ route.post('/zip', async (req, res) => {
 
     const fname = (_path.extname(name)[0] || name) + '.zip';
 
-    let t = _path.normalize(p, _path.sanitizeFilename(fname));
+    let t = _path.normalize(p, fname);
 
     if ((await _f.exists(t)) || t === getTrashDir(account)) {
       t = await getUniqueFilename(t);
@@ -1047,7 +1095,7 @@ route.post('/unzip', async (req, res) => {
 
     const fname = _path.extname(name)[0] || name;
 
-    let t = _path.normalize(p, _path.sanitizeFilename(fname));
+    let t = _path.normalize(p, fname);
 
     const controller = new AbortController();
     const signal = controller.signal;
@@ -1155,10 +1203,7 @@ route.post('/delete', async (req, res) => {
         } else {
           await _f.mkdir(trashDir);
 
-          let targetPath = _path.normalize(
-            trashDir,
-            _path.sanitizeFilename(name)
-          );
+          let targetPath = _path.normalize(trashDir, name);
           if (await _f.exists(targetPath)) {
             targetPath = await getUniqueFilename(targetPath);
           }

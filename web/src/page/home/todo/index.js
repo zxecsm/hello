@@ -251,7 +251,7 @@ function addTodo(e) {
       items: {
         text: {
           type: 'textarea',
-          placeholder: '待办内容',
+          beforeText: '待办内容：',
           verify(val) {
             if (val === '') {
               return '请输入待办内容';
@@ -336,7 +336,7 @@ function editTodo(e, todo) {
       items: {
         text: {
           type: 'textarea',
-          placeholder: '待办内容',
+          beforeText: '待办内容：',
           value: todo.content,
           verify(val) {
             if (val === '') {

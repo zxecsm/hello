@@ -916,7 +916,7 @@ $pMusicListBox.on('click', '.save_playing_list', function (e) {
       subText: '提交',
       items: {
         name: {
-          placeholder: '歌单名称',
+          beforeText: '歌单名称：',
           value: defaultShareTitle,
           verify(val) {
             if (val === '') {

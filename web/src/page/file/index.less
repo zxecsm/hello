@@ -185,6 +185,10 @@ body {
             .suffix {
               color: green;
             }
+            .link_target {
+              color: var(--color5);
+              padding-left: 0.5rem;
+            }
           }
           &:hover {
             color: var(--text-hover-color);
@@ -221,6 +225,12 @@ body {
           font-size: 3rem;
           border-radius: 0.4rem;
           color: var(--icon-color);
+          &.dir {
+            color: var(--text-hover-color);
+          }
+          &.other {
+            color: var(--color7);
+          }
           &.is_img {
             width: 5rem;
             height: 5rem;
@@ -275,6 +285,9 @@ body {
             padding: 0 0 0 0.5rem;
             text-overflow: ellipsis;
             text-align: center;
+            .link_target {
+              display: none;
+            }
           }
           .favorite,
           .date,

@@ -67,7 +67,6 @@ function addCategory(e) {
       subText: '提交',
       items: {
         text: {
-          placeholder: '标题',
           beforeText: '标题：',
           verify(val) {
             if (val === '') {
@@ -106,7 +105,6 @@ function editCategory(e, obj) {
       subText: '提交',
       items: {
         text: {
-          placeholder: '标题',
           beforeText: '标题：',
           value: obj.title,
           verify(val) {

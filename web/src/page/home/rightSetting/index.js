@@ -206,7 +206,7 @@ function changeUsername(e) {
       subText: '提交',
       items: {
         name: {
-          placeholder: '用户名',
+          beforeText: '用户名：',
           value: setUserInfo().username,
           verify(val) {
             if (val.length < 1 || val.length > _d.fieldLength.username) {
@@ -1451,18 +1451,15 @@ function changeUserPd(e) {
       items: {
         pass: {
           beforeText: '原密码：',
-          placeholder: '原密码',
           autocomplete: 'current-password',
           inputType: 'password',
         },
         npass: {
           beforeText: '新密码：',
-          placeholder: '新密码',
           autocomplete: 'new-password',
           inputType: 'password',
         },
         rpass: {
-          placeholder: '确认密码',
           beforeText: '确认密码：',
           autocomplete: 'new-password',
           inputType: 'password',

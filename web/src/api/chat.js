@@ -2,8 +2,8 @@ import _d from '../js/common/config';
 import { _getAjax, _postAjax, _upFile } from '../js/utils/utils';
 
 // 获取通知
-export function reqChatNews() {
-  return _getAjax('/chat/news');
+export function reqChatNews(data) {
+  return _getAjax('/chat/news', data);
 }
 // 获取消息
 export function reqChatReadMsg(data) {

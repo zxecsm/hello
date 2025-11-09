@@ -182,6 +182,7 @@ function renderUserList(pageNo, total, totalPage, top) {
   if (chatRoomWrapIsHide() || $userListWrap.is(':hidden')) return;
   const html = _tpl(
     `
+    <button v-if="hasNoRead" cursor="y" class="clear_msg btn btn_primary">标记为已读</button>
     <ul v-for="{username, account, online, des = '', read, msg} in userList" :data-account="account" class="user_item">
       <i :x="read === 1 ? 'y' : 'n'" class="msg_alert"></i>
       <li cursor="y" class="user_logo" style="{{online === 1 ? '' : 'filter: grayscale(1);'}}"></li>
@@ -194,6 +195,7 @@ function renderUserList(pageNo, total, totalPage, top) {
     <div v-if="totalPage > 1" v-html="getPaging()"></div>
       `,
     {
+      hasNoRead: userList.some((item) => item.read === 0),
       userList,
       totalPage,
       getStyle(account, online) {
@@ -894,7 +896,8 @@ function userMenu(e, msgObj, isUserList) {
                   subText: '提交',
                   items: {
                     text: {
-                      placeholder: '备注（为空则不设置）',
+                      beforeText: '备注：',
+                      placeholder: '为空则不设置',
                       value: des,
                       verify(val) {
                         if (val.length > _d.fieldLength.chatDes) {
@@ -1913,6 +1916,22 @@ async function openFriend(acc, noHideUserList, cb) {
 }
 // 显示好友消息
 $userListBox
+  .on('click', '.clear_msg', function (e) {
+    rMenu.pop({ e, text: '所有消息标记为：已读？' }, (type) => {
+      if (type === 'confirm') {
+        reqChatNews({ clear: 1 })
+          .then((res) => {
+            if (res.code === 1) {
+              _msg.success(res.codeText);
+              $chatHeadBtns.find('.c_home_msg_alert').stop().fadeOut(_d.speed);
+              $chatHeadBtns.find('.c_msg_alert').stop().fadeOut(_d.speed);
+              getUserList();
+            }
+          })
+          .catch(() => {});
+      }
+    });
+  })
   .on('click', '.user_item', function (e) {
     const $this = $(this);
     const obj = getUserItem($this.data('account'));
