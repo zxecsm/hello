@@ -194,8 +194,12 @@ export async function readMenu(path) {
         if (info.type === 'file') {
           info.fileType = type;
           if (type === 'symlink') {
-            info.linkTarget = await _f.fsp.readlink(f);
-            info.linkTargetType = await _f.getType(info.linkTarget);
+            try {
+              info.linkTarget = await _f.fsp.realpath(f);
+              info.linkTargetType = await _f.getType(info.linkTarget);
+            } catch {
+              info.linkTarget = await _f.fsp.readlink(f);
+            }
           }
         }
         arr.push(info);
