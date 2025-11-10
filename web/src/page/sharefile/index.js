@@ -584,6 +584,14 @@ $contentWrap
       readFileAndDir(getFileItem(id), e);
     }
   })
+  .on('click', '.mode', function (e) {
+    const id = this.parentNode.dataset.id;
+    showFileInfo(e, getFileItem(id));
+  })
+  .on('click', '.date', function (e) {
+    const id = this.parentNode.dataset.id;
+    showFileInfo(e, getFileItem(id));
+  })
   .on('mouseenter', '.file_item .name', function () {
     const {
       name,
@@ -596,13 +604,12 @@ $contentWrap
       time,
       uid,
       gid,
+      fileTypeName,
     } = getFileItem($(this).parent().attr('data-id'));
-    const str = `名称：${name}\n类型：${
-      type === 'dir' ? '文件夹' : '文件'
+    const str = `名称：${name}\n类型：${type === 'dir' ? '文件夹' : '文件'}${
+      type === 'file' && fileType !== 'file' ? `(${fileTypeName})` : ''
     }\n路径：${path}${
-      type === 'file' && fileType === 'symlink'
-        ? `\n符号链接：${linkTarget}`
-        : ''
+      type === 'file' && fileType === 'symlink' ? ` => ${linkTarget}` : ''
     }${
       mode ? `\n权限：${mode}\n用户ID：${uid}\n用户组ID：${gid}` : ''
     }\n大小：${size ? formatBytes(size) : '--'}\n更新时间：${formatDate({

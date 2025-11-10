@@ -190,6 +190,27 @@ async function getType(stat) {
   return 'unknown';
 }
 
+function getFileTypeName(type) {
+  switch (type) {
+    case 'file':
+      return '文件';
+    case 'dir':
+      return '文件夹';
+    case 'symlink':
+      return '符号链接';
+    case 'socket':
+      return '套接字';
+    case 'fifo':
+      return '命名管道';
+    case 'chardev':
+      return '字符设备';
+    case 'blockdev':
+      return '块设备';
+    default:
+      return '未知';
+  }
+}
+
 async function del(path, { signal, progress } = {}) {
   if (!(await getType(path))) return;
 
@@ -373,6 +394,7 @@ const _f = {
   del,
   mkdir,
   getType,
+  getFileTypeName,
   symlink,
   link,
   readFile,

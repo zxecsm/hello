@@ -142,20 +142,28 @@ export function showFileInfo(e, obj) {
       beforeText: '名称：',
     },
     {
-      text: obj.type === 'dir' ? '文件夹' : '文件',
+      text:
+        obj.type === 'dir'
+          ? '文件夹'
+          : '文件' +
+            `${
+              obj.type === 'file' && obj.fileType !== 'file'
+                ? `(${obj.fileTypeName})`
+                : ''
+            }`,
       beforeText: '类型：',
     },
     {
-      text: obj.path,
+      text:
+        obj.path +
+        `${
+          obj.type === 'file' && obj.fileType === 'symlink'
+            ? ` => ${obj.linkTarget}`
+            : ''
+        }`,
       beforeText: '路径：',
     },
   ];
-  if (obj.type === 'file' && obj.fileType === 'symlink') {
-    data.push({
-      text: obj.linkTarget,
-      beforeText: '符号链接：',
-    });
-  }
   if (obj.mode) {
     data.push(
       {

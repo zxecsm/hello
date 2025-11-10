@@ -29,6 +29,7 @@ import localData from './localData';
 import wave from '../plugins/wave';
 import { timeMsg } from '../../page/home/home';
 import bear from '../plugins/bear';
+import ScreenWakeLock from './screenWakeLock';
 window._pageName =
   myOpen()
     .split(/[?#]/)[0]
@@ -356,6 +357,7 @@ changeHeadBtnSort(localData.get('headBtnToRight'));
   });
 })();
 if (!isIframe()) {
+  ScreenWakeLock.enable();
   bear(999);
   let idx = 1;
   switch (window._pageName) {

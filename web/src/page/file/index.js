@@ -561,6 +561,14 @@ $contentWrap
       readFileAndDir(getFileItem(id), e);
     }
   })
+  .on('click', '.mode', function (e) {
+    const id = this.parentNode.dataset.id;
+    showFileInfo(e, getFileItem(id));
+  })
+  .on('click', '.date', function (e) {
+    const id = this.parentNode.dataset.id;
+    showFileInfo(e, getFileItem(id));
+  })
   .on('click', '.check_state', function (e) {
     e.stopPropagation();
     hdCheckItem(this);
@@ -577,14 +585,13 @@ $contentWrap
       gid,
       favorite,
       fileType,
+      fileTypeName,
       linkTarget,
     } = getFileItem($(this).parent().attr('data-id'));
-    const str = `名称：${name}\n类型：${
-      type === 'dir' ? '文件夹' : '文件'
+    const str = `名称：${name}\n类型：${type === 'dir' ? '文件夹' : '文件'}${
+      type === 'file' && fileType !== 'file' ? `(${fileTypeName})` : ''
     }\n路径：${path}${
-      type === 'file' && fileType === 'symlink'
-        ? `\n符号链接：${linkTarget}`
-        : ''
+      type === 'file' && fileType === 'symlink' ? ` => ${linkTarget}` : ''
     }${mode ? `\n权限：${mode}\n用户ID：${uid}\n用户组ID：${gid}` : ''}${
       type === 'dir' && favorite !== undefined
         ? `\n收藏状态：${favorite ? '已收藏' : '未收藏'}`
