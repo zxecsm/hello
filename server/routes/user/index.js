@@ -1633,7 +1633,7 @@ route.get('/share-list', async (req, res) => {
       data = await queryData(
         'share',
         'id, type, title, pass, exp_time',
-        `WHERE account = ? ORDER BY create_at DESC LIMIT ? OFFSET ?`,
+        `WHERE account = ? ORDER BY serial DESC LIMIT ? OFFSET ?`,
         [account, pageSize, offset]
       );
     }
@@ -1744,7 +1744,7 @@ route.get('/trash-list', async (req, res) => {
 
       valArr.push(...searchSql.valArr, ...scoreSql.valArr);
     } else {
-      where += `ORDER BY create_at DESC`;
+      where += `ORDER BY ${type === 'note' ? 'create_at' : 'serial'} DESC`;
     }
 
     const total = await getTableRowCount(

@@ -100,7 +100,6 @@ timedTask.add(async (flag) => {
     // 更新用户数据
     await batchUpdateData(
       'user',
-      'account',
       { bg: bg ? bg.id : '', bgxs: bgxs ? bgxs.id : '' },
       `WHERE daily_change_bg = ? AND state = ?`,
       [1, 1]
@@ -200,7 +199,7 @@ route.get('/list', async (req, res) => {
       data = await queryData(
         'bg',
         'id,url,type',
-        `WHERE type = ? ORDER BY create_at DESC LIMIT ? OFFSET ?`,
+        `WHERE type = ? ORDER BY serial DESC LIMIT ? OFFSET ?`,
         [type, pageSize, offset]
       );
     }

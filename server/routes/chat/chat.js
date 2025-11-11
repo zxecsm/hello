@@ -155,10 +155,9 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
       // 给所有人只标记新增消息为未读，忽略删除，清空，抖一下
       await batchUpdateData(
         'friends',
-        'account',
-        { read: 0, update_at: t },
-        `WHERE friend = ?`,
-        ['chang']
+        { read: 0 },
+        `WHERE friend = ? AND read = ?`,
+        ['chang', 1]
       );
     }
 
@@ -174,16 +173,16 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
       const fArr = await queryData(
         'friends',
         'des,account',
-        `WHERE friend = ? AND account IN (${fillString(list.length)})`,
-        [account, ...list]
+        `WHERE account IN (${fillString(list.length)}) AND friend = ?`,
+        [...list, account]
       );
 
       // 群消息是否勿扰
       const fList = await queryData(
         'friends',
         'notify,account',
-        `WHERE friend = ? AND account IN (${fillString(list.length)})`,
-        ['chang', ...list]
+        `WHERE account IN (${fillString(list.length)}) AND friend = ?`,
+        [...list, 'chang']
       );
 
       list.forEach((key) => {
@@ -287,14 +286,14 @@ export async function sendNotificationsToCustomAddresses(req, obj) {
       const fArr = await queryData(
         'friends',
         'des,account',
-        `WHERE friend = ? AND account IN (${fillString(list.length)})`,
-        [obj._from, ...list.map((item) => item.account)]
+        `WHERE account IN (${fillString(list.length)}) AND friend = ?`,
+        [...list.map((item) => item.account), obj._from]
       );
       const fList = await queryData(
         'friends',
         'notify,account',
-        `WHERE friend = ? AND account IN (${fillString(list.length)})`,
-        ['chang', ...list.map((item) => item.account)]
+        `WHERE account IN (${fillString(list.length)}) AND friend = ?`,
+        [...list.map((item) => item.account), 'chang']
       );
 
       await hdForwardToLink(req, list, fArr, obj.content, fList);
@@ -312,8 +311,8 @@ export async function sendNotificationsToCustomAddresses(req, obj) {
     const fArr = await queryData(
       'friends',
       'des,notify,account',
-      `WHERE friend = ? AND account = ?`,
-      [obj._from, obj._to]
+      `WHERE account = ? AND friend = ?`,
+      [obj._to, obj._from]
     );
 
     await hdForwardToLink(req, list, fArr, obj.content, fArr);
@@ -382,10 +381,10 @@ export async function onlineMsg(req, pass) {
       const fArr = await queryData(
         'friends',
         'des,account',
-        `WHERE friend = ? AND des != ? AND account IN (${fillString(
+        `WHERE account IN (${fillString(
           list.length
-        )})`,
-        [account, '', ...list]
+        )}) AND friend = ? AND des != ?`,
+        [...list, account, '']
       );
 
       list.forEach((key) => {

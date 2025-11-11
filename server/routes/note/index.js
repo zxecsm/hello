@@ -153,9 +153,9 @@ route.post('/search', async (req, res) => {
       return;
     }
 
-    let where = 'WHERE state = ? AND account = ?';
+    let where = 'WHERE account = ? AND state = ?';
 
-    const valArr = [1, acc || account];
+    const valArr = [acc || account, 1];
 
     let isOwn = true;
 
@@ -350,7 +350,7 @@ route.get('/category', async (req, res) => {
     const list = await queryData(
       'note_category',
       'id,title',
-      `WHERE account = ? ORDER BY create_at DESC`,
+      `WHERE account = ? ORDER BY serial DESC`,
       [acc || account]
     );
 

@@ -461,7 +461,7 @@ route.get('/list', async (req, res) => {
     const newSong = await queryData(
       'songs',
       '*',
-      `ORDER BY create_at DESC LIMIT ?`,
+      `ORDER BY serial DESC LIMIT ?`,
       [1]
     );
 
@@ -548,7 +548,7 @@ route.get('/list', async (req, res) => {
 
               where += order;
             } else {
-              const order = `ORDER BY create_at DESC`;
+              const order = `ORDER BY serial DESC`;
 
               offsetWhere = tplReplace(template, {
                 field: 'title',

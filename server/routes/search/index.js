@@ -102,7 +102,7 @@ route.get('/history-list', async (req, res) => {
 
       valArr.push(...searchSql.valArr, ...scoreSql.valArr);
     } else {
-      where += ` ORDER BY create_at DESC`;
+      where += ` ORDER BY serial DESC`;
     }
 
     const total = await getTableRowCount('history', where, valArr);
@@ -180,8 +180,8 @@ route.get('/list', async (req, res) => {
       const list = await queryData(
         'history',
         'id,content',
-        `WHERE state = ? AND account = ? ORDER BY create_at DESC LIMIT ?`,
-        [1, account, 10]
+        `WHERE account = ? AND state = ? ORDER BY serial DESC LIMIT ?`,
+        [account, 1, 10]
       );
 
       _success(res, 'ok', {
@@ -199,8 +199,8 @@ route.get('/list', async (req, res) => {
     const bmkGroup = await queryData(
       'bmk_group',
       'id,title',
-      `WHERE state = ? AND account = ?`,
-      [1, account]
+      `WHERE account = ? AND state = ?`,
+      [account, 1]
     );
 
     bmkGroup.push({ id: 'home', title: '主页' });
@@ -209,13 +209,13 @@ route.get('/list', async (req, res) => {
 
     const curSplit = splitWord.slice(0, 10);
 
-    let historyWhere = `WHERE state = ? AND account = ?`,
+    let historyWhere = `WHERE account = ? AND state = ?`,
       bmkWhere = historyWhere,
       noteWhere = historyWhere;
 
-    const hValArr = [1, account],
-      bValArr = [1, account],
-      nValArr = [1, account];
+    const hValArr = [account, 1],
+      bValArr = [account, 1],
+      nValArr = [account, 1];
 
     // 关键词搜索
     const hSearchSql = createSearchSql(curSplit, ['content']);

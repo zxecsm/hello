@@ -88,8 +88,8 @@ route.all('/:chat_id/sendMessage', async (req, res) => {
       await queryData(
         'user',
         'account',
-        `WHERE state = ? AND chat_id = ? AND receive_chat_state = ?`,
-        [1, chat_id, 1]
+        `WHERE chat_id = ? AND state = ? AND receive_chat_state = ?`,
+        [chat_id, 1, 1]
       )
     )[0];
 
@@ -297,6 +297,16 @@ route.get('/read-msg', async (req, res) => {
       valArr.push(`${account}-${acc}`, `${acc}-${account}`);
     }
 
+    if (start && end) {
+      // 日期过滤
+      const sTime = new Date(start + ' 00:00:00').getTime();
+      const eTime = new Date(end + ' 00:00:00').getTime();
+
+      where += ` AND create_at >= ? AND create_at < ?`;
+
+      valArr.push(sTime, eTime);
+    }
+
     let splitWord = [];
 
     if (word) {
@@ -312,31 +322,19 @@ route.get('/read-msg', async (req, res) => {
       valArr.push(...searchSql.valArr);
     }
 
-    if (start && end) {
-      // 日期过滤
-      const sTime = new Date(start + ' 00:00:00').getTime();
-      const eTime = new Date(end + ' 00:00:00').getTime();
-
-      const sql = ` AND create_at >= ? AND create_at < ?`;
-
-      where += sql;
-
-      valArr.push(sTime, eTime);
-    }
-
     // 获取游标消息
     const offsetMsg = (
-      flag ? await queryData('chat', 'create_at', `WHERE id = ?`, [flag]) : []
+      flag ? await queryData('chat', 'serial', `WHERE id = ?`, [flag]) : []
     )[0];
 
     // 根据游标定位位置
     if (offsetMsg && type !== 0) {
       if (type === 1) {
-        where += ` AND create_at <= ? AND id != ?`;
+        where += ` AND serial < ?`;
       } else if (type === 2) {
-        where += ` AND create_at >= ? AND id != ?`;
+        where += ` AND serial > ?`;
       }
-      valArr.push(offsetMsg.create_at, flag);
+      valArr.push(offsetMsg.serial);
     }
 
     const pageSize = fieldLength.chatPageSize;
@@ -345,20 +343,20 @@ route.get('/read-msg', async (req, res) => {
     const fields = `logo,email,username,_from,_to,id,create_at,content,hash,size,type,flag`;
     if (type === 0 || !offsetMsg) {
       // 打开聊天框或没有游标
-      where += ` ORDER BY create_at DESC LIMIT ?`;
+      where += ` ORDER BY serial DESC LIMIT ?`;
       valArr.push(pageSize);
       list = await queryData('chat_user_view', fields, where, valArr);
       list.reverse();
     } else {
       // 向上截取
       if (type === 1) {
-        where += ` ORDER BY create_at DESC LIMIT ?`;
+        where += ` ORDER BY serial DESC LIMIT ?`;
         valArr.push(pageSize);
         list = await queryData('chat_user_view', fields, where, valArr);
         list.reverse();
       } else if (type === 2) {
         // 向下截取
-        where += ` ORDER BY create_at ASC LIMIT ?`;
+        where += ` ORDER BY serial ASC LIMIT ?`;
         valArr.push(pageSize);
         list = await queryData('chat_user_view', fields, where, valArr);
       }
@@ -569,9 +567,12 @@ route.get('/news', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     if (clear === 1) {
-      await batchUpdateData('friends', 'id', { read: 1 }, `WHERE account = ?`, [
-        account,
-      ]);
+      await batchUpdateData(
+        'friends',
+        { read: 1 },
+        `WHERE account = ? AND read = ?`,
+        [account, 0]
+      );
       _success(res, '消息标记已读成功')(req);
       return;
     }
@@ -633,7 +634,7 @@ route.post('/delete-msg', async (req, res) => {
       if (to === 'chang') {
         // 群消息只能管理员清空
         if (req._hello.isRoot) {
-          await batchDeleteData('chat', 'id', `WHERE _to = ?`, ['chang']);
+          await batchDeleteData('chat', `WHERE _to = ?`, ['chang']);
 
           await sendNotifyMsg(req, to, 'clear');
 
@@ -642,7 +643,7 @@ route.post('/delete-msg', async (req, res) => {
           _err(res, '无权清空消息')(req, to, 1);
         }
       } else {
-        await batchDeleteData('chat', 'id', `WHERE flag = ? OR flag = ?`, [
+        await batchDeleteData('chat', `WHERE flag = ? OR flag = ?`, [
           `${account}-${to}`,
           `${to}-${account}`,
         ]);

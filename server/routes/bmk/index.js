@@ -159,8 +159,8 @@ route.post('/search', async (req, res) => {
       return;
     }
 
-    const valArr = [1, 1, acc || account];
-    let where = 'WHERE group_state = ? AND state = ? AND account = ?';
+    const valArr = [acc || account, 1, 1];
+    let where = 'WHERE account = ? AND state = ? AND group_state = ?';
 
     if (acc && acc !== account) {
       // 非本人只能获取公开的分组书签
@@ -188,7 +188,7 @@ route.post('/search', async (req, res) => {
 
       valArr.push(...searchSql.valArr, ...scoreSql.valArr);
     } else {
-      where += ` ORDER BY id DESC`;
+      where += ` ORDER BY serial DESC`;
     }
 
     // 匹配结果数
@@ -1072,8 +1072,8 @@ route.get('/export', async (req, res) => {
     const bms = await queryData(
       'bmk',
       'title,link,des,group_id',
-      `WHERE state = ? AND account = ?`,
-      [1, account]
+      `WHERE account = ? AND state = ?`,
+      [account, 1]
     );
 
     let list = await queryData(

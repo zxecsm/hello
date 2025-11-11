@@ -25,12 +25,20 @@ const db = new sqlite3.Database(
 );
 
 // 启用 WAL 模式
-db.exec('PRAGMA journal_mode = WAL;', (err) => {
-  if (err) {
-    // eslint-disable-next-line no-console
-    console.error('Error enabling WAL mode:', err.message);
+db.exec(
+  `
+  PRAGMA journal_mode = WAL;
+  PRAGMA synchronous = NORMAL;
+  PRAGMA wal_autocheckpoint = 500;
+  PRAGMA cache_size = 2000;
+  `,
+  (err) => {
+    if (err) {
+      // eslint-disable-next-line no-console
+      console.error('Error enabling WAL mode:', err.message);
+    }
   }
-});
+);
 
 // 事务
 export async function executeInTransaction(callback) {
@@ -43,8 +51,9 @@ export async function executeInTransaction(callback) {
 
     // 提交事务
     await runSqlite('COMMIT');
-  } catch {
+  } catch (error) {
     await runSqlite('ROLLBACK');
+    throw new Error(`Transaction failed: ${error.message}`);
   }
 }
 
@@ -157,35 +166,38 @@ export function updateData(table, sets, where = '', varr = []) {
 // 分批更新
 export async function batchUpdateData(
   table,
-  idField,
   sets,
   where = '',
   valArr = [],
   limit = 800
 ) {
-  await batchTask(async (offset) => {
-    const ids = await queryData(table, idField, `${where} LIMIT ? OFFSET ?`, [
+  let lastSerial = 0;
+
+  while (true) {
+    const condition = where ? `${where} AND serial > ?` : `WHERE serial > ?`;
+    const sql = `${condition} ORDER BY serial LIMIT ?`;
+
+    const rows = await queryData(table, 'serial', sql, [
       ...valArr,
+      lastSerial,
       limit,
-      offset,
     ]);
 
-    if (ids.length === 0) return false;
+    if (rows.length === 0) break;
+
+    const serials = rows.map((row) => row.serial);
 
     const whereClause =
       where && !/\bIN\s*\(/i.test(where)
-        ? `${where} AND ${idField} IN (${fillString(ids.length)})`
+        ? `${where} AND serial IN (${fillString(serials.length)})`
         : where
         ? where
-        : `WHERE ${idField} IN (${fillString(ids.length)})`;
+        : `WHERER serial IN (${fillString(serials.length)})`;
 
-    await updateData(table, sets, whereClause, [
-      ...valArr,
-      ...ids.map((item) => item[idField]),
-    ]);
+    await updateData(table, sets, whereClause, [...valArr, ...serials]);
 
-    return true;
-  }, limit);
+    lastSerial = serials[serials.length - 1];
+  }
 }
 
 // 字段自增
@@ -209,33 +221,37 @@ export async function deleteData(table, where = '', valArr = []) {
 // 分批删除
 export async function batchDeleteData(
   table,
-  idField,
   where = '',
   valArr = [],
   limit = 800
 ) {
-  await batchTask(async () => {
-    const ids = await queryData(table, idField, `${where} LIMIT ?`, [
+  let lastSerial = 0;
+
+  while (true) {
+    const condition = where ? `${where} AND serial > ?` : `WHERE serial > ?`;
+    const sql = `${condition} ORDER BY serial LIMIT ?`;
+
+    const rows = await queryData(table, 'serial', sql, [
       ...valArr,
+      lastSerial,
       limit,
     ]);
 
-    if (ids.length === 0) return false;
+    if (rows.length === 0) break;
+
+    const serials = rows.map((row) => row.serial);
 
     const whereClause =
       where && !/\bIN\s*\(/i.test(where)
-        ? `${where} AND ${idField} IN (${fillString(ids.length)})`
+        ? `${where} AND serial IN (${fillString(serials.length)})`
         : where
         ? where
-        : `WHERE ${idField} IN (${fillString(ids.length)})`;
+        : `WHERE serial IN (${fillString(serials.length)})`;
 
-    await deleteData(table, whereClause, [
-      ...valArr,
-      ...ids.map((item) => item[idField]),
-    ]);
+    await deleteData(table, whereClause, [...valArr, ...serials]);
 
-    return true;
-  }, limit);
+    lastSerial = serials[serials.length - 1];
+  }
 }
 
 // 批量条件更新不同值

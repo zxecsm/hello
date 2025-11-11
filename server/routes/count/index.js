@@ -63,8 +63,8 @@ timedTask.add(async () => {
       const list = await queryData(
         'count_down',
         'account',
-        `WHERE end < ? AND state = ? LIMIT ? OFFSET ?`,
-        [t, 1, limit, offset]
+        `WHERE state = ? AND end < ? LIMIT ? OFFSET ?`,
+        [1, t, limit, offset]
       );
 
       if (list.length === 0) return false;

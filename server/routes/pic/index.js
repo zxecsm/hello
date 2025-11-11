@@ -155,7 +155,7 @@ route.get('/list', async (req, res) => {
       list = await queryData(
         'pic',
         'url,id,hash',
-        `ORDER BY create_at DESC LIMIT ? OFFSET ?`,
+        `ORDER BY serial DESC LIMIT ? OFFSET ?`,
         [pageSize, offset]
       );
     }

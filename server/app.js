@@ -29,7 +29,7 @@ import jwt from './utils/jwt.js';
 
 import { getUserInfo } from './routes/user/user.js';
 
-import './data/createData.js';
+import initDatabase from './data/initDatabase.js';
 
 import bgRoute from './routes/bg/index.js';
 import bmkRoute from './routes/bmk/index.js';
@@ -238,23 +238,36 @@ app.use((_, res) => {
   res.status(404).redirect('/404');
 });
 
-app.listen(appConfig.port, () => {
-  const arr = getLocalhost().map(
-    (item) =>
-      `http://${item}${appConfig.port === 80 ? '' : `:${appConfig.port}`}`
-  );
-  // eslint-disable-next-line no-console
-  console.log(`
-  __   __  ______  __     __       __ 
- |  | |  ||  ____||  |   |  |    / __ \\
- |  |_|  || |____ |  |   |  |   | |  | |
- |   _   ||  ____||  |   |  |   | |  | |
- |  | |  || |____ |  |__ |  |__ | |__| |
- |__| |__||______||_____||_____| \\ __ / 
- `);
-  // eslint-disable-next-line no-console
-  console.log(`服务开启成功，访问地址为：\n${arr.join('\n')}`);
-});
+initDatabase()
+  .then(() => {
+    app.listen(appConfig.port, (err) => {
+      if (err) {
+        // eslint-disable-next-line no-console
+        console.error(err);
+        process.exit(1);
+      }
+      const arr = getLocalhost().map(
+        (item) =>
+          `http://${item}${appConfig.port === 80 ? '' : `:${appConfig.port}`}`
+      );
+      // eslint-disable-next-line no-console
+      console.log(`
+    __   __  ______  __     __       __ 
+   |  | |  ||  ____||  |   |  |    / __ \\
+   |  |_|  || |____ |  |   |  |   | |  | |
+   |   _   ||  ____||  |   |  |   | |  | |
+   |  | |  || |____ |  |__ |  |__ | |__| |
+   |__| |__||______||_____||_____| \\ __ / 
+   `);
+      // eslint-disable-next-line no-console
+      console.log(`服务开启成功，访问地址为：\n${arr.join('\n')}`);
+    });
+  })
+  .catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error(`init database error - ${err}`);
+    process.exit(1);
+  });
 
 function getLocalhost() {
   const obj = os.networkInterfaces();

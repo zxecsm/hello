@@ -466,7 +466,7 @@ export const renderChatMsg = {
   },
   reset(data = []) {
     chatMsgData.reset(data);
-    $chatListBox.find('.chat_list').html(renderMsgList(data), 1);
+    $chatListBox.find('.chat_list').html(renderMsgList(data));
     $chatListBox.scrollTop($chatListBox[0].scrollHeight);
     chatimgLoad();
   },
@@ -474,7 +474,7 @@ export const renderChatMsg = {
     $chatListBox
       .find('.chat_list')
       .html(
-        renderMsgList(chatMsgData.get().slice(-_d.fieldLength.chatPageSize), 1)
+        renderMsgList(chatMsgData.get().slice(-_d.fieldLength.chatPageSize))
       );
     $chatListBox.scrollTop($chatListBox[0].scrollHeight);
     chatimgLoad();
@@ -543,19 +543,13 @@ export const chatMsgData = {
   },
 };
 // 生成消息列表
-function renderMsgList(list, skip) {
+function renderMsgList(list) {
   if (list.length === 0) return '';
-  const listDoms = skip
-    ? []
-    : [...$chatListBox[0].querySelectorAll('.chat_item')];
   const cList = chatMsgData.get();
   list = list.reduce((pre, item) => {
-    // 处理可能时间戳相同的信息，因为游标使用create_at导致信息重复的问题
-    if (!listDoms.some((c) => c.dataset.id === item.id)) {
-      // 处理日期是否显示
-      item = cList.find((c) => c.id === item.id);
-      pre.push(item);
-    }
+    // 处理日期是否显示
+    item = cList.find((c) => c.id === item.id);
+    pre.push(item);
     return pre;
   }, []);
   if (list.length === 0) return '';

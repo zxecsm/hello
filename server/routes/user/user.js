@@ -31,9 +31,9 @@ export async function getFontList() {
 // 获取用户信息
 export async function getUserInfo(account, fields = '*') {
   return (
-    await queryData('user', fields, `WHERE state = ? AND account = ?`, [
-      1,
+    await queryData('user', fields, `WHERE account = ? AND state = ?`, [
       account,
+      1,
     ])
   )[0];
 }
@@ -59,37 +59,37 @@ export async function playInConfig() {
 export async function deleteUser(account) {
   await deleteData('user', `WHERE account = ?`, [account]);
 
-  await batchDeleteData('bmk', 'id', `WHERE account = ?`, [account]);
+  await batchDeleteData('bmk', `WHERE account = ?`, [account]);
 
-  await batchDeleteData('bmk_group', 'id', `WHERE account = ?`, [account]);
+  await batchDeleteData('bmk_group', `WHERE account = ?`, [account]);
 
-  await batchDeleteData('chat', 'id', `WHERE _from = ? OR _to = ?`, [
+  await batchDeleteData('chat', `WHERE _from = ? OR _to = ?`, [
     account,
     account,
   ]);
 
-  await batchDeleteData('count_down', 'id', `WHERE account = ?`, [account]);
+  await batchDeleteData('count_down', `WHERE account = ?`, [account]);
 
-  await batchDeleteData('friends', 'id', `WHERE account = ? OR friend = ?`, [
+  await batchDeleteData('friends', `WHERE account = ? OR friend = ?`, [
     account,
     account,
   ]);
 
-  await batchDeleteData('history', 'id', `WHERE account = ?`, [account]);
+  await batchDeleteData('history', `WHERE account = ?`, [account]);
 
   await deleteData('last_play', `WHERE account = ?`, [account]);
 
-  await batchDeleteData('note', 'id', `WHERE account = ?`, [account]);
+  await batchDeleteData('note', `WHERE account = ?`, [account]);
 
-  await batchDeleteData('note_category', 'id', `WHERE account = ?`, [account]);
+  await batchDeleteData('note_category', `WHERE account = ?`, [account]);
 
   await deleteData('playing_list', `WHERE account = ?`, [account]);
 
-  await batchDeleteData('share', 'id', `WHERE account = ?`, [account]);
+  await batchDeleteData('share', `WHERE account = ?`, [account]);
 
   await deleteData('song_list', `WHERE account = ?`, [account]);
 
-  await batchDeleteData('todo', 'id', `WHERE account = ?`, [account]);
+  await batchDeleteData('todo', `WHERE account = ?`, [account]);
 
   await _delDir(_path.normalize(appConfig.appData, 'logo', account));
 
