@@ -1377,7 +1377,7 @@ export function getDateDiff(timestamp) {
     year = day * 365,
     now = new Date().getTime(),
     deffer = now - timestamp,
-    result = 'just now';
+    result = '刚刚';
   if (deffer < 0) {
     return result;
   }
