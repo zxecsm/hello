@@ -524,7 +524,7 @@ export function getChatUserList(account, pageSize, offset) {
     .join(
       'friends AS f',
       { 'u.account': { value: 'f.friend', raw: true }, 'f.account': account },
-      'LEFT'
+      { type: 'LEFT' }
     )
     .where({ 'u.state': 1 })
     .orderBy('f.update_at', 'DESC')
