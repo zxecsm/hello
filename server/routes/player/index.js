@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { db } from '../../utils/sqlite.js';
+import { allSql, db } from '../../utils/sqlite.js';
 
 import {
   deepClone,
@@ -488,14 +488,31 @@ route.get('/list', async (req, res) => {
               // 定位到正则播放歌曲所在页
               const row = await songDB.clone().where({ id: playId }).findOne();
               if (row) {
-                const count = await songDB
-                  .clone()
-                  .where({
-                    serial: {
-                      [`${orderDir === 'ASC' ? '<=' : '>='}`]: row.serial,
-                    },
-                  })
-                  .count();
+                let count = 0;
+                if (sort === 'default') {
+                  count = await songDB
+                    .clone()
+                    .where({
+                      serial: {
+                        [`${orderDir === 'ASC' ? '<=' : '>='}`]: row.serial,
+                      },
+                    })
+                    .count();
+                } else {
+                  count =
+                    (
+                      await allSql(
+                        `WITH OrderedSongs AS (
+                                SELECT id, ${orderField}, ROW_NUMBER() OVER (ORDER BY ${orderField} ${orderDir}) AS row_num
+                                FROM songs
+                              )
+                              SELECT row_num
+                              FROM OrderedSongs
+                              WHERE id = ?`,
+                        [playId]
+                      )
+                    )[0]?.row_num || 0;
+                }
                 pageNo = Math.ceil(count / pageSize);
                 offset = (pageNo - 1) * pageSize;
               }
