@@ -2,16 +2,7 @@ import express from 'express';
 
 import axios from 'axios';
 
-import {
-  batchDiffUpdateData,
-  insertData,
-  updateData,
-  queryData,
-  getTableRowCount,
-  createSearchSql,
-  fillString,
-  createScoreSql,
-} from '../../utils/sqlite.js';
+import { db } from '../../utils/sqlite.js';
 
 import {
   _success,
@@ -159,18 +150,20 @@ route.post('/search', async (req, res) => {
       return;
     }
 
-    const valArr = [acc || account, 1, 1];
-    let where = 'WHERE account = ? AND state = ? AND group_state = ?';
+    // 非本人只能获取公开的分组书签
+    const bmdb = db('bmk_bmk_group_view').where({
+      account: acc || account,
+      state: 1,
+      group_state: 1,
+    });
 
     if (acc && acc !== account) {
       // 非本人只能获取公开的分组书签
-      where += ` AND group_share = ?`;
-      valArr.push(1);
+      bmdb.where({ group_share: 1 });
     }
 
     if (category.length > 0) {
-      where += ` AND group_id IN (${fillString(category.length)})`;
-      valArr.push(...category);
+      bmdb.where({ group_id: { in: category } });
     }
 
     let splitWord = [];
@@ -178,21 +171,14 @@ route.post('/search', async (req, res) => {
       splitWord = getSplitWord(word);
 
       const curSplit = splitWord.slice(0, 10);
-
-      const searchSql = createSearchSql(curSplit, ['title', 'link', 'des']);
-
-      // 根据关键词排序
-      const scoreSql = createScoreSql(curSplit, ['title', 'link', 'des']);
-
-      where += ` AND (${searchSql.sql}) ${scoreSql.sql}`;
-
-      valArr.push(...searchSql.valArr, ...scoreSql.valArr);
+      curSplit[0] = { value: curSplit[0], weight: 10 };
+      bmdb.search(curSplit, ['title', 'link', 'des'], { sort: true });
     } else {
-      where += ` ORDER BY serial DESC`;
+      bmdb.orderBy('serial', 'DESC');
     }
 
     // 匹配结果数
-    const total = await getTableRowCount('bmk_bmk_group_view', where, valArr);
+    const total = await bmdb.count();
 
     const result = createPagingData(Array(total), pageSize, pageNo);
 
@@ -201,16 +187,10 @@ route.post('/search', async (req, res) => {
     let data = [];
     if (total > 0) {
       // 分页
-      where += ` LIMIT ? OFFSET ?`;
-      valArr.push(pageSize, offset);
-
-      // 匹配数据
-      data = await queryData(
-        'bmk_bmk_group_view',
-        'group_title,id,group_id,title,link,des,logo',
-        where,
-        valArr
-      );
+      data = await bmdb
+        .page(pageSize, offset)
+        .select('group_title,id,group_id,title,link,des,logo')
+        .find();
 
       data.forEach((item) => {
         if (!item.group_title) {
@@ -250,12 +230,11 @@ route.get('/list', async (req, res) => {
     }
 
     let home = [];
-    let list = await queryData(
-      'bmk_group',
-      'id,title,share',
-      `WHERE account = ? AND state = ? ORDER BY num ASC`,
-      [acc || account, 1]
-    );
+    let list = await db('bmk_group')
+      .select('id,title,share')
+      .where({ account: acc || account, state: 1 })
+      .orderBy('num', 'ASC')
+      .find();
 
     if (acc && acc !== account) {
       list = list
@@ -268,12 +247,15 @@ route.get('/list', async (req, res) => {
       return;
     }
 
-    let bms = await queryData(
-      'bmk',
-      'id,title,link,logo,des,group_id',
-      `WHERE account = ? AND state = ? AND group_id = ? ORDER BY num ASC`,
-      [acc || account, 1, id]
-    );
+    let bms = await db('bmk')
+      .select('id,title,link,logo,des,group_id')
+      .where({
+        account: acc || account,
+        state: 1,
+        group_id: id,
+      })
+      .orderBy('num', 'ASC')
+      .find();
 
     bms = bms.map((item, idx) => ({ ...item, num: idx }));
     list = list.map((item, idx) => ({ ...item, num: idx }));
@@ -486,11 +468,12 @@ route.post('/add-group', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const total = await getTableRowCount(
-      'bmk_group',
-      `WHERE account = ? AND state = ?`,
-      [account, 1]
-    );
+    const total = await db('bmk_group')
+      .where({
+        account,
+        state: 1,
+      })
+      .count();
 
     if (total >= fieldLength.bmkGroup) {
       return _err(res, `分组限制${fieldLength.bmkGroup}个`)(req);
@@ -498,13 +481,13 @@ route.post('/add-group', async (req, res) => {
 
     await updateBmkGroupOrder(account);
 
-    await insertData('bmk_group', [
-      {
-        title,
-        account,
-        num: total + 1,
-      },
-    ]);
+    await db('bmk_group').insert({
+      id: nanoid(),
+      create_at: new Date(),
+      title,
+      account,
+      num: total + 1,
+    });
 
     syncUpdateData(req, 'bookmark');
 
@@ -532,12 +515,9 @@ route.post('/delete-group', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     // 放入回收站
-    await updateData(
-      'bmk_group',
-      { state: 0 },
-      `WHERE id IN (${fillString(ids.length)}) AND state = ? AND account = ?`,
-      [...ids, 1, account]
-    );
+    await db('bmk_group')
+      .where({ id: { in: ids }, state: 1, account })
+      .update({ state: 0 });
 
     syncUpdateData(req, 'bookmark');
     syncUpdateData(req, 'trash');
@@ -566,12 +546,9 @@ route.post('/group-share-state', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await updateData(
-      'bmk_group',
-      { share },
-      `WHERE id IN (${fillString(ids.length)}) AND state = ? AND account = ?`,
-      [...ids, 1, account]
-    );
+    await db('bmk_group')
+      .where({ id: { in: ids }, state: 1, account })
+      .update({ share });
 
     syncUpdateData(req, 'bookmark');
 
@@ -597,12 +574,7 @@ route.get('/delete-logo', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await updateData(
-      'bmk',
-      { logo: '' },
-      `WHERE account = ? AND id = ? AND state = ?`,
-      [account, id, 1]
-    );
+    await db('bmk').where({ account, id, state: 1 }).update({ logo: '' });
 
     syncUpdateData(req, 'bookmark');
 
@@ -628,12 +600,7 @@ route.post('/edit-group', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await updateData(
-      'bmk_group',
-      { title },
-      `WHERE account = ? AND state = ? AND id = ?`,
-      [account, 1, id]
-    );
+    await db('bmk_group').where({ account, state: 1, id }).update({ title });
 
     if (toId) {
       await bookListMoveLocation(account, id, toId);
@@ -678,11 +645,9 @@ route.post('/add-bmk', async (req, res) => {
       return;
     }
 
-    const total = await getTableRowCount(
-      'bmk',
-      `WHERE group_id = ? AND account = ? AND state = ?`,
-      [groupId, account, 1]
-    );
+    const total = await db('bmk')
+      .where({ account, state: 1, group_id: groupId })
+      .count();
 
     // 计算添加的书签和现有的书签
     if (total + bms.length > fieldLength.bmk) {
@@ -690,8 +655,11 @@ route.post('/add-bmk', async (req, res) => {
     }
 
     await updateBmkOrder(account, groupId);
+    const create_at = Date.now();
 
     bms = bms.map((item, i) => ({
+      id: nanoid(),
+      create_at,
       account,
       num: total + i + 1,
       group_id: groupId,
@@ -699,8 +667,7 @@ route.post('/add-bmk', async (req, res) => {
       link: item.link,
       des: item.des,
     }));
-
-    await insertData('bmk', bms);
+    await db('bmk').insertMany(bms);
 
     syncUpdateData(req, 'bookmark');
 
@@ -730,12 +697,9 @@ route.post('/edit-bmk', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await updateData(
-      'bmk',
-      { title, link, des },
-      `WHERE account = ? AND state = ? AND id = ? AND group_id = ?`,
-      [account, 1, id, groupId]
-    );
+    await db('bmk')
+      .where({ account, state: 1, id, group_id: groupId })
+      .update({ title, link, des });
 
     if (toId) {
       await bookmarkMoveLocation(account, groupId, id, toId);
@@ -777,11 +741,9 @@ route.post('/bmk-to-group', async (req, res) => {
       return;
     }
 
-    const total = await getTableRowCount(
-      'bmk',
-      `WHERE group_id = ? AND account = ? AND state = ?`,
-      [groupId, account, 1]
-    );
+    const total = await db('bmk')
+      .where({ group_id: groupId, account, state: 1 })
+      .count();
 
     // 计算分组书签数量
     if (total + ids.length > fieldLength.bmk) {
@@ -792,34 +754,29 @@ route.post('/bmk-to-group', async (req, res) => {
 
     const ob = [
       {
-        key: 'num',
-        where: 'id',
-        data: [],
+        field: 'num',
+        match: 'id',
+        items: [],
       },
       {
-        key: 'group_id',
-        where: 'id',
-        data: [],
+        field: 'group_id',
+        match: 'id',
+        items: [],
       },
     ];
 
     ids.forEach((item, idx) => {
-      ob[0].data.push({
+      ob[0].items.push({
         id: item,
         num: total + idx + 1,
       });
-      ob[1].data.push({
+      ob[1].items.push({
         id: item,
         group_id: groupId,
       });
     });
 
-    await batchDiffUpdateData(
-      'bmk',
-      ob,
-      `WHERE account = ? AND state = ? AND id IN (${fillString(ids.length)})`,
-      [account, 1, ...ids]
-    );
+    await db('bmk').batchDiffUpdate(ob, { account, state: 1, id: { in: ids } });
 
     syncUpdateData(req, 'bookmark');
 
@@ -846,12 +803,9 @@ route.post('/delete-bmk', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await updateData(
-      'bmk',
-      { state: 0 },
-      `WHERE id IN (${fillString(ids.length)}) AND state = ? AND account = ?`,
-      [...ids, 1, account]
-    );
+    await db('bmk')
+      .where({ id: { in: ids }, state: 1, account })
+      .update({ state: 0 });
 
     syncUpdateData(req, 'bookmark');
     syncUpdateData(req, 'trash');
@@ -881,12 +835,11 @@ route.post('/share', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const bms = await queryData(
-      'bmk',
-      'title,link,des',
-      `WHERE account = ? AND state = ? AND group_id = ? ORDER BY num ASC`,
-      [account, 1, id]
-    );
+    const bms = await db('bmk')
+      .select('title,link,des')
+      .where({ account, state: 1, group_id: id })
+      .orderBy('num', 'asc')
+      .find();
 
     if (bms.length === 0) {
       _err(res, '当前分组为空')(req, id, 1);
@@ -895,6 +848,7 @@ route.post('/share', async (req, res) => {
 
     const obj = {
       id: nanoid(),
+      create_at: Date.now(),
       exp_time:
         expireTime === 0 ? 0 : Date.now() + expireTime * 24 * 60 * 60 * 1000,
       title,
@@ -903,8 +857,7 @@ route.post('/share', async (req, res) => {
       account,
       type: 'bookmk',
     };
-
-    await insertData('share', [obj]);
+    await db('share').insert(obj);
 
     syncUpdateData(req, 'sharelist');
 
@@ -942,32 +895,29 @@ route.post('/save-share', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const total = await getTableRowCount(
-      'bmk_group',
-      `WHERE account = ? AND state = ?`,
-      [account, 1]
-    );
+    const total = await db('bmk_group').where({ account, state: 1 }).count();
 
     if (total >= 200) {
       return _err(res, '分组限制200个')(req);
     }
 
     const pid = nanoid();
+    const create_at = Date.now();
 
     await updateBmkGroupOrder(account);
 
-    await insertData('bmk_group', [
-      {
-        id: pid,
-        title,
-        account,
-        num: total + 1,
-      },
-    ]);
-
+    await db('bmk_group').insert({
+      id: pid,
+      create_at,
+      title,
+      account,
+      num: total + 1,
+    });
     arr = arr.map((item, idx) => {
       const { title, link, des } = item;
       return {
+        id: nanoid(),
+        create_at,
         title,
         link,
         des,
@@ -976,8 +926,7 @@ route.post('/save-share', async (req, res) => {
         account,
       };
     });
-
-    await insertData('bmk', arr);
+    await db('bmk').insertMany(arr);
 
     syncUpdateData(req, 'bookmark');
 
@@ -1016,11 +965,7 @@ route.post('/import', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const total = await getTableRowCount(
-      'bmk_group',
-      `WHERE account = ? AND state = ?`,
-      [account, 1]
-    );
+    const total = await db('bmk_group').where({ account, state: 1 }).count();
 
     if (total + list.length > fieldLength.bmkGroup) {
       return _err(res, `分组限制${fieldLength.bmkGroup}个`)(req);
@@ -1029,21 +974,22 @@ route.post('/import', async (req, res) => {
     await updateBmkGroupOrder(account);
 
     let count = 0;
+    const create_at = Date.now();
     for (let i = 0; i < list.length; i++) {
       let { title, list: bms } = list[i];
 
       const groupId = nanoid();
 
-      await insertData('bmk_group', [
-        {
-          id: groupId,
-          title,
-          account,
-          num: total + 1 + i,
-        },
-      ]);
-
+      await db('bmk_group').insert({
+        create_at,
+        id: groupId,
+        title,
+        account,
+        num: total + 1 + i,
+      });
       bms = bms.map((item, i) => ({
+        id: nanoid(),
+        create_at,
         account,
         num: i + 1,
         group_id: groupId,
@@ -1053,7 +999,7 @@ route.post('/import', async (req, res) => {
       }));
 
       count += bms.length;
-      await insertData('bmk', bms);
+      await db('bmk').insertMany(bms);
     }
 
     syncUpdateData(req, 'bookmark');
@@ -1069,19 +1015,16 @@ route.get('/export', async (req, res) => {
   try {
     const { account } = req._hello.userinfo;
 
-    const bms = await queryData(
-      'bmk',
-      'title,link,des,group_id',
-      `WHERE account = ? AND state = ?`,
-      [account, 1]
-    );
+    const bms = await db('bmk')
+      .select('title,link,des,group_id')
+      .where({ account, state: 1 })
+      .find();
 
-    let list = await queryData(
-      'bmk_group',
-      'id,title,id',
-      `WHERE account = ? AND state = ? ORDER BY num ASC`,
-      [account, 1]
-    );
+    let list = await db('bmk_group')
+      .select('id,title')
+      .where({ account, state: 1 })
+      .orderBy('num', 'asc')
+      .find();
 
     list.unshift({ id: 'home', title: '主页' });
 

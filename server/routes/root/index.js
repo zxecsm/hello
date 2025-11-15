@@ -7,13 +7,7 @@ import mailer from '../../utils/email.js';
 import _f from '../../utils/f.js';
 import _2fa from '../../utils/_2fa.js';
 
-import {
-  updateData,
-  queryData,
-  runSqlite,
-  getTableRowCount,
-  insertData,
-} from '../../utils/sqlite.js';
+import { runSql, db } from '../../utils/sqlite.js';
 
 import timedTask from '../../utils/timedTask.js';
 
@@ -111,20 +105,22 @@ route.get('/user-list', async (req, res) => {
       return;
     }
 
-    const total = await getTableRowCount('user', `WHERE account != ?`, [
-      'hello',
-    ]);
+    const total = await db('user')
+      .where({ account: { '!=': 'hello' } })
+      .count();
 
     const result = createPagingData(Array(total), pageSize, pageNo);
 
     const offset = (result.pageNo - 1) * pageSize;
 
-    let list = await queryData(
-      'user',
-      'account,username,update_at,email,state,hide',
-      `WHERE account != ? ORDER BY update_at DESC LIMIT ? OFFSET ?`,
-      ['hello', pageSize, offset]
-    );
+    let list = await db('user')
+      .select('account,username,update_at,email,state,hide')
+      .where({
+        account: { '!=': 'hello' },
+      })
+      .orderBy('update_at', 'desc')
+      .page(pageSize, offset)
+      .find();
 
     const cons = _connect.getConnects();
 
@@ -188,14 +184,7 @@ route.post('/account-state', async (req, res) => {
       return;
     }
 
-    await updateData(
-      'user',
-      {
-        state,
-      },
-      `WHERE account = ?`,
-      [account]
-    );
+    await db('user').where({ account }).update({ state });
 
     if (state === 1) {
       _success(res, '激活账号成功')(req, account, 1);
@@ -235,7 +224,7 @@ route.get('/clean-music-file', async (req, res) => {
     const musicDir = _path.normalize(appConfig.appData, 'music');
 
     if (await _f.exists(musicDir)) {
-      const songs = await queryData('songs', 'url');
+      const songs = await db('songs').select('url').find();
       const allMusicFile = await getAllFile(musicDir);
 
       await concurrencyTasks(allMusicFile, 5, async (item) => {
@@ -263,7 +252,7 @@ route.get('/clean-bg-file', async (req, res) => {
     const bgDir = _path.normalize(appConfig.appData, 'bg');
 
     if (await _f.exists(bgDir)) {
-      const bgs = await queryData('bg', '*');
+      const bgs = await db('bg').find();
       const allBgFile = await getAllFile(bgDir);
 
       await concurrencyTasks(allBgFile, 5, async (item) => {
@@ -288,7 +277,7 @@ route.get('/clean-pic-file', async (req, res) => {
     const picDir = _path.normalize(appConfig.appData, 'pic');
 
     if (await _f.exists(picDir)) {
-      const pics = await queryData('pic', '*');
+      const pics = await db('pic').find();
       const allPicFile = await getAllFile(picDir);
 
       await concurrencyTasks(allPicFile, 5, async (item) => {
@@ -517,7 +506,7 @@ route.post('/change-cache-time', async (req, res) => {
 // 清理数据库
 route.post('/clean-database', async (req, res) => {
   try {
-    await runSqlite('VACUUM;');
+    await runSql('VACUUM;');
     _success(res, '清理数据库成功')(req);
   } catch (error) {
     _err(res)(req, error);
@@ -527,10 +516,16 @@ route.post('/clean-database', async (req, res) => {
 // 清理logo文件
 route.get('/clean-logo-file', async (req, res) => {
   try {
-    let bmk = await queryData('bmk', 'logo', `WHERE logo != ?`, ['']);
+    let bmk = await db('bmk')
+      .select('logo')
+      .where({ logo: { '!=': '' } })
+      .find();
     bmk = bmk.map((item) => _path.basename(item.logo)[0]);
 
-    let user = await queryData('user', 'logo', `WHERE logo != ?`, ['']);
+    let user = await db('user')
+      .select('logo')
+      .where({ logo: { '!=': '' } })
+      .find();
     user = user.map((item) => _path.basename(item.logo)[0]);
 
     const logos = [...bmk, ...user];
@@ -671,11 +666,11 @@ route.post('/create-account', async (req, res) => {
       return;
     }
 
-    const users = await queryData('user', 'account', `WHERE username = ?`, [
-      username,
-    ]);
-
-    if (users.length > 0) {
+    const userInfo = await db('user')
+      .select('account')
+      .where({ username })
+      .findOne();
+    if (userInfo) {
       _err(res, '用户名已注册')(req, username, 1);
       return;
     }
@@ -683,19 +678,14 @@ route.post('/create-account', async (req, res) => {
     // 写入用户数据
     const account = nanoid();
 
-    await insertData(
-      'user',
-      [
-        {
-          update_at: 0,
-          account,
-          username,
-          chat_id: nanoid(),
-          password: await _crypto.hashPassword(password),
-        },
-      ],
-      'account'
-    );
+    await db('user').insert({
+      create_at: Date.now(),
+      update_at: 0,
+      account,
+      username,
+      chat_id: nanoid(),
+      password: await _crypto.hashPassword(password),
+    });
 
     await becomeFriends(account, 'chang');
     await becomeFriends(account, 'hello');

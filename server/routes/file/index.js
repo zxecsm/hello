@@ -24,7 +24,7 @@ import {
 
 import appConfig from '../../data/config.js';
 
-import { insertData } from '../../utils/sqlite.js';
+import { db } from '../../utils/sqlite.js';
 
 import _f from '../../utils/f.js';
 
@@ -682,17 +682,17 @@ route.post('/share', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await insertData('share', [
-      {
-        account,
-        type: data.type,
-        exp_time:
-          expireTime === 0 ? 0 : Date.now() + expireTime * 24 * 60 * 60 * 1000,
-        title,
-        pass,
-        data: JSON.stringify(data),
-      },
-    ]);
+    await db('share').insert({
+      id: nanoid(),
+      created_at: Date.now(),
+      account,
+      type: data.type,
+      exp_time:
+        expireTime === 0 ? 0 : Date.now() + expireTime * 24 * 60 * 60 * 1000,
+      title,
+      pass,
+      data: JSON.stringify(data),
+    });
 
     syncUpdateData(req, 'sharelist');
 

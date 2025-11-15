@@ -1,11 +1,6 @@
 import NodeID3 from 'node-id3';
 
-import {
-  queryData,
-  fillString,
-  insertData,
-  updateData,
-} from '../../utils/sqlite.js';
+import { db } from '../../utils/sqlite.js';
 
 import { batchTask, parseJson, unique } from '../../utils/utils.js';
 
@@ -59,12 +54,10 @@ export async function batchGetMusics(ids) {
 
     if (arr.length === 0) return false;
 
-    const list = await queryData(
-      'songs',
-      '*',
-      `WHERE id IN (${fillString(arr.length)})`,
-      [...arr]
-    );
+    const list = await db('songs')
+      .where({ id: { in: arr } })
+      .find();
+
     list.forEach((item) => {
       res[item.id] = item;
     });
@@ -77,24 +70,21 @@ export async function batchGetMusics(ids) {
 
 // 获取歌曲列表
 export async function getMusicList(account) {
-  let songListObj = (
-    await queryData('song_list', 'data', `WHERE account = ?`, [account])
-  )[0];
+  let songListObj = await db('song_list')
+    .select('data')
+    .where({ account })
+    .findOne();
+
   const list = [
     { name: '播放历史', pic: 'img/history.jpg', item: [], id: 'history' },
     { name: '收藏', pic: 'img/music.jpg', item: [], id: 'favorites' },
   ];
   if (!songListObj) {
-    await insertData(
-      'song_list',
-      [
-        {
-          account,
-          data: JSON.stringify(list),
-        },
-      ],
-      'account'
-    );
+    await db('song_list').insert({
+      create_at: Date.now(),
+      account,
+      data: JSON.stringify(list),
+    });
     return list;
   }
   return parseJson(songListObj.data, list);
@@ -102,14 +92,11 @@ export async function getMusicList(account) {
 
 // 更新歌曲列表
 export function updateSongList(account, data) {
-  return updateData(
-    'song_list',
-    {
+  return db('song_list')
+    .where({ account })
+    .update({
       data: JSON.stringify(data),
-    },
-    `WHERE account = ?`,
-    [account]
-  );
+    });
 }
 
 // 歌单移动位置

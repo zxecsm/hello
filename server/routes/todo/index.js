@@ -1,13 +1,6 @@
 import express from 'express';
 
-import {
-  queryData,
-  updateData,
-  deleteData,
-  insertData,
-  fillString,
-  getTableRowCount,
-} from '../../utils/sqlite.js';
+import { db } from '../../utils/sqlite.js';
 
 import {
   _nologin,
@@ -22,6 +15,7 @@ import {
 } from '../../utils/utils.js';
 
 import { fieldLength } from '../config.js';
+import nanoid from '../../utils/nanoid.js';
 
 const route = express.Router();
 
@@ -54,9 +48,7 @@ route.get('/list', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const total = await getTableRowCount('todo', `WHERE account = ?`, [
-      account,
-    ]);
+    const total = await db('todo').where({ account }).count();
 
     const result = createPagingData(Array(total), pageSize, pageNo);
 
@@ -67,18 +59,16 @@ route.get('/list', async (req, res) => {
 
     if (total > 0) {
       // 未完成代办数
-      undoneCount = await getTableRowCount(
-        'todo',
-        `WHERE account = ? AND state = ?`,
-        [account, 1]
-      );
+      undoneCount = await db('todo').where({ account, state: 1 }).count();
 
-      data = await queryData(
-        'todo',
-        'id,content,state,update_at',
-        `WHERE account = ? ORDER BY state DESC, update_at DESC LIMIT ? OFFSET ?`,
-        [account, pageSize, offset]
-      );
+      data = await db('todo')
+        .select('id,content,state,update_at')
+        .where({ account })
+        .orderBy('state', 'desc')
+        .orderBy('update_at', 'desc')
+        .limit(pageSize)
+        .offset(offset)
+        .find();
     }
 
     _success(res, 'ok', {
@@ -103,13 +93,14 @@ route.post('/add', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await insertData('todo', [
-      {
-        account,
-        content,
-        update_at: Date.now(),
-      },
-    ]);
+    const create_at = Date.now();
+    await db('todo').insert({
+      id: nanoid(),
+      create_at,
+      account,
+      content,
+      update_at: create_at,
+    });
 
     syncUpdateData(req, 'todolist');
 
@@ -135,11 +126,9 @@ route.post('/delete', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await deleteData(
-      'todo',
-      `WHERE id IN (${fillString(ids.length)}) AND account = ?`,
-      [...ids, account]
-    );
+    await db('todo')
+      .where({ id: { in: ids }, account })
+      .delete();
 
     syncUpdateData(req, 'todolist');
 
@@ -165,12 +154,9 @@ route.get('/state', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await updateData(
-      'todo',
-      { state, update_at: Date.now() },
-      `WHERE id = ? AND account = ?`,
-      [id, account]
-    );
+    await db('todo')
+      .where({ id, account })
+      .update({ state, update_at: Date.now() });
 
     syncUpdateData(req, 'todolist');
 
@@ -195,12 +181,9 @@ route.post('/edit', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await updateData(
-      'todo',
-      { content, update_at: Date.now() },
-      `WHERE id = ? AND account = ?`,
-      [id, account]
-    );
+    await db('todo')
+      .where({ id, account })
+      .update({ content, update_at: Date.now() });
 
     syncUpdateData(req, 'todolist');
 

@@ -9,7 +9,7 @@ import {
   errLog,
 } from '../../utils/utils.js';
 
-import { queryData } from '../../utils/sqlite.js';
+import { db } from '../../utils/sqlite.js';
 
 import _f from '../../utils/f.js';
 
@@ -71,9 +71,10 @@ export default async function getFile(req, res, p) {
     if (dir === 'upload') {
       const id = pArr[0];
 
-      const msg = (
-        await queryData('chat_upload_view', 'flag,url', `WHERE id = ?`, [id])
-      )[0];
+      const msg = await db('chat_upload_view')
+        .select('flag,url')
+        .where({ id })
+        .findOne();
 
       if (
         msg &&

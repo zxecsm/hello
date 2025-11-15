@@ -1,77 +1,63 @@
 import appConfig from '../../data/config.js';
 import { _d } from '../../data/data.js';
 import _path from '../../utils/path.js';
-import {
-  queryData,
-  batchDiffUpdateData,
-  fillString,
-} from '../../utils/sqlite.js';
+import { db } from '../../utils/sqlite.js';
 import { concurrencyTasks, writelog } from '../../utils/utils.js';
 import { _delDir, readMenu } from '../file/file.js';
 
 // 更新顺序
 export async function updateBmkGroupOrder(account) {
-  const list = await queryData(
-    'bmk_group',
-    'id',
-    `WHERE account = ? AND state = ? ORDER BY num ASC`,
-    [account, 1]
-  );
+  const list = db('bmk_group')
+    .select('id')
+    .where({ account, state: 1 })
+    .orderBy('num', 'ASC')
+    .find();
 
   if (!list.length) return;
 
   const data = [
     {
-      where: 'id',
-      key: 'num',
-      data: list.map((item, i) => ({ id: item.id, num: i })),
+      match: 'id',
+      field: 'num',
+      items: list.map((item, i) => ({ id: item.id, num: i })),
     },
   ];
 
-  await batchDiffUpdateData(
-    'bmk_group',
-    data,
-    `WHERE id IN (${fillString(list.length)})`,
-    list.map((item) => item.id)
-  );
+  await db('bmk_group').batchDiffUpdate(data, {
+    id: { in: list.map((item) => item.id) },
+  });
 }
 
 export async function updateBmkOrder(account, groupId) {
-  const bms = await queryData(
-    'bmk',
-    'id',
-    `WHERE account = ? AND state = ? AND group_id = ? ORDER BY num ASC`,
-    [account, 1, groupId]
-  );
+  const bms = await db('bmk')
+    .select('id')
+    .where({ account, state: 1, group_id: groupId })
+    .orderBy('num', 'ASC')
+    .find();
 
   if (!bms.length) return;
 
   const data = [
     {
-      where: 'id',
-      key: 'num',
-      data: bms.map((item, i) => ({ id: item.id, num: i })),
+      match: 'id',
+      field: 'num',
+      items: bms.map((item, i) => ({ id: item.id, num: i })),
     },
   ];
 
-  await batchDiffUpdateData(
-    'bmk',
-    data,
-    `WHERE id IN (${fillString(bms.length)})`,
-    bms.map((item) => item.id)
-  );
+  await db('bmk').batchDiffUpdate(data, {
+    id: { in: bms.map((item) => item.id) },
+  });
 }
 
 // 移动分组位置
 export async function bookListMoveLocation(account, fromId, toId) {
   if (fromId === toId) return;
-
-  const list = await queryData(
-    'bmk_group',
-    'id',
-    `WHERE account = ? AND state = ? ORDER BY num ASC`,
-    [account, 1]
-  );
+  const list = await db('bmk_group')
+    .select('id')
+    .where({ account, state: 1 })
+    .orderBy('num', 'ASC')
+    .find();
 
   const fIdx = list.findIndex((item) => item.id === fromId),
     tIdx = list.findIndex((item) => item.id === toId);
@@ -81,32 +67,27 @@ export async function bookListMoveLocation(account, fromId, toId) {
 
     const data = [
       {
-        where: 'id',
-        key: 'num',
-        data: list.map((item, i) => ({ id: item.id, num: i })),
+        match: 'id',
+        field: 'num',
+        items: list.map((item, i) => ({ id: item.id, num: i })),
       },
     ];
 
     // 批量更新对应的位置
-    await batchDiffUpdateData(
-      'bmk_group',
-      data,
-      `WHERE id IN (${fillString(list.length)})`,
-      list.map((item) => item.id)
-    );
+    await db('bmk_group').batchDiffUpdate(data, {
+      id: { in: list.map((item) => item.id) },
+    });
   }
 }
 
 // 移动书签位置
 export async function bookmarkMoveLocation(account, groupId, fromId, toId) {
   if (fromId === toId) return;
-
-  const bms = await queryData(
-    'bmk',
-    'id',
-    `WHERE account = ? AND state = ? AND group_id = ? ORDER BY num ASC`,
-    [account, 1, groupId]
-  );
+  const bms = await db('bmk')
+    .select('id')
+    .where({ account, state: 1, group_id: groupId })
+    .orderBy('num', 'ASC')
+    .find();
 
   const fIdx = bms.findIndex((item) => item.id === fromId),
     tIdx = bms.findIndex((item) => item.id === toId);
@@ -115,31 +96,24 @@ export async function bookmarkMoveLocation(account, groupId, fromId, toId) {
     bms.splice(tIdx, 0, ...bms.splice(fIdx, 1));
     const data = [
       {
-        where: 'id',
-        key: 'num',
-        data: bms.map((item, i) => ({ id: item.id, num: i })),
+        match: 'id',
+        field: 'num',
+        items: bms.map((item, i) => ({ id: item.id, num: i })),
       },
     ];
 
-    await batchDiffUpdateData(
-      'bmk',
-      data,
-      `WHERE id IN (${fillString(bms.length)})`,
-      bms.map((item) => item.id)
-    );
+    await db('bmk').batchDiffUpdate(data, {
+      id: { in: bms.map((item) => item.id) },
+    });
   }
 }
 
 // 分组是否存在
 export async function bmkGroupExist(account, groupId) {
-  const list = await queryData(
-    'bmk_group',
-    'id',
-    `WHERE account = ? AND state = ? AND id = ?`,
-    [account, 1, groupId]
-  );
-
-  return list.length > 0;
+  return db('bmk_group')
+    .select('id')
+    .where({ account, state: 1, id: groupId })
+    .findOne();
 }
 
 // 清理缓存siteInfo

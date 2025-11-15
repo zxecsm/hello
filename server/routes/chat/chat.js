@@ -1,15 +1,7 @@
 import axios from 'axios';
 import _connect from '../../utils/connect.js';
 
-import {
-  queryData,
-  updateData,
-  insertData,
-  fillString,
-  allSqlite,
-  batchUpdateData,
-  deleteData,
-} from '../../utils/sqlite.js';
+import { db } from '../../utils/sqlite.js';
 
 import {
   uLog,
@@ -34,24 +26,17 @@ import nanoid from '../../utils/nanoid.js';
 
 // 获取好友信息
 export async function getFriendInfo(mAcc, fAcc, fields = '*') {
-  const fData = (
-    await queryData('friends', fields, `WHERE account = ? AND friend = ?`, [
-      mAcc,
-      fAcc,
-    ])
-  )[0];
-
-  return fData;
+  return await db('friends')
+    .select(fields)
+    .where({ account: mAcc, friend: fAcc })
+    .findOne();
 }
 
 // 标记为已读
 export async function markAsRead(mAcc, fAcc) {
-  const change = await updateData(
-    'friends',
-    { read: 1 },
-    `WHERE friend = ? AND account = ?`,
-    [fAcc, mAcc]
-  );
+  const change = await db('friends')
+    .where({ friend: fAcc, account: mAcc })
+    .update({ read: 1 });
 
   // 不是好友，变为好友
   if (change.changes === 0) {
@@ -74,34 +59,25 @@ export async function hdHelloMsg(req, data, type) {
   if (type === 'text' && text === 'update') {
     chat_id = nanoid();
 
-    await updateData(
-      'user',
-      { receive_chat_state: 1, chat_id },
-      `WHERE account = ? AND state = ?`,
-      [account, 1]
-    );
+    await db('user')
+      .where({ account, state: 1 })
+      .update({ receive_chat_state: 1, chat_id });
 
     msgText = `收信接口：\nGET：${origin}/api/chat/${chat_id}/sendMessage?text=消息内容\nPOST：${origin}/api/chat/${chat_id}/sendMessage body：{"text": "消息内容"}\n\n回复 update 更新接口 回复 stop 关闭接口`;
 
     await uLog(req, `更新收信接口成功(${chat_id})`);
   } else if (type === 'text' && text === 'stop') {
-    await updateData(
-      'user',
-      { receive_chat_state: 0 },
-      `WHERE account = ? AND state = ?`,
-      [account, 1]
-    );
+    await db('user')
+      .where({ account, state: 1 })
+      .update({ receive_chat_state: 0 });
 
     msgText = stopMsgText;
 
     await uLog(req, `关闭收信接口成功(${chat_id})`);
   } else if (type === 'text' && text === 'start') {
-    await updateData(
-      'user',
-      { receive_chat_state: 1 },
-      `WHERE account = ? AND state = ?`,
-      [account, 1]
-    );
+    await db('user')
+      .where({ account, state: 1 })
+      .update({ receive_chat_state: 1 });
 
     await uLog(req, `开启收信接口成功(${chat_id})`);
   } else {
@@ -121,7 +97,9 @@ export async function saveChatMsg(account, obj) {
 
   obj.flag = obj._to === 'chang' ? 'chang' : `${account}-${obj._to}`;
 
-  await insertData('chat', [obj]);
+  if (!obj.id) obj.id = nanoid();
+  if (!obj.create_at) obj.create_at = Date.now();
+  await db('chat').insert(obj);
 
   return obj;
 }
@@ -153,12 +131,9 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
   if (notifyObj.data.to === 'chang') {
     if (flag === 'addmsg') {
       // 给所有人只标记新增消息为未读，忽略删除，清空，抖一下
-      await batchUpdateData(
-        'friends',
-        { read: 0 },
-        `WHERE friend = ? AND read = ?`,
-        ['chang', 1]
-      );
+      await db('friends')
+        .where({ friend: 'chang', read: 1 })
+        .batchUpdate({ read: 0 });
     }
 
     const accs = Object.keys(_connect.getConnects());
@@ -170,20 +145,16 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
       if (list.length === 0) return false;
 
       // 获取我被好友设置的备注
-      const fArr = await queryData(
-        'friends',
-        'des,account',
-        `WHERE account IN (${fillString(list.length)}) AND friend = ?`,
-        [...list, account]
-      );
+      const fArr = await db('friends')
+        .select('des,account')
+        .where({ account: { in: list }, friend: account })
+        .find();
 
       // 群消息是否勿扰
-      const fList = await queryData(
-        'friends',
-        'notify,account',
-        `WHERE account IN (${fillString(list.length)}) AND friend = ?`,
-        [...list, 'chang']
-      );
+      const fList = await db('friends')
+        .select('notify,account')
+        .where({ account: { in: list }, friend: 'chang' })
+        .find();
 
       list.forEach((key) => {
         const fe = fArr.find((item) => item.account === key);
@@ -228,20 +199,14 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
         // 新增消息才标记未读
         updateObj.read = 0;
       }
-      change = await updateData(
-        'friends',
-        updateObj,
-        `WHERE account = ? AND friend = ?`,
-        [notifyObj.data.to, account]
-      );
+      change = await db('friends')
+        .where({ account: notifyObj.data.to, friend: account })
+        .update(updateObj);
     }
 
-    const change2 = await updateData(
-      'friends',
-      { update_at: t, msg: `您：${msgText}` },
-      `WHERE account = ? AND friend = ?`,
-      [account, notifyObj.data.to]
-    );
+    const change2 = await db('friends')
+      .where({ account, friend: notifyObj.data.to })
+      .update({ update_at: t, msg: `您：${msgText}` });
     // 如果不是好友，成为好友
     if (
       (notifyObj.data.to !== account && change.changes === 0) ||
@@ -273,47 +238,60 @@ export async function sendNotificationsToCustomAddresses(req, obj) {
 
   if (obj._to === 'chang') {
     // 群，发送给所有配置了自定义地址的用户
-    await batchTask(async (offset, limit) => {
-      const list = await queryData(
-        'user',
-        'forward_msg_link,account',
-        `WHERE forward_msg_state = ? AND account != ? AND state = ? LIMIT ? OFFSET ?`,
-        [1, obj._from, 1, limit, offset]
-      );
+    let lastSerial = 0;
 
-      if (list.length === 0) return false;
+    while (true) {
+      const list = await db('user')
+        .select('forward_msg_link,account')
+        .where({
+          forward_msg_state: 1,
+          account: { '!=': obj._from },
+          state: 1,
+          serial: { '>': lastSerial },
+        })
+        .orderBy('serial', 'asc')
+        .limit(200)
+        .find();
 
-      const fArr = await queryData(
-        'friends',
-        'des,account',
-        `WHERE account IN (${fillString(list.length)}) AND friend = ?`,
-        [...list.map((item) => item.account), obj._from]
-      );
-      const fList = await queryData(
-        'friends',
-        'notify,account',
-        `WHERE account IN (${fillString(list.length)}) AND friend = ?`,
-        [...list.map((item) => item.account), 'chang']
-      );
+      if (list.length === 0) break;
+
+      lastSerial = list[list.length - 1].serial;
+
+      const fArr = await db('friends')
+        .select('des,account')
+        .where({
+          account: { in: list.map((item) => item.account) },
+          friend: obj._from,
+        })
+        .find();
+
+      const fList = await db('friends')
+        .select('notify,account')
+        .where({
+          account: { in: list.map((item) => item.account) },
+          friend: 'chang',
+        })
+        .find();
 
       await hdForwardToLink(req, list, fArr, obj.content, fList);
-
-      return true;
-    }, 200);
+    }
   } else {
-    const list = await queryData(
-      'user',
-      'forward_msg_link,account',
-      `WHERE forward_msg_state = ? AND account = ? AND state = ?`,
-      [1, obj._to, 1]
-    );
+    const list = await db('user')
+      .select('forward_msg_link,account')
+      .where({
+        forward_msg_state: 1,
+        account: obj._to,
+        state: 1,
+      })
+      .find();
 
-    const fArr = await queryData(
-      'friends',
-      'des,notify,account',
-      `WHERE account = ? AND friend = ?`,
-      [obj._to, obj._from]
-    );
+    const fArr = await db('friends')
+      .select('des,notify,account')
+      .where({
+        account: obj._to,
+        friend: obj._from,
+      })
+      .find();
 
     await hdForwardToLink(req, list, fArr, obj.content, fArr);
   }
@@ -378,14 +356,10 @@ export async function onlineMsg(req, pass) {
 
       if (list.length === 0) return false;
 
-      const fArr = await queryData(
-        'friends',
-        'des,account',
-        `WHERE account IN (${fillString(
-          list.length
-        )}) AND friend = ? AND des != ?`,
-        [...list, account, '']
-      );
+      const fArr = await db('friends')
+        .select('des,account')
+        .where({ account: { in: list }, friend: account, des: { '!=': '' } })
+        .find();
 
       list.forEach((key) => {
         let des = '';
@@ -422,12 +396,15 @@ export async function becomeFriends(
     return;
 
   // 检查是否已经互为朋友
-  const frs = await queryData(
-    'friends',
-    'account,friend',
-    `WHERE (account = ? AND friend = ?) OR (account = ? AND friend = ?)`,
-    [me, friend, friend, me]
-  );
+  const frs = await db('friends')
+    .select('account,friend')
+    .where({
+      $or: [
+        { account: me, friend: friend },
+        { account: friend, friend: me },
+      ],
+    })
+    .find();
 
   const isFriend1 = frs.some(
     (item) => item.account === me && item.friend === friend
@@ -436,49 +413,47 @@ export async function becomeFriends(
     (item) => item.account === friend && item.friend === me
   );
 
+  const create_at = Date.now();
   if (
     // 如果是自己或群，并且没有
     (friend === 'chang' || me === friend) &&
     !isFriend1
   ) {
-    await insertData('friends', [
-      {
-        id: `${me}_${friend}`,
-        update_at: 0,
-        account: me,
-        friend,
-        read: read1,
-        msg,
-      },
-    ]);
+    await db('friends').insert({
+      id: `${me}_${friend}`,
+      create_at,
+      update_at: 0,
+      account: me,
+      friend,
+      read: read1,
+      msg,
+    });
 
     return;
   }
 
   if (!isFriend1) {
-    await insertData('friends', [
-      {
-        id: `${me}_${friend}`,
-        update_at: 0,
-        account: me,
-        friend,
-        read: read1,
-        msg,
-      },
-    ]);
+    await db('friends').insert({
+      id: `${me}_${friend}`,
+      create_at,
+      update_at: 0,
+      account: me,
+      friend,
+      read: read1,
+      msg,
+    });
   }
 
   if (!isFriend2) {
-    await insertData('friends', [
-      {
-        id: `${friend}_${me}`,
-        update_at: 0,
-        account: friend,
-        friend: me,
-        read: read2,
-        msg,
-      },
-    ]);
+    await db('friends').insert({
+      id: `${friend}_${me}`,
+      create_at,
+      update_at: 0,
+      account: friend,
+      friend: me,
+      read: read2,
+      msg,
+    });
   }
 }
 
@@ -542,15 +517,19 @@ export function parseForwardMsgLink(str) {
 
 // 获取成员列表
 export function getChatUserList(account, pageSize, offset) {
-  const sql = `SELECT f.des,f.read,f.msg,u.update_at,u.username,u.account,u.logo,u.email,u.hide
-   FROM user AS u 
-   LEFT JOIN friends AS f 
-   ON u.account = f.friend 
-   AND f.account = ? 
-   WHERE u.state = ? 
-   ORDER BY f.update_at DESC 
-   LIMIT ? OFFSET ?`;
-  return allSqlite(sql, [account, 1, pageSize, offset]);
+  return db('user AS u')
+    .select(
+      'f.des,f.read,f.msg,u.update_at,u.username,u.account,u.logo,u.email,u.hide'
+    )
+    .join(
+      'friends AS f',
+      { 'u.account': { value: 'f.friend', raw: true }, 'f.account': account },
+      'LEFT'
+    )
+    .where({ 'u.state': 1 })
+    .orderBy('f.update_at', 'DESC')
+    .page(pageSize, offset)
+    .find();
 }
 
 // 清理到期聊天文件
@@ -564,22 +543,22 @@ export async function cleanUpload(req = false) {
     const exp = now - _d.cacheExp.uploadSaveDay * 24 * 60 * 60 * 1000;
 
     let count = 0;
+    let lastSerial = 0;
 
-    await batchTask(async (offset, limit) => {
-      const list = await queryData(
-        'upload',
-        'id,url',
-        `WHERE update_at < ? LIMIT ? OFFSET ?`,
-        [exp, limit, offset]
-      );
+    while (true) {
+      const list = await db('upload')
+        .select('id,url')
+        .where({ serial: { '>': lastSerial }, update_at: { '<': exp } })
+        .orderBy('serial', 'ASC')
+        .limit(800)
+        .find();
+      if (list.length === 0) break;
 
-      if (list.length === 0) return false;
+      lastSerial = list[list.length - 1].serial;
 
-      await deleteData(
-        'upload',
-        `WHERE id IN (${fillString(list.length)})`,
-        list.map((item) => item.id)
-      );
+      await db('upload')
+        .where({ id: { in: list.map((item) => item.id) } })
+        .delete();
 
       await concurrencyTasks(list, 5, async (item) => {
         const { url } = item;
@@ -587,9 +566,7 @@ export async function cleanUpload(req = false) {
         await _delDir(path);
         count++;
       });
-
-      return true;
-    }, 800);
+    }
 
     await cleanEmptyDirectories(uploadDir);
 

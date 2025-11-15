@@ -28,16 +28,7 @@ import {
   getWordContent,
 } from '../../utils/utils.js';
 
-import {
-  insertData,
-  updateData,
-  deleteData,
-  queryData,
-  fillString,
-  getTableRowCount,
-  createSearchSql,
-  createScoreSql,
-} from '../../utils/sqlite.js';
+import { db } from '../../utils/sqlite.js';
 
 import timedTask from '../../utils/timedTask.js';
 
@@ -165,31 +156,24 @@ route.post('/register', async (req, res) => {
       return;
     }
 
-    const users = await queryData('user', 'account', `WHERE username = ?`, [
-      username,
-    ]);
+    const userInfo = await db('user').where({ username }).findOne();
 
-    if (users.length > 0) {
+    if (userInfo) {
       _err(res, '用户名已注册')(req, username, 1);
       return;
     }
 
     // 写入用户数据
     const account = nanoid();
-
-    await insertData(
-      'user',
-      [
-        {
-          update_at: Date.now(),
-          account,
-          username,
-          chat_id: nanoid(),
-          password: await _crypto.hashPassword(password),
-        },
-      ],
-      'account'
-    );
+    const create_at = Date.now();
+    await db('user').insert({
+      create_at,
+      update_at: create_at,
+      account,
+      username,
+      chat_id: nanoid(),
+      password: await _crypto.hashPassword(password),
+    });
 
     // 种下Cookie
     jwt.setCookie(res, { account, username });
@@ -230,14 +214,10 @@ route.post('/allow-login-req', async (req, res) => {
       return;
     }
 
-    const userinfo = (
-      await queryData(
-        'user',
-        'account,remote_login',
-        `WHERE username = ? AND state = ? AND account != ?`,
-        [username, 1, 'hello']
-      )
-    )[0];
+    const userinfo = await db('user')
+      .select('account, remote_login')
+      .where({ username, state: 1, account: { '!=': 'hello' } })
+      .findOne();
 
     if (!userinfo) {
       _err(res, '用户不存在')(req, username, 1);
@@ -285,14 +265,10 @@ route.post('/code-login', async (req, res) => {
       return;
     }
 
-    const userinfo = (
-      await queryData(
-        'user',
-        'account,remote_login',
-        `WHERE username = ? AND state = ? AND account != ?`,
-        [username, 1, 'hello']
-      )
-    )[0];
+    const userinfo = await db('user')
+      .select('account, remote_login')
+      .where({ username, state: 1, account: { '!=': 'hello' } })
+      .findOne();
 
     if (!userinfo) {
       _err(res, '用户不存在')(req, username, 1);
@@ -361,14 +337,10 @@ route.post('/login', async (req, res) => {
 
     // ip登录错误次数是否超限制
     if (loginVerifyLimit.verify(ip, username)) {
-      const userinfo = (
-        await queryData(
-          'user',
-          'verify,account,password',
-          `WHERE username = ? AND state = ? AND account != ?`,
-          [username, 1, 'hello']
-        )
-      )[0];
+      const userinfo = await db('user')
+        .select('verify,account,password')
+        .where({ username, state: 1, account: { '!=': 'hello' } })
+        .findOne();
 
       if (!userinfo) {
         _err(res, '用户不存在')(req, username, 1);
@@ -501,14 +473,10 @@ route.get('/mail-code', async (req, res) => {
       return;
     }
 
-    const userinfo = (
-      await queryData(
-        'user',
-        'account,email',
-        `WHERE username = ? AND state = ? AND account != ?`,
-        [username, 1, 'hello']
-      )
-    )[0];
+    const userinfo = await db('user')
+      .select('account,email')
+      .where({ username, state: 1, account: { '!=': 'hello' } })
+      .findOne();
 
     if (!userinfo) {
       _err(res, '用户不存在')(req, username, 1);
@@ -565,14 +533,10 @@ route.post('/reset-pass', async (req, res) => {
     const ip = req._hello.ip;
 
     if (emailVerify.verify(ip, email)) {
-      const userinfo = (
-        await queryData(
-          'user',
-          'username',
-          `WHERE email = ? AND account = ? AND state = ? AND account != ?`,
-          [email, account, 1, 'hello']
-        )
-      )[0];
+      const userinfo = await db('user')
+        .select('username')
+        .where({ email, account: { '=': account, '!=': 'hello' }, state: 1 })
+        .findOne();
 
       if (!userinfo) {
         _err(res, '用户不存在')(req, account, 1);
@@ -583,16 +547,13 @@ route.post('/reset-pass', async (req, res) => {
 
       if (mailer.get(email) === code) {
         // 清除密码和两部验证token
-        await updateData(
-          'user',
-          {
+        await db('user')
+          .where({ account, state: 1 })
+          .update({
             password: '',
             verify: '',
             exp_token_time: parseInt(Date.now() / 1000) - 2,
-          },
-          `WHERE account = ? AND state = ?`,
-          [account, 1]
-        );
+          });
 
         jwt.setCookie(res, {
           account,
@@ -682,9 +643,10 @@ route.post('/bind-mail-code', async (req, res) => {
       return;
     }
 
-    const userinfo = (
-      await queryData('user', 'account', `WHERE email = ?`, [email])
-    )[0];
+    const userinfo = await db('user')
+      .select('account')
+      .where({ email })
+      .findOne();
 
     if (userinfo) {
       _err(res, '邮箱已绑定用户')(req, email, 1);
@@ -719,14 +681,7 @@ route.post('/bind-email', async (req, res) => {
     }
 
     if (!code) {
-      await updateData(
-        'user',
-        {
-          email: '',
-        },
-        `WHERE account = ? AND state = ?`,
-        [account, 1]
-      );
+      await db('user').where({ account, state: 1 }).update({ email: '' });
 
       syncUpdateData(req, 'userinfo');
 
@@ -743,9 +698,10 @@ route.post('/bind-email', async (req, res) => {
       return;
     }
 
-    const userinfo = (
-      await queryData('user', 'account', `WHERE email = ?`, [email])
-    )[0];
+    const userinfo = await db('user')
+      .select('account')
+      .where({ email })
+      .findOne();
 
     if (userinfo) {
       _err(res, '邮箱已绑定用户')(req, email, 1);
@@ -753,14 +709,7 @@ route.post('/bind-email', async (req, res) => {
     }
 
     if (mailer.get(email) === code) {
-      await updateData(
-        'user',
-        {
-          email,
-        },
-        `WHERE account = ? AND state = ?`,
-        [account, 1]
-      );
+      await db('user').where({ account, state: 1 }).update({ email });
 
       mailer.del(email);
 
@@ -803,12 +752,7 @@ route.post('/verify', async (req, res) => {
     }
 
     if (!token) {
-      await updateData(
-        'user',
-        { verify: '' },
-        `WHERE account = ?  AND state = ?`,
-        [account, 1]
-      );
+      await db('user').where({ account, state: 1 }).update({ verify: '' });
 
       syncUpdateData(req, 'userinfo');
 
@@ -825,10 +769,7 @@ route.post('/verify', async (req, res) => {
 
     // 验证token
     if (_2fa.verify(verify, token)) {
-      await updateData('user', { verify }, `WHERE account = ?  AND state = ?`, [
-        account,
-        1,
-      ]);
+      await db('user').where({ account, state: 1 }).update({ verify });
 
       syncUpdateData(req, 'userinfo');
 
@@ -916,15 +857,12 @@ route.post('/change-pd', async (req, res) => {
 
     //对比原密码
     if ((await _crypto.verifyPassword(oldpassword, password)) || !password) {
-      await updateData(
-        'user',
-        {
+      await db('user')
+        .where({ account, state: 1 })
+        .update({
           password: await _crypto.hashPassword(newpassword),
           exp_token_time: parseInt(Date.now() / 1000),
-        },
-        `WHERE account = ? AND state = ?`,
-        [account, 1]
-      );
+        });
 
       _success(res, '修改密码成功，请重新登录')(req);
     } else {
@@ -949,14 +887,11 @@ route.get('/logout', async (req, res) => {
     if (other === 1) {
       const { account, username } = req._hello.userinfo;
       //退出其他登录设备
-      await updateData(
-        'user',
-        {
+      await db('user')
+        .where({ account, state: 1 })
+        .update({
           exp_token_time: parseInt(Date.now() / 1000) - 2,
-        },
-        `WHERE account = ? AND state = ?`,
-        [account, 1]
-      );
+        });
 
       jwt.setCookie(res, {
         account,
@@ -982,25 +917,20 @@ route.post('/changename', async (req, res) => {
       return;
     }
 
-    const users = await queryData('user', 'account', `WHERE username = ?`, [
-      username,
-    ]);
+    const userinfo = await db('user')
+      .where({
+        username,
+      })
+      .findOne();
 
-    if (users.length > 0) {
+    if (userinfo) {
       _err(res, '用户名已注册')(req, username, 1);
       return;
     }
 
     const { account } = req._hello.userinfo;
 
-    await updateData(
-      'user',
-      {
-        username,
-      },
-      `WHERE account = ? AND state = ?`,
-      [account, 1]
-    );
+    await db('user').where({ account, state: 1 }).update({ username });
 
     jwt.setCookie(res, {
       account,
@@ -1077,10 +1007,10 @@ route.get('/userinfo', async (req, res) => {
 
     forward_msg_link = parseForwardMsgLink(forward_msg_link);
 
-    const bgs = await queryData('bg', 'url,id', `WHERE id IN (?,?)`, [
-      bg,
-      bgxs,
-    ]);
+    const bgs = await db('bg')
+      .select('url,id')
+      .where({ id: { in: [bg, bgxs] } })
+      .find();
 
     const bgObj = {};
     bgs.forEach((item) => {
@@ -1113,14 +1043,7 @@ route.get('/delete-logo', async (req, res) => {
   try {
     const { account } = req._hello.userinfo;
 
-    await updateData(
-      'user',
-      {
-        logo: '',
-      },
-      `WHERE account = ? AND state = ?`,
-      [account, 1]
-    );
+    await db('user').where({ account, state: 1 }).update({ logo: '' });
 
     syncUpdateData(req, 'userinfo');
 
@@ -1157,25 +1080,15 @@ route.post('/up-logo', async (req, res) => {
     const logo = _path.normalize(timePath, `${HASH}.${_path.extname(name)[2]}`);
 
     if (type === 'bookmark') {
-      await updateData(
-        'bmk',
-        { logo: _path.normalize('/logo', account, logo) },
-        `WHERE account = ? AND id = ? AND state = ?`,
-        [account, id, 1]
-      );
+      await db('bmk')
+        .where({ account, id, state: 1 })
+        .update({ logo: _path.normalize('/logo', account, logo) });
 
       syncUpdateData(req, 'bookmark');
 
       _success(res, '更新书签LOGO成功')(req, logo, 1);
     } else if (type === 'userlogo') {
-      await updateData(
-        'user',
-        {
-          logo,
-        },
-        `WHERE account = ? AND state = ?`,
-        [account, 1]
-      );
+      await db('user').where({ account, state: 1 }).update({ logo });
 
       syncUpdateData(req, 'userinfo');
 
@@ -1198,14 +1111,9 @@ route.get('/daily-change-bg', async (req, res) => {
     } else {
       tem = 1;
     }
-    await updateData(
-      'user',
-      {
-        daily_change_bg: tem,
-      },
-      `WHERE account = ? AND state = ?`,
-      [account, 1]
-    );
+    await db('user')
+      .where({ account, state: 1 })
+      .update({ daily_change_bg: tem });
 
     syncUpdateData(req, 'userinfo');
 
@@ -1232,14 +1140,7 @@ route.get('/hide-state', async (req, res) => {
       tem = 1;
     }
 
-    await updateData(
-      'user',
-      {
-        hide: tem,
-      },
-      `WHERE account = ? AND state = ?`,
-      [account, 1]
-    );
+    await db('user').where({ account, state: 1 }).update({ hide: tem });
 
     syncUpdateData(req, 'userinfo');
 
@@ -1268,14 +1169,7 @@ route.get('/remote-login-state', async (req, res) => {
       tem = 1;
     }
 
-    await updateData(
-      'user',
-      {
-        remote_login: tem,
-      },
-      `WHERE account = ? AND state = ?`,
-      [account, 1]
-    );
+    await db('user').where({ account, state: 1 }).update({ remote_login: tem });
 
     syncUpdateData(req, 'userinfo');
 
@@ -1292,14 +1186,9 @@ route.get('/remote-login-state', async (req, res) => {
 // 更新在线时间
 route.get('/update-time', async (req, res) => {
   try {
-    await updateData(
-      'user',
-      {
-        update_at: Date.now(),
-      },
-      `WHERE account = ? AND state = ?`,
-      [req._hello.userinfo.account, 1]
-    );
+    await db('user')
+      .where({ account: req._hello.userinfo.account, state: 1 })
+      .update({ update_at: Date.now() });
 
     _success(res);
   } catch (error) {
@@ -1585,11 +1474,9 @@ route.post('/delete-share', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await deleteData(
-      'share',
-      `WHERE id IN (${fillString(ids.length)}) AND account = ?`,
-      [...ids, account]
-    );
+    await db('share')
+      .where({ id: { in: ids }, account })
+      .delete();
 
     syncUpdateData(req, 'sharelist');
 
@@ -1619,9 +1506,7 @@ route.get('/share-list', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const total = await getTableRowCount('share', `WHERE account = ?`, [
-      account,
-    ]);
+    const total = await db('share').where({ account }).count();
 
     const result = createPagingData(Array(total), pageSize, pageNo);
 
@@ -1630,12 +1515,15 @@ route.get('/share-list', async (req, res) => {
     let data = [];
 
     if (total > 0) {
-      data = await queryData(
-        'share',
-        'id, type, title, pass, exp_time',
-        `WHERE account = ? ORDER BY serial DESC LIMIT ? OFFSET ?`,
-        [account, pageSize, offset]
-      );
+      data = await db('share')
+        .select('id,type,title,pass,exp_time')
+        .where({
+          account,
+        })
+        .orderBy('serial', 'desc')
+        .limit(pageSize)
+        .offset(offset)
+        .find();
     }
 
     _success(res, 'ok', {
@@ -1673,10 +1561,7 @@ route.post('/edit-share', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await updateData('share', obj, `WHERE id = ? AND account = ?`, [
-      id,
-      account,
-    ]);
+    await db('share').where({ id, account }).update(obj);
 
     syncUpdateData(req, 'sharelist');
 
@@ -1725,9 +1610,12 @@ route.get('/trash-list', async (req, res) => {
     }
 
     const { account } = req._hello.userinfo;
-
-    let where = 'WHERE account = ? AND state = ?';
-    const valArr = [account, 0];
+    const trashdb = db(type === 'bmk' ? 'bmk_bmk_group_view' : type)
+      .select(fields)
+      .where({
+        account,
+        state: 0,
+      });
 
     let splitWord = [];
 
@@ -1735,23 +1623,13 @@ route.get('/trash-list', async (req, res) => {
       splitWord = getSplitWord(word);
 
       const curSplit = splitWord.slice(0, 10);
-
-      const searchSql = createSearchSql(curSplit, fieldArr);
-
-      const scoreSql = createScoreSql(curSplit, fieldArr);
-
-      where += ` AND (${searchSql.sql}) ${scoreSql.sql}`;
-
-      valArr.push(...searchSql.valArr, ...scoreSql.valArr);
+      curSplit[0] = { value: curSplit[0], weight: 10 };
+      trashdb.search(curSplit, fieldArr, { sort: true });
     } else {
-      where += `ORDER BY ${type === 'note' ? 'create_at' : 'serial'} DESC`;
+      trashdb.orderBy(type === 'note' ? 'create_at' : 'serial', 'desc');
     }
 
-    const total = await getTableRowCount(
-      type === 'bmk' ? 'bmk_bmk_group_view' : type,
-      where,
-      valArr
-    );
+    const total = await trashdb.count();
 
     const result = createPagingData(Array(total), pageSize, pageNo);
 
@@ -1760,25 +1638,13 @@ route.get('/trash-list', async (req, res) => {
     let data = [];
 
     if (total > 0) {
-      where += ` LIMIT ? OFFSET ?`;
-
-      valArr.push(pageSize, offset);
-
-      data = await queryData(
-        type === 'bmk' ? 'bmk_bmk_group_view' : type,
-        fields,
-        where,
-        valArr,
-        [account, 0]
-      );
+      data = await trashdb.page(pageSize, offset).find();
 
       if (type === 'note') {
-        const noteCategory = await queryData(
-          'note_category',
-          'id,title',
-          `WHERE account = ?`,
-          [account]
-        );
+        const noteCategory = await db('note_category')
+          .select('id,title')
+          .where({ account })
+          .find();
 
         data = data.map((item) => {
           let { title, content, id, category } = item;
@@ -1880,11 +1746,9 @@ route.post('/delete-trash', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await deleteData(
-      type,
-      `WHERE id IN (${fillString(ids.length)}) AND account = ? AND state = ?`,
-      [...ids, account, 0]
-    );
+    await db(type)
+      .where({ id: { in: ids }, account, state: 0 })
+      .delete();
 
     // 删除分组，则删除分组下的所有书签
     if (type === 'bmk_group') {
@@ -1893,11 +1757,9 @@ route.post('/delete-trash', async (req, res) => {
 
         if (list.length === 0) return false;
 
-        await deleteData(
-          'bmk',
-          `WHERE group_id IN (${fillString(list.length)}) AND account = ?`,
-          [...list, account]
-        );
+        await db('bmk')
+          .where({ group_id: { in: list }, account })
+          .delete();
 
         return true;
       }, 3);
@@ -1944,12 +1806,9 @@ route.post('/recover-trash', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await updateData(
-      type,
-      { state: 1 },
-      `WHERE id IN (${fillString(ids.length)}) AND account = ? AND state = ?`,
-      [...ids, account, 0]
-    );
+    await db(type)
+      .where({ id: { in: ids }, account, state: 0 })
+      .update({ state: 1 });
 
     syncUpdateData(req, 'trash');
 

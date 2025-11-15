@@ -1,6 +1,6 @@
 import _f from '../utils/f.js';
 
-import { queryData, runSqlite, insertData } from '../utils/sqlite.js';
+import { db, runSql } from '../utils/sqlite.js';
 
 import { resolve } from 'path';
 
@@ -415,7 +415,7 @@ CREATE INDEX idx_user_email ON user (email);
 async function createTables() {
   try {
     for (const sql of createTableSQLs) {
-      await runSqlite(sql);
+      await runSql(sql);
     }
   } catch (error) {
     await writelog(false, `[ createTables ] - ${error}`, 'error');
@@ -429,6 +429,7 @@ async function insertInitialData() {
   const initPassword = Math.random().toString(36).slice(2, 12);
   const userData = [
     {
+      create_at: nowTime,
       update_at: nowTime,
       account: 'root',
       username: 'admin',
@@ -436,6 +437,7 @@ async function insertInitialData() {
       password: await _crypto.hashPassword(_crypto.getStringHash(initPassword)),
     },
     {
+      create_at: nowTime,
       update_at: nowTime,
       account: 'hello',
       username: 'hello',
@@ -446,6 +448,7 @@ async function insertInitialData() {
 
   const noteData = [
     {
+      create_at: nowTime,
       update_at: nowTime,
       id: 'about',
       account: 'root',
@@ -456,6 +459,7 @@ async function insertInitialData() {
       ).toString(),
     },
     {
+      create_at: nowTime,
       update_at: nowTime,
       id: 'tips',
       account: 'root',
@@ -466,8 +470,8 @@ async function insertInitialData() {
   ];
 
   try {
-    await insertData('user', userData, 'account');
-    await insertData('note', noteData);
+    await db('user').insertMany(userData);
+    await db('note').insertMany(noteData);
     await becomeFriends('root', 'chang');
     await becomeFriends('root', 'hello');
     // eslint-disable-next-line no-console
@@ -482,7 +486,7 @@ async function insertInitialData() {
 // 主函数：执行数据库初始化操作
 export default async function initDatabase(noInitData = false) {
   try {
-    await queryData('user', 'account', 'WHERE account = ?', ['root']);
+    await db('user').where({ account: 'root' }).findOne();
   } catch {
     try {
       // 如果表不存在则创建表

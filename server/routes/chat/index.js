@@ -3,17 +3,7 @@ import express from 'express';
 import appConfig from '../../data/config.js';
 import _f from '../../utils/f.js';
 
-import {
-  insertData,
-  updateData,
-  queryData,
-  deleteData,
-  createSearchSql,
-  getTableRowCount,
-  batchDeleteData,
-  fillString,
-  batchUpdateData,
-} from '../../utils/sqlite.js';
+import { db } from '../../utils/sqlite.js';
 
 import {
   _success,
@@ -84,14 +74,10 @@ route.all('/:chat_id/sendMessage', async (req, res) => {
       return;
     }
 
-    const user = (
-      await queryData(
-        'user',
-        'account',
-        `WHERE chat_id = ? AND state = ? AND receive_chat_state = ?`,
-        [chat_id, 1, 1]
-      )
-    )[0];
+    const user = await db('user')
+      .select('account')
+      .where({ chat_id, state: 1, receive_chat_state: 1 })
+      .findOne();
 
     if (!user) {
       _err(res, `${appConfig.helloDes}未开启收信接口`)(req);
@@ -132,12 +118,7 @@ route.post('/dnd-mode', async (req, res) => {
     }
 
     await becomeFriends(account, acc);
-    await updateData(
-      'friends',
-      { notify },
-      `WHERE friend = ? AND account = ?`,
-      [acc, account]
-    );
+    await db('friends').where({ friend: acc, account }).update({ notify });
 
     _success(res, `${notify === 0 ? '开启' : '关闭'}免打扰成功`)(
       req,
@@ -172,10 +153,7 @@ route.post('/setdes', async (req, res) => {
     }
 
     await becomeFriends(account, acc);
-    await updateData('friends', { des }, `WHERE friend = ? AND account = ?`, [
-      acc,
-      account,
-    ]);
+    await db('friends').where({ friend: acc, account }).update({ des });
 
     _success(res, '设置备注成功')(req, `${acc}-${des}`, 1);
   } catch (error) {
@@ -285,16 +263,15 @@ route.get('/read-msg', async (req, res) => {
     // 标记已读
     await markAsRead(account, acc);
 
-    let where = 'WHERE';
-    const valArr = [];
+    const chatdb = db('chat_user_view');
 
     if (acc === 'chang') {
       // 群
-      where += ` flag = ?`;
-      valArr.push('chang');
+      chatdb.where({ flag: 'chang' });
     } else {
-      where += ` flag IN (?,?)`;
-      valArr.push(`${account}-${acc}`, `${acc}-${account}`);
+      chatdb.where({
+        flag: { in: [`${account}-${acc}`, `${acc}-${account}`] },
+      });
     }
 
     if (start && end) {
@@ -302,9 +279,7 @@ route.get('/read-msg', async (req, res) => {
       const sTime = new Date(start + ' 00:00:00').getTime();
       const eTime = new Date(end + ' 00:00:00').getTime();
 
-      where += ` AND create_at >= ? AND create_at < ?`;
-
-      valArr.push(sTime, eTime);
+      chatdb.where({ create_at: { '>=': sTime, '<': eTime } });
     }
 
     let splitWord = [];
@@ -315,61 +290,53 @@ route.get('/read-msg', async (req, res) => {
 
       const curSplit = splitWord.slice(0, 10);
 
-      const searchSql = createSearchSql(curSplit, ['username', 'content']);
-
-      where += ` AND (${searchSql.sql})`;
-
-      valArr.push(...searchSql.valArr);
+      chatdb.search(curSplit, ['username', 'content']);
     }
 
     // 获取游标消息
-    const offsetMsg = (
-      flag ? await queryData('chat', 'serial', `WHERE id = ?`, [flag]) : []
-    )[0];
+    const offsetMsg = flag
+      ? await db('chat').select('serial').where({ id: flag }).findOne()
+      : null;
 
     // 根据游标定位位置
     if (offsetMsg && type !== 0) {
       if (type === 1) {
-        where += ` AND serial < ?`;
+        chatdb.where({ serial: { '<': offsetMsg.serial } });
       } else if (type === 2) {
-        where += ` AND serial > ?`;
+        chatdb.where({ serial: { '>': offsetMsg.serial } });
       }
-      valArr.push(offsetMsg.serial);
     }
 
     const pageSize = fieldLength.chatPageSize;
     let list = [];
 
     const fields = `logo,email,username,_from,_to,id,create_at,content,hash,size,type,flag`;
+    chatdb.select(fields).limit(pageSize);
+
     if (type === 0 || !offsetMsg) {
       // 打开聊天框或没有游标
-      where += ` ORDER BY serial DESC LIMIT ?`;
-      valArr.push(pageSize);
-      list = await queryData('chat_user_view', fields, where, valArr);
+      list = await chatdb.clone().orderBy('serial', 'desc').find();
       list.reverse();
     } else {
       // 向上截取
       if (type === 1) {
-        where += ` ORDER BY serial DESC LIMIT ?`;
-        valArr.push(pageSize);
-        list = await queryData('chat_user_view', fields, where, valArr);
+        list = await chatdb.clone().orderBy('serial', 'desc').find();
         list.reverse();
       } else if (type === 2) {
         // 向下截取
-        where += ` ORDER BY serial ASC LIMIT ?`;
-        valArr.push(pageSize);
-        list = await queryData('chat_user_view', fields, where, valArr);
+        list = await chatdb.clone().orderBy('serial', 'asc').find();
       }
     }
 
     // 添加备注信息
     const accIds = unique(list.map((item) => item._from));
-    const friends = await queryData(
-      'friends',
-      'friend,des',
-      `WHERE account = ? AND friend IN (${fillString(accIds.length)})`,
-      [account, ...accIds]
-    );
+    const friends = await db('friends')
+      .select('friend,des')
+      .where({
+        account,
+        friend: { in: accIds },
+      })
+      .find();
 
     list = list.map((item) => {
       item.des = '';
@@ -396,7 +363,7 @@ route.get('/expired', async (req, res) => {
       return;
     }
 
-    const file = (await queryData('upload', 'url', `WHERE id = ?`, [hash]))[0];
+    const file = await db('upload').select('url').where({ id: hash }).findOne();
 
     if (file) {
       const u = _path.normalize(appConfig.appData, 'upload', file.url);
@@ -504,7 +471,7 @@ route.post('/forward', async (req, res) => {
       log = `${user.username}-${user.account}`;
     }
 
-    const chat = (await queryData('chat', '*', `WHERE id = ?`, [id]))[0];
+    const chat = await db('chat').where({ id }).findOne();
 
     if (!chat) {
       _err(res, '转发的信息不存在')(req, id, 1);
@@ -529,9 +496,7 @@ route.post('/forward', async (req, res) => {
 
     // 文件消息，更新时间，避免被清理
     if (hash) {
-      await updateData('upload', { update_at: Date.now() }, `WHERE id = ?`, [
-        hash,
-      ]);
+      await db('upload').where({ id: hash }).update({ update_at: Date.now() });
     }
 
     // 重新生成id
@@ -567,27 +532,18 @@ route.get('/news', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     if (clear === 1) {
-      await batchUpdateData(
-        'friends',
-        { read: 1 },
-        `WHERE account = ? AND read = ?`,
-        [account, 0]
-      );
+      await db('friends').where({ account, read: 0 }).batchUpdate({ read: 1 });
       _success(res, '消息标记已读成功')(req);
       return;
     }
 
-    const group = await getTableRowCount(
-      'friends',
-      `WHERE account = ? AND read = ? AND friend = ?`,
-      [account, 0, 'chang']
-    );
+    const group = await db('friends')
+      .where({ account, read: 0, friend: 'chang' })
+      .count();
 
-    const friend = await getTableRowCount(
-      'friends',
-      `WHERE account = ? AND read = ? AND friend != ?`,
-      [account, 0, 'chang']
-    );
+    const friend = await db('friends')
+      .where({ account, read: 0, friend: { '!=': 'chang' } })
+      .count();
 
     _success(res, 'ok', {
       group,
@@ -626,7 +582,7 @@ route.post('/delete-msg', async (req, res) => {
     }
 
     if (id) {
-      await deleteData('chat', `WHERE id = ? AND _from = ?`, [id, account]);
+      await db('chat').where({ id, _from: account }).delete();
       await sendNotifyMsg(req, to, 'del', { msgId: id });
 
       _success(res, '撤回消息成功')(req, `${id}=>${log}`, 1);
@@ -634,7 +590,7 @@ route.post('/delete-msg', async (req, res) => {
       if (to === 'chang') {
         // 群消息只能管理员清空
         if (req._hello.isRoot) {
-          await batchDeleteData('chat', `WHERE _to = ?`, ['chang']);
+          await db('chat').where({ _to: 'chang' }).batchDelete();
 
           await sendNotifyMsg(req, to, 'clear');
 
@@ -643,10 +599,11 @@ route.post('/delete-msg', async (req, res) => {
           _err(res, '无权清空消息')(req, to, 1);
         }
       } else {
-        await batchDeleteData('chat', `WHERE flag = ? OR flag = ?`, [
-          `${account}-${to}`,
-          `${to}-${account}`,
-        ]);
+        await db('chat')
+          .where({
+            $or: [{ flag: `${account}-${to}` }, { flag: `${to}-${account}` }],
+          })
+          .batchDelete();
 
         await sendNotifyMsg(req, to, 'clear');
 
@@ -714,7 +671,7 @@ route.get('/user-list', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const total = await getTableRowCount('user', `WHERE state = ?`, [1]);
+    const total = await db('user').where({ state: 1 }).count();
 
     const result = createPagingData(Array(total), pageSize, pageNo);
 
@@ -838,9 +795,10 @@ route.post('/up-voice', async (req, res) => {
       log = `${user.username}-${user.account}`;
     }
 
-    const upload = (
-      await queryData('upload', 'url', `WHERE id = ?`, [HASH])
-    )[0];
+    const upload = await db('uploud')
+      .select('url')
+      .where({ id: HASH })
+      .findOne();
 
     if (upload) {
       _err(res, '语音发送失败')(req, `语音=>${log}`, 1);
@@ -858,6 +816,7 @@ route.post('/up-voice', async (req, res) => {
 
     const fobj = {
       id: HASH,
+      create_at: time,
       url: _path.normalize(timePath, tName),
       update_at: time,
     };
@@ -872,7 +831,7 @@ route.post('/up-voice', async (req, res) => {
       size: duration,
     };
 
-    await insertData('upload', [fobj]);
+    await db('uploud').insert(fobj);
 
     const msg = await saveChatMsg(account, obj);
     await sendNotifyMsg(req, obj._to, 'addmsg', obj);
@@ -923,9 +882,10 @@ route.post('/merge', async (req, res) => {
       log = `${user.username}-${user.account}`;
     }
 
-    const upload = (
-      await queryData('upload', 'url', `WHERE id = ?`, [HASH])
-    )[0];
+    const upload = await db('uploud')
+      .select('url')
+      .where({ id: HASH })
+      .findOne();
 
     if (upload) {
       _err(res, '文件发送失败')(req, `${name}=>${log}`, 1);
@@ -953,6 +913,7 @@ route.post('/merge', async (req, res) => {
 
     const fobj = {
       id: HASH,
+      create_at: time,
       url: _path.normalize(timePath, tName),
       update_at: time,
     };
@@ -967,7 +928,7 @@ route.post('/merge', async (req, res) => {
       size: stat.size,
     };
 
-    await insertData('upload', [fobj]);
+    await db('uploud').insert(fobj);
 
     if (type === 'image') {
       obj.content = tName;
@@ -1038,9 +999,10 @@ route.post('/repeat', async (req, res) => {
 
     name = _path.sanitizeFilename(name);
 
-    const upload = (
-      await queryData('upload', 'url', `WHERE id = ?`, [HASH])
-    )[0];
+    const upload = await db('uploud')
+      .select('url')
+      .where({ id: HASH })
+      .findOne();
 
     if (upload) {
       // 文件已存在则，跳过上传
@@ -1063,12 +1025,9 @@ route.post('/repeat', async (req, res) => {
             log = `${user.username}-${user.account}`;
           }
 
-          await updateData(
-            'upload',
-            { update_at: Date.now() },
-            `WHERE id = ?`,
-            [HASH]
-          );
+          await db('uploud')
+            .where({ id: HASH })
+            .update({ update_at: Date.now() });
 
           const suffix = _path.extname(name)[2];
 
@@ -1111,7 +1070,7 @@ route.post('/repeat', async (req, res) => {
         return;
       }
 
-      await deleteData('upload', `WHERE id = ?`, [HASH]);
+      await db('uploud').where({ id: HASH }).delete();
     }
 
     _nothing(res);
@@ -1162,15 +1121,10 @@ route.post('/forward-msg-link', async (req, res) => {
       }
     }
 
-    await updateData(
-      'user',
-      {
-        forward_msg_state: state,
-        forward_msg_link,
-      },
-      `WHERE account = ? AND state = ?`,
-      [account, 1]
-    );
+    await db('user').where({ account, state: 1 }).update({
+      forward_msg_state: state,
+      forward_msg_link,
+    });
 
     _success(res, `${state === 1 ? '配置' : '关闭'}转发消息接口成功`)(req);
   } catch (error) {

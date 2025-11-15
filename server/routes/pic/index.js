@@ -6,13 +6,7 @@ import _f from '../../utils/f.js';
 
 import { getImgInfo } from '../../utils/img.js';
 
-import {
-  queryData,
-  deleteData,
-  insertData,
-  fillString,
-  getTableRowCount,
-} from '../../utils/sqlite.js';
+import { db } from '../../utils/sqlite.js';
 
 import {
   _success,
@@ -34,6 +28,7 @@ import { fieldLength } from '../config.js';
 
 import { _delDir } from '../file/file.js';
 import _path from '../../utils/path.js';
+import nanoid from '../../utils/nanoid.js';
 
 const route = express.Router();
 
@@ -58,7 +53,7 @@ route.post('/up', async (req, res) => {
 
     name = _path.sanitizeFilename(name);
 
-    const pic = (await queryData('pic', 'hash', `WHERE hash = ?`, [HASH]))[0];
+    const pic = await db('pic').select('hash').where({ hash: HASH }).findOne();
 
     if (pic) {
       _err(res, '图片已存在')(req, HASH, 1);
@@ -67,7 +62,8 @@ route.post('/up', async (req, res) => {
 
     const [title, , suffix] = _path.extname(name);
 
-    const timePath = getTimePath(Date.now());
+    const create_at = Date.now();
+    const timePath = getTimePath(create_at);
 
     const tDir = _path.normalize(appConfig.appData, 'pic', timePath);
     const tName = `${HASH}.${suffix}`;
@@ -78,12 +74,14 @@ route.post('/up', async (req, res) => {
     await getImgInfo(_path.normalize(tDir, tName));
 
     const obj = {
+      id: nanoid(),
+      create_at,
       hash: HASH,
       url: _path.normalize(timePath, tName),
       title,
     };
 
-    await insertData('pic', [obj]);
+    await db('pic').insert(obj);
 
     _success(res, '上传图片成功', obj)(req, obj.url, 1);
   } catch (error) {
@@ -101,7 +99,10 @@ route.post('/repeat', async (req, res) => {
       return;
     }
 
-    const pic = (await queryData('pic', 'id,url', `WHERE hash = ?`, [HASH]))[0];
+    const pic = await db('pic')
+      .select('id,url')
+      .where({ hash: HASH })
+      .findOne();
 
     if (pic) {
       if (await _f.exists(_path.normalize(appConfig.appData, 'pic', pic.url))) {
@@ -109,7 +110,7 @@ route.post('/repeat', async (req, res) => {
         return;
       }
 
-      await deleteData('pic', `WHERE id = ?`, [pic.id]);
+      await db('pic').where({ id: pic.id }).delete();
     }
 
     _nothing(res);
@@ -144,7 +145,7 @@ route.get('/list', async (req, res) => {
       return;
     }
 
-    const total = await getTableRowCount('pic');
+    const total = await db('pic').count();
 
     const result = createPagingData(Array(total), pageSize, pageNo);
 
@@ -152,12 +153,11 @@ route.get('/list', async (req, res) => {
     if (total > 0) {
       const offset = (result.pageNo - 1) * pageSize;
 
-      list = await queryData(
-        'pic',
-        'url,id,hash',
-        `ORDER BY serial DESC LIMIT ? OFFSET ?`,
-        [pageSize, offset]
-      );
+      list = await db('pic')
+        .select('url,id,hash')
+        .orderBy('serial', 'desc')
+        .page(pageSize, offset)
+        .find();
     }
 
     _success(res, 'ok', {
@@ -184,12 +184,10 @@ route.post('/delete', async (req, res) => {
       return;
     }
 
-    const dels = await queryData(
-      'pic',
-      'url',
-      `WHERE id IN (${fillString(ids.length)})`,
-      [...ids]
-    );
+    const dels = await db('pic')
+      .select('url')
+      .where({ id: { in: ids } })
+      .find();
 
     await concurrencyTasks(dels, 5, async (del) => {
       const { url } = del;
@@ -199,9 +197,9 @@ route.post('/delete', async (req, res) => {
       await uLog(req, `删除图片(${url})`);
     });
 
-    await deleteData('pic', `WHERE id IN (${fillString(ids.length)})`, [
-      ...ids,
-    ]);
+    await db('pic')
+      .where({ id: { in: ids } })
+      .delete();
 
     _success(res, '删除图片成功')(req, ids.length, 1);
   } catch (error) {

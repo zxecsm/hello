@@ -2,12 +2,7 @@ import appConfig from '../../data/config.js';
 
 import { resolve } from 'path';
 
-import {
-  queryData,
-  deleteData,
-  batchDeleteData,
-  fillString,
-} from '../../utils/sqlite.js';
+import { db } from '../../utils/sqlite.js';
 
 import _f from '../../utils/f.js';
 import { _delDir, getRootDir } from '../file/file.js';
@@ -30,12 +25,7 @@ export async function getFontList() {
 
 // 获取用户信息
 export async function getUserInfo(account, fields = '*') {
-  return (
-    await queryData('user', fields, `WHERE account = ? AND state = ?`, [
-      account,
-      1,
-    ])
-  )[0];
+  return db('user').select(fields).where({ account, state: 1 }).findOne();
 }
 
 // 获取外部播放器配置
@@ -57,39 +47,37 @@ export async function playInConfig() {
 
 // 删除用户数据
 export async function deleteUser(account) {
-  await deleteData('user', `WHERE account = ?`, [account]);
+  await db('user').where({ account }).delete();
 
-  await batchDeleteData('bmk', `WHERE account = ?`, [account]);
+  await db('bmk').where({ account }).batchDelete();
 
-  await batchDeleteData('bmk_group', `WHERE account = ?`, [account]);
+  await db('bmk_group').where({ account }).batchDelete();
 
-  await batchDeleteData('chat', `WHERE _from = ? OR _to = ?`, [
-    account,
-    account,
-  ]);
+  await db('chat')
+    .where({ $or: [{ _from: account }, { _to: account }] })
+    .batchDelete();
 
-  await batchDeleteData('count_down', `WHERE account = ?`, [account]);
+  await db('count_down').where({ account }).batchDelete();
 
-  await batchDeleteData('friends', `WHERE account = ? OR friend = ?`, [
-    account,
-    account,
-  ]);
+  await db('friends')
+    .where({ $or: [{ account }, { friend: account }] })
+    .batchDelete();
 
-  await batchDeleteData('history', `WHERE account = ?`, [account]);
+  await db('history').where({ account }).batchDelete();
 
-  await deleteData('last_play', `WHERE account = ?`, [account]);
+  await db('last_play').where({ account }).delete();
 
-  await batchDeleteData('note', `WHERE account = ?`, [account]);
+  await db('note').where({ account }).batchDelete();
 
-  await batchDeleteData('note_category', `WHERE account = ?`, [account]);
+  await db('note_category').where({ account }).batchDelete();
 
-  await deleteData('playing_list', `WHERE account = ?`, [account]);
+  await db('playing_list').where({ account }).delete();
 
-  await batchDeleteData('share', `WHERE account = ?`, [account]);
+  await db('share').where({ account }).batchDelete();
 
-  await deleteData('song_list', `WHERE account = ?`, [account]);
+  await db('song_list').where({ account }).delete();
 
-  await batchDeleteData('todo', `WHERE account = ?`, [account]);
+  await db('todo').where({ account }).batchDelete();
 
   await _delDir(_path.normalize(appConfig.appData, 'logo', account));
 
@@ -118,14 +106,10 @@ export async function validShareState(shareToken, t) {
     };
   }
 
-  const share = (
-    await queryData(
-      'share',
-      'exp_time,data,account',
-      `WHERE id = ? AND type IN (${fillString(types.length)})`,
-      [id, ...types]
-    )
-  )[0];
+  const share = await db('share')
+    .select('exp_time,data,account')
+    .where({ id, type: { in: types } })
+    .findOne();
 
   if (!share)
     return {
@@ -152,14 +136,10 @@ export async function validShareAddUserState(req, types, id, pass) {
   const { ip } = req._hello;
 
   if (shareVerify.verify(ip, id)) {
-    const share = (
-      await queryData(
-        'share_user_view',
-        'username,logo,email,exp_time,title,account,data,pass',
-        `WHERE id = ? AND type IN (${fillString(types.length)})`,
-        [id, ...types]
-      )
-    )[0];
+    const share = await db('share_user_view')
+      .select('username,logo,email,exp_time,title,account,data,pass')
+      .where({ id, type: { in: types } })
+      .findOne();
 
     if (!share)
       return {

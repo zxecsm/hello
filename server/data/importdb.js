@@ -1,6 +1,6 @@
 import _f from '../utils/f.js';
 import _path from '../utils/path.js';
-import { batchInsertData } from '../utils/sqlite.js';
+import { db } from '../utils/sqlite.js';
 import appConfig from './config.js';
 import initDatabase from './initDatabase.js';
 
@@ -14,12 +14,11 @@ import initDatabase from './initDatabase.js';
 
     // 插入数据
     for (const { name, data } of tables) {
-      await batchInsertData(
-        name,
-        data,
-        ['last_play', 'playing_list', 'song_list', 'user'].includes(name)
-          ? 'account'
-          : 'id'
+      await db(name).insertMany(
+        data.map((item) => {
+          delete item.serial;
+          return item;
+        })
       );
       console.log(`insert ${name} success`); // eslint-disable-line no-console
     }

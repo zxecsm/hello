@@ -1,6 +1,6 @@
 import _f from '../utils/f.js';
 import _path from '../utils/path.js';
-import { allSqlite } from '../utils/sqlite.js';
+import { allSql } from '../utils/sqlite.js';
 import appConfig from './config.js';
 
 (async () => {
@@ -11,11 +11,11 @@ import appConfig from './config.js';
 
     // 导出数据库到JSON文件
     const tables = [];
-    const tableList = await allSqlite(
+    const tableList = await allSql(
       `SELECT name FROM sqlite_master WHERE type='table';`
     );
     for (const table of tableList) {
-      const list = await allSqlite(`SELECT * FROM ${table.name}`);
+      const list = await allSql(`SELECT * FROM ${table.name}`);
       table.data = list;
       tables.push(table);
       // eslint-disable-next-line no-console

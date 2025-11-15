@@ -1,13 +1,6 @@
 import express from 'express';
 
-import {
-  queryData,
-  updateData,
-  deleteData,
-  insertData,
-  getTableRowCount,
-  fillString,
-} from '../../utils/sqlite.js';
+import { db } from '../../utils/sqlite.js';
 
 import timedTask from '../../utils/timedTask.js';
 
@@ -25,7 +18,6 @@ import {
   validationValue,
   writelog,
   concurrencyTasks,
-  batchTask,
 } from '../../utils/utils.js';
 
 import {
@@ -35,6 +27,7 @@ import {
 
 import { fieldLength } from '../config.js';
 import { computerDay } from './count.js';
+import nanoid from '../../utils/nanoid.js';
 
 const route = express.Router();
 
@@ -58,16 +51,19 @@ timedTask.add(async () => {
 
     // 倒计时剩下两天时通知
     const t = Date.now() + 2 * 1000 * 60 * 60 * 24;
+    let lastSerial = 0;
 
-    await batchTask(async (offset, limit) => {
-      const list = await queryData(
-        'count_down',
-        'account',
-        `WHERE state = ? AND end < ? LIMIT ? OFFSET ?`,
-        [1, t, limit, offset]
-      );
+    while (true) {
+      const list = await db('count_down')
+        .select('account')
+        .where({ state: 1, end: { '<': t }, serial: { '>': lastSerial } })
+        .orderBy('serial', 'asc')
+        .limit(800)
+        .find();
 
-      if (list.length === 0) return false;
+      if (list.length === 0) break;
+
+      lastSerial = list[list.length - 1].serial;
 
       list.forEach((item) => {
         const { account } = item;
@@ -81,19 +77,21 @@ timedTask.add(async () => {
           };
         }
       });
+    }
 
-      return true;
-    });
+    lastSerial = 0;
 
-    await batchTask(async (offset, limit) => {
-      const list = await queryData(
-        'todo',
-        'account',
-        `WHERE state = ? LIMIT ? OFFSET ?`,
-        [1, limit, offset]
-      );
+    while (true) {
+      const list = await db('todo')
+        .select('account')
+        .where({ state: 1, serial: { '>': lastSerial } })
+        .orderBy('serial', 'asc')
+        .limit(800)
+        .find();
 
-      if (list.length === 0) return false;
+      if (list.length === 0) break;
+
+      lastSerial = list[list.length - 1].serial;
 
       list.forEach((item) => {
         const { account } = item;
@@ -107,8 +105,7 @@ timedTask.add(async () => {
           };
         }
       });
-      return true;
-    });
+    }
 
     const keys = Object.keys(obj);
 
@@ -166,9 +163,7 @@ route.get('/list', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const total = await getTableRowCount('count_down', `WHERE account = ?`, [
-      account,
-    ]);
+    const total = await db('count_down').where({ account }).count();
 
     const result = createPagingData(Array(total), pageSize, pageNo);
 
@@ -179,19 +174,22 @@ route.get('/list', async (req, res) => {
 
     if (total > 0) {
       // 剩下不到两天的数量
-      expireCount = await getTableRowCount(
-        'count_down',
-        `WHERE account = ? AND state = ? AND end < ?`,
-        [account, 1, Date.now() + 2 * 1000 * 60 * 60 * 24]
-      );
+      expireCount = await db('count_down')
+        .where({
+          account,
+          state: 1,
+          end: { '<': Date.now() + 2 * 1000 * 60 * 60 * 24 },
+        })
+        .count();
 
       list = (
-        await queryData(
-          'count_down',
-          'id,title,link,start,end,state,top',
-          `WHERE account = ? ORDER BY top DESC, end ASC LIMIT ? OFFSET ?`,
-          [account, pageSize, offset]
-        )
+        await db('count_down')
+          .select('id,title,link,start,end,state,top')
+          .where({ account })
+          .orderBy('top', 'desc')
+          .orderBy('end', 'asc')
+          .page(pageSize, offset)
+          .find()
       ).map((item) => {
         const { start, end } = item;
         return {
@@ -236,15 +234,15 @@ route.post('/add', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await insertData('count_down', [
-      {
-        account,
-        title,
-        start,
-        end,
-        link,
-      },
-    ]);
+    await db('count_down').insert({
+      id: nanoid(),
+      create_at: Date.now(),
+      account,
+      title,
+      start,
+      end,
+      link,
+    });
 
     syncUpdateData(req, 'countlist');
 
@@ -271,11 +269,9 @@ route.post('/delete', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await deleteData(
-      'count_down',
-      `WHERE id IN (${fillString(ids.length)}) AND account = ?`,
-      [...ids, account]
-    );
+    await db('count_down')
+      .where({ id: { in: ids }, account })
+      .delete();
 
     syncUpdateData(req, 'countlist');
 
@@ -311,17 +307,12 @@ route.post('/edit', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await updateData(
-      'count_down',
-      {
-        title,
-        start,
-        end,
-        link,
-      },
-      `WHERE id = ? AND account = ?`,
-      [id, account]
-    );
+    await db('count_down').where({ id, account }).update({
+      title,
+      start,
+      end,
+      link,
+    });
 
     syncUpdateData(req, 'countlist');
 
@@ -349,10 +340,7 @@ route.post('/top', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await updateData('count_down', { top }, `WHERE id = ? AND account = ?`, [
-      id,
-      account,
-    ]);
+    await db('count_down').where({ id, account }).update({ top });
 
     syncUpdateData(req, 'countlist');
 
@@ -377,10 +365,7 @@ route.post('/state', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await updateData('count_down', { state }, `WHERE id = ? AND account = ?`, [
-      id,
-      account,
-    ]);
+    await db('count_down').where({ id, account }).update({ state });
 
     syncUpdateData(req, 'countlist');
 

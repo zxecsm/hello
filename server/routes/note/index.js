@@ -1,16 +1,6 @@
 import express from 'express';
 
-import {
-  insertData,
-  updateData,
-  queryData,
-  deleteData,
-  incrementField,
-  fillString,
-  createSearchSql,
-  createScoreSql,
-  getTableRowCount,
-} from '../../utils/sqlite.js';
+import { db, searchSql } from '../../utils/sqlite.js';
 
 import {
   _success,
@@ -50,14 +40,12 @@ route.get('/read', async (req, res) => {
       return;
     }
 
-    const note = (
-      await queryData(
-        'note_user_view',
-        'account,username,logo,email,create_at,update_at,title,state,share,content,visit_count,category',
-        `WHERE id = ?`,
-        [id]
+    const note = await db('note_user_view')
+      .select(
+        'account,username,logo,email,create_at,update_at,title,state,share,content,visit_count,category'
       )
-    )[0];
+      .where({ id })
+      .findOne();
 
     if (note) {
       let {
@@ -75,7 +63,7 @@ route.get('/read', async (req, res) => {
         category,
       } = note;
 
-      await incrementField('note', { visit_count: 1 }, `WHERE id = ?`, [id]);
+      await db('note').where({ id }).increment({ visit_count: 1 });
 
       const { account } = req._hello.userinfo;
 
@@ -153,17 +141,14 @@ route.post('/search', async (req, res) => {
       return;
     }
 
-    let where = 'WHERE account = ? AND state = ?';
-
-    const valArr = [acc || account, 1];
+    const notedb = db('note').where({ account: acc || account, state: 1 });
 
     let isOwn = true;
 
     if (acc && acc !== account) {
       // 非自己只能访问公开的
       isOwn = false;
-      where += ` AND share = ?`;
-      valArr.push(1);
+      notedb.where({ share: 1 });
     }
 
     if (category.length > 0) {
@@ -172,30 +157,44 @@ route.post('/search', async (req, res) => {
       const idx = category.findIndex((item) => item === 'locked');
       if (idx >= 0) {
         category.splice(idx, 1);
-        if (isOwn) {
-          where += ` AND (share = ?`;
-          valArr.push(0);
-          hasLocked = true;
-        }
+        hasLocked = true;
       }
 
       if (category.length > 0) {
         // 分类
-        const categorySql = createSearchSql(
+        const categorySql = searchSql(
           category,
           category.map(() => 'category')
         );
 
-        if (hasLocked) {
-          where += ` OR ${categorySql.sql})`;
+        if (isOwn) {
+          if (hasLocked) {
+            notedb.where(
+              { share: 0 },
+              {
+                process({ clause, params }) {
+                  return {
+                    clause: `((${clause}) OR ${categorySql.clause})`,
+                    params: [...params, ...categorySql.params],
+                  };
+                },
+              }
+            );
+          } else {
+            notedb.search(
+              category,
+              category.map(() => 'category')
+            );
+          }
         } else {
-          where += ` AND (${categorySql.sql})`;
+          notedb.search(
+            category,
+            category.map(() => 'category')
+          );
         }
-
-        valArr.push(...categorySql.valArr);
       } else {
-        if (hasLocked) {
-          where += ')';
+        if (isOwn && hasLocked) {
+          notedb.where({ share: 0 });
         }
       }
     }
@@ -207,19 +206,13 @@ route.post('/search', async (req, res) => {
       splitWord = getSplitWord(word);
 
       const curSplit = splitWord.slice(0, 10);
-
-      const searchSql = createSearchSql(curSplit, ['title', 'content']);
-
-      const scoreSql = createScoreSql(curSplit, ['title', 'content']);
-
-      where += ` AND (${searchSql.sql}) ${scoreSql.sql}`;
-
-      valArr.push(...searchSql.valArr, ...scoreSql.valArr);
+      curSplit[0] = { value: curSplit[0], weight: 10 };
+      notedb.search(curSplit, ['title', 'content'], { sort: true });
     } else {
-      where += ` ORDER BY top DESC, create_at DESC`;
+      notedb.orderBy('top', 'DESC').orderBy('create_at', 'DESC');
     }
 
-    const total = await getTableRowCount('note', where, valArr);
+    const total = await notedb.count();
 
     const result = createPagingData(Array(total), pageSize, pageNo);
 
@@ -227,23 +220,18 @@ route.post('/search', async (req, res) => {
     if (total > 0) {
       const offset = (result.pageNo - 1) * pageSize;
 
-      where += ` LIMIT ? OFFSET ?`;
+      list = await notedb
+        .select(
+          'title,create_at,update_at,id,share,content,visit_count,top,category'
+        )
+        .page(pageSize, offset)
 
-      valArr.push(pageSize, offset);
+        .find();
 
-      list = await queryData(
-        'note',
-        'title,create_at,update_at,id,share,content,visit_count,top,category',
-        where,
-        valArr
-      );
-
-      const noteCategory = await queryData(
-        'note_category',
-        'id,title',
-        `WHERE account = ?`,
-        [acc || account]
-      );
+      const noteCategory = await db('note_category')
+        .select('id,title')
+        .where({ account: acc || account })
+        .find();
 
       list = list.map((item) => {
         let {
@@ -347,12 +335,11 @@ route.get('/category', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const list = await queryData(
-      'note_category',
-      'id,title',
-      `WHERE account = ? ORDER BY serial DESC`,
-      [acc || account]
-    );
+    const list = await db('note_category')
+      .select('id,title')
+      .where({ account: acc || account })
+      .orderBy('serial', 'DESC')
+      .find();
 
     _success(res, 'ok', list);
   } catch (error) {
@@ -387,12 +374,9 @@ route.post('/state', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await updateData(
-      'note',
-      { share },
-      `WHERE id IN (${fillString(ids.length)}) AND account = ? AND state = ?`,
-      [...ids, account, 1]
-    );
+    await db('note')
+      .where({ id: { in: ids }, account, state: 1 })
+      .update({ share });
 
     syncUpdateData(req, 'note');
 
@@ -425,12 +409,9 @@ route.post('/delete', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await updateData(
-      'note',
-      { state: 0 },
-      `WHERE id IN (${fillString(ids.length)}) AND account = ? AND state = ?`,
-      [...ids, account, 1]
-    );
+    await db('note')
+      .where({ id: { in: ids }, account, state: 1 })
+      .update({ state: 0 });
 
     syncUpdateData(req, 'note');
 
@@ -458,14 +439,15 @@ route.post('/up-note', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await insertData('note', [
-      {
-        title,
-        content,
-        update_at: Date.now(),
-        account,
-      },
-    ]);
+    const create_at = Date.now();
+    await db('note').insert({
+      id: nanoid(),
+      create_at,
+      title,
+      content,
+      update_at: create_at,
+      account,
+    });
 
     _success(res, '上传笔记成功')(req, title, 1);
   } catch (error) {
@@ -492,27 +474,20 @@ route.post('/edit', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const note = (
-      await queryData('note', 'content', `WHERE id = ? AND account = ?`, [
-        id,
-        account,
-      ])
-    )[0];
+    const note = await db('note')
+      .select('content')
+      .where({ id, account })
+      .findOne();
 
     if (note) {
       // 保存笔记历史版本
       await saveNoteHistory(req, id, note.content);
 
-      await updateData(
-        'note',
-        {
-          title,
-          content,
-          update_at: time,
-        },
-        `WHERE id = ? AND account = ?`,
-        [id, account]
-      );
+      await db('note').where({ id, account }).update({
+        title,
+        content,
+        update_at: time,
+      });
 
       syncUpdateData(req, 'file');
 
@@ -524,15 +499,14 @@ route.post('/edit', async (req, res) => {
     } else {
       id = nanoid();
 
-      await insertData('note', [
-        {
-          id,
-          title,
-          content,
-          update_at: time,
-          account,
-        },
-      ]);
+      await db('note').insert({
+        id,
+        create_at: time,
+        title,
+        content,
+        update_at: time,
+        account,
+      });
 
       syncUpdateData(req, 'note');
 
@@ -571,17 +545,12 @@ route.post('/edit-info', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await updateData(
-      'note',
-      {
-        title,
-        create_at,
-        update_at,
-        visit_count,
-      },
-      `WHERE id = ? AND account = ?`,
-      [id, account]
-    );
+    await db('note').where({ id, account }).update({
+      title,
+      create_at,
+      update_at,
+      visit_count,
+    });
 
     syncUpdateData(req, 'note', id);
 
@@ -611,10 +580,7 @@ route.post('/top', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await updateData('note', { top }, `WHERE id = ? AND account = ?`, [
-      id,
-      account,
-    ]);
+    await db('note').where({ id, account }).update({ top });
 
     syncUpdateData(req, 'note');
 
@@ -642,12 +608,7 @@ route.post('/set-category', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     const categoryStr = category.join('-');
-    await updateData(
-      'note',
-      { category: categoryStr },
-      `WHERE account = ? AND id = ?`,
-      [account, id]
-    );
+    await db('note').where({ id, account }).update({ category: categoryStr });
 
     syncUpdateData(req, 'note', id);
 
@@ -672,12 +633,7 @@ route.post('/edit-category', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await updateData(
-      'note_category',
-      { title },
-      `WHERE id = ? AND account = ?`,
-      [id, account]
-    );
+    await db('note_category').where({ id, account }).update({ title });
 
     syncUpdateData(req, 'category', id);
 
@@ -699,14 +655,18 @@ route.post('/add-category', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const total = await getTableRowCount('note_category');
+    const total = await db('note_category').count();
 
     if (total >= fieldLength.maxNoteCategory) {
       _err(res, `类型限制${fieldLength.maxNoteCategory}`)(req);
       return;
     }
-
-    await insertData('note_category', [{ title, account }]);
+    await db('note_category').insert({
+      id: nanoid(),
+      create_at: Date.now(),
+      title,
+      account,
+    });
 
     syncUpdateData(req, 'category');
 
@@ -728,10 +688,7 @@ route.get('/delete-category', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await deleteData('note_category', `WHERE id = ? AND account = ?`, [
-      id,
-      account,
-    ]);
+    await db('note_category').where({ id, account }).delete();
 
     syncUpdateData(req, 'category', id);
 

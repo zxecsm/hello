@@ -1,17 +1,6 @@
 import express from 'express';
 
-import {
-  insertData,
-  updateData,
-  queryData,
-  deleteData,
-  fillString,
-  incrementField,
-  createSearchSql,
-  createScoreSql,
-  getTableRowCount,
-  allSqlite,
-} from '../../utils/sqlite.js';
+import { db } from '../../utils/sqlite.js';
 
 import {
   deepClone,
@@ -35,7 +24,6 @@ import {
   uLog,
   concurrencyTasks,
   getSplitWord,
-  tplReplace,
   myShuffle,
   normalizePageNo,
   parseJson,
@@ -122,11 +110,10 @@ route.post('/lrc', async (req, res) => {
 
     if (token) {
       // 自增播放次数
-      await incrementField('songs', { play_count: 1 }, `where id = ?`, [id]);
+      await db('songs').where({ id }).increment('play_count', 1);
     }
 
-    const songInfo = (await queryData('songs', 'lrc', `WHERE id = ?`, [id]))[0];
-
+    const songInfo = await db('songs').select('lrc').where({ id }).findOne();
     if (!songInfo) {
       _success(res, 'ok', errData);
       return;
@@ -191,14 +178,12 @@ route.post('/song-info', async (req, res) => {
       }
     }
 
-    const info = (
-      await queryData(
-        'songs',
-        'title,artist,duration,album,year,collect_count,play_count,create_at',
-        `WHERE id = ?`,
-        [id]
+    const info = await db('songs')
+      .select(
+        'title,artist,duration,album,year,collect_count,play_count,create_at'
       )
-    )[0];
+      .where({ id })
+      .findOne();
 
     if (!info) {
       _err(res, '歌曲不存在')(req, id, 1);
@@ -319,15 +304,12 @@ route.get('/search', async (req, res) => {
     const splitWord = getSplitWord(word);
 
     const curSplit = splitWord.slice(0, 10);
+    curSplit[0] = { value: curSplit[0], weight: 10 };
+    const songdb = db('songs').search(curSplit, ['title', 'artist'], {
+      sort: true,
+    });
 
-    const searchSql = createSearchSql(curSplit, ['title', 'artist']);
-    const scoreSql = createScoreSql(curSplit, ['title', 'artist']);
-
-    let where = `WHERE (${searchSql.sql}) ${scoreSql.sql}`;
-
-    const valArr = [...searchSql.valArr, ...scoreSql.valArr];
-
-    const total = await getTableRowCount('songs', where, valArr);
+    const total = await songdb.count();
 
     const result = createPagingData(Array(total), pageSize, pageNo);
 
@@ -336,11 +318,7 @@ route.get('/search', async (req, res) => {
     if (total > 0) {
       const offset = (result.pageNo - 1) * pageSize;
 
-      where += ` LIMIT ? OFFSET ?`;
-
-      valArr.push(pageSize, offset);
-
-      list = await queryData('songs', '*', where, valArr);
+      list = await songdb.page(pageSize, offset).find();
     }
 
     _success(res, 'ok', {
@@ -458,12 +436,7 @@ route.get('/list', async (req, res) => {
     }
 
     // 所有歌曲歌单获取最新一首用来读取封面
-    const newSong = await queryData(
-      'songs',
-      '*',
-      `ORDER BY serial DESC LIMIT ?`,
-      [1]
-    );
+    const newSong = await db('songs').orderBy('serial', 'DESC').limit(1).find();
 
     songList.splice(2, 0, { id: 'all', item: newSong });
 
@@ -489,16 +462,11 @@ route.get('/list', async (req, res) => {
         delete item.item;
       } else {
         if (item.id === 'all') {
-          let where = ``;
-
-          let offsetWhere = '';
-
+          const songDB = db('songs');
           if (onlyMv === 1) {
-            where = `WHERE mv != '' `;
-            offsetWhere = `WHERE mv != '' `;
+            songDB.where({ mv: { '!=': '' } });
           }
-          // 如果是所有歌曲歌单，则在服务端分页处理
-          const total = await getTableRowCount('songs', where);
+          const total = await songDB.count();
 
           pageNo = normalizePageNo(total, pageSize, pageNo);
 
@@ -506,70 +474,34 @@ route.get('/list', async (req, res) => {
 
           if (total > 0) {
             let offset = (pageNo - 1) * pageSize;
-
-            // 排序后获取当前播放歌曲位置offset
-            const template = `WITH OrderedSongs AS (
-                                SELECT id, {{field}}, ROW_NUMBER() OVER ({{order}}) AS row_num
-                                FROM songs
-                              )
-                              SELECT row_num
-                              FROM OrderedSongs
-                              WHERE id = ?`;
-
-            // 排序
-            if (sort === 'artist') {
-              const order = 'ORDER BY artist_pinyin ASC';
-
-              offsetWhere = tplReplace(template, { field: 'artist', order });
-
-              where += order;
-            } else if (sort === 'title') {
-              const order = `ORDER BY title_pinyin ASC`;
-
-              offsetWhere = tplReplace(template, { field: 'title', order });
-
-              where += order;
-            } else if (sort === 'playCount') {
-              const order = `ORDER BY play_count DESC`;
-
-              offsetWhere = tplReplace(template, {
-                field: 'play_count',
-                order,
-              });
-
-              where += order;
-            } else if (sort === 'collectCount') {
-              const order = `ORDER BY collect_count DESC`;
-
-              offsetWhere = tplReplace(template, {
-                field: 'collect_count',
-                order,
-              });
-
-              where += order;
-            } else {
-              const order = `ORDER BY serial DESC`;
-
-              offsetWhere = tplReplace(template, {
-                field: 'title',
-                order,
-              });
-
-              where += order;
-            }
+            const orderMap = {
+              artist: ['artist_pinyin', 'ASC'],
+              title: ['title_pinyin', 'ASC'],
+              playCount: ['play_count', 'DESC'],
+              collectCount: ['collect_count', 'DESC'],
+              default: ['serial', 'DESC'],
+            };
+            const [orderField, orderDir] = orderMap[sort] || orderMap.default;
+            songDB.orderBy(orderField, orderDir);
 
             if (playId) {
               // 定位到正则播放歌曲所在页
-              const row = await allSqlite(offsetWhere, [playId]);
-              if (row[0]) {
-                pageNo = Math.ceil(row[0].row_num / pageSize);
+              const row = await songDB.clone().where({ id: playId }).findOne();
+              if (row) {
+                const count = await songDB
+                  .clone()
+                  .where({
+                    serial: {
+                      [`${orderDir === 'ASC' ? '<=' : '>='}`]: row.serial,
+                    },
+                  })
+                  .count();
+                pageNo = Math.ceil(count / pageSize);
                 offset = (pageNo - 1) * pageSize;
               }
             }
 
-            where += ` LIMIT ? OFFSET ?`;
-
-            list = await queryData('songs', '*', where, [pageSize, offset]);
+            list = await songDB.page(pageSize, offset).find();
           }
 
           const obj = createPagingData(Array(total), pageSize, pageNo);
@@ -702,38 +634,25 @@ route.post('/last-play', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const change = await updateData(
-      'last_play',
-      {
+    const change = await db('last_play').where({ account }).update({
+      song_id: lastplay.id,
+      play_current_time: currentTime,
+      duration,
+    });
+    if (change.changes === 0) {
+      await db('last_play').insert({
+        create_at: new Date(),
+        account,
         song_id: lastplay.id,
         play_current_time: currentTime,
         duration,
-      },
-      `WHERE account = ?`,
-      [account]
-    );
-
-    if (change.changes === 0) {
-      await insertData(
-        'last_play',
-        [
-          {
-            account,
-            song_id: lastplay.id,
-            play_current_time: currentTime,
-            duration,
-          },
-        ],
-        'account'
-      );
+      });
     }
 
     // 增加播放历史记录
     if (history === 1) {
       // 自增播放次数
-      await incrementField('songs', { play_count: 1 }, `where id = ?`, [
-        lastplay.id,
-      ]);
+      await db('songs').where({ id: lastplay.id }).increment({ play_count: 1 });
 
       const list = await getMusicList(account);
 
@@ -757,14 +676,10 @@ route.get('/last-play', async (req, res) => {
   try {
     const { account } = req._hello.userinfo;
 
-    const lastm = (
-      await queryData(
-        'last_play',
-        'song_id,play_current_time,duration',
-        `WHERE account = ?`,
-        [account]
-      )
-    )[0];
+    const lastm = await db('last_play')
+      .select('song_id,play_current_time,duration')
+      .where({ account })
+      .findOne();
 
     const obj = {
       currentTime: 0,
@@ -778,9 +693,7 @@ route.get('/last-play', async (req, res) => {
       obj.currentTime = play_current_time;
       obj.duration = duration;
 
-      const lastplay = (
-        await queryData('songs', '*', `WHERE id = ?`, [song_id])
-      )[0];
+      const lastplay = await db('songs').where({ id: song_id }).findOne();
 
       if (lastplay) {
         obj.lastplay = lastplay;
@@ -797,7 +710,7 @@ route.get('/last-play', async (req, res) => {
 route.get('/random-list', async (req, res) => {
   try {
     // 获取总行数
-    let total = await getTableRowCount('songs');
+    let total = await db('songs').count();
 
     if (total === 0) {
       _err(res, '音乐库为空')(req);
@@ -812,10 +725,7 @@ route.get('/random-list', async (req, res) => {
       offset = Math.floor(Math.random() * total);
     }
 
-    const list = await queryData('songs', '*', `LIMIT ? OFFSET ?`, [
-      maxSonglistCount,
-      offset,
-    ]);
+    const list = await db('songs').page(maxSonglistCount, offset).find();
 
     _success(res, 'ok', myShuffle(list));
   } catch (error) {
@@ -838,26 +748,18 @@ route.post('/playlist', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const change = await updateData(
-      'playing_list',
-      {
+    const change = await db('playing_list')
+      .where({ account })
+      .update({
         data: JSON.stringify(data),
-      },
-      `WHERE account=?`,
-      [account]
-    );
+      });
 
     if (change.changes === 0) {
-      await insertData(
-        'playing_list',
-        [
-          {
-            account,
-            data: JSON.stringify(data),
-          },
-        ],
-        'account'
-      );
+      await db('playing_list').insert({
+        create_at: Date.now(),
+        account,
+        data: JSON.stringify,
+      });
     }
 
     syncUpdateData(req, 'playinglist');
@@ -872,9 +774,10 @@ route.get('/playlist', async (req, res) => {
   try {
     const { account } = req._hello.userinfo;
 
-    const playing = (
-      await queryData('playing_list', 'data', `WHERE account = ?`, [account])
-    )[0];
+    const playing = await db('playing_list')
+      .select('data')
+      .where({ account })
+      .findOne();
 
     let list = [];
 
@@ -1049,9 +952,10 @@ route.post('/edit-song', async (req, res) => {
       return;
     }
 
-    const songInfo = (
-      await queryData('songs', 'url,hash,artist,title', `WHERE id = ?`, [id])
-    )[0];
+    const songInfo = await db('songs')
+      .select('url,hash,artist,title')
+      .where({ id })
+      .findOne();
 
     if (!songInfo) {
       _err(res, '歌曲不存在')(req, id, 1);
@@ -1083,9 +987,9 @@ route.post('/edit-song', async (req, res) => {
       );
     }
 
-    await updateData(
-      'songs',
-      {
+    await db('songs')
+      .where({ id })
+      .update({
         title,
         title_pinyin: pinyin(title),
         artist,
@@ -1096,10 +1000,7 @@ route.post('/edit-song', async (req, res) => {
         play_count,
         collect_count,
         hash: newHASH || songInfo.hash,
-      },
-      `WHERE id = ?`,
-      [id]
-    );
+      });
 
     syncUpdateData(req, 'music');
 
@@ -1212,12 +1113,9 @@ route.post('/collect-song', async (req, res) => {
     await updateSongList(account, list);
 
     // 更新歌曲收藏记录
-    await incrementField(
-      'songs',
-      { collect_count: 1 },
-      `WHERE id IN (${fillString(ids.length)})`,
-      [...ids]
-    );
+    await db('songs')
+      .where({ id: { in: ids } })
+      .increment({ collect_count: 1 });
 
     syncUpdateData(req, 'music');
 
@@ -1283,12 +1181,10 @@ route.post('/delete-song', async (req, res) => {
         return;
       }
 
-      const dels = await queryData(
-        'songs',
-        'url,artist,title',
-        `WHERE id IN (${fillString(ids.length)})`,
-        [...ids]
-      );
+      const dels = await db('songs')
+        .select('url,artist,title')
+        .where({ id: { in: ids } })
+        .find();
 
       await concurrencyTasks(dels, 5, async (del) => {
         const { url, artist, title } = del;
@@ -1300,9 +1196,9 @@ route.post('/delete-song', async (req, res) => {
         await uLog(req, `删除歌曲(${artist}-${title})`);
       });
 
-      await deleteData('songs', `WHERE id IN (${fillString(ids.length)})`, [
-        ...ids,
-      ]);
+      await db('songs')
+        .where({ id: { in: ids } })
+        .delete();
     } else {
       const list = await getMusicList(account);
 
@@ -1421,9 +1317,10 @@ route.post('/delete-mv', async (req, res) => {
       return;
     }
 
-    const dels = await queryData('songs', 'mv,title,artist', `WHERE id = ?`, [
-      id,
-    ]);
+    const dels = await db('songs')
+      .select('mv,artist,title')
+      .where({ id })
+      .find();
 
     for (let i = 0; i < dels.length; i++) {
       const { mv, artist, title } = dels[i];
@@ -1433,7 +1330,7 @@ route.post('/delete-mv', async (req, res) => {
       }
     }
 
-    await updateData('songs', { mv: '' }, `WHERE id = ?`, [id]);
+    await db('songs').where({ id }).update({ mv: '' });
 
     syncUpdateData(req, 'music');
 
@@ -1453,9 +1350,7 @@ route.get('/read-lrc', async (req, res) => {
       return;
     }
 
-    const musicinfo = (
-      await queryData('songs', 'lrc', `WHERE id = ?`, [id])
-    )[0];
+    const musicinfo = await db('songs').select('lrc').where({ id }).findOne();
 
     if (!musicinfo) {
       _err(res, '歌曲不存在')(req, id, 1);
@@ -1496,11 +1391,10 @@ route.post('/edit-lrc', async (req, res) => {
       return;
     }
 
-    const musicinfo = (
-      await queryData('songs', 'url,lrc,artist,title,hash', `WHERE id = ?`, [
-        id,
-      ])
-    )[0];
+    const musicinfo = await db('songs')
+      .select('url,lrc,artist,title,hash')
+      .where({ id })
+      .findOne();
 
     if (!musicinfo) {
       _err(res, '歌曲不存在')(req, id, 1);
@@ -1533,14 +1427,7 @@ route.post('/edit-lrc', async (req, res) => {
       const newHASH = await _crypto.getFileMD5Hash(songUrl);
 
       if (newHASH && newHASH !== musicinfo.hash) {
-        await updateData(
-          'songs',
-          {
-            hash: newHASH,
-          },
-          `WHERE id = ?`,
-          [id]
-        );
+        await db('songs').where({ id }).update({ hash: newHASH });
       }
     } catch {
       await errLog(
@@ -1582,10 +1469,12 @@ route.post('/share', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     const id = nanoid();
+    const created_at = Date.now();
     const obj = {
       id,
+      created_at,
       exp_time:
-        expireTime === 0 ? 0 : Date.now() + expireTime * 24 * 60 * 60 * 1000,
+        expireTime === 0 ? 0 : created_at + expireTime * 24 * 60 * 60 * 1000,
       title,
       pass,
       data: JSON.stringify(list),
@@ -1593,7 +1482,7 @@ route.post('/share', async (req, res) => {
       type: 'music',
     };
 
-    await insertData('share', [obj]);
+    await db('share').insert(obj);
 
     syncUpdateData(req, 'sharelist');
 
@@ -1633,9 +1522,10 @@ route.post('/up', async (req, res) => {
         return;
       }
 
-      const song = (
-        await queryData('songs', 'id,artist,title', `WHERE hash = ?`, [HASH])
-      )[0];
+      const song = await db('songs')
+        .select('id,artist,title')
+        .where({ hash: HASH })
+        .findOne();
 
       if (song) {
         _err(res, '歌曲已存在')(req, `${song.artist}-${song.title}`, 1);
@@ -1644,7 +1534,9 @@ route.post('/up', async (req, res) => {
 
       const songId = nanoid();
 
-      const timePath = getTimePath(Date.now());
+      const create_at = Date.now();
+
+      const timePath = getTimePath(create_at);
 
       const suffix = _path.extname(name)[2];
 
@@ -1689,22 +1581,21 @@ route.post('/up', async (req, res) => {
 
       await _f.fsp.writeFile(_path.normalize(tDir, `${songId}.lrc`), lrc);
 
-      await insertData('songs', [
-        {
-          id: songId,
-          artist,
-          artist_pinyin: pinyin(artist),
-          title,
-          title_pinyin: pinyin(title),
-          duration,
-          album,
-          year,
-          hash: HASH,
-          pic,
-          url: _path.normalize(timePath, songId, tName),
-          lrc: _path.normalize(timePath, songId, `${songId}.lrc`),
-        },
-      ]);
+      await db('songs').insert({
+        id: songId,
+        create_at,
+        artist,
+        artist_pinyin: pinyin(artist),
+        title,
+        title_pinyin: pinyin(title),
+        duration,
+        album,
+        year,
+        hash: HASH,
+        pic,
+        url: _path.normalize(timePath, songId, tName),
+        lrc: _path.normalize(timePath, songId, `${songId}.lrc`),
+      });
 
       _success(res, '上传歌曲成功')(req, `${songId}-${artist}-${title}`, 1);
     } else if (type === 'cover') {
@@ -1723,11 +1614,10 @@ route.post('/up', async (req, res) => {
         return;
       }
 
-      const songInfo = (
-        await queryData('songs', 'url,pic,hash,title,artist', `WHERE id = ?`, [
-          id,
-        ])
-      )[0];
+      const songInfo = await db('songs')
+        .select('url,pic,hash,title,artist')
+        .where({ id })
+        .findOne();
 
       if (!songInfo) {
         _err(res, '歌曲不存在')(req, id, 1);
@@ -1779,15 +1669,12 @@ route.post('/up', async (req, res) => {
       }
 
       if (_path.basename(pic)[0] !== tName || (newHASH && newHASH !== hash)) {
-        await updateData(
-          'songs',
-          {
+        await db('songs')
+          .where({ id })
+          .update({
             pic: `${_path.extname(url)[0]}.${_path.extname(name)[2]}`,
             hash: newHASH || hash,
-          },
-          `WHERE id = ?`,
-          [id]
-        );
+          });
       }
 
       syncUpdateData(req, 'music');
@@ -1809,9 +1696,10 @@ route.post('/up', async (req, res) => {
         return;
       }
 
-      const songInfo = (
-        await queryData('songs', 'url,mv,title,artist', `WHERE id = ?`, [id])
-      )[0];
+      const songInfo = await db('songs')
+        .select('url,mv,title,artist')
+        .where({ id })
+        .findOne();
 
       if (!songInfo) {
         _err(res, '歌曲不存在')(req, id, 1);
@@ -1836,12 +1724,9 @@ route.post('/up', async (req, res) => {
           await _delDir(_path.normalize(tDir, _path.basename(mv)[0]));
         }
 
-        await updateData(
-          'songs',
-          { mv: `${_path.extname(url)[0]}.${_path.extname(name)[2]}` },
-          `WHERE id = ?`,
-          [id]
-        );
+        await db('songs')
+          .where({ id })
+          .update({ mv: `${_path.extname(url)[0]}.${_path.extname(name)[2]}` });
       }
       _success(res, '上传MV成功')(req, `${id}-${artist}-${title}`, 1);
     }
@@ -1860,9 +1745,10 @@ route.post('/repeat', async (req, res) => {
       return;
     }
 
-    const songInfo = (
-      await queryData('songs', 'url,id', `WHERE hash = ?`, [HASH])
-    )[0];
+    const songInfo = await db('songs')
+      .select('url,id')
+      .where({ hash: HASH })
+      .findOne();
 
     if (songInfo) {
       const url = _path.normalize(appConfig.appData, 'music', songInfo.url);
@@ -1873,7 +1759,7 @@ route.post('/repeat', async (req, res) => {
       }
 
       // 歌曲不存在删除数据和歌曲目录，重新上传
-      await deleteData('songs', `WHERE id = ?`, [songInfo.id]);
+      await db('songs').where({ id: songInfo.id }).delete();
 
       await _delDir(_path.dirname(url));
     }

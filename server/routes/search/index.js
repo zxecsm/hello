@@ -1,15 +1,6 @@
 import express from 'express';
 
-import {
-  insertData,
-  updateData,
-  deleteData,
-  queryData,
-  fillString,
-  createSearchSql,
-  createScoreSql,
-  getTableRowCount,
-} from '../../utils/sqlite.js';
+import { db } from '../../utils/sqlite.js';
 
 import {
   _success,
@@ -26,6 +17,7 @@ import {
 
 import { fieldLength } from '../config.js';
 import { getSearchConfig } from './search.js';
+import nanoid from '../../utils/nanoid.js';
 
 const route = express.Router();
 
@@ -84,28 +76,20 @@ route.get('/history-list', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    let where = `WHERE account = ? AND state = ?`;
-
-    const valArr = [account, 1];
+    const historydb = db('history').where({ account, state: 1 });
 
     let splitWord = [];
     if (word) {
       splitWord = getSplitWord(word);
 
       const curSplit = splitWord.slice(0, 10);
-
-      const searchSql = createSearchSql(curSplit, ['content']);
-
-      const scoreSql = createScoreSql(curSplit, ['content']);
-
-      where += ` AND (${searchSql.sql}) ${scoreSql.sql}`;
-
-      valArr.push(...searchSql.valArr, ...scoreSql.valArr);
+      curSplit[0] = { value: curSplit[0], weight: 10 };
+      historydb.search(curSplit, ['content'], { sort: true });
     } else {
-      where += ` ORDER BY serial DESC`;
+      historydb.orderBy('serial', 'desc');
     }
 
-    const total = await getTableRowCount('history', where, valArr);
+    const total = await historydb.count();
 
     const result = createPagingData(Array(total), pageSize, pageNo);
 
@@ -113,11 +97,7 @@ route.get('/history-list', async (req, res) => {
 
     let data = [];
     if (total > 0) {
-      where += ` LIMIT ? OFFSET ?`;
-
-      valArr.push(pageSize, offset);
-
-      data = await queryData('history', 'id,content', where, valArr);
+      data = await historydb.select('id,content').page(pageSize, offset).find();
     }
 
     _success(res, 'ok', {
@@ -143,17 +123,14 @@ route.post('/save', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     // 删除重复历史记录
-    await deleteData('history', `WHERE account = ? AND content = ?`, [
-      account,
-      content,
-    ]);
+    await db('history').where({ account, content }).delete();
 
-    await insertData('history', [
-      {
-        content,
-        account,
-      },
-    ]);
+    await db('history').insert({
+      id: nanoid(),
+      create_at: Date.now(),
+      content,
+      account,
+    });
 
     syncUpdateData(req, 'history');
 
@@ -177,12 +154,12 @@ route.get('/list', async (req, res) => {
 
     if (!word) {
       // 没有输入返回历史记录最新10条
-      const list = await queryData(
-        'history',
-        'id,content',
-        `WHERE account = ? AND state = ? ORDER BY serial DESC LIMIT ?`,
-        [account, 1, 10]
-      );
+      const list = await db('history')
+        .where({ account, state: 1 })
+        .select('id,content')
+        .orderBy('serial', 'desc')
+        .limit(10)
+        .find();
 
       _success(res, 'ok', {
         list: list.map((item) => {
@@ -196,61 +173,38 @@ route.get('/list', async (req, res) => {
       return;
     }
 
-    const bmkGroup = await queryData(
-      'bmk_group',
-      'id,title',
-      `WHERE account = ? AND state = ?`,
-      [account, 1]
-    );
+    const bmkGroup = await db('bmk_group')
+      .select('id,title')
+      .where({
+        account,
+        state: 1,
+      })
+      .find();
 
     bmkGroup.push({ id: 'home', title: '主页' });
 
     const splitWord = getSplitWord(word);
 
     const curSplit = splitWord.slice(0, 10);
-
-    let historyWhere = `WHERE account = ? AND state = ?`,
-      bmkWhere = historyWhere,
-      noteWhere = historyWhere;
-
-    const hValArr = [account, 1],
-      bValArr = [account, 1],
-      nValArr = [account, 1];
-
-    // 关键词搜索
-    const hSearchSql = createSearchSql(curSplit, ['content']);
-    const bSearchSql = createSearchSql(curSplit, ['title', 'link', 'des']);
-    const nSearchSql = createSearchSql(curSplit, ['title']);
-
-    // 根据关键词排序
-    const hScoreSql = createScoreSql(curSplit, ['content']);
-    const bScoreSql = createScoreSql(curSplit, ['title', 'link', 'des']);
-    const nScoreSql = createScoreSql(curSplit, ['title']);
-
-    historyWhere += ` AND (${hSearchSql.sql}) ${hScoreSql.sql} LIMIT 100`;
-    hValArr.push(...hSearchSql.valArr, ...hScoreSql.valArr);
-
-    bmkWhere += ` AND (${bSearchSql.sql}) ${bScoreSql.sql} LIMIT 100`;
-    bValArr.push(...bSearchSql.valArr, ...bScoreSql.valArr);
-
-    noteWhere += ` AND (${nSearchSql.sql}) ${nScoreSql.sql} LIMIT 100`;
-    nValArr.push(...nSearchSql.valArr, ...nScoreSql.valArr);
-
-    const historyList = await queryData(
-      'history',
-      'id,content',
-      historyWhere,
-      hValArr
-    );
-
-    const bmkList = await queryData(
-      'bmk',
-      'id,title,link,des,group_id',
-      bmkWhere,
-      bValArr
-    );
-
-    const noteList = await queryData('note', 'id,title', noteWhere, nValArr);
+    curSplit[0] = { value: curSplit[0], weight: 10 };
+    const historyList = await db('history')
+      .select('id,content')
+      .where({ account, state: 1 })
+      .search(curSplit, ['content'], { sort: true })
+      .limit(100)
+      .find();
+    const bmkList = await db('bmk')
+      .select('id,title,link,des,group_id')
+      .where({ account, state: 1 })
+      .search(curSplit, ['title', 'link', 'des'], { sort: true })
+      .limit(100)
+      .find();
+    const noteList = await db('note')
+      .select('id,title')
+      .where({ account, state: 1 })
+      .search(curSplit, ['title'], { sort: true })
+      .limit(100)
+      .find();
 
     const list = [];
     historyList.forEach((h) => {
@@ -323,12 +277,11 @@ route.post('/delete', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    await updateData(
-      'history',
-      { state: 0 },
-      `WHERE id IN (${fillString(ids.length)}) AND account = ? AND state = ?`,
-      [...ids, account, 1]
-    );
+    await db('history')
+      .where({ id: { in: ids }, account, state: 1 })
+      .update({
+        state: 0,
+      });
 
     syncUpdateData(req, 'history');
     syncUpdateData(req, 'trash');

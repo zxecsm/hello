@@ -4,15 +4,7 @@ import appConfig from '../../data/config.js';
 import { _d } from '../../data/data.js';
 import _f from '../../utils/f.js';
 
-import {
-  updateData,
-  insertData,
-  queryData,
-  deleteData,
-  getTableRowCount,
-  batchUpdateData,
-  fillString,
-} from '../../utils/sqlite.js';
+import { db } from '../../utils/sqlite.js';
 
 import timedTask from '../../utils/timedTask.js';
 
@@ -98,12 +90,9 @@ timedTask.add(async (flag) => {
     const bgxs = await getRandomBg('bgxs', 'id');
 
     // 更新用户数据
-    await batchUpdateData(
-      'user',
-      { bg: bg ? bg.id : '', bgxs: bgxs ? bgxs.id : '' },
-      `WHERE daily_change_bg = ? AND state = ?`,
-      [1, 1]
-    );
+    await db('user')
+      .where({ daily_change_bg: 1, state: 1 })
+      .batchUpdate({ bg: bg ? bg.id : '', bgxs: bgxs ? bgxs.id : '' });
 
     Object.keys(_connect.getConnects()).forEach((key) => {
       _connect.send(key, nanoid(), {
@@ -153,13 +142,9 @@ route.post('/change', async (req, res) => {
     }
 
     const { account } = req._hello.userinfo;
-
-    await updateData(
-      'user',
-      { [type]: id },
-      `WHERE account = ? AND state = ?`,
-      [account, 1]
-    );
+    await db('user')
+      .where({ account, state: 1 })
+      .update({ [type]: id });
 
     syncUpdateData(req, 'userinfo');
 
@@ -187,8 +172,9 @@ route.get('/list', async (req, res) => {
       paramErr(res, req);
       return;
     }
+    const bgdb = db('bg').where({ type });
 
-    const total = await getTableRowCount('bg', `WHERE type = ?`, [type]);
+    const total = await bgdb.count();
 
     const result = createPagingData(Array(total), pageSize, pageNo);
 
@@ -196,12 +182,11 @@ route.get('/list', async (req, res) => {
 
     let data = [];
     if (total > 0) {
-      data = await queryData(
-        'bg',
-        'id,url,type',
-        `WHERE type = ? ORDER BY serial DESC LIMIT ? OFFSET ?`,
-        [type, pageSize, offset]
-      );
+      data = await bgdb
+        .select('id,url,type')
+        .page(pageSize, offset)
+        .orderBy('serial', 'DESC')
+        .find();
     }
 
     _success(res, 'ok', {
@@ -234,14 +219,13 @@ route.post('/delete', async (req, res) => {
       return;
     }
 
-    const dels = await queryData(
-      'bg',
-      'url',
-      `WHERE id IN (${fillString(ids.length)})`,
-      [...ids]
-    );
+    const bgDb = db('bg')
+      .select('url')
+      .where({ id: { in: ids } });
 
-    await deleteData('bg', `WHERE id IN (${fillString(ids.length)})`, [...ids]);
+    const dels = await bgDb.find();
+
+    await bgDb.delete();
 
     await concurrencyTasks(dels, 5, async (del) => {
       const { url } = del;
@@ -268,16 +252,15 @@ route.post('/up', async (req, res) => {
     }
 
     name = _path.sanitizeFilename(name);
-
-    const bg = (await queryData('bg', 'url', `WHERE hash = ?`, [HASH]))[0];
+    const bg = await db('bg').select('url').where({ hash: HASH }).findOne();
     if (bg) {
       _err(res, '壁纸已存在')(req, `${name}-${HASH}`, 1);
       return;
     }
 
     const [title, , suffix] = _path.extname(name);
-
-    const timePath = getTimePath(Date.now());
+    const create_at = Date.now();
+    const timePath = getTimePath(create_at);
 
     const tDir = _path.normalize(appConfig.appData, 'bg', timePath);
     const tName = `${HASH}.${suffix}`;
@@ -292,14 +275,14 @@ route.post('/up', async (req, res) => {
 
     const url = _path.normalize(timePath, tName);
 
-    await insertData('bg', [
-      {
-        hash: HASH,
-        url,
-        type,
-        title,
-      },
-    ]);
+    await db('bg').insert({
+      create_at,
+      id: nanoid(),
+      hash: HASH,
+      url,
+      type,
+      title,
+    });
 
     _success(res, '上传壁纸成功')(req, url, 1);
   } catch (error) {
@@ -317,7 +300,7 @@ route.post('/repeat', async (req, res) => {
       return;
     }
 
-    const bg = (await queryData('bg', 'url,id', `WHERE hash = ?`, [HASH]))[0];
+    const bg = await db('bg').select('url,id').where({ hash: HASH }).findOne();
 
     if (bg) {
       if (await _f.exists(_path.normalize(appConfig.appData, 'bg', bg.url))) {
@@ -326,7 +309,7 @@ route.post('/repeat', async (req, res) => {
       }
 
       // 壁纸文件丢失，删除数据，重新上传
-      await deleteData('bg', `WHERE id = ?`, [bg.id]);
+      await db('bg').where({ id: bg.id }).delete();
     }
 
     _nothing(res);
