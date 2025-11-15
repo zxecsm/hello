@@ -33,6 +33,7 @@ import {
   _mySlide,
   isIframe,
   getStaticPath,
+  getDateDiff,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
@@ -304,7 +305,7 @@ async function renderList(top) {
         </li>
         <li v-if="mode" class='mode'>{{mode}} {{uid}}:{{gid}}</li>
         <li class="size">{{size ? formatBytes(size) : '--'}}</li>
-        <li class="date">{{formatDate({template: '{0}-{1}-{2} {3}:{4}',timestamp: time})}}</li>
+        <li class="date">{{getDateDiff(time)}}</li>
       </ul>
       <i v-for="item in 10" class='fill'></i>
     </template>
@@ -314,7 +315,7 @@ async function renderList(top) {
       total: fileListData.total,
       _d,
       paging: { list: fileListData.data },
-      formatDate,
+      getDateDiff,
       formatBytes,
       logoColor(type, fileType) {
         if (type === 'dir') return type;

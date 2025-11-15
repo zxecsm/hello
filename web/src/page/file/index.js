@@ -34,6 +34,7 @@ import {
   isurl,
   _mySlide,
   isInteger,
+  getDateDiff,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
@@ -244,7 +245,7 @@ async function renderList(top) {
         </li>
         <li v-if="mode" class='mode'>{{mode}} {{uid}}:{{gid}}</li>
         <li :cursor="type === 'file' ? '' : 'cursor'" class="size">{{size ? formatBytes(size) : type === 'file' ? '--' : '计算'}}</li>
-        <li class="date">{{formatDate({template: '{0}-{1}-{2} {3}:{4}',timestamp: time})}}</li>
+        <li class="date">{{getDateDiff(time)}}</li>
       </ul>
       <i v-for="item in 10" class='fill'></i>
     </template>
@@ -252,7 +253,7 @@ async function renderList(top) {
     `,
     {
       total: fileListData.total,
-      formatDate,
+      getDateDiff,
       list: fileListData.data,
       logoColor(type, fileType) {
         if (type === 'dir') return type;

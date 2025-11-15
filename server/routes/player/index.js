@@ -1469,12 +1469,12 @@ route.post('/share', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     const id = nanoid();
-    const created_at = Date.now();
+    const create_at = Date.now();
     const obj = {
       id,
-      created_at,
+      create_at,
       exp_time:
-        expireTime === 0 ? 0 : created_at + expireTime * 24 * 60 * 60 * 1000,
+        expireTime === 0 ? 0 : create_at + expireTime * 24 * 60 * 60 * 1000,
       title,
       pass,
       data: JSON.stringify(list),

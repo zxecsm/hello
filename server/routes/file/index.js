@@ -684,7 +684,7 @@ route.post('/share', async (req, res) => {
 
     await db('share').insert({
       id: nanoid(),
-      created_at: Date.now(),
+      create_at: Date.now(),
       account,
       type: data.type,
       exp_time:
