@@ -209,12 +209,6 @@ class Database {
     const params = [];
 
     for (const [key, value] of Object.entries(conditions)) {
-      // --- $raw 顶层表达式 ---
-      if (key === '$raw') {
-        if (value) clauses.push(value);
-        continue;
-      }
-
       // --- OR ---
       if (key === '$or' && Array.isArray(value)) {
         const parts = value
@@ -264,12 +258,6 @@ class Database {
           clauses.push(clause);
           params.push(...p);
         }
-        continue;
-      }
-
-      // --- 子级 $raw 支持 ---
-      if (key === '$raw') {
-        if (val) clauses.push(val);
         continue;
       }
 
@@ -332,10 +320,6 @@ class Database {
               );
               params.push(value[0], value[1]);
             }
-            break;
-
-          case '$raw':
-            clauses.push(value);
             break;
 
           default:
@@ -616,56 +600,20 @@ class Database {
     return this.db.run(sql, params);
   }
 
-  async getRandom({ autoIncField = 'serial' } = {}) {
-    // 检查自增字段是否存在，第一次调用才检查
-    if (this._autoIncChecked === undefined) {
-      const pragma = await this.db.all(`PRAGMA table_info(${this._table})`);
-      this._autoIncExists = pragma.some((c) => c.name === autoIncField);
-      this._autoIncChecked = true;
-    }
+  async getRandom({ limit = 1 } = {}) {
+    const total = await this.clone().count();
 
-    const hasAutoInc = this._autoIncExists;
+    if (!total) return [];
+    if (total <= limit) return this.clone().find();
 
-    if (!hasAutoInc) {
-      // 没有自增字段，直接随机排序取一条
-      return this.clone()
-        .clearOrder()
-        .clearPage()
-        .orderBy('RANDOM()')
-        .limit(1)
-        .findOne();
-    }
+    return this.clone()
+      .page(limit, Math.floor(Math.random() * (total - limit) + 1))
+      .echoSql()
+      .find();
+  }
 
-    // 获取自增字段的最小/最大值
-    const range = await this.clone()
-      .select(`MIN(${autoIncField}) AS minId, MAX(${autoIncField}) AS maxId`)
-      .findOne();
-
-    if (!range || range.minId == null || range.maxId == null) return null;
-
-    // 生成随机 ID
-    const randomId =
-      Math.floor(Math.random() * (range.maxId - range.minId + 1)) + range.minId;
-
-    // 尝试获取 >= randomId 的第一条
-    let row = await this.clone()
-      .clearOrder()
-      .where({ [autoIncField]: { '>=': randomId } })
-      .orderBy(autoIncField, 'ASC')
-      .limit(1)
-      .findOne();
-
-    if (!row) {
-      // 如果没有，获取 < randomId 的最后一条
-      row = await this.clone()
-        .clearOrder()
-        .where({ [autoIncField]: { '<': randomId } })
-        .orderBy(autoIncField, 'DESC')
-        .limit(1)
-        .findOne();
-    }
-
-    return row || null;
+  async getRandomOne() {
+    return (await this.getRandom({ limit: 1 }))[0] || null;
   }
 
   async count() {

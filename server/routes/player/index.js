@@ -726,23 +726,12 @@ route.get('/last-play', async (req, res) => {
 // 随机播放列表
 route.get('/random-list', async (req, res) => {
   try {
-    // 获取总行数
-    let total = await db('songs').count();
+    const list = await db('songs').getRandom({ limit: maxSonglistCount });
 
-    if (total === 0) {
+    if (list.length === 0) {
       _err(res, '音乐库为空')(req);
       return;
     }
-
-    let offset = 0;
-
-    // 计算随机偏移
-    if (total > maxSonglistCount) {
-      total -= maxSonglistCount;
-      offset = Math.floor(Math.random() * total);
-    }
-
-    const list = await db('songs').page(maxSonglistCount, offset).find();
 
     _success(res, 'ok', myShuffle(list));
   } catch (error) {

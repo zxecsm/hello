@@ -1911,20 +1911,16 @@ async function openFriend(acc, noHideUserList, cb) {
 // 显示好友消息
 $userListBox
   .on('click', '.clear_msg', function (e) {
-    rMenu.pop({ e, text: '所有消息标记为：已读？' }, (type) => {
-      if (type === 'confirm') {
-        reqChatNews({ clear: 1 })
-          .then((res) => {
-            if (res.code === 1) {
-              _msg.success(res.codeText);
-              $chatHeadBtns.find('.c_home_msg_alert').stop().fadeOut(_d.speed);
-              $chatHeadBtns.find('.c_msg_alert').stop().fadeOut(_d.speed);
-              getUserList();
-            }
-          })
-          .catch(() => {});
-      }
-    });
+    reqChatNews({ clear: 1 })
+      .then((res) => {
+        if (res.code === 1) {
+          _msg.success(res.codeText);
+          $chatHeadBtns.find('.c_home_msg_alert').stop().fadeOut(_d.speed);
+          $chatHeadBtns.find('.c_msg_alert').stop().fadeOut(_d.speed);
+          getUserList();
+        }
+      })
+      .catch(() => {});
   })
   .on('click', '.user_item', function (e) {
     const $this = $(this);
