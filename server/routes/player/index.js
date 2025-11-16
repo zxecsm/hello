@@ -110,7 +110,7 @@ route.post('/lrc', async (req, res) => {
 
     if (token) {
       // 自增播放次数
-      await db('songs').where({ id }).increment('play_count', 1);
+      await db('songs').where({ id }).increment({ play_count: 1 });
     }
 
     const songInfo = await db('songs').select('lrc').where({ id }).findOne();

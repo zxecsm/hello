@@ -1910,7 +1910,7 @@ async function openFriend(acc, noHideUserList, cb) {
 }
 // 显示好友消息
 $userListBox
-  .on('click', '.clear_msg', function (e) {
+  .on('click', '.clear_msg', function () {
     reqChatNews({ clear: 1 })
       .then((res) => {
         if (res.code === 1) {
