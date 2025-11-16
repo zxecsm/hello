@@ -31,6 +31,7 @@ module.exports = merge(require('./webpack.base'), {
     port: 55556,
     open: true,
     hot: false,
+    allowedHosts: 'all',
     proxy: [
       {
         context: ['/api'],
