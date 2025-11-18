@@ -68,7 +68,6 @@ route.post('/up', async (req, res) => {
     const tDir = _path.normalize(appConfig.appData, 'pic', timePath);
     const tName = `${HASH}.${suffix}`;
 
-    await _f.mkdir(tDir);
     await receiveFiles(req, tDir, tName, 10, HASH);
 
     await getImgInfo(_path.normalize(tDir, tName));

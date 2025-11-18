@@ -59,10 +59,8 @@ export async function writelog(req, str, flag = 'hello') {
 
     const targetPath = _path.normalize(appConfig.appData, 'log', `${flag}.log`);
 
-    await _f.mkdir(_path.dirname(targetPath));
-
     // console.log(str);
-    await _f.fsp.appendFile(targetPath, str);
+    await _f.appendFile(targetPath, str);
 
     const s = await _f.fsp.lstat(targetPath);
 
@@ -234,7 +232,7 @@ export async function receiveFiles(
   req.setTimeout(1000 * 60 * 10); // 10分钟超时
 
   const maxFileSize = maxFileSizeMB * 1024 * 1024;
-
+  await _f.mkdir(uploadDir);
   const form = formidable({
     multiples: false,
     uploadDir,
@@ -296,7 +294,7 @@ export async function mergefile(count, from, to, HASH) {
           callback(null, chunk);
         },
       }),
-      _f.fs.createWriteStream(temFile, { flags: 'a' }) // 'a' 追加模式
+      _f.createWriteStream(temFile, { flags: 'a' }) // 'a' 追加模式
     );
 
     await _f.del(filePath);

@@ -55,11 +55,7 @@ route.post('/', async (req, res) => {
     const p = _path.normalize(appConfig.appData, 'notepad', `${k}.md`);
 
     if (data) {
-      if (!(await _f.exists(p))) {
-        await _f.mkdir(_path.dirname(p));
-      }
-
-      await _f.fsp.writeFile(p, data);
+      await _f.writeFile(p, data);
 
       await uLog(req, `更新便条成功(${k})`);
     } else {

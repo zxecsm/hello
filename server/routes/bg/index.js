@@ -265,8 +265,6 @@ route.post('/up', async (req, res) => {
     const tDir = _path.normalize(appConfig.appData, 'bg', timePath);
     const tName = `${HASH}.${suffix}`;
 
-    await _f.mkdir(tDir);
-
     await receiveFiles(req, tDir, tName, 10, HASH);
 
     // 获取壁纸尺寸进行分类

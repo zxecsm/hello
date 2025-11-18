@@ -1368,8 +1368,7 @@ route.get('/read-lrc', async (req, res) => {
       const str = (await _f.readFile(url, null, '')).toString();
       _success(res, 'ok', str);
     } else {
-      await _f.mkdir(_path.dirname(url));
-      await _f.fsp.writeFile(url, '');
+      await _f.writeFile(url, '');
 
       _success(res, 'ok', '');
     }
@@ -1408,9 +1407,7 @@ route.post('/edit-lrc', async (req, res) => {
 
     const url = _path.normalize(appConfig.appData, 'music', musicinfo.lrc);
 
-    await _f.mkdir(_path.dirname(url));
-
-    await _f.fsp.writeFile(url, text);
+    await _f.writeFile(url, text);
 
     try {
       const songUrl = _path.normalize(
@@ -1554,8 +1551,6 @@ route.post('/up', async (req, res) => {
       );
       const tName = `${songId}.${suffix}`;
 
-      await _f.mkdir(tDir);
-
       await receiveFiles(req, tDir, tName, 50, HASH);
 
       // 读取歌曲元数据
@@ -1574,7 +1569,7 @@ route.post('/up', async (req, res) => {
 
       if (pic) {
         // 提取封面
-        await _f.fsp.writeFile(
+        await _f.writeFile(
           _path.normalize(tDir, `${songId}.${_path.basename(picFormat)[0]}`),
           pic
         );
@@ -1585,7 +1580,7 @@ route.post('/up', async (req, res) => {
         );
       }
 
-      await _f.fsp.writeFile(_path.normalize(tDir, `${songId}.lrc`), lrc);
+      await _f.writeFile(_path.normalize(tDir, `${songId}.lrc`), lrc);
 
       await db('songs').insert({
         id: songId,
@@ -1638,8 +1633,6 @@ route.post('/up', async (req, res) => {
         _path.dirname(url)
       );
       const tName = `${_path.basename(url)[1]}.${_path.extname(name)[2]}`;
-
-      await _f.mkdir(tDir);
 
       await receiveFiles(req, tDir, tName, 5, HASH);
 
@@ -1721,7 +1714,6 @@ route.post('/up', async (req, res) => {
       );
       const tName = `${_path.basename(url)[1]}.${_path.extname(name)[2]}`;
 
-      await _f.mkdir(tDir);
       await receiveFiles(req, tDir, tName, 200, HASH);
 
       if (_path.basename(mv)[0] != tName) {

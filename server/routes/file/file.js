@@ -41,8 +41,6 @@ export async function _delDir(path) {
       return _f.del(path);
     }
 
-    await _f.mkdir(trashDir);
-
     const targetName = _path.basename(path)[0];
 
     if (!targetName) return;
@@ -255,7 +253,7 @@ export async function readFavorites(account) {
 // 写入收藏目录
 export async function writeFavorites(account, list) {
   const favoritesDir = _path.normalize(getRootDir(account), '.favorites');
-  await _f.fsp.writeFile(favoritesDir, list.join('\n'));
+  await _f.writeFile(favoritesDir, list.join('\n'));
 }
 
 // 读取历史目录
@@ -270,5 +268,5 @@ export async function readHistoryDirs(account) {
 // 写入历史目录
 export async function writeHistoryDirs(account, list) {
   const cdHistoryDir = _path.normalize(getRootDir(account), '.cdHistory');
-  await _f.fsp.writeFile(cdHistoryDir, list.join('\n'));
+  await _f.writeFile(cdHistoryDir, list.join('\n'));
 }

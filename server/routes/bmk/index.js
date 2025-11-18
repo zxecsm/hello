@@ -338,8 +338,6 @@ route.get('/parse-site-info', async (req, res) => {
         return;
       }
 
-      await _f.mkdir(_path.normalize(appConfig.appData, 'siteinfo'));
-
       let result;
       try {
         result = await axios({
@@ -376,13 +374,13 @@ route.get('/parse-site-info', async (req, res) => {
       obj.title = $title.text() || '';
       obj.des = $des.attr('content') || '';
 
-      await _f.fsp.writeFile(p, JSON.stringify(obj));
+      await _f.writeFile(p, JSON.stringify(obj));
 
       _success(res, 'ok', obj);
     } catch (error) {
       if (miss) {
         try {
-          await _f.fsp.writeFile(miss, '');
+          await _f.writeFile(miss, '');
         } catch (err) {
           await errLog(req, `${err}(${u})`);
         }

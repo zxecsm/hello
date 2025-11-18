@@ -565,9 +565,8 @@ route.post('/custom-code', async (req, res) => {
 
     const u = _path.normalize(appConfig.appData, 'custom');
 
-    await _f.mkdir(u);
-    await _f.fsp.writeFile(_path.normalize(u, 'custom_head.html'), head);
-    await _f.fsp.writeFile(_path.normalize(u, 'custom_body.html'), body);
+    await _f.writeFile(_path.normalize(u, 'custom_head.html'), head);
+    await _f.writeFile(_path.normalize(u, 'custom_body.html'), body);
 
     _success(res, '添加自定义代码成功')(req);
   } catch (error) {

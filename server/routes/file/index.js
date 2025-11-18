@@ -588,8 +588,7 @@ route.post('/create-file', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const dir = getCurPath(account, path);
-    const fpath = _path.normalize(dir, name);
+    const fpath = getCurPath(account, path, name);
 
     // 过滤回收站
     if ((await _f.exists(fpath)) || getTrashDir(account) === fpath) {
@@ -597,8 +596,7 @@ route.post('/create-file', async (req, res) => {
       return;
     }
 
-    await _f.mkdir(dir);
-    await _f.fsp.writeFile(fpath, '');
+    await _f.writeFile(fpath, '');
 
     syncUpdateData(req, 'file');
 
@@ -743,8 +741,6 @@ route.post('/save-file', async (req, res) => {
             appConfig.textFileHistoryDirName
           );
 
-          await _f.mkdir(historyDir);
-
           const newName = `${filename}_${formatDate({
             template: `{0}{1}{2}-{3}{4}{5}`,
           })}${suffix ? `.${suffix}` : ''}`;
@@ -756,7 +752,7 @@ route.post('/save-file', async (req, res) => {
       }
     }
 
-    await _f.fsp.writeFile(fpath, text);
+    await _f.writeFile(fpath, text);
 
     syncUpdateData(req, 'file');
 
@@ -1205,8 +1201,6 @@ route.post('/delete', async (req, res) => {
             },
           });
         } else {
-          await _f.mkdir(trashDir);
-
           let targetPath = _path.normalize(trashDir, name);
           if (await _f.exists(targetPath)) {
             targetPath = await getUniqueFilename(targetPath);
@@ -1565,8 +1559,6 @@ route.post('/up', async (req, res) => {
       `${account}_${HASH}`
     );
 
-    await _f.mkdir(path);
-
     await receiveFiles(req, path, name, 50);
 
     _success(res);
@@ -1611,8 +1603,6 @@ route.post('/merge', async (req, res) => {
     // 存在先删除
     if (await _f.exists(targetPath)) {
       await _f.del(targetPath);
-    } else {
-      await _f.mkdir(_path.dirname(targetPath));
     }
 
     await mergefile(
@@ -1759,7 +1749,7 @@ route.post('/download', async (req, res) => {
             callback(null, chunk);
           },
         }),
-        _f.fs.createWriteStream(outputFilePath),
+        _f.createWriteStream(outputFilePath),
         { signal }
       );
 

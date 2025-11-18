@@ -195,13 +195,11 @@ export default async function getFile(req, res, p) {
         }
 
         if (!(await _f.exists(thumbP))) {
-          await _f.mkdir(_path.dirname(thumbP));
-
           const { x, y } = getCompressionSize(dir);
 
           const buf = await compressionImg(path, x, y, 20);
 
-          await _f.fsp.writeFile(thumbP, buf);
+          await _f.writeFile(thumbP, buf);
         }
 
         path = thumbP;

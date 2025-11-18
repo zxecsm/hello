@@ -758,7 +758,6 @@ route.post('/up', async (req, res) => {
       `${account}_${HASH}`
     );
 
-    await _f.mkdir(path);
     await receiveFiles(req, path, name, 50);
 
     _success(res);
@@ -811,7 +810,6 @@ route.post('/up-voice', async (req, res) => {
     const tDir = _path.normalize(appConfig.appData, 'upload', timePath);
     const tName = `${HASH}.${_path.extname(name)[2]}`;
 
-    await _f.mkdir(tDir);
     await receiveFiles(req, tDir, tName, 3, HASH);
 
     const fobj = {
@@ -901,7 +899,6 @@ route.post('/merge', async (req, res) => {
     const tDir = _path.normalize(appConfig.appData, 'upload', timePath);
     const tName = `${HASH}${suffix ? `.${suffix}` : ''}`;
 
-    await _f.mkdir(tDir);
     const targetPath = _path.normalize(tDir, tName);
 
     await mergefile(

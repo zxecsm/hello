@@ -1074,7 +1074,6 @@ route.post('/up-logo', async (req, res) => {
 
     const path = _path.normalize(appConfig.appData, 'logo', account, timePath);
 
-    await _f.mkdir(path);
     await receiveFiles(req, path, `${HASH}.${_path.extname(name)[2]}`, 5, HASH);
 
     const logo = _path.normalize(timePath, `${HASH}.${_path.extname(name)[2]}`);
@@ -1773,8 +1772,6 @@ route.post('/delete-trash', async (req, res) => {
         const noteHistoryDir = getNoteHistoryDir(account, id);
 
         if (await _f.exists(noteHistoryDir)) {
-          await _f.mkdir(trashDir);
-
           await _f.rename(noteHistoryDir, _path.normalize(trashDir, id));
         }
       });

@@ -6,7 +6,6 @@ import appConfig from './config.js';
 (async () => {
   try {
     const dataPath = _path.normalize(appConfig.appData, '/data'); // 数据目录
-    await _f.mkdir(dataPath); // 创建数据目录
     const exportPath = `${dataPath}/db.json`; // 导出文件路径
 
     // 导出数据库到JSON文件
@@ -21,7 +20,7 @@ import appConfig from './config.js';
       // eslint-disable-next-line no-console
       console.log(`export table ${table.name} success`);
     }
-    await _f.fsp.writeFile(exportPath, JSON.stringify(tables));
+    await _f.writeFile(exportPath, JSON.stringify(tables));
 
     // 备份原数据库
     const bak_path = `${dataPath}/db_bak`;

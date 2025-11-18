@@ -54,7 +54,7 @@ async function downFile(url, path) {
   });
 
   if (res.data && res.data.length > 0) {
-    await _f.fsp.writeFile(path, res.data);
+    await _f.writeFile(path, res.data);
   }
 }
 
@@ -127,8 +127,6 @@ route.get('/', async (req, res) => {
         return;
       }
 
-      await _f.mkdir(_path.dirname(iconPath));
-
       try {
         // 自行解析获取图标
         let htmlResp;
@@ -172,7 +170,7 @@ route.get('/', async (req, res) => {
           const buf = await compressionImg(iconPath);
 
           if (buf) {
-            await _f.fsp.writeFile(iconPath, buf);
+            await _f.writeFile(iconPath, buf);
           }
         } catch (error) {
           await errLog(req, `${error}(${urlStr})`);
@@ -184,7 +182,7 @@ route.get('/', async (req, res) => {
     } catch (error) {
       if (missFlagPath) {
         try {
-          await _f.fsp.writeFile(missFlagPath, '');
+          await _f.writeFile(missFlagPath, '');
         } catch (err) {
           await errLog(req, `${err}(${urlStr})`);
         }

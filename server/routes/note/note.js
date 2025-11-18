@@ -31,9 +31,7 @@ export async function saveNoteHistory(req, noteId, content) {
       `${formatDate({ template: '{0}_{1}_{2}-{3}_{4}_{5}' })}.md`
     );
 
-    await _f.mkdir(noteDir);
-
-    await _f.fsp.writeFile(notePath, content);
+    await _f.writeFile(notePath, content);
   } catch (error) {
     errLog(req, `保存笔记历史版本失败(${error})`);
   }

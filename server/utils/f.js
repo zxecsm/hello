@@ -64,9 +64,8 @@ async function cp(from, to, { signal, progress, renameMode = false } = {}) {
       if (renameMode) await del(f);
       progress?.({ count: 1 });
     } else {
-      await mkdir(_path.dirname(t));
       const readStream = fs.createReadStream(f);
-      const writeStream = fs.createWriteStream(t, { flags: 'w' });
+      const writeStream = createWriteStream(t, { flags: 'w' });
 
       await streamp.pipeline(
         readStream,
@@ -97,12 +96,30 @@ async function readFile(path, options, defaultValue) {
 }
 
 // 读取目录
-async function readdir(path, options) {
+async function readdir(path, ...arg) {
   try {
-    return await fsp.readdir(path, options);
+    return await fsp.readdir(path, ...arg);
   } catch {
     return [];
   }
+}
+
+// 写入文件
+async function writeFile(path, ...arg) {
+  await mkdir(_path.dirname(path));
+  await fsp.writeFile(path, ...arg);
+}
+
+// 追加文件
+async function appendFile(path, ...arg) {
+  await mkdir(_path.dirname(path));
+  await fsp.appendFile(path, ...arg);
+}
+
+// 写入流
+async function createWriteStream(path, ...arg) {
+  await mkdir(_path.dirname(path));
+  return fs.createWriteStream(path, ...arg);
 }
 
 // 修改权限
@@ -398,7 +415,10 @@ const _f = {
   symlink,
   link,
   readFile,
+  writeFile,
+  appendFile,
   readdir,
+  createWriteStream,
   cp,
   chmod,
   chown,
