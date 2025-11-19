@@ -65,7 +65,7 @@ async function cp(from, to, { signal, progress, renameMode = false } = {}) {
       progress?.({ count: 1 });
     } else {
       const readStream = fs.createReadStream(f);
-      const writeStream = createWriteStream(t, { flags: 'w' });
+      const writeStream = await createWriteStream(t, { flags: 'w' });
 
       await streamp.pipeline(
         readStream,

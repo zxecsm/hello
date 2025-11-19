@@ -6,7 +6,7 @@ import { concurrencyTasks } from './utils.js';
 
 // 压缩文件
 async function zip(froms, to, { signal, progress } = {}) {
-  const output = _f.createWriteStream(to, { flags: 'w' });
+  const output = await _f.createWriteStream(to, { flags: 'w' });
   const archive = archiver('zip', { zlib: { level: 9 } });
 
   const progressInfo = {
@@ -72,7 +72,7 @@ async function unzip(from, to, { signal, progress } = {}) {
             callback(null, chunk);
           },
         }),
-        _f.createWriteStream(outputPath, { flags: 'w' }),
+        await _f.createWriteStream(outputPath, { flags: 'w' }),
         { signal }
       );
       progressInfo.count += 1;

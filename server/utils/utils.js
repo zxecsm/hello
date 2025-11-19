@@ -294,7 +294,7 @@ export async function mergefile(count, from, to, HASH) {
           callback(null, chunk);
         },
       }),
-      _f.createWriteStream(temFile, { flags: 'a' }) // 'a' 追加模式
+      await _f.createWriteStream(temFile, { flags: 'a' }) // 'a' 追加模式
     );
 
     await _f.del(filePath);

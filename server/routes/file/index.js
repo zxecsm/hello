@@ -1749,7 +1749,7 @@ route.post('/download', async (req, res) => {
             callback(null, chunk);
           },
         }),
-        _f.createWriteStream(outputFilePath),
+        await _f.createWriteStream(outputFilePath),
         { signal }
       );
 
