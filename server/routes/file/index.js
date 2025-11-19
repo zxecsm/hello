@@ -588,7 +588,7 @@ route.post('/create-file', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const fpath = getCurPath(account, path, name);
+    const fpath = getCurPath(account, `${path}/${name}`);
 
     // 过滤回收站
     if ((await _f.exists(fpath)) || getTrashDir(account) === fpath) {
