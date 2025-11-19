@@ -608,7 +608,6 @@ class Database {
 
     return this.clone()
       .page(limit, Math.floor(Math.random() * (total - limit) + 1))
-      .echoSql()
       .find();
   }
 
