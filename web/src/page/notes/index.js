@@ -598,6 +598,7 @@ function editNoteInfo(e, obj) {
         count: {
           beforeText: '阅读量：',
           value: obj.visit_count,
+          inputType: 'number',
           verify(val) {
             return rMenu.validInteger(val) || rMenu.validNumber(val, 0);
           },
