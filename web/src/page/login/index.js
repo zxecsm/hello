@@ -8,7 +8,6 @@ import {
   myOpen,
   wrapInput,
   _setTimeout,
-  isInteger,
   debounce,
   throttle,
   loadImg,
@@ -196,15 +195,11 @@ function resetPassword(e) {
                     beforeText: '邮箱验证码：',
                     inputType: 'number',
                     verify(val) {
-                      if (val === '') {
-                        return '请输入验证码';
-                      } else if (
-                        val.length !== 6 ||
-                        !isInteger(+val) ||
-                        val < 0
-                      ) {
-                        return '请输入6位正整数';
-                      }
+                      return (
+                        rMenu.validInteger(val) ||
+                        rMenu.validNumber(val, 0) ||
+                        rMenu.validString(val, 6, 6)
+                      );
                     },
                   },
                 },
@@ -371,15 +366,11 @@ function hdLogin(obj) {
                       inputType: 'number',
                       autocomplete: 'one-time-code',
                       verify(val) {
-                        if (val === '') {
-                          return '请输入验证码';
-                        } else if (
-                          val.length !== 6 ||
-                          !isInteger(+val) ||
-                          val < 0
-                        ) {
-                          return '请输入6位正整数';
-                        }
+                        return (
+                          rMenu.validInteger(val) ||
+                          rMenu.validNumber(val, 0) ||
+                          rMenu.validString(val, 6, 6)
+                        );
                       },
                     },
                   },

@@ -2316,10 +2316,7 @@ export function inputPageNo(e, opt, callback) {
           value,
           inputType: 'number',
           verify(val) {
-            val = parseFloat(val);
-            if (!isInteger(val) || val < 0) {
-              return '请输入正整数';
-            }
+            return rMenu.validInteger(val) || rMenu.validNumber(val, 0);
           },
         },
       },
@@ -2351,11 +2348,7 @@ export function createShare(e, opt, cb) {
           inputType: 'text',
           beforeText: '分享名称：',
           verify(val) {
-            if (val === '') {
-              return '请输入名称';
-            } else if (val.length > _d.fieldLength.title) {
-              return '名称过长';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.title);
           },
         },
         expireTime: {
@@ -2364,13 +2357,10 @@ export function createShare(e, opt, cb) {
           inputType: 'number',
           beforeText: '过期时间（天）：',
           verify(val) {
-            if (val === '') {
-              return '请输入过期时间（天）';
-            }
-            val = parseFloat(val);
-            if (!isInteger(val) || val > _d.fieldLength.expTime) {
-              return `最大限制${_d.fieldLength.expTime}`;
-            }
+            return (
+              rMenu.validInteger(val) ||
+              rMenu.validNumber(val, undefined, _d.fieldLength.expTime)
+            );
           },
         },
         pass: {
@@ -2379,9 +2369,7 @@ export function createShare(e, opt, cb) {
           beforeText: '提取码：',
           placeholder: '为空则不设置提取码',
           verify(val) {
-            if (val.length > _d.fieldLength.sharePass) {
-              return '提取码过长';
-            }
+            return rMenu.validString(val, 0, _d.fieldLength.sharePass);
           },
         },
       },
@@ -2418,11 +2406,7 @@ export function enterPassCode(cb) {
           beforeText: '提取码：',
           inputType: 'password',
           verify(val) {
-            if (val.length === 0) {
-              return '请输入提取码';
-            } else if (val.length > _d.fieldLength.sharePass) {
-              return '提取码过长';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.sharePass);
           },
         },
       },

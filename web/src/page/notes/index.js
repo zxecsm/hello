@@ -3,7 +3,6 @@ import '../../css/common/reset.css';
 import '../../css/common/common.css';
 import '../../font/iconfont.css';
 import './index.less';
-import './notes.less';
 import {
   throttle,
   _myOpen,
@@ -19,7 +18,6 @@ import {
   longPress,
   isMobile,
   hdTitleHighlight,
-  isInteger,
   formatDate,
   isLogin,
   isValidDate,
@@ -92,14 +90,7 @@ waitLogin(() => {
         } = item;
         if (type === 'updatedata') {
           if (flag === 'note' || flag === 'category') {
-            if (flag === 'category') {
-              if (isHideCategoryBox()) {
-                updataCategory();
-              } else {
-                renderCategoryList();
-              }
-            }
-            renderList();
+            renderCategoryList(1);
           }
         }
       }
@@ -505,15 +496,10 @@ function toTop(e, obj) {
           inputType: 'number',
           placeholder: '0：取消；数值越大越靠前',
           verify(val) {
-            if (val === '') {
-              return '请输入权重数';
-            } else if (
-              !isInteger(+val) ||
-              val < 0 ||
-              val > _d.fieldLength.top
-            ) {
-              return `最大限制${_d.fieldLength.top}`;
-            }
+            return (
+              rMenu.validInteger(val) ||
+              rMenu.validNumber(val, 0, _d.fieldLength.top)
+            );
           },
         },
       },
@@ -606,23 +592,14 @@ function editNoteInfo(e, obj) {
           beforeText: '标题：',
           value: obj.title,
           verify(val) {
-            if (val === '') {
-              return '请输入标题';
-            } else if (val.length > _d.fieldLength.title) {
-              return '标题内容过长';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.title);
           },
         },
         count: {
           beforeText: '阅读量：',
           value: obj.visit_count,
           verify(val) {
-            const num = parseInt(val);
-            if (!val.trim()) {
-              return '请输入阅读量';
-            } else if (isNaN(num) || num < 0) {
-              return '请输入正整数';
-            }
+            return rMenu.validInteger(val) || rMenu.validNumber(val, 0);
           },
         },
         create_at: {

@@ -31,9 +31,7 @@ import {
   toLogin,
   wrapInput,
   getDuplicates,
-  isurl,
   _mySlide,
-  isInteger,
   getDateDiff,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
@@ -913,9 +911,7 @@ function editFileMode(e, data) {
           inputType: 'number',
           value: data.length > 1 ? '' : `${firstItem.mode.slice(-3)}`,
           verify(val) {
-            if (!/^[0-7]{3}$/.test(val)) {
-              return '请输入正确权限码';
-            }
+            return rMenu.validMode(val);
           },
         },
         r: {
@@ -971,10 +967,7 @@ function editFileChown(e, data) {
           inputType: 'number',
           value: data.length > 1 ? '' : `${firstItem.uid}`,
           verify(val) {
-            val = parseFloat(val);
-            if (!isInteger(val) || val < 0) {
-              return '请输入正整数';
-            }
+            return rMenu.validInteger(val) || rMenu.validNumber(val, 0);
           },
         },
         gid: {
@@ -982,10 +975,7 @@ function editFileChown(e, data) {
           inputType: 'number',
           value: data.length > 1 ? '' : `${firstItem.gid}`,
           verify(val) {
-            val = parseFloat(val);
-            if (!isInteger(val) || val < 0) {
-              return '请输入正整数';
-            }
+            return rMenu.validInteger(val) || rMenu.validNumber(val, 0);
           },
         },
         r: {
@@ -1249,13 +1239,10 @@ function createFile(e) {
         name: {
           beforeText: '文件名：',
           verify(val) {
-            if (val === '') {
-              return '请输入名称';
-            } else if (val.length > _d.fieldLength.filename) {
-              return '名称过长';
-            } else if (!_path.isFilename(val)) {
-              return '名称包含了不允许的特殊字符';
-            }
+            return (
+              rMenu.validString(val, 1, _d.fieldLength.filename) ||
+              rMenu.validFilename(val)
+            );
           },
         },
       },
@@ -1292,13 +1279,10 @@ function createDir(e) {
         name: {
           beforeText: '文件夹名：',
           verify(val) {
-            if (val === '') {
-              return '请输入名称';
-            } else if (val.length > _d.fieldLength.filename) {
-              return '名称过长';
-            } else if (!_path.isFilename(val)) {
-              return '名称包含了不允许的特殊字符';
-            }
+            return (
+              rMenu.validString(val, 1, _d.fieldLength.filename) ||
+              rMenu.validFilename(val)
+            );
           },
         },
       },
@@ -1471,9 +1455,10 @@ function handleDownloadFile(e) {
           beforeText: '下载文件链接地址：',
           placeholder: '仅支持http/https网络链接',
           verify(val) {
-            if (!isurl(val)) {
-              return '请输入正确的外链地址';
-            }
+            return (
+              rMenu.validString(val, 1, _d.fieldLength.url) ||
+              rMenu.validUrl(val)
+            );
           },
         },
       },
@@ -1584,24 +1569,17 @@ function createSymlink(e) {
         name: {
           beforeText: '文件名：',
           verify(val) {
-            if (val === '') {
-              return '请输入名称';
-            } else if (val.length > _d.fieldLength.filename) {
-              return '名称过长';
-            } else if (!_path.isFilename(val)) {
-              return '名称包含了不允许的特殊字符';
-            }
+            return (
+              rMenu.validString(val, 1, _d.fieldLength.filename) ||
+              rMenu.validFilename(val)
+            );
           },
         },
         targetPath: {
           beforeText: '目标路径：',
           placeholder: '硬链接不支持文件夹',
           verify(val) {
-            if (val === '') {
-              return '请输入目标路径';
-            } else if (val.length > _d.fieldLength.url) {
-              return '路径过长';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.url);
           },
         },
         isSymlink: {
@@ -2121,13 +2099,10 @@ function hdRename(e, obj, cb) {
           beforeText: `${obj.type === 'file' ? '文件' : '文件夹'}名：`,
           value: obj.name,
           verify(val) {
-            if (val === '') {
-              return '请输入名称';
-            } else if (val.length > _d.fieldLength.filename) {
-              return '名称过长';
-            } else if (!_path.isFilename(val)) {
-              return '名称包含了不允许的特殊字符';
-            }
+            return (
+              rMenu.validString(val, 1, _d.fieldLength.filename) ||
+              rMenu.validFilename(val)
+            );
           },
         },
       },

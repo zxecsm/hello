@@ -233,11 +233,7 @@ function saveBm(e) {
           value: defaultTitle,
           beforeText: '书签分组名称：',
           verify(val) {
-            if (val === '') {
-              return '请输入名称';
-            } else if (val.length > _d.fieldLength.title) {
-              return '名称过长';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.title);
           },
         },
       },

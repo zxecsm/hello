@@ -205,6 +205,9 @@ const toolBox = (() => {
   } else {
     document.body.appendChild(toolBox);
   }
+  if (window._pageName === 'addbmk') {
+    toolBox.style.zIndex = _d.levelObj.rightBox + 1;
+  }
   toolBox.addEventListener('click', (e) => {
     if (_getTarget(toolBox, e, '.zoom_in')) {
       const size = localData.get('htmlFontSize') + 1;

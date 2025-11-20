@@ -894,9 +894,11 @@ function userMenu(e, msgObj, isUserList) {
                       placeholder: '为空则不设置',
                       value: des,
                       verify(val) {
-                        if (val.length > _d.fieldLength.chatDes) {
-                          return `限制1-${_d.fieldLength.chatDes}位`;
-                        }
+                        return rMenu.validString(
+                          val,
+                          0,
+                          _d.fieldLength.chatDes
+                        );
                       },
                     },
                   },

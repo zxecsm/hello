@@ -261,13 +261,10 @@ if (!k || !/^[\w]+$/.test(k)) {
         key: {
           beforeText: '便条Key：',
           verify(val) {
-            if (val === '') {
-              return '请输入便条Key';
-            } else if (val.length > _d.fieldLength.filename) {
-              return '便条key过长';
-            } else if (!/^[\w]+$/.test(val)) {
-              return '只能包含数字、字母和下划线';
-            }
+            return (
+              rMenu.validString(val, 1, _d.fieldLength.filename) ||
+              rMenu.validAlphanumeric(val)
+            );
           },
         },
       },
@@ -643,13 +640,10 @@ function openNotepad(e) {
         key: {
           beforeText: '便条Key：',
           verify(val) {
-            if (val === '') {
-              return '请输入便条Key';
-            } else if (val.length > 20) {
-              return '便条key过长';
-            } else if (!/^[\w]+$/.test(val)) {
-              return '只能包含数字、字母和下划线';
-            }
+            return (
+              rMenu.validString(val, 1, _d.fieldLength.filename) ||
+              rMenu.validAlphanumeric(val)
+            );
           },
         },
       },

@@ -6,13 +6,11 @@ import {
   debounce,
   _getTarget,
   imgjz,
-  isurl,
   _position,
   loadingImg,
   longPress,
   isMobile,
   createShare,
-  isInteger,
   LazyLoad,
   _mySlide,
   _setTimeout,
@@ -454,11 +452,7 @@ function addBmList(e) {
         text: {
           beforeText: '分组标题：',
           verify(val) {
-            if (val === '') {
-              return '请输入标题';
-            } else if (val.length > _d.fieldLength.title) {
-              return '标题过长';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.title);
           },
         },
       },
@@ -834,11 +828,10 @@ export function addBookMark(e, pid) {
           beforeText: '网址：',
           placeholder: 'https://',
           verify(val) {
-            if (val.length > _d.fieldLength.url) {
-              return '网址过长';
-            } else if (!isurl(val)) {
-              return '请输入正确的网址';
-            }
+            return (
+              rMenu.validString(val, 1, _d.fieldLength.url) ||
+              rMenu.validUrl(val)
+            );
           },
         },
       },
@@ -861,11 +854,7 @@ export function addBookMark(e, pid) {
                     beforeText: '标题：',
                     value: title,
                     verify(val) {
-                      if (val === '') {
-                        return '请输入书签标题';
-                      } else if (val.length > _d.fieldLength.title) {
-                        return '标题过长';
-                      }
+                      return rMenu.validString(val, 1, _d.fieldLength.title);
                     },
                   },
                   link: {
@@ -873,11 +862,10 @@ export function addBookMark(e, pid) {
                     placeholder: 'https://',
                     value: u,
                     verify(val) {
-                      if (val.length > _d.fieldLength.url) {
-                        return '网址过长';
-                      } else if (!isurl(val)) {
-                        return '请输入正确的网址';
-                      }
+                      return (
+                        rMenu.validString(val, 1, _d.fieldLength.url) ||
+                        rMenu.validUrl(val)
+                      );
                     },
                   },
                   des: {
@@ -885,9 +873,7 @@ export function addBookMark(e, pid) {
                     value: des,
                     type: 'textarea',
                     verify(val) {
-                      if (val.length > _d.fieldLength.des) {
-                        return '描述过长';
-                      }
+                      return rMenu.validString(val, 0, _d.fieldLength.des);
                     },
                   },
                 },
@@ -948,21 +934,14 @@ function editBmList(e, obj) {
           inputType: 'number',
           value: obj.num + 1,
           verify(val) {
-            const value = parseFloat(val);
-            if (!isInteger(value) || value <= 0) {
-              return '请输正整数';
-            }
+            return rMenu.validInteger(val) || rMenu.validNumber(val, 0);
           },
         },
         text: {
           beforeText: '标题：',
           value: obj.title,
           verify(val) {
-            if (val === '') {
-              return '请输入标题';
-            } else if (val.length > _d.fieldLength.title) {
-              return '标题过长';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.title);
           },
         },
       },
@@ -1175,21 +1154,14 @@ function editBm(e, obj, isHome) {
           beforeText: '序号：',
           value: obj.num + 1,
           verify(val) {
-            const value = parseFloat(val);
-            if (!isInteger(value) || value <= 0) {
-              return '请输正整数';
-            }
+            return rMenu.validInteger(val) || rMenu.validNumber(val, 0);
           },
         },
         title: {
           beforeText: '标题：',
           value: obj.title,
           verify(val) {
-            if (val === '') {
-              return '请输入书签标题';
-            } else if (val.length > _d.fieldLength.title) {
-              return '标题过长';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.title);
           },
         },
         link: {
@@ -1197,11 +1169,10 @@ function editBm(e, obj, isHome) {
           placeholder: 'https://',
           value: obj.link,
           verify(val) {
-            if (val.length > _d.fieldLength.url) {
-              return '网址过长';
-            } else if (!isurl(val)) {
-              return '请输入正确的网址';
-            }
+            return (
+              rMenu.validString(val, 1, _d.fieldLength.url) ||
+              rMenu.validUrl(val)
+            );
           },
         },
         des: {
@@ -1209,9 +1180,7 @@ function editBm(e, obj, isHome) {
           type: 'textarea',
           value: obj.des,
           verify(val) {
-            if (val.length > _d.fieldLength.des) {
-              return '描述过长';
-            }
+            return rMenu.validString(val, 0, _d.fieldLength.des);
           },
         },
       },

@@ -28,7 +28,6 @@ import {
   isBigScreen,
   getFilePath,
   createShare,
-  isInteger,
   LazyLoad,
   wrapInput,
   myDrag,
@@ -624,33 +623,21 @@ export function editSongInfo(e, sobj) {
           value: sobj.artist,
           beforeText: '歌手名：',
           verify(val) {
-            if (val === '') {
-              return '请输入歌手名';
-            } else if (val.length > _d.fieldLength.title) {
-              return '歌手名过长';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.title);
           },
         },
         title: {
           value: sobj.title,
           beforeText: '歌曲名：',
           verify(val) {
-            if (val === '') {
-              return '请输入歌曲名';
-            } else if (val.length > _d.fieldLength.title) {
-              return '歌曲名过长';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.title);
           },
         },
         album: {
           value: sobj.album,
           beforeText: '专辑：',
           verify(val) {
-            if (val === '') {
-              return '请输入专辑名';
-            } else if (val.length > _d.fieldLength.title) {
-              return '专辑名过长';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.title);
           },
         },
         year: {
@@ -658,9 +645,7 @@ export function editSongInfo(e, sobj) {
           beforeText: '年份：',
           inputType: 'number',
           verify(val) {
-            if (val.length > 10) {
-              return '年份过长';
-            }
+            return rMenu.validString(val, 0, 10);
           },
         },
         duration: {
@@ -668,12 +653,7 @@ export function editSongInfo(e, sobj) {
           beforeText: '时长(秒)：',
           inputType: 'number',
           verify(val) {
-            const num = parseFloat(val);
-            if (val === '') {
-              return '请输入时长';
-            } else if (isNaN(num) || num < 0) {
-              return '请输入正整数';
-            }
+            return rMenu.validNumber(val, 0);
           },
         },
         play_count: {
@@ -681,12 +661,7 @@ export function editSongInfo(e, sobj) {
           beforeText: '播放量：',
           inputType: 'number',
           verify(val) {
-            const num = parseInt(val);
-            if (val === '') {
-              return '请输入播放量';
-            } else if (isNaN(num) || num < 0) {
-              return '请输入正整数';
-            }
+            return rMenu.validInteger(val) || rMenu.validNumber(val, 0);
           },
         },
         collect_count: {
@@ -694,12 +669,7 @@ export function editSongInfo(e, sobj) {
           beforeText: '收藏量：',
           inputType: 'number',
           verify(val) {
-            const num = parseInt(val);
-            if (val === '') {
-              return '请输入收藏量';
-            } else if (isNaN(num) || num < 0) {
-              return '请输入正整数';
-            }
+            return rMenu.validInteger(val) || rMenu.validNumber(val, 0);
           },
         },
       },
@@ -1212,20 +1182,14 @@ function addSongList(e) {
         title: {
           beforeText: '标题：',
           verify(val) {
-            if (val === '') {
-              return '请输入标题';
-            } else if (val.length > _d.fieldLength.title) {
-              return '标题过长';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.title);
           },
         },
         des: {
           type: 'textarea',
           beforeText: '描述：',
           verify(val) {
-            if (val.length > _d.fieldLength.des) {
-              return '描述过长';
-            }
+            return rMenu.validString(val, 0, _d.fieldLength.des);
           },
         },
       },
@@ -1438,21 +1402,14 @@ function editSongList(e, obj, sid) {
         inputType: 'number',
         value: obj.num + 1,
         verify(val) {
-          let value = parseFloat(val);
-          if (!isInteger(value) || value <= 0) {
-            return '请输正整数';
-          }
+          return rMenu.validInteger(val) || rMenu.validNumber(val, 0);
         },
       },
       title: {
         beforeText: '标题：',
         value: name,
         verify(val) {
-          if (val === '') {
-            return '请输入标题';
-          } else if (val.length > _d.fieldLength.title) {
-            return '标题过长';
-          }
+          return rMenu.validString(val, 1, _d.fieldLength.title);
         },
       },
       des: {
@@ -1460,9 +1417,7 @@ function editSongList(e, obj, sid) {
         type: 'textarea',
         value: des || '',
         verify(val) {
-          if (val.length > _d.fieldLength.des) {
-            return '描述过长';
-          }
+          return rMenu.validString(val, 0, _d.fieldLength.des);
         },
       },
     },

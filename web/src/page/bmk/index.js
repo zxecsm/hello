@@ -14,7 +14,6 @@ import {
   toLogin,
   scrollState,
   queryURLParams,
-  isurl,
   isIframe,
   wrapInput,
   getScreenSize,
@@ -40,6 +39,7 @@ import {
   reqBmkDeleteBmk,
   reqBmkEditBmk,
   reqBmkList,
+  reqBmkParseSiteInfo,
   reqBmkSearch,
   reqBmkToGroup,
 } from '../../api/bmk';
@@ -52,6 +52,11 @@ import { BoxSelector } from '../../js/utils/boxSelector';
 import { otherWindowMsg, waitLogin } from '../home/home';
 import cacheFile from '../../js/utils/cacheFile';
 import localData from '../../js/common/localData';
+import {
+  isHideCategoryBox,
+  renderCategoryList,
+  showCategoryBox,
+} from './category';
 
 const $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
@@ -64,6 +69,8 @@ let { HASH } = urlParams;
 
 if (urlParams.acc && urlParams.acc !== localData.get('account')) {
   runState = 'other';
+  $headWrap.find('.h_add_item_btn').remove();
+  $categoryTag.find('.setting_category').remove();
   $footer.find('.f_move_to').text('添加到');
   $footer.find('.f_delete').remove();
 } else {
@@ -81,7 +88,7 @@ waitLogin(() => {
           data: { flag },
         } = item;
         if (type === 'updatedata' && flag === 'bookmark') {
-          updataCategory();
+          renderCategoryList(1);
         }
       }
       otherWindowMsg(item);
@@ -110,7 +117,12 @@ const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
     }
   },
 });
-
+export function setBmkCategoryList(val) {
+  if (val === undefined) {
+    return $contentWrap.groupList;
+  }
+  $contentWrap.groupList = val;
+}
 function updataCategory() {
   reqBmkList({ account: urlParams.acc || '' })
     .then((res) => {
@@ -175,9 +187,11 @@ function hdCategoryAdd(e, cb, hasList) {
   );
 }
 
-$categoryTag.on('click', '.clean_category', function () {
-  tabsObj.list = [];
-});
+$categoryTag
+  .on('click', '.setting_category', showCategoryBox)
+  .on('click', '.clean_category', function () {
+    tabsObj.list = [];
+  });
 
 function switchCleanBtnState() {
   const $clean = $categoryTag.find('.clean_category');
@@ -252,7 +266,7 @@ const pgnt = pagination($contentWrap[0], {
 });
 const loadImg = new LazyLoad();
 // 生成列表
-function renderList(y) {
+export function renderList(y) {
   let pagenum = bmksPageNo,
     word = wInput.getValue().trim();
 
@@ -384,6 +398,7 @@ function movebmk(e, arr, loading = { start() {}, end() {} }) {
     .then((res) => {
       loading.end();
       if (res.code === 1) {
+        $contentWrap.groupList = res.data.list;
         const data = [
           {
             id: 'home',
@@ -512,11 +527,7 @@ function bmMenu(e) {
                 beforeText: '标题：',
                 value: obj.title,
                 verify(val) {
-                  if (val === '') {
-                    return '请输入书签标题';
-                  } else if (val.length > _d.fieldLength.title) {
-                    return '标题过长';
-                  }
+                  return rMenu.validString(val, 1, _d.fieldLength.title);
                 },
               },
               link: {
@@ -524,11 +535,10 @@ function bmMenu(e) {
                 placeholder: 'https://',
                 value: obj.link,
                 verify(val) {
-                  if (val.length > _d.fieldLength.url) {
-                    return '网址过长';
-                  } else if (!isurl(val)) {
-                    return '请输入正确的网址';
-                  }
+                  return (
+                    rMenu.validString(val, 1, _d.fieldLength.url) ||
+                    rMenu.validUrl(val)
+                  );
                 },
               },
               des: {
@@ -536,9 +546,7 @@ function bmMenu(e) {
                 type: 'textarea',
                 value: obj.des,
                 verify(val) {
-                  if (val.length > _d.fieldLength.des) {
-                    return '描述过长';
-                  }
+                  return rMenu.validString(val, 0, _d.fieldLength.des);
                 },
               },
             },
@@ -724,6 +732,116 @@ function hdClearSearch() {
 
 $headWrap
   .on('click', '.h_check_item_btn', checkedItemBtn)
+  .on('click', '.h_add_item_btn', (e) => {
+    if (runState !== 'own') return;
+    if ($contentWrap.groupList.length === 0) {
+      _msg.error('请先创建分组');
+      return;
+    }
+    rMenu.inpMenu(
+      e,
+      {
+        subText: '添加',
+        items: {
+          link: {
+            beforeText: '网址：',
+            placeholder: 'https://',
+            verify(val) {
+              return (
+                rMenu.validString(val, 1, _d.fieldLength.url) ||
+                rMenu.validUrl(val)
+              );
+            },
+          },
+        },
+      },
+      function ({ e, inp, close, loading }) {
+        const u = inp.link;
+        loading.start();
+        reqBmkParseSiteInfo({ u })
+          .then((result) => {
+            loading.end();
+            if (result.code === 1) {
+              close();
+              const { title, des } = result.data;
+              rMenu.inpMenu(
+                e,
+                {
+                  subText: '提交',
+                  items: {
+                    title: {
+                      beforeText: '标题：',
+                      value: title,
+                      verify(val) {
+                        return rMenu.validString(val, 1, _d.fieldLength.title);
+                      },
+                    },
+                    groupId: {
+                      beforeText: '选择分组：',
+                      type: 'select',
+                      value: $contentWrap.groupList[0].id,
+                      selectItem: $contentWrap.groupList.map((item) => ({
+                        value: item.id,
+                        text: item.title,
+                      })),
+                    },
+                    link: {
+                      beforeText: '网址：',
+                      placeholder: 'https://',
+                      value: u,
+                      verify(val) {
+                        return (
+                          rMenu.validString(val, 1, _d.fieldLength.url) ||
+                          rMenu.validUrl(val)
+                        );
+                      },
+                    },
+                    des: {
+                      beforeText: '描述：',
+                      value: des,
+                      type: 'textarea',
+                      verify(val) {
+                        return rMenu.validString(val, 0, _d.fieldLength.des);
+                      },
+                    },
+                  },
+                },
+                function ({ close, inp, loading }) {
+                  const { title, groupId, link, des } = inp;
+                  loading.start();
+                  reqBmkAddBmk({
+                    groupId,
+                    bms: [
+                      {
+                        title,
+                        link,
+                        des,
+                      },
+                    ],
+                  })
+                    .then((result) => {
+                      loading.end();
+                      if (result.code === 1) {
+                        close(true);
+                        _msg.success(result.codeText);
+                        renderList();
+                      }
+                    })
+                    .catch(() => {
+                      loading.end();
+                    });
+                },
+                '添加书签'
+              );
+            }
+          })
+          .catch(() => {
+            loading.end();
+          });
+      },
+      '添加书签'
+    );
+  })
   .on('click', '.h_go_home', hdGoHome)
   .on('click', '.inp_box .clean_btn', hdClearSearch)
   .on('click', '.inp_box .search_btn', () => {
@@ -857,6 +975,7 @@ scrollState(
 );
 
 document.addEventListener('keydown', function (e) {
+  if (!isHideCategoryBox()) return;
   const key = e.key,
     ctrl = e.ctrlKey || e.metaKey;
   const isFocus = $('input').is(':focus') || $('textarea').is(':focus');

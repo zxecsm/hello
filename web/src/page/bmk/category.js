@@ -1,31 +1,32 @@
 import $ from 'jquery';
 import _d from '../../js/common/config';
 import { _mySlide, loadingImg } from '../../js/utils/utils';
-import {
-  reqNoteAddCategory,
-  reqNoteCategory,
-  reqNoteDeleteCategory,
-  reqNoteEditCategory,
-} from '../../api/note';
+
 import _msg from '../../js/plugins/message';
-import { renderList, setNoteCategoryList } from '.';
+import { renderList, setBmkCategoryList } from '.';
 import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';
+import {
+  reqBmkAddGroup,
+  reqBmkDeleteGroup,
+  reqBmkEditGroup,
+  reqBmkList,
+} from '../../api/bmk';
 const $categoryBox = $('.category_box');
 export function isHideCategoryBox() {
   return $categoryBox.is(':hidden');
 }
 // 生成列表
-export function renderCategoryList(updateNoteList = false) {
+export function renderCategoryList(updateBmkList = false) {
   const $list = $categoryBox.find('.list');
   if ($list.children().length === 0) {
     loadingImg($list[0]);
   }
-  reqNoteCategory()
+  reqBmkList()
     .then((res) => {
       if (res.code === 1) {
-        setNoteCategoryList(res.data);
-        if (updateNoteList) {
+        setBmkCategoryList(res.data.list);
+        if (updateBmkList) {
           renderList();
         }
         if (isHideCategoryBox()) return;
@@ -38,7 +39,7 @@ export function renderCategoryList(updateNoteList = false) {
           </div>
           `,
           {
-            list: res.data,
+            list: res.data.list,
           }
         );
         $list.html(html);
@@ -48,7 +49,7 @@ export function renderCategoryList(updateNoteList = false) {
 }
 // 获取分类信息
 function getCategoryInfo(id) {
-  return setNoteCategoryList().find((item) => item.id === id) || {};
+  return setBmkCategoryList().find((item) => item.id === id) || {};
 }
 // 显示分类设置
 export function showCategoryBox() {
@@ -68,9 +69,9 @@ function addCategory(e) {
       subText: '提交',
       items: {
         text: {
-          beforeText: '标题：',
+          beforeText: '分组标题：',
           verify(val) {
-            return rMenu.validString(val, 1, _d.fieldLength.noteCategoryTitle);
+            return rMenu.validString(val, 1, _d.fieldLength.title);
           },
         },
       },
@@ -78,7 +79,7 @@ function addCategory(e) {
     function ({ close, inp, loading }) {
       const title = inp.text;
       loading.start();
-      reqNoteAddCategory({ title })
+      reqBmkAddGroup({ title })
         .then((res) => {
           loading.end();
           if (res.code === 1) {
@@ -91,7 +92,7 @@ function addCategory(e) {
           loading.end();
         });
     },
-    '添加笔记分类'
+    '添加书签分组'
   );
 }
 // 编辑分类
@@ -102,10 +103,10 @@ function editCategory(e, obj) {
       subText: '提交',
       items: {
         text: {
-          beforeText: '标题：',
+          beforeText: '分组标题：',
           value: obj.title,
           verify(val) {
-            return rMenu.validString(val, 1, _d.fieldLength.noteCategoryTitle);
+            return rMenu.validString(val, 1, _d.fieldLength.title);
           },
         },
       },
@@ -114,7 +115,7 @@ function editCategory(e, obj) {
       if (!isDiff()) return;
       const title = inp.text;
       loading.start();
-      reqNoteEditCategory({ id: obj.id, title })
+      reqBmkEditGroup({ id: obj.id, title })
         .then((res) => {
           loading.end();
           if (res.code === 1) {
@@ -127,7 +128,7 @@ function editCategory(e, obj) {
           loading.end();
         });
     },
-    '编辑笔记分类'
+    '编辑书签分组'
   );
 }
 // 删除分类
@@ -141,7 +142,7 @@ function deleteCategory(e, obj, cb, loading = { start() {}, end() {} }) {
     (t) => {
       if (t === 'confirm') {
         loading.start();
-        reqNoteDeleteCategory({ id: obj.id })
+        reqBmkDeleteGroup({ ids: [obj.id] })
           .then((res) => {
             loading.end();
             if (res.code === 1) {

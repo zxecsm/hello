@@ -15,8 +15,6 @@ import {
   _setTimeout,
   readableTime,
   myOpen,
-  isurl,
-  isInteger,
   isFullScreen,
   getCenterPointDistance,
   _animate,
@@ -290,24 +288,18 @@ function addCount(e) {
         title: {
           beforeText: '标题：',
           verify(val) {
-            if (val === '') {
-              return '请输入标题';
-            } else if (val.length > _d.fieldLength.countTitle) {
-              return '标题内容过长';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.countTitle);
           },
         },
         link: {
           beforeText: '链接：',
           placeholder: 'https://',
           verify(val) {
-            val = val;
             if (!val) return;
-            if (val.length > _d.fieldLength.url) {
-              return '链接过长';
-            } else if (!isurl(val)) {
-              return '请输入正确的链接';
-            }
+            return (
+              rMenu.validString(val, 0, _d.fieldLength.url) ||
+              rMenu.validUrl(val)
+            );
           },
         },
         start: {
@@ -411,11 +403,7 @@ function editCount(e, count) {
           beforeText: '标题：',
           value: count.title,
           verify(val) {
-            if (val === '') {
-              return '请输入标题';
-            } else if (val.length > _d.fieldLength.countTitle) {
-              return '标题内容过长';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.countTitle);
           },
         },
         link: {
@@ -423,13 +411,11 @@ function editCount(e, count) {
           placeholder: 'https://',
           value: count.link,
           verify(val) {
-            val = val;
             if (!val) return;
-            if (val.length > _d.fieldLength.url) {
-              return '链接过长';
-            } else if (!isurl(val)) {
-              return '请输入正确的链接';
-            }
+            return (
+              rMenu.validString(val, 0, _d.fieldLength.url) ||
+              rMenu.validUrl(val)
+            );
           },
         },
         start: {
@@ -563,15 +549,10 @@ function toTop(e, obj) {
           inputType: 'number',
           placeholder: '0：取消；数值越大越靠前',
           verify(val) {
-            if (val === '') {
-              return '请输入权重数';
-            } else if (
-              !isInteger(+val) ||
-              val < 0 ||
-              val > _d.fieldLength.top
-            ) {
-              return `限制0-${_d.fieldLength.top}`;
-            }
+            return (
+              rMenu.validInteger(val) ||
+              rMenu.validNumber(val, 0, _d.fieldLength.top)
+            );
           },
         },
       },

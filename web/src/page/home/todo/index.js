@@ -253,11 +253,7 @@ function addTodo(e) {
           type: 'textarea',
           beforeText: '待办内容：',
           verify(val) {
-            if (val === '') {
-              return '请输入待办内容';
-            } else if (val.length > _d.fieldLength.todoContent) {
-              return '待办内容过长';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.todoContent);
           },
         },
       },
@@ -339,11 +335,7 @@ function editTodo(e, todo) {
           beforeText: '待办内容：',
           value: todo.content,
           verify(val) {
-            if (val === '') {
-              return '请输入待办内容';
-            } else if (val.length > _d.fieldLength.todoContent) {
-              return '待办内容过长';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.todoContent);
           },
         },
       },

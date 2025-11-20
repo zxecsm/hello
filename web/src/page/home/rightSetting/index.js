@@ -17,7 +17,6 @@ import {
   downloadText,
   getTextImg,
   getFiles,
-  isInteger,
   myDrag,
   isMobile,
   longPress,
@@ -25,8 +24,6 @@ import {
   myToRest,
   getCenterPointDistance,
   isRoot,
-  isEmail,
-  isurl,
   parseObjectJson,
   encodeHtml,
   getScreenSize,
@@ -209,9 +206,7 @@ function changeUsername(e) {
           beforeText: '用户名：',
           value: setUserInfo().username,
           verify(val) {
-            if (val.length < 1 || val.length > _d.fieldLength.username) {
-              return `限制1-${_d.fieldLength.username}位`;
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.username);
           },
         },
       },
@@ -502,11 +497,10 @@ function bindEmail(e) {
             inputType: 'email',
             autocomplete: 'email',
             verify(val) {
-              if (!isEmail(val)) {
-                return '请输入正确的邮箱';
-              } else if (val.length > _d.fieldLength.email) {
-                return '邮箱过长';
-              }
+              return (
+                rMenu.validString(val, 1, _d.fieldLength.email) ||
+                rMenu.validEmail(val)
+              );
             },
           },
         },
@@ -533,15 +527,11 @@ function bindEmail(e) {
                       beforeText: '邮箱验证码：',
                       inputType: 'number',
                       verify(val) {
-                        if (val === '') {
-                          return '请输入验证码';
-                        } else if (
-                          val.length !== 6 ||
-                          !isInteger(+val) ||
-                          val < 0
-                        ) {
-                          return '请输入6位正整数';
-                        }
+                        return (
+                          rMenu.validInteger(val) ||
+                          rMenu.validNumber(val, 0) ||
+                          rMenu.validString(val, 6, 6)
+                        );
                       },
                     },
                   },
@@ -612,12 +602,11 @@ function handleForwardMsg(e) {
           type: 'textarea',
           placeholder: 'https://api.xxx.com/xxx?title={{title}}?text={{text}}',
           verify(val, items) {
-            if (
-              items.state.value === 'y' &&
-              !isurl(val) &&
-              val.length > _d.fieldLength.url
-            ) {
-              return '请输入正确的接口地址';
+            if (items.state.value === 'y') {
+              return (
+                rMenu.validString(val, 1, _d.fieldLength.url) ||
+                rMenu.validUrl(val)
+              );
             }
           },
         },
@@ -1352,9 +1341,7 @@ function createQrCode(e) {
         text: {
           type: 'textarea',
           verify(val) {
-            if (val === '') {
-              return '请输入需要生成字符';
-            }
+            return rMenu.validString(val, 1);
           },
         },
       },
@@ -1694,11 +1681,11 @@ async function hdVerifyLogin(e, verify, account) {
                 beforeText: '验证码：',
                 inputType: 'number',
                 verify(val) {
-                  if (val === '') {
-                    return '请输入验证码';
-                  } else if (val.length !== 6 || !isInteger(+val) || val < 0) {
-                    return '请输入6位正整数';
-                  }
+                  return (
+                    rMenu.validInteger(val) ||
+                    rMenu.validNumber(val, 0) ||
+                    rMenu.validString(val, 6, 6)
+                  );
                 },
               },
             },

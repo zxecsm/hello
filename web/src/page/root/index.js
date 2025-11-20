@@ -10,13 +10,10 @@ import {
   pageScrollTop,
   isIframe,
   getScreenSize,
-  isInteger,
   isRoot,
-  isEmail,
   addCustomCode,
   _myOpen,
   getTextSize,
-  isurl,
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
@@ -561,11 +558,7 @@ function setEmail(e) {
           placeholder: 'smtp.qq.com',
           verify(val, items) {
             if (items.state.value === 'y') {
-              if (val === '') {
-                return '请输入SMTP服务器地址';
-              } else if (val.length > _d.fieldLength.email) {
-                return 'host过长';
-              }
+              return rMenu.validString(val, 1, _d.fieldLength.email);
             }
           },
         },
@@ -573,12 +566,12 @@ function setEmail(e) {
           value: port,
           beforeText: '端口：',
           placeholder: '通常为587或465',
+          inputType: 'number',
           verify(val, items) {
             if (items.state.value === 'y') {
-              val = parseInt(val);
-              if (isNaN(val) || val < 0 || val > 65535) {
-                return '端口格式错误';
-              }
+              return (
+                rMenu.validInteger(val) || rMenu.validNumber(val, 0, 65535)
+              );
             }
           },
         },
@@ -587,11 +580,10 @@ function setEmail(e) {
           beforeText: '发件人邮箱：',
           verify(val, items) {
             if (items.state.value === 'y') {
-              if (!isEmail(val)) {
-                return '发件人邮箱格式错误';
-              } else if (val.length > _d.fieldLength.email) {
-                return '邮箱过长';
-              }
+              return (
+                rMenu.validString(val, 1, _d.fieldLength.email) ||
+                rMenu.validEmail(val)
+              );
             }
           },
         },
@@ -704,11 +696,10 @@ function testEmail(e) {
           beforeText: '收件人邮箱：',
           value: localData.get('testEmail') || '',
           verify(val) {
-            if (!isEmail(val)) {
-              return '邮箱格式错误';
-            } else if (val.length > _d.fieldLength.email) {
-              return '邮箱过长';
-            }
+            return (
+              rMenu.validString(val, 1, _d.fieldLength.email) ||
+              rMenu.validEmail(val)
+            );
           },
         },
       },
@@ -742,11 +733,11 @@ function testTFA(e) {
           inputType: 'number',
           value: localData.get('testCode') || '',
           verify(val) {
-            if (val === '') {
-              return '请输入验证码';
-            } else if (val.length !== 6 || !isInteger(+val) || val < 0) {
-              return '请输入6位正整数';
-            }
+            return (
+              rMenu.validInteger(val) ||
+              rMenu.validNumber(val, 0) ||
+              rMenu.validString(val, 6, 6)
+            );
           },
         },
       },
@@ -844,10 +835,10 @@ function handleClearFile(e) {
 function handleFileCacheExp(e) {
   const { uploadSaveDay, faviconCache, siteInfoCache } = dataObj.cacheExp;
   function verify(val) {
-    val = parseFloat(val);
-    if (!isInteger(val) || val < 0 || val > _d.fieldLength.expTime) {
-      return `限制0-${_d.fieldLength.expTime}`;
-    }
+    return (
+      rMenu.validInteger(val) ||
+      rMenu.validNumber(val, 0, _d.fieldLength.expTime)
+    );
   }
   const placeholder = '0: 无限制';
   const inputType = 'number';
@@ -1015,11 +1006,10 @@ function handlePubApi(e) {
                 placeholder: 'https://www.xxx.com?url={{host}}',
                 verify(val) {
                   if (val !== '') {
-                    if (!isurl(val)) {
-                      return '请输入正确的接口地址';
-                    } else if (val.length > _d.fieldLength.url) {
-                      return `接口地址过长`;
-                    }
+                    return (
+                      rMenu.validString(val, 1, _d.fieldLength.url) ||
+                      rMenu.validUrl(val)
+                    );
                   }
                 },
               },
@@ -1075,9 +1065,7 @@ $('.create_account').on('click', (e) => {
           beforeText: '用户名：',
           value: '',
           verify(val) {
-            if (val.length < 1 || val.length > 20) {
-              return '请输入1-20位用户名';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.username);
           },
         },
         password: {

@@ -11,6 +11,9 @@ import {
   getScreenSize,
   hdTextMsg,
   imgjz,
+  isEmail,
+  isInteger,
+  isurl,
   myDrag,
   myResize,
   myToRest,
@@ -23,6 +26,7 @@ import loadFailImg from '../../../images/img/loadfail.png';
 import { CreateTabs } from '../../../page/notes/tabs';
 import { _tpl, deepClone } from '../../utils/template';
 import cacheFile from '../../utils/cacheFile';
+import _path from '../../utils/path';
 // 右键菜单
 let rightBoxList = [];
 const updateActiveWindows = debounce(function () {
@@ -1031,6 +1035,72 @@ function percentBar(e, percent, callback) {
   };
 }
 const rMenu = {
+  validString(val, min = 0, max) {
+    const len = val.length;
+
+    if (min > 0 && len === 0) return '请输入内容';
+
+    if (max === undefined) {
+      if (len < min) return `请输入不小于${min}个字符`;
+    } else {
+      if (min === max && len !== min) return `请输入${min}个字符`;
+      if (len < min || len > max) return `请输入${min}-${max}个字符`;
+    }
+
+    return '';
+  },
+  validAlphanumeric(val) {
+    if (!/^[\w]+$/.test(val)) return '请输入只包含数字、字母、下划线的字符';
+    return '';
+  },
+  validNumber(val, min, max) {
+    const num = +val;
+
+    // 非数字
+    if (val === '' || Number.isNaN(num)) return '请输入数字';
+
+    // 只传 min
+    if (min !== undefined && max === undefined) {
+      if (num < min) return `请输入不小于${min}的数字`;
+      return '';
+    }
+
+    // 只传 max
+    if (max !== undefined && min === undefined) {
+      if (num > max) return `请输入不大于${max}的数字`;
+      return '';
+    }
+
+    // 同时传 min 和 max
+    if (min !== undefined && max !== undefined) {
+      if (min === max && num !== min) return `请输入等于${min}的数字`;
+      if (num < min || num > max) return `请输入${min}-${max}之间的数字`;
+      return '';
+    }
+
+    // min 和 max 都未传 → 无限制
+    return '';
+  },
+  validUrl(val) {
+    if (!isurl(val)) return '请输入正确的网址';
+    return '';
+  },
+  validMode(val) {
+    if (!/^[0-7]{3}$/.test(val)) return '请输入正确的权限码格式';
+    return '';
+  },
+  validInteger(val) {
+    if (!isInteger(+val)) return '请输入整数';
+    return '';
+  },
+  validFilename(val) {
+    if (!_path.isFilename(val)) return '请输入不包含特殊字符的文件名';
+    return '';
+  },
+  validEmail(val) {
+    if (!isEmail(val)) return '请输入正确的邮箱';
+    return '';
+  },
   pop,
   percentBar,
   rightM,

@@ -919,11 +919,7 @@ $pMusicListBox.on('click', '.save_playing_list', function (e) {
           beforeText: '歌单名称：',
           value: defaultShareTitle,
           verify(val) {
-            if (val === '') {
-              return '请输入名称';
-            } else if (val.length > _d.fieldLength.title) {
-              return '名称过长';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.title);
           },
         },
       },
