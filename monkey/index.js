@@ -141,12 +141,14 @@
     btn.style.gap = '3px';
 
     if (icon) {
-      const i = document.createElement('span');
-      i.innerHTML = icon;
-      i.style.display = 'inline-block';
-      i.style.width = '14px';
-      i.style.height = '14px';
-      btn.appendChild(i);
+      try {
+        const i = document.createElement('span');
+        i.innerHTML = icon;
+        i.style.display = 'inline-block';
+        i.style.width = '14px';
+        i.style.height = '14px';
+        btn.appendChild(i);
+      } catch {}
     }
 
     btn.appendChild(document.createTextNode(label));
