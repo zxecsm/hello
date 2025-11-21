@@ -154,7 +154,6 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
   }
 
   function hdMove(e) {
-    handleBtnState();
     if (e.target !== image) return;
 
     if (e.type === 'mousemove' && !isDragging) return;
@@ -256,6 +255,7 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
 
   function closeBox() {
     box.removeEventListener('click', hdClick);
+    box.removeEventListener('mousemove', handleBtnState);
     box.removeEventListener('mousedown', hdDown);
     box.removeEventListener('touchstart', hdDown);
     document.removeEventListener('mousemove', hdMove);
@@ -279,6 +279,7 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
   }
 
   box.addEventListener('click', hdClick);
+  box.addEventListener('mousemove', handleBtnState);
 
   function hdWheel(e) {
     e.preventDefault();
