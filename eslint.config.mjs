@@ -6,6 +6,8 @@ export default [
         ...globals.browser,
         ...globals.node,
         chrome: 'readonly',
+        GM_setClipboard: 'readonly',
+        GM_xmlhttpRequest: 'readonly',
         Intl: 'readonly',
         openInIframe: 'readonly',
         handleFontType: 'readonly',

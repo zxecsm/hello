@@ -4,37 +4,126 @@
     <meta charset="UTF-8" />
     <title>Save to Hello</title>
     <style>
+      /* 页面整体样式 */
       body {
-        width: 260px;
+        width: 280px;
         margin: 0;
-        padding: 16px;
-        font-family: sans-serif;
+        padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f9f9f9;
+        color: #333;
+        transition: background 0.3s, color 0.3s;
       }
+
+      h3 {
+        margin-top: 0;
+        font-size: 18px;
+        text-align: center;
+        color: #222;
+        transition: color 0.3s;
+      }
+
+      label {
+        font-size: 13px;
+        margin-top: 12px;
+        display: block;
+        color: #555;
+        transition: color 0.3s;
+      }
+
+      input {
+        width: 100%;
+        margin-top: 6px;
+        padding: 8px 10px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border 0.2s, background 0.3s, color 0.3s;
+        background: #fff;
+        color: #000;
+      }
+
+      input:focus {
+        border-color: #0078d4;
+        outline: none;
+      }
+
       button {
         width: 100%;
         padding: 10px;
         font-size: 15px;
         cursor: pointer;
-        margin-top: 12px;
+        margin-top: 16px;
+        background: #0078d4;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        transition: background 0.2s, transform 0.1s;
       }
-      input {
-        width: 100%;
-        margin-top: 6px;
-        padding: 6px;
-        box-sizing: border-box;
+
+      button:hover {
+        background: #005fa3;
       }
-      label {
-        font-size: 13px;
-        margin-top: 10px;
-        display: block;
+
+      button:active {
+        transform: scale(0.97);
+      }
+
+      /* 小提示文字 */
+      .note {
+        font-size: 12px;
+        color: #888;
+        margin-top: 4px;
+        transition: color 0.3s;
+      }
+
+      /* 深色主题 */
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #1e1e1e;
+          color: #eee;
+        }
+
+        h3 {
+          color: #fff;
+        }
+
+        label {
+          color: #ccc;
+        }
+
+        input {
+          background: #2c2c2c;
+          color: #eee;
+          border: 1px solid #555;
+        }
+
+        input:focus {
+          border-color: #3399ff;
+        }
+
+        button {
+          background: #3399ff;
+          color: #fff;
+        }
+
+        button:hover {
+          background: #1f7ae0;
+        }
+
+        .note {
+          color: #aaa;
+        }
       }
     </style>
   </head>
   <body>
-    <h3 style="margin-top: 0">保存到 Hello</h3>
-    <label>API 地址：</label>
-    <input id="api" />
+    <h3>保存到 Hello</h3>
+    <label for="api">API 地址：{{}} 会替换为页面地址</label>
+    <input id="api" placeholder="https://xxx.com/addbmk#{{}}" />
     <button id="save">保存当前页面</button>
+    <div class="note">请确认 API 地址正确，否则无法保存</div>
     <script src="popup.js"></script>
   </body>
 </html>
