@@ -192,6 +192,22 @@
   function replaceApi(api, text) {
     return api.replace(/\{\{(.*?)\}\}/g, text);
   }
+  function openInWindow(url) {
+    const width = window.screen.width / 2;
+    const height = window.screen.height / 2;
+    const left = (window.screen.width - width) / 2;
+    const top = (window.screen.height - height) / 2;
+
+    const features = `
+        popup=yes,
+        width=${width},
+        height=${height},
+        left=${left},
+        top=${top}
+    `.replace(/\s+/g, '');
+
+    window.open(url, '_blank', features);
+  }
   function init() {
     createToolbox();
 
@@ -214,26 +230,13 @@
     // 翻译
     addButton('翻译', ICON_TRANSLATE, () => {
       const t = encodeURIComponent(window.getSelection().toString());
-      window.open(replaceApi(TRANSLATOR_API, t));
+      openInWindow(replaceApi(TRANSLATOR_API, t));
     });
 
     // 保存书签到HELLO
     addButton('保存书签', ICON_SAVE, () => {
       const url = replaceApi(SAVEBMK_API, window.location.href);
-      const width = window.screen.width / 2;
-      const height = window.screen.height / 2;
-      const left = (window.screen.width - width) / 2;
-      const top = (window.screen.height - height) / 2;
-
-      const features = `
-        popup=yes,
-        width=${width},
-        height=${height},
-        left=${left},
-        top=${top}
-    `.replace(/\s+/g, '');
-
-      window.open(url, '_blank', features);
+      openInWindow(url);
     });
 
     // 推送到HELLO
