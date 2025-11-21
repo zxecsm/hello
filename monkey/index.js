@@ -168,51 +168,6 @@
     toolbox.style.display = 'none';
   }
 
-  function showToolbox(e) {
-    const sel = window.getSelection().toString().trim();
-    if (sel && toolbox.style.display !== 'none') return;
-    if (!sel) return hideToolbox();
-
-    toolbox.style.display = 'flex';
-
-    let x = e.clientX || (e.touches && e.touches[0].clientX) || 0;
-    let y = e.clientY || (e.touches && e.touches[0].clientY) || 0;
-
-    const w = toolbox.offsetWidth;
-    const h = toolbox.offsetHeight;
-
-    const margin = 20; // 离指针的最小距离
-
-    // 水平方向
-    if (x < window.innerWidth / 2) {
-      x += margin; // 指针左侧 → 工具框在右边
-      if (x + w > window.innerWidth - 6) x = window.innerWidth - w - 6;
-    } else {
-      x -= w + margin; // 指针右侧 → 工具框在左边
-      if (x < 6) x = 6;
-    }
-
-    // 垂直方向
-    if (y < window.innerHeight / 2) {
-      y += margin; // 指针上方 → 工具框在下方
-      if (y + h > window.innerHeight - 6) y = window.innerHeight - h - 6;
-    } else {
-      y -= h + margin; // 指针下方 → 工具框在上方
-      if (y < 6) y = 6;
-    }
-
-    toolbox.style.left = x + 'px';
-    toolbox.style.top = y + 'px';
-  }
-
-  /* ---------------------- 事件监听 ---------------------- */
-
-  function onSelectDone(e) {
-    setTimeout(() => {
-      showToolbox(e);
-    }, 10);
-  }
-
   /* ---------------------- 图标 ---------------------- */
 
   const ICON_COPY = `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1m3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2m0 16H8V7h11v14Z"/></svg>`;
@@ -304,9 +259,70 @@
       .addEventListener('change', applyTheme);
 
     // 全局事件
-    document.addEventListener('mouseup', onSelectDone);
-    document.addEventListener('touchend', onSelectDone);
-    // 暴露自定义 API
+    document.addEventListener('selectionchange', handle);
+    let selTimer = null;
+    function handle() {
+      if (selTimer) clearTimeout(selTimer);
+
+      selTimer = setTimeout(() => {
+        selTimer = null;
+
+        const sel = window.getSelection();
+        const text = sel.toString().trim();
+
+        if (!text) {
+          hideToolbox();
+          return;
+        }
+
+        const active = document.activeElement;
+
+        // ⭐ 只要选中的是 input / textarea → 根据输入框定位
+        if (
+          active &&
+          (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')
+        ) {
+          const rect = active.getBoundingClientRect();
+          showToolboxAtRect(rect);
+          return;
+        }
+
+        // 普通文本
+        if (sel.rangeCount) {
+          const rect = sel.getRangeAt(0).getBoundingClientRect();
+          if (rect.width !== 0 || rect.height !== 0) {
+            showToolboxAtRect(rect);
+            return;
+          }
+        }
+
+        // rect 获取失败 → 居中兜底
+        showToolboxCenter();
+      }, 200);
+    }
+    function showToolboxAtRect(rect) {
+      toolbox.style.display = 'flex';
+
+      const w = toolbox.offsetWidth;
+      const h = toolbox.offsetHeight;
+
+      let left = rect.left + rect.width / 2 - w / 2;
+      let top = rect.top - h - 10;
+
+      if (left < 6) left = 6;
+      if (left + w > window.innerWidth - 6) left = window.innerWidth - w - 6;
+      if (top < 6) top = rect.bottom + 10;
+
+      toolbox.style.left = left + 'px';
+      toolbox.style.top = top + 'px';
+    }
+    function showToolboxCenter() {
+      toolbox.style.display = 'flex';
+      toolbox.style.left = (window.innerWidth - toolbox.offsetWidth) / 2 + 'px';
+      toolbox.style.top =
+        (window.innerHeight - toolbox.offsetHeight) / 2 + 'px';
+    }
+
     window.SelectionToolbox = { addButton };
   }
 
