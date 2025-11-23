@@ -1948,9 +1948,9 @@ const sysStatus = (() => {
             const { percent, used, total, cores, arch } = res.data[type];
             bar.setProgress(percent, type).setColor(getPercentColor(percent));
             if (type === 'cpu') {
-              text.innerText = `${cores}核 ${arch}`;
+              text.textContent = `${cores}核 ${arch}`;
             } else {
-              text.innerText = `${formatBytes(used)} / ${formatBytes(total)}`;
+              text.textContent = `${formatBytes(used)} / ${formatBytes(total)}`;
             }
           });
           timer = setTimeout(start, 1000);
@@ -2006,6 +2006,9 @@ $rightBox
   .on('click', '.show_todo', showTodoBox)
   .on('click', '.show_count', showCountBox)
   .on('click', '.log_out', userLogout);
+function encodeUrlAttr(url) {
+  return String(url).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
 // 生成导出配置
 function hdExportBm(arr) {
   let str = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
@@ -2021,7 +2024,7 @@ function hdExportBm(arr) {
   arr.forEach((item) => {
     str += `<DT><H3>${encodeHtml(item.title)}</H3>\n<DL><p>\n`;
     item.children.forEach((y) => {
-      str += `<DT><A HREF="${encodeHtml(y.link)}" data-des="${encodeHtml(
+      str += `<DT><A HREF="${encodeUrlAttr(y.link)}" DESCRIPTION="${encodeHtml(
         y.des
       )}">${encodeHtml(y.title)}</A>\n`;
     });

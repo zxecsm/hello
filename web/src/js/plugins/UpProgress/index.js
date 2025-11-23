@@ -54,7 +54,7 @@ class Progress {
     this.title.className = 'title';
     this.box2 = document.createElement('div');
     this.box2.className = 'box2';
-    this.title.innerText = this.name;
+    this.title.textContent = this.name;
     this.box1.appendChild(this.icon);
     this.box1.appendChild(this.title);
     this.box.appendChild(this.box2);
@@ -63,20 +63,20 @@ class Progress {
   }
   update(percent) {
     //上传进度
-    this.title.innerText = this.name;
+    this.title.textContent = this.name;
     this.box2.style.backgroundColor = 'var(--color7)';
     this.box2.style.width = percent * 100 + '%';
   }
   loading(percent) {
-    this.title.innerText = `校验文件...${parseInt(percent * 100)}%`;
+    this.title.textContent = `校验文件...${parseInt(percent * 100)}%`;
   }
   close(title) {
-    this.title.innerText = this.name;
+    this.title.textContent = this.name;
     this.box2.style.width = 100 + '%';
     this.box2.style.backgroundColor = 'green';
     this.box2.style.opacity = '0.8';
     this.box2.style.zIndex = '2';
-    this.box2.innerText = title || '上传成功';
+    this.box2.textContent = title || '上传成功';
     if (this.timer) {
       clearTimeout(this.timer);
       this.timer = null;
@@ -88,12 +88,12 @@ class Progress {
     }, 3000);
   }
   fail(title) {
-    this.title.innerText = this.name;
+    this.title.textContent = this.name;
     this.box2.style.width = 100 + '%';
     this.box2.style.backgroundColor = 'red';
     this.box2.style.opacity = '0.8';
     this.box2.style.zIndex = '2';
-    this.box2.innerText = title || '上传失败';
+    this.box2.textContent = title || '上传失败';
     if (this.timer) {
       clearTimeout(this.timer);
       this.timer = null;

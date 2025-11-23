@@ -56,7 +56,7 @@ export function createNoteDir($box) {
   const fra = _tpl.createFrag();
   (function next(data, level, fra) {
     data.forEach((item) => {
-      const text = item.node.innerText;
+      const text = item.node.textContent;
       const id = `hello_${num++}`;
       item.node.id = id;
       const oLi = _tpl.getDom(

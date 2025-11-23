@@ -826,7 +826,7 @@ function fallbackCopyText(content) {
   const range = document.createRange();
 
   // 设置临时 div 样式
-  tempDiv.innerText = content;
+  tempDiv.textContent = content;
   tempDiv.style.position = 'fixed';
   tempDiv.style.opacity = '0';
   tempDiv.style.pointerEvents = 'none';
@@ -1344,7 +1344,7 @@ export class ContentScroll {
         interSpace = pW / 3;
       if (differ > 0) {
         const oI = document.createElement('i');
-        oI.innerText = this.text;
+        oI.textContent = this.text;
         oI.style.marginLeft = interSpace + 'px';
         oI.style.fontStyle = 'normal';
         this.el.appendChild(oI);
@@ -1362,7 +1362,7 @@ export class ContentScroll {
       clearTimeout(this.timer);
       this.timer = null;
     }
-    this.el.innerText = this.text || '';
+    this.el.textContent = this.text || '';
     this.el.style.transition = 'transform 0s';
     this.el.style.transform = 'none';
   }
@@ -1972,7 +1972,7 @@ export async function showQcode(e, text, title = '展示二维码') {
       function ({ e, box }) {
         const item = _getTarget(box, e, '.item');
         if (item) {
-          copyText(item.innerText);
+          copyText(item.textContent);
         }
       },
       title
@@ -2202,39 +2202,46 @@ export function wrapInput(target, opt) {
 
 // 解析书签
 export function parseBookmark(node) {
+  if (!node) return [];
   const res = [];
   function walk(node, list) {
+    if (!node || !node.children) return;
     const els = node.children;
-    if (els.length > 0) {
-      for (let i = 0; i < els.length; i++) {
-        const item = els[i];
-        const iTagName = item.tagName;
-        if (iTagName === 'P' || iTagName === 'H3') {
-          continue;
-        }
-        if (iTagName === 'DT') {
-          let child = {};
-          const oH3 = item.querySelector('h3');
-          const oDl = item.querySelector('dl');
-          if (oH3 || oDl) {
-            child = {
-              title: oH3 ? oH3.innerText : '',
-              folder: true,
-              children: [],
-            };
+    for (let i = 0; i < els.length; i++) {
+      const item = els[i];
+      const tagName = item.tagName?.toUpperCase();
+      if (tagName === 'P' || tagName === 'H3') {
+        continue;
+      }
+      if (tagName === 'DT') {
+        let child = {};
+        const oH3 = item.querySelector('h3');
+        const oDl = item.querySelector('dl');
+        const oA = item.querySelector('a');
+        if (oH3 || oDl) {
+          child = {
+            title: oH3?.textContent?.trim() || '未命名文件夹',
+            folder: true,
+            children: [],
+          };
+          if (oDl) {
             walk(oDl, child.children);
-          } else {
-            const oA = item.querySelector('a');
-            child = {
-              title: oA ? oA.innerText : '',
-              link: oA ? oA.href : '',
-              des: oA ? oA.dataset.des || '' : '',
-            };
           }
-          list.push(child);
-        } else if (iTagName === 'DL') {
-          walk(item, list);
+        } else if (oA) {
+          child = {
+            title: oA.textContent?.trim() || '未命名书签',
+            link: oA.getAttribute('href') || 'https://github.com',
+            des:
+              oA.getAttribute('description') ||
+              oA.getAttribute('DESCRIPTION') ||
+              '',
+          };
         }
+        if (Object.keys(child).length > 0) {
+          list.push(child);
+        }
+      } else if (tagName === 'DL') {
+        walk(item, list);
       }
     }
   }
@@ -2243,15 +2250,13 @@ export function parseBookmark(node) {
 }
 // 读取书签
 export function getbookmark(str) {
-  // 创建iframe
-  const iframe = document.createElement('iframe');
-  document.body.appendChild(iframe);
-  iframe.style.display = 'none';
-  iframe.contentWindow.document.documentElement.innerHTML = str;
-  const root = iframe.contentWindow.document.querySelector('dl');
-  const res = parseBookmark(root);
-  iframe.remove();
-  return res;
+  if (!str || typeof str !== 'string') {
+    return [];
+  }
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(str, 'text/html');
+  const root = doc.querySelector('dl');
+  return parseBookmark(root);
 }
 // 文字logo
 export function getTextImg(name, size = 400) {

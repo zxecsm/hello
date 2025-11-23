@@ -102,7 +102,7 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
   }
   handleBtnState();
   function cut(idx) {
-    countInfo.innerText = `${idx + 1} / ${arr.length}`;
+    countInfo.textContent = `${idx + 1} / ${arr.length}`;
     scale = 1;
     rotate = 0;
     image.style.opacity = 0;

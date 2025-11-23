@@ -213,7 +213,7 @@ class CreateIframe {
   updateTitle(name) {
     this.name = name;
     this.scrollT.init(this.name);
-    this.tagBox.querySelector('.title').innerText = this.name;
+    this.tagBox.querySelector('.title').textContent = this.name;
   }
   // 处理层级
   hdZindex() {
@@ -377,7 +377,7 @@ function addHideBox(iframeBox) {
   close.className = 'close_btn iconfont icon-close-bold';
   const title = document.createElement('span');
   title.className = 'title';
-  title.innerText = iframeBox.name;
+  title.textContent = iframeBox.name;
   const logo = document.createElement('span');
   const isOuterLink = iframeBox.url.startsWith('http');
 
@@ -487,7 +487,7 @@ function handleHideBox(e, _this) {
         closeAllIframe(ifram);
       }
     },
-    _this.innerText
+    _this.textContent
   );
 }
 export function closeAllIframe(ignoreIframe) {

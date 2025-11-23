@@ -247,7 +247,7 @@ function renderStat() {
   $stat.scrollTop(0);
 }
 $stat.on('click', '.ip', function () {
-  wInput.setValue(this.innerText);
+  wInput.setValue(this.textContent);
   $main.pageNo = 1;
   hdRender();
 });

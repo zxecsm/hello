@@ -59,7 +59,7 @@ class Msg {
     if (this.callback) {
       this.oText.setAttribute('cursor', '');
     }
-    this.oText.innerText = this.opt.message;
+    this.oText.textContent = this.opt.message;
     this.progress = document.createElement('div');
     this.progress.className = 'progress';
     this.oClose = document.createElement('i');
@@ -212,7 +212,7 @@ const botMsg = (function () {
       box.clientWidth;
     }
 
-    textbox.innerText = str;
+    textbox.textContent = str;
     box.style.transition =
       'transform 0.3s ease-in-out,opacity 0.3s ease-in-out';
     box.style.transform = 'none';

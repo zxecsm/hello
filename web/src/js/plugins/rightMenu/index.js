@@ -353,7 +353,7 @@ function selectTabs(e, data, opt = {}, title = '') {
         } else {
           shake(this.rightBox);
         }
-        this.content.querySelector('.err').innerText = errText;
+        this.content.querySelector('.err').textContent = errText;
       } else if (cleanBtn) {
         tabsObj.list = [];
       }
@@ -495,7 +495,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
             if (verify) {
               errText = verify(items[key].value, items) || '';
             }
-            err.innerText = errText;
+            err.textContent = errText;
           },
         });
         wrapInputList.push(wInput);
@@ -538,7 +538,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
               isErr = true;
             }
           }
-          err.innerText = errText;
+          err.textContent = errText;
         });
         if (isErr) {
           shake(this.rightBox);
@@ -579,7 +579,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
             if (id) {
               const sData = selectItem[id - 1];
               items[key].value = sData.value;
-              sBox.querySelector('span').innerText = sData.text;
+              sBox.querySelector('span').textContent = sData.text;
               close();
             }
           },
@@ -810,18 +810,18 @@ class Pop {
     this.box.className = 'box';
     this.textBox = document.createElement('div');
     this.textBox.className = 'text_box';
-    this.textBox.innerText = this.text;
+    this.textBox.textContent = this.text;
     this.btns = document.createElement('div');
     this.btns.className = 'btns';
     this.cancelBtn = document.createElement('button');
     this.cancelBtn.className = `btn btn_${this.cancel.type}`;
     this.cancelBtn.setAttribute('cursor', '');
-    this.cancelBtn.innerText = this.cancel.text;
+    this.cancelBtn.textContent = this.cancel.text;
     this.confirmBtn = document.createElement('button');
     this.confirmBtn.style.cssText = `margin-left: 2rem;`;
     this.confirmBtn.className = `btn btn_${this.confirm.type}`;
     this.confirmBtn.setAttribute('cursor', '');
-    this.confirmBtn.innerText = this.confirm.text;
+    this.confirmBtn.textContent = this.confirm.text;
     this.btns.appendChild(this.cancelBtn);
     this.btns.appendChild(this.confirmBtn);
     this.box.appendChild(this.textBox);
@@ -966,7 +966,7 @@ function percentBar(e, percent, callback) {
     const val =
       (pro1Box.offsetWidth - dolt.offsetWidth) * per + dolt.offsetWidth / 2;
     pro2Box.style.width = val + 'px';
-    percentBox.innerText = parseInt(per * 100) + '%';
+    percentBox.textContent = parseInt(per * 100) + '%';
   }
   function move(e) {
     percent =

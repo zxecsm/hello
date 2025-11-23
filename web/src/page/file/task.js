@@ -61,7 +61,7 @@ class CreateTask {
     this.task.className = 'task';
     this.progress = document.createElement('div');
     this.progress.className = 'progress';
-    this.progress.innerText = '...';
+    this.progress.textContent = '...';
     this.cancelBtn = document.createElement('div');
     this.cancelBtn.className = 'cancel_task iconfont icon-close-bold';
     this.cancelBtn.setAttribute('cursor', 'y');
@@ -78,7 +78,7 @@ class CreateTask {
 
       if (res.code === 1) {
         if (res.data.text) {
-          this.progress.innerText = res.data.text;
+          this.progress.textContent = res.data.text;
         } else {
           if (!this.key) return;
           this.cancel();

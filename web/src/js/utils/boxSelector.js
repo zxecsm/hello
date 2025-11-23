@@ -568,7 +568,7 @@ export class MouseElementTracker {
       opacity: 0,
       transform: 'translateY(-100%)',
     });
-    el.innerText = this.content;
+    el.textContent = this.content;
     return el;
   }
 }

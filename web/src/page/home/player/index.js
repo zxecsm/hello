@@ -2155,7 +2155,7 @@ $msuicContentBox
   })
   .on('click', '.artist_name_text', function (e) {
     e.stopPropagation();
-    musicSearchInput.setValue(this.innerText).focus();
+    musicSearchInput.setValue(this.textContent).focus();
     getSearchSongs(1, 1);
   })
   .on('click', '.song_logo_box', function (e) {
