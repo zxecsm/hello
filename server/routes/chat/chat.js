@@ -320,6 +320,7 @@ export async function hdForwardToLink(req, list = [], fArr, text, fList = []) {
       });
       body = replaceObjectValue(body, { title, text });
 
+      header['x-source-service'] = 'hello';
       if (type === 'get') {
         await axios({
           method: type,

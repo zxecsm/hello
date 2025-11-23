@@ -53,6 +53,13 @@ route.all('/:chat_id/sendMessage', async (req, res) => {
   try {
     const { method } = req._hello;
 
+    const source = req.headers['x-source-service'];
+
+    if (source === 'hello') {
+      _err(res, '不能转发消息给自己')(req);
+      return;
+    }
+
     let text = '';
     if (method === 'get') {
       text = req.query.text;
