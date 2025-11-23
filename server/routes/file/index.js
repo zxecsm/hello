@@ -1593,7 +1593,9 @@ route.post('/merge', async (req, res) => {
 
     let targetPath = getCurPath(
       account,
-      _path.dirname(path) + _path.sanitizeFilename(_path.basename(path)[0])
+      `${_path.dirname(path)}/${_path.sanitizeFilename(
+        _path.basename(path)[0]
+      )}`
     );
 
     if (targetPath === getTrashDir(account)) {

@@ -794,7 +794,7 @@ route.post('/up-voice', async (req, res) => {
       log = `${user.username}-${user.account}`;
     }
 
-    const upload = await db('uploud')
+    const upload = await db('upload')
       .select('url')
       .where({ id: HASH })
       .findOne();
@@ -829,7 +829,7 @@ route.post('/up-voice', async (req, res) => {
       size: duration,
     };
 
-    await db('uploud').insert(fobj);
+    await db('upload').insert(fobj);
 
     const msg = await saveChatMsg(account, obj);
     await sendNotifyMsg(req, obj._to, 'addmsg', obj);
@@ -880,7 +880,7 @@ route.post('/merge', async (req, res) => {
       log = `${user.username}-${user.account}`;
     }
 
-    const upload = await db('uploud')
+    const upload = await db('upload')
       .select('url')
       .where({ id: HASH })
       .findOne();
@@ -925,7 +925,7 @@ route.post('/merge', async (req, res) => {
       size: stat.size,
     };
 
-    await db('uploud').insert(fobj);
+    await db('upload').insert(fobj);
 
     if (type === 'image') {
       obj.content = tName;
@@ -996,7 +996,7 @@ route.post('/repeat', async (req, res) => {
 
     name = _path.sanitizeFilename(name);
 
-    const upload = await db('uploud')
+    const upload = await db('upload')
       .select('url')
       .where({ id: HASH })
       .findOne();
@@ -1022,7 +1022,7 @@ route.post('/repeat', async (req, res) => {
             log = `${user.username}-${user.account}`;
           }
 
-          await db('uploud')
+          await db('upload')
             .where({ id: HASH })
             .update({ update_at: Date.now() });
 
@@ -1067,7 +1067,7 @@ route.post('/repeat', async (req, res) => {
         return;
       }
 
-      await db('uploud').where({ id: HASH }).delete();
+      await db('upload').where({ id: HASH }).delete();
     }
 
     _nothing(res);
