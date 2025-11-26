@@ -92,10 +92,10 @@ const appConfig = {
     return _path.normalize(this.configDir(account, 'logo'), ...arg);
   },
   fileConfigDir(account, ...arg) {
-    return _path.normalize(this.configDir(account, 'file'), ...arg);
+    return _path.normalize(this.configDir(account, 'file_config'), ...arg);
   },
   searchConfigDir(account, ...arg) {
-    return _path.normalize(this.configDir(account, 'search'), ...arg);
+    return _path.normalize(this.configDir(account, 'search_config'), ...arg);
   },
   noteHistoryDir(account, ...arg) {
     return _path.normalize(this.configDir(account, 'note_history'), ...arg);
