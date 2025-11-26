@@ -138,7 +138,7 @@ export default async function getFile(req, res, p) {
         paramErr(res, req);
         return;
       }
-      path = appConfig.logoDir(account, pArr.slice(1).join('/'));
+      path = appConfig.logoDir(acc, pArr.slice(1).join('/'));
     } else {
       path = appConfig.appFilesDir(url);
     }
