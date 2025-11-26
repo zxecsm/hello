@@ -106,7 +106,7 @@ route.get('/user-list', async (req, res) => {
     }
 
     const total = await db('user')
-      .where({ account: { '!=': 'hello' } })
+      .where({ account: { '!=': appConfig.notifyAccount } })
       .count();
 
     const result = createPagingData(Array(total), pageSize, pageNo);
@@ -116,7 +116,7 @@ route.get('/user-list', async (req, res) => {
     let list = await db('user')
       .select('account,username,update_at,email,state,hide')
       .where({
-        account: { '!=': 'hello' },
+        account: { '!=': appConfig.notifyAccount },
       })
       .orderBy('update_at', 'desc')
       .page(pageSize, offset)
@@ -177,8 +177,8 @@ route.post('/account-state', async (req, res) => {
     if (
       !validaString(account, 1, fieldLength.id, 1) ||
       !validationValue(state, [1, 0]) ||
-      account === 'hello' ||
-      account === 'root'
+      account === appConfig.notifyAccount ||
+      account === appConfig.adminAccount
     ) {
       paramErr(res, req);
       return;
@@ -203,8 +203,8 @@ route.post('/delete-account', async (req, res) => {
 
     if (
       !validaString(account, 1, fieldLength.id, 1) ||
-      account === 'root' ||
-      account === 'hello'
+      account === appConfig.adminAccount ||
+      account === appConfig.notifyAccount
     ) {
       paramErr(res, req);
       return;
@@ -221,7 +221,7 @@ route.post('/delete-account', async (req, res) => {
 // 清理歌曲文件
 route.get('/clean-music-file', async (req, res) => {
   try {
-    const musicDir = _path.normalize(appConfig.appData, 'music');
+    const musicDir = appConfig.musicDir();
 
     if (await _f.exists(musicDir)) {
       const songs = await db('songs').select('url').find();
@@ -249,7 +249,7 @@ route.get('/clean-music-file', async (req, res) => {
 // 清理壁纸文件
 route.get('/clean-bg-file', async (req, res) => {
   try {
-    const bgDir = _path.normalize(appConfig.appData, 'bg');
+    const bgDir = appConfig.bgDir();
 
     if (await _f.exists(bgDir)) {
       const bgs = await db('bg').find();
@@ -274,7 +274,7 @@ route.get('/clean-bg-file', async (req, res) => {
 // 清理图床文件
 route.get('/clean-pic-file', async (req, res) => {
   try {
-    const picDir = _path.normalize(appConfig.appData, 'pic');
+    const picDir = appConfig.picDir();
 
     if (await _f.exists(picDir)) {
       const pics = await db('pic').find();
@@ -308,9 +308,7 @@ route.get('/clean-thumb-file', async (req, res) => {
     }
 
     const delP =
-      type === 'all'
-        ? _path.normalize(appConfig.appData, 'thumb')
-        : _path.normalize(appConfig.appData, 'thumb', type);
+      type === 'all' ? appConfig.thumbDir() : appConfig.thumbDir(type);
 
     await _delDir(delP);
 
@@ -356,13 +354,7 @@ route.get('/log', async (req, res) => {
       return;
     }
 
-    const log = (
-      await _f.readFile(
-        _path.normalize(appConfig.appData, 'log', name),
-        null,
-        ''
-      )
-    )
+    const log = (await _f.readFile(appConfig.logDir(name), null, ''))
       .toString()
       .split('\n')
       .filter(Boolean)
@@ -377,9 +369,9 @@ route.get('/log', async (req, res) => {
 // 日志文件列表
 route.get('/log-list', async (req, res) => {
   try {
-    const list = (
-      await readMenu(_path.normalize(appConfig.appData, 'log'))
-    ).filter((f) => f.type === 'file');
+    const list = (await readMenu(appConfig.logDir())).filter(
+      (f) => f.type === 'file'
+    );
 
     list.sort((a, b) => b.time - a.time);
     _success(res, 'ok', list);
@@ -398,9 +390,9 @@ route.post('/delete-log', async (req, res) => {
     }
 
     if (name === 'all') {
-      await _delDir(_path.normalize(appConfig.appData, 'log'));
+      await _delDir(appConfig.logDir());
     } else {
-      await _delDir(_path.normalize(appConfig.appData, 'log', name));
+      await _delDir(appConfig.logDir(name));
     }
 
     _success(res, '删除日志成功')(req, name, 1);
@@ -513,41 +505,6 @@ route.post('/clean-database', async (req, res) => {
   }
 });
 
-// 清理logo文件
-route.get('/clean-logo-file', async (req, res) => {
-  try {
-    let bmk = await db('bmk')
-      .select('logo')
-      .where({ logo: { '!=': '' } })
-      .find();
-    bmk = bmk.map((item) => _path.basename(item.logo)[0]);
-
-    let user = await db('user')
-      .select('logo')
-      .where({ logo: { '!=': '' } })
-      .find();
-    user = user.map((item) => _path.basename(item.logo)[0]);
-
-    const logos = [...bmk, ...user];
-    const dir = _path.normalize(appConfig.appData, 'logo');
-
-    const logoFiles = await getAllFile(dir);
-
-    await concurrencyTasks(logoFiles, 5, async (item) => {
-      const { name, path } = item;
-      const p = _path.normalize(path, name);
-      if (!logos.some((item) => item === name)) {
-        await _delDir(p);
-      }
-    });
-
-    await cleanEmptyDirectories(dir);
-    _success(res, '清理LOGO文件成功')(req);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
 // 自定义代码
 route.post('/custom-code', async (req, res) => {
   try {
@@ -563,10 +520,8 @@ route.post('/custom-code', async (req, res) => {
       return;
     }
 
-    const u = _path.normalize(appConfig.appData, 'custom');
-
-    await _f.writeFile(_path.normalize(u, 'custom_head.html'), head);
-    await _f.writeFile(_path.normalize(u, 'custom_body.html'), body);
+    await _f.writeFile(appConfig.customDir('custom_head.html'), head);
+    await _f.writeFile(appConfig.customDir('custom_body.html'), body);
 
     _success(res, '添加自定义代码成功')(req);
   } catch (error) {
@@ -686,8 +641,8 @@ route.post('/create-account', async (req, res) => {
       password: await _crypto.hashPassword(password),
     });
 
-    await becomeFriends(account, 'chang');
-    await becomeFriends(account, 'hello');
+    await becomeFriends(account, appConfig.chatRoomAccount);
+    await becomeFriends(account, appConfig.notifyAccount);
 
     _success(res, '创建账号成功', { account, username })(
       req,
@@ -714,9 +669,9 @@ timedTask.add(async (flag) => {
     await cleanUpload();
 
     // 定期清理LOG文件
-    const list = (
-      await readMenu(_path.normalize(appConfig.appData, 'log'))
-    ).filter((f) => f.type === 'file');
+    const list = (await readMenu(appConfig.logDir())).filter(
+      (f) => f.type === 'file'
+    );
 
     if (list.length > 200) {
       list.sort((a, b) => b.time - a.time);

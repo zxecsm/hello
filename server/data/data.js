@@ -12,7 +12,7 @@ const __dirname = getDirname(import.meta);
 const defaultConfigPath = resolve(__dirname, 'config.json');
 
 // 配置路径
-const dataConfigPath = _path.normalize(appConfig.appData, '/data/config.json');
+const dataConfigPath = appConfig.dataDir('config.json');
 
 // 加载默认配置
 let config = loadConfig(defaultConfigPath);

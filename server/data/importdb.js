@@ -1,11 +1,10 @@
 import _f from '../utils/f.js';
-import _path from '../utils/path.js';
-import { db } from '../utils/sqlite.js';
+import { db, runSql } from '../utils/sqlite.js';
 import appConfig from './config.js';
 import initDatabase from './initDatabase.js';
 
 (async () => {
-  const dataPath = _path.normalize(appConfig.appData, '/data'); // 数据目录
+  const dataPath = appConfig.dataDir(); // 数据目录
   try {
     const exportPath = `${dataPath}/db.json`; // 导出文件路径
     const tables = JSON.parse((await _f.fsp.readFile(exportPath)).toString());
@@ -14,6 +13,7 @@ import initDatabase from './initDatabase.js';
 
     // 插入数据
     for (const { name, data } of tables) {
+      await runSql(`DELETE FROM sqlite_sequence WHERE name=?;`, [name]); // 从头开始自增
       await db(name).insertMany(
         data.map((item) => {
           delete item.serial;

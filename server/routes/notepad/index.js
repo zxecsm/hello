@@ -13,7 +13,6 @@ import appConfig from '../../data/config.js';
 import _f from '../../utils/f.js';
 
 import { _delDir } from '../file/file.js';
-import _path from '../../utils/path.js';
 import { fieldLength } from '../config.js';
 
 const route = express.Router();
@@ -28,7 +27,7 @@ route.get('/', async (req, res) => {
       return;
     }
 
-    const p = _path.normalize(appConfig.appData, 'notepad', `${k}.md`);
+    const p = appConfig.notepadDir(`${k}.md`);
 
     const note = (await _f.readFile(p, null, '')).toString();
 
@@ -52,7 +51,7 @@ route.post('/', async (req, res) => {
       return;
     }
 
-    const p = _path.normalize(appConfig.appData, 'notepad', `${k}.md`);
+    const p = appConfig.notepadDir(`${k}.md`);
 
     if (data) {
       await _f.writeFile(p, data);

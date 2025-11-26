@@ -47,7 +47,6 @@ import todoRoute from './routes/todo/index.js';
 import userRoute from './routes/user/index.js';
 import taskRoute from './routes/task/index.js';
 import echoRoute from './routes/echo/index.js';
-import _path from './utils/path.js';
 import { fieldLength } from './routes/config.js';
 import getClientIp from './utils/getClientIp.js';
 import getFile from './routes/getfile/index.js';
@@ -69,7 +68,11 @@ const informReqLimit = debounce(
   async (req) => {
     try {
       const { os, ip } = req._hello;
-      await heperMsgAndForward(req, 'root', `[${os}(${ip})] 请求频率超过限制`);
+      await heperMsgAndForward(
+        req,
+        appConfig.adminAccount,
+        `[${os}(${ip})] 请求频率超过限制`
+      );
     } catch (error) {
       await writelog(req, `[ informReqLimit ] - ${error}`, 'error');
     }
@@ -127,42 +130,21 @@ app.use(async (req, res, next) => {
 
 app.use(
   '/api/pub/font',
-  express.static(_path.normalize(appConfig.appData, 'font'), {
+  express.static(appConfig.fontDir(), {
     dotfiles: 'allow',
     maxAge: 2592000000,
   })
 );
 app.use(
   '/api/pub/share',
-  express.static(_path.normalize(appConfig.appData, 'share'), {
-    dotfiles: 'allow',
-    maxAge: 2592000000,
-  })
-);
-app.use(
-  '/api/pub/logo',
-  express.static(_path.normalize(appConfig.appData, 'logo'), {
+  express.static(appConfig.shareDir(), {
     dotfiles: 'allow',
     maxAge: 2592000000,
   })
 );
 app.use(
   '/api/pub/picture',
-  express.static(_path.normalize(appConfig.appData, 'pic'), {
-    dotfiles: 'allow',
-    maxAge: 2592000000,
-  })
-);
-app.use(
-  '/api/pub/searchlogo',
-  express.static(_path.normalize(appConfig.appData, 'searchlogo'), {
-    dotfiles: 'allow',
-    maxAge: 2592000000,
-  })
-);
-app.use(
-  '/api/pub/playerlogo',
-  express.static(_path.normalize(appConfig.appData, 'playerlogo'), {
+  express.static(appConfig.picDir(), {
     dotfiles: 'allow',
     maxAge: 2592000000,
   })
@@ -181,7 +163,7 @@ app.use(async (req, res, next) => {
       jwtData &&
       jwtData.data.type === 'authentication' &&
       account &&
-      account !== 'hello'
+      account !== appConfig.notifyAccount
     ) {
       const { iat, exp } = jwtData; // token有效期范围
       const user = await getUserInfo(account, '*');
@@ -189,7 +171,7 @@ app.use(async (req, res, next) => {
       //  对比token生成的时间
       if (user && (user.exp_token_time || 0) < iat) {
         req._hello.userinfo = user; // 验证身份成功，保存用户信息
-        req._hello.isRoot = user.account === 'root';
+        req._hello.isRoot = user.account === appConfig.adminAccount;
 
         // token剩下一半时间到期，重置token
         if (Date.now() / 1000 - iat >= (exp - iat) / 2) {

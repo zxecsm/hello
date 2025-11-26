@@ -8,7 +8,6 @@ import { writelog, getDirname } from '../utils/utils.js';
 
 import { becomeFriends } from '../routes/chat/chat.js';
 import nanoid from '../utils/nanoid.js';
-import _path from '../utils/path.js';
 import appConfig from './config.js';
 import _crypto from '../utils/crypto.js';
 
@@ -395,6 +394,8 @@ CREATE TABLE IF NOT EXISTS user (
     hide                 INTEGER NOT NULL DEFAULT (0),
     verify               TEXT    NOT NULL DEFAULT (''),
     email                TEXT    NOT NULL DEFAULT (''),
+    note_history         INTEGER NOT NULL DEFAULT (1),
+    file_history         INTEGER NOT NULL DEFAULT (1),
     receive_chat_state   INTEGER NOT NULL DEFAULT (0),
     forward_msg_state    INTEGER NOT NULL DEFAULT (0),
     forward_msg_link     TEXT    NOT NULL DEFAULT ('') 
@@ -431,7 +432,7 @@ async function insertInitialData() {
     {
       create_at: nowTime,
       update_at: nowTime,
-      account: 'root',
+      account: appConfig.adminAccount,
       username: 'admin',
       chat_id: nanoid(),
       password: await _crypto.hashPassword(_crypto.getStringHash(initPassword)),
@@ -439,8 +440,8 @@ async function insertInitialData() {
     {
       create_at: nowTime,
       update_at: nowTime,
-      account: 'hello',
-      username: 'hello',
+      account: appConfig.notifyAccount,
+      username: appConfig.notifyAccount,
       chat_id: nanoid(),
       password: '',
     },
@@ -450,8 +451,8 @@ async function insertInitialData() {
     {
       create_at: nowTime,
       update_at: nowTime,
-      id: 'about',
-      account: 'root',
+      id: appConfig.aboutid,
+      account: appConfig.adminAccount,
       title: 'About',
       share: 1,
       content: (
@@ -461,8 +462,8 @@ async function insertInitialData() {
     {
       create_at: nowTime,
       update_at: nowTime,
-      id: 'tips',
-      account: 'root',
+      id: appConfig.tipsid,
+      account: appConfig.adminAccount,
       title: 'Tips',
       share: 1,
       content: '',
@@ -472,8 +473,8 @@ async function insertInitialData() {
   try {
     await db('user').insertMany(userData);
     await db('note').insertMany(noteData);
-    await becomeFriends('root', 'chang');
-    await becomeFriends('root', 'hello');
+    await becomeFriends(appConfig.adminAccount, appConfig.chatRoomAccount);
+    await becomeFriends(appConfig.adminAccount, appConfig.notifyAccount);
     // eslint-disable-next-line no-console
     console.log(`\nusername: admin\npassword: ${initPassword}
       `);
@@ -486,7 +487,7 @@ async function insertInitialData() {
 // 主函数：执行数据库初始化操作
 export default async function initDatabase(noInitData = false) {
   try {
-    await db('user').where({ account: 'root' }).findOne();
+    await db('user').where({ account: appConfig.adminAccount }).findOne();
   } catch {
     try {
       // 如果表不存在则创建表
@@ -496,7 +497,7 @@ export default async function initDatabase(noInitData = false) {
         await insertInitialData();
       }
     } catch (error) {
-      await _f.del(_path.normalize(appConfig.appData, '/data/db'));
+      await _f.del(appConfig.databaseDir());
       throw error;
     }
   }

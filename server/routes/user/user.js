@@ -5,18 +5,17 @@ import { resolve } from 'path';
 import { db } from '../../utils/sqlite.js';
 
 import _f from '../../utils/f.js';
-import { _delDir, getRootDir } from '../file/file.js';
+import { _delDir } from '../file/file.js';
 
 import shareVerify from '../../utils/shareVerify.js';
 import { isValidShare, errLog, getDirname } from '../../utils/utils.js';
-import _path from '../../utils/path.js';
 import jwt from '../../utils/jwt.js';
 
 const __dirname = getDirname(import.meta);
 
 // 获取字体列表
 export async function getFontList() {
-  const p = _path.normalize(appConfig.appData, 'font');
+  const p = appConfig.fontDir();
   if (!(await _f.exists(p))) {
     await _f.cp(resolve(__dirname, `../../font`), p);
   }
@@ -26,23 +25,6 @@ export async function getFontList() {
 // 获取用户信息
 export async function getUserInfo(account, fields = '*') {
   return db('user').select(fields).where({ account, state: 1 }).findOne();
-}
-
-// 获取外部播放器配置
-export async function playInConfig() {
-  const p = _path.normalize(appConfig.appData, '/data/playIn.json');
-
-  const logop = _path.normalize(appConfig.appData, 'playerlogo');
-
-  if (!(await _f.exists(logop))) {
-    await _f.cp(resolve(__dirname, `../../img/playerlogo`), logop);
-  }
-
-  if (!(await _f.exists(p))) {
-    await _f.cp(resolve(__dirname, `../../data/playIn.json`), p);
-  }
-
-  return JSON.parse(await _f.fsp.readFile(p));
 }
 
 // 删除用户数据
@@ -79,9 +61,7 @@ export async function deleteUser(account) {
 
   await db('todo').where({ account }).batchDelete();
 
-  await _delDir(_path.normalize(appConfig.appData, 'logo', account));
-
-  await _delDir(getRootDir(account));
+  await _delDir(appConfig.userRootDir(account));
 }
 
 // 验证分享

@@ -95,7 +95,10 @@ export async function hdHelloMsg(req, data, type) {
 export async function saveChatMsg(account, obj) {
   obj._from = account;
 
-  obj.flag = obj._to === 'chang' ? 'chang' : `${account}-${obj._to}`;
+  obj.flag =
+    obj._to === appConfig.chatRoomAccount
+      ? appConfig.chatRoomAccount
+      : `${account}-${obj._to}`;
 
   if (!obj.id) obj.id = nanoid();
   if (!obj.create_at) obj.create_at = Date.now();
@@ -128,11 +131,11 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
   const t = Date.now();
 
   // 群消息
-  if (notifyObj.data.to === 'chang') {
+  if (notifyObj.data.to === appConfig.chatRoomAccount) {
     if (flag === 'addmsg') {
       // 给所有人只标记新增消息为未读，忽略删除，清空，抖一下
       await db('friends')
-        .where({ friend: 'chang', read: 1 })
+        .where({ friend: appConfig.chatRoomAccount, read: 1 })
         .batchUpdate({ read: 0 });
     }
 
@@ -153,7 +156,7 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
       // 群消息是否勿扰
       const fList = await db('friends')
         .select('notify,account')
-        .where({ account: { in: list }, friend: 'chang' })
+        .where({ account: { in: list }, friend: appConfig.chatRoomAccount })
         .find();
 
       list.forEach((key) => {
@@ -220,7 +223,11 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
       _connect.send(account, nanoid(), notifyObj);
     } else {
       notifyObj.data.from.des =
-        account === 'hello' ? appConfig.helloDes : fInfo ? fInfo.des : '';
+        account === appConfig.notifyAccount
+          ? appConfig.notifyAccountDes
+          : fInfo
+          ? fInfo.des
+          : '';
 
       _connect.send(notifyObj.data.to, req._hello.temid, notifyObj);
 
@@ -234,9 +241,9 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
 
 // 发送消息到自定义地址
 export async function sendNotificationsToCustomAddresses(req, obj) {
-  if (obj._from === obj._to || obj._to === 'hello') return; // 文件传输和给助手发的消息不发送
+  if (obj._from === obj._to || obj._to === appConfig.notifyAccount) return; // 文件传输和给助手发的消息不发送
 
-  if (obj._to === 'chang') {
+  if (obj._to === appConfig.chatRoomAccount) {
     // 群，发送给所有配置了自定义地址的用户
     let lastSerial = 0;
 
@@ -269,7 +276,7 @@ export async function sendNotificationsToCustomAddresses(req, obj) {
         .select('notify,account')
         .where({
           account: { in: list.map((item) => item.account) },
-          friend: 'chang',
+          friend: appConfig.chatRoomAccount,
         })
         .find();
 
@@ -312,7 +319,9 @@ export async function hdForwardToLink(req, list = [], fArr, text, fList = []) {
       if (fno && fno.notify === 0) return;
       const des = fe ? fe.des : '';
       const title =
-        fromAccount === 'hello' ? appConfig.helloDes : des || username;
+        fromAccount === appConfig.notifyAccount
+          ? appConfig.notifyAccountDes
+          : des || username;
 
       link = tplReplace(link, {
         text: encodeURIComponent(text),
@@ -320,7 +329,7 @@ export async function hdForwardToLink(req, list = [], fArr, text, fList = []) {
       });
       body = replaceObjectValue(body, { title, text });
 
-      header['x-source-service'] = 'hello';
+      header['x-source-service'] = appConfig.appName;
       if (type === 'get') {
         await axios({
           method: type,
@@ -388,8 +397,8 @@ export async function becomeFriends(
   msg = ''
 ) {
   if (
-    friend !== 'chang' &&
-    friend !== 'hello' &&
+    friend !== appConfig.chatRoomAccount &&
+    friend !== appConfig.notifyAccount &&
     me !== friend &&
     !(await getUserInfo(friend, 'account'))
   )
@@ -417,7 +426,7 @@ export async function becomeFriends(
   const create_at = Date.now();
   if (
     // 如果是自己或群，并且没有
-    (friend === 'chang' || me === friend) &&
+    (friend === appConfig.chatRoomAccount || me === friend) &&
     !isFriend1
   ) {
     await db('friends').insert({
@@ -466,8 +475,8 @@ export async function heperMsgAndForward(req, to, text) {
     {
       _hello: {
         userinfo: {
-          username: 'hello',
-          account: 'hello',
+          username: appConfig.notifyAccount,
+          account: appConfig.notifyAccount,
         },
       },
     },
@@ -485,14 +494,14 @@ export async function helloHelperMsg(to, text) {
     type: 'text',
   };
 
-  const msg = await saveChatMsg('hello', msgObj);
+  const msg = await saveChatMsg(appConfig.notifyAccount, msgObj);
 
   await sendNotifyMsg(
     {
       _hello: {
         userinfo: {
-          account: 'hello',
-          username: 'hello',
+          account: appConfig.notifyAccount,
+          username: appConfig.notifyAccount,
         },
       },
     },
@@ -536,7 +545,7 @@ export function getChatUserList(account, pageSize, offset) {
 // 清理到期聊天文件
 export async function cleanUpload(req = false) {
   if (_d.cacheExp.uploadSaveDay > 0) {
-    const uploadDir = _path.normalize(appConfig.appData, 'upload');
+    const uploadDir = appConfig.uploadDir();
 
     if (!(await _f.exists(uploadDir))) return;
 

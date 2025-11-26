@@ -24,8 +24,8 @@ import {
   _getTarget,
   LazyLoad,
   imgjz,
-  getStaticPath,
   getFaviconPath,
+  getFilePath,
 } from '../../js/utils/utils';
 
 import _d from '../../js/common/config';
@@ -354,7 +354,7 @@ export function renderList(y) {
             );
 
             if (logo) {
-              logo = getStaticPath(logo);
+              logo = getFilePath(logo);
             } else {
               logo = getFaviconPath(link);
             }
@@ -371,7 +371,7 @@ export function renderList(y) {
             );
 
             if (logo) {
-              logo = getStaticPath(logo);
+              logo = getFilePath(logo);
             } else {
               logo = getFaviconPath(link);
             }

@@ -4,7 +4,7 @@ import _f from './f.js';
 import _path from './path.js';
 
 // DB 文件路径
-const dbPath = _path.normalize(appConfig.appData, '/data/db/hello.db');
+const dbPath = appConfig.databaseDir('hello.db');
 _f.fs.mkdirSync(_path.dirname(dbPath), { recursive: true });
 
 // ===== SQLite 封装 =====

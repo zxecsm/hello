@@ -31,7 +31,7 @@ export function getFilename(meta) {
 const lock = new Lock();
 
 // 记录日志
-export async function writelog(req, str, flag = 'hello') {
+export async function writelog(req, str, flag = appConfig.appName) {
   const unLock = await lock.acquire();
 
   try {
@@ -57,7 +57,7 @@ export async function writelog(req, str, flag = 'hello') {
       str = `[${date}] - ${str}\n`;
     }
 
-    const targetPath = _path.normalize(appConfig.appData, 'log', `${flag}.log`);
+    const targetPath = appConfig.logDir(`${flag}.log`);
 
     // console.log(str);
     await _f.appendFile(targetPath, str);
@@ -67,9 +67,7 @@ export async function writelog(req, str, flag = 'hello') {
     if (s.size > 9 * 1024 * 1024) {
       await _f.rename(
         targetPath,
-        _path.normalize(
-          appConfig.appData,
-          'log',
+        appConfig.logDir(
           `${formatDate({
             template: '{0}{1}{2}_{3}{4}{5}',
           })}_${flag}.log`
@@ -113,6 +111,11 @@ export function paramErr(res, req) {
   }
 
   _err(res, '参数错误')(req, param || '', 1);
+}
+
+// 验证颜色
+export function isValidColor(value) {
+  return /^#[0-9a-fA-F]{6}$/.test(value);
 }
 
 // 格式时间日期
@@ -672,7 +675,7 @@ export const _type = (function () {
 // 时间路径
 export function getTimePath(timestamp) {
   return formatDate({
-    template: '{0}/{1}/{2}',
+    template: '{0}/{1}/{2}/{3}',
     timestamp: timestamp || Date.now(),
   });
 }

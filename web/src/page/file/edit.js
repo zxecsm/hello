@@ -6,10 +6,15 @@ import {
   debounce,
   getTextSize,
   isDarkMode,
+  isLogin,
   percentToValue,
 } from '../../js/utils/utils';
 import _msg from '../../js/plugins/message';
-import { reqFileSaveFile } from '../../api/file';
+import {
+  reqFileGetHistoryState,
+  reqFileHistoryState,
+  reqFileSaveFile,
+} from '../../api/file';
 import bus from '../../js/utils/bus';
 import rMenu from '../../js/plugins/rightMenu';
 import _path from '../../js/utils/path';
@@ -123,7 +128,16 @@ const editTitleContentScroll = new ContentScroll(
   $editFile.find('.head_btn .text .scroll_text')[0]
 );
 // 设置
-function settingMenu(e) {
+async function settingMenu(e) {
+  let fileHistoryState = 0;
+  if (isLogin()) {
+    try {
+      const res = await reqFileGetHistoryState();
+      if (res.code === 1) {
+        fileHistoryState = res.data.file_history;
+      }
+    } catch {}
+  }
   const data = [
     { id: 'size', text: '字体大小', beforeIcon: 'iconfont icon-font-size' },
     {
@@ -133,10 +147,22 @@ function settingMenu(e) {
     },
     { id: 'code', text: '语言', beforeIcon: 'iconfont icon-daimakuai' },
   ];
+  if (isLogin()) {
+    data.push({
+      id: 'history',
+      text: '保存文件历史',
+      beforeIcon: 'iconfont icon-history',
+      afterIcon:
+        'iconfont ' +
+        (fileHistoryState ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+      param: { value: fileHistoryState },
+    });
+  }
   rMenu.selectMenu(
     e,
     data,
-    ({ e, id }) => {
+    ({ e, id, loading, resetMenu, param }) => {
+      const curItem = data.find((item) => item.id === id);
       if (id === 'size') {
         rMenu.percentBar(e, fileFontSize, (percent) => {
           $editFile.find('.editor').css({
@@ -174,6 +200,27 @@ function settingMenu(e) {
           },
           '选择语言'
         );
+      } else if (id === 'history') {
+        loading.start();
+        reqFileHistoryState({ state: param.value ? 0 : 1 })
+          .then((res) => {
+            if (res.code === 1) {
+              loading.end();
+              if (param.value) {
+                curItem.afterIcon = 'iconfont icon-kaiguan-guan';
+                curItem.param.value = false;
+                _msg.success('关闭成功');
+              } else {
+                curItem.afterIcon = 'iconfont icon-kaiguan-kai1';
+                curItem.param.value = true;
+                _msg.success('开启成功');
+              }
+              resetMenu(data);
+            }
+          })
+          .catch(() => {
+            loading.end();
+          });
       }
     },
     '设置'

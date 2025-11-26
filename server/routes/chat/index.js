@@ -55,7 +55,7 @@ route.all('/:chat_id/sendMessage', async (req, res) => {
 
     const source = req.headers['x-source-service'];
 
-    if (source === 'hello') {
+    if (source === appConfig.appName) {
       _err(res, '不能转发消息给自己')(req);
       return;
     }
@@ -87,13 +87,13 @@ route.all('/:chat_id/sendMessage', async (req, res) => {
       .findOne();
 
     if (!user) {
-      _err(res, `${appConfig.helloDes}未开启收信接口`)(req);
+      _err(res, `${appConfig.notifyAccountDes}未开启收信接口`)(req);
       return;
     }
 
     await heperMsgAndForward(req, user.account, text);
 
-    _success(res, `接收${appConfig.helloDes}消息成功`)(req, text, 1);
+    _success(res, `接收${appConfig.notifyAccountDes}消息成功`)(req, text, 1);
   } catch (error) {
     _err(res)(req, error);
   }
@@ -145,7 +145,7 @@ route.post('/setdes', async (req, res) => {
     if (
       !validaString(acc, 1, fieldLength.id, 1) ||
       !validaString(des, 0, fieldLength.chatDes) ||
-      acc === 'hello'
+      acc === appConfig.notifyAccount
     ) {
       paramErr(res, req);
       return;
@@ -154,7 +154,7 @@ route.post('/setdes', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     // 过滤群和自己
-    if (account === acc || acc === 'chang') {
+    if (account === acc || acc === appConfig.chatRoomAccount) {
       _err(res, '设置备注失败')(req, acc, 1);
       return;
     }
@@ -183,7 +183,7 @@ route.get('/getdes', async (req, res) => {
     const des = f ? f.des : '';
     const notify = f ? f.notify : 1;
 
-    if (acc === 'chang') {
+    if (acc === appConfig.chatRoomAccount) {
       _success(res, 'ok', {
         username: '聊天室',
         des: '聊天室',
@@ -192,10 +192,10 @@ route.get('/getdes', async (req, res) => {
         notify,
       });
       return;
-    } else if (acc === 'hello') {
+    } else if (acc === appConfig.notifyAccount) {
       _success(res, 'ok', {
-        username: 'hello',
-        des: appConfig.helloDes,
+        username: appConfig.notifyAccount,
+        des: appConfig.notifyAccountDes,
         online: true,
         os: [],
         notify,
@@ -204,7 +204,7 @@ route.get('/getdes', async (req, res) => {
     } else if (acc === account) {
       _success(res, 'ok', {
         username,
-        des: appConfig.userDes,
+        des: appConfig.ownAccountDes,
         online: true,
         os: [],
         notify,
@@ -272,9 +272,9 @@ route.get('/read-msg', async (req, res) => {
 
     const chatdb = db('chat_user_view');
 
-    if (acc === 'chang') {
+    if (acc === appConfig.chatRoomAccount) {
       // 群
-      chatdb.where({ flag: 'chang' });
+      chatdb.where({ flag: appConfig.chatRoomAccount });
     } else {
       chatdb.where({
         flag: { in: [`${account}-${acc}`, `${acc}-${account}`] },
@@ -373,7 +373,7 @@ route.get('/expired', async (req, res) => {
     const file = await db('upload').select('url').where({ id: hash }).findOne();
 
     if (file) {
-      const u = _path.normalize(appConfig.appData, 'upload', file.url);
+      const u = appConfig.uploadDir(file.url);
 
       if (await _f.exists(u)) {
         _success(res, 'ok', {
@@ -411,7 +411,7 @@ route.post('/send-msg', async (req, res) => {
 
     let log = to;
     // 非群非助手验证用户是否存在
-    if (to !== 'chang' && to !== 'hello') {
+    if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
       const user = await getUserInfo(to, 'account,username');
 
       if (!user) {
@@ -434,7 +434,7 @@ route.post('/send-msg', async (req, res) => {
     const msg = await saveChatMsg(account, obj);
     await sendNotifyMsg(req, obj._to, 'addmsg', obj);
 
-    if (to === 'hello') {
+    if (to === appConfig.notifyAccount) {
       // 如果发送给助手，处理响应
       await hdHelloMsg(req, content, obj.type);
     }
@@ -467,7 +467,7 @@ route.post('/forward', async (req, res) => {
     }
 
     let log = to;
-    if (to !== 'chang' && to !== 'hello') {
+    if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
       const user = await getUserInfo(to, 'account,username');
 
       if (!user) {
@@ -490,7 +490,7 @@ route.post('/forward', async (req, res) => {
     const { flag, hash } = chat;
 
     // 只能转发群和发送给自己的或自己发送的消息
-    if (flag !== 'chang' && !flag.includes(account)) {
+    if (flag !== appConfig.chatRoomAccount && !flag.includes(account)) {
       _err(res, '无权转发')(req, id, 1);
       return;
     }
@@ -512,7 +512,7 @@ route.post('/forward', async (req, res) => {
     const msg = await saveChatMsg(account, chat);
     await sendNotifyMsg(req, to, 'addmsg', chat);
 
-    if (to === 'hello') {
+    if (to === appConfig.notifyAccount) {
       await hdHelloMsg(req, chat.content, chat.type);
     }
 
@@ -545,11 +545,11 @@ route.get('/news', async (req, res) => {
     }
 
     const group = await db('friends')
-      .where({ account, read: 0, friend: 'chang' })
+      .where({ account, read: 0, friend: appConfig.chatRoomAccount })
       .count();
 
     const friend = await db('friends')
-      .where({ account, read: 0, friend: { '!=': 'chang' } })
+      .where({ account, read: 0, friend: { '!=': appConfig.chatRoomAccount } })
       .count();
 
     _success(res, 'ok', {
@@ -577,7 +577,7 @@ route.post('/delete-msg', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     let log = to;
-    if (to !== 'chang' && to !== 'hello') {
+    if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
       const user = await getUserInfo(to, 'account,username');
 
       if (!user) {
@@ -594,10 +594,12 @@ route.post('/delete-msg', async (req, res) => {
 
       _success(res, '撤回消息成功')(req, `${id}=>${log}`, 1);
     } else {
-      if (to === 'chang') {
+      if (to === appConfig.chatRoomAccount) {
         // 群消息只能管理员清空
         if (req._hello.isRoot) {
-          await db('chat').where({ _to: 'chang' }).batchDelete();
+          await db('chat')
+            .where({ _to: appConfig.chatRoomAccount })
+            .batchDelete();
 
           await sendNotifyMsg(req, to, 'clear');
 
@@ -630,9 +632,9 @@ route.post('/shake-msg', async (req, res) => {
 
     if (
       !validaString(to, 1, fieldLength.id, 1) ||
-      to === 'chang' ||
+      to === appConfig.chatRoomAccount ||
       to === account ||
-      to === 'hello'
+      to === appConfig.notifyAccount
     ) {
       paramErr(res, req);
       return;
@@ -716,16 +718,16 @@ route.get('/user-list', async (req, res) => {
         msg,
       };
       if (acc === account) {
-        obj.des = appConfig.userDes;
+        obj.des = appConfig.ownAccountDes;
       }
-      if (acc === 'hello') {
-        obj.username = 'hello';
-        obj.des = appConfig.helloDes;
+      if (acc === appConfig.notifyAccount) {
+        obj.username = appConfig.notifyAccount;
+        obj.des = appConfig.notifyAccountDes;
       }
       if (
         (hide === 1 || n - update_at > 1000 * 30) &&
         account !== acc &&
-        acc !== 'hello'
+        acc !== appConfig.notifyAccount
       ) {
         obj.online = 0;
         obj.os = [];
@@ -759,11 +761,7 @@ route.post('/up', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const path = _path.normalize(
-      appConfig.appData,
-      'tem',
-      `${account}_${HASH}`
-    );
+    const path = appConfig.temDir(`${account}_${HASH}`);
 
     await receiveFiles(req, path, name, 50);
 
@@ -790,7 +788,7 @@ route.post('/up-voice', async (req, res) => {
     const { account } = req._hello.userinfo;
 
     let log = to;
-    if (to !== 'chang' && to !== 'hello') {
+    if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
       const user = await getUserInfo(to, 'account,username');
 
       if (!user) {
@@ -814,7 +812,7 @@ route.post('/up-voice', async (req, res) => {
     const time = Date.now();
 
     const timePath = getTimePath(time);
-    const tDir = _path.normalize(appConfig.appData, 'upload', timePath);
+    const tDir = appConfig.uploadDir(timePath);
     const tName = `${HASH}.${_path.extname(name)[2]}`;
 
     await receiveFiles(req, tDir, tName, 3, HASH);
@@ -841,7 +839,7 @@ route.post('/up-voice', async (req, res) => {
     const msg = await saveChatMsg(account, obj);
     await sendNotifyMsg(req, obj._to, 'addmsg', obj);
 
-    if (to === 'hello') {
+    if (to === appConfig.notifyAccount) {
       await hdHelloMsg(req, obj.content, obj.type);
     }
 
@@ -876,7 +874,7 @@ route.post('/merge', async (req, res) => {
     name = _path.sanitizeFilename(name);
 
     let log = to;
-    if (to !== 'chang' && to !== 'hello') {
+    if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
       let user = await getUserInfo(to, 'account,username');
 
       if (!user) {
@@ -903,14 +901,14 @@ route.post('/merge', async (req, res) => {
     const time = Date.now();
     const timePath = getTimePath(time);
 
-    const tDir = _path.normalize(appConfig.appData, 'upload', timePath);
+    const tDir = appConfig.uploadDir(timePath);
     const tName = `${HASH}${suffix ? `.${suffix}` : ''}`;
 
     const targetPath = _path.normalize(tDir, tName);
 
     await mergefile(
       count,
-      _path.normalize(appConfig.appData, 'tem', `${account}_${HASH}`),
+      appConfig.temDir(`${account}_${HASH}`),
       targetPath,
       HASH
     );
@@ -941,7 +939,7 @@ route.post('/merge', async (req, res) => {
     const msg = await saveChatMsg(account, obj);
     await sendNotifyMsg(req, obj._to, 'addmsg', obj);
 
-    if (to === 'hello') {
+    if (to === appConfig.notifyAccount) {
       await hdHelloMsg(req, obj.content, type);
     }
 
@@ -971,11 +969,7 @@ route.post('/breakpoint', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const path = _path.normalize(
-        appConfig.appData,
-        'tem',
-        `${account}_${HASH}`
-      ),
+    const path = appConfig.temDir(`${account}_${HASH}`),
       arr = await _f.readdir(path);
 
     _success(res, 'ok', arr);
@@ -1010,7 +1004,7 @@ route.post('/repeat', async (req, res) => {
 
     if (upload) {
       // 文件已存在则，跳过上传
-      const p = _path.normalize(appConfig.appData, 'upload', upload.url);
+      const p = appConfig.uploadDir(upload.url);
 
       if (await _f.exists(p)) {
         const stats = await _f.fsp.lstat(p);
@@ -1018,7 +1012,10 @@ route.post('/repeat', async (req, res) => {
         let log = to;
 
         if (!stats.isDirectory() && stats.size === size) {
-          if (to !== 'chang' && to !== 'hello') {
+          if (
+            to !== appConfig.chatRoomAccount &&
+            to !== appConfig.notifyAccount
+          ) {
             const user = await getUserInfo(to, 'account,username');
 
             if (!user) {
@@ -1054,7 +1051,7 @@ route.post('/repeat', async (req, res) => {
           const msg = await saveChatMsg(account, obj);
           await sendNotifyMsg(req, obj._to, 'addmsg', obj);
 
-          if (to === 'hello') {
+          if (to === appConfig.notifyAccount) {
             await hdHelloMsg(req, obj.content, type);
           }
 

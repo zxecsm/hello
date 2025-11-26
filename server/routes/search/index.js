@@ -13,10 +13,12 @@ import {
   getSplitWord,
   syncUpdateData,
   createPagingData,
+  isurl,
+  isValidColor,
 } from '../../utils/utils.js';
 
 import { fieldLength } from '../config.js';
-import { getSearchConfig } from './search.js';
+import { readSearchConfig, writeSearchConfig } from './search.js';
 import nanoid from '../../utils/nanoid.js';
 
 const route = express.Router();
@@ -33,7 +35,335 @@ route.use((req, res, next) => {
 // 配置
 route.get('/config', async (req, res) => {
   try {
-    _success(res, 'ok', await getSearchConfig());
+    _success(res, 'ok', await readSearchConfig(req._hello.userinfo.account));
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 添加搜索引擎
+route.post('/add-engine', async (req, res) => {
+  try {
+    const { title, link, color = '' } = req.body;
+    if (
+      !validaString(title, 1, fieldLength.title) ||
+      !validaString(link, 1, fieldLength.url) ||
+      (color && !isValidColor(color)) ||
+      !isurl(link) ||
+      !link.includes('{{}}')
+    ) {
+      paramErr(res, req);
+      return;
+    }
+    const { account } = req._hello.userinfo;
+    const config = await readSearchConfig(account);
+
+    const item = {
+      id: nanoid(),
+      title,
+      color,
+      link,
+      logo: '',
+    };
+
+    if (Array.isArray(config.searchEngineData)) {
+      config.searchEngineData.push(item);
+    } else {
+      config.searchEngineData = [item];
+    }
+
+    await writeSearchConfig(account, config);
+    syncUpdateData(req, 'searchConfig');
+
+    _success(res, '添加搜索引擎成功')(req, `${title}-${link}`, 1);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 编辑搜索引擎
+route.post('/edit-engine', async (req, res) => {
+  try {
+    const { title, link, color = '', id } = req.body;
+    if (
+      !validaString(id, 1, fieldLength.id, 1) ||
+      !validaString(title, 1, fieldLength.title) ||
+      !validaString(link, 1, fieldLength.url) ||
+      (color && !isValidColor(color)) ||
+      !isurl(link) ||
+      !link.includes('{{}}')
+    ) {
+      paramErr(res, req);
+      return;
+    }
+    const { account } = req._hello.userinfo;
+    const config = await readSearchConfig(account);
+
+    if (Array.isArray(config.searchEngineData)) {
+      const idx = config.searchEngineData.findIndex((s) => s.id === id);
+      if (idx >= 0) {
+        config.searchEngineData[idx] = {
+          ...config.searchEngineData[idx],
+          title,
+          color,
+          link,
+        };
+        await writeSearchConfig(account, config);
+        syncUpdateData(req, 'searchConfig');
+      }
+    }
+
+    _success(res, '修改搜索引擎成功')(req, `${title}-${link}`, 1);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 删除搜索引擎
+route.post('/delete-engine', async (req, res) => {
+  try {
+    const { id } = req.body;
+    if (!validaString(id, 1, fieldLength.id, 1)) {
+      paramErr(res, req);
+      return;
+    }
+    const { account } = req._hello.userinfo;
+    const config = await readSearchConfig(account);
+
+    let log = '';
+    if (Array.isArray(config.searchEngineData)) {
+      config.searchEngineData = config.searchEngineData.filter((s) => {
+        if (s.id === id) {
+          log = `${s.title}-${s.link}`;
+        }
+        return s.id !== id;
+      });
+      await writeSearchConfig(account, config);
+      syncUpdateData(req, 'searchConfig');
+    }
+
+    _success(res, '删除搜索引擎成功')(req, `${id}${log ? `-${log}` : ''}`, 1);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 切换搜索引擎
+route.post('/change-engine', async (req, res) => {
+  try {
+    const { id } = req.body;
+    if (!validaString(id, 1, fieldLength.id, 1)) {
+      paramErr(res, req);
+      return;
+    }
+    const { account } = req._hello.userinfo;
+    const config = await readSearchConfig(account);
+
+    config.searchengineid = id;
+
+    await writeSearchConfig(account, config);
+    syncUpdateData(req, 'searchConfig');
+
+    _success(res, '切换搜索引擎成功')(req, id, 1);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 清除搜索引擎LOGO
+route.post('/delete-engine-logo', async (req, res) => {
+  try {
+    const { id } = req.body;
+    if (!validaString(id, 1, fieldLength.id, 1)) {
+      paramErr(res, req);
+      return;
+    }
+    const { account } = req._hello.userinfo;
+    const config = await readSearchConfig(account);
+
+    let log = '';
+    if (Array.isArray(config.searchEngineData)) {
+      const idx = config.searchEngineData.findIndex((s) => s.id === id);
+      if (idx >= 0) {
+        log = `${config.searchEngineData[idx].title}-${config.searchEngineData[idx].link}`;
+        config.searchEngineData[idx] = {
+          ...config.searchEngineData[idx],
+          logo: '',
+        };
+        await writeSearchConfig(account, config);
+        syncUpdateData(req, 'searchConfig');
+      }
+    }
+
+    _success(res, '删除搜索引擎LOGO成功')(
+      req,
+      `${id}${log ? `-${log}` : ''}`,
+      1
+    );
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 添加翻译接口
+route.post('/add-translator', async (req, res) => {
+  try {
+    const { title, link } = req.body;
+    if (
+      !validaString(title, 1, fieldLength.title) ||
+      !validaString(link, 1, fieldLength.url) ||
+      !isurl(link) ||
+      !link.includes('{{}}')
+    ) {
+      paramErr(res, req);
+      return;
+    }
+
+    const { account } = req._hello.userinfo;
+    const config = await readSearchConfig(account);
+
+    const item = {
+      id: nanoid(),
+      title,
+      link,
+      logo: '',
+    };
+
+    if (Array.isArray(config.translatorData)) {
+      config.translatorData.push(item);
+    } else {
+      config.translatorData = [item];
+    }
+
+    await writeSearchConfig(account, config);
+    syncUpdateData(req, 'searchConfig');
+
+    _success(res, '添加翻译接口成功')(req, `${title}-${link}`, 1);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 编辑翻译接口
+route.post('/edit-translator', async (req, res) => {
+  try {
+    const { title, link, id } = req.body;
+    if (
+      !validaString(id, 1, fieldLength.id, 1) ||
+      !validaString(title, 1, fieldLength.title) ||
+      !validaString(link, 1, fieldLength.url) ||
+      !isurl(link) ||
+      !link.includes('{{}}')
+    ) {
+      paramErr(res, req);
+      return;
+    }
+
+    const { account } = req._hello.userinfo;
+    const config = await readSearchConfig(account);
+
+    if (Array.isArray(config.translatorData)) {
+      const idx = config.translatorData.findIndex((t) => t.id === id);
+      if (idx >= 0) {
+        config.translatorData[idx] = {
+          ...config.translatorData[idx],
+          title,
+          link,
+        };
+        await writeSearchConfig(account, config);
+        syncUpdateData(req, 'searchConfig');
+      }
+    }
+
+    _success(res, '修改翻译接口成功')(req, `${title}-${link}`, 1);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 删除翻译接口
+route.post('/delete-translator', async (req, res) => {
+  try {
+    const { id } = req.body;
+    if (!validaString(id, 1, fieldLength.id, 1)) {
+      paramErr(res, req);
+      return;
+    }
+
+    const { account } = req._hello.userinfo;
+    const config = await readSearchConfig(account);
+
+    let log = '';
+    if (Array.isArray(config.translatorData)) {
+      config.translatorData = config.translatorData.filter((t) => {
+        if (t.id === id) {
+          log = `${t.title}-${t.link}`;
+        }
+        return t.id !== id;
+      });
+      await writeSearchConfig(account, config);
+      syncUpdateData(req, 'searchConfig');
+    }
+
+    _success(res, '删除翻译接口成功')(req, `${id}${log ? `-${log}` : ''}`, 1);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 切换翻译接口
+route.post('/change-translator', async (req, res) => {
+  try {
+    const { id } = req.body;
+    if (!validaString(id, 1, fieldLength.id, 1)) {
+      paramErr(res, req);
+      return;
+    }
+    const { account } = req._hello.userinfo;
+    const config = await readSearchConfig(account);
+
+    config.translatorid = id;
+
+    await writeSearchConfig(account, config);
+    syncUpdateData(req, 'searchConfig');
+
+    _success(res, '切换翻译接口成功')(req, id, 1);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
+// 清除翻译接口LOGO
+route.post('/delete-translator-logo', async (req, res) => {
+  try {
+    const { id } = req.body;
+    if (!validaString(id, 1, fieldLength.id, 1)) {
+      paramErr(res, req);
+      return;
+    }
+
+    const { account } = req._hello.userinfo;
+    const config = await readSearchConfig(account);
+
+    let log = '';
+    if (Array.isArray(config.translatorData)) {
+      const idx = config.translatorData.findIndex((t) => t.id === id);
+      if (idx >= 0) {
+        log = `${config.translatorData[idx].title}-${config.translatorData[idx].link}`;
+        config.translatorData[idx] = {
+          ...config.translatorData[idx],
+          logo: '',
+        };
+        await writeSearchConfig(account, config);
+        syncUpdateData(req, 'searchConfig');
+      }
+    }
+
+    _success(res, '删除翻译接口LOGO成功')(
+      req,
+      `${id}${log ? `-${log}` : ''}`,
+      1
+    );
   } catch (error) {
     _err(res)(req, error);
   }

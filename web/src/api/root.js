@@ -42,14 +42,6 @@ export function reqRootCleanBgFile() {
     { timeout: _d.fieldLength.operationTimeout }
   );
 }
-// 清理logo文件
-export function reqRootCleanLogoFile() {
-  return _getAjax(
-    '/root/clean-logo-file',
-    {},
-    { timeout: _d.fieldLength.operationTimeout }
-  );
-}
 // 清理pic文件
 export function reqRootCleanPicFile() {
   return _getAjax(

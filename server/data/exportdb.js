@@ -1,11 +1,10 @@
 import _f from '../utils/f.js';
-import _path from '../utils/path.js';
 import { allSql } from '../utils/sqlite.js';
 import appConfig from './config.js';
 
 (async () => {
   try {
-    const dataPath = _path.normalize(appConfig.appData, '/data'); // 数据目录
+    const dataPath = appConfig.dataDir(); // 数据目录
     const exportPath = `${dataPath}/db.json`; // 导出文件路径
 
     // 导出数据库到JSON文件

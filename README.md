@@ -8,8 +8,7 @@ services:
     environment:
       - TZ=Asia/Shanghai
     volumes:
-      - /:/root/helloFiles # 管理员文件管理根目录
-      - ./data:/root/helloData # 应用数据存放目录
+      - /:/root/helloApp
     ports:
       - '55555:55555'
 ```

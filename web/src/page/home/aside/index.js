@@ -14,8 +14,8 @@ import {
   LazyLoad,
   _mySlide,
   _setTimeout,
-  getStaticPath,
   getFaviconPath,
+  getFilePath,
 } from '../../../js/utils/utils.js';
 
 import _d from '../../../js/common/config';
@@ -369,7 +369,7 @@ function hdAsideListItemLogo() {
     );
 
     if (logo) {
-      logo = getStaticPath(logo);
+      logo = getFilePath(logo);
     } else {
       logo = getFaviconPath(link);
     }
@@ -388,7 +388,7 @@ function hdAsideListItemLogo() {
     );
 
     if (logo) {
-      logo = getStaticPath(logo);
+      logo = getFilePath(logo);
     } else {
       logo = getFaviconPath(link);
     }

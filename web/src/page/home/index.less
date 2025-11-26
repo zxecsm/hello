@@ -1955,6 +1955,7 @@ body {
 
         .logo_box {
           width: 0rem;
+          height: 8.8rem;
           margin: 0 auto;
           overflow: hidden;
 
@@ -1964,6 +1965,8 @@ body {
           }
 
           @media (max-width: 800px) {
+            height: 7.6rem;
+
             &.active {
               animation: logowidth1 1s ease-in-out alternate both;
               -webkit-animation: logowidth1 1s ease-in-out alternate both;
@@ -2051,13 +2054,35 @@ body {
             height: 5rem;
             line-height: 5rem;
             display: flex;
+            border-radius: 0.4rem;
+            overflow: hidden;
             flex-flow: row;
+            .logo {
+              flex: none;
+              height: 5rem;
+              width: 5rem;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              &:hover {
+                img {
+                  width: 5rem;
+                  height: 5rem;
+                }
+              }
+              img {
+                width: 4rem;
+                height: 4rem;
+                border-radius: 0.4rem;
+              }
+            }
             .inp_box {
               flex: auto;
               display: flex;
               align-items: center;
 
               input {
+                padding: 0;
                 flex: auto;
                 width: 0;
                 outline: none;

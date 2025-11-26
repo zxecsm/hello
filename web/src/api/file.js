@@ -111,3 +111,10 @@ export function reqFileGetFavorites() {
 export function reqFileFavorites(data) {
   return _postAjax('/file/favorites', data);
 }
+// 文件历史记录
+export function reqFileGetHistoryState() {
+  return _getAjax('/file/history-state');
+}
+export function reqFileHistoryState(data) {
+  return _postAjax('/file/history-state', data);
+}

@@ -43,7 +43,6 @@ import { fieldLength } from '../config.js';
 import { validShareAddUserState, validShareState } from '../user/user.js';
 import { getFriendInfo } from '../chat/chat.js';
 import _crypto from '../../utils/crypto.js';
-import _path from '../../utils/path.js';
 import jwt from '../../utils/jwt.js';
 import { _d } from '../../data/data.js';
 import nanoid from '../../utils/nanoid.js';
@@ -315,9 +314,7 @@ route.get('/parse-site-info', async (req, res) => {
       await uLog(req, `获取网站信息(${u})`);
       const { host, pathname } = new URL(url);
 
-      p = _path.normalize(
-        appConfig.appData,
-        'siteinfo',
+      p = appConfig.siteinfoDir(
         `${_crypto.getStringHash(`${host}${pathname}`)}.json`
       );
 

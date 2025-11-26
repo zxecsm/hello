@@ -75,7 +75,6 @@ import toolTip from '../../../js/plugins/tooltip/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import { verifyDate } from '../count_down/index.js';
 import md5 from '../../../js/utils/md5.js';
-import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
 import localData from '../../../js/common/localData.js';
@@ -89,7 +88,7 @@ const $document = $(document),
   $chatFootBox = $chatRoomWrap.find('.chat_foot_box'),
   $showChatRoomBtn = $('.show_chat_room_btn'),
   $chatAudio = $('.chat_ausio');
-let curChatAccount = 'chang',
+let curChatAccount = _d.chatRoomAccount,
   userList = [],
   helperInfo = '用于接收提示信息和外部信息(回复任意信息查看收信接口API)',
   chatIsTop = localData.get('chatIsTop');
@@ -190,11 +189,12 @@ function renderUserList(pageNo, total, totalPage, top) {
         <span class="name">{{des || username}}</span>
         <span v-if="msg" class="msg">{{msg}}</span>
       </li>
-      <li v-if="account !== 'hello'" :cursor="online === 1 ? 'y' : ''" :style=getStyle(account,online) class="online iconfont icon-tuichudenglu1"></li>
+      <li v-if="account !== notifyAccount" :cursor="online === 1 ? 'y' : ''" :style=getStyle(account,online) class="online iconfont icon-tuichudenglu1"></li>
     </ul>
     <div v-if="totalPage > 1" v-html="getPaging()"></div>
       `,
     {
+      notifyAccount: _d.notifyAccount,
       hasNoRead: userList.some((item) => item.read === 0),
       userList,
       totalPage,
@@ -260,9 +260,9 @@ function lazyLoadChatLogo() {
         des = '',
       } = getUserItem($item.parent().data('account'));
       if (logo) {
-        logo = _path.normalize('/api/pub/logo', account, logo);
+        logo = getFilePath(`/logo/${account}/${logo}`);
       }
-      if (account === 'hello') {
+      if (account === _d.notifyAccount) {
         logo = imgHelloLogo;
       }
       const cache = logo
@@ -287,9 +287,9 @@ function lazyLoadChatLogo() {
       des = '',
     } = getUserItem($item.parent().data('account'));
     if (logo) {
-      logo = _path.normalize('/api/pub/logo', account, logo);
+      logo = getFilePath(`/logo/${account}/${logo}`);
     }
-    if (account === 'hello') {
+    if (account === _d.notifyAccount) {
       logo = imgHelloLogo;
     }
     imgjz(logo)
@@ -331,7 +331,7 @@ export function closeChatRoom() {
 // 清空消息
 function clearMsg(e) {
   const acc = curChatAccount;
-  if (acc === 'chang' && !isRoot()) {
+  if (acc === _d.chatRoomAccount && !isRoot()) {
     _msg.error('没有权限操作');
     return;
   }
@@ -357,7 +357,7 @@ function clearMsg(e) {
 // 处理转发信息
 function hdforwardMsg(e, acc) {
   let text = '确认转发信息到：聊天室？';
-  if (acc !== 'chang') {
+  if (acc !== _d.chatRoomAccount) {
     const user = getUserItem(acc);
     text = `确认转发信息给：${user.des || user.username}？`;
   }
@@ -389,10 +389,10 @@ $chatHeadBtns
     '.chat_home_btn',
     throttle(function (e) {
       if (isForward) {
-        hdforwardMsg(e, 'chang');
+        hdforwardMsg(e, _d.chatRoomAccount);
         return;
       }
-      openFriend('chang');
+      openFriend(_d.chatRoomAccount);
     }, 2000)
   )
   .on('click', '.search_msg_inp .clean_btn', function () {
@@ -562,7 +562,7 @@ function renderMsgList(list) {
         </div>
         <div class="msg_info_wrap">
           <li v-if="isRight(_from)" cursor="y" class="chat_menu_btn iconfont icon-maohao"></li>
-          <li v-if="!isRight(_from) && _to === 'chang'" cursor="y" class="c_left_logo">
+          <li v-if="!isRight(_from) && _to === chatRoomAccount" cursor="y" class="c_left_logo">
             <div class="c_logo" style="float: left;"></div>
           </li>
           <li class="c_content_box">
@@ -604,6 +604,7 @@ function renderMsgList(list) {
     </template>
     `,
     {
+      chatRoomAccount: _d.chatRoomAccount,
       list,
       getDate(create_at) {
         return formatDate({
@@ -616,7 +617,8 @@ function renderMsgList(list) {
         return _from === setUserInfo().account ? true : false;
       },
       getUsername(username, des, _to, _from) {
-        if (_to !== 'chang' || _from === setUserInfo().account) return '';
+        if (_to !== _d.chatRoomAccount || _from === setUserInfo().account)
+          return '';
         return des || username || '未知';
       },
       fileLogoType,
@@ -655,9 +657,9 @@ function chatimgLoad() {
       _from,
     } = getChatItem($item.parent().parent().parent().data('id'));
     if (logo) {
-      logo = _path.normalize('/api/pub/logo', _from, logo);
+      logo = getFilePath(`/logo/${_from}/${logo}`);
     }
-    if (_from === 'hello') {
+    if (_from === _d.notifyAccount) {
       logo = imgHelloLogo;
     }
     if (logo) {
@@ -697,15 +699,15 @@ export function chatMessageNotification(name, data, from, to, logo) {
     },
     (type) => {
       if (type === 'click') {
-        showChatRoom(to === 'chang' ? to : from);
+        showChatRoom(to === _d.chatRoomAccount ? to : from);
       }
     },
     1
   );
   if (logo) {
-    logo = _path.normalize('/api/pub/logo', from, logo);
+    logo = getFilePath(`/logo/${from}/${logo}`);
   }
-  if (from === 'hello') {
+  if (from === _d.notifyAccount) {
     logo = imgHelloLogo;
   }
   if (logo) {
@@ -719,7 +721,7 @@ export function chatMessageNotification(name, data, from, to, logo) {
               icon: cache,
             },
             () => {
-              showChatRoom(to === 'chang' ? to : from);
+              showChatRoom(to === _d.chatRoomAccount ? to : from);
             }
           );
         }
@@ -733,7 +735,7 @@ export function chatMessageNotification(name, data, from, to, logo) {
               icon: getTextImg(name),
             },
             () => {
-              showChatRoom(to === 'chang' ? to : from);
+              showChatRoom(to === _d.chatRoomAccount ? to : from);
             }
           );
         }
@@ -747,7 +749,7 @@ export function chatMessageNotification(name, data, from, to, logo) {
           icon: getTextImg(name),
         },
         () => {
-          showChatRoom(to === 'chang' ? to : from);
+          showChatRoom(to === _d.chatRoomAccount ? to : from);
         }
       );
     }
@@ -809,7 +811,7 @@ $showChatRoomBtn.on(
 // 用户菜单
 function userMenu(e, msgObj, isUserList) {
   const { _from, username, des, logo, email } = msgObj;
-  if (_from === 'hello') {
+  if (_from === _d.notifyAccount) {
     rMenu.rightInfo(e, helperInfo, '助手功能');
     return;
   }
@@ -828,7 +830,7 @@ function userMenu(e, msgObj, isUserList) {
       beforeIcon: 'iconfont icon-kejian',
     });
   }
-  if (chatAcc === 'chang' || isUserList) {
+  if (chatAcc === _d.chatRoomAccount || isUserList) {
     data.push({
       id: '2',
       text: '发送消息',
@@ -913,7 +915,7 @@ function userMenu(e, msgObj, isUserList) {
                       if (res.code === 1) {
                         _msg.success(res.codeText);
                         close(true);
-                        if (curChatAccount === 'chang') {
+                        if (curChatAccount === _d.chatRoomAccount) {
                           openFriend(curChatAccount, true);
                         } else if (curChatAccount === _from) {
                           setChatTitle(curChatAccount);
@@ -941,7 +943,7 @@ function userMenu(e, msgObj, isUserList) {
         close();
         openInIframe(`/bmk?acc=${_from}`, (des || username) + '的书签夹');
       } else if (id === '5') {
-        imgPreview([{ u1: _path.normalize('/api/pub/logo', _from, logo) }], 0, {
+        imgPreview([{ u1: getFilePath(`/logo/${_from}/${logo}`) }], 0, {
           x: e.clientX,
           y: e.clientY,
         });
@@ -1411,8 +1413,8 @@ function sendTextMsg() {
 function switchShakeBtn() {
   const $shakeBtn = $chatFootBox.find('.c_sent_shake_btn');
   if (
-    curChatAccount === 'chang' ||
-    curChatAccount === 'hello' ||
+    curChatAccount === _d.chatRoomAccount ||
+    curChatAccount === _d.notifyAccount ||
     chatMsgInp.getValue() ||
     curChatAccount === setUserInfo().account
   ) {
@@ -1845,7 +1847,9 @@ function switchNdnMode(acc, notify) {
 // 设置消息标题
 function setChatTitle(acc) {
   chatTitleScroll.init('');
-  if ([setUserInfo().account, 'chang', 'hello'].includes(acc)) {
+  if (
+    [setUserInfo().account, _d.chatRoomAccount, _d.notifyAccount].includes(acc)
+  ) {
     $onlineStatus.css('display', 'none');
     updateOnlineStatus.clear();
     reqChatGetDes({ account: acc })
@@ -1875,7 +1879,7 @@ async function openFriend(acc, noHideUserList, cb) {
   $chatRoomWrap.find('.ndn_icon').css('display', 'none');
   setChatTitle(acc);
   switchShakeBtn();
-  if (acc === 'chang') {
+  if (acc === _d.chatRoomAccount) {
     if (isRoot()) {
       $chatHeadBtns.find('.clear_msg_btn').stop().fadeIn(_d.speed);
     } else {
@@ -1902,7 +1906,7 @@ async function openFriend(acc, noHideUserList, cb) {
       if (result.code === 1) {
         if (chatRoomWrapIsHide()) return;
         renderChatMsg.reset(result.data);
-        if (acc === 'chang') {
+        if (acc === _d.chatRoomAccount) {
           $chatHeadBtns.find('.c_home_msg_alert').stop().fadeOut(_d.speed);
         }
         cb && cb();
@@ -1936,7 +1940,7 @@ $userListBox
         hideUserList();
         return;
       }
-      if (from === 'hello') {
+      if (from === _d.notifyAccount) {
         rMenu.rightInfo(e, helperInfo, '助手功能');
         return;
       }
@@ -1949,7 +1953,7 @@ $userListBox
       openFriend(from);
     } else if (_getTarget(this, e, '.online')) {
       const { os, online, account } = obj;
-      if (account === 'hello' || online === 0) return;
+      if (account === _d.notifyAccount || online === 0) return;
       let status = '在线';
       if (account === setUserInfo().account && setUserInfo().hide === 1) {
         status = '隐身';
@@ -1961,7 +1965,7 @@ $userListBox
   .on('mouseenter', '.user_item .user_logo', function () {
     const obj = getUserItem($(this).parent().data('account'));
     let { account, des, email, username, os, online } = obj;
-    if (account === 'hello') {
+    if (account === _d.notifyAccount) {
       toolTip.setTip(helperInfo).show();
       return;
     }

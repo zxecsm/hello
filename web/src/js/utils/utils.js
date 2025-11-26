@@ -2462,8 +2462,12 @@ export function formartSongTime(time) {
 export function isInteger(obj) {
   return Math.floor(obj) === obj;
 }
-export function isRoot() {
-  return localData.get('account') === 'root';
+export function isRoot(acc) {
+  if (acc) return acc === _d.adminAccount;
+  return localData.get('account') === _d.adminAccount;
+}
+export function isValidColor(value) {
+  return /^#[0-9a-fA-F]{6}$/.test(value);
 }
 export function isLogin() {
   return localData.get('account');

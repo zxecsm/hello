@@ -24,7 +24,6 @@ import {
   reqRootChangeCacheTime,
   reqRootCleanBgFile,
   reqRootCleanDatabase,
-  reqRootCleanLogoFile,
   reqRootCleanMusicFile,
   reqRootCleanPicFile,
   reqRootCleanThumbFile,
@@ -84,13 +83,14 @@ function renderUserList(pageNo, total, top) {
       <td>{{email || '--'}}</td>
       <td>{{account}}</td>
       <td style="color:{{state === 1 ? 'green' : 'var(--btn-danger-color)'}};">{{state === 1 ? '启用' : '停用'}}</td>
-      <td :style="account === 'root' ? 'opacity: 0;pointer-events: none;' : ''">
+      <td :style="isRoot(account) ? 'opacity: 0;pointer-events: none;' : ''">
         <button cursor="y" class="user_state btn btn_primary">{{state === 1 ? '停用' : '启用'}}</button>
         <button cursor="y" class="del_account btn btn_danger">删除</button>
       </td>
     </tr>
     `,
     {
+      isRoot,
       userList,
       formatDate,
     }
@@ -307,34 +307,6 @@ function cleanBgFile(e, loading = { start() {}, end() {} }) {
     }
   );
 }
-// 清理logo文件
-function cleanLogoFile(e, loading = { start() {}, end() {} }) {
-  rMenu.pop(
-    {
-      e,
-      text: `确认清理：logo文件？`,
-    },
-    (type) => {
-      if (type === 'confirm') {
-        loading.start();
-        reqRootCleanLogoFile()
-          .then((result) => {
-            loading.end();
-            if (result.code === 1) {
-              _msg.success(result.codeText);
-              return;
-            }
-          })
-          .catch((error) => {
-            loading.end();
-            if (error.statusText === 'timeout') {
-              timeoutMsg();
-            }
-          });
-      }
-    }
-  );
-}
 // 清理图床文件
 function cleanPicFile(e, loading = { start() {}, end() {} }) {
   rMenu.pop(
@@ -467,7 +439,7 @@ function changeTrashState(e) {
     ({ id, resetMenu, close, loading }) => {
       const curItem = data.find((item) => item.id === id);
       if (id === 'toTrash') {
-        _myOpen(`/file#/${_d.trashDirName}`, '文件管理');
+        _myOpen(`/file#${_d.trashDir}`, '文件管理');
         close();
       } else if (id === 'state') {
         loading.start();
@@ -801,11 +773,6 @@ function handleClearFile(e) {
       beforeIcon: 'iconfont icon-tupian',
     },
     {
-      id: 'logo',
-      text: '清理logo文件',
-      beforeIcon: 'iconfont icon-tupian',
-    },
-    {
       id: 'song',
       text: '清理歌曲文件',
       beforeIcon: 'iconfont icon-yinle1',
@@ -821,8 +788,6 @@ function handleClearFile(e) {
         cleanBgFile(e, loading);
       } else if (id === 'pic') {
         cleanPicFile(e, loading);
-      } else if (id === 'logo') {
-        cleanLogoFile(e, loading);
       } else if (id === 'song') {
         cleanMusicFile(e, loading);
       }

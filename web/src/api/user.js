@@ -154,7 +154,3 @@ export function reqUserCustomCode() {
 export function reqUserFileToken(data) {
   return _getAjax('/user/file-token', data);
 }
-// 获取playInConfig
-export function reqUserPlayerConfig() {
-  return _getAjax('/user/player-config');
-}

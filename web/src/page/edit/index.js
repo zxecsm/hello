@@ -34,7 +34,12 @@ import _msg from '../../js/plugins/message';
 import { UpProgress } from '../../js/plugins/UpProgress';
 import aceEditor from '../../js/utils/editor';
 import gqImg from '../../images/img/gqimg.png';
-import { reqNoteEdit, reqNoteRead } from '../../api/note';
+import {
+  reqNoteEdit,
+  reqNoteGetHistoryState,
+  reqNoteHistoryState,
+  reqNoteRead,
+} from '../../api/note';
 import { reqPicRepeat, reqPicUp } from '../../api/pic';
 import rMenu from '../../js/plugins/rightMenu';
 import MdWorker from '../../js/utils/md.worker.js';
@@ -611,7 +616,16 @@ function setNoteFontSize() {
 }
 setNoteFontSize();
 // 设置
-function settingEdit(e) {
+async function settingEdit(e) {
+  let noteHistoryState = 0;
+  if (isLogin()) {
+    try {
+      const res = await reqNoteGetHistoryState();
+      if (res.code === 1) {
+        noteHistoryState = res.data.note_history;
+      }
+    } catch {}
+  }
   const data = [
     {
       id: 'size',
@@ -624,10 +638,22 @@ function settingEdit(e) {
       beforeIcon: 'iconfont icon-liebiao',
     },
   ];
+  if (isLogin()) {
+    data.push({
+      id: 'history',
+      text: '保存笔记历史',
+      beforeIcon: 'iconfont icon-history',
+      afterIcon:
+        'iconfont ' +
+        (noteHistoryState ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+      param: { value: noteHistoryState },
+    });
+  }
   rMenu.selectMenu(
     e,
     data,
-    ({ e, id }) => {
+    ({ e, id, param, loading, resetMenu }) => {
+      const curItem = data.find((item) => item.id === id);
       if (id === 'size') {
         rMenu.percentBar(e, editNoteFontSize, (percent) => {
           editNoteFontSize = percent;
@@ -638,6 +664,27 @@ function settingEdit(e) {
         setEditor(e, editor, () => {
           handleSave();
         });
+      } else if (id === 'history') {
+        loading.start();
+        reqNoteHistoryState({ state: param.value ? 0 : 1 })
+          .then((res) => {
+            if (res.code === 1) {
+              loading.end();
+              if (param.value) {
+                curItem.afterIcon = 'iconfont icon-kaiguan-guan';
+                curItem.param.value = false;
+                _msg.success('关闭成功');
+              } else {
+                curItem.afterIcon = 'iconfont icon-kaiguan-kai1';
+                curItem.param.value = true;
+                _msg.success('开启成功');
+              }
+              resetMenu(data);
+            }
+          })
+          .catch(() => {
+            loading.end();
+          });
       }
     },
     '设置'
@@ -679,7 +726,7 @@ $headBtns
       toLogin();
       return;
     }
-    _myOpen(`/file#/${_d.noteHistoryDirName}/${HASH}`, '文件管理');
+    _myOpen(`/file#${_d.noteHistoryDir}/${HASH}`, '文件管理');
   })
   .on('click', '.table_btn', () => insertBlock(editor, 'table'))
   .on('click', '.code_btn', () => insertBlock(editor, 'code'))

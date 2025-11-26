@@ -48,16 +48,17 @@ import {
   parseForwardMsgLink,
 } from '../chat/chat.js';
 
-import { playInConfig, getUserInfo, deleteUser, getFontList } from './user.js';
+import { getUserInfo, deleteUser, getFontList } from './user.js';
 
 import jwt from '../../utils/jwt.js';
 import { fieldLength } from '../config.js';
 import _path from '../../utils/path.js';
-import { getNoteHistoryDir, parseMarkDown } from '../note/note.js';
-import { _delDir, getTrashDir, readMenu } from '../file/file.js';
+import { parseMarkDown } from '../note/note.js';
+import { _delDir, readMenu } from '../file/file.js';
 import _crypto from '../../utils/crypto.js';
 import getCity from '../../utils/getCity.js';
 import nanoid from '../../utils/nanoid.js';
+import { readSearchConfig, writeSearchConfig } from '../search/search.js';
 
 const verifyCode = new Map();
 
@@ -81,21 +82,11 @@ route.post('/error', async (req, res) => {
   }
 });
 
-// 外部播放配置
-route.get('/player-config', async (req, res) => {
-  try {
-    _success(res, 'ok', await playInConfig());
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
 // 获取自定义code
 route.get('/custom-code', async (req, res) => {
   try {
-    const u = _path.normalize(appConfig.appData, 'custom');
-    const headPath = _path.normalize(u, 'custom_head.html');
-    const bodyPath = _path.normalize(u, 'custom_body.html');
+    const headPath = appConfig.customDir('custom_head.html');
+    const bodyPath = appConfig.customDir('custom_body.html');
 
     const obj = {
       head: (await _f.readFile(headPath, null, '')).toString(),
@@ -119,7 +110,7 @@ timedTask.add(async (flag) => {
 
     const threshold = now - 10 * 24 * 60 * 60 * 1000;
 
-    const sList = await readMenu(_path.normalize(appConfig.appData, 'tem'));
+    const sList = await readMenu(appConfig.temDir());
 
     let num = 0;
 
@@ -180,14 +171,14 @@ route.post('/register', async (req, res) => {
 
     registerCount++;
 
-    await becomeFriends(account, 'chang');
-    await becomeFriends(account, 'hello');
+    await becomeFriends(account, appConfig.chatRoomAccount);
+    await becomeFriends(account, appConfig.notifyAccount);
 
     const { os, ip } = req._hello;
 
     await heperMsgAndForward(
       req,
-      'root',
+      appConfig.adminAccount,
       `${username}(${account})，在 [${os}(${ip})] 注册账号成功`
     );
 
@@ -216,7 +207,7 @@ route.post('/allow-login-req', async (req, res) => {
 
     const userinfo = await db('user')
       .select('account, remote_login')
-      .where({ username, state: 1, account: { '!=': 'hello' } })
+      .where({ username, state: 1, account: { '!=': appConfig.notifyAccount } })
       .findOne();
 
     if (!userinfo) {
@@ -267,7 +258,7 @@ route.post('/code-login', async (req, res) => {
 
     const userinfo = await db('user')
       .select('account, remote_login')
-      .where({ username, state: 1, account: { '!=': 'hello' } })
+      .where({ username, state: 1, account: { '!=': appConfig.notifyAccount } })
       .findOne();
 
     if (!userinfo) {
@@ -339,7 +330,11 @@ route.post('/login', async (req, res) => {
     if (loginVerifyLimit.verify(ip, username)) {
       const userinfo = await db('user')
         .select('verify,account,password')
-        .where({ username, state: 1, account: { '!=': 'hello' } })
+        .where({
+          username,
+          state: 1,
+          account: { '!=': appConfig.notifyAccount },
+        })
         .findOne();
 
       if (!userinfo) {
@@ -403,7 +398,7 @@ route.post('/verify-login', async (req, res) => {
       !validaString(token, 6, 6, 1) ||
       !validaString(account, 1, fieldLength.id, 1) ||
       !validaString(password, 1, fieldLength.id, 1) ||
-      account === 'hello'
+      account === appConfig.notifyAccount
     ) {
       paramErr(res, req);
       return;
@@ -475,7 +470,7 @@ route.get('/mail-code', async (req, res) => {
 
     const userinfo = await db('user')
       .select('account,email')
-      .where({ username, state: 1, account: { '!=': 'hello' } })
+      .where({ username, state: 1, account: { '!=': appConfig.notifyAccount } })
       .findOne();
 
     if (!userinfo) {
@@ -535,7 +530,11 @@ route.post('/reset-pass', async (req, res) => {
     if (emailVerify.verify(ip, email)) {
       const userinfo = await db('user')
         .select('username')
-        .where({ email, account: { '=': account, '!=': 'hello' }, state: 1 })
+        .where({
+          email,
+          account: { '=': account, '!=': appConfig.notifyAccount },
+          state: 1,
+        })
         .findOne();
 
       if (!userinfo) {
@@ -963,7 +962,7 @@ route.post('/delete-account', async (req, res) => {
       return;
     }
 
-    if (req._hello.isRoot || account === 'hello') {
+    if (req._hello.isRoot || account === appConfig.notifyAccount) {
       _err(res, '无权操作')(req);
     } else {
       await deleteUser(account);
@@ -974,7 +973,7 @@ route.post('/delete-account', async (req, res) => {
 
       await heperMsgAndForward(
         req,
-        'root',
+        appConfig.adminAccount,
         `${username}(${account})，在 [${os}(${ip})] 注销账号成功`
       );
 
@@ -1061,8 +1060,14 @@ route.post('/up-logo', async (req, res) => {
     if (
       !isImgFile(name) ||
       !validaString(HASH, 1, fieldLength.id, 1) ||
-      !validationValue(type, ['bookmark', 'userlogo']) ||
-      (type === 'bookmark' && !validaString(id, 1, fieldLength.id, 1))
+      !validationValue(type, [
+        'bookmark',
+        'userlogo',
+        'engine',
+        'translator',
+      ]) ||
+      (['bookmark', 'engine', 'translator'].includes(type) &&
+        !validaString(id, 1, fieldLength.id, 1))
     ) {
       paramErr(res, req);
       return;
@@ -1072,7 +1077,7 @@ route.post('/up-logo', async (req, res) => {
 
     const timePath = getTimePath();
 
-    const path = _path.normalize(appConfig.appData, 'logo', account, timePath);
+    const path = appConfig.logoDir(account, timePath);
 
     await receiveFiles(req, path, `${HASH}.${_path.extname(name)[2]}`, 5, HASH);
 
@@ -1092,6 +1097,36 @@ route.post('/up-logo', async (req, res) => {
       syncUpdateData(req, 'userinfo');
 
       _success(res, '更新头像成功')(req, logo, 1);
+    } else if (type === 'engine') {
+      const config = await readSearchConfig(account);
+
+      if (Array.isArray(config.searchEngineData)) {
+        const idx = config.searchEngineData.findIndex((s) => s.id === id);
+        if (idx >= 0) {
+          config.searchEngineData[idx] = {
+            ...config.searchEngineData[idx],
+            logo,
+          };
+          await writeSearchConfig(account, config);
+          syncUpdateData(req, 'searchConfig');
+        }
+      }
+      _success(res, '更新搜索引擎LOGO成功')(req, logo, 1);
+    } else if (type === 'translator') {
+      const config = await readSearchConfig(account);
+
+      if (Array.isArray(config.translatorData)) {
+        const idx = config.translatorData.findIndex((t) => t.id === id);
+        if (idx >= 0) {
+          config.translatorData[idx] = {
+            ...config.translatorData[idx],
+            logo,
+          };
+          await writeSearchConfig(account, config);
+          syncUpdateData(req, 'searchConfig');
+        }
+      }
+      _success(res, '更新翻译接口LOGO成功')(req, logo, 1);
     }
   } catch (error) {
     _err(res)(req, error);
@@ -1323,6 +1358,7 @@ route.post('/real-time', async (req, res) => {
           'history',
           'category',
           'file',
+          'searchConfig',
         ]) ||
         !validaString(id, 0, fieldLength.id, 1)
       ) {
@@ -1766,10 +1802,10 @@ route.post('/delete-trash', async (req, res) => {
 
     // 移动笔记历史到文件回收站
     if (type === 'note') {
-      const trashDir = getTrashDir(account);
+      const trashDir = appConfig.trashDir(account);
 
       await concurrencyTasks(ids, 5, async (id) => {
-        const noteHistoryDir = getNoteHistoryDir(account, id);
+        const noteHistoryDir = appConfig.noteHistoryDir(account, id);
 
         if (await _f.exists(noteHistoryDir)) {
           await _f.rename(noteHistoryDir, _path.normalize(trashDir, id));

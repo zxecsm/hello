@@ -27,7 +27,6 @@ import {
   isLogin,
   isRoot,
   getScreenSize,
-  getStaticPath,
 } from '../../js/utils/utils.js';
 import _d from '../../js/common/config';
 import _msg from '../../js/plugins/message';
@@ -69,6 +68,7 @@ import {
   getHomeBmList,
   searchBoxIsHide,
   showSearchBox,
+  updateSearchConfig,
 } from './searchBox/index.js';
 import {
   canToBottom,
@@ -307,6 +307,7 @@ function closeLoading() {
 }
 // 初始化
 const onceInit = hdOnce(function () {
+  updateSearchConfig();
   // 设置默认聊天页为文件传输
   setCurChatAccount(userInfo.account);
   if (!isRoot()) {
@@ -350,7 +351,7 @@ export function updateUserInfo(cb) {
         updateRightBoxUsername(username);
         // 更新头像
         if (logo) {
-          imgjz(getStaticPath(`/logo/${account}/${logo}`))
+          imgjz(getFilePath(`/logo/${account}/${logo}`))
             .then((cache) => {
               $userLogoBtn.css('background-image', `url(${cache})`);
             })
@@ -700,7 +701,7 @@ window.addEventListener(
 );
 function isCurChatRoom(chatAccount, from, to) {
   return (
-    (chatAccount === 'chang' && to === 'chang') ||
+    (chatAccount === _d.chatRoomAccount && to === _d.chatRoomAccount) ||
     (from === userInfo.account &&
       to === userInfo.account &&
       chatAccount === userInfo.account) ||
@@ -796,10 +797,10 @@ function hdChatType(resData, notify) {
       } else {
         if (isAlert(from.account)) {
           // 新消息不是是当前聊天框
-          if (chatAccount === 'chang') {
+          if (chatAccount === _d.chatRoomAccount) {
             $chatHeadBtns.find('.c_msg_alert').stop().fadeIn(_d.speed);
           } else {
-            if (to === 'chang') {
+            if (to === _d.chatRoomAccount) {
               $chatHeadBtns.find('.c_home_msg_alert').stop().fadeIn(_d.speed);
             } else {
               $chatHeadBtns.find('.c_msg_alert').stop().fadeIn(_d.speed);
@@ -848,7 +849,7 @@ function hdChatType(resData, notify) {
       }
     }
   } else if (flag === 'shake') {
-    if (isNotify(from.account, notify) && to !== 'chang') {
+    if (isNotify(from.account, notify) && to !== _d.chatRoomAccount) {
       chatMessageNotification(
         from.des || from.username,
         '抖了一下窗口',
@@ -930,6 +931,8 @@ function hdUpdatedataType(resData) {
     renderBgList();
   } else if (flag === 'tips') {
     updateTipsFlag();
+  } else if (flag === 'searchConfig') {
+    updateSearchConfig();
   }
 }
 // 上线通知

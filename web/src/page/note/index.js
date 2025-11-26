@@ -28,7 +28,7 @@ import {
   LazyLoad,
   isDarkMode,
   getDarkIcon,
-  getStaticPath,
+  getFilePath,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -210,7 +210,7 @@ if (urlparmes.v) {
         });
 
         if (logo) {
-          imgjz(getStaticPath(`/logo/${account}/${logo}`))
+          imgjz(getFilePath(`/logo/${account}/${logo}`))
             .then((cache) => {
               $authorInfo
                 .find('.logo')
@@ -244,7 +244,7 @@ function updateNoteInfo(
   { create_at, visit_count, update_at, category, account } = {},
   content
 ) {
-  if (!['about', 'tips'].includes(urlparmes.v)) {
+  if (![_d.aboutid, _d.tipsid].includes(urlparmes.v)) {
     const readInfo = noteReadInfo(content);
     const $headInfo = $noteInfo.find('div');
     $headInfo.html(

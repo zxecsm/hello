@@ -25,7 +25,6 @@ import _f from '../../utils/f.js';
 import timedTask from '../../utils/timedTask.js';
 import { compressionImg } from '../../utils/img.js';
 import _crypto from '../../utils/crypto.js';
-import _path from '../../utils/path.js';
 import { cleanFavicon } from '../bmk/bmk.js';
 import { _d } from '../../data/data.js';
 import { fieldLength } from '../config.js';
@@ -109,11 +108,7 @@ route.get('/', async (req, res) => {
     try {
       const { host } = new URL(url);
 
-      iconPath = _path.normalize(
-        appConfig.appData,
-        'favicon',
-        `${_crypto.getStringHash(host)}.png`
-      );
+      iconPath = appConfig.faviconDir(`${_crypto.getStringHash(host)}.png`);
 
       missFlagPath = `${iconPath}.miss`;
 

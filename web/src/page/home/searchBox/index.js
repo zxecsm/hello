@@ -19,8 +19,8 @@ import {
   copyText,
   throttle,
   _position,
-  getStaticPath,
   getFaviconPath,
+  getFilePath,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
@@ -36,15 +36,25 @@ import {
 } from '../aside/index.js';
 import { reqBmkList } from '../../../api/bmk.js';
 import {
+  reqSearchAddEngine,
+  reqSearchAddTranslator,
+  reqSearchChangeEngine,
+  reqSearchChangeTranslator,
   reqSearchConfig,
   reqSearchDelete,
+  reqSearchDeleteEngine,
+  reqSearchDeleteEngineLogo,
+  reqSearchDeleteTranslator,
+  reqSearchDeleteTranslatorLogo,
+  reqSearchEditEngine,
+  reqSearchEditTranslator,
   reqSearchList,
   reqSearchSave,
 } from '../../../api/search.js';
 import { popWindow, setZidx } from '../popWindow.js';
 import toolTip from '../../../js/plugins/tooltip/index.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
-import { showBmk, showHistory } from '../rightSetting/index.js';
+import { showBmk, showHistory, upLogo } from '../rightSetting/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import {
@@ -52,6 +62,7 @@ import {
   MouseElementTracker,
 } from '../../../js/utils/boxSelector.js';
 import localData from '../../../js/common/localData.js';
+import { setUserInfo } from '../index.js';
 const $searchBoxMask = $('.search_box_mask'),
   $searchLogo = $searchBoxMask.find('.search_logo'),
   $searchInpWrap = $searchBoxMask.find('.search_inp_wrap'),
@@ -59,7 +70,8 @@ const $searchBoxMask = $('.search_box_mask'),
   $homeFootMenu = $searchBoxMask.find('.home_foot_menu'),
   $searchBoxBtn = $('.search_box_btn'),
   $pageBg = $('.page_bg');
-let curSearchIdx = localData.get('searchengine'),
+let curSearchID = localData.get('searchengine'),
+  curtranslatorID = localData.get('translator'),
   searchWordIdx = localData.get('searchWordIdx');
 let searchList = [];
 // 底部菜单是隐藏
@@ -249,7 +261,7 @@ function lazyLoadHomeBmLogo() {
     let { logo, link } = getHomeBmData($item.attr('data-id'));
     const $homeBmLogo = $item.find('.home_bm_logo');
     if (logo) {
-      logo = getStaticPath(logo);
+      logo = getFilePath(logo);
     } else {
       logo = getFaviconPath(link);
     }
@@ -270,7 +282,7 @@ function lazyLoadHomeBmLogo() {
     let { logo, link } = getHomeBmData($item.attr('data-id'));
     const $homeBmLogo = $item.find('.home_bm_logo');
     if (logo) {
-      logo = getStaticPath(logo);
+      logo = getFilePath(logo);
     } else {
       logo = getFaviconPath(link);
     }
@@ -527,36 +539,85 @@ const searchInput = wrapInput($searchInpWrap.find('.inp_box input')[0], {
   },
 });
 // 获取搜索引擎
-function getSearchEngine() {
-  return _d.searchEngineData[curSearchIdx] || _d.searchEngineData[0];
+function getSearchEngine(id) {
+  if (id) return _d.searchEngineData.find((s) => s.id === id);
+  return (
+    _d.searchEngineData.find((s) => s.id === curSearchID) ||
+    _d.searchEngineData[0]
+  );
 }
+// 获取翻译
+function getTranslator(id) {
+  if (id) return _d.translatorData.find((t) => t.id === id);
+  return (
+    _d.translatorData.find((t) => t.id === curtranslatorID) ||
+    _d.translatorData[0]
+  );
+}
+
 // 获取提示词服务
 function getSearchWordLink() {
   return _d.searchWord[searchWordIdx] || _d.searchWord[0];
 }
-reqSearchConfig()
-  .then((res) => {
+export async function updateSearchConfig(loading) {
+  try {
+    loading?.start();
+    const res = await reqSearchConfig();
     if (res.code === 1) {
-      _d.searchEngineData = res.data.searchEngineData;
-      _d.translator = res.data.translator;
+      if (Array.isArray(res.data.searchEngineData)) {
+        _d.searchEngineData = [
+          _d.defaultSearchEngineData,
+          ...res.data.searchEngineData,
+        ];
+      }
+      if (res.data.searchengineid) {
+        curSearchID = res.data.searchengineid;
+        localData.set('searchengine', res.data.searchengineid);
+      }
+      if (Array.isArray(res.data.translatorData)) {
+        _d.translatorData = [
+          _d.defaultTranslatorData,
+          ...res.data.translatorData,
+        ];
+      }
+      if (res.data.translatorid) {
+        curtranslatorID = res.data.translatorid;
+        localData.set('translator', res.data.translatorid);
+      }
       switchSearchEngine();
     }
-  })
-  .catch(() => {});
+    loading?.end();
+  } catch {
+    loading?.end();
+  }
+}
 // 切换搜索引擎
 function switchSearchEngine() {
-  const { icon, logo, color } = getSearchEngine();
-  $searchInpWrap.find('.content').css('box-shadow', `0 0 0.2rem ${color}`);
-  $searchLogo.find('img').attr({ src: logo });
-  $searchLogo.find('.logo_box').addClass('active');
-  $searchBoxBtn.attr('src', icon);
-  $searchInpWrap.find('.inp_box input').attr({
-    placeholder: '输入搜索内容或网址',
-  });
+  const { logo, color, link, id } = getSearchEngine();
+  if (id !== 'bing') {
+    const icon = logo
+      ? getFilePath(`/logo/${setUserInfo().account}/${logo}`)
+      : getFaviconPath(link);
+    imgjz(icon)
+      .then((cache) => {
+        $searchBoxBtn.attr('src', cache);
+        $searchInpWrap.find('img').attr('src', cache);
+      })
+      .catch(() => {
+        $searchBoxBtn.attr('src', defaultIcon);
+        $searchInpWrap.find('img').attr('src', defaultIcon);
+      });
+  } else {
+    $searchBoxBtn.attr('src', logo);
+    $searchInpWrap.find('img').attr('src', logo);
+  }
+  $searchInpWrap
+    .find('.content')
+    .css('box-shadow', `0 0 0.2rem ${color || 'var(--icon-color)'}`);
 }
 // 搜索提示词
 function toSearch(val) {
-  const action = getSearchEngine().searchlink;
+  const action = getSearchEngine().link;
   if (val === '') return;
   saveSearchText(val);
   let u = val;
@@ -592,7 +653,10 @@ function toTranslator() {
   const word = searchInput.getValue().trim();
   if (word === '') return;
   saveSearchText(word);
-  const u = _d.translator.replace(/\{\{(.*?)\}\}/g, encodeURIComponent(word));
+  const u = getTranslator().link.replace(
+    /\{\{(.*?)\}\}/g,
+    encodeURIComponent(word)
+  );
   if (isSearchOpenPop()) {
     openInIframe(u, word);
     return;
@@ -659,6 +723,7 @@ $searchInpWrap
     const val = searchInput.getValue().trim();
     toSearch(val);
   })
+  .on('click', '.logo', selectSearch)
   .on('click', '.translate_btn', toTranslator)
   .on('click', '.inp_box i', function () {
     searchInput.setValue('').focus();
@@ -851,6 +916,11 @@ function searchSetting(e) {
       beforeIcon: 'iconfont icon-search',
     },
     {
+      id: '6',
+      text: '切换翻译接口',
+      beforeIcon: 'iconfont icon-tubiao-fanyi',
+    },
+    {
       id: '1',
       text: '切换搜索提示词服务',
       beforeIcon: 'iconfont icon-tishi',
@@ -894,58 +964,554 @@ function searchSetting(e) {
       } else if (id === '4') {
         close();
         showBmk();
+      } else if (id === '6') {
+        selectTranslator(e);
       }
     },
     '设置'
   );
 }
-$searchBoxMask
-  .on('click', '.setting', searchSetting)
-  .on('click', '.logo_box', selectSearch);
+$searchBoxMask.on('click', '.setting', searchSetting);
 // 选中搜索引擎
-function selectSearch(e) {
-  const html = _tpl(
+function getSearchEngineList() {
+  return _tpl(
     `
-    <div v-for="{name,icon},i in _d.searchEngineData" cursor="y" class="item {{getSearchEngine().name === name ? 'active' : ''}}" :xi="i">
-      <img style="width: 4rem;height: 4rem;border-radius: 0.4rem;" :data-src="icon"/>
-      <span style="margin-left:1rem;">{{name}}</span>
+    <div v-for="{id,title,logo,color,link},i in _d.searchEngineData" cursor="y" :data-id="id" class="item {{getSearchEngine().id === id ? 'active' : ''}}">
+      <img v-if="i == 0" :src="logo" style="width: 4rem;height: 4rem;border-radius: 0.4rem;"/>
+      <img v-else style="width: 4rem;height: 4rem;border-radius: 0.4rem;" :data-src="getLogoPath(link,logo)"/>
+      <span class="search_name" style="margin-left:1rem;color:{{color}};flex:auto;">{{title}}</span>
     </div>
+    <div class="item add" cursor="true"><i class="icon iconfont icon-tianjia"></i><span class="text">添加搜索引擎</span></div>
     `,
     {
       _d,
+      getLogoPath(link, logo) {
+        if (logo) {
+          return getFilePath(`/logo/${setUserInfo().account}/${logo}`);
+        }
+        return getFaviconPath(link);
+      },
       getSearchEngine,
     }
   );
+}
+function editEngine(e, obj, resetMenu, preClose) {
+  const { title, id: engineid, link, color } = obj;
+  rMenu.inpMenu(
+    e,
+    {
+      items: {
+        title: {
+          beforeText: '名称：',
+          value: title,
+          verify(val) {
+            return rMenu.validString(val, 1, _d.fieldLength.title);
+          },
+        },
+        color: {
+          beforeText: '配色：',
+          inputType: 'color',
+          value: color,
+          verify(val) {
+            if (!val) return '';
+            return rMenu.validColor(val);
+          },
+        },
+        link: {
+          beforeText: '链接：',
+          placeholder: 'https://xxx.com?q={{}}',
+          value: link,
+          verify(val) {
+            return (
+              rMenu.validString(val, 1, _d.fieldLength.url) ||
+              rMenu.validUrl(val) ||
+              (val.includes('{{}}') ? '' : '请输入正确的占位符')
+            );
+          },
+        },
+      },
+    },
+    ({ loading, close, inp, isDiff }) => {
+      if (!isDiff()) return;
+      loading.start();
+      inp.id = engineid;
+      reqSearchEditEngine(inp)
+        .then(async (res) => {
+          if (res.code === 1) {
+            loading.end();
+            await updateSearchConfig(loading);
+            _msg.success(res.codeText);
+            close();
+            preClose();
+            resetMenu(getSearchEngineList());
+          }
+        })
+        .catch(() => {
+          loading.end();
+        });
+    },
+    '编辑搜索引擎'
+  );
+}
+function handleEngineLogo(e, obj, resetMenu, preClose) {
+  const { logo, id: engineid } = obj;
+  const data = [
+    {
+      id: '1',
+      text: '自定义图标',
+    },
+  ];
+  if (logo) {
+    data.push({
+      id: '2',
+      text: '使用自动获取图标',
+    });
+  }
+  rMenu.selectMenu(
+    e,
+    data,
+    ({ id, loading, close, e }) => {
+      if (id === '1') {
+        upLogo(
+          'engine',
+          async (res) => {
+            await updateSearchConfig(loading);
+            _msg.success(res.codeText);
+            resetMenu(getSearchEngineList());
+            close();
+            preClose();
+          },
+          engineid,
+          loading
+        );
+      } else if (id === '2') {
+        rMenu.pop(
+          {
+            e,
+            text: '确认清除：自定义图标，使用自动获取图标？',
+          },
+          (type) => {
+            if (type === 'confirm') {
+              loading.start();
+              reqSearchDeleteEngineLogo({ id: engineid })
+                .then(async (res) => {
+                  if (res.code === 1) {
+                    loading.end();
+                    await updateSearchConfig(loading);
+                    _msg.success(res.codeText);
+                    resetMenu(getSearchEngineList());
+                    close();
+                    preClose();
+                  }
+                })
+                .catch(() => {
+                  loading.end();
+                });
+            }
+          }
+        );
+      }
+    },
+    '图标设置'
+  );
+}
+function deleteEngine(e, obj, loading, resetMenu, close) {
+  rMenu.pop({ e, text: `确认删除：${obj.title}？` }, (type) => {
+    if (type === 'confirm') {
+      loading.start();
+      reqSearchDeleteEngine({ id: obj.id })
+        .then(async (res) => {
+          if (res.code === 1) {
+            loading.end();
+            await updateSearchConfig(loading);
+            _msg.success(res.codeText);
+            resetMenu(getSearchEngineList());
+            close();
+          }
+        })
+        .catch(() => {
+          loading.end();
+        });
+    }
+  });
+}
+function addEngine(e, resetMenu) {
+  rMenu.inpMenu(
+    e,
+    {
+      items: {
+        title: {
+          beforeText: '名称：',
+          verify(val) {
+            return rMenu.validString(val, 1, _d.fieldLength.title);
+          },
+        },
+        color: {
+          beforeText: '配色：',
+          inputType: 'color',
+          verify(val) {
+            if (!val) return '';
+            return rMenu.validColor(val);
+          },
+        },
+        link: {
+          beforeText: '链接：',
+          placeholder: 'https://xxx.com?q={{}}',
+          verify(val) {
+            return (
+              rMenu.validString(val, 1, _d.fieldLength.url) ||
+              rMenu.validUrl(val) ||
+              (val.includes('{{}}') ? '' : '请输入正确的占位符')
+            );
+          },
+        },
+      },
+    },
+    ({ loading, close, inp }) => {
+      loading.start();
+      reqSearchAddEngine(inp)
+        .then(async (res) => {
+          if (res.code === 1) {
+            loading.end();
+            await updateSearchConfig(loading);
+            _msg.success(res.codeText);
+            close();
+            resetMenu(getSearchEngineList());
+          }
+        })
+        .catch(() => {
+          loading.end();
+        });
+    },
+    '添加搜索引擎'
+  );
+}
+function selectSearch(e) {
   rMenu.rightMenu(
     e,
-    html,
-    function ({ close, e, box, loading }) {
-      const _this = _getTarget(box, e, '.item');
-      if (_this) {
-        $searchLogo.find('.logo_box').removeClass('active');
-        const xi = $(_this).attr('xi'),
-          { logo } = _d.searchEngineData[xi];
+    getSearchEngineList(),
+    function ({ close, e, box, loading, resetMenu }) {
+      if (!box) return;
+      const add = _getTarget(box, e, '.add');
+      const img = _getTarget(box, e, 'img');
+      const searchName = _getTarget(box, e, '.search_name');
+      if (img) {
+        const engineObj = getSearchEngine($(img).parent().data('id'));
+        const { title, id: engineid } = engineObj;
+        if (engineid === 'bing') return;
+        const data = [
+          {
+            id: 'edit',
+            text: '编辑',
+            beforeIcon: 'iconfont icon-bianji',
+          },
+          {
+            id: 'logo',
+            text: '图标',
+            beforeIcon: 'iconfont icon-tupian',
+          },
+          {
+            id: 'delete',
+            text: '删除',
+            beforeIcon: 'iconfont icon-shanchu',
+          },
+        ];
+        rMenu.selectMenu(
+          e,
+          data,
+          ({ e, close, id, loading }) => {
+            if (id === 'edit') {
+              editEngine(e, engineObj, resetMenu, close);
+            } else if (id === 'logo') {
+              handleEngineLogo(e, engineObj, resetMenu, close);
+            } else if (id === 'delete') {
+              deleteEngine(e, engineObj, loading, resetMenu, close);
+            }
+          },
+          title
+        );
+      } else if (add) {
+        addEngine(e, resetMenu);
+      } else if (searchName) {
+        const id = $(searchName).parent().data('id');
         loading.start();
-        imgjz(logo)
-          .then(() => {
-            curSearchIdx = xi;
-            switchSearchEngine();
-            localData.set('searchengine', xi);
-            _msg.success('切换成功');
-            loading.end();
-            close(true);
+        reqSearchChangeEngine({ id })
+          .then(async (res) => {
+            if (res.code === 1) {
+              loading.end();
+              await updateSearchConfig(loading);
+              _msg.success('切换成功');
+              close(true);
+            }
           })
           .catch(() => {
-            curSearchIdx = xi;
-            switchSearchEngine();
-            localData.set('searchengine', xi);
-            _msg.success('切换成功');
             loading.end();
-            close(true);
           });
       }
     },
     '选择搜索引擎'
+  );
+}
+function getTranslatorList() {
+  return _tpl(
+    `
+    <div v-for="{id,title,logo,link},i in _d.translatorData" cursor="y" :data-id="id" class="item {{getTranslator().id === id ? 'active' : ''}}">
+      <img v-if="i == 0" :src="logo" style="width: 4rem;height: 4rem;border-radius: 0.4rem;"/>
+      <img v-else style="width: 4rem;height: 4rem;border-radius: 0.4rem;" :data-src="getLogoPath(link,logo)"/>
+      <span class="translator_name" style="margin-left:1rem;flex:auto;">{{title}}</span>
+    </div>
+    <div class="item add" cursor="true"><i class="icon iconfont icon-tianjia"></i><span class="text">添加翻译接口</span></div>
+    `,
+    {
+      _d,
+      getLogoPath(link, logo) {
+        if (logo) {
+          return getFilePath(`/logo/${setUserInfo().account}/${logo}`);
+        }
+        return getFaviconPath(link);
+      },
+      getTranslator,
+    }
+  );
+}
+function editTranslator(e, obj, resetMenu, preClose) {
+  const { title, id: tid, link } = obj;
+  rMenu.inpMenu(
+    e,
+    {
+      items: {
+        title: {
+          beforeText: '名称：',
+          value: title,
+          verify(val) {
+            return rMenu.validString(val, 1, _d.fieldLength.title);
+          },
+        },
+        link: {
+          beforeText: '链接：',
+          placeholder: 'https://xxx.com?q={{}}',
+          value: link,
+          verify(val) {
+            return (
+              rMenu.validString(val, 1, _d.fieldLength.url) ||
+              rMenu.validUrl(val) ||
+              (val.includes('{{}}') ? '' : '请输入正确的占位符')
+            );
+          },
+        },
+      },
+    },
+    ({ loading, close, inp, isDiff }) => {
+      if (!isDiff()) return;
+      loading.start();
+      inp.id = tid;
+      reqSearchEditTranslator(inp)
+        .then(async (res) => {
+          if (res.code === 1) {
+            loading.end();
+            await updateSearchConfig(loading);
+            _msg.success(res.codeText);
+            close();
+            preClose();
+            resetMenu(getTranslatorList());
+          }
+        })
+        .catch(() => {
+          loading.end();
+        });
+    },
+    '编辑翻译接口'
+  );
+}
+function handleTranslatorLogo(e, obj, resetMenu, preClose) {
+  const { logo, id: tid } = obj;
+  const data = [
+    {
+      id: '1',
+      text: '自定义图标',
+    },
+  ];
+  if (logo) {
+    data.push({
+      id: '2',
+      text: '使用自动获取图标',
+    });
+  }
+  rMenu.selectMenu(
+    e,
+    data,
+    ({ id, loading, close, e }) => {
+      if (id === '1') {
+        upLogo(
+          'translator',
+          async (res) => {
+            await updateSearchConfig(loading);
+            _msg.success(res.codeText);
+            resetMenu(getTranslatorList());
+            close();
+            preClose();
+          },
+          tid,
+          loading
+        );
+      } else if (id === '2') {
+        rMenu.pop(
+          {
+            e,
+            text: '确认清除：自定义图标，使用自动获取图标？',
+          },
+          (type) => {
+            if (type === 'confirm') {
+              loading.start();
+              reqSearchDeleteTranslatorLogo({ id: tid })
+                .then(async (res) => {
+                  if (res.code === 1) {
+                    loading.end();
+                    await updateSearchConfig(loading);
+                    _msg.success(res.codeText);
+                    resetMenu(getTranslatorList());
+                    close();
+                    preClose();
+                  }
+                })
+                .catch(() => {
+                  loading.end();
+                });
+            }
+          }
+        );
+      }
+    },
+    '图标设置'
+  );
+}
+function deleteTranslator(e, obj, loading, resetMenu, close) {
+  rMenu.pop({ e, text: `确认删除：${obj.title}？` }, (type) => {
+    if (type === 'confirm') {
+      loading.start();
+      reqSearchDeleteTranslator({ id: obj.id })
+        .then(async (res) => {
+          if (res.code === 1) {
+            loading.end();
+            await updateSearchConfig(loading);
+            _msg.success(res.codeText);
+            resetMenu(getTranslatorList());
+            close();
+          }
+        })
+        .catch(() => {
+          loading.end();
+        });
+    }
+  });
+}
+function addTranslator(e, resetMenu) {
+  rMenu.inpMenu(
+    e,
+    {
+      items: {
+        title: {
+          beforeText: '名称：',
+          verify(val) {
+            return rMenu.validString(val, 1, _d.fieldLength.title);
+          },
+        },
+        link: {
+          beforeText: '链接：',
+          placeholder: 'https://xxx.com?q={{}}',
+          verify(val) {
+            return (
+              rMenu.validString(val, 1, _d.fieldLength.url) ||
+              rMenu.validUrl(val) ||
+              (val.includes('{{}}') ? '' : '请输入正确的占位符')
+            );
+          },
+        },
+      },
+    },
+    ({ loading, close, inp }) => {
+      loading.start();
+      reqSearchAddTranslator(inp)
+        .then(async (res) => {
+          if (res.code === 1) {
+            loading.end();
+            await updateSearchConfig(loading);
+            _msg.success(res.codeText);
+            close();
+            resetMenu(getTranslatorList());
+          }
+        })
+        .catch(() => {
+          loading.end();
+        });
+    },
+    '添加翻译接口'
+  );
+}
+function selectTranslator(e) {
+  rMenu.rightMenu(
+    e,
+    getTranslatorList(),
+    function ({ close, e, box, loading, resetMenu }) {
+      if (!box) return;
+      const add = _getTarget(box, e, '.add');
+      const img = _getTarget(box, e, 'img');
+      const translatorName = _getTarget(box, e, '.translator_name');
+      if (img) {
+        const translatorObj = getTranslator($(img).parent().data('id'));
+        const { title, id: tid } = translatorObj;
+        if (tid === 'bing') return;
+        const data = [
+          {
+            id: 'edit',
+            text: '编辑',
+            beforeIcon: 'iconfont icon-bianji',
+          },
+          {
+            id: 'logo',
+            text: '图标',
+            beforeIcon: 'iconfont icon-tupian',
+          },
+          {
+            id: 'delete',
+            text: '删除',
+            beforeIcon: 'iconfont icon-shanchu',
+          },
+        ];
+        rMenu.selectMenu(
+          e,
+          data,
+          ({ e, close, id, loading }) => {
+            if (id === 'edit') {
+              editTranslator(e, translatorObj, resetMenu, close);
+            } else if (id === 'logo') {
+              handleTranslatorLogo(e, translatorObj, resetMenu, close);
+            } else if (id === 'delete') {
+              deleteTranslator(e, translatorObj, loading, resetMenu, close);
+            }
+          },
+          title
+        );
+      } else if (add) {
+        addTranslator(e, resetMenu);
+      } else if (translatorName) {
+        const id = $(translatorName).parent().data('id');
+        loading.start();
+        reqSearchChangeTranslator({ id })
+          .then(async (res) => {
+            if (res.code === 1) {
+              loading.end();
+              await updateSearchConfig(loading);
+              _msg.success('切换成功');
+              close(true);
+            }
+          })
+          .catch(() => {
+            loading.end();
+          });
+      }
+    },
+    '选择翻译接口'
   );
 }
 document.addEventListener('click', function (e) {

@@ -31,7 +31,7 @@ import {
   _animate,
   getDarkIcon,
   savePopLocationInfo,
-  getStaticPath,
+  getFilePath,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -406,7 +406,7 @@ function hdUserLogo(e) {
         imgPreview(
           [
             {
-              u1: getStaticPath(
+              u1: getFilePath(
                 `/logo/${setUserInfo().account}/${setUserInfo().logo}`
               ),
             },
@@ -696,7 +696,7 @@ export function renderUserinfo() {
   );
   $userInfoWrap.find('.user_list').html(html);
   if (logo) {
-    imgjz(getStaticPath(`/logo/${account}/${logo}`))
+    imgjz(getFilePath(`/logo/${account}/${logo}`))
       .then((cache) => {
         $userInfoWrap
           .find('.user_logo div')
@@ -751,22 +751,33 @@ function setPageFont(e, loading = { start() {}, end() {} }) {
       loading.end();
       if (res.code === 1) {
         res.data.sort((a, b) => mixedSort(a, b));
-        res.data.unshift('default');
+        res.data.unshift('manageFonts', 'default');
         const data = [];
         res.data.forEach((item, idx) => {
           let name = item.slice(0, -4);
-          data.push({
-            id: idx + 1 + '',
+          const info = {
+            id: idx + '',
             text: item === 'default' ? '默认字体' : name,
-            beforeText: (idx + 1 + '').padStart(2, '0') + '. ',
+            beforeText: (idx + '').padStart(2, '0') + '. ',
             param: { font: item },
             active: localData.get('fontType') === item ? true : false,
-          });
+          };
+          if (item === 'manageFonts') {
+            info.text = '管理字体';
+            info.beforeIcon = 'iconfont icon-shezhi';
+            delete info.beforeText;
+          }
+          data.push(info);
         });
         rMenu.selectMenu(
           e,
           data,
-          async ({ id, resetMenu, param, loading }) => {
+          async ({ id, resetMenu, param, loading, close }) => {
+            if (id === '0') {
+              openInIframe(`/file/#${_d.fontDir}`, '文件管理');
+              close(true);
+              return;
+            }
             if (id) {
               const font = param.font;
               data.forEach((item) => {
@@ -1149,10 +1160,10 @@ export function settingMenu(e, isMain) {
                   param: { text: '图片', type: 'image' },
                 },
                 {
-                  id: 'hello',
+                  id: _d.appName,
                   text: '其他',
                   beforeIcon: 'iconfont icon-bangzhu',
-                  param: { text: '其他', type: 'hello' },
+                  param: { text: '其他', type: _d.appName },
                 },
                 {
                   id: 'local',

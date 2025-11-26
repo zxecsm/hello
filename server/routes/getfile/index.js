@@ -13,8 +13,6 @@ import { db } from '../../utils/sqlite.js';
 
 import _f from '../../utils/f.js';
 
-import { getCurPath, getRootDir } from '../file/file.js';
-
 import { getCompressionSize, compressionImg } from '../../utils/img.js';
 import { validShareState } from '../user/user.js';
 import { fieldLength } from '../config.js';
@@ -51,7 +49,7 @@ export default async function getFile(req, res, p) {
 
     let dir = pArr.shift();
 
-    const publicArr = ['pic', 'sharemusic', 'sharefile'];
+    const publicArr = ['pic', 'sharemusic', 'sharefile', 'logo'];
     const verifyArr = ['bg', 'upload', 'file', 'music']; // 目录需要登录态
 
     if (publicArr.includes(dir)) {
@@ -70,6 +68,10 @@ export default async function getFile(req, res, p) {
 
     if (dir === 'upload') {
       const id = pArr[0];
+      if (!validaString(id, 1, fieldLength.id, 1)) {
+        paramErr(res, req);
+        return;
+      }
 
       const msg = await db('chat_upload_view')
         .select('flag,url')
@@ -79,16 +81,16 @@ export default async function getFile(req, res, p) {
       if (
         msg &&
         msg.url &&
-        (msg.flag === 'chang' || msg.flag.includes(account))
+        (msg.flag === appConfig.chatRoomAccount || msg.flag.includes(account))
       ) {
         // 消息文件存在，并且是群和自己发送或收到的消息
-        path = _path.normalize(appConfig.appData, 'upload', msg.url);
+        path = appConfig.uploadDir(msg.url);
       } else {
         _err(res, '无权访问')(req, `${dir}-${id}`, 1);
         return;
       }
     } else if (dir === 'file') {
-      path = getCurPath(account, pArr.join('/'));
+      path = appConfig.userRootDir(account, pArr.join('/'));
     } else if (dir === 'sharefile') {
       const share = await validShareState(token, 'file');
 
@@ -102,11 +104,7 @@ export default async function getFile(req, res, p) {
 
         const { name, type } = obj;
 
-        const rootP = _path.normalize(
-          getRootDir(share.data.account),
-          obj.path,
-          name
-        );
+        const rootP = appConfig.userRootDir(share.data.account, obj.path, name);
 
         if (type === 'file') {
           path = rootP;
@@ -116,14 +114,13 @@ export default async function getFile(req, res, p) {
       }
     } else if (dir === 'sharemusic') {
       if (account) {
-        path = _path.normalize(
-          appConfig.appData,
-          'music',
-          pArr.slice(1).join('/')
-        );
+        path = appConfig.musicDir(pArr.slice(1).join('/'));
       } else {
         const sid = pArr[0];
-
+        if (!validaString(sid, 1, fieldLength.id, 1)) {
+          paramErr(res, req);
+          return;
+        }
         const share = await validShareState(token, 'music');
         if (share.state === 0) {
           _err(res, share.text)(req, dir, 1);
@@ -131,16 +128,19 @@ export default async function getFile(req, res, p) {
         }
         if (share.state === 1) {
           if (share.data.data.some((item) => item === sid)) {
-            path = _path.normalize(
-              appConfig.appData,
-              'music',
-              pArr.slice(1).join('/')
-            );
+            path = appConfig.musicDir(pArr.slice(1).join('/'));
           }
         }
       }
+    } else if (dir === 'logo') {
+      const acc = pArr[0];
+      if (!validaString(acc, 1, fieldLength.id, 1)) {
+        paramErr(res, req);
+        return;
+      }
+      path = appConfig.logoDir(account, pArr.slice(1).join('/'));
     } else {
-      path = _path.normalize(appConfig.appData, url);
+      path = appConfig.appFilesDir(url);
     }
 
     if (!path || !(await _f.exists(path))) {
@@ -180,17 +180,15 @@ export default async function getFile(req, res, p) {
 
         let thumbP = '';
         if (dir === 'file') {
-          thumbP = _path.normalize(
-            appConfig.appData,
-            'thumb',
+          thumbP = appConfig.thumbDir(
             dir,
             `${_path.basename(path)[1]}_${stat.size}.png`
           );
         } else {
-          thumbP = _path.normalize(
-            appConfig.appData,
-            'thumb',
-            `${_path.extname(path.slice(appConfig.appData.length))[0]}.png`
+          thumbP = appConfig.thumbDir(
+            `${
+              _path.extname(path.slice(appConfig.appFilesDir().length))[0]
+            }.png`
           );
         }
 

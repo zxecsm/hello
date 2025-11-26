@@ -32,7 +32,6 @@ import {
   loadImg,
   _mySlide,
   isIframe,
-  getStaticPath,
   getDateDiff,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
@@ -112,7 +111,7 @@ function getShareData(close, loading = { start() {}, end() {} }) {
         uObj = { username, account, email };
         shareObj = data;
         if (logo) {
-          imgjz(getStaticPath(`/logo/${account}/${logo}`))
+          imgjz(getFilePath(`/logo/${account}/${logo}`))
             .then((cache) => {
               $shareInfo.find('.logo').css('background-image', `url(${cache})`);
             })

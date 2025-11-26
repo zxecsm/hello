@@ -53,7 +53,8 @@ const defaultData = {
   skipUpSameNameFiles: false, // 略过同名文件
   newNote: '', // 未保存的新笔记
   historyPageSize: 20, // 历史记录每页显示
-  searchengine: 0, // 搜索引擎
+  searchengine: 'bing', // 搜索引擎
+  translator: 'bing', // 翻译
   searchWordIdx: 1, // 搜索提示词服务
   filterbg: 0, // 壁纸模糊度
   songListSort: 'default', // 歌曲排序

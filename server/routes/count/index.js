@@ -28,6 +28,7 @@ import {
 import { fieldLength } from '../config.js';
 import { computerDay } from './count.js';
 import nanoid from '../../utils/nanoid.js';
+import appConfig from '../../data/config.js';
 
 const route = express.Router();
 
@@ -128,8 +129,8 @@ timedTask.add(async () => {
         {
           _hello: {
             userinfo: {
-              username: 'hello',
-              account: 'hello',
+              username: appConfig.notifyAccount,
+              account: appConfig.notifyAccount,
             },
           },
         },

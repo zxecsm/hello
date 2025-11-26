@@ -13,6 +13,7 @@ import {
   imgjz,
   isEmail,
   isInteger,
+  isValidColor,
   isurl,
   myDrag,
   myResize,
@@ -720,6 +721,9 @@ function selectMenu(e, data, callback, title = '') {
   };
 }
 function rightMenu(e, html, callback, title = '') {
+  function resetMenu(html) {
+    r.renderList(html);
+  }
   let isOnce = false;
   const loadImg = new LazyLoad();
   const r = rightM({
@@ -732,6 +736,7 @@ function rightMenu(e, html, callback, title = '') {
     afterRender() {
       const imgs = [...this.content.querySelectorAll('img')].filter((item) => {
         const url = item.getAttribute('data-src');
+        if (!url) return false;
         const cache = cacheFile.hasUrl(url, 'image');
         if (cache) {
           item.src = cache;
@@ -761,7 +766,7 @@ function rightMenu(e, html, callback, title = '') {
       }
     },
     click({ e, close }) {
-      callback && callback({ e, close, box: this.content, loading });
+      callback && callback({ e, close, resetMenu, box: this.content, loading });
     },
   });
   const loading = {
@@ -1083,6 +1088,10 @@ const rMenu = {
   },
   validUrl(val) {
     if (!isurl(val)) return '请输入正确的网址';
+    return '';
+  },
+  validColor(val) {
+    if (!isValidColor(val)) return '请输入正确的颜色格式';
     return '';
   },
   validMode(val) {

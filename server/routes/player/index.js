@@ -119,7 +119,7 @@ route.post('/lrc', async (req, res) => {
       return;
     }
 
-    const url = _path.normalize(appConfig.appData, 'music', songInfo.lrc);
+    const url = appConfig.musicDir(songInfo.lrc);
 
     if (await _f.exists(url)) {
       const str = (await _f.readFile(url, null, '')).toString(),
@@ -971,7 +971,7 @@ route.post('/edit-song', async (req, res) => {
     let newHASH = '';
 
     try {
-      const songUrl = _path.normalize(appConfig.appData, 'music', songInfo.url);
+      const songUrl = appConfig.musicDir(songInfo.url);
 
       // 写入歌曲文件
       await nodeID3.update(
@@ -1195,9 +1195,7 @@ route.post('/delete-song', async (req, res) => {
       await concurrencyTasks(dels, 5, async (del) => {
         const { url, artist, title } = del;
 
-        await _delDir(
-          _path.normalize(appConfig.appData, 'music', _path.dirname(url))
-        );
+        await _delDir(appConfig.musicDir(_path.dirname(url)));
 
         await uLog(req, `删除歌曲(${artist}-${title})`);
       });
@@ -1331,7 +1329,7 @@ route.post('/delete-mv', async (req, res) => {
     for (let i = 0; i < dels.length; i++) {
       const { mv, artist, title } = dels[i];
       if (mv) {
-        await _delDir(_path.normalize(appConfig.appData, 'music', mv));
+        await _delDir(appConfig.musicDir(mv));
         await uLog(req, `删除MV(${artist}-${title})`);
       }
     }
@@ -1362,7 +1360,7 @@ route.get('/read-lrc', async (req, res) => {
       _err(res, '歌曲不存在')(req, id, 1);
     }
 
-    const url = _path.normalize(appConfig.appData, 'music', musicinfo.lrc);
+    const url = appConfig.musicDir(musicinfo.lrc);
 
     if (await _f.exists(url)) {
       const str = (await _f.readFile(url, null, '')).toString();
@@ -1405,16 +1403,12 @@ route.post('/edit-lrc', async (req, res) => {
       _err(res, '歌曲不存在')(req, id, 1);
     }
 
-    const url = _path.normalize(appConfig.appData, 'music', musicinfo.lrc);
+    const url = appConfig.musicDir(musicinfo.lrc);
 
     await _f.writeFile(url, text);
 
     try {
-      const songUrl = _path.normalize(
-        appConfig.appData,
-        'music',
-        musicinfo.url
-      );
+      const songUrl = appConfig.musicDir(musicinfo.url);
 
       // 写入歌曲文件
       await nodeID3.update(
@@ -1543,12 +1537,7 @@ route.post('/up', async (req, res) => {
 
       const suffix = _path.extname(name)[2];
 
-      const tDir = _path.normalize(
-        appConfig.appData,
-        'music',
-        timePath,
-        songId
-      );
+      const tDir = appConfig.musicDir(timePath, songId);
       const tName = `${songId}.${suffix}`;
 
       await receiveFiles(req, tDir, tName, 50, HASH);
@@ -1627,11 +1616,7 @@ route.post('/up', async (req, res) => {
 
       const { url, pic, title, artist, hash } = songInfo;
 
-      const tDir = _path.normalize(
-        appConfig.appData,
-        'music',
-        _path.dirname(url)
-      );
+      const tDir = appConfig.musicDir(_path.dirname(url));
       const tName = `${_path.basename(url)[1]}.${_path.extname(name)[2]}`;
 
       await receiveFiles(req, tDir, tName, 5, HASH);
@@ -1646,7 +1631,7 @@ route.post('/up', async (req, res) => {
       let newHASH = '';
 
       try {
-        const songUrl = _path.normalize(appConfig.appData, 'music', url);
+        const songUrl = appConfig.musicDir(url);
 
         // 写入歌曲文件
         await nodeID3.update(
@@ -1707,11 +1692,7 @@ route.post('/up', async (req, res) => {
 
       const { url, mv, title, artist } = songInfo;
 
-      const tDir = _path.normalize(
-        appConfig.appData,
-        'music',
-        _path.dirname(url)
-      );
+      const tDir = appConfig.musicDir(_path.dirname(url));
       const tName = `${_path.basename(url)[1]}.${_path.extname(name)[2]}`;
 
       await receiveFiles(req, tDir, tName, 200, HASH);
@@ -1749,7 +1730,7 @@ route.post('/repeat', async (req, res) => {
       .findOne();
 
     if (songInfo) {
-      const url = _path.normalize(appConfig.appData, 'music', songInfo.url);
+      const url = appConfig.musicDir(songInfo.url);
 
       if (await _f.exists(url)) {
         _success(res);

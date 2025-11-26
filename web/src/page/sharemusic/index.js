@@ -42,7 +42,6 @@ import {
   pageErr,
   _animate,
   savePopLocationInfo,
-  getStaticPath,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -165,7 +164,7 @@ function getShareData(close, loading = { start() {}, end() {} }) {
         shareToken = token;
         userInfo = { account, username, email };
         if (logo) {
-          imgjz(getStaticPath(`/logo/${account}/${logo}`))
+          imgjz(getFilePath(`/logo/${account}/${logo}`))
             .then((cache) => {
               $lrcHead
                 .find('.user_logo')

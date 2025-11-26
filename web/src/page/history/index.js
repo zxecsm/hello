@@ -49,8 +49,12 @@ realtime.init().add((res) => {
       type,
       data: { flag },
     } = item;
-    if (type === 'updatedata' && flag === 'history') {
-      renderList();
+    if (type === 'updatedata') {
+      if (flag === 'history') {
+        renderList();
+      } else if (flag === 'searchConfig') {
+        updateSearchConfig();
+      }
     }
     otherWindowMsg(item);
   });
@@ -171,17 +175,29 @@ const pgnt = pagination($contentWrap[0], {
   },
 });
 renderList(true);
-reqSearchConfig()
-  .then((res) => {
-    if (res.code === 1) {
-      _d.searchEngineData = res.data.searchEngineData;
-    }
-  })
-  .catch(() => {});
+function updateSearchConfig() {
+  reqSearchConfig()
+    .then((res) => {
+      if (res.code === 1) {
+        if (Array.isArray(res.data.searchEngineData)) {
+          _d.searchEngineData = [
+            _d.defaultSearchEngineData,
+            ...res.data.searchEngineData,
+          ];
+        }
+        if (res.data.searchengineid) {
+          localData.set('searchengine', res.data.searchengineid);
+        }
+      }
+    })
+    .catch(() => {});
+}
+updateSearchConfig();
 // 获取搜索引擎
 function getSearchEngine() {
   return (
-    _d.searchEngineData[localData.get('searchengine')] || _d.searchEngineData[0]
+    _d.searchEngineData.find((s) => s.id === localData.get('searchengine')) ||
+    _d.searchEngineData[0]
   );
 }
 // 删除
@@ -217,10 +233,7 @@ $contentWrap
     if (isurl(content)) {
       myOpen(content, '_blank');
     } else {
-      const url = getSearchEngine().searchlink.replace(
-        /\{\{(.*?)\}\}/g,
-        content
-      );
+      const url = getSearchEngine().link.replace(/\{\{(.*?)\}\}/g, content);
       myOpen(url, '_blank');
     }
   })

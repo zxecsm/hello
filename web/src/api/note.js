@@ -56,3 +56,10 @@ export function reqNoteEditCategory(data) {
 export function reqNoteEditInfo(data) {
   return _postAjax('/note/edit-info', data);
 }
+// 笔记历史记录
+export function reqNoteGetHistoryState() {
+  return _getAjax('/note/history-state');
+}
+export function reqNoteHistoryState(data) {
+  return _postAjax('/note/history-state', data);
+}

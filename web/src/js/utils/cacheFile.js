@@ -35,7 +35,7 @@ const cacheFile = {
     return `${type}_${md5.getStringHash(key)}`;
   },
   // 保存配置数据
-  async setData(key, value, type = 'hello') {
+  async setData(key, value, type = _d.appName) {
     const hash = this.getHash(key, type);
 
     if (!this.supported) {
@@ -50,7 +50,7 @@ const cacheFile = {
     );
   },
   // 获取配置数据
-  async getData(key, type = 'hello') {
+  async getData(key, type = _d.appName) {
     const hash = this.getHash(key, type);
 
     try {
@@ -72,7 +72,7 @@ const cacheFile = {
     return this.urlCache.get(hash);
   },
   // 读取文件
-  async read(url, type = 'hello') {
+  async read(url, type = _d.appName) {
     try {
       const hash = this.getHash(url, type);
 
@@ -111,7 +111,7 @@ const cacheFile = {
     }
   },
   // 添加文件
-  async add(url, type = 'hello', file) {
+  async add(url, type = _d.appName, file) {
     try {
       const hash = this.getHash(url, type);
 
@@ -161,7 +161,7 @@ const cacheFile = {
     }
   },
   // 删除文件缓存
-  async delete(url, type = 'hello') {
+  async delete(url, type = _d.appName) {
     try {
       const hash = this.getHash(url, type);
       const cachedURL = this.urlCache.get(hash);

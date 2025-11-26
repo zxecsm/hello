@@ -703,7 +703,7 @@ $contentWrap
         } else if (id === '7') {
           close();
           e.stopPropagation();
-          _myOpen(`/file#/${_d.noteHistoryDirName}/${noteid}`, '文件管理');
+          _myOpen(`/file#${_d.noteHistoryDir}/${noteid}`, '文件管理');
         }
       },
       title

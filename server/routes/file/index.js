@@ -33,9 +33,6 @@ import { getFriendInfo } from '../chat/chat.js';
 import fileSize from './cacheFileSize.js';
 
 import {
-  getRootDir,
-  getTrashDir,
-  getCurPath,
   readMenu,
   getUniqueFilename,
   sortFileList,
@@ -204,12 +201,12 @@ route.post('/read-dir', async (req, res) => {
       const { name } = data;
 
       // 用户根目录
-      rootP = _path.normalize(getRootDir(account), data.path, name);
+      rootP = appConfig.userRootDir(account, data.path, name);
 
       p = _path.normalize(rootP, path);
     } else {
-      p = getCurPath(account, path);
-      rootP = getRootDir(account);
+      p = appConfig.userRootDir(account, path);
+      rootP = appConfig.userRootDir(account);
     }
 
     let favorites = null;
@@ -406,7 +403,7 @@ route.post('/read-file', async (req, res) => {
 
       const { name, type } = data;
 
-      const rootP = _path.normalize(getRootDir(account), data.path, name);
+      const rootP = appConfig.userRootDir(account, data.path, name);
 
       if (type === 'file') {
         p = rootP;
@@ -414,7 +411,7 @@ route.post('/read-file', async (req, res) => {
         p = _path.normalize(rootP, path);
       }
     } else {
-      p = getCurPath(account, path);
+      p = appConfig.userRootDir(account, path);
     }
 
     if (!(await _f.exists(p))) {
@@ -452,6 +449,36 @@ route.use((req, res, next) => {
     next();
   } else {
     _nologin(res);
+  }
+});
+
+// 文件编辑历史记录
+route.post('/history-state', async (req, res) => {
+  try {
+    const { state = 0 } = req.body;
+
+    if (!validationValue(state, [0, 1])) {
+      paramErr(res, req);
+      return;
+    }
+
+    const { account } = req._hello.userinfo;
+
+    await db('user')
+      .where({ account, state: 1 })
+      .update({ file_history: state });
+
+    _success(res, `${state === 0 ? '关闭' : '开启'}文件历史记录成功`)(req);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+route.get('/history-state', async (req, res) => {
+  try {
+    const { file_history } = req._hello.userinfo;
+    _success(res, 'ok', { file_history });
+  } catch (error) {
+    _err(res)(req, error);
   }
 });
 
@@ -508,7 +535,7 @@ route.post('/favorites', async (req, res) => {
 
     _success(res, `${type === 'add' ? '' : '移除'}收藏文件夹成功`)(
       req,
-      _path.normalize(getRootDir(account), path),
+      appConfig.userRootDir(account, path),
       1
     );
   } catch (error) {
@@ -528,7 +555,7 @@ route.get('/read-dir-size', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const p = getCurPath(account, path);
+    const p = appConfig.userRootDir(account, path);
 
     const controller = new AbortController();
     const signal = controller.signal;
@@ -588,10 +615,10 @@ route.post('/create-file', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const fpath = getCurPath(account, `${path}/${name}`);
+    const fpath = appConfig.userRootDir(account, `${path}/${name}`);
 
     // 过滤回收站
-    if ((await _f.exists(fpath)) || getTrashDir(account) === fpath) {
+    if ((await _f.exists(fpath)) || appConfig.trashDir(account) === fpath) {
       _err(res, '已存在重名文件')(req, fpath, 1);
       return;
     }
@@ -630,11 +657,11 @@ route.post('/create-link', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const curPath = getCurPath(account, `${path}/${name}`);
-    const tPath = getCurPath(account, targetPath);
+    const curPath = appConfig.userRootDir(account, `${path}/${name}`);
+    const tPath = appConfig.userRootDir(account, targetPath);
 
     // 过滤回收站
-    if ((await _f.exists(curPath)) || getTrashDir(account) === curPath) {
+    if ((await _f.exists(curPath)) || appConfig.trashDir(account) === curPath) {
       _err(res, '已存在重名文件')(req, curPath, 1);
       return;
     }
@@ -696,7 +723,7 @@ route.post('/share', async (req, res) => {
 
     _success(res, `分享${data.type === 'dir' ? '文件夹' : '文件'}成功`)(
       req,
-      _path.normalize(getRootDir(account), data.path, data.name),
+      appConfig.userRootDir(account, data.path, data.name),
       1
     );
   } catch (error) {
@@ -718,12 +745,12 @@ route.post('/save-file', async (req, res) => {
       return;
     }
 
-    const { account } = req._hello.userinfo;
+    const { account, file_history } = req._hello.userinfo;
 
-    const fpath = getCurPath(account, path);
+    const fpath = appConfig.userRootDir(account, path);
 
     const type = await _f.getType(fpath);
-    if (!type || type === 'dir' || getTrashDir(account) === fpath) {
+    if (!type || type === 'dir' || appConfig.trashDir(account) === fpath) {
       _err(res, '文件不存在')(req, fpath, 1);
       return;
     }
@@ -731,24 +758,26 @@ route.post('/save-file', async (req, res) => {
     const stat = await _f.fsp.lstat(fpath);
 
     if (type === 'file') {
-      try {
-        if (stat.size > 0) {
-          // 保存编辑历史版本
-          const [, filename, , suffix] = _path.basename(fpath);
+      if (file_history === 1) {
+        try {
+          if (stat.size > 0) {
+            // 保存编辑历史版本
+            const [, filename, , suffix] = _path.basename(fpath);
 
-          const historyDir = _path.normalize(
-            _path.dirname(fpath),
-            appConfig.textFileHistoryDirName
-          );
+            const historyDir = _path.normalize(
+              _path.dirname(fpath),
+              appConfig.textFileHistoryDirName
+            );
 
-          const newName = `${filename}_${formatDate({
-            template: `{0}{1}{2}-{3}{4}{5}`,
-          })}${suffix ? `.${suffix}` : ''}`;
+            const newName = `${filename}_${formatDate({
+              template: `{0}{1}{2}-{3}{4}{5}`,
+            })}${suffix ? `.${suffix}` : ''}`;
 
-          await _f.cp(fpath, _path.normalize(historyDir, newName));
+            await _f.cp(fpath, _path.normalize(historyDir, newName));
+          }
+        } catch (error) {
+          await errLog(req, `保存文件历史版本失败(${fpath}-${error})`);
         }
-      } catch (error) {
-        await errLog(req, `保存文件历史版本失败(${fpath}-${error})`);
       }
     }
 
@@ -791,7 +820,7 @@ route.post('/copy', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const p = getCurPath(account, path);
+    const p = appConfig.userRootDir(account, path);
 
     if (!(await _f.exists(p))) {
       _err(res, '目标文件夹不存在')(req, p, 1);
@@ -810,14 +839,14 @@ route.post('/copy', async (req, res) => {
       let count = 0;
       let size = 0;
 
-      const trashDir = getTrashDir(account);
+      const trashDir = appConfig.trashDir(account);
 
       await concurrencyTasks(data, 5, async (task) => {
         if (signal.aborted) return;
 
         const { name, path, type } = task;
 
-        const f = getCurPath(account, `${path}/${name}`);
+        const f = appConfig.userRootDir(account, `${path}/${name}`);
 
         let to = _path.normalize(p, name);
 
@@ -884,7 +913,7 @@ route.post('/same-name', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const p = getCurPath(account, path);
+    const p = appConfig.userRootDir(account, path);
 
     if (!(await _f.exists(p))) {
       _err(res, '目标文件夹不存在')(req, p, 1);
@@ -924,7 +953,7 @@ route.post('/move', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const p = getCurPath(account, path);
+    const p = appConfig.userRootDir(account, path);
 
     if (!(await _f.exists(p))) {
       _err(res, '目标文件夹不存在')(req, p, 1);
@@ -943,14 +972,14 @@ route.post('/move', async (req, res) => {
       let count = 0;
       let size = 0;
 
-      const trashDir = getTrashDir(account);
+      const trashDir = appConfig.trashDir(account);
 
       await concurrencyTasks(data, 5, async (task) => {
         if (signal.aborted) return;
 
         const { name, path, type } = task;
 
-        const f = getCurPath(account, `${path}/${name}`);
+        const f = appConfig.userRootDir(account, `${path}/${name}`);
 
         let t = _path.normalize(p, name);
 
@@ -1013,7 +1042,7 @@ route.post('/zip', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const p = getCurPath(account, path);
+    const p = appConfig.userRootDir(account, path);
 
     data.path = p;
 
@@ -1028,7 +1057,7 @@ route.post('/zip', async (req, res) => {
 
     let t = _path.normalize(p, fname);
 
-    if ((await _f.exists(t)) || t === getTrashDir(account)) {
+    if ((await _f.exists(t)) || t === appConfig.trashDir(account)) {
       t = await getUniqueFilename(t);
     }
 
@@ -1085,7 +1114,7 @@ route.post('/unzip', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const p = getCurPath(account, path);
+    const p = appConfig.userRootDir(account, path);
     const f = _path.normalize(p, name);
 
     if (!(await _f.exists(f))) {
@@ -1106,7 +1135,7 @@ route.post('/unzip', async (req, res) => {
     _success(res, 'ok', { key: taskKey });
 
     try {
-      if ((await _f.exists(t)) || t === getTrashDir(account)) {
+      if ((await _f.exists(t)) || t === appConfig.trashDir(account)) {
         t = await getUniqueFilename(t);
       }
 
@@ -1173,14 +1202,14 @@ route.post('/delete', async (req, res) => {
       let count = 0;
       let size = 0;
 
-      const trashDir = getTrashDir(account);
+      const trashDir = appConfig.trashDir(account);
 
       await concurrencyTasks(data, 5, async (task) => {
         if (signal.aborted) return;
 
         let { path, name, type } = task;
 
-        const p = getCurPath(account, `${path}/${name}`);
+        const p = appConfig.userRootDir(account, `${path}/${name}`);
 
         let handleType = '删除';
 
@@ -1258,7 +1287,7 @@ route.get('/clear-trash', async (req, res) => {
       let count = 0;
       let size = 0;
 
-      const trashDir = getTrashDir(account);
+      const trashDir = appConfig.trashDir(account);
 
       if (await _f.exists(trashDir)) {
         const list = await _f.fsp.readdir(trashDir);
@@ -1315,7 +1344,7 @@ route.post('/create-dir', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const fpath = getCurPath(account, `${path}/${name}`);
+    const fpath = appConfig.userRootDir(account, `${path}/${name}`);
 
     if (await _f.exists(fpath)) {
       _err(res, '已存在重名文件')(req, fpath, 1);
@@ -1359,7 +1388,7 @@ route.post('/rename', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const dir = getCurPath(account, data.path);
+    const dir = appConfig.userRootDir(account, data.path);
 
     const p = _path.normalize(dir, data.name),
       t = _path.normalize(dir, name);
@@ -1369,7 +1398,7 @@ route.post('/rename', async (req, res) => {
       return;
     }
 
-    if ((await _f.exists(t)) || getTrashDir(account) === t) {
+    if ((await _f.exists(t)) || appConfig.trashDir(account) === t) {
       _err(res, '已存在重名文件')(req, t, 1);
       return;
     }
@@ -1433,7 +1462,7 @@ route.post('/mode', async (req, res) => {
 
         const { name, path } = task;
 
-        const p = getCurPath(account, `${path}/${name}`);
+        const p = appConfig.userRootDir(account, `${path}/${name}`);
 
         await _f.chmod(p, mode, {
           signal,
@@ -1508,7 +1537,7 @@ route.post('/chown', async (req, res) => {
 
         const { name, path } = task;
 
-        const p = getCurPath(account, `${path}/${name}`);
+        const p = appConfig.userRootDir(account, `${path}/${name}`);
 
         await _f.chown(p, uid, gid, {
           signal,
@@ -1553,11 +1582,7 @@ route.post('/up', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const path = _path.normalize(
-      appConfig.appData,
-      'tem',
-      `${account}_${HASH}`
-    );
+    const path = appConfig.temDir(`${account}_${HASH}`);
 
     await receiveFiles(req, path, name, 50);
 
@@ -1591,14 +1616,14 @@ route.post('/merge', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    let targetPath = getCurPath(
+    let targetPath = appConfig.userRootDir(
       account,
       `${_path.dirname(path)}/${_path.sanitizeFilename(
         _path.basename(path)[0]
       )}`
     );
 
-    if (targetPath === getTrashDir(account)) {
+    if (targetPath === appConfig.trashDir(account)) {
       targetPath = await getUniqueFilename(targetPath);
     }
 
@@ -1609,7 +1634,7 @@ route.post('/merge', async (req, res) => {
 
     await mergefile(
       count,
-      _path.normalize(appConfig.appData, 'tem', `${account}_${HASH}`),
+      appConfig.temDir(`${account}_${HASH}`),
       targetPath,
       HASH
     );
@@ -1649,11 +1674,7 @@ route.post('/breakpoint', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const path = _path.normalize(
-        appConfig.appData,
-        'tem',
-        `${account}_${HASH}`
-      ),
+    const path = appConfig.temDir(`${account}_${HASH}`),
       list = await _f.readdir(path);
 
     _success(res, 'ok', list);
@@ -1672,7 +1693,7 @@ route.post('/repeat', async (req, res) => {
       return;
     }
 
-    const p = getCurPath(req._hello.userinfo.account, path);
+    const p = appConfig.userRootDir(req._hello.userinfo.account, path);
 
     if (await _f.exists(p)) {
       _success(res);
@@ -1701,7 +1722,7 @@ route.post('/download', async (req, res) => {
 
     const { account } = req._hello.userinfo;
 
-    const targetPath = getCurPath(account, path);
+    const targetPath = appConfig.userRootDir(account, path);
 
     if (!(await _f.exists(targetPath))) {
       _err(res, '目标文件夹不存在')(req, targetPath, 1);
@@ -1716,7 +1737,7 @@ route.post('/download', async (req, res) => {
     // 已存在添加后缀
     if (
       (await _f.exists(outputFilePath)) ||
-      outputFilePath === getTrashDir(account)
+      outputFilePath === appConfig.trashDir(account)
     ) {
       outputFilePath = await getUniqueFilename(outputFilePath);
     }

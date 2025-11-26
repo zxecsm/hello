@@ -5,17 +5,7 @@ import _path from '../../utils/path.js';
 
 import { errLog, formatDate } from '../../utils/utils.js';
 
-import { getRootDir } from '../file/file.js';
 import cheerio from '../bmk/cheerio.js';
-
-// 获取笔记历史版本记录文件夹
-export function getNoteHistoryDir(account, noteId) {
-  return _path.normalize(
-    getRootDir(account),
-    appConfig.noteHistoryDirName,
-    noteId
-  );
-}
 
 // 保存笔记历史
 export async function saveNoteHistory(req, noteId, content) {
@@ -24,7 +14,7 @@ export async function saveNoteHistory(req, noteId, content) {
 
     const { account } = req._hello.userinfo;
 
-    const noteDir = getNoteHistoryDir(account, noteId);
+    const noteDir = appConfig.noteHistoryDir(account, noteId);
 
     const notePath = _path.normalize(
       noteDir,

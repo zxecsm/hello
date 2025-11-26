@@ -65,7 +65,7 @@ route.post('/up', async (req, res) => {
     const create_at = Date.now();
     const timePath = getTimePath(create_at);
 
-    const tDir = _path.normalize(appConfig.appData, 'pic', timePath);
+    const tDir = appConfig.picDir(timePath);
     const tName = `${HASH}.${suffix}`;
 
     await receiveFiles(req, tDir, tName, 10, HASH);
@@ -104,7 +104,7 @@ route.post('/repeat', async (req, res) => {
       .findOne();
 
     if (pic) {
-      if (await _f.exists(_path.normalize(appConfig.appData, 'pic', pic.url))) {
+      if (await _f.exists(appConfig.picDir(pic.url))) {
         _success(res, 'ok', pic);
         return;
       }
@@ -191,7 +191,7 @@ route.post('/delete', async (req, res) => {
     await concurrencyTasks(dels, 5, async (del) => {
       const { url } = del;
 
-      await _delDir(_path.normalize(appConfig.appData, 'pic', url));
+      await _delDir(appConfig.picDir(url));
 
       await uLog(req, `删除图片(${url})`);
     });

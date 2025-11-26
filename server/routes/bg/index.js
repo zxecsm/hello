@@ -61,7 +61,7 @@ route.get('/r/:type', async (req, res) => {
     }
 
     // 获取壁纸 URL 并返回
-    const url = _path.normalize(appConfig.appData, 'bg', bgData.url);
+    const url = appConfig.bgDir(bgData.url);
 
     if (await _f.exists(url)) {
       res.sendFile(url, { dotfiles: 'allow' });
@@ -229,7 +229,7 @@ route.post('/delete', async (req, res) => {
 
     await concurrencyTasks(dels, 5, async (del) => {
       const { url } = del;
-      await _delDir(_path.normalize(appConfig.appData, 'bg', url));
+      await _delDir(appConfig.bgDir(url));
       await uLog(req, `删除壁纸(${url})`);
     });
 
@@ -262,7 +262,7 @@ route.post('/up', async (req, res) => {
     const create_at = Date.now();
     const timePath = getTimePath(create_at);
 
-    const tDir = _path.normalize(appConfig.appData, 'bg', timePath);
+    const tDir = appConfig.bgDir(timePath);
     const tName = `${HASH}.${suffix}`;
 
     await receiveFiles(req, tDir, tName, 10, HASH);
@@ -301,7 +301,7 @@ route.post('/repeat', async (req, res) => {
     const bg = await db('bg').select('url,id').where({ hash: HASH }).findOne();
 
     if (bg) {
-      if (await _f.exists(_path.normalize(appConfig.appData, 'bg', bg.url))) {
+      if (await _f.exists(appConfig.bgDir(bg.url))) {
         _success(res);
         return;
       }

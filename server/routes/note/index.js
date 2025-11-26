@@ -23,6 +23,7 @@ import { fieldLength } from '../config.js';
 import { parseMarkDown, saveNoteHistory } from './note.js';
 import _f from '../../utils/f.js';
 import nanoid from '../../utils/nanoid.js';
+import appConfig from '../../data/config.js';
 
 const route = express.Router();
 
@@ -356,6 +357,36 @@ route.use((req, res, next) => {
   }
 });
 
+// 笔记历史状态
+route.post('/history-state', async (req, res) => {
+  try {
+    const { state = 0 } = req.body;
+
+    if (!validationValue(state, [0, 1])) {
+      paramErr(res, req);
+      return;
+    }
+
+    const { account } = req._hello.userinfo;
+
+    await db('user')
+      .where({ account, state: 1 })
+      .update({ note_history: state });
+
+    _success(res, `${state === 0 ? '关闭' : '开启'}笔记历史记录成功`)(req);
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+route.get('/history-state', async (req, res) => {
+  try {
+    const { note_history } = req._hello.userinfo;
+    _success(res, 'ok', { note_history });
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
+
 // 笔记状态
 route.post('/state', async (req, res) => {
   try {
@@ -405,7 +436,9 @@ route.post('/delete', async (req, res) => {
       return;
     }
 
-    ids = ids.filter((item) => !['about', 'tips'].includes(item)); // 过滤关于和tips
+    ids = ids.filter(
+      (item) => ![appConfig.aboutid, appConfig.tipsid].includes(item)
+    ); // 过滤关于和tips
 
     const { account } = req._hello.userinfo;
 
@@ -472,7 +505,7 @@ route.post('/edit', async (req, res) => {
 
     const time = Date.now();
 
-    const { account } = req._hello.userinfo;
+    const { account, note_history } = req._hello.userinfo;
 
     const note = await db('note')
       .select('content')
@@ -481,15 +514,16 @@ route.post('/edit', async (req, res) => {
 
     if (note) {
       // 保存笔记历史版本
-      await saveNoteHistory(req, id, note.content);
+      if (note_history === 1) {
+        await saveNoteHistory(req, id, note.content);
+        syncUpdateData(req, 'file');
+      }
 
       await db('note').where({ id, account }).update({
         title,
         content,
         update_at: time,
       });
-
-      syncUpdateData(req, 'file');
 
       syncUpdateData(req, 'note', id);
 

@@ -18,8 +18,8 @@ import {
   getScreenSize,
   hdOnce,
   isIframe,
-  getStaticPath,
   getFaviconPath,
+  getFilePath,
 } from '../../js/utils/utils';
 
 import defaultIcon from '../../images/img/default-icon.png';
@@ -180,7 +180,7 @@ function getShareData(close, loading = { start() {}, end() {} }) {
         $head._uObj = { username, account, email };
         defaultTitle = title;
         if (logo) {
-          imgjz(getStaticPath(`/logo/${account}/${logo}`))
+          imgjz(getFilePath(`/logo/${account}/${logo}`))
             .then((cache) => {
               $head.find('.logo').css('background-image', `url(${cache})`);
             })

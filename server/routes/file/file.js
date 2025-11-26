@@ -8,31 +8,12 @@ import { concurrencyTasks, mixedSort, writelog } from '../../utils/utils.js';
 
 import _path from '../../utils/path.js';
 
-export function getCurPath(acc, p) {
-  return _path.normalize(getRootDir(acc), p);
-}
-
-// 用户文件管理根目录
-export function getRootDir(acc) {
-  let path = appConfig.appFiles;
-
-  if (acc !== 'root') {
-    path = `${appConfig.userFiles}/${acc}`;
-  }
-  return _path.normalize(path);
-}
-
-// 获取回收站目录
-export function getTrashDir(account) {
-  return _path.normalize(getRootDir(account), appConfig.trashDirName);
-}
-
 // 删除站点文件
 export async function _delDir(path) {
   if (!(await _f.exists(path))) return;
 
   if (_d.trashState) {
-    const trashDir = getTrashDir('root');
+    const trashDir = appConfig.trashDir(appConfig.adminAccount);
 
     if (
       _path.isPathWithin(path, trashDir, true) ||
@@ -243,8 +224,9 @@ export async function hasSameNameFile(targetPath, list) {
 
 // 读取收藏目录
 export async function readFavorites(account) {
-  const favoritesDir = _path.normalize(getRootDir(account), '.favorites');
-  return (await _f.readFile(favoritesDir, null, ''))
+  return (
+    await _f.readFile(appConfig.fileConfigDir(account, 'favorites'), null, '')
+  )
     .toString()
     .split('\n')
     .filter(Boolean);
@@ -252,14 +234,17 @@ export async function readFavorites(account) {
 
 // 写入收藏目录
 export async function writeFavorites(account, list) {
-  const favoritesDir = _path.normalize(getRootDir(account), '.favorites');
-  await _f.writeFile(favoritesDir, list.join('\n'));
+  await _f.writeFile(
+    appConfig.fileConfigDir(account, 'favorites'),
+    list.join('\n')
+  );
 }
 
 // 读取历史目录
 export async function readHistoryDirs(account) {
-  const cdHistoryDir = _path.normalize(getRootDir(account), '.cdHistory');
-  return (await _f.readFile(cdHistoryDir, null, ''))
+  return (
+    await _f.readFile(appConfig.fileConfigDir(account, 'cd_history'), null, '')
+  )
     .toString()
     .split('\n')
     .filter(Boolean);
@@ -267,6 +252,8 @@ export async function readHistoryDirs(account) {
 
 // 写入历史目录
 export async function writeHistoryDirs(account, list) {
-  const cdHistoryDir = _path.normalize(getRootDir(account), '.cdHistory');
-  await _f.writeFile(cdHistoryDir, list.join('\n'));
+  await _f.writeFile(
+    appConfig.fileConfigDir(account, 'cd_history'),
+    list.join('\n')
+  );
 }
