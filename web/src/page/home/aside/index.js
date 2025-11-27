@@ -32,7 +32,7 @@ import {
   reqBmkGroupShareState,
   reqBmkMoveBmk,
   reqBmkMoveGroup,
-  reqBmkPageInfo,
+  reqBmkSiteInfo,
   reqBmkShare,
   reqBmkToGroup,
   reqBmkDeleteLogo,
@@ -839,7 +839,7 @@ export function addBookMark(e, pid) {
     function ({ e, inp, close, loading }) {
       const u = inp.link;
       loading.start();
-      reqBmkPageInfo({ u })
+      reqBmkSiteInfo({ u })
         .then((result) => {
           loading.end();
           if (result.code === 1) {

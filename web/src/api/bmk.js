@@ -33,8 +33,8 @@ export function reqBmkToGroup(data) {
   return _postAjax('/bmk/bmk-to-group', data);
 }
 // 获取网站信息
-export function reqBmkPageInfo(data) {
-  return _getAjax('/page-info', data);
+export function reqBmkSiteInfo(data) {
+  return _getAjax('/site-info', data);
 }
 // 添加书签
 export function reqBmkAddBmk(data) {

@@ -261,7 +261,7 @@ app.all('/api/s/:chat_id', async (req, res) => {
 });
 
 // 获取页面信息
-app.get('/api/page-info', async (req, res) => {
+app.get('/api/site-info', async (req, res) => {
   try {
     const { u } = req.query;
 

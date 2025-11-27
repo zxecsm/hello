@@ -173,7 +173,11 @@ function updatePromptText(path) {
     text = '回收站目录，请谨慎操作';
   }
   if (color) {
-    $promptText.css('display', 'block').css('color', color).text(text);
+    $promptText
+      .css('display', 'block')
+      .find('.text')
+      .css('color', color)
+      .text(text);
   } else {
     $promptText.css('display', 'none');
   }

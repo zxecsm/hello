@@ -31,7 +31,7 @@ http://localhost:55555/api/icon?u=[https://]google.com
 获取网站信息
 
 ```
-http://localhost:55555/api/page-info?u=[https://]google.com
+http://localhost:55555/api/site-info?u=[https://]google.com
 ```
 
 回显接口

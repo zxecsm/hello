@@ -4,7 +4,7 @@ import '../../font/iconfont.css';
 import './index.less';
 import '../../js/common/common';
 import { isLogin, myOpen, queryURLParams, toLogin } from '../../js/utils/utils';
-import { reqBmkAddBmk, reqBmkList, reqBmkPageInfo } from '../../api/bmk';
+import { reqBmkAddBmk, reqBmkList, reqBmkSiteInfo } from '../../api/bmk';
 import rMenu from '../../js/plugins/rightMenu';
 import _d from '../../js/common/config';
 import _msg from '../../js/plugins/message';
@@ -42,7 +42,7 @@ window.addEventListener('load', async () => {
         function ({ inp, close, loading }) {
           const u = inp.link;
           loading.start();
-          reqBmkPageInfo({ u })
+          reqBmkSiteInfo({ u })
             .then((result) => {
               loading.end();
               if (result.code === 1) {
