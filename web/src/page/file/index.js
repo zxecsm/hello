@@ -113,6 +113,9 @@ function changeHiddenFileModel() {
       }`
     );
 }
+if (isIframe()) {
+  $promptText.css('bottom', '1rem');
+}
 const dangerDir = [
   '/boot',
   '/etc',

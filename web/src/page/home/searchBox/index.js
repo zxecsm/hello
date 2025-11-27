@@ -584,7 +584,7 @@ export async function updateSearchConfig(loading) {
         curtranslatorID = res.data.translatorid;
         localData.set('translator', res.data.translatorid);
       }
-      switchSearchEngine();
+      await switchSearchEngine();
     }
     loading?.end();
   } catch {
@@ -592,21 +592,20 @@ export async function updateSearchConfig(loading) {
   }
 }
 // 切换搜索引擎
-function switchSearchEngine() {
+async function switchSearchEngine() {
   const { logo, color, link, id } = getSearchEngine();
   if (id !== 'bing') {
     const icon = logo
       ? getFilePath(`/logo/${setUserInfo().account}/${logo}`)
       : getFaviconPath(link);
-    imgjz(icon)
-      .then((cache) => {
-        $searchBoxBtn.attr('src', cache);
-        $searchInpWrap.find('img').attr('src', cache);
-      })
-      .catch(() => {
-        $searchBoxBtn.attr('src', defaultIcon);
-        $searchInpWrap.find('img').attr('src', defaultIcon);
-      });
+    try {
+      const cache = await imgjz(icon);
+      $searchBoxBtn.attr('src', cache);
+      $searchInpWrap.find('img').attr('src', cache);
+    } catch {
+      $searchBoxBtn.attr('src', defaultIcon);
+      $searchInpWrap.find('img').attr('src', defaultIcon);
+    }
   } else {
     $searchBoxBtn.attr('src', logo);
     $searchInpWrap.find('img').attr('src', logo);
