@@ -253,8 +253,10 @@ export function changeLogoAlertStatus() {
   }
 }
 // 关闭页面加载
-function closeLoading() {
+async function closeLoading() {
+  await updateSearchConfig();
   loadingPage.end();
+  $pageBg.removeClass('sce');
   $searchBoxBtn.stop().slideDown(_d.speed, () => {
     timeMsg();
     // 查看消息
@@ -303,7 +305,6 @@ function closeLoading() {
       }
     });
   });
-  $pageBg.removeClass('sce');
 }
 // 初始化
 const onceInit = hdOnce(function () {

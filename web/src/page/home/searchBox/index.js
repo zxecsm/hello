@@ -591,7 +591,6 @@ export async function updateSearchConfig(loading) {
     loading?.end();
   }
 }
-updateSearchConfig();
 // 切换搜索引擎
 function switchSearchEngine() {
   const { logo, color, link, id } = getSearchEngine();
