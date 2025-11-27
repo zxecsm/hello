@@ -55,7 +55,7 @@ if (isLogin()) {
   myOpen('/');
 }
 (async () => {
-  const url = `/api/bg/r/${isBigScreen() ? 'big' : 'small'}`;
+  const url = `/api/bg/r/${isBigScreen() ? 'd' : 'm'}`;
 
   try {
     await loadImg(url);

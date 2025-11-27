@@ -1374,6 +1374,11 @@ function hdTools(e) {
   let data = [
     { id: '1', text: '笔记本', beforeIcon: 'iconfont icon-mingcheng-jiluben' },
     { id: '2', text: '文件管理', beforeIcon: 'iconfont icon-24gl-folder' },
+    {
+      id: '9',
+      text: '公开文件目录',
+      beforeIcon: 'iconfont icon-24gl-folder',
+    },
     { id: '5', text: '便条', beforeIcon: 'iconfont icon-jilu' },
     {
       id: '7',
@@ -1438,6 +1443,10 @@ function hdTools(e) {
       } else if (id === '8') {
         close();
         showBmk();
+      } else if (id === '9') {
+        close();
+        hideRightMenu();
+        openInIframe(`/file/#${_d.pubDir}`, '文件管理');
       }
     },
     '工具'

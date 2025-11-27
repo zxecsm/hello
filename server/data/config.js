@@ -52,9 +52,6 @@ const appConfig = {
   picDir(...arg) {
     return _path.normalize(this.appFilesDir('pic'), ...arg);
   },
-  shareDir(...arg) {
-    return _path.normalize(this.appFilesDir('share'), ...arg);
-  },
   siteinfoDir(...arg) {
     return _path.normalize(this.appFilesDir('siteinfo'), ...arg);
   },
@@ -99,6 +96,9 @@ const appConfig = {
   },
   noteHistoryDir(account, ...arg) {
     return _path.normalize(this.configDir(account, 'note_history'), ...arg);
+  },
+  pubDir(account, ...arg) {
+    return _path.normalize(this.configDir(account, 'pub'), ...arg);
   },
 };
 

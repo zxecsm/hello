@@ -42,7 +42,7 @@ const route = express.Router();
 route.get('/r/:type', async (req, res) => {
   try {
     const { type } = req.params;
-    if (!validationValue(type, ['big', 'small'])) {
+    if (!validationValue(type, ['d', 'm'])) {
       paramErr(res, req);
       return;
     }
@@ -53,7 +53,7 @@ route.get('/r/:type', async (req, res) => {
     }
 
     // 从数据库中随机选择一条数据
-    const bgData = await getRandomBg(type === 'big' ? 'bg' : 'bgxs', 'url');
+    const bgData = await getRandomBg(type === 'd' ? 'bg' : 'bgxs', 'url');
 
     // 如果没有数据，返回错误
     if (!bgData) {

@@ -15,6 +15,12 @@ import {
   getDirname,
   validaString,
   paramErr,
+  isurl,
+  uLog,
+  _success,
+  parseJson,
+  extractFullHead,
+  errLog,
 } from './utils/utils.js';
 
 import { resolve } from 'path';
@@ -50,6 +56,11 @@ import echoRoute from './routes/echo/index.js';
 import { fieldLength } from './routes/config.js';
 import getClientIp from './utils/getClientIp.js';
 import getFile from './routes/getfile/index.js';
+import { _d } from './data/data.js';
+import _crypto from './utils/crypto.js';
+import _f from './utils/f.js';
+import axios from 'axios';
+import cheerio from './routes/bmk/cheerio.js';
 
 const __dirname = getDirname(import.meta);
 
@@ -129,21 +140,14 @@ app.use(async (req, res, next) => {
 });
 
 app.use(
-  '/api/pub/font',
+  '/api/font',
   express.static(appConfig.fontDir(), {
     dotfiles: 'allow',
     maxAge: 2592000000,
   })
 );
 app.use(
-  '/api/pub/share',
-  express.static(appConfig.shareDir(), {
-    dotfiles: 'allow',
-    maxAge: 2592000000,
-  })
-);
-app.use(
-  '/api/pub/picture',
+  '/api/p',
   express.static(appConfig.picDir(), {
     dotfiles: 'allow',
     maxAge: 2592000000,
@@ -201,12 +205,120 @@ app.use('/api/count', countRoute);
 app.use('/api/file', fileRoute);
 app.use('/api/notepad', notepadRoute);
 app.use('/api/task', taskRoute);
-app.use('/api/getfavicon', getfaviconRoute);
+app.use('/api/icon', getfaviconRoute);
 app.use('/api/echo', echoRoute);
+
+// 获取页面信息
+app.get('/api/page-info', async (req, res) => {
+  try {
+    const { u } = req.query;
+
+    // 检查接口是否开启
+    if (!_d.pubApi.siteInfoApi && !req._hello.userinfo.account) {
+      return _err(res, '接口未开放')(req, u, 1);
+    }
+
+    if (!validaString(u, 1, fieldLength.url)) {
+      paramErr(res, req);
+      return;
+    }
+
+    let protocol = 'https:'; // 默认https
+    const url = `${u.startsWith('http') ? '' : `${protocol}//`}${u}`;
+
+    if (!isurl(url)) {
+      paramErr(res, req);
+      return;
+    }
+
+    const obj = { title: '', des: '' };
+    let p = '',
+      miss = '';
+
+    try {
+      await uLog(req, `获取网站信息(${u})`);
+      const { host, pathname } = new URL(url);
+
+      p = appConfig.siteinfoDir(
+        `${_crypto.getStringHash(`${host}${pathname}`)}.json`
+      );
+
+      miss = p + '.miss';
+
+      // 缓存存在，则使用缓存
+      if (await _f.exists(p)) {
+        _success(
+          res,
+          'ok',
+          parseJson((await _f.fsp.readFile(p)).toString(), {})
+        );
+        return;
+      }
+
+      if (await _f.exists(miss)) {
+        _success(res, 'ok', obj);
+        return;
+      }
+
+      let result;
+      try {
+        result = await axios({
+          method: 'get',
+          url: `${protocol}//${host}${pathname}`,
+          timeout: 5000,
+        });
+      } catch {
+        protocol = 'http:';
+        result = await axios({
+          method: 'get',
+          url: `${protocol}//${host}${pathname}`,
+          timeout: 5000,
+        });
+      }
+
+      if (
+        !result?.headers ||
+        !result.headers['content-type']?.includes('text/html')
+      ) {
+        throw new Error('只允许获取HTML文件');
+      }
+
+      const head = extractFullHead(result.data);
+
+      if (_f.getTextSize(head) > 300 * 1024) {
+        throw new Error('HTML文件过大');
+      }
+
+      const $ = cheerio.load(head);
+      const $title = $('title');
+      const $des = $('meta[name="description"]');
+
+      obj.title = $title.text() || '';
+      obj.des = $des.attr('content') || '';
+
+      await _f.writeFile(p, JSON.stringify(obj));
+
+      _success(res, 'ok', obj);
+    } catch (error) {
+      if (miss) {
+        try {
+          await _f.writeFile(miss, '');
+        } catch (err) {
+          await errLog(req, `${err}(${u})`);
+        }
+      }
+
+      await errLog(req, `${error}(${u})`);
+      _success(res, 'ok', obj);
+    }
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
 
 app.use(async (req, res, next) => {
   const path = req._hello.path;
-  const routePath = '/api/getfile';
+  const routePath = '/api/f';
   if (path.startsWith(routePath)) {
     const filePath = path.slice(routePath.length);
     req._hello.path = routePath;

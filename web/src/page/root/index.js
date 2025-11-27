@@ -882,7 +882,7 @@ function handlePubApi(e) {
         const pre = originURL + _d.apiPath;
         rMenu.rightInfo(
           e,
-          `壁纸：\n  大屏：${pre}/bg/r/big\n  小屏：${pre}/bg/r/small\n\n获取网站图标：${originURL}${_d.faviconURL}?u=${originURL}\n\n获取网站信息：${pre}/bmk/parse-site-info?u=${originURL}\n\n回显接口：${pre}/echo`,
+          `壁纸：\n  大屏：${pre}/bg/r/d\n  小屏：${pre}/bg/r/m\n\n获取网站图标：${originURL}${_d.faviconURL}?u=${originURL}\n\n获取网站信息：${pre}/page-info?u=${originURL}\n\n回显接口：${pre}/echo`,
           '接口信息'
         );
       } else if (id === 'state') {

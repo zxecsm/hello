@@ -12,9 +12,11 @@ const levelObj = {
 };
 const originURL = window.location.origin;
 const apiPath = '/api';
-const getFileURL = apiPath + '/getfile';
-const staticURL = apiPath + '/pub';
-const faviconURL = apiPath + '/getfavicon';
+const getFileURL = apiPath + '/f';
+const faviconURL = apiPath + '/icon';
+const fontURL = apiPath + '/font';
+const picURL = apiPath + '/p';
+const userConfigDir = '/.h_config';
 // 搜索引擎
 const bingLogo =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAMAAACahl6sAAAArlBMVEUMhIT////V6upnsrINhYUQhob9/v4djY0WiYkTiIgrlJQmkZHM5uY1mZn6/f273d2bzc2Av7/H4+OSyMhCoKAai4shj4/2+/u/399ttbVMpaU7nJyl0tJ8vb1hr69bra0wl5fS6OiNxcVWqqrw9/fE4eFzuLhSqKi02dmu1taWy8t3u7twt7fq9PTf7++Iw8NqtLRHoqI+nZ2p1NROpqbj8fHa7e2gz8/U6upFoaFbfBSFAAAEXUlEQVR42u3ciVraQBSG4f+M2SAhC/sOgqzSYtFWvf8ba0vVqGQgSfukM3DeK+B75pBlQgBjjDHGGGOMMcYYY4wxxhhjjDHGGGPs31g0DZwFr7WcVxzoTxBZ/iwclU3oTdCe5bejhatzjKA3Vus+erahqdeQOKZTKUFDgg5Y16GGUyYoWTtyoRVBMt+gFXlIHVq5gBU5m5AutCIPeYBW5CELaOUCQqbQijxkBK1cQMgQWrmAkCtoRR5yB63IQzrQijxkA61cQMgcWrmAkFto5ZJCDFuHTW55yACvOsGo0oDi0oQ4S6LlvGsr/SQlTQhG9NtNbeiquy0sD4nwprGkP6zlZqzokMlDPMSuKGYNdio+rksXYgf0nhU9KPeEK10IOvSJNblT6zmKPOTaQKwZ0KHvUb2hzMKkDMGGErXW3bIaC5M2xG2TzOOop8CpP20IBnTE47BrI4dCQoSJ98ozOmoVDZsmcig6BBGdchN20p8uiwv58SlkXKXT/OVt3UUaBYaU8FGN0mlF07GBHIoKqVQpLX971yuhUPKQryXkWJK4JYyebRNShYbkWpKY9WU9hkyBIQ5SL4kC25WZQnotSqbABrI85LuDAyElU2BL/0hIAwfq/pmEGKGGIV9sHPrmn0mIsTqTEHSFfiFNJHHnQrOQmyaSNe/EeYQAztDTKcSFnDkKziMEML/1dQkp4zijstYipFXGKYY7EWcR8ovzQ/2QMVKY+sqH+ClC6oGv/mj5FZxQCX0dvuzWiZByzdPj8Hs8pFHzdDkhUg9S5tzT5xJFHmJOqzpdNNIOiYxuoNdlPNWRpHev241VYojb1+8Oce0kHKqEdrsoVq2ET5zNE2m302htTXxUGl5TZtU6iiKSOyIDHxiLNmXmTWxIFRJyfYuPdgFlZq16KIQ8xOvgg/KKsguGBookEjqGeK85EZTZbGujGPKQ6hTv2IMcGX5YQdHEQUcXMacj8kzVtLCpkofM6nhTmnqUXXVgoyjykHYvPuLWA9JjqhJCgvhTVPqUw/2iwKmShyzL8X0s5dC+dVAcecjqtaMZCcrOqo1RIHnIvYu9RkdQDquHQqdKHtJv4jdn5FEOQcdGkeQhjzZ+MR8CymNbRqHkIWEDgLHrUx59BV4ZfwmpOQDGa8qjvVHgt5kvIdcm4EaUhzX571MVh1R7sOci31TVFfmdvCCidre3alEewZUKU/USYlU3ky+Uh1Dp32yE/7XvUS59pf5wRNx8zTdVM3Wmam9NuVhbhaZqz7yaUXaPPUWOVbE8V+yzoRpvWnxWuvIoAzFQbapi5ZBS6++gsNKoSqm0R2pOVcZvihjYUJ45vaYTwgq04E7omOpC9al6Y0yfSEbcajBVseZENlVj6MXotulQu6vMe5Pp2RP6RMwVfWH6BOPZo/dCNW5l87C3ccZMx6mK1au0Jzpq3XRk19g/qFqre3mY3u5JqLJB8pdK2pzIGWOMMcYYY4wxxhhjjDHGGGNn7CdHbEpPmxq5TwAAAABJRU5ErkJggg==';
@@ -82,14 +84,22 @@ const _d = {
   aboutid: 'about',
   tipsid: 'tips',
   adminAccount: 'root',
+  userConfigDir,
   trashDir: `/.trash`,
-  noteHistoryDir: `/.h_config/note_history`,
-  fontDir: `/.h_config/appFiles/font`,
+  noteHistoryDir: `${userConfigDir}/note_history`,
+  fontDir: `${userConfigDir}/appFiles/font`,
+  pubDir: `${userConfigDir}/pub`,
+  fileConfigDir: `${userConfigDir}/file_config`,
+  appFilesDir: `${userConfigDir}/appFiles`,
+  userLogoDir: `${userConfigDir}/logo`,
+  searchConfigDir: `${userConfigDir}/search_config`,
+  fileHistoryDirName: '.history',
   fieldLength,
   apiPath,
+  fontURL,
+  picURL,
   originURL,
   getFileURL,
-  staticURL,
   faviconURL,
   defaultFontFamily: 'Roboto, Arial, sans-serif', // 默认字体
   levelObj,

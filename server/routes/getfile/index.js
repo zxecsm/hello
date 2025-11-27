@@ -49,7 +49,7 @@ export default async function getFile(req, res, p) {
 
     let dir = pArr.shift();
 
-    const publicArr = ['pic', 'sharemusic', 'sharefile', 'logo'];
+    const publicArr = ['pic', 'sharemusic', 'sharefile', 'logo', 'pub'];
     const verifyArr = ['bg', 'upload', 'file', 'music']; // 目录需要登录态
 
     if (publicArr.includes(dir)) {
@@ -139,6 +139,13 @@ export default async function getFile(req, res, p) {
         return;
       }
       path = appConfig.logoDir(acc, pArr.slice(1).join('/'));
+    } else if (dir === 'pub') {
+      const acc = pArr[0];
+      if (!validaString(acc, 1, fieldLength.id, 1)) {
+        paramErr(res, req);
+        return;
+      }
+      path = appConfig.pubDir(acc, pArr.slice(1).join('/'));
     } else {
       path = appConfig.appFilesDir(url);
     }

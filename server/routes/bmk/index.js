@@ -1,7 +1,5 @@
 import express from 'express';
 
-import axios from 'axios';
-
 import { db } from '../../utils/sqlite.js';
 
 import {
@@ -14,19 +12,10 @@ import {
   paramErr,
   validationValue,
   _nothing,
-  errLog,
   syncUpdateData,
   createPagingData,
-  uLog,
   getSplitWord,
-  extractFullHead,
-  parseJson,
 } from '../../utils/utils.js';
-
-import cheerio from './cheerio.js';
-
-import appConfig from '../../data/config.js';
-import _f from '../../utils/f.js';
 
 import timedTask from '../../utils/timedTask.js';
 
@@ -42,9 +31,7 @@ import {
 import { fieldLength } from '../config.js';
 import { validShareAddUserState, validShareState } from '../user/user.js';
 import { getFriendInfo } from '../chat/chat.js';
-import _crypto from '../../utils/crypto.js';
 import jwt from '../../utils/jwt.js';
-import { _d } from '../../data/data.js';
 import nanoid from '../../utils/nanoid.js';
 
 const route = express.Router();
@@ -280,114 +267,6 @@ route.get('/list', async (req, res) => {
 timedTask.add(async (flag) => {
   if (flag.slice(-6) === '001000') {
     await cleanSiteInfo();
-  }
-});
-
-// 获取网站信息
-route.get('/parse-site-info', async (req, res) => {
-  try {
-    const { u } = req.query;
-
-    // 检查接口是否开启
-    if (!_d.pubApi.siteInfoApi && !req._hello.userinfo.account) {
-      return _err(res, '接口未开放')(req, u, 1);
-    }
-
-    if (!validaString(u, 1, fieldLength.url)) {
-      paramErr(res, req);
-      return;
-    }
-
-    let protocol = 'https:'; // 默认https
-    const url = `${u.startsWith('http') ? '' : `${protocol}//`}${u}`;
-
-    if (!isurl(url)) {
-      paramErr(res, req);
-      return;
-    }
-
-    const obj = { title: '', des: '' };
-    let p = '',
-      miss = '';
-
-    try {
-      await uLog(req, `获取网站信息(${u})`);
-      const { host, pathname } = new URL(url);
-
-      p = appConfig.siteinfoDir(
-        `${_crypto.getStringHash(`${host}${pathname}`)}.json`
-      );
-
-      miss = p + '.miss';
-
-      // 缓存存在，则使用缓存
-      if (await _f.exists(p)) {
-        _success(
-          res,
-          'ok',
-          parseJson((await _f.fsp.readFile(p)).toString(), {})
-        );
-        return;
-      }
-
-      if (await _f.exists(miss)) {
-        _success(res, 'ok', obj);
-        return;
-      }
-
-      let result;
-      try {
-        result = await axios({
-          method: 'get',
-          url: `${protocol}//${host}${pathname}`,
-          timeout: 5000,
-        });
-      } catch {
-        protocol = 'http:';
-        result = await axios({
-          method: 'get',
-          url: `${protocol}//${host}${pathname}`,
-          timeout: 5000,
-        });
-      }
-
-      if (
-        !result?.headers ||
-        !result.headers['content-type']?.includes('text/html')
-      ) {
-        throw new Error('只允许获取HTML文件');
-      }
-
-      const head = extractFullHead(result.data);
-
-      if (_f.getTextSize(head) > 300 * 1024) {
-        throw new Error('HTML文件过大');
-      }
-
-      const $ = cheerio.load(head);
-      const $title = $('title');
-      const $des = $('meta[name="description"]');
-
-      obj.title = $title.text() || '';
-      obj.des = $des.attr('content') || '';
-
-      await _f.writeFile(p, JSON.stringify(obj));
-
-      _success(res, 'ok', obj);
-    } catch (error) {
-      if (miss) {
-        try {
-          await _f.writeFile(miss, '');
-        } catch (err) {
-          await errLog(req, `${err}(${u})`);
-        }
-      }
-
-      await errLog(req, `${error}(${u})`);
-      _success(res, 'ok', obj);
-    }
-  } catch (error) {
-    _err(res)(req, error);
   }
 });
 

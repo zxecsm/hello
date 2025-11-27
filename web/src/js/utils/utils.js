@@ -2433,9 +2433,8 @@ export function getFilePath(p, query = {}, prefix = false) {
   if (prefix) return `${_d.originURL}${path}`;
   return path;
 }
-// 生成静态路径
-export function getStaticPath(p, prefix = false) {
-  const path = `${_d.staticURL}${_path.normalize('/' + p)}`;
+export function getPicPath(p, prefix = false) {
+  const path = `${_path.normalize(_d.picURL, p)}`;
   if (prefix) return `${_d.originURL}${path}`;
   return path;
 }

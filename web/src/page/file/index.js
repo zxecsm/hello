@@ -94,6 +94,7 @@ const $curmbBox = $('.crumb_box');
 const $search = $('.search');
 const $header = $('.header');
 const $footer = $('.footer');
+const $promptText = $('.prompt_text');
 let pageSize = localData.get('filesPageSize');
 let curFileDirPath = curmb.getHash();
 let fileShowGrid = localData.get('fileShowGrid');
@@ -111,6 +112,71 @@ function changeHiddenFileModel() {
         hiddenFile ? 'icon-kejian' : 'icon-bukejian'
       }`
     );
+}
+const dangerDir = [
+  '/boot',
+  '/etc',
+  '/bin',
+  '/sbin',
+  '/usr/bin',
+  '/usr/sbin',
+  '/usr/lib',
+  '/usr/lib64',
+  '/lib',
+  '/lib64',
+  '/dev',
+  '/proc',
+  '/sys',
+  '/var/lib',
+  '/var/run',
+];
+function updatePromptText(path) {
+  let color = '';
+  let text = '';
+  if (isRoot() && path === '/') {
+    color = 'var(--message-error-color)';
+    text = '系统根目录，请谨慎操作';
+  } else if (
+    isRoot() &&
+    dangerDir.some((p) => _path.isPathWithin(p, path, 1))
+  ) {
+    color = 'var(--message-error-color)';
+    text = '系统文件目录，请谨慎操作';
+  } else if (_path.basename(path)[0] === _d.fileHistoryDirName) {
+    color = 'var(--message-success-color)';
+    text = '文件历史记录目录';
+  } else if (_path.isPathWithin(_d.noteHistoryDir, path, 1)) {
+    color = 'var(--message-success-color)';
+    text = '笔记历史记录目录';
+  } else if (_path.isPathWithin(_d.fileConfigDir, path, 1)) {
+    color = 'var(--message-success-color)';
+    text = '文件管理配置目录';
+  } else if (_path.isPathWithin(_d.searchConfigDir, path, 1)) {
+    color = 'var(--message-success-color)';
+    text = '搜索引擎配置目录';
+  } else if (isRoot() && _path.isPathWithin(_d.appFilesDir, path, 1)) {
+    color = 'var(--message-error-color)';
+    text = '程序配置目录，请谨慎操作';
+  } else if (_path.isPathWithin(_d.pubDir, path, 1)) {
+    color = 'var(--message-success-color)';
+    text = '公开文件目录，复制链接为永久访问链接';
+  } else if (_path.isPathWithin(_d.userLogoDir, path, 1)) {
+    color = 'var(--message-success-color)';
+    text = '用户书签/头像图标目录';
+  } else if (_path.isPathWithin(_d.userConfigDir, path, 1)) {
+    color = isRoot()
+      ? 'var(--message-error-color)'
+      : 'var(--message-warning-color)';
+    text = '用户配置目录，请谨慎操作';
+  } else if (_path.isPathWithin(_d.trashDir, path, 1)) {
+    color = 'var(--message-warning-color)';
+    text = '回收站目录，请谨慎操作';
+  }
+  if (color) {
+    $promptText.css('display', 'block').css('color', color).text(text);
+  } else {
+    $promptText.css('display', 'none');
+  }
 }
 changeHiddenFileModel();
 // 更改显示模式
@@ -165,6 +231,7 @@ curmb.bind($curmbBox.find('.container')[0], (path, param) => {
     // 打开新的目录，清空搜索框
     wInput.setValue('');
   }
+  updatePromptText(curFileDirPath);
   openDir(curFileDirPath, param);
 });
 // 选定搜索子目录状态
@@ -778,6 +845,15 @@ function rightList(e, obj, el) {
           'image'
         );
       } else if (id === 'copyLink') {
+        if (_path.isPathWithin(_d.pubDir, obj.path, 1)) {
+          const p = _path.normalize(
+            '/pub',
+            localData.get('account'),
+            `${obj.path}/${obj.name}`.slice(_d.pubDir.length)
+          );
+          copyText(`${_d.originURL}${getFilePath(p)}`);
+          return;
+        }
         loading.start();
         const p = _path.normalize('/file', obj.path, obj.name);
         reqUserFileToken({ p })

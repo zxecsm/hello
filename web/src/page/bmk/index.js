@@ -39,7 +39,7 @@ import {
   reqBmkDeleteBmk,
   reqBmkEditBmk,
   reqBmkList,
-  reqBmkParseSiteInfo,
+  reqBmkPageInfo,
   reqBmkSearch,
   reqBmkToGroup,
 } from '../../api/bmk';
@@ -758,7 +758,7 @@ $headWrap
       function ({ e, inp, close, loading }) {
         const u = inp.link;
         loading.start();
-        reqBmkParseSiteInfo({ u })
+        reqBmkPageInfo({ u })
           .then((result) => {
             loading.end();
             if (result.code === 1) {

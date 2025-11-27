@@ -13,7 +13,6 @@ import {
   getDarkIcon,
   _getTarget,
   throttle,
-  getStaticPath,
 } from '../utils/utils';
 import _d from './config';
 import _msg from '../plugins/message';
@@ -30,6 +29,7 @@ import wave from '../plugins/wave';
 import { timeMsg } from '../../page/home/home';
 import bear from '../plugins/bear';
 import ScreenWakeLock from './screenWakeLock';
+import _path from '../utils/path';
 window._pageName =
   myOpen()
     .split(/[?#]/)[0]
@@ -315,7 +315,7 @@ window.onerror = function (message, url, line, column) {
         return;
       }
       _loadingBar.start();
-      const fontUrl = getStaticPath(`/font/${fontType}`);
+      const fontUrl = _path.normalize(_d.fontURL, fontType);
       const ff = new FontFace('changfont', `url(${fontUrl})`);
       // 添加到全局的 FontFaceSet 中
       document.fonts.add(ff);

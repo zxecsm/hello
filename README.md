@@ -18,20 +18,20 @@ services:
 随机壁纸
 
 ```
-http://localhost:55555/api/bg/r/big    # 大屏
-http://localhost:55555/api/bg/r/small  # 小屛
+http://localhost:55555/api/bg/r/d    # 桌面端壁纸
+http://localhost:55555/api/bg/r/m    # 移动端壁纸
 ```
 
 获取网站图标
 
 ```
-http://localhost:55555/api/getfavicon?u=[https://]google.com
+http://localhost:55555/api/icon?u=[https://]google.com
 ```
 
 获取网站信息
 
 ```
-http://localhost:55555/api/bmk/parse-site-info?u=[https://]google.com
+http://localhost:55555/api/page-info?u=[https://]google.com
 ```
 
 回显接口
