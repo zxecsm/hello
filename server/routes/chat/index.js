@@ -38,7 +38,6 @@ import {
   sendNotifyMsg,
   sendNotificationsToCustomAddresses,
   becomeFriends,
-  heperMsgAndForward,
   getChatUserList,
   hdForwardToLink,
 } from './chat.js';
@@ -47,57 +46,6 @@ import _connect from '../../utils/connect.js';
 import _path from '../../utils/path.js';
 
 const route = express.Router();
-
-// 收信接口
-route.all('/:chat_id/sendMessage', async (req, res) => {
-  try {
-    const { method } = req._hello;
-
-    const source = req.headers['x-source-service'];
-
-    if (source === appConfig.appName) {
-      _err(res, '不能转发消息给自己')(req);
-      return;
-    }
-
-    let text = '';
-    if (method === 'get') {
-      text = req.query.text;
-    } else if (method === 'post') {
-      text = req.body.text;
-
-      if (!text) {
-        text = req.query.text;
-      }
-    }
-
-    const { chat_id } = req.params;
-
-    if (
-      !validaString(chat_id, 1, fieldLength.id, 1) ||
-      !validaString(text, 1, fieldLength.chatContent)
-    ) {
-      paramErr(res, req);
-      return;
-    }
-
-    const user = await db('user')
-      .select('account')
-      .where({ chat_id, state: 1, receive_chat_state: 1 })
-      .findOne();
-
-    if (!user) {
-      _err(res, `${appConfig.notifyAccountDes}未开启收信接口`)(req);
-      return;
-    }
-
-    await heperMsgAndForward(req, user.account, text);
-
-    _success(res, `接收${appConfig.notifyAccountDes}消息成功`)(req, text, 1);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
 
 // 验证登录态
 route.use((req, res, next) => {

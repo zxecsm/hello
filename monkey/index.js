@@ -185,8 +185,7 @@
   const SEARCH_API = 'https://duckduckgo.com/?q={{}}';
   const TRANSLATOR_API = 'https://bing.com/translator?text={{}}';
   const SAVEBMK_API = 'http://localhost:55555/addbmk#{{}}';
-  const PUSH_API =
-    'http://localhost:55555/api/chat/xxxxxx/sendMessage?text={{}}';
+  const PUSH_API = 'http://localhost:55555/api/s/xxxxxx?text={{}}';
 
   // 替换api中的占位符
   function replaceApi(api, text) {

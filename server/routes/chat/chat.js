@@ -52,7 +52,7 @@ export async function hdHelloMsg(req, data, type) {
   const stopMsgText =
     '接口为关闭状态\n\n回复 start 开启接口 或 update 开启并更新接口';
 
-  let msgText = `收信接口：\nGET：${origin}/api/chat/${chat_id}/sendMessage?text=消息内容\nPOST：${origin}/api/chat/${chat_id}/sendMessage body：{"text": "消息内容"}\n\n回复 update 更新接口 回复 stop 关闭接口`;
+  let msgText = `收信接口：\nGET：${origin}/api/s/${chat_id}?text=消息内容\nPOST：${origin}/api/s/${chat_id} body：{"text": "消息内容"}\n\n回复 update 更新接口 回复 stop 关闭接口`;
 
   const text = data.trim();
 
@@ -63,7 +63,7 @@ export async function hdHelloMsg(req, data, type) {
       .where({ account, state: 1 })
       .update({ receive_chat_state: 1, chat_id });
 
-    msgText = `收信接口：\nGET：${origin}/api/chat/${chat_id}/sendMessage?text=消息内容\nPOST：${origin}/api/chat/${chat_id}/sendMessage body：{"text": "消息内容"}\n\n回复 update 更新接口 回复 stop 关闭接口`;
+    msgText = `收信接口：\nGET：${origin}/api/s/${chat_id}?text=消息内容\nPOST：${origin}/api/s/${chat_id} body：{"text": "消息内容"}\n\n回复 update 更新接口 回复 stop 关闭接口`;
 
     await uLog(req, `更新收信接口成功(${chat_id})`);
   } else if (type === 'text' && text === 'stop') {
