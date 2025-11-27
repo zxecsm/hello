@@ -307,7 +307,6 @@ function closeLoading() {
 }
 // 初始化
 const onceInit = hdOnce(function () {
-  updateSearchConfig();
   // 设置默认聊天页为文件传输
   setCurChatAccount(userInfo.account);
   if (!isRoot()) {

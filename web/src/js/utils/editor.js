@@ -17,9 +17,7 @@ import 'ace-builds/src-noconflict/keybinding-vscode.js';
 import localData from '../common/localData';
 
 function createEditor(el) {
-  const editor = ace.edit(el, {
-    tabSize: 2,
-  });
+  const editor = ace.edit(el);
   // 快捷键
   editor.setKeyboardHandler('ace/keyboard/vscode');
   // editor.getSession().setMode('ace/mode/javascript');
@@ -35,12 +33,14 @@ function createEditor(el) {
   // 空格代替制表符
   editor.setOption('useSoftTabs', true);
   const editorOption = localData.get('editorOption');
+  editor.getSession().setTabSize(editorOption.tabSize);
   // 启用滚动动画
   editor.setOption('animatedScroll', editorOption.animatedScroll);
   // 显示不可见字符（例如空格、制表符、换行符）。
   editor.setOption('showInvisibles', editorOption.showInvisibles);
   // 控制折叠部件（如代码折叠标记）是否淡入淡出
   editor.setOption('fadeFoldWidgets', editorOption.fadeFoldWidgets);
+  editor.session.setFoldStyle('markbeginend'); // 折叠箭头开始和结尾都显示
   // 控制换行符的模式
   editor.session.setOption('newLineMode', editorOption.newLineMode);
   // 关闭行号
@@ -54,9 +54,19 @@ function createEditor(el) {
   // 打印边距
   editor.setShowPrintMargin(false);
   // 行高亮
-  editor.setHighlightActiveLine(false);
+  editor.setHighlightActiveLine(editorOption.highlightActiveLine);
   // 语法检查
   editor.getSession().setUseWorker(false);
+  const style = document.createElement('style');
+  style.innerHTML = `
+  .ace_editor .ace_marker-layer .ace_active-line {
+    background: transparent;
+    border: 1px solid var(--color8);
+    border-left: none;
+    border-right: none;
+    box-sizing: border-box;
+  }`;
+  document.head.appendChild(style);
   // editor.setTheme('ace/theme/github_light_default');
   // editor.setTheme('ace/theme/github_dark');
   // 添加 Ctrl+D 快捷键绑定

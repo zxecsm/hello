@@ -72,11 +72,13 @@ const defaultData = {
   editorOption: {
     animatedScroll: true, // 滚动动画
     showInvisibles: false, // 显示不可见字符（例如空格、制表符、换行符）
-    fadeFoldWidgets: true, // 控制折叠部件（如代码折叠标记）是否淡入淡出
-    newLineMode: 'auto', // 控制换行符的模式 "unix", "windows" 或 "auto"
+    fadeFoldWidgets: false, // 控制折叠部件（如代码折叠标记）是否淡入淡出
+    newLineMode: 'unix', // 控制换行符的模式 "unix", "windows" 或 "auto"
     showGutter: true, // 显示行号
     useWrapMode: false, // 自动换行
     cursorStyle: 'ace', // 光标 "ace", "slim", "smooth", 或 "wide"
+    tabSize: 2,
+    highlightActiveLine: true,
   },
 };
 function encode(obj) {

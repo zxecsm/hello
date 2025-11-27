@@ -10,12 +10,31 @@ export function setEditor(e, editor, cb) {
     showGutter: editor.renderer.getOption('showGutter'), // 获取是否显示行号边栏
     useWrapMode: editor.getSession().getUseWrapMode(), // 获取是否启用自动换行
     cursorStyle: editor.getOption('cursorStyle'), // "ace", "slim", "smooth", 或 "wide"
+    tabSize: editor.getSession().getTabSize(),
+    highlightActiveLine: editor.getOption('highlightActiveLine'),
   };
   rMenu.inpMenu(
     e,
     {
       subText: '提交',
       items: {
+        tabSize: {
+          beforeText: 'Tab空格：',
+          inputType: 'number',
+          value: editorOption.tabSize,
+          verify(val) {
+            return rMenu.validInteger(val) || rMenu.validNumber(val, 1);
+          },
+        },
+        useWrapMode: {
+          beforeText: '自动换行：',
+          type: 'select',
+          value: editorOption.useWrapMode ? 'y' : 'n',
+          selectItem: [
+            { value: 'y', text: '开启' },
+            { value: 'n', text: '关闭' },
+          ],
+        },
         showGutter: {
           beforeText: '显示行号：',
           type: 'select',
@@ -25,10 +44,19 @@ export function setEditor(e, editor, cb) {
             { value: 'n', text: '关闭' },
           ],
         },
-        useWrapMode: {
-          beforeText: '自动换行：',
+        highlightActiveLine: {
+          beforeText: '高亮当前行：',
           type: 'select',
-          value: editorOption.useWrapMode ? 'y' : 'n',
+          value: editorOption.highlightActiveLine ? 'y' : 'n',
+          selectItem: [
+            { value: 'y', text: '开启' },
+            { value: 'n', text: '关闭' },
+          ],
+        },
+        fadeFoldWidgets: {
+          beforeText: '折叠淡入淡出：',
+          type: 'select',
+          value: editorOption.fadeFoldWidgets ? 'y' : 'n',
           selectItem: [
             { value: 'y', text: '开启' },
             { value: 'n', text: '关闭' },
@@ -73,15 +101,6 @@ export function setEditor(e, editor, cb) {
             { value: 'n', text: '关闭' },
           ],
         },
-        fadeFoldWidgets: {
-          beforeText: '折叠淡入淡出：',
-          type: 'select',
-          value: editorOption.fadeFoldWidgets ? 'y' : 'n',
-          selectItem: [
-            { value: 'y', text: '开启' },
-            { value: 'n', text: '关闭' },
-          ],
-        },
       },
     },
     function ({ inp, close, isDiff }) {
@@ -95,6 +114,8 @@ export function setEditor(e, editor, cb) {
         cursorStyle: inp.cursorStyle,
         showGutter: inp.showGutter === 'y',
         useWrapMode: inp.useWrapMode === 'y',
+        tabSize: +inp.tabSize,
+        highlightActiveLine: inp.highlightActiveLine === 'y',
       };
       localData.set('editorOption', editorOption);
       // 启用滚动动画
@@ -111,6 +132,8 @@ export function setEditor(e, editor, cb) {
       // 自动换行
       editor.session.setUseWrapMode(editorOption.useWrapMode);
       editor.setOption('cursorStyle', editorOption.cursorStyle); // 设置为平滑光标
+      editor.getSession().setTabSize(editorOption.tabSize);
+      editor.setHighlightActiveLine(editorOption.highlightActiveLine);
       cb && cb();
     },
     '编辑器配置'

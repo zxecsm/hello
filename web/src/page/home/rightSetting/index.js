@@ -769,6 +769,9 @@ function setPageFont(e, loading = { start() {}, end() {} }) {
           }
           data.push(info);
         });
+        if (!isRoot()) {
+          data.shift();
+        }
         rMenu.selectMenu(
           e,
           data,
