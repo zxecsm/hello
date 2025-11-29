@@ -1483,9 +1483,9 @@ export async function updateSongCover(obj) {
       _msg.error(`封面格式错误`);
       return;
     }
-    if (size <= 0 || size >= 5 * 1024 * 1024) {
+    if (size <= 0 || size >= _d.fieldLength.maxSongPicSize * 1024 * 1024) {
       pro.fail();
-      _msg.error(`封面限制0-5M`);
+      _msg.error(`封面限制0-${_d.fieldLength.maxSongPicSize}MB`);
       return;
     }
     const result = await reqPlayerUp(
@@ -1531,9 +1531,9 @@ export async function upMv(obj) {
     _msg.error(`MV 格式错误`);
     return;
   }
-  if (size <= 0 || size >= 200 * 1024 * 1024) {
+  if (size <= 0 || size >= _d.fieldLength.maxMvSize * 1024 * 1024) {
     pro.fail();
-    _msg.error(`MV限制0-200M`);
+    _msg.error(`MV限制0-${_d.fieldLength.maxMvSize}MB`);
     return;
   }
   try {
@@ -1582,20 +1582,14 @@ async function upSong() {
       _msg.error(`歌曲格式错误`);
       return;
     }
-    if (size <= 0 || size >= 50 * 1024 * 1024) {
+    if (size <= 0 || size >= _d.fieldLength.maxSongSize * 1024 * 1024) {
       pro.fail();
-      _msg.error(`歌曲限制0-50M`);
+      _msg.error(`歌曲限制0-${_d.fieldLength.maxSongSize}MB`);
       return;
     }
     try {
       //文件切片
-      let { HASH } = await md5.fileSlice(
-        file,
-        (percent) => {
-          pro.loading(percent);
-        },
-        signal
-      );
+      let HASH = await md5.sampleHash(file);
       let isrepeat = await reqPlayerRepeat({ HASH }); //是否已经存在文件
 
       if (isrepeat.code === 1) {

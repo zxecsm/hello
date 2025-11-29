@@ -69,7 +69,13 @@ const fieldLength = {
   noteCategoryTitle: 30, // 笔记分类标题
   operationTimeout: 10000, // 操作超时时间
   rainCodeSleep: 60 * 5, // 代码雨触发等待时间
-  maxFileSize: 1024 * 1024 * 10000, // 最大切片
+  maxFileSize: 19.5, // 最大文件大小GB
+  maxPicSize: 10, // 最大图片大小MB
+  maxBgSize: 10, // 最大壁纸大小MB
+  maxSongSize: 50, // 最大音乐大小MB
+  maxSongPicSize: 5, // 最大音乐封面大小MB
+  maxMvSize: 200, // 最大视频大小MB
+  maxLogoSize: 5, // 最大logo大小MB
   textFileSize: 10 * 1024 * 1024, // 文本文件编辑大小
   noteSize: 300 * 1024, // 笔记大小
   lrcSize: 20 * 1024, // 歌词大小

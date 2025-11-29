@@ -1575,20 +1575,14 @@ async function sendfile(files, chatAcc) {
       _msg.error(`不能发送空文件`);
       return;
     }
-    if (size > _d.fieldLength.maxFileSize) {
+    if (size > _d.fieldLength.maxFileSize * 1024 * 1024 * 1024) {
       pro.fail('发送失败');
-      _msg.error(`发送文件限制0-9.7G`);
+      _msg.error(`发送文件限制0-${_d.fieldLength.maxFileSize}GB`);
       return;
     }
     const type = isImgFile(name) ? 'image' : 'file';
     try {
-      const { chunks, count, HASH } = await md5.fileSlice(
-        file,
-        (percent) => {
-          pro.loading(percent);
-        },
-        signal
-      );
+      const { chunks, count, HASH } = await md5.fileSlice(file);
 
       const isrepeat = await reqChatRepeat({
         HASH,

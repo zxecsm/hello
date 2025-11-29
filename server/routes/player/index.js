@@ -985,7 +985,7 @@ route.post('/edit-song', async (req, res) => {
       );
 
       // 重新计算歌曲HASH
-      newHASH = await _crypto.getFileMD5Hash(songUrl);
+      newHASH = await _crypto.sampleHash(songUrl);
     } catch {
       await errLog(
         req,
@@ -1421,7 +1421,7 @@ route.post('/edit-lrc', async (req, res) => {
         songUrl
       );
 
-      const newHASH = await _crypto.getFileMD5Hash(songUrl);
+      const newHASH = await _crypto.sampleHash(songUrl);
 
       if (newHASH && newHASH !== musicinfo.hash) {
         await db('songs').where({ id }).update({ hash: newHASH });
@@ -1540,7 +1540,7 @@ route.post('/up', async (req, res) => {
       const tDir = appConfig.musicDir(timePath, songId);
       const tName = `${songId}.${suffix}`;
 
-      await receiveFiles(req, tDir, tName, 50, HASH);
+      await receiveFiles(req, tDir, tName, fieldLength.maxSongSize, HASH);
 
       // 读取歌曲元数据
       const songInfo = await getSongInfo(_path.normalize(tDir, tName));
@@ -1619,7 +1619,7 @@ route.post('/up', async (req, res) => {
       const tDir = appConfig.musicDir(_path.dirname(url));
       const tName = `${_path.basename(url)[1]}.${_path.extname(name)[2]}`;
 
-      await receiveFiles(req, tDir, tName, 5, HASH);
+      await receiveFiles(req, tDir, tName, fieldLength.maxSongPicSize, HASH);
 
       // 如果上传封面文件和现有的封面文件名不同，删除现有的
       if (_path.basename(pic)[0] !== tName) {
@@ -1647,7 +1647,7 @@ route.post('/up', async (req, res) => {
           songUrl
         );
 
-        newHASH = await _crypto.getFileMD5Hash(songUrl);
+        newHASH = await _crypto.sampleHash(songUrl);
       } catch {
         await errLog(req, `写入元数据到歌曲文件失败(${artist}-${title})`);
       }
@@ -1695,7 +1695,7 @@ route.post('/up', async (req, res) => {
       const tDir = appConfig.musicDir(_path.dirname(url));
       const tName = `${_path.basename(url)[1]}.${_path.extname(name)[2]}`;
 
-      await receiveFiles(req, tDir, tName, 200, HASH);
+      await receiveFiles(req, tDir, tName, fieldLength.maxMvSize, HASH);
 
       if (_path.basename(mv)[0] != tName) {
         // 上传和现有文件名不同上传现有的

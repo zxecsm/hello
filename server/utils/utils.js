@@ -261,10 +261,8 @@ export async function receiveFiles(
   const newPath = _path.normalize(uploadDir, uploadedFile.newFilename);
   const originalPath = _path.normalize(uploadDir, filename);
 
-  const hash = HASH ? await _crypto.getFileMD5Hash(newPath) : '';
   await _f.fsp.rename(newPath, originalPath);
-
-  if (HASH && HASH !== hash) {
+  if (HASH && HASH !== (await _crypto.sampleHash(originalPath))) {
     await _f.del(originalPath);
     throw new Error('hash error');
   }
@@ -283,7 +281,6 @@ export async function mergefile(count, from, to, HASH) {
   });
 
   const temFile = `${to}_${nanoid()}`;
-  const hash = HASH ? _crypto.createHash('md5') : null;
 
   for (const filename of list) {
     const filePath = _path.normalize(from, filename);
@@ -293,7 +290,6 @@ export async function mergefile(count, from, to, HASH) {
       readStream,
       new _f.stream.Transform({
         transform(chunk, _, callback) {
-          if (HASH) hash.update(chunk);
           callback(null, chunk);
         },
       }),
@@ -307,7 +303,7 @@ export async function mergefile(count, from, to, HASH) {
 
   await _f.rename(temFile, to);
 
-  if (HASH && HASH !== hash.digest('hex')) {
+  if (HASH && HASH !== (await _crypto.sampleHash(to))) {
     await _f.del(to);
     throw new Error('hash error');
   }

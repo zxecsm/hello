@@ -60,20 +60,14 @@ async function hdUpBg(files) {
       _msg.error(`壁纸格式错误`);
       return;
     }
-    if (size <= 0 || size >= 10 * 1024 * 1024) {
+    if (size <= 0 || size >= _d.fieldLength.maxBgSize * 1024 * 1024) {
       pro.fail();
-      _msg.error(`壁纸限制0-10M`);
+      _msg.error(`壁纸限制0-${_d.fieldLength.maxBgSize}MB`);
       return;
     }
     try {
       //文件切片
-      const { HASH } = await md5.fileSlice(
-        file,
-        (percent) => {
-          pro.loading(percent);
-        },
-        signal
-      );
+      const HASH = await md5.sampleHash(file);
       const isrepeat = await reqBgRepeat({
         HASH,
       }); //是否已经存在文件

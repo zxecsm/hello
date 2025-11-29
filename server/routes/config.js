@@ -27,7 +27,15 @@ export const fieldLength = {
   chatPageSize: 50, // 消息分页
   userPageSize: 100, // 用户分页
   operationTimeout: 10000, // 操作超时时间
-  maxFileSlice: 200, // 最大切片
+  maxFileSlice: 400, // 最大切片数
+  maxFileChunk: 50, // 最大分片MB
+  maxBgSize: 10, // 最大壁纸大小MB
+  maxVoiceSize: 3, // 最大语音大小MB
+  maxPicSize: 10, // 最大图片大小MB
+  maxSongSize: 50, // 最大歌曲大小MB
+  maxSongPicSize: 5, // 最大歌曲封面大小MB
+  maxMvSize: 200, // 最大MV大小MB
+  maxLogoSize: 5, // 最大logo大小MB
   textFileSize: 10 * 1024 * 1024, // 文本文件编辑大小
   lrcSize: 20 * 1024, // 歌词大小
   customCodeSize: 100 * 1024, // 自定义代码大小

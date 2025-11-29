@@ -711,7 +711,7 @@ route.post('/up', async (req, res) => {
 
     const path = appConfig.temDir(`${account}_${HASH}`);
 
-    await receiveFiles(req, path, name, 50);
+    await receiveFiles(req, path, name, fieldLength.maxFileChunk);
 
     _success(res);
   } catch (error) {
@@ -763,7 +763,7 @@ route.post('/up-voice', async (req, res) => {
     const tDir = appConfig.uploadDir(timePath);
     const tName = `${HASH}.${_path.extname(name)[2]}`;
 
-    await receiveFiles(req, tDir, tName, 3, HASH);
+    await receiveFiles(req, tDir, tName, fieldLength.maxVoiceSize, HASH);
 
     const fobj = {
       id: HASH,

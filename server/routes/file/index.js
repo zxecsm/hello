@@ -1584,7 +1584,7 @@ route.post('/up', async (req, res) => {
 
     const path = appConfig.temDir(`${account}_${HASH}`);
 
-    await receiveFiles(req, path, name, 50);
+    await receiveFiles(req, path, name, fieldLength.maxFileChunk);
 
     _success(res);
   } catch (error) {

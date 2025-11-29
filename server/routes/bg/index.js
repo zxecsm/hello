@@ -265,7 +265,7 @@ route.post('/up', async (req, res) => {
     const tDir = appConfig.bgDir(timePath);
     const tName = `${HASH}.${suffix}`;
 
-    await receiveFiles(req, tDir, tName, 10, HASH);
+    await receiveFiles(req, tDir, tName, fieldLength.maxBgSize, HASH);
 
     // 获取壁纸尺寸进行分类
     const { width, height } = await getImgInfo(_path.normalize(tDir, tName));

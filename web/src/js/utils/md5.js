@@ -1,78 +1,68 @@
 import sparkMd5 from 'spark-md5';
-import FileWorker from './fileSlice.worker.js';
 import { getFileReader } from './utils.js';
 import _path from './path.js';
 
-// 切片文件
-function fileSlice(file, callback, signal) {
-  return new Promise(async (resolve, reject) => {
-    const chunkSize = getChunkSize(file);
+async function sampleHash(file) {
+  try {
+    const fileSize = file.size;
 
-    const [filename, , suffix] = _path.extname(file.name || '');
-    const count = Math.ceil(file.size / chunkSize);
-    const chunks = createFileChunks(file, chunkSize, count);
+    const maxSampleCount = 100; // 最大取样点数
+    const sampleCount = Math.min(
+      Math.max(Math.floor(fileSize / 1024), 4),
+      maxSampleCount
+    );
+    const maxOffset = fileSize - 256; // 防止读取超出文件范围
 
-    if (typeof Worker === 'undefined') {
-      const spark = new sparkMd5.ArrayBuffer();
-      const list = [];
+    let seed = fileSize;
+    const rng = (seed) => {
+      seed = (seed * 9301 + 49297) % 233280; // 线性同余生成器
+      return seed / 233280; // 归一化到 [0, 1)
+    };
 
-      for (let i = 0; i < chunks; i++) {
-        if (signal && signal.aborted) break;
+    const spark = new sparkMd5.ArrayBuffer();
 
-        const chunk = chunks[i];
-        const buf = await getFileReader(chunk);
-        spark.append(buf);
-        list.push({
-          file: chunk,
-          filename: `_${i}`,
-        });
-        callback && callback(count === 1 ? 1 : (i + 1) / count);
-      }
+    // 读取文件指定位置的样本
+    const readSample = async (offset) => {
+      spark.append(await getFileReader(file.slice(offset, offset + 256)));
+    };
 
-      const HASH = spark.end();
+    // 1. 读取文件头部的样本
+    await readSample(0);
 
-      return {
-        HASH,
-        chunks: list,
-        count,
-        suffix,
-        filename,
-        size: file.size,
-      };
+    // 2. 读取随机位置的样本
+    for (let i = 0; i < sampleCount; i++) {
+      const randomValue = rng(seed); // 获取伪随机数
+      seed = (seed * 9301 + 49297) % 233280; // 更新种子
+
+      const offset = Math.min(Math.floor(randomValue * maxOffset), maxOffset);
+      await readSample(offset); // 读取随机位置的样本
     }
 
-    const w = new FileWorker();
+    // 3. 读取文件尾部的样本
+    await readSample(maxOffset);
 
-    w.postMessage({ chunks });
+    return spark.end();
+  } catch {
+    return '';
+  }
+}
 
-    w.onmessage = (e) => {
-      if (signal && signal.aborted) {
-        cleanUpWorker(w);
-        w.terminate();
-        return;
-      }
+// 切片文件
+async function fileSlice(file) {
+  const chunkSize = getChunkSize(file);
 
-      const { type, value, HASH } = e.data;
-      if (type === 'progress') {
-        callback && callback(value);
-      } else if (type === 'result') {
-        cleanUpWorker(w);
-        resolve({
-          HASH,
-          chunks: value,
-          count,
-          suffix,
-          filename,
-          size: file.size,
-        });
-      }
-    };
-
-    w.onerror = (err) => {
-      cleanUpWorker(w);
-      reject(err);
-    };
-  });
+  const [filename, , suffix] = _path.extname(file.name || '');
+  const count = Math.ceil(file.size / chunkSize);
+  const chunks = createFileChunks(file, chunkSize, count);
+  const HASH = await sampleHash(file);
+  return {
+    HASH,
+    chunks,
+    count,
+    suffix,
+    filename,
+    size: file.size,
+  };
 }
 
 // 获取切片大小
@@ -86,19 +76,16 @@ function getChunkSize(file) {
 function createFileChunks(file, chunkSize, count) {
   const chunks = [];
   for (let i = 0; i < count; i++) {
-    const chunk = file.slice(i * chunkSize, (i + 1) * chunkSize);
-    chunks.push(chunk);
+    chunks.push({
+      file: file.slice(i * chunkSize, (i + 1) * chunkSize),
+      filename: `_${i}`,
+    });
   }
   return chunks;
 }
 
-// 清理 Worker
-function cleanUpWorker(worker) {
-  worker.onmessage = null;
-  worker.onerror = null;
-}
-
 const md5 = {
+  sampleHash,
   fileSlice,
   getStringHash: sparkMd5.hash,
 };

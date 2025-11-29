@@ -2,6 +2,57 @@ import { createHash, randomBytes, pbkdf2 } from 'crypto';
 import { createReadStream } from 'fs';
 import { Writable } from 'stream';
 import { pipeline } from 'stream/promises';
+import fsp from 'fs/promises';
+
+async function sampleHash(filePath) {
+  try {
+    const stats = await fsp.lstat(filePath);
+    const fileSize = stats.size;
+
+    const maxSampleCount = 100; // 最大取样点数
+    const sampleCount = Math.min(
+      Math.max(Math.floor(fileSize / 1024), 4),
+      maxSampleCount
+    );
+    const maxOffset = fileSize - 256; // 防止读取超出文件范围
+
+    let seed = fileSize;
+    const rng = (seed) => {
+      seed = (seed * 9301 + 49297) % 233280; // 线性同余生成器
+      return seed / 233280; // 归一化到 [0, 1)
+    };
+
+    const hash = createHash('md5');
+
+    // 读取指定位置的样本
+    const readSample = async (offset) => {
+      const buffer = Buffer.alloc(256);
+      const fd = await fsp.open(filePath, 'r');
+      await fd.read(buffer, 0, 256, offset);
+      await fd.close();
+      hash.update(buffer);
+    };
+
+    // 1. 读取文件头部的样本
+    await readSample(0);
+
+    // 2. 读取随机位置的样本
+    for (let i = 0; i < sampleCount; i++) {
+      const randomValue = rng(seed); // 获取伪随机数
+      seed = (seed * 9301 + 49297) % 233280; // 更新种子
+
+      const offset = Math.min(Math.floor(randomValue * maxOffset), maxOffset);
+      await readSample(offset); // 读取随机位置的样本
+    }
+
+    // 3. 读取文件尾部的样本
+    await readSample(maxOffset);
+
+    return hash.digest('hex');
+  } catch {
+    return '';
+  }
+}
 
 // 计算文件的 MD5 值
 async function getFileMD5Hash(filePath, signal) {
@@ -92,6 +143,7 @@ const _crypto = {
   hashPassword,
   verifyPassword,
   generateSecureKey,
+  sampleHash,
 };
 
 export default _crypto;

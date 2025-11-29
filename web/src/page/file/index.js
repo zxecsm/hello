@@ -1233,6 +1233,7 @@ async function hdUp(files) {
     controller.abort();
   });
 
+  const skip = skipUpSameNameFiles;
   await concurrencyTasks(files, 3, async (file) => {
     if (signal.aborted) return;
     const { name, size, webkitRelativePath } = file;
@@ -1249,12 +1250,12 @@ async function hdUp(files) {
       _msg.error(`不能上传空文件`);
       return;
     }
-    if (size > _d.fieldLength.maxFileSize) {
+    if (size > _d.fieldLength.maxFileSize * 1024 * 1024 * 1024) {
       pro.fail();
-      _msg.error(`上传文件限制0-9.7G`);
+      _msg.error(`上传文件限制0-${_d.fieldLength.maxFileSize}GB`);
       return;
     }
-    if (skipUpSameNameFiles) {
+    if (skip) {
       const res = await reqFileRepeat({ path });
       if (res.code === 1) {
         pro.close('略过同名文件');
@@ -1264,13 +1265,7 @@ async function hdUp(files) {
 
     try {
       //文件切片
-      const { chunks, count, HASH } = await md5.fileSlice(
-        file,
-        (percent) => {
-          pro.loading(percent);
-        },
-        signal
-      );
+      const { chunks, count, HASH } = await md5.fileSlice(file);
       const breakpointarr = (await reqFileBreakpoint({ HASH })).data; //断点续传
 
       function compale(index) {

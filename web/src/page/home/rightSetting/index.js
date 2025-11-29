@@ -327,18 +327,15 @@ export async function upLogo(type, cb, id, loading = { start() {}, end() {} }) {
       controller.abort();
     });
     const pro = upPro.add(file.name);
-    if (file.size <= 0 || file.size >= 5 * 1024 * 1024) {
+    if (
+      file.size <= 0 ||
+      file.size >= _d.fieldLength.maxLogoSize * 1024 * 1024
+    ) {
       pro.fail();
-      _msg.error(`图片限制0-5M`);
+      _msg.error(`图片限制0-${_d.fieldLength.maxLogoSize}MB`);
       return;
     }
-    const { HASH } = await md5.fileSlice(
-      file,
-      (percent) => {
-        pro.loading(percent);
-      },
-      signal
-    );
+    const HASH = await md5.sampleHash(file);
     loading.start();
     reqUserUpLogo(
       { HASH, name: file.name, type, id },

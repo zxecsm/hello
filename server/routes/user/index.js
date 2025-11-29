@@ -1079,7 +1079,13 @@ route.post('/up-logo', async (req, res) => {
 
     const path = appConfig.logoDir(account, timePath);
 
-    await receiveFiles(req, path, `${HASH}.${_path.extname(name)[2]}`, 5, HASH);
+    await receiveFiles(
+      req,
+      path,
+      `${HASH}.${_path.extname(name)[2]}`,
+      fieldLength.maxLogoSize,
+      HASH
+    );
 
     const logo = _path.normalize(timePath, `${HASH}.${_path.extname(name)[2]}`);
 
