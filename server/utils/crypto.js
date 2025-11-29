@@ -5,6 +5,7 @@ import { pipeline } from 'stream/promises';
 import fsp from 'fs/promises';
 
 async function sampleHash(filePath) {
+  let fd;
   try {
     const stats = await fsp.lstat(filePath);
     const fileSize = stats.size;
@@ -24,12 +25,12 @@ async function sampleHash(filePath) {
 
     const hash = createHash('md5');
 
+    fd = await fsp.open(filePath, 'r');
+
     // 读取指定位置的样本
     const readSample = async (offset) => {
       const buffer = Buffer.alloc(256);
-      const fd = await fsp.open(filePath, 'r');
       await fd.read(buffer, 0, 256, offset);
-      await fd.close();
       hash.update(buffer);
     };
 
@@ -51,6 +52,10 @@ async function sampleHash(filePath) {
     return hash.digest('hex');
   } catch {
     return '';
+  } finally {
+    if (fd) {
+      await fd.close();
+    }
   }
 }
 
