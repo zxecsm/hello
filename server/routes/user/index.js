@@ -167,7 +167,7 @@ route.post('/register', async (req, res) => {
     });
 
     // 种下Cookie
-    jwt.setCookie(res, { account, username });
+    await jwt.setCookie(res, { account, username });
 
     registerCount++;
 
@@ -289,7 +289,7 @@ route.post('/code-login', async (req, res) => {
 
     verifyCode.delete(key);
 
-    jwt.setCookie(res, {
+    await jwt.setCookie(res, {
       account,
       username,
     });
@@ -356,7 +356,7 @@ route.post('/login', async (req, res) => {
             verify: true,
           })(req, `${username}-${account}`, 1);
         } else {
-          jwt.setCookie(res, {
+          await jwt.setCookie(res, {
             account,
             username,
           });
@@ -423,7 +423,7 @@ route.post('/verify-login', async (req, res) => {
         verify &&
         _2fa.verify(verify, token)
       ) {
-        jwt.setCookie(res, {
+        await jwt.setCookie(res, {
           account,
           username,
         });
@@ -554,7 +554,7 @@ route.post('/reset-pass', async (req, res) => {
             exp_token_time: parseInt(Date.now() / 1000) - 2,
           });
 
-        jwt.setCookie(res, {
+        await jwt.setCookie(res, {
           account,
           username,
         });
@@ -599,7 +599,7 @@ route.get('/file-token', async (req, res) => {
       return;
     }
 
-    const token = jwt.set(
+    const token = await jwt.set(
       {
         type: 'temAccessFile',
         data: { account: req._hello.userinfo.account, p },
@@ -892,7 +892,7 @@ route.get('/logout', async (req, res) => {
           exp_token_time: parseInt(Date.now() / 1000) - 2,
         });
 
-      jwt.setCookie(res, {
+      await jwt.setCookie(res, {
         account,
         username,
       });
@@ -931,7 +931,7 @@ route.post('/changename', async (req, res) => {
 
     await db('user').where({ account, state: 1 }).update({ username });
 
-    jwt.setCookie(res, {
+    await jwt.setCookie(res, {
       account,
       username,
     });

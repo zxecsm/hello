@@ -90,7 +90,7 @@ route.post('/get-share', async (req, res) => {
       account: acc,
       data,
       title,
-      token: jwt.set(
+      token: await jwt.set(
         { type: 'share', data: { id, types: ['bookmk'] } },
         fieldLength.shareTokenExp
       ),

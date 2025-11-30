@@ -78,7 +78,7 @@ async function getFileMD5Hash(filePath, signal) {
 }
 
 // 生成安全密钥
-function generateSecureKey(length = 64) {
+function generateSecureKey(length = 32) {
   return randomBytes(length).toString('base64url');
 }
 

@@ -106,7 +106,7 @@ app.use(async (req, res, next) => {
     const method = req.method.toLocaleLowerCase(); // 请求类型
 
     // 身份验证
-    const jwtData = jwt.get(req.cookies.token);
+    const jwtData = await jwt.get(req.cookies.token);
     const userinfo =
       jwtData && jwtData.data.type === 'authentication'
         ? jwtData.data.data
@@ -181,7 +181,7 @@ app.use(async (req, res, next) => {
         // token剩下一半时间到期，重置token
         if (Date.now() / 1000 - iat >= (exp - iat) / 2) {
           const { account, username } = req._hello.userinfo;
-          jwt.setCookie(res, { account, username });
+          await jwt.setCookie(res, { account, username });
         }
       }
     }

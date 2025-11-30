@@ -66,7 +66,7 @@ export async function deleteUser(account) {
 
 // 验证分享
 export async function validShareState(shareToken, t) {
-  const jwtData = jwt.get(shareToken);
+  const jwtData = await jwt.get(shareToken);
   if (!jwtData) {
     return {
       state: 0,

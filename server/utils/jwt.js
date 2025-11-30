@@ -1,26 +1,31 @@
-import jsonwebtoken from 'jsonwebtoken';
-
+import { EncryptJWT, jwtDecrypt } from 'jose';
+import { createSecretKey } from 'crypto';
 import { _d } from '../data/data.js';
 
 const jwt = {
-  set(data = {}, exp = 60 * 60 * 24 * 2) {
-    return jsonwebtoken.sign(
-      {
-        exp: Math.floor(Date.now() / 1000) + exp,
-        data,
-      },
-      _d.tokenKey
-    );
+  async set(data = {}, exp = 60 * 60 * 24 * 2) {
+    const expSec = Math.floor(Date.now() / 1000) + exp;
+    return await new EncryptJWT({ data })
+      .setProtectedHeader({ alg: 'A256GCMKW', enc: 'A256GCM' }) // 对称加密
+      .setExpirationTime(expSec)
+      .setIssuedAt()
+      .encrypt(createSecretKey(Buffer.from(_d.tokenKey, 'base64url')));
   },
-  get(token) {
+  async get(token) {
     try {
-      return jsonwebtoken.verify(token, _d.tokenKey);
+      const { payload } = await jwtDecrypt(
+        token,
+        createSecretKey(Buffer.from(_d.tokenKey, 'base64url'))
+      );
+      return payload;
     } catch {
       return null;
     }
   },
-  setCookie(res, data) {
-    res.cookie('token', this.set({ type: 'authentication', data }), {
+  async setCookie(res, data) {
+    const token = await this.set({ type: 'authentication', data });
+
+    res.cookie('token', token, {
       maxAge: 1000 * 60 * 60 * 24 * 2,
       httpOnly: true,
     });

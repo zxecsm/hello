@@ -34,7 +34,7 @@ export default async function getFile(req, res, p) {
 
     let { account } = req._hello.userinfo;
 
-    const jwtData = token ? jwt.get(token) : '';
+    const jwtData = token ? await jwt.get(token) : '';
 
     // 以指定的用户身份访问指定的文件
     if (jwtData && jwtData.data.type === 'temAccessFile') {
