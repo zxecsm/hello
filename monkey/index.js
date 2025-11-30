@@ -84,12 +84,15 @@
     toolbox = document.createElement('div');
     toolbox.style.position = 'fixed';
     toolbox.style.zIndex = 999999;
-    toolbox.style.padding = '6px 8px';
+    toolbox.style.padding = '2px';
     toolbox.style.borderRadius = '6px';
     toolbox.style.fontSize = '14px';
     toolbox.style.display = 'none';
     toolbox.style.userSelect = 'none';
-    toolbox.style.whiteSpace = 'nowrap';
+    toolbox.style.maxWidth = '90%';
+    toolbox.style.flexFlow = 'row wrap';
+    toolbox.style.justifyContent = 'space-evenly';
+    toolbox.style.alignItems = 'center';
 
     applyTheme();
     document.body.appendChild(toolbox);
@@ -133,7 +136,7 @@
     const btn = document.createElement('span');
     btn.className = 'tool-btn';
     btn.style.padding = '4px 6px';
-    btn.style.margin = '0 4px';
+    btn.style.margin = '4px';
     btn.style.borderRadius = '4px';
     btn.style.cursor = 'pointer';
     btn.style.display = 'inline-flex';

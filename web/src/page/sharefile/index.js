@@ -466,20 +466,17 @@ function getFileItem(id) {
 async function readFileAndDir(obj, e) {
   const { type, name, path } = obj;
   const p = `${path}/${name}`;
-  if (type === 'dir') {
+  if (
+    type === 'dir' ||
+    (type === 'file' &&
+      obj.fileType === 'symlink' &&
+      obj.linkTargetType === 'dir' &&
+      obj.linkTarget)
+  ) {
     updatePageInfo();
     curmb.toGo(p, { pageNo: 1, top: 0 });
   } else if (type === 'file') {
     try {
-      if (
-        obj.fileType === 'symlink' &&
-        obj.linkTargetType === 'dir' &&
-        obj.linkTarget
-      ) {
-        updatePageInfo();
-        curmb.toGo(obj.linkTarget, { pageNo: 1, top: 0 });
-        return;
-      }
       const res = await reqFileReadFile({
         path: p,
         token: shareToken,

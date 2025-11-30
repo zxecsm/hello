@@ -165,7 +165,7 @@ export async function readMenu(path) {
           type: type === 'dir' ? 'dir' : 'file',
           name,
           time: s.ctimeMs,
-          size: s.size,
+          size: 0,
           mode: modeStr,
           uid,
           gid,
@@ -180,6 +180,8 @@ export async function readMenu(path) {
             } catch {
               info.linkTarget = await _f.fsp.readlink(f);
             }
+          } else {
+            info.size = s.size;
           }
         }
         arr.push(info);
