@@ -297,7 +297,7 @@ route.post('/read-dir', async (req, res) => {
             if (
               obj.type === 'file' &&
               obj.fileType === 'symlink' &&
-              _path.isPathWithin(rootP, obj.linkTarget)
+              _path.isPathWithin(rootP, obj.linkTarget, 1)
             ) {
               obj.linkTarget = _path.normalize(
                 '/' + item.linkTarget.slice(rootP.length)
