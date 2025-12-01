@@ -13,7 +13,7 @@ services:
       - '55555:55555'
 ```
 
-> 注意歌词格式：`[00:00.00]歌词<=>翻译`
+歌词格式：`[00:00.00]歌词<=>翻译`
 
 随机壁纸
 
@@ -38,6 +38,19 @@ http://localhost:55555/api/site-info?u=[https://]google.com
 
 ```
 http://localhost:55555/api/echo?msg=hello
+```
+
+添加书签窗口（用于扩展和油猴脚本添加书签）
+
+```
+http://localhost:55555/addbmk/#{{https://google.com}}
+```
+
+接收推送消息
+
+```
+GET： http://localhost:55556/api/s/<key>?text=消息内容
+POST：http://localhost:55556/api/s/<key> body：{"text": "消息内容"}
 ```
 
 ![hello](https://raw.githubusercontent.com/zxecsm/hello/main/hello.png)

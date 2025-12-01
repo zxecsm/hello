@@ -2566,7 +2566,11 @@ export function startPlayingSongLogo() {
     animation: 'rotate360 8s infinite linear',
   });
 }
-$playingSongLogo.on('click', showLrcBox);
+$playingSongLogo.on('click', (e) => {
+  const songInfo = setPlayingSongInfo();
+  if (!songInfo.hash) return;
+  showSongInfo(e, songInfo);
+});
 // 显示播放器
 export function showMusicPlayerBox(cb) {
   hideRightMenu();
