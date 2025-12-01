@@ -158,7 +158,7 @@ export function showFileInfo(e, obj) {
         obj.path +
         `${
           obj.type === 'file' && obj.fileType === 'symlink'
-            ? ` => ${obj.linkTarget}`
+            ? ` => ${obj.linkTarget}(${obj.linkTargetTypeName})`
             : ''
         }`,
       beforeText: '路径：',

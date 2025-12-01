@@ -305,14 +305,14 @@ async function renderList(top) {
   const html = _tpl(
     `
     <template v-if="total > 0">
-      <ul v-for="{type, fileType, name, size, time, id, mode, gid, uid, favorite, linkTarget} in list" class="file_item" :data-id="id">
+      <ul v-for="{type, fileType, name, size, time, id, mode, gid, uid, favorite, linkTarget, linkTargetTypeName} in list" class="file_item" :data-id="id">
         <li class="check_state" check="n"></li>
         <li cursor="y" class="logo {{logoColor(type,fileType)}} iconfont {{hdLogo(name,type,size) || 'is_img'}}"></li>
         <li v-if="favorite" class='favorite iconfont icon-shoucang'></li>
         <li cursor="y" class="name">
           <span class="text">{{getText(name,type).a}}
             <span class="suffix">{{getText(name,type).b}}</span>
-            <span v-if="type === 'file' && fileType === 'symlink'" class="link_target">=> {{linkTarget}}</span>
+            <span v-if="type === 'file' && fileType === 'symlink'" class="link_target">=> {{linkTarget}}({{linkTargetTypeName}})</span>
           </span>
         </li>
         <li v-if="mode" class='mode'>{{mode}} {{uid}}:{{gid}}</li>
@@ -657,11 +657,14 @@ $contentWrap
       fileType,
       fileTypeName,
       linkTarget,
+      linkTargetTypeName,
     } = getFileItem($(this).parent().attr('data-id'));
     const str = `名称：${name}\n类型：${type === 'dir' ? '文件夹' : '文件'}${
       type === 'file' && fileType !== 'file' ? `(${fileTypeName})` : ''
     }\n路径：${path}${
-      type === 'file' && fileType === 'symlink' ? ` => ${linkTarget}` : ''
+      type === 'file' && fileType === 'symlink'
+        ? ` => ${linkTarget}(${linkTargetTypeName})`
+        : ''
     }${mode ? `\n权限：${mode}\n用户ID：${uid}\n用户组ID：${gid}` : ''}${
       type === 'dir' && favorite !== undefined
         ? `\n收藏状态：${favorite ? '已收藏' : '未收藏'}`

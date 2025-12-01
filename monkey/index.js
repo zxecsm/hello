@@ -148,8 +148,8 @@
         const i = document.createElement('span');
         i.innerHTML = icon;
         i.style.display = 'inline-block';
-        i.style.width = '14px';
-        i.style.height = '14px';
+        i.style.width = '16px';
+        i.style.height = '16px';
         btn.appendChild(i);
       } catch {}
     }

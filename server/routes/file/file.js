@@ -177,8 +177,11 @@ export async function readMenu(path) {
             try {
               info.linkTarget = await _f.fsp.realpath(f);
               info.linkTargetType = await _f.getType(info.linkTarget);
+              info.linkTargetTypeName = _f.getFileTypeName(info.linkTargetType);
             } catch {
               info.linkTarget = await _f.fsp.readlink(f);
+              info.linkTargetType = 'unknown';
+              info.linkTargetTypeName = '未知';
             }
           } else {
             info.size = s.size;
