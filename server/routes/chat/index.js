@@ -868,7 +868,7 @@ route.post('/merge', async (req, res) => {
       update_at: time,
     };
 
-    const stat = await _f.fsp.lstat(targetPath);
+    const stat = await _f.lstat(targetPath);
 
     const obj = {
       _to: to,
@@ -954,9 +954,8 @@ route.post('/repeat', async (req, res) => {
       // 文件已存在则，跳过上传
       const p = appConfig.uploadDir(upload.url);
 
-      if (await _f.exists(p)) {
-        const stats = await _f.fsp.lstat(p);
-
+      const stats = await _f.lstat(p);
+      if (stats) {
         let log = to;
 
         if (!stats.isDirectory() && stats.size === size) {

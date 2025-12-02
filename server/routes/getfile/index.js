@@ -150,13 +150,9 @@ export default async function getFile(req, res, p) {
       path = appConfig.appFilesDir(url);
     }
 
-    if (!path || !(await _f.exists(path))) {
-      _err(res, '文件不存在')(req, path, 1);
-      return;
-    }
+    const stat = await _f.lstat(path);
 
-    const stat = await _f.fsp.lstat(path);
-    if (stat.isDirectory()) {
+    if (!path || !stat || stat.isDirectory()) {
       _err(res, '文件不存在')(req, path, 1);
       return;
     }

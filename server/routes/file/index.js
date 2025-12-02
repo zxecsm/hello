@@ -54,6 +54,7 @@ import zipper from '../../utils/zip.js';
 import fileList from './cacheFileList.js';
 import axios from 'axios';
 import nanoid from '../../utils/nanoid.js';
+import _crypto from '../../utils/crypto.js';
 
 const route = express.Router();
 
@@ -414,14 +415,9 @@ route.post('/read-file', async (req, res) => {
       p = appConfig.userRootDir(account, path);
     }
 
-    if (!(await _f.exists(p))) {
-      _err(res, '文件不存在')(req, p, 1);
-      return;
-    }
+    const stat = await _f.lstat(p);
 
-    const stat = await _f.fsp.lstat(p);
-
-    if ((await _f.getType(stat)) === 'dir') {
+    if (!stat || (await _f.getType(stat)) === 'dir') {
       _err(res, '文件不存在')(req, p, 1);
       return;
     }
@@ -749,13 +745,13 @@ route.post('/save-file', async (req, res) => {
 
     const fpath = appConfig.userRootDir(account, path);
 
-    const type = await _f.getType(fpath);
+    const stat = await _f.lstat(fpath);
+    const type = await _f.getType(stat);
+
     if (!type || type === 'dir' || appConfig.trashDir(account) === fpath) {
       _err(res, '文件不存在')(req, fpath, 1);
       return;
     }
-
-    const stat = await _f.fsp.lstat(fpath);
 
     if (type === 'file') {
       if (file_history === 1) {
@@ -1729,20 +1725,7 @@ route.post('/download', async (req, res) => {
       return;
     }
 
-    let outputFilePath = _path.normalize(
-      targetPath,
-      _path.sanitizeFilename(_path.basename(url)[0])
-    );
-
-    // 已存在添加后缀
-    if (
-      (await _f.exists(outputFilePath)) ||
-      outputFilePath === appConfig.trashDir(account)
-    ) {
-      outputFilePath = await getUniqueFilename(outputFilePath);
-    }
-
-    const filename = _path.basename(outputFilePath)[0];
+    const filename = _path.sanitizeFilename(_path.basename(url)[0]);
 
     const controller = new AbortController();
     const signal = controller.signal;
@@ -1750,15 +1733,40 @@ route.post('/download', async (req, res) => {
 
     _success(res, 'ok', { key: taskKey });
 
+    const temPath = appConfig.temDir(
+      `${account}_${_crypto.getStringHash(url)}`
+    );
     try {
+      const stats = await _f.lstat(temPath);
+      let downloadedBytes = stats ? stats.size : 0;
+
+      const headers = {};
+      if (downloadedBytes > 0) {
+        headers.Range = `bytes=${downloadedBytes}-`;
+      }
+
       const response = await axios({
         method: 'get',
         url,
         responseType: 'stream',
         signal,
+        headers,
+        decompress: false, // 防止 gzip 会导致续传失败
+        validateStatus: (s) => s === 200 || s === 206,
       });
 
-      let downloadedBytes = 0;
+      // 判断是否支持续传（206）
+      const isResume = downloadedBytes > 0 && response.status === 206;
+
+      if (!isResume && downloadedBytes > 0) {
+        // 服务器不支持续传 → 重头下载
+        downloadedBytes = 0;
+      }
+
+      // 写入模式：续传 append / 覆盖 write
+      const writer = await _f.createWriteStream(temPath, {
+        flags: downloadedBytes > 0 ? 'a' : 'w',
+      });
 
       await _f.streamp.pipeline(
         response.data,
@@ -1772,10 +1780,21 @@ route.post('/download', async (req, res) => {
             callback(null, chunk);
           },
         }),
-        await _f.createWriteStream(outputFilePath),
+        writer,
         { signal }
       );
 
+      let outputFilePath = _path.normalize(targetPath, filename);
+
+      // 已存在添加后缀
+      if (
+        (await _f.exists(outputFilePath)) ||
+        outputFilePath === appConfig.trashDir(account)
+      ) {
+        outputFilePath = await getUniqueFilename(outputFilePath);
+      }
+
+      await _f.rename(temPath, outputFilePath);
       taskState.delete(taskKey);
       uLog(req, `离线下载文件: ${url}=>${outputFilePath}`);
       syncUpdateData(req, 'file');

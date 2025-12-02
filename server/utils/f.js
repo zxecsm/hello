@@ -95,6 +95,14 @@ async function readFile(path, options, defaultValue) {
   }
 }
 
+async function lstat(path) {
+  try {
+    return await fsp.lstat(path);
+  } catch {
+    return null;
+  }
+}
+
 // 读取目录
 async function readdir(path, ...arg) {
   try {
@@ -192,11 +200,8 @@ async function chown(
 }
 
 async function getType(stat) {
-  try {
-    if (typeof stat === 'string') stat = await fsp.lstat(stat);
-  } catch {
-    return '';
-  }
+  if (typeof stat === 'string') stat = await lstat(stat);
+  if (!stat) return '';
   if (stat.isFile()) return 'file';
   if (stat.isDirectory()) return 'dir';
   if (stat.isSymbolicLink()) return 'symlink';
@@ -253,7 +258,7 @@ async function del(path, { signal, progress } = {}) {
         stack.push(_path.normalize(currentPath, name));
       }
     } else {
-      const size = (await fsp.lstat(currentPath)).size;
+      const size = (await lstat(currentPath)).size;
       await fsp.rm(currentPath, { force: true });
       if (type === 'file') {
         progress?.({ count: 1, size });
@@ -307,7 +312,7 @@ async function isTextFile(path, length = 1000) {
 
 // 文件或文件夹是否存在
 async function exists(path) {
-  return (await getType(path)) !== '';
+  return (await lstat(path)) !== null;
 }
 
 // 重命名
@@ -365,7 +370,7 @@ async function readDirSize(path, { signal, progress } = {}) {
         stack.push(_path.normalize(currentPath, name));
       }
     } else if (type === 'file') {
-      const size = (await fsp.lstat(currentPath)).size;
+      const size = (await lstat(currentPath)).size;
       progress?.({ count: 1, size });
     }
   }
@@ -411,6 +416,7 @@ const _f = {
   del,
   mkdir,
   getType,
+  lstat,
   getFileTypeName,
   symlink,
   link,

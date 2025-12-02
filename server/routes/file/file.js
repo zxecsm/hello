@@ -80,7 +80,7 @@ export async function getAllFile(path) {
       const currentPath = stack.pop();
 
       try {
-        const s = await _f.fsp.lstat(currentPath);
+        const s = await _f.lstat(currentPath);
 
         if (s.isDirectory()) {
           const list = await _f.fsp.readdir(currentPath);
@@ -156,7 +156,7 @@ export async function readMenu(path) {
       try {
         const f = _path.normalize(path, name);
 
-        const s = await _f.fsp.lstat(f);
+        const s = await _f.lstat(f);
         const { mode, numericMode, uid, gid } = _f.getPermissions(s);
         const type = await _f.getType(s);
         const modeStr = `${mode} ${numericMode}`;

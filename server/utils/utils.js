@@ -62,9 +62,9 @@ export async function writelog(req, str, flag = appConfig.appName) {
     // console.log(str);
     await _f.appendFile(targetPath, str);
 
-    const s = await _f.fsp.lstat(targetPath);
+    const s = await _f.lstat(targetPath);
 
-    if (s.size > 9 * 1024 * 1024) {
+    if (s && s.size > 9 * 1024 * 1024) {
       await _f.rename(
         targetPath,
         appConfig.logDir(
