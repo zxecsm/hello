@@ -79,7 +79,7 @@ export default async function getFile(req, res, originalPath) {
     if (dir === 'upload') {
       let id = pArr[0];
       try {
-        id = V.parse(
+        id = await V.parse(
           id,
           V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
           'chat id'
@@ -134,7 +134,7 @@ export default async function getFile(req, res, originalPath) {
       } else {
         let sid = pArr[0];
         try {
-          sid = V.parse(
+          sid = await V.parse(
             sid,
             V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
             'song id'
@@ -157,7 +157,7 @@ export default async function getFile(req, res, originalPath) {
     } else if (dir === 'logo') {
       let acc = pArr[0];
       try {
-        acc = V.parse(
+        acc = await V.parse(
           acc,
           V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
           'logo account'
@@ -170,7 +170,7 @@ export default async function getFile(req, res, originalPath) {
     } else if (dir === 'pub') {
       let acc = pArr[0];
       try {
-        acc = V.parse(
+        acc = await V.parse(
           acc,
           V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
           'pub account'
