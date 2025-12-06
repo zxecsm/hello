@@ -1642,6 +1642,7 @@ route.post(
                 V.object({
                   name: V.string().min(1).notEmpty().max(fieldLength.filename),
                   path: V.string().min(1).notEmpty().max(fieldLength.url),
+                  type: V.string().trim().enum(['dir', 'file']),
                 })
               )
                 .min(1)
