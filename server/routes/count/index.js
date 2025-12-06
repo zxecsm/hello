@@ -8,16 +8,14 @@ import {
   _nologin,
   _err,
   _success,
-  validaString,
   paramErr,
   syncUpdateData,
   createPagingData,
-  _type,
   isValidDate,
   isurl,
-  validationValue,
   writelog,
   concurrencyTasks,
+  validate,
 } from '../../utils/utils.js';
 
 import {
@@ -29,6 +27,7 @@ import { fieldLength } from '../config.js';
 import { computerDay } from './count.js';
 import nanoid from '../../utils/nanoid.js';
 import appConfig from '../../data/config.js';
+import V from '../../utils/validRules.js';
 
 const route = express.Router();
 
@@ -145,235 +144,252 @@ timedTask.add(async () => {
 });
 
 // 倒计时列表
-route.get('/list', async (req, res) => {
-  try {
-    let { pageNo = 1, pageSize = 40 } = req.query;
-    pageNo = parseInt(pageNo);
-    pageSize = parseInt(pageSize);
+route.get(
+  '/list',
+  validate(
+    'query',
+    V.object({
+      pageNo: V.number().toInt().default(1).min(1),
+      pageSize: V.number()
+        .toInt()
+        .default(40)
+        .min(1)
+        .max(fieldLength.maxPagesize),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { pageNo, pageSize } = req._vdata;
 
-    if (
-      isNaN(pageNo) ||
-      isNaN(pageSize) ||
-      pageNo < 1 ||
-      pageSize < 1 ||
-      pageSize > fieldLength.maxPagesize
-    ) {
-      paramErr(res, req);
-      return;
-    }
+      const { account } = req._hello.userinfo;
 
-    const { account } = req._hello.userinfo;
+      const total = await db('count_down').where({ account }).count();
 
-    const total = await db('count_down').where({ account }).count();
+      const result = createPagingData(Array(total), pageSize, pageNo);
 
-    const result = createPagingData(Array(total), pageSize, pageNo);
+      const offset = (result.pageNo - 1) * pageSize;
 
-    const offset = (result.pageNo - 1) * pageSize;
+      let list = [],
+        expireCount = 0;
 
-    let list = [],
-      expireCount = 0;
+      if (total > 0) {
+        // 剩下不到两天的数量
+        expireCount = await db('count_down')
+          .where({
+            account,
+            state: 1,
+            end: { '<': Date.now() + 2 * 1000 * 60 * 60 * 24 },
+          })
+          .count();
 
-    if (total > 0) {
-      // 剩下不到两天的数量
-      expireCount = await db('count_down')
-        .where({
-          account,
-          state: 1,
-          end: { '<': Date.now() + 2 * 1000 * 60 * 60 * 24 },
-        })
-        .count();
+        list = (
+          await db('count_down')
+            .select('id,title,link,start,end,state,top')
+            .where({ account })
+            .orderBy('top', 'desc')
+            .orderBy('end', 'asc')
+            .page(pageSize, offset)
+            .find()
+        ).map((item) => {
+          const { start, end } = item;
+          return {
+            ...item,
+            ...computerDay(start, end),
+          };
+        });
+      }
 
-      list = (
-        await db('count_down')
-          .select('id,title,link,start,end,state,top')
-          .where({ account })
-          .orderBy('top', 'desc')
-          .orderBy('end', 'asc')
-          .page(pageSize, offset)
-          .find()
-      ).map((item) => {
-        const { start, end } = item;
-        return {
-          ...item,
-          ...computerDay(start, end),
-        };
+      _success(res, 'ok', {
+        ...result,
+        data: list,
+        expireCount,
       });
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    _success(res, 'ok', {
-      ...result,
-      data: list,
-      expireCount,
-    });
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 增加
-route.post('/add', async (req, res) => {
-  try {
-    let { title, start, end, link = '' } = req.body;
+route.post(
+  '/add',
+  validate(
+    'body',
+    V.object({
+      title: V.string().trim().min(1).max(fieldLength.title),
+      start: V.string().trim().custom(isValidDate, '必须 YYYY-MM-DD 格式'),
+      end: V.string().trim().custom(isValidDate, '必须 YYYY-MM-DD 格式'),
+      link: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(fieldLength.url)
+        .custom((v) => (v ? isurl(v) : true), 'url 格式错误'),
+    })
+  ),
+  async (req, res) => {
+    try {
+      let { title, start, end, link } = req._vdata;
 
-    if (
-      !validaString(title, 1, fieldLength.title) ||
-      !isValidDate(start) ||
-      !isValidDate(end) ||
-      (link && (!validaString(link, 1, fieldLength.url) || !isurl(link)))
-    ) {
-      paramErr(res, req);
-      return;
+      start = new Date(start + ' 00:00:00').getTime();
+      end = new Date(end + ' 00:00:00').getTime();
+
+      if (start >= end) {
+        paramErr(res, req);
+        return;
+      }
+
+      const { account } = req._hello.userinfo;
+
+      await db('count_down').insert({
+        id: nanoid(),
+        create_at: Date.now(),
+        account,
+        title,
+        start,
+        end,
+        link,
+      });
+
+      syncUpdateData(req, 'countlist');
+
+      _success(res, `添加倒计时成功`)(req, title, 1);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    start = new Date(start + ' 00:00:00').getTime();
-    end = new Date(end + ' 00:00:00').getTime();
-
-    if (start >= end) {
-      paramErr(res, req);
-      return;
-    }
-
-    const { account } = req._hello.userinfo;
-
-    await db('count_down').insert({
-      id: nanoid(),
-      create_at: Date.now(),
-      account,
-      title,
-      start,
-      end,
-      link,
-    });
-
-    syncUpdateData(req, 'countlist');
-
-    _success(res, `添加倒计时成功`)(req, title, 1);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 删除
-route.post('/delete', async (req, res) => {
-  try {
-    const { ids } = req.body;
+route.post(
+  '/delete',
+  validate(
+    'body',
+    V.object({
+      ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
+        .min(1)
+        .max(fieldLength.maxPagesize),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { ids } = req._vdata;
 
-    if (
-      !_type.isArray(ids) ||
-      ids.length === 0 ||
-      ids.length > fieldLength.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
-    ) {
-      paramErr(res, req);
-      return;
+      const { account } = req._hello.userinfo;
+
+      await db('count_down')
+        .where({ id: { in: ids }, account })
+        .delete();
+
+      syncUpdateData(req, 'countlist');
+
+      _success(res, `删除倒计时成功`)(req, ids.length, 1);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    const { account } = req._hello.userinfo;
-
-    await db('count_down')
-      .where({ id: { in: ids }, account })
-      .delete();
-
-    syncUpdateData(req, 'countlist');
-
-    _success(res, `删除倒计时成功`)(req, ids.length, 1);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 编辑
-route.post('/edit', async (req, res) => {
-  try {
-    let { id, title, start, end, link = '' } = req.body;
+route.post(
+  '/edit',
+  validate(
+    'body',
+    V.object({
+      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      title: V.string().trim().min(1).max(fieldLength.title),
+      start: V.string().trim().custom(isValidDate, '必须 YYYY-MM-DD 格式'),
+      end: V.string().trim().custom(isValidDate, '必须 YYYY-MM-DD 格式'),
+      link: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(fieldLength.url)
+        .custom((v) => (v ? isurl(v) : true), 'url 格式错误'),
+    })
+  ),
+  async (req, res) => {
+    try {
+      let { id, title, start, end, link } = req._vdata;
 
-    if (
-      !validaString(id, 1, fieldLength.id, 1) ||
-      !validaString(title, 1, fieldLength.title) ||
-      !isValidDate(start) ||
-      !isValidDate(end) ||
-      (link && (!validaString(link, 1, fieldLength.url) || !isurl(link)))
-    ) {
-      paramErr(res, req);
-      return;
+      start = new Date(start + ' 00:00:00').getTime();
+      end = new Date(end + ' 00:00:00').getTime();
+
+      if (start >= end) {
+        paramErr(res, req);
+        return;
+      }
+
+      const { account } = req._hello.userinfo;
+
+      await db('count_down').where({ id, account }).update({
+        title,
+        start,
+        end,
+        link,
+      });
+
+      syncUpdateData(req, 'countlist');
+
+      _success(res, '更新倒计时成功')(req, title, 1);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    start = new Date(start + ' 00:00:00').getTime();
-    end = new Date(end + ' 00:00:00').getTime();
-
-    if (start >= end) {
-      paramErr(res, req);
-      return;
-    }
-
-    const { account } = req._hello.userinfo;
-
-    await db('count_down').where({ id, account }).update({
-      title,
-      start,
-      end,
-      link,
-    });
-
-    syncUpdateData(req, 'countlist');
-
-    _success(res, '更新倒计时成功')(req, title, 1);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 置顶权重
-route.post('/top', async (req, res) => {
-  try {
-    let { id, top } = req.body;
-    top = parseInt(top);
+route.post(
+  '/top',
+  validate(
+    'body',
+    V.object({
+      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      top: V.number().toInt().min(0).max(fieldLength.top),
+    })
+  ),
+  async (req, res) => {
+    try {
+      let { id, top } = req._vdata;
 
-    if (
-      isNaN(top) ||
-      top < 0 ||
-      top > fieldLength.top ||
-      !validaString(id, 1, fieldLength.id, 1)
-    ) {
-      paramErr(res, req);
-      return;
+      const { account } = req._hello.userinfo;
+
+      await db('count_down').where({ id, account }).update({ top });
+
+      syncUpdateData(req, 'countlist');
+
+      _success(res, '修改倒计时权重成功')(req, `${id}-${top}`, 1);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    const { account } = req._hello.userinfo;
-
-    await db('count_down').where({ id, account }).update({ top });
-
-    syncUpdateData(req, 'countlist');
-
-    _success(res, '修改倒计时权重成功')(req, `${id}-${top}`, 1);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 状态
-route.post('/state', async (req, res) => {
-  try {
-    const { id, state } = req.body;
+route.post(
+  '/state',
+  validate(
+    'body',
+    V.object({
+      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      state: V.number().toInt().enum([0, 1]),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { id, state } = req._vdata;
 
-    if (
-      !validationValue(state, [1, 0]) ||
-      !validaString(id, 1, fieldLength.id, 1)
-    ) {
-      paramErr(res, req);
-      return;
+      const { account } = req._hello.userinfo;
+
+      await db('count_down').where({ id, account }).update({ state });
+
+      syncUpdateData(req, 'countlist');
+
+      _success(res, '修改倒计时状态成功')(req, `${id}-${state}`, 1);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    const { account } = req._hello.userinfo;
-
-    await db('count_down').where({ id, account }).update({ state });
-
-    syncUpdateData(req, 'countlist');
-
-    _success(res, '修改倒计时状态成功')(req, `${id}-${state}`, 1);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 export default route;

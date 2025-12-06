@@ -17,6 +17,7 @@ import _path from './path.js';
 import Lock from './lock.js';
 import nanoid from './nanoid.js';
 import _crypto from './crypto.js';
+import V from './validRules.js';
 
 // 获取模块目录
 export function getDirname(meta) {
@@ -101,16 +102,29 @@ export function errLog(req, err) {
 }
 
 // 参数错误
-export function paramErr(res, req) {
-  let param = '';
+export function paramErr(res, req, err = '', data = {}) {
+  let str = '';
+  try {
+    if (typeof data === 'string') {
+      str = JSON.stringify(req[data]);
+    } else {
+      str = JSON.stringify(data);
+    }
+  } catch {}
 
-  if (req._hello.method === 'get') {
-    param = JSON.stringify(req.query);
-  } else if (req._hello.method === 'post') {
-    param = JSON.stringify(req.body);
-  }
+  _err(res, '参数错误')(req, `${err}${str ? ` - ${str}` : ''}`, 1);
+}
 
-  _err(res, '参数错误')(req, param || '', 1);
+// 参数验证中间件
+export function validate(type, schema, path = '') {
+  return async (req, res, next) => {
+    try {
+      req._vdata = await V.parse(req[type], schema, path);
+      next();
+    } catch (error) {
+      paramErr(res, req, error, type);
+    }
+  };
 }
 
 // 验证颜色
@@ -595,49 +609,6 @@ export async function getSongInfo(path) {
 // 音乐文件
 export function isMusicFile(str) {
   return /\.(mp3)$/i.test(str);
-}
-
-// 验证值
-export function validationValue(target, arr) {
-  return arr.includes(target);
-}
-
-// 是否空格开头或结尾
-export function hasLeadingOrTrailingSpaces(str) {
-  return str.startsWith(' ') || str.endsWith(' ');
-}
-
-// 字符限制
-export function validaString(
-  target,
-  min = 0,
-  max = 0,
-  isAlphanumeric = false, // 由数字字母下划线组成
-  allowWhitespace = false // 允许空格
-) {
-  // 验证输入类型
-  if (
-    !_type.isString(target) ||
-    !_type.isNumber(min) ||
-    !_type.isNumber(max) ||
-    (!allowWhitespace && hasLeadingOrTrailingSpaces(target))
-  )
-    return false;
-
-  const length = target.length;
-
-  // 检查最小长度限制
-  if (length < min) return false;
-
-  // 检查最大长度限制
-  if (max > 0 && length > max) return false;
-
-  // 如果需要，检查是否为字母数字_
-  if (isAlphanumeric && length > 0) {
-    return /^[\w]+$/.test(target);
-  }
-
-  return true;
 }
 
 // 数据类型判断

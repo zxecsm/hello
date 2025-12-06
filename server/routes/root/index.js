@@ -14,13 +14,11 @@ import timedTask from '../../utils/timedTask.js';
 import {
   _success,
   _err,
-  validaString,
-  validationValue,
   paramErr,
   createPagingData,
   isEmail,
   concurrencyTasks,
-  isurl,
+  validate,
 } from '../../utils/utils.js';
 
 import { becomeFriends, cleanUpload } from '../chat/chat.js';
@@ -40,6 +38,7 @@ import { cleanFavicon, cleanSiteInfo } from '../bmk/bmk.js';
 import _crypto from '../../utils/crypto.js';
 import { getSystemUsage } from '../../utils/sys.js';
 import nanoid from '../../utils/nanoid.js';
+import V from '../../utils/validRules.js';
 
 const route = express.Router();
 
@@ -53,170 +52,194 @@ route.use((req, res, next) => {
 });
 
 // 配置邮箱
-route.post('/email', async (req, res) => {
-  try {
-    let { user = '', pass = '', host = '', secure, port, state } = req.body;
-    port = parseInt(port) || 465;
+route.post(
+  '/email',
+  validate(
+    'body',
+    V.object({
+      state: V.number().toInt().enum([0, 1]),
+      user: V.string().trim().default('').allowEmpty().max(fieldLength.email),
+      pass: V.string().trim().default('').allowEmpty().max(100),
+      host: V.string().trim().default('').allowEmpty().max(fieldLength.email),
+      secure: V.number().toInt().enum([0, 1]),
+      port: V.number().toInt().default(465).min(0),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { user, pass, host, secure, port, state } = req._vdata;
+      if (state === 1 && !isEmail(user)) {
+        paramErr(res, req, 'user 必须为邮箱格式', 'body');
+        return;
+      }
+      if (state === 1 && !host) {
+        paramErr(res, req, 'host 不能为空', 'body');
+        return;
+      }
 
-    if (
-      !validationValue(state, [1, 0]) ||
-      !validationValue(secure, [1, 0]) ||
-      port < 0 ||
-      !validaString(user, 0, fieldLength.email) ||
-      !validaString(host, 0, fieldLength.email) ||
-      !validaString(pass, 0, 100) ||
-      (state === 1 && !isEmail(user)) ||
-      (state === 1 && !validaString(host, 1, fieldLength.email))
-    ) {
-      paramErr(res, req);
-      return;
+      _d.email = {
+        user,
+        pass,
+        host,
+        secure: secure === 1 ? true : false,
+        port,
+        state: state === 1 ? true : false,
+      };
+
+      _success(res, '更新邮箱配置成功')(req);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    _d.email = {
-      user,
-      pass,
-      host,
-      secure: secure === 1 ? true : false,
-      port,
-      state: state === 1 ? true : false,
-    };
-
-    _success(res, '更新邮箱配置成功')(req);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 获取用户列表
-route.get('/user-list', async (req, res) => {
-  try {
-    let { pageNo = 1, pageSize = 10 } = req.query;
-    pageNo = parseInt(pageNo);
-    pageSize = parseInt(pageSize);
+route.get(
+  '/user-list',
+  validate(
+    'query',
+    V.object({
+      pageNo: V.number().toInt().min(1).default(1),
+      pageSize: V.number()
+        .toInt()
+        .min(1)
+        .max(fieldLength.userPageSize)
+        .default(10),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { pageNo, pageSize } = req._vdata;
 
-    if (
-      isNaN(pageNo) ||
-      isNaN(pageSize) ||
-      pageNo < 1 ||
-      pageSize < 1 ||
-      pageSize > fieldLength.userPageSize
-    ) {
-      paramErr(res, req);
-      return;
+      const total = await db('user')
+        .where({ account: { '!=': appConfig.notifyAccount } })
+        .count();
+
+      const result = createPagingData(Array(total), pageSize, pageNo);
+
+      const offset = (result.pageNo - 1) * pageSize;
+
+      let list = await db('user')
+        .select('account,username,update_at,email,state,hide')
+        .where({
+          account: { '!=': appConfig.notifyAccount },
+        })
+        .orderBy('update_at', 'desc')
+        .page(pageSize, offset)
+        .find();
+
+      const cons = _connect.getConnects();
+
+      list = list.map((item) => {
+        const con = cons[item.account];
+        return {
+          ...item,
+          os: con ? con.onlines.map((item) => `${item.os}(${item.ip})`) : [],
+          online: Date.now() - item.update_at >= 1000 * 30 ? 0 : 1,
+        };
+      });
+
+      _success(res, 'ok', {
+        ...result,
+        registerState: _d.registerState,
+        trashState: _d.trashState,
+        cacheExp: _d.cacheExp,
+        pubApi: _d.pubApi,
+        email: _d.email,
+        faviconSpareApi: _d.faviconSpareApi,
+        data: list,
+      });
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    const total = await db('user')
-      .where({ account: { '!=': appConfig.notifyAccount } })
-      .count();
-
-    const result = createPagingData(Array(total), pageSize, pageNo);
-
-    const offset = (result.pageNo - 1) * pageSize;
-
-    let list = await db('user')
-      .select('account,username,update_at,email,state,hide')
-      .where({
-        account: { '!=': appConfig.notifyAccount },
-      })
-      .orderBy('update_at', 'desc')
-      .page(pageSize, offset)
-      .find();
-
-    const cons = _connect.getConnects();
-
-    list = list.map((item) => {
-      const con = cons[item.account];
-      return {
-        ...item,
-        os: con ? con.onlines.map((item) => `${item.os}(${item.ip})`) : [],
-        online: Date.now() - item.update_at >= 1000 * 30 ? 0 : 1,
-      };
-    });
-
-    _success(res, 'ok', {
-      ...result,
-      registerState: _d.registerState,
-      trashState: _d.trashState,
-      cacheExp: _d.cacheExp,
-      pubApi: _d.pubApi,
-      email: _d.email,
-      faviconSpareApi: _d.faviconSpareApi,
-      data: list,
-    });
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 备用图标api
-route.post('/favicon-spare-api', async (req, res) => {
-  try {
-    const { link = '' } = req.body;
+route.post(
+  '/favicon-spare-api',
+  validate(
+    'body',
+    V.object({
+      link: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(fieldLength.url)
+        .httpUrl(),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { link } = req._vdata;
 
-    if (
-      !validaString(link, 0, fieldLength.url) ||
-      (link !== '' && !isurl(link))
-    ) {
-      paramErr(res, req);
-      return;
+      _d.faviconSpareApi = link;
+
+      _success(res, '设置图标备用api接口成功')(req, link, 1);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    _d.faviconSpareApi = link;
-
-    _success(res, '设置图标备用api接口成功')(req, link, 1);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 账号状态
-route.post('/account-state', async (req, res) => {
-  try {
-    const { account, state = 1 } = req.body;
+route.post(
+  '/account-state',
+  validate(
+    'body',
+    V.object({
+      account: V.string()
+        .trim()
+        .min(1)
+        .max(fieldLength.id)
+        .alphanumeric()
+        .notEnum([appConfig.notifyAccount, appConfig.adminAccount]),
+      state: V.number().toInt().default(1).enum([1, 0]),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { account, state } = req._vdata;
 
-    if (
-      !validaString(account, 1, fieldLength.id, 1) ||
-      !validationValue(state, [1, 0]) ||
-      account === appConfig.notifyAccount ||
-      account === appConfig.adminAccount
-    ) {
-      paramErr(res, req);
-      return;
+      await db('user').where({ account }).update({ state });
+
+      if (state === 1) {
+        _success(res, '激活账号成功')(req, account, 1);
+      } else {
+        _success(res, '关闭账号成功')(req, account, 1);
+      }
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    await db('user').where({ account }).update({ state });
-
-    if (state === 1) {
-      _success(res, '激活账号成功')(req, account, 1);
-    } else {
-      _success(res, '关闭账号成功')(req, account, 1);
-    }
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 刪除账号
-route.post('/delete-account', async (req, res) => {
-  try {
-    const { account } = req.body;
+route.post(
+  '/delete-account',
+  validate(
+    'body',
+    V.object({
+      account: V.string()
+        .trim()
+        .min(1)
+        .max(fieldLength.id)
+        .alphanumeric()
+        .notEnum([appConfig.notifyAccount, appConfig.adminAccount]),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { account } = req._vdata;
 
-    if (
-      !validaString(account, 1, fieldLength.id, 1) ||
-      account === appConfig.adminAccount ||
-      account === appConfig.notifyAccount
-    ) {
-      paramErr(res, req);
-      return;
+      await deleteUser(account); // 删除账号数据
+
+      _success(res, '销毁账号成功')(req, account, 1);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    await deleteUser(account); // 删除账号数据
-
-    _success(res, '销毁账号成功')(req, account, 1);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 清理歌曲文件
 route.get('/clean-music-file', async (req, res) => {
@@ -297,26 +320,31 @@ route.get('/clean-pic-file', async (req, res) => {
 });
 
 // 清理缩略图文件
-route.get('/clean-thumb-file', async (req, res) => {
-  try {
-    const { type } = req.query;
+route.get(
+  '/clean-thumb-file',
+  validate(
+    'query',
+    V.object({
+      type: V.string()
+        .trim()
+        .enum(['pic', 'music', 'bg', 'upload', 'all', 'file']),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { type } = req._vdata;
 
-    if (
-      !validationValue(type, ['pic', 'music', 'bg', 'upload', 'all', 'file'])
-    ) {
-      paramErr(res, req);
+      const delP =
+        type === 'all' ? appConfig.thumbDir() : appConfig.thumbDir(type);
+
+      await _delDir(delP);
+
+      _success(res, '清理缩略图文件成功')(req, type, 1);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    const delP =
-      type === 'all' ? appConfig.thumbDir() : appConfig.thumbDir(type);
-
-    await _delDir(delP);
-
-    _success(res, '清理缩略图文件成功')(req, type, 1);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 设置注册状态
 route.post('/register-state', async (req, res) => {
@@ -345,26 +373,30 @@ route.post('/update-tokenkey', async (req, res) => {
 });
 
 // 读取日志
-route.get('/log', async (req, res) => {
-  try {
-    const { name } = req.query;
+route.get(
+  '/log',
+  validate(
+    'query',
+    V.object({
+      name: V.string().notEmpty().min(1).max(fieldLength.filename),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { name } = req._vdata;
 
-    if (!validaString(name, 1, fieldLength.filename)) {
-      paramErr(res, req);
-      return;
+      const log = (await _f.readFile(appConfig.logDir(name), null, ''))
+        .toString()
+        .split('\n')
+        .filter(Boolean)
+        .reverse();
+
+      _success(res, 'ok', log);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    const log = (await _f.readFile(appConfig.logDir(name), null, ''))
-      .toString()
-      .split('\n')
-      .filter(Boolean)
-      .reverse();
-
-    _success(res, 'ok', log);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 日志文件列表
 route.get('/log-list', async (req, res) => {
@@ -381,25 +413,30 @@ route.get('/log-list', async (req, res) => {
 });
 
 // 删除日志
-route.post('/delete-log', async (req, res) => {
-  try {
-    const { name } = req.body;
-    if (!validaString(name, 1, fieldLength.filename)) {
-      paramErr(res, req);
-      return;
-    }
+route.post(
+  '/delete-log',
+  validate(
+    'body',
+    V.object({
+      name: V.string().notEmpty().min(1).max(fieldLength.filename),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { name } = req._vdata;
 
-    if (name === 'all') {
-      await _delDir(appConfig.logDir());
-    } else {
-      await _delDir(appConfig.logDir(name));
-    }
+      if (name === 'all') {
+        await _delDir(appConfig.logDir());
+      } else {
+        await _delDir(appConfig.logDir(name));
+      }
 
-    _success(res, '删除日志成功')(req, name, 1);
-  } catch (error) {
-    _err(res)(req, error);
+      _success(res, '删除日志成功')(req, name, 1);
+    } catch (error) {
+      _err(res)(req, error);
+    }
   }
-});
+);
 
 // 回收站状态
 route.post('/trash-state', async (req, res) => {
@@ -417,83 +454,78 @@ route.post('/trash-state', async (req, res) => {
 });
 
 // 公开api状态
-route.post('/pub-api-state', async (req, res) => {
-  try {
-    const { randomBgApi, siteInfoApi, faviconApi, echoApi } = req.body;
-    if (
-      !validationValue(randomBgApi, [0, 1]) ||
-      !validationValue(siteInfoApi, [0, 1]) ||
-      !validationValue(faviconApi, [0, 1]) ||
-      !validationValue(echoApi, [0, 1])
-    ) {
-      paramErr(res, req);
-      return;
+route.post(
+  '/pub-api-state',
+  validate(
+    'body',
+    V.object({
+      randomBgApi: V.number().toInt().enum([0, 1]),
+      siteInfoApi: V.number().toInt().enum([0, 1]),
+      faviconApi: V.number().toInt().enum([0, 1]),
+      echoApi: V.number().toInt().enum([0, 1]),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { randomBgApi, siteInfoApi, faviconApi, echoApi } = req._vdata;
+
+      _d.pubApi = {
+        randomBgApi: !!randomBgApi,
+        siteInfoApi: !!siteInfoApi,
+        faviconApi: !!faviconApi,
+        echoApi: !!echoApi,
+      };
+
+      _success(res, `修改接口状态成功`, _d.pubApi)(req);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    _d.pubApi = {
-      randomBgApi: !!randomBgApi,
-      siteInfoApi: !!siteInfoApi,
-      faviconApi: !!faviconApi,
-      echoApi: !!echoApi,
-    };
-
-    _success(res, `修改接口状态成功`, _d.pubApi)(req);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 文件缓存时间
-route.post('/change-cache-time', async (req, res) => {
-  try {
-    let { uploadSaveDay, faviconCache, siteInfoCache } = req.body;
+route.post(
+  '/change-cache-time',
+  validate(
+    'body',
+    V.object({
+      uploadSaveDay: V.number().toInt().min(0).max(fieldLength.expTime),
+      faviconCache: V.number().toInt().min(0).max(fieldLength.expTime),
+      siteInfoCache: V.number().toInt().min(0).max(fieldLength.expTime),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { uploadSaveDay, faviconCache, siteInfoCache } = req._vdata;
 
-    uploadSaveDay = parseInt(uploadSaveDay);
-    faviconCache = parseInt(faviconCache);
-    siteInfoCache = parseInt(siteInfoCache);
+      const uploadSaveDayIschange = _d.cacheExp.uploadSaveDay !== uploadSaveDay;
+      const faviconCacheIschange = _d.cacheExp.faviconCache !== faviconCache;
+      const siteInfoCacheIschange = _d.cacheExp.siteInfoCache !== siteInfoCache;
 
-    if (
-      isNaN(uploadSaveDay) ||
-      uploadSaveDay < 0 ||
-      uploadSaveDay > fieldLength.expTime ||
-      isNaN(faviconCache) ||
-      faviconCache < 0 ||
-      faviconCache > fieldLength.expTime ||
-      isNaN(siteInfoCache) ||
-      siteInfoCache < 0 ||
-      siteInfoCache > fieldLength.expTime
-    ) {
-      paramErr(res, req);
-      return;
+      _d.cacheExp = {
+        uploadSaveDay,
+        faviconCache,
+        siteInfoCache,
+      };
+
+      if (uploadSaveDayIschange) {
+        await cleanUpload(req);
+      }
+
+      if (faviconCacheIschange) {
+        await cleanFavicon(req);
+      }
+
+      if (siteInfoCacheIschange) {
+        await cleanSiteInfo(req);
+      }
+
+      _success(res, `修改文件缓存过期时间成功`, _d.cacheExp)(req);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    const uploadSaveDayIschange = _d.cacheExp.uploadSaveDay !== uploadSaveDay;
-    const faviconCacheIschange = _d.cacheExp.faviconCache !== faviconCache;
-    const siteInfoCacheIschange = _d.cacheExp.siteInfoCache !== siteInfoCache;
-
-    _d.cacheExp = {
-      uploadSaveDay,
-      faviconCache,
-      siteInfoCache,
-    };
-
-    if (uploadSaveDayIschange) {
-      await cleanUpload(req);
-    }
-
-    if (faviconCacheIschange) {
-      await cleanFavicon(req);
-    }
-
-    if (siteInfoCacheIschange) {
-      await cleanSiteInfo(req);
-    }
-
-    _success(res, `修改文件缓存过期时间成功`, _d.cacheExp)(req);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 清理数据库
 route.post('/clean-database', async (req, res) => {
@@ -506,153 +538,178 @@ route.post('/clean-database', async (req, res) => {
 });
 
 // 自定义代码
-route.post('/custom-code', async (req, res) => {
-  try {
-    const { body = '', head = '' } = req.body;
+route.post(
+  '/custom-code',
+  validate(
+    'body',
+    V.object({
+      body: V.string()
+        .default('')
+        .allowEmpty()
+        .custom(
+          (v) => _f.getTextSize(v) <= fieldLength.customCodeSize,
+          `文本内容不能超过: ${fieldLength.customCodeSize} 字节`
+        ),
+      head: V.string()
+        .default('')
+        .allowEmpty()
+        .custom(
+          (v) => _f.getTextSize(v) <= fieldLength.customCodeSize,
+          `文本内容不能超过: ${fieldLength.customCodeSize} 字节`
+        ),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { body, head } = req._vdata;
 
-    if (
-      !validaString(body, 0, 0, 0, 1) ||
-      !validaString(head, 0, 0, 0, 1) ||
-      _f.getTextSize(body) > fieldLength.customCodeSize ||
-      _f.getTextSize(head) > fieldLength.customCodeSize
-    ) {
-      paramErr(res, req);
-      return;
+      await _f.writeFile(appConfig.customDir('custom_head.html'), head);
+      await _f.writeFile(appConfig.customDir('custom_body.html'), body);
+
+      _success(res, '添加自定义代码成功')(req);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    await _f.writeFile(appConfig.customDir('custom_head.html'), head);
-    await _f.writeFile(appConfig.customDir('custom_body.html'), body);
-
-    _success(res, '添加自定义代码成功')(req);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // tipsFlag
-route.post('/tips', async (req, res) => {
-  try {
-    const { flag } = req.body;
+route.post(
+  '/tips',
+  validate(
+    'bosy',
+    V.object({
+      flag: V.string().trim().enum(['close', 'update']),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { flag } = req._vdata;
 
-    if (!validationValue(flag, ['close', 'update'])) {
-      paramErr(res, req);
-      return;
-    }
+      if (flag === 'close') {
+        _d.tipsFlag = 0;
+      } else if (flag === 'update') {
+        _d.tipsFlag = nanoid();
+      }
 
-    if (flag === 'close') {
-      _d.tipsFlag = 0;
-    } else if (flag === 'update') {
-      _d.tipsFlag = nanoid();
-    }
+      const temId = nanoid();
 
-    const temId = nanoid();
-
-    Object.keys(_connect.getConnects()).forEach((key) => {
-      _connect.send(key, temId, {
-        type: 'updatedata',
-        data: {
-          flag: 'tips',
-        },
+      Object.keys(_connect.getConnects()).forEach((key) => {
+        _connect.send(key, temId, {
+          type: 'updatedata',
+          data: {
+            flag: 'tips',
+          },
+        });
       });
-    });
 
-    _success(res, '修改tips状态成功')(req, _d.tipsFlag, 1);
-  } catch (error) {
-    _err(res)(req, error);
+      _success(res, '修改tips状态成功')(req, _d.tipsFlag, 1);
+    } catch (error) {
+      _err(res)(req, error);
+    }
   }
-});
+);
 
 // 测试邮箱
-route.post('/test-email', async (req, res) => {
-  try {
-    const { email } = req.body;
+route.post(
+  '/test-email',
+  validate(
+    'body',
+    V.object({
+      email: V.string().trim().min(1).max(fieldLength.email).email(),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { email } = req._vdata;
 
-    if (!validaString(email, 1, fieldLength.email) || !isEmail(email)) {
-      paramErr(res, req);
-      return;
+      if (!_d.email.state) {
+        _err(res, '未开启邮箱验证');
+        return;
+      }
+
+      await mailer.sendMail(email, 'Hello账号验证邮件', '测试邮件');
+      _success(res, '测试邮件发送成功')(req, email, 1);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    if (!_d.email.state) {
-      _err(res, '未开启邮箱验证');
-      return;
-    }
-
-    await mailer.sendMail(email, 'Hello账号验证邮件', '测试邮件');
-    _success(res, '测试邮件发送成功')(req, email, 1);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 测试两步验证
-route.post('/test-tfa', async (req, res) => {
-  try {
-    const { token } = req.body;
-    if (!validaString(token, 6, 6, 1)) {
-      paramErr(res, req);
-      return;
-    }
+route.post(
+  '/test-tfa',
+  validate(
+    'body',
+    V.object({ token: V.string().trim().min(6).max(6).alphanumeric() })
+  ),
+  async (req, res) => {
+    try {
+      const { token } = req._vdata;
 
-    const verify = req._hello.userinfo.verify;
+      const verify = req._hello.userinfo.verify;
 
-    if (!verify) {
-      _err(res, '未开启两步验证')(req);
-    } else if (_2fa.verify(verify, token)) {
-      _success(res, '验证码正确')(req);
-    } else {
-      _err(res, '验证码错误')(req);
+      if (!verify) {
+        _err(res, '未开启两步验证')(req);
+      } else if (_2fa.verify(verify, token)) {
+        _success(res, '验证码正确')(req);
+      } else {
+        _err(res, '验证码错误')(req);
+      }
+    } catch (error) {
+      _err(res)(req, error);
     }
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 创建帐号
-route.post('/create-account', async (req, res) => {
-  try {
-    const { username, password } = req.body;
+route.post(
+  '/create-account',
+  validate(
+    'body',
+    V.object({
+      username: V.string().trim().min(1).max(fieldLength.username),
+      password: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { username, password } = req._vdata;
 
-    if (
-      !validaString(username, 1, fieldLength.username) ||
-      !validaString(password, 1, fieldLength.id, 1)
-    ) {
-      paramErr(res, req);
-      return;
+      const userInfo = await db('user')
+        .select('account')
+        .where({ username })
+        .findOne();
+      if (userInfo) {
+        _err(res, '用户名已注册')(req, username, 1);
+        return;
+      }
+
+      // 写入用户数据
+      const account = nanoid();
+
+      await db('user').insert({
+        create_at: Date.now(),
+        update_at: 0,
+        account,
+        username,
+        chat_id: nanoid(),
+        password: await _crypto.hashPassword(password),
+      });
+
+      await becomeFriends(account, appConfig.chatRoomAccount);
+      await becomeFriends(account, appConfig.notifyAccount);
+
+      _success(res, '创建账号成功', { account, username })(
+        req,
+        `${username}-${account}`,
+        1
+      );
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    const userInfo = await db('user')
-      .select('account')
-      .where({ username })
-      .findOne();
-    if (userInfo) {
-      _err(res, '用户名已注册')(req, username, 1);
-      return;
-    }
-
-    // 写入用户数据
-    const account = nanoid();
-
-    await db('user').insert({
-      create_at: Date.now(),
-      update_at: 0,
-      account,
-      username,
-      chat_id: nanoid(),
-      password: await _crypto.hashPassword(password),
-    });
-
-    await becomeFriends(account, appConfig.chatRoomAccount);
-    await becomeFriends(account, appConfig.notifyAccount);
-
-    _success(res, '创建账号成功', { account, username })(
-      req,
-      `${username}-${account}`,
-      1
-    );
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 系统状态
 route.get('/sys-status', async (req, res) => {

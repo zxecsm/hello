@@ -4,7 +4,6 @@ import {
   _err,
   _nologin,
   isImgFile,
-  validaString,
   paramErr,
   errLog,
 } from '../../utils/utils.js';
@@ -18,19 +17,30 @@ import { validShareState } from '../user/user.js';
 import { fieldLength } from '../config.js';
 import _path from '../../utils/path.js';
 import jwt from '../../utils/jwt.js';
+import V from '../../utils/validRules.js';
 
-export default async function getFile(req, res, p) {
+export default async function getFile(req, res, originalPath) {
   try {
-    const { t = '', token = '' } = req.query;
-
-    if (
-      !validaString(t, 0, 1, 1) ||
-      !validaString(token, 0, fieldLength.url) ||
-      !validaString(p, 1, fieldLength.url)
-    ) {
-      paramErr(res, req);
+    const params = { ...req.query, p: originalPath };
+    try {
+      req._vdata = await V.parse(
+        params,
+        V.object({
+          t: V.string().trim().default('').allowEmpty().max(1).alphanumeric(),
+          token: V.string()
+            .trim()
+            .default('')
+            .allowEmpty()
+            .max(fieldLength.url),
+          p: V.string().notEmpty().min(1).max(fieldLength.url),
+        })
+      );
+    } catch (error) {
+      paramErr(res, req, error, params);
       return;
     }
+
+    let { t, token, p } = req._vdata;
 
     let { account } = req._hello.userinfo;
 
@@ -67,9 +77,15 @@ export default async function getFile(req, res, p) {
     let path = '';
 
     if (dir === 'upload') {
-      const id = pArr[0];
-      if (!validaString(id, 1, fieldLength.id, 1)) {
-        paramErr(res, req);
+      let id = pArr[0];
+      try {
+        id = V.parse(
+          id,
+          V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+          'chat id'
+        );
+      } catch (error) {
+        paramErr(res, req, error, { id });
         return;
       }
 
@@ -116,9 +132,15 @@ export default async function getFile(req, res, p) {
       if (account) {
         path = appConfig.musicDir(pArr.slice(1).join('/'));
       } else {
-        const sid = pArr[0];
-        if (!validaString(sid, 1, fieldLength.id, 1)) {
-          paramErr(res, req);
+        let sid = pArr[0];
+        try {
+          sid = V.parse(
+            sid,
+            V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+            'song id'
+          );
+        } catch (error) {
+          paramErr(res, req, error, { id: sid });
           return;
         }
         const share = await validShareState(token, 'music');
@@ -133,16 +155,28 @@ export default async function getFile(req, res, p) {
         }
       }
     } else if (dir === 'logo') {
-      const acc = pArr[0];
-      if (!validaString(acc, 1, fieldLength.id, 1)) {
-        paramErr(res, req);
+      let acc = pArr[0];
+      try {
+        acc = V.parse(
+          acc,
+          V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+          'logo account'
+        );
+      } catch (error) {
+        paramErr(res, req, error, { account: acc });
         return;
       }
       path = appConfig.logoDir(acc, pArr.slice(1).join('/'));
     } else if (dir === 'pub') {
-      const acc = pArr[0];
-      if (!validaString(acc, 1, fieldLength.id, 1)) {
-        paramErr(res, req);
+      let acc = pArr[0];
+      try {
+        acc = V.parse(
+          acc,
+          V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+          'pub account'
+        );
+      } catch (error) {
+        paramErr(res, req, error, { account: acc });
         return;
       }
       path = appConfig.pubDir(acc, pArr.slice(1).join('/'));

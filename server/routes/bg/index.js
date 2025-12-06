@@ -15,15 +15,12 @@ import {
   _err,
   receiveFiles,
   isImgFile,
-  validationValue,
-  _type,
-  validaString,
-  paramErr,
   getTimePath,
   syncUpdateData,
   concurrencyTasks,
   createPagingData,
   uLog,
+  validate,
 } from '../../utils/utils.js';
 
 import { _delDir } from '../file/file.js';
@@ -35,43 +32,49 @@ import { fieldLength } from '../config.js';
 import _path from '../../utils/path.js';
 import _connect from '../../utils/connect.js';
 import nanoid from '../../utils/nanoid.js';
+import V from '../../utils/validRules.js';
 
 const route = express.Router();
 
 // 获取随机一张壁纸
-route.get('/r/:type', async (req, res) => {
-  try {
-    const { type } = req.params;
-    if (!validationValue(type, ['d', 'm'])) {
-      paramErr(res, req);
-      return;
+route.get(
+  '/r/:type',
+  validate(
+    'params',
+    V.object({
+      type: V.string().trim().enum(['d', 'm']),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { type } = req._vdata;
+
+      // 检查壁纸接口是否开启
+      if (!_d.pubApi.randomBgApi) {
+        return _err(res, '接口未开放')(req);
+      }
+
+      // 从数据库中随机选择一条数据
+      const bgData = await getRandomBg(type === 'd' ? 'bg' : 'bgxs', 'url');
+
+      // 如果没有数据，返回错误
+      if (!bgData) {
+        return _err(res, '壁纸库为空')(req);
+      }
+
+      // 获取壁纸 URL 并返回
+      const url = appConfig.bgDir(bgData.url);
+
+      if (await _f.exists(url)) {
+        res.sendFile(url, { dotfiles: 'allow' });
+      } else {
+        _err(res, '获取壁纸失败')(req, `${url} 不存在`, 1);
+      }
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    // 检查壁纸接口是否开启
-    if (!_d.pubApi.randomBgApi) {
-      return _err(res, '接口未开放')(req);
-    }
-
-    // 从数据库中随机选择一条数据
-    const bgData = await getRandomBg(type === 'd' ? 'bg' : 'bgxs', 'url');
-
-    // 如果没有数据，返回错误
-    if (!bgData) {
-      return _err(res, '壁纸库为空')(req);
-    }
-
-    // 获取壁纸 URL 并返回
-    const url = appConfig.bgDir(bgData.url);
-
-    if (await _f.exists(url)) {
-      res.sendFile(url, { dotfiles: 'allow' });
-    } else {
-      _err(res, '获取壁纸失败')(req, url, 1);
-    }
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 验证登录态
 route.use((req, res, next) => {
@@ -106,214 +109,235 @@ timedTask.add(async (flag) => {
 });
 
 // 随机壁纸
-route.get('/random', async (req, res) => {
-  try {
-    const { type } = req.query;
+route.get(
+  '/random',
+  validate('query', V.object({ type: V.string().trim().enum(['bg', 'bgxs']) })),
+  async (req, res) => {
+    try {
+      const { type } = req._vdata;
 
-    if (!validationValue(type, ['bg', 'bgxs'])) {
-      paramErr(res, req);
-      return;
-    }
+      const bgData = await getRandomBg(type, 'url,id,type');
 
-    const bgData = await getRandomBg(type, 'url,id,type');
-
-    if (!bgData) {
-      _err(res, '壁纸库为空，请先上传壁纸')(req);
-      return;
-    }
-
-    _success(res, 'ok', bgData);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 更换壁纸
-route.post('/change', async (req, res) => {
-  try {
-    const { type, id } = req.body;
-
-    if (
-      !validationValue(type, ['bg', 'bgxs']) ||
-      !validaString(id, 1, fieldLength.id, 1)
-    ) {
-      paramErr(res, req);
-      return;
-    }
-
-    const { account } = req._hello.userinfo;
-    await db('user')
-      .where({ account, state: 1 })
-      .update({ [type]: id });
-
-    syncUpdateData(req, 'userinfo');
-
-    _success(res, '更换壁纸成功')(req, `${type}-${id}`, 1);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 壁纸列表
-route.get('/list', async (req, res) => {
-  try {
-    let { type, pageNo = 1, pageSize = 40 } = req.query;
-    pageNo = parseInt(pageNo);
-    pageSize = parseInt(pageSize);
-
-    if (
-      !validationValue(type, ['bg', 'bgxs']) ||
-      isNaN(pageNo) ||
-      isNaN(pageSize) ||
-      pageNo < 1 ||
-      pageSize < 1 ||
-      pageSize > fieldLength.bgPageSize
-    ) {
-      paramErr(res, req);
-      return;
-    }
-    const bgdb = db('bg').where({ type });
-
-    const total = await bgdb.count();
-
-    const result = createPagingData(Array(total), pageSize, pageNo);
-
-    const offset = (result.pageNo - 1) * pageSize;
-
-    let data = [];
-    if (total > 0) {
-      data = await bgdb
-        .select('id,url,type')
-        .page(pageSize, offset)
-        .orderBy('serial', 'DESC')
-        .find();
-    }
-
-    _success(res, 'ok', {
-      ...result,
-      data,
-    });
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 删除壁纸
-route.post('/delete', async (req, res) => {
-  try {
-    const ids = req.body;
-
-    // 验证管理员
-    if (!req._hello.isRoot) {
-      _err(res, '无权操作')(req);
-      return;
-    }
-
-    if (
-      !_type.isArray(ids) ||
-      ids.length === 0 ||
-      ids.length > fieldLength.bgPageSize ||
-      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
-    ) {
-      paramErr(res, req);
-      return;
-    }
-
-    const bgDb = db('bg')
-      .select('url')
-      .where({ id: { in: ids } });
-
-    const dels = await bgDb.find();
-
-    await bgDb.delete();
-
-    await concurrencyTasks(dels, 5, async (del) => {
-      const { url } = del;
-      await _delDir(appConfig.bgDir(url));
-      await uLog(req, `删除壁纸(${url})`);
-    });
-
-    syncUpdateData(req, 'bg');
-
-    _success(res, '删除壁纸成功')(req, ids.length, 1);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 上传
-route.post('/up', async (req, res) => {
-  try {
-    let { HASH, name } = req.query;
-
-    if (!validaString(HASH, 1, fieldLength.id, 1) || !isImgFile(name)) {
-      paramErr(res, req);
-      return;
-    }
-
-    name = _path.sanitizeFilename(name);
-    const bg = await db('bg').select('url').where({ hash: HASH }).findOne();
-    if (bg) {
-      _err(res, '壁纸已存在')(req, `${name}-${HASH}`, 1);
-      return;
-    }
-
-    const [title, , suffix] = _path.extname(name);
-    const create_at = Date.now();
-    const timePath = getTimePath(create_at);
-
-    const tDir = appConfig.bgDir(timePath);
-    const tName = `${HASH}.${suffix}`;
-
-    await receiveFiles(req, tDir, tName, fieldLength.maxBgSize, HASH);
-
-    // 获取壁纸尺寸进行分类
-    const { width, height } = await getImgInfo(_path.normalize(tDir, tName));
-    const type = width < height ? 'bgxs' : 'bg';
-
-    const url = _path.normalize(timePath, tName);
-
-    await db('bg').insert({
-      create_at,
-      id: nanoid(),
-      hash: HASH,
-      url,
-      type,
-      title,
-    });
-
-    _success(res, '上传壁纸成功')(req, url, 1);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 重复
-route.post('/repeat', async (req, res) => {
-  try {
-    const { HASH } = req.body;
-
-    if (!validaString(HASH, 1, fieldLength.id, 1)) {
-      paramErr(res, req);
-      return;
-    }
-
-    const bg = await db('bg').select('url,id').where({ hash: HASH }).findOne();
-
-    if (bg) {
-      if (await _f.exists(appConfig.bgDir(bg.url))) {
-        _success(res);
+      if (!bgData) {
+        _err(res, '壁纸库为空，请先上传壁纸')(req);
         return;
       }
 
-      // 壁纸文件丢失，删除数据，重新上传
-      await db('bg').where({ id: bg.id }).delete();
+      _success(res, 'ok', bgData);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    _nothing(res);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
+
+// 更换壁纸
+route.post(
+  '/change',
+  validate(
+    'body',
+    V.object({
+      type: V.string().trim().enum(['bg', 'bgxs']),
+      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { type, id } = req._vdata;
+
+      const { account } = req._hello.userinfo;
+      await db('user')
+        .where({ account, state: 1 })
+        .update({ [type]: id });
+
+      syncUpdateData(req, 'userinfo');
+
+      _success(res, '更换壁纸成功')(req, `${type}-${id}`, 1);
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 壁纸列表
+route.get(
+  '/list',
+  validate(
+    'query',
+    V.object({
+      type: V.string().trim().enum(['bg', 'bgxs']),
+      pageNo: V.number().toInt().default(1).min(1),
+      pageSize: V.number()
+        .toInt()
+        .default(40)
+        .min(1)
+        .max(fieldLength.bgPageSize),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { type, pageNo, pageSize } = req._vdata;
+
+      const bgdb = db('bg').where({ type });
+
+      const total = await bgdb.count();
+
+      const result = createPagingData(Array(total), pageSize, pageNo);
+
+      const offset = (result.pageNo - 1) * pageSize;
+
+      let data = [];
+      if (total > 0) {
+        data = await bgdb
+          .select('id,url,type')
+          .page(pageSize, offset)
+          .orderBy('serial', 'DESC')
+          .find();
+      }
+
+      _success(res, 'ok', {
+        ...result,
+        data,
+      });
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 删除壁纸
+route.post(
+  '/delete',
+  validate(
+    'body',
+    V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
+      .min(1)
+      .max(fieldLength.bgPageSize),
+    'ids'
+  ),
+  async (req, res) => {
+    try {
+      const ids = req._vdata;
+
+      // 验证管理员
+      if (!req._hello.isRoot) {
+        _err(res, '无权操作')(req);
+        return;
+      }
+
+      const bgDb = db('bg')
+        .select('url')
+        .where({ id: { in: ids } });
+
+      const dels = await bgDb.find();
+
+      await bgDb.delete();
+
+      await concurrencyTasks(dels, 5, async (del) => {
+        const { url } = del;
+        await _delDir(appConfig.bgDir(url));
+        await uLog(req, `删除壁纸(${url})`);
+      });
+
+      syncUpdateData(req, 'bg');
+
+      _success(res, '删除壁纸成功')(req, ids.length, 1);
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 上传
+route.post(
+  '/up',
+  validate(
+    'query',
+    V.object({
+      HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      name: V.string()
+        .trim()
+        .preprocess((v) =>
+          typeof v === 'string' ? _path.sanitizeFilename(v) : v
+        )
+        .min(1)
+        .max(fieldLength.filename)
+        .custom(isImgFile, '必须图片文件后缀'),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { HASH, name } = req._vdata;
+
+      const bg = await db('bg').select('url').where({ hash: HASH }).findOne();
+      if (bg) {
+        _err(res, '壁纸已存在')(req, `${name}-${HASH}`, 1);
+        return;
+      }
+
+      const [title, , suffix] = _path.extname(name);
+      const create_at = Date.now();
+      const timePath = getTimePath(create_at);
+
+      const tDir = appConfig.bgDir(timePath);
+      const tName = `${HASH}.${suffix}`;
+
+      await receiveFiles(req, tDir, tName, fieldLength.maxBgSize, HASH);
+
+      // 获取壁纸尺寸进行分类
+      const { width, height } = await getImgInfo(_path.normalize(tDir, tName));
+      const type = width < height ? 'bgxs' : 'bg';
+
+      const url = _path.normalize(timePath, tName);
+
+      await db('bg').insert({
+        create_at,
+        id: nanoid(),
+        hash: HASH,
+        url,
+        type,
+        title,
+      });
+
+      _success(res, '上传壁纸成功')(req, url, 1);
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 重复
+route.post(
+  '/repeat',
+  validate(
+    'body',
+    V.object({
+      HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { HASH } = req._vdata;
+
+      const bg = await db('bg')
+        .select('url,id')
+        .where({ hash: HASH })
+        .findOne();
+
+      if (bg) {
+        if (await _f.exists(appConfig.bgDir(bg.url))) {
+          _success(res);
+          return;
+        }
+
+        // 壁纸文件丢失，删除数据，重新上传
+        await db('bg').where({ id: bg.id }).delete();
+      }
+
+      _nothing(res);
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
 
 export default route;

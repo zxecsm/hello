@@ -6,15 +6,12 @@ import {
   _success,
   _nologin,
   _err,
-  isurl,
-  validaString,
-  _type,
   paramErr,
-  validationValue,
   _nothing,
   syncUpdateData,
   createPagingData,
   getSplitWord,
+  validate,
 } from '../../utils/utils.js';
 
 import timedTask from '../../utils/timedTask.js';
@@ -33,235 +30,260 @@ import { validShareAddUserState, validShareState } from '../user/user.js';
 import { getFriendInfo } from '../chat/chat.js';
 import jwt from '../../utils/jwt.js';
 import nanoid from '../../utils/nanoid.js';
+import V from '../../utils/validRules.js';
 
 const route = express.Router();
 
 // 分享
-route.post('/get-share', async (req, res) => {
-  try {
-    const { id, pass = '' } = req.body;
+route.post(
+  '/get-share',
+  validate(
+    'body',
+    V.object({
+      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      pass: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(fieldLength.sharePass),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { id, pass } = req._vdata;
 
-    if (
-      !validaString(id, 1, fieldLength.id, 1) ||
-      !validaString(pass, 0, fieldLength.sharePass)
-    ) {
-      paramErr(res, req);
-      return;
+      // 验证分享状态，获取分享数据
+      const share = await validShareAddUserState(req, ['bookmk'], id, pass);
+
+      if (share.state === 0) {
+        _err(res, share.text)(req, id, 1);
+        return;
+      }
+
+      if (share.state === 3) {
+        _nothing(res, share.text);
+        return;
+      }
+
+      let {
+        username,
+        logo,
+        email,
+        exp_time,
+        title,
+        account: acc,
+        data,
+      } = share.data;
+
+      const { account } = req._hello.userinfo;
+
+      // 如果非自己的分享
+      if (account && account != acc) {
+        const f = await getFriendInfo(account, acc, 'des');
+        const des = f ? f.des : '';
+        // 有设置备注则返回备注
+        username = des || username;
+      }
+
+      _success(res, '获取书签分享成功', {
+        username,
+        logo,
+        email,
+        exp_time,
+        account: acc,
+        data,
+        title,
+        token: await jwt.set(
+          { type: 'share', data: { id, types: ['bookmk'] } },
+          fieldLength.shareTokenExp
+        ),
+      })(req, id, 1);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    // 验证分享状态，获取分享数据
-    const share = await validShareAddUserState(req, ['bookmk'], id, pass);
-
-    if (share.state === 0) {
-      _err(res, share.text)(req, id, 1);
-      return;
-    }
-
-    if (share.state === 3) {
-      _nothing(res, share.text);
-      return;
-    }
-
-    let {
-      username,
-      logo,
-      email,
-      exp_time,
-      title,
-      account: acc,
-      data,
-    } = share.data;
-
-    const { account } = req._hello.userinfo;
-
-    // 如果非自己的分享
-    if (account && account != acc) {
-      const f = await getFriendInfo(account, acc, 'des');
-      const des = f ? f.des : '';
-      // 有设置备注则返回备注
-      username = des || username;
-    }
-
-    _success(res, '获取书签分享成功', {
-      username,
-      logo,
-      email,
-      exp_time,
-      account: acc,
-      data,
-      title,
-      token: await jwt.set(
-        { type: 'share', data: { id, types: ['bookmk'] } },
-        fieldLength.shareTokenExp
-      ),
-    })(req, id, 1);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 搜索书签
-route.post('/search', async (req, res) => {
-  try {
-    let {
-      word = '',
-      pageNo = 1,
-      pageSize = 20,
-      account: acc = '',
-      category = [],
-    } = req.body;
-    pageNo = parseInt(pageNo);
-    pageSize = parseInt(pageSize);
+route.post(
+  '/search',
+  validate(
+    'body',
+    V.object({
+      word: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(fieldLength.searchWord),
+      pageNo: V.number().toInt().default(1).min(1),
+      pageSize: V.number()
+        .toInt()
+        .default(20)
+        .min(1)
+        .max(fieldLength.maxPagesize),
+      account: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(fieldLength.id)
+        .alphanumeric(),
+      category: V.array(
+        V.string().trim().min(1).max(fieldLength.id).alphanumeric()
+      )
+        .default([])
+        .max(10),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { word, pageNo, pageSize, account: acc, category } = req._vdata;
 
-    if (
-      !validaString(word, 0, fieldLength.searchWord) ||
-      !validaString(acc, 0, fieldLength.id, 1) ||
-      isNaN(pageNo) ||
-      isNaN(pageSize) ||
-      pageNo < 1 ||
-      pageSize < 1 ||
-      pageSize > fieldLength.maxPagesize ||
-      !_type.isArray(category) ||
-      category.length > 10 ||
-      !category.every((item) => validaString(item, 1, fieldLength.id, 1))
-    ) {
-      paramErr(res, req);
-      return;
-    }
+      const { account } = req._hello.userinfo;
 
-    const { account } = req._hello.userinfo;
+      if (!acc && !account) {
+        _nologin(res);
+        return;
+      }
 
-    if (!acc && !account) {
-      _nologin(res);
-      return;
-    }
-
-    // 非本人只能获取公开的分组书签
-    const bmdb = db('bmk_bmk_group_view').where({
-      account: acc || account,
-      state: 1,
-      group_state: 1,
-    });
-
-    if (acc && acc !== account) {
       // 非本人只能获取公开的分组书签
-      bmdb.where({ group_share: 1 });
-    }
-
-    if (category.length > 0) {
-      bmdb.where({ group_id: { in: category } });
-    }
-
-    let splitWord = [];
-    if (word) {
-      splitWord = getSplitWord(word);
-
-      const curSplit = splitWord.slice(0, 10);
-      curSplit[0] = { value: curSplit[0], weight: 10 };
-      bmdb.search(curSplit, ['title', 'link', 'des'], { sort: true });
-    } else {
-      bmdb.orderBy('serial', 'DESC');
-    }
-
-    // 匹配结果数
-    const total = await bmdb.count();
-
-    const result = createPagingData(Array(total), pageSize, pageNo);
-
-    const offset = (result.pageNo - 1) * pageSize;
-
-    let data = [];
-    if (total > 0) {
-      // 分页
-      data = await bmdb
-        .page(pageSize, offset)
-        .select('group_title,id,group_id,title,link,des,logo')
-        .find();
-
-      data.forEach((item) => {
-        if (!item.group_title) {
-          item.group_title = '未知分组';
-        }
-      });
-    }
-
-    _success(res, 'ok', {
-      ...result,
-      splitWord,
-      data,
-    });
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 获取列表
-route.get('/list', async (req, res) => {
-  try {
-    const { id = '', account: acc = '' } = req.query;
-
-    if (
-      !validaString(id, 0, fieldLength.id, 1) ||
-      !validaString(acc, 0, fieldLength.id, 1)
-    ) {
-      paramErr(res, req);
-      return;
-    }
-
-    const { account } = req._hello.userinfo;
-
-    if (!acc && !account) {
-      _nologin(res);
-      return;
-    }
-
-    let home = [];
-    let list = await db('bmk_group')
-      .select('id,title,share')
-      .where({ account: acc || account, state: 1 })
-      .orderBy('num', 'ASC')
-      .find();
-
-    if (acc && acc !== account) {
-      list = list
-        .filter((item) => item.share === 1)
-        .map((item) => ({ id: item.id, title: item.title }));
-    }
-
-    if (!id || !account) {
-      _success(res, 'ok', { list, home });
-      return;
-    }
-
-    let bms = await db('bmk')
-      .select('id,title,link,logo,des,group_id')
-      .where({
+      const bmdb = db('bmk_bmk_group_view').where({
         account: acc || account,
         state: 1,
-        group_id: id,
-      })
-      .orderBy('num', 'ASC')
-      .find();
-
-    bms = bms.map((item, idx) => ({ ...item, num: idx }));
-    list = list.map((item, idx) => ({ ...item, num: idx }));
-
-    if (id === 'home') {
-      home = bms;
-    } else {
-      list = list.map((item) => {
-        if (item.id === id) {
-          item.item = bms;
-        }
-        return item;
+        group_state: 1,
       });
-    }
 
-    _success(res, 'ok', { list, home });
-  } catch (error) {
-    _err(res)(req, error);
+      if (acc && acc !== account) {
+        // 非本人只能获取公开的分组书签
+        bmdb.where({ group_share: 1 });
+      }
+
+      if (category.length > 0) {
+        bmdb.where({ group_id: { in: category } });
+      }
+
+      let splitWord = [];
+      if (word) {
+        splitWord = getSplitWord(word);
+
+        const curSplit = splitWord.slice(0, 10);
+        curSplit[0] = { value: curSplit[0], weight: 10 };
+        bmdb.search(curSplit, ['title', 'link', 'des'], { sort: true });
+      } else {
+        bmdb.orderBy('serial', 'DESC');
+      }
+
+      // 匹配结果数
+      const total = await bmdb.count();
+
+      const result = createPagingData(Array(total), pageSize, pageNo);
+
+      const offset = (result.pageNo - 1) * pageSize;
+
+      let data = [];
+      if (total > 0) {
+        // 分页
+        data = await bmdb
+          .page(pageSize, offset)
+          .select('group_title,id,group_id,title,link,des,logo')
+          .find();
+
+        data.forEach((item) => {
+          if (!item.group_title) {
+            item.group_title = '未知分组';
+          }
+        });
+      }
+
+      _success(res, 'ok', {
+        ...result,
+        splitWord,
+        data,
+      });
+    } catch (error) {
+      _err(res)(req, error);
+    }
   }
-});
+);
+
+// 获取列表
+route.get(
+  '/list',
+  validate(
+    'query',
+    V.object({
+      id: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(fieldLength.id)
+        .alphanumeric(),
+      account: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(fieldLength.id)
+        .alphanumeric(),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { id, account: acc } = req._vdata;
+
+      const { account } = req._hello.userinfo;
+
+      if (!acc && !account) {
+        _nologin(res);
+        return;
+      }
+
+      let home = [];
+      let list = await db('bmk_group')
+        .select('id,title,share')
+        .where({ account: acc || account, state: 1 })
+        .orderBy('num', 'ASC')
+        .find();
+
+      if (acc && acc !== account) {
+        list = list
+          .filter((item) => item.share === 1)
+          .map((item) => ({ id: item.id, title: item.title }));
+      }
+
+      if (!id || !account) {
+        _success(res, 'ok', { list, home });
+        return;
+      }
+
+      let bms = await db('bmk')
+        .select('id,title,link,logo,des,group_id')
+        .where({
+          account: acc || account,
+          state: 1,
+          group_id: id,
+        })
+        .orderBy('num', 'ASC')
+        .find();
+
+      bms = bms.map((item, idx) => ({ ...item, num: idx }));
+      list = list.map((item, idx) => ({ ...item, num: idx }));
+
+      if (id === 'home') {
+        home = bms;
+      } else {
+        list = list.map((item) => {
+          if (item.id === id) {
+            item.item = bms;
+          }
+          return item;
+        });
+      }
+
+      _success(res, 'ok', { list, home });
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
 
 // 删除网址描述缓存信息
 timedTask.add(async (flag) => {
@@ -280,609 +302,658 @@ route.use((req, res, next) => {
 });
 
 // 分组移动
-route.post('/move-group', async (req, res) => {
-  try {
-    const { fromId, toId } = req.body;
+route.post(
+  '/move-group',
+  validate(
+    'body',
+    V.object({
+      fromId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      toId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { fromId, toId } = req._vdata;
 
-    if (
-      !validaString(fromId, 1, fieldLength.id, 1) ||
-      !validaString(toId, 1, fieldLength.id, 1)
-    ) {
-      paramErr(res, req);
-      return;
+      const { account } = req._hello.userinfo;
+
+      await bookListMoveLocation(account, fromId, toId);
+
+      syncUpdateData(req, 'bookmark');
+
+      _success(res, '移动分组位置成功')(req, `${fromId}=>${toId}`, 1);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    const { account } = req._hello.userinfo;
-
-    await bookListMoveLocation(account, fromId, toId);
-
-    syncUpdateData(req, 'bookmark');
-
-    _success(res, '移动分组位置成功')(req, `${fromId}=>${toId}`, 1);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 书签移动
-route.post('/move-bmk', async (req, res) => {
-  try {
-    const { groupId, fromId, toId } = req.body;
+route.post(
+  '/move-bmk',
+  validate(
+    'body',
+    V.object({
+      groupId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      fromId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      toId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { groupId, fromId, toId } = req._vdata;
 
-    if (
-      !validaString(groupId, 1, fieldLength.id, 1) ||
-      !validaString(fromId, 1, fieldLength.id, 1) ||
-      !validaString(toId, 1, fieldLength.id, 1)
-    ) {
-      paramErr(res, req);
-      return;
+      const { account } = req._hello.userinfo;
+
+      await bookmarkMoveLocation(account, groupId, fromId, toId);
+
+      syncUpdateData(req, 'bookmark');
+
+      _success(res, '移动书签位置成功')(
+        req,
+        `${groupId}: ${fromId}=>${toId}`,
+        1
+      );
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    const { account } = req._hello.userinfo;
-
-    await bookmarkMoveLocation(account, groupId, fromId, toId);
-
-    syncUpdateData(req, 'bookmark');
-
-    _success(res, '移动书签位置成功')(req, `${groupId}: ${fromId}=>${toId}`, 1);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 新建分组
-route.post('/add-group', async (req, res) => {
-  try {
-    const { title } = req.body;
-
-    if (!validaString(title, 1, fieldLength.title)) {
-      paramErr(res, req);
-      return;
-    }
-
-    const { account } = req._hello.userinfo;
-
-    const total = await db('bmk_group')
-      .where({
-        account,
-        state: 1,
-      })
-      .count();
-
-    if (total >= fieldLength.bmkGroup) {
-      return _err(res, `分组限制${fieldLength.bmkGroup}个`)(req);
-    }
-
-    await updateBmkGroupOrder(account);
-
-    await db('bmk_group').insert({
-      id: nanoid(),
-      create_at: new Date(),
-      title,
-      account,
-      num: total + 1,
-    });
-
-    syncUpdateData(req, 'bookmark');
-
-    _success(res, '添加分组成功')(req, title, 1);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 删除分组
-route.post('/delete-group', async (req, res) => {
-  try {
-    const { ids } = req.body;
-
-    if (
-      !_type.isArray(ids) ||
-      ids.length === 0 ||
-      ids.length > fieldLength.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
-    ) {
-      paramErr(res, req);
-      return;
-    }
-
-    const { account } = req._hello.userinfo;
-
-    // 放入回收站
-    await db('bmk_group')
-      .where({ id: { in: ids }, state: 1, account })
-      .update({ state: 0 });
-
-    syncUpdateData(req, 'bookmark');
-    syncUpdateData(req, 'trash');
-
-    _success(res, '删除分组成功')(req, ids.length, 1);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 分组状态
-route.post('/group-share-state', async (req, res) => {
-  try {
-    const { share, ids } = req.body;
-
-    if (
-      !validationValue(share, [1, 0]) ||
-      !_type.isArray(ids) ||
-      ids.length === 0 ||
-      ids.length > fieldLength.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
-    ) {
-      paramErr(res, req);
-      return;
-    }
-
-    const { account } = req._hello.userinfo;
-
-    await db('bmk_group')
-      .where({ id: { in: ids }, state: 1, account })
-      .update({ share });
-
-    syncUpdateData(req, 'bookmark');
-
-    _success(res, `${share === 1 ? '公开' : '锁定'}分组成功`)(
-      req,
-      ids.length,
-      1
-    );
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 删除自定义书签logo
-route.get('/delete-logo', async (req, res) => {
-  try {
-    const { id } = req.query;
-
-    if (!validaString(id, 1, fieldLength.id, 1)) {
-      paramErr(res, req);
-      return;
-    }
-
-    const { account } = req._hello.userinfo;
-
-    await db('bmk').where({ account, id, state: 1 }).update({ logo: '' });
-
-    syncUpdateData(req, 'bookmark');
-
-    _success(res, '删除书签LOGO成功')(req, id, 1);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 编辑分组
-route.post('/edit-group', async (req, res) => {
-  try {
-    const { id, title, toId = '' } = req.body;
-
-    if (
-      !validaString(title, 1, fieldLength.title) ||
-      !validaString(id, 1, fieldLength.id, 1) ||
-      !validaString(toId, 0, fieldLength.id, 1)
-    ) {
-      paramErr(res, req);
-      return;
-    }
-
-    const { account } = req._hello.userinfo;
-
-    await db('bmk_group').where({ account, state: 1, id }).update({ title });
-
-    if (toId) {
-      await bookListMoveLocation(account, id, toId);
-    }
-
-    syncUpdateData(req, 'bookmark');
-
-    _success(res, '更新分组标题成功')(req, title, 1);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 添加书签
-route.post('/add-bmk', async (req, res) => {
-  try {
-    let { bms, groupId } = req.body;
-
-    if (
-      !validaString(groupId, 1, fieldLength.id, 1) ||
-      !_type.isArray(bms) ||
-      bms.length === 0 ||
-      bms.length > fieldLength.maxPagesize ||
-      !bms.every(
-        (item) =>
-          _type.isObject(item) &&
-          validaString(item.title, 1, fieldLength.title) &&
-          validaString(item.link, 1, fieldLength.url) &&
-          isurl(item.link) &&
-          validaString(item.des, 0, fieldLength.des)
-      )
-    ) {
-      paramErr(res, req);
-      return;
-    }
-
-    const { account } = req._hello.userinfo;
-
-    // 添加书签的分组必须存在
-    if (groupId !== 'home' && !(await bmkGroupExist(account, groupId))) {
-      paramErr(res, req);
-      return;
-    }
-
-    const total = await db('bmk')
-      .where({ account, state: 1, group_id: groupId })
-      .count();
-
-    // 计算添加的书签和现有的书签
-    if (total + bms.length > fieldLength.bmk) {
-      return _err(res, `分组书签限制${fieldLength.bmk}个`)(req);
-    }
-
-    await updateBmkOrder(account, groupId);
-    const create_at = Date.now();
-
-    bms = bms.map((item, i) => ({
-      id: nanoid(),
-      create_at,
-      account,
-      num: total + i + 1,
-      group_id: groupId,
-      title: item.title,
-      link: item.link,
-      des: item.des,
-    }));
-    await db('bmk').insertMany(bms);
-
-    syncUpdateData(req, 'bookmark');
-
-    _success(res, '添加书签成功')(req, `${groupId}-${bms.length}`, 1);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 编辑书签
-route.post('/edit-bmk', async (req, res) => {
-  try {
-    const { groupId, id, title, link, des = '', toId = '' } = req.body;
-
-    if (
-      !validaString(groupId, 1, fieldLength.id, 1) ||
-      !validaString(id, 1, fieldLength.id, 1) ||
-      !validaString(toId, 0, fieldLength.id, 1) ||
-      !validaString(title, 1, fieldLength.title) ||
-      !validaString(link, 1, fieldLength.url) ||
-      !isurl(link) ||
-      !validaString(des, 0, fieldLength.des)
-    ) {
-      paramErr(res, req);
-      return;
-    }
-
-    const { account } = req._hello.userinfo;
-
-    await db('bmk')
-      .where({ account, state: 1, id, group_id: groupId })
-      .update({ title, link, des });
-
-    if (toId) {
-      await bookmarkMoveLocation(account, groupId, id, toId);
-    }
-
-    syncUpdateData(req, 'bookmark');
-
-    _success(res, '更新书签信息成功')(
-      req,
-      `${groupId}: ${id}-${title}-${link}-${des}`,
-      1
-    );
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 书签移动到分组
-route.post('/bmk-to-group', async (req, res) => {
-  try {
-    const { ids, groupId } = req.body;
-
-    if (
-      !validaString(groupId, 1, fieldLength.id, 1) ||
-      !_type.isArray(ids) ||
-      ids.length === 0 ||
-      ids.length > fieldLength.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
-    ) {
-      paramErr(res, req);
-      return;
-    }
-
-    const { account } = req._hello.userinfo;
-
-    // 移动到的分组需要存在
-    if (groupId !== 'home' && !(await bmkGroupExist(account, groupId))) {
-      paramErr(res, req);
-      return;
-    }
-
-    const total = await db('bmk')
-      .where({ group_id: groupId, account, state: 1 })
-      .count();
-
-    // 计算分组书签数量
-    if (total + ids.length > fieldLength.bmk) {
-      return _err(res, `分组书签限制${fieldLength.bmk}个`)(req);
-    }
-
-    await updateBmkOrder(account, groupId);
-
-    const ob = [
-      {
-        field: 'num',
-        match: 'id',
-        items: [],
-      },
-      {
-        field: 'group_id',
-        match: 'id',
-        items: [],
-      },
-    ];
-
-    ids.forEach((item, idx) => {
-      ob[0].items.push({
-        id: item,
-        num: total + idx + 1,
-      });
-      ob[1].items.push({
-        id: item,
-        group_id: groupId,
-      });
-    });
-
-    await db('bmk').batchDiffUpdate(ob, { account, state: 1, id: { in: ids } });
-
-    syncUpdateData(req, 'bookmark');
-
-    _success(res, '书签移动分组成功')(req, `${ids.length}=>${groupId}`, 1);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 删除书签
-route.post('/delete-bmk', async (req, res) => {
-  try {
-    const { ids } = req.body;
-
-    if (
-      !_type.isArray(ids) ||
-      ids.length === 0 ||
-      ids.length > fieldLength.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
-    ) {
-      paramErr(res, req);
-      return;
-    }
-
-    const { account } = req._hello.userinfo;
-
-    await db('bmk')
-      .where({ id: { in: ids }, state: 1, account })
-      .update({ state: 0 });
-
-    syncUpdateData(req, 'bookmark');
-    syncUpdateData(req, 'trash');
-
-    _success(res, '删除书签成功')(req, ids.length, 1);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 分享分组
-route.post('/share', async (req, res) => {
-  try {
-    let { id, title, expireTime, pass = '' } = req.body;
-
-    expireTime = parseInt(expireTime);
-    if (
-      !validaString(id, 1, fieldLength.id, 1) ||
-      !validaString(title, 1, fieldLength.title) ||
-      !validaString(pass, 0, fieldLength.sharePass) ||
-      isNaN(expireTime) ||
-      expireTime > fieldLength.expTime
-    ) {
-      paramErr(res, req);
-      return;
-    }
-
-    const { account } = req._hello.userinfo;
-
-    const bms = await db('bmk')
-      .select('title,link,des')
-      .where({ account, state: 1, group_id: id })
-      .orderBy('num', 'asc')
-      .find();
-
-    if (bms.length === 0) {
-      _err(res, '当前分组为空')(req, id, 1);
-      return;
-    }
-
-    const obj = {
-      id: nanoid(),
-      create_at: Date.now(),
-      exp_time:
-        expireTime === 0 ? 0 : Date.now() + expireTime * 24 * 60 * 60 * 1000,
-      title,
-      pass,
-      data: JSON.stringify(bms),
-      account,
-      type: 'bookmk',
-    };
-    await db('share').insert(obj);
-
-    syncUpdateData(req, 'sharelist');
-
-    _success(res, '分享分组成功', { id: obj.id })(
-      req,
-      `${id}: ${title}-${obj.id}-${bms.length}`,
-      1
-    );
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 保存分享
-route.post('/save-share', async (req, res) => {
-  try {
-    const { title, token } = req.body;
-
-    if (
-      !validaString(title, 1, fieldLength.title) ||
-      !validaString(token, 0, fieldLength.url)
-    ) {
-      paramErr(res, req);
-      return;
-    }
-
-    const share = await validShareState(token, 'bookmk');
-
-    if (share.state === 0) {
-      _err(res, share.text)(req);
-      return;
-    }
-
-    let arr = share.data.data;
-
-    const { account } = req._hello.userinfo;
-
-    const total = await db('bmk_group').where({ account, state: 1 }).count();
-
-    if (total >= 200) {
-      return _err(res, '分组限制200个')(req);
-    }
-
-    const pid = nanoid();
-    const create_at = Date.now();
-
-    await updateBmkGroupOrder(account);
-
-    await db('bmk_group').insert({
-      id: pid,
-      create_at,
-      title,
-      account,
-      num: total + 1,
-    });
-    arr = arr.map((item, idx) => {
-      const { title, link, des } = item;
-      return {
-        id: nanoid(),
-        create_at,
-        title,
-        link,
-        des,
-        num: idx + 1,
-        group_id: pid,
-        account,
-      };
-    });
-    await db('bmk').insertMany(arr);
-
-    syncUpdateData(req, 'bookmark');
-
-    _success(res, '保存分享书签成功')(req, `${arr.length}=>${title}`, 1);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 导入
-route.post('/import', async (req, res) => {
-  try {
-    const { list } = req.body;
-
-    if (
-      !_type.isArray(list) ||
-      !list.length > fieldLength.bmkGroup ||
-      !list.every(
-        (item) =>
-          _type.isObject(item) &&
-          validaString(item.title, 1, fieldLength.title) &&
-          _type.isArray(item.list) &&
-          item.list.length <= fieldLength.bmk &&
-          item.list.every(
-            (y) =>
-              validaString(y.title, 1, fieldLength.title) &&
-              isurl(y.link) &&
-              validaString(y.link, 1, fieldLength.url) &&
-              validaString(y.des, 0, fieldLength.des)
-          )
-      )
-    ) {
-      paramErr(res, req);
-      return;
-    }
-
-    const { account } = req._hello.userinfo;
-
-    const total = await db('bmk_group').where({ account, state: 1 }).count();
-
-    if (total + list.length > fieldLength.bmkGroup) {
-      return _err(res, `分组限制${fieldLength.bmkGroup}个`)(req);
-    }
-
-    await updateBmkGroupOrder(account);
-
-    let count = 0;
-    const create_at = Date.now();
-    for (let i = 0; i < list.length; i++) {
-      let { title, list: bms } = list[i];
-
-      const groupId = nanoid();
+route.post(
+  '/add-group',
+  validate(
+    'body',
+    V.object({
+      title: V.string().trim().min(1).max(fieldLength.title),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { title } = req._vdata;
+
+      const { account } = req._hello.userinfo;
+
+      const total = await db('bmk_group')
+        .where({
+          account,
+          state: 1,
+        })
+        .count();
+
+      if (total >= fieldLength.bmkGroup) {
+        return _err(res, `分组限制${fieldLength.bmkGroup}个`)(req);
+      }
+
+      await updateBmkGroupOrder(account);
 
       await db('bmk_group').insert({
-        create_at,
-        id: groupId,
+        id: nanoid(),
+        create_at: new Date(),
         title,
         account,
-        num: total + 1 + i,
+        num: total + 1,
       });
+
+      syncUpdateData(req, 'bookmark');
+
+      _success(res, '添加分组成功')(req, title, 1);
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 删除分组
+route.post(
+  '/delete-group',
+  validate(
+    'body',
+    V.object({
+      ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
+        .min(1)
+        .max(fieldLength.maxPagesize),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { ids } = req._vdata;
+
+      const { account } = req._hello.userinfo;
+
+      // 放入回收站
+      await db('bmk_group')
+        .where({ id: { in: ids }, state: 1, account })
+        .update({ state: 0 });
+
+      syncUpdateData(req, 'bookmark');
+      syncUpdateData(req, 'trash');
+
+      _success(res, '删除分组成功')(req, ids.length, 1);
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 分组状态
+route.post(
+  '/group-share-state',
+  validate(
+    'body',
+    V.object({
+      share: V.number().toInt().enum([0, 1]),
+      ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
+        .min(1)
+        .max(fieldLength.maxPagesize),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { share, ids } = req._vdata;
+
+      const { account } = req._hello.userinfo;
+
+      await db('bmk_group')
+        .where({ id: { in: ids }, state: 1, account })
+        .update({ share });
+
+      syncUpdateData(req, 'bookmark');
+
+      _success(res, `${share === 1 ? '公开' : '锁定'}分组成功`)(
+        req,
+        ids.length,
+        1
+      );
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 删除自定义书签logo
+route.get(
+  '/delete-logo',
+  validate(
+    'query',
+    V.object({
+      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { id } = req._vdata;
+
+      const { account } = req._hello.userinfo;
+
+      await db('bmk').where({ account, id, state: 1 }).update({ logo: '' });
+
+      syncUpdateData(req, 'bookmark');
+
+      _success(res, '删除书签LOGO成功')(req, id, 1);
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 编辑分组
+route.post(
+  '/edit-group',
+  validate(
+    'body',
+    V.object({
+      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      title: V.string().trim().min(1).max(fieldLength.title),
+      toId: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(fieldLength.id)
+        .alphanumeric(),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { id, title, toId } = req._vdata;
+
+      const { account } = req._hello.userinfo;
+
+      await db('bmk_group').where({ account, state: 1, id }).update({ title });
+
+      if (toId) {
+        await bookListMoveLocation(account, id, toId);
+      }
+
+      syncUpdateData(req, 'bookmark');
+
+      _success(res, '更新分组标题成功')(req, title, 1);
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 添加书签
+route.post(
+  '/add-bmk',
+  validate(
+    'body',
+    V.object({
+      groupId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      bms: V.array(
+        V.object({
+          title: V.string().trim().min(1).max(fieldLength.title),
+          link: V.string().trim().min(1).max(fieldLength.url).httpUrl(),
+          des: V.string().trim().default('').allowEmpty().max(fieldLength.des),
+        })
+      )
+        .min(1)
+        .max(fieldLength.maxPagesize),
+    })
+  ),
+  async (req, res) => {
+    try {
+      let { bms, groupId } = req._vdata;
+
+      const { account } = req._hello.userinfo;
+
+      // 添加书签的分组必须存在
+      if (groupId !== 'home' && !(await bmkGroupExist(account, groupId))) {
+        paramErr(res, req);
+        return;
+      }
+
+      const total = await db('bmk')
+        .where({ account, state: 1, group_id: groupId })
+        .count();
+
+      // 计算添加的书签和现有的书签
+      if (total + bms.length > fieldLength.bmk) {
+        return _err(res, `分组书签限制${fieldLength.bmk}个`)(req);
+      }
+
+      await updateBmkOrder(account, groupId);
+      const create_at = Date.now();
+
       bms = bms.map((item, i) => ({
         id: nanoid(),
         create_at,
         account,
-        num: i + 1,
+        num: total + i + 1,
         group_id: groupId,
         title: item.title,
         link: item.link,
         des: item.des,
       }));
-
-      count += bms.length;
       await db('bmk').insertMany(bms);
+
+      syncUpdateData(req, 'bookmark');
+
+      _success(res, '添加书签成功')(req, `${groupId}-${bms.length}`, 1);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    syncUpdateData(req, 'bookmark');
-
-    _success(res, '导入书签成功')(req, count, 1);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
+
+// 编辑书签
+route.post(
+  '/edit-bmk',
+  validate(
+    'body',
+    V.object({
+      groupId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      toId: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(fieldLength.id)
+        .alphanumeric(),
+      title: V.string().trim().min(1).max(fieldLength.title),
+      link: V.string().trim().min(1).max(fieldLength.url).httpUrl(),
+      des: V.string().trim().default('').allowEmpty().max(fieldLength.des),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { groupId, id, title, link, des, toId } = req._vdata;
+
+      const { account } = req._hello.userinfo;
+
+      await db('bmk')
+        .where({ account, state: 1, id, group_id: groupId })
+        .update({ title, link, des });
+
+      if (toId) {
+        await bookmarkMoveLocation(account, groupId, id, toId);
+      }
+
+      syncUpdateData(req, 'bookmark');
+
+      _success(res, '更新书签信息成功')(
+        req,
+        `${groupId}: ${id}-${title}-${link}-${des}`,
+        1
+      );
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 书签移动到分组
+route.post(
+  '/bmk-to-group',
+  validate(
+    'body',
+    V.object({
+      groupId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
+        .min(1)
+        .max(fieldLength.maxPagesize),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { ids, groupId } = req._vdata;
+
+      const { account } = req._hello.userinfo;
+
+      // 移动到的分组需要存在
+      if (groupId !== 'home' && !(await bmkGroupExist(account, groupId))) {
+        paramErr(res, req);
+        return;
+      }
+
+      const total = await db('bmk')
+        .where({ group_id: groupId, account, state: 1 })
+        .count();
+
+      // 计算分组书签数量
+      if (total + ids.length > fieldLength.bmk) {
+        return _err(res, `分组书签限制${fieldLength.bmk}个`)(req);
+      }
+
+      await updateBmkOrder(account, groupId);
+
+      const ob = [
+        {
+          field: 'num',
+          match: 'id',
+          items: [],
+        },
+        {
+          field: 'group_id',
+          match: 'id',
+          items: [],
+        },
+      ];
+
+      ids.forEach((item, idx) => {
+        ob[0].items.push({
+          id: item,
+          num: total + idx + 1,
+        });
+        ob[1].items.push({
+          id: item,
+          group_id: groupId,
+        });
+      });
+
+      await db('bmk').batchDiffUpdate(ob, {
+        account,
+        state: 1,
+        id: { in: ids },
+      });
+
+      syncUpdateData(req, 'bookmark');
+
+      _success(res, '书签移动分组成功')(req, `${ids.length}=>${groupId}`, 1);
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 删除书签
+route.post(
+  '/delete-bmk',
+  validate(
+    'body',
+    V.object({
+      ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
+        .min(1)
+        .max(fieldLength.maxPagesize),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { ids } = req._vdata;
+
+      const { account } = req._hello.userinfo;
+
+      await db('bmk')
+        .where({ id: { in: ids }, state: 1, account })
+        .update({ state: 0 });
+
+      syncUpdateData(req, 'bookmark');
+      syncUpdateData(req, 'trash');
+
+      _success(res, '删除书签成功')(req, ids.length, 1);
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 分享分组
+route.post(
+  '/share',
+  validate(
+    'body',
+    V.object({
+      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      title: V.string().trim().min(1).max(fieldLength.title),
+      expireTime: V.number().toInt().max(fieldLength.expTime),
+      pass: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(fieldLength.sharePass),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { id, title, expireTime, pass } = req._vdata;
+
+      const { account } = req._hello.userinfo;
+
+      const bms = await db('bmk')
+        .select('title,link,des')
+        .where({ account, state: 1, group_id: id })
+        .orderBy('num', 'asc')
+        .find();
+
+      if (bms.length === 0) {
+        _err(res, '当前分组为空')(req, id, 1);
+        return;
+      }
+
+      const obj = {
+        id: nanoid(),
+        create_at: Date.now(),
+        exp_time:
+          expireTime === 0 ? 0 : Date.now() + expireTime * 24 * 60 * 60 * 1000,
+        title,
+        pass,
+        data: JSON.stringify(bms),
+        account,
+        type: 'bookmk',
+      };
+      await db('share').insert(obj);
+
+      syncUpdateData(req, 'sharelist');
+
+      _success(res, '分享分组成功', { id: obj.id })(
+        req,
+        `${id}: ${title}-${obj.id}-${bms.length}`,
+        1
+      );
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 保存分享
+route.post(
+  '/save-share',
+  validate(
+    'body',
+    V.object({
+      title: V.string().trim().min(1).max(fieldLength.title),
+      token: V.string().trim().default('').allowEmpty().max(fieldLength.url),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { title, token } = req._vdata;
+
+      const share = await validShareState(token, 'bookmk');
+
+      if (share.state === 0) {
+        _err(res, share.text)(req);
+        return;
+      }
+
+      let arr = share.data.data;
+
+      const { account } = req._hello.userinfo;
+
+      const total = await db('bmk_group').where({ account, state: 1 }).count();
+
+      if (total >= 200) {
+        return _err(res, '分组限制200个')(req);
+      }
+
+      const pid = nanoid();
+      const create_at = Date.now();
+
+      await updateBmkGroupOrder(account);
+
+      await db('bmk_group').insert({
+        id: pid,
+        create_at,
+        title,
+        account,
+        num: total + 1,
+      });
+      arr = arr.map((item, idx) => {
+        const { title, link, des } = item;
+        return {
+          id: nanoid(),
+          create_at,
+          title,
+          link,
+          des,
+          num: idx + 1,
+          group_id: pid,
+          account,
+        };
+      });
+      await db('bmk').insertMany(arr);
+
+      syncUpdateData(req, 'bookmark');
+
+      _success(res, '保存分享书签成功')(req, `${arr.length}=>${title}`, 1);
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 导入
+route.post(
+  '/import',
+  validate(
+    'body',
+    V.object({
+      list: V.array(
+        V.object({
+          title: V.string().trim().min(1).max(fieldLength.title),
+          list: V.array(
+            V.object({
+              title: V.string().trim().min(1).max(fieldLength.title),
+              link: V.string().trim().min(1).max(fieldLength.url).httpUrl(),
+              des: V.string()
+                .trim()
+                .default('')
+                .allowEmpty()
+                .max(fieldLength.des),
+            })
+          )
+            .min(1)
+            .max(fieldLength.bmk),
+        })
+      )
+        .min(1)
+        .max(fieldLength.bmkGroup),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { list } = req._vdata;
+
+      const { account } = req._hello.userinfo;
+
+      const total = await db('bmk_group').where({ account, state: 1 }).count();
+
+      if (total + list.length > fieldLength.bmkGroup) {
+        return _err(res, `分组限制${fieldLength.bmkGroup}个`)(req);
+      }
+
+      await updateBmkGroupOrder(account);
+
+      let count = 0;
+      const create_at = Date.now();
+      for (let i = 0; i < list.length; i++) {
+        let { title, list: bms } = list[i];
+
+        const groupId = nanoid();
+
+        await db('bmk_group').insert({
+          create_at,
+          id: groupId,
+          title,
+          account,
+          num: total + 1 + i,
+        });
+        bms = bms.map((item, i) => ({
+          id: nanoid(),
+          create_at,
+          account,
+          num: i + 1,
+          group_id: groupId,
+          title: item.title,
+          link: item.link,
+          des: item.des,
+        }));
+
+        count += bms.length;
+        await db('bmk').insertMany(bms);
+      }
+
+      syncUpdateData(req, 'bookmark');
+
+      _success(res, '导入书签成功')(req, count, 1);
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
 
 // 导出
 route.get('/export', async (req, res) => {

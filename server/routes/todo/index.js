@@ -6,16 +6,14 @@ import {
   _nologin,
   _err,
   _success,
-  validaString,
-  paramErr,
   syncUpdateData,
   createPagingData,
-  _type,
-  validationValue,
+  validate,
 } from '../../utils/utils.js';
 
 import { fieldLength } from '../config.js';
 import nanoid from '../../utils/nanoid.js';
+import V from '../../utils/validRules.js';
 
 const route = express.Router();
 
@@ -29,168 +27,178 @@ route.use((req, res, next) => {
 });
 
 // 待办列表
-route.get('/list', async (req, res) => {
-  try {
-    let { pageNo = 1, pageSize = 40 } = req.query;
-    pageNo = parseInt(pageNo);
-    pageSize = parseInt(pageSize);
+route.get(
+  '/list',
+  validate(
+    'query',
+    V.object({
+      pageNo: V.number().toInt().default(1).min(1),
+      pageSize: V.number()
+        .toInt()
+        .default(40)
+        .min(1)
+        .max(fieldLength.maxPagesize),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { pageNo, pageSize } = req._vdata;
 
-    if (
-      isNaN(pageNo) ||
-      isNaN(pageSize) ||
-      pageNo < 1 ||
-      pageSize < 1 ||
-      pageSize > fieldLength.maxPagesize
-    ) {
-      paramErr(res, req);
-      return;
+      const { account } = req._hello.userinfo;
+
+      const total = await db('todo').where({ account }).count();
+
+      const result = createPagingData(Array(total), pageSize, pageNo);
+
+      const offset = (result.pageNo - 1) * pageSize;
+
+      let data = [],
+        undoneCount = 0;
+
+      if (total > 0) {
+        // 未完成代办数
+        undoneCount = await db('todo').where({ account, state: 1 }).count();
+
+        data = await db('todo')
+          .select('id,content,state,update_at')
+          .where({ account })
+          .orderBy('state', 'desc')
+          .orderBy('update_at', 'desc')
+          .limit(pageSize)
+          .offset(offset)
+          .find();
+      }
+
+      _success(res, 'ok', {
+        ...result,
+        data,
+        undoneCount,
+      });
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    const { account } = req._hello.userinfo;
-
-    const total = await db('todo').where({ account }).count();
-
-    const result = createPagingData(Array(total), pageSize, pageNo);
-
-    const offset = (result.pageNo - 1) * pageSize;
-
-    let data = [],
-      undoneCount = 0;
-
-    if (total > 0) {
-      // 未完成代办数
-      undoneCount = await db('todo').where({ account, state: 1 }).count();
-
-      data = await db('todo')
-        .select('id,content,state,update_at')
-        .where({ account })
-        .orderBy('state', 'desc')
-        .orderBy('update_at', 'desc')
-        .limit(pageSize)
-        .offset(offset)
-        .find();
-    }
-
-    _success(res, 'ok', {
-      ...result,
-      data,
-      undoneCount,
-    });
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 增加待办
-route.post('/add', async (req, res) => {
-  try {
-    const { content } = req.body;
+route.post(
+  '/add',
+  validate(
+    'body',
+    V.object({
+      content: V.string().trim().min(1).max(fieldLength.todoContent),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { content } = req._vdata;
 
-    if (!validaString(content, 1, fieldLength.todoContent)) {
-      paramErr(res, req);
-      return;
+      const { account } = req._hello.userinfo;
+
+      const create_at = Date.now();
+      await db('todo').insert({
+        id: nanoid(),
+        create_at,
+        account,
+        content,
+        update_at: create_at,
+      });
+
+      syncUpdateData(req, 'todolist');
+
+      _success(res, `添加待办成功`)(req, content, 1);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    const { account } = req._hello.userinfo;
-
-    const create_at = Date.now();
-    await db('todo').insert({
-      id: nanoid(),
-      create_at,
-      account,
-      content,
-      update_at: create_at,
-    });
-
-    syncUpdateData(req, 'todolist');
-
-    _success(res, `添加待办成功`)(req, content, 1);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 删除待办
-route.post('/delete', async (req, res) => {
-  try {
-    const { ids } = req.body;
-    if (
-      !_type.isArray(ids) ||
-      ids.length === 0 ||
-      ids.length > fieldLength.maxPagesize ||
-      !ids.every((item) => validaString(item, 1, fieldLength.id, 1))
-    ) {
-      paramErr(res, req);
-      return;
+route.post(
+  '/delete',
+  validate(
+    'body',
+    V.object({
+      ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
+        .min(1)
+        .max(fieldLength.maxPagesize),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { ids } = req._vdata;
+
+      const { account } = req._hello.userinfo;
+
+      await db('todo')
+        .where({ id: { in: ids }, account })
+        .delete();
+
+      syncUpdateData(req, 'todolist');
+
+      _success(res, `删除待办成功`)(req, ids.length, 1);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    const { account } = req._hello.userinfo;
-
-    await db('todo')
-      .where({ id: { in: ids }, account })
-      .delete();
-
-    syncUpdateData(req, 'todolist');
-
-    _success(res, `删除待办成功`)(req, ids.length, 1);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 待办状态
-route.get('/state', async (req, res) => {
-  try {
-    let { id, state } = req.query;
-    state = +state;
+route.get(
+  '/state',
+  validate(
+    'query',
+    V.object({
+      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      state: V.number().toInt().enum([0, 1]),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { id, state } = req._vdata;
 
-    if (
-      !validaString(id, 1, fieldLength.id, 1) ||
-      !validationValue(state, [1, 0])
-    ) {
-      paramErr(res, req);
-      return;
+      const { account } = req._hello.userinfo;
+
+      await db('todo')
+        .where({ id, account })
+        .update({ state, update_at: Date.now() });
+
+      syncUpdateData(req, 'todolist');
+
+      _success(res, state === 1 ? '标记为未完成' : '标记为已完成')(req, id, 1);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    const { account } = req._hello.userinfo;
-
-    await db('todo')
-      .where({ id, account })
-      .update({ state, update_at: Date.now() });
-
-    syncUpdateData(req, 'todolist');
-
-    _success(res, state === 1 ? '标记为未完成' : '标记为已完成')(req, id, 1);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 // 编辑待办
-route.post('/edit', async (req, res) => {
-  try {
-    const { id, content } = req.body;
+route.post(
+  '/edit',
+  validate(
+    'body',
+    V.object({
+      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      content: V.string().trim().min(1).max(fieldLength.todoContent),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { id, content } = req._vdata;
 
-    if (
-      !validaString(id, 1, fieldLength.id, 1) ||
-      !validaString(content, 1, fieldLength.todoContent)
-    ) {
-      paramErr(res, req);
-      return;
+      const { account } = req._hello.userinfo;
+
+      await db('todo')
+        .where({ id, account })
+        .update({ content, update_at: Date.now() });
+
+      syncUpdateData(req, 'todolist');
+
+      _success(res, '编辑待办成功')(req, content, 1);
+    } catch (error) {
+      _err(res)(req, error);
     }
-
-    const { account } = req._hello.userinfo;
-
-    await db('todo')
-      .where({ id, account })
-      .update({ content, update_at: Date.now() });
-
-    syncUpdateData(req, 'todolist');
-
-    _success(res, '编辑待办成功')(req, content, 1);
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 export default route;

@@ -15,7 +15,7 @@ import {
   paramErr,
   tplReplace,
   uLog,
-  validaString,
+  validate,
 } from '../../utils/utils.js';
 
 import appConfig from '../../data/config.js';
@@ -28,6 +28,7 @@ import _crypto from '../../utils/crypto.js';
 import { cleanFavicon } from '../bmk/bmk.js';
 import { _d } from '../../data/data.js';
 import { fieldLength } from '../config.js';
+import V from '../../utils/validRules.js';
 
 const route = express.Router();
 
@@ -80,116 +81,127 @@ function extractIconUrl($, host, protocol) {
   return defaultIcon;
 }
 
-route.get('/', async (req, res) => {
-  try {
-    const urlStr = req.query.u;
-
-    // 检查接口是否开启
-    if (!_d.pubApi.faviconApi && !req._hello.userinfo.account) {
-      return _err(res, '接口未开放')(req, urlStr, 1);
-    }
-
-    if (!validaString(urlStr, 1, fieldLength.url)) {
-      paramErr(res, req);
-      return;
-    }
-
-    let protocol = 'https:'; // 默认https
-    const url = `${urlStr.startsWith('http') ? '' : `${protocol}//`}${urlStr}`;
-
-    if (!isurl(url)) {
-      paramErr(res, req);
-      return;
-    }
-
-    let iconPath = '',
-      missFlagPath = '';
-
+route.get(
+  '/',
+  validate(
+    'query',
+    V.object({
+      u: V.string().trim().min(1).max(fieldLength.url),
+    })
+  ),
+  async (req, res) => {
     try {
-      const { host } = new URL(url);
+      const urlStr = req._vdata.u;
 
-      iconPath = appConfig.faviconDir(`${_crypto.getStringHash(host)}.png`);
+      // 检查接口是否开启
+      if (!_d.pubApi.faviconApi && !req._hello.userinfo.account) {
+        return _err(res, '接口未开放')(req, urlStr, 1);
+      }
 
-      missFlagPath = `${iconPath}.miss`;
+      let protocol = 'https:'; // 默认https
+      const url = `${
+        urlStr.startsWith('http') ? '' : `${protocol}//`
+      }${urlStr}`;
 
-      if (await _f.exists(iconPath)) {
-        res.sendFile(iconPath, { dotfiles: 'allow' });
+      if (!isurl(url)) {
+        paramErr(res, req, `url 格式错误`, { url });
         return;
       }
 
-      if (await _f.exists(missFlagPath)) {
-        res.sendFile(defaultIcon, { dotfiles: 'allow' });
-        return;
-      }
+      let iconPath = '',
+        missFlagPath = '';
 
       try {
-        // 自行解析获取图标
-        let htmlResp;
+        const { host } = new URL(url);
+
+        iconPath = appConfig.faviconDir(`${_crypto.getStringHash(host)}.png`);
+
+        missFlagPath = `${iconPath}.miss`;
+
+        if (await _f.exists(iconPath)) {
+          res.sendFile(iconPath, { dotfiles: 'allow' });
+          return;
+        }
+
+        if (await _f.exists(missFlagPath)) {
+          res.sendFile(defaultIcon, { dotfiles: 'allow' });
+          return;
+        }
+
         try {
-          htmlResp = await axios.get(`${protocol}//${host}`, { timeout: 5000 });
-        } catch {
-          protocol = 'http:';
-          htmlResp = await axios.get(`${protocol}//${host}`, { timeout: 5000 });
-        }
-        if (
-          !htmlResp?.headers ||
-          !htmlResp.headers['content-type']?.includes('text/html')
-        ) {
-          throw new Error('只允许获取HTML文件');
-        }
-
-        const head = extractFullHead(htmlResp.data);
-
-        const $ = _f.getTextSize(head) > 300 * 1024 ? null : cheerio.load(head);
-
-        await downFile(extractIconUrl($, host, protocol), iconPath);
-      } catch (err) {
-        // 调用备用接口获取图标
-        if (_d.faviconSpareApi) {
-          await downFile(
-            tplReplace(_d.faviconSpareApi, {
-              host,
-            }),
-            iconPath
-          );
-
-          await uLog(req, `调用备用接口获取图标(${urlStr})`);
-        } else {
-          throw err;
-        }
-      }
-
-      if (await _f.exists(iconPath)) {
-        try {
-          // 压缩图标
-          const buf = await compressionImg(iconPath);
-
-          if (buf) {
-            await _f.writeFile(iconPath, buf);
+          // 自行解析获取图标
+          let htmlResp;
+          try {
+            htmlResp = await axios.get(`${protocol}//${host}`, {
+              timeout: 5000,
+            });
+          } catch {
+            protocol = 'http:';
+            htmlResp = await axios.get(`${protocol}//${host}`, {
+              timeout: 5000,
+            });
           }
-        } catch (error) {
-          await errLog(req, `${error}(${urlStr})`);
+          if (
+            !htmlResp?.headers ||
+            !htmlResp.headers['content-type']?.includes('text/html')
+          ) {
+            throw new Error('只允许获取HTML文件');
+          }
+
+          const head = extractFullHead(htmlResp.data);
+
+          const $ =
+            _f.getTextSize(head) > 300 * 1024 ? null : cheerio.load(head);
+
+          await downFile(extractIconUrl($, host, protocol), iconPath);
+        } catch (err) {
+          // 调用备用接口获取图标
+          if (_d.faviconSpareApi) {
+            await downFile(
+              tplReplace(_d.faviconSpareApi, {
+                host,
+              }),
+              iconPath
+            );
+
+            await uLog(req, `调用备用接口获取图标(${urlStr})`);
+          } else {
+            throw err;
+          }
         }
-        res.sendFile(iconPath, { dotfiles: 'allow' });
-      } else {
-        throw new Error(`获取图标失败`);
+
+        if (await _f.exists(iconPath)) {
+          try {
+            // 压缩图标
+            const buf = await compressionImg(iconPath);
+
+            if (buf) {
+              await _f.writeFile(iconPath, buf);
+            }
+          } catch (error) {
+            await errLog(req, `${error}(${urlStr})`);
+          }
+          res.sendFile(iconPath, { dotfiles: 'allow' });
+        } else {
+          throw new Error(`获取图标失败`);
+        }
+      } catch (error) {
+        if (missFlagPath) {
+          try {
+            await _f.writeFile(missFlagPath, '');
+          } catch (err) {
+            await errLog(req, `${err}(${urlStr})`);
+          }
+        }
+
+        await errLog(req, `${error}(${urlStr})`);
+
+        res.sendFile(defaultIcon, { dotfiles: 'allow' });
       }
     } catch (error) {
-      if (missFlagPath) {
-        try {
-          await _f.writeFile(missFlagPath, '');
-        } catch (err) {
-          await errLog(req, `${err}(${urlStr})`);
-        }
-      }
-
-      await errLog(req, `${error}(${urlStr})`);
-
-      res.sendFile(defaultIcon, { dotfiles: 'allow' });
+      _err(res)(req, error);
     }
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
 
 export default route;

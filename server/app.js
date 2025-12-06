@@ -13,7 +13,6 @@ import {
   _err,
   debounce,
   getDirname,
-  validaString,
   paramErr,
   isurl,
   uLog,
@@ -21,6 +20,7 @@ import {
   parseJson,
   extractFullHead,
   errLog,
+  validate,
 } from './utils/utils.js';
 
 import { resolve } from 'path';
@@ -62,6 +62,7 @@ import _f from './utils/f.js';
 import axios from 'axios';
 import cheerio from './routes/bmk/cheerio.js';
 import { db } from './utils/sqlite.js';
+import V from './utils/validRules.js';
 
 const __dirname = getDirname(import.meta);
 
@@ -96,9 +97,20 @@ const informReqLimit = debounce(
 app.use(async (req, res, next) => {
   try {
     // 客户端临时ID格式
-    const temid = req.headers['x-tem-id'] || '';
-    if (!validaString(temid, 0, fieldLength.id, 1)) {
-      paramErr(res, req);
+    let temid = req.headers['x-tem-id'] || '';
+    try {
+      temid = await V.parse(
+        temid,
+        V.string()
+          .trim()
+          .default('')
+          .allowEmpty()
+          .max(fieldLength.id)
+          .alphanumeric(),
+        'temid'
+      );
+    } catch (error) {
+      paramErr(res, req, error, { temid });
       return;
     }
 
@@ -210,163 +222,178 @@ app.use('/api/icon', getfaviconRoute);
 app.use('/api/echo', echoRoute);
 
 // 收信接口
-app.all('/api/s/:chat_id', async (req, res) => {
-  try {
-    const { method } = req._hello;
-
-    const source = req.headers['x-source-service'];
-
-    if (source === appConfig.appName) {
-      _err(res, '不能转发消息给自己')(req);
-      return;
-    }
-
-    let text = '';
-    if (method === 'get') {
-      text = req.query.text;
-    } else if (method === 'post') {
-      text = req.body.text;
-
-      if (!text) {
-        text = req.query.text;
-      }
-    }
-
-    const { chat_id } = req.params;
-
-    if (
-      !validaString(chat_id, 1, fieldLength.id, 1) ||
-      !validaString(text, 1, fieldLength.chatContent)
-    ) {
-      paramErr(res, req);
-      return;
-    }
-
-    const user = await db('user')
-      .select('account')
-      .where({ chat_id, state: 1, receive_chat_state: 1 })
-      .findOne();
-
-    if (!user) {
-      _err(res, `${appConfig.notifyAccountDes}未开启收信接口`)(req);
-      return;
-    }
-
-    await heperMsgAndForward(req, user.account, text);
-
-    _success(res, `接收${appConfig.notifyAccountDes}消息成功`)(req, text, 1);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-// 获取页面信息
-app.get('/api/site-info', async (req, res) => {
-  try {
-    const { u } = req.query;
-
-    // 检查接口是否开启
-    if (!_d.pubApi.siteInfoApi && !req._hello.userinfo.account) {
-      return _err(res, '接口未开放')(req, u, 1);
-    }
-
-    if (!validaString(u, 1, fieldLength.url)) {
-      paramErr(res, req);
-      return;
-    }
-
-    let protocol = 'https:'; // 默认https
-    const url = `${u.startsWith('http') ? '' : `${protocol}//`}${u}`;
-
-    if (!isurl(url)) {
-      paramErr(res, req);
-      return;
-    }
-
-    const obj = { title: '', des: '' };
-    let p = '',
-      miss = '';
-
+app.all(
+  '/api/s/:chat_id',
+  validate(
+    'params',
+    V.object({
+      chat_id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+    })
+  ),
+  async (req, res) => {
     try {
-      await uLog(req, `获取网站信息(${u})`);
-      const { host, pathname } = new URL(url);
+      const { method } = req._hello;
 
-      p = appConfig.siteinfoDir(
-        `${_crypto.getStringHash(`${host}${pathname}`)}.json`
-      );
+      const source = req.headers['x-source-service'];
 
-      miss = p + '.miss';
-
-      // 缓存存在，则使用缓存
-      if (await _f.exists(p)) {
-        _success(
-          res,
-          'ok',
-          parseJson((await _f.fsp.readFile(p)).toString(), {})
-        );
+      if (source === appConfig.appName) {
+        _err(res, '不能转发消息给自己')(req);
         return;
       }
 
-      if (await _f.exists(miss)) {
-        _success(res, 'ok', obj);
-        return;
-      }
+      let text = '';
+      if (method === 'get') {
+        text = req.query.text;
+      } else if (method === 'post') {
+        text = req.body.text;
 
-      let result;
-      try {
-        result = await axios({
-          method: 'get',
-          url: `${protocol}//${host}${pathname}`,
-          timeout: 5000,
-        });
-      } catch {
-        protocol = 'http:';
-        result = await axios({
-          method: 'get',
-          url: `${protocol}//${host}${pathname}`,
-          timeout: 5000,
-        });
-      }
-
-      if (
-        !result?.headers ||
-        !result.headers['content-type']?.includes('text/html')
-      ) {
-        throw new Error('只允许获取HTML文件');
-      }
-
-      const head = extractFullHead(result.data);
-
-      if (_f.getTextSize(head) > 300 * 1024) {
-        throw new Error('HTML文件过大');
-      }
-
-      const $ = cheerio.load(head);
-      const $title = $('title');
-      const $des = $('meta[name="description"]');
-
-      obj.title = $title.text() || '';
-      obj.des = $des.attr('content') || '';
-
-      await _f.writeFile(p, JSON.stringify(obj));
-
-      _success(res, 'ok', obj);
-    } catch (error) {
-      if (miss) {
-        try {
-          await _f.writeFile(miss, '');
-        } catch (err) {
-          await errLog(req, `${err}(${u})`);
+        if (!text) {
+          text = req.query.text;
         }
       }
 
-      await errLog(req, `${error}(${u})`);
-      _success(res, 'ok', obj);
+      const { chat_id } = req._vdata;
+
+      try {
+        text = await V.parse(
+          text,
+          V.string().trim().min(1).max(fieldLength.chatContent),
+          'text'
+        );
+      } catch (error) {
+        paramErr(res, req, error, { text });
+      }
+
+      const user = await db('user')
+        .select('account')
+        .where({ chat_id, state: 1, receive_chat_state: 1 })
+        .findOne();
+
+      if (!user) {
+        _err(res, `${appConfig.notifyAccountDes}未开启收信接口`)(req);
+        return;
+      }
+
+      await heperMsgAndForward(req, user.account, text);
+
+      _success(res, `接收${appConfig.notifyAccountDes}消息成功`)(req, text, 1);
+    } catch (error) {
+      _err(res)(req, error);
     }
-  } catch (error) {
-    _err(res)(req, error);
   }
-});
+);
+
+// 获取页面信息
+app.get(
+  '/api/site-info',
+  validate(
+    'query',
+    V.object({
+      u: V.string().trim().min(1).max(fieldLength.url),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { u } = req._vdata;
+
+      // 检查接口是否开启
+      if (!_d.pubApi.siteInfoApi && !req._hello.userinfo.account) {
+        return _err(res, '接口未开放')(req, u, 1);
+      }
+
+      let protocol = 'https:'; // 默认https
+      const url = `${u.startsWith('http') ? '' : `${protocol}//`}${u}`;
+
+      if (!isurl(url)) {
+        paramErr(res, req, '无效的URL', { url });
+        return;
+      }
+
+      const obj = { title: '', des: '' };
+      let p = '',
+        miss = '';
+
+      try {
+        await uLog(req, `获取网站信息(${u})`);
+        const { host, pathname } = new URL(url);
+
+        p = appConfig.siteinfoDir(
+          `${_crypto.getStringHash(`${host}${pathname}`)}.json`
+        );
+
+        miss = p + '.miss';
+
+        // 缓存存在，则使用缓存
+        if (await _f.exists(p)) {
+          _success(
+            res,
+            'ok',
+            parseJson((await _f.fsp.readFile(p)).toString(), {})
+          );
+          return;
+        }
+
+        if (await _f.exists(miss)) {
+          _success(res, 'ok', obj);
+          return;
+        }
+
+        let result;
+        try {
+          result = await axios({
+            method: 'get',
+            url: `${protocol}//${host}${pathname}`,
+            timeout: 5000,
+          });
+        } catch {
+          protocol = 'http:';
+          result = await axios({
+            method: 'get',
+            url: `${protocol}//${host}${pathname}`,
+            timeout: 5000,
+          });
+        }
+
+        if (
+          !result?.headers ||
+          !result.headers['content-type']?.includes('text/html')
+        ) {
+          throw new Error('只允许获取HTML文件');
+        }
+
+        const head = extractFullHead(result.data);
+
+        if (_f.getTextSize(head) > 300 * 1024) {
+          throw new Error('HTML文件过大');
+        }
+
+        const $ = cheerio.load(head);
+        const $title = $('title');
+        const $des = $('meta[name="description"]');
+
+        obj.title = $title.text() || '';
+        obj.des = $des.attr('content') || '';
+
+        await _f.writeFile(p, JSON.stringify(obj));
+
+        _success(res, 'ok', obj);
+      } catch (error) {
+        if (miss) {
+          try {
+            await _f.writeFile(miss, '');
+          } catch (err) {
+            await errLog(req, `${err}(${u})`);
+          }
+        }
+
+        await errLog(req, `${error}(${u})`);
+        _success(res, 'ok', obj);
+      }
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
 
 app.use(async (req, res, next) => {
   const path = req._hello.path;
