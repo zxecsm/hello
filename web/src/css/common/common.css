@@ -350,3 +350,6 @@ a:hover {
 .inactive-window .window_head {
   opacity: 0.5 !important;
 }
+.drag_opacity {
+  opacity: 0.8 !important;
+}

@@ -84,7 +84,7 @@
     toolbox = document.createElement('div');
     toolbox.style.position = 'fixed';
     toolbox.style.zIndex = 999999;
-    toolbox.style.padding = '2px';
+    toolbox.style.padding = '2px 2px 2px 30px';
     toolbox.style.borderRadius = '6px';
     toolbox.style.fontSize = '14px';
     toolbox.style.display = 'none';
@@ -93,8 +93,10 @@
     toolbox.style.flexFlow = 'row wrap';
     toolbox.style.justifyContent = 'space-evenly';
     toolbox.style.alignItems = 'center';
+    toolbox.style.cursor = 'move';
 
     applyTheme();
+    myDrag({ target: toolbox, trigger: toolbox });
     document.body.appendChild(toolbox);
   }
 
@@ -331,5 +333,73 @@
     window.SelectionToolbox = { addButton };
   }
 
+  function myDrag(opt) {
+    opt.target = opt.target || opt.trigger;
+    const { trigger, target, create, down, move, up, border, dblclick } = opt;
+    create && create({ trigger, target });
+    let ol, ot, x, y, pointerX, pointerY;
+    function hdDown(e) {
+      if (e.target !== toolbox) return;
+      x = target.offsetLeft;
+      y = target.offsetTop;
+      const l = target.offsetLeft,
+        t = target.offsetTop;
+      if (e.type === 'touchstart') {
+        pointerX = e.touches[0].clientX;
+        pointerY = e.touches[0].clientY;
+      } else if (e.type === 'mousedown') {
+        pointerX = e.clientX;
+        pointerY = e.clientY;
+      }
+      ol = pointerX - l;
+      ot = pointerY - t;
+      trigger.addEventListener('touchmove', hdMove);
+      trigger.addEventListener('touchend', hdUp);
+      document.addEventListener('mousemove', hdMove);
+      document.addEventListener('mouseup', hdUp);
+      down && down({ e, trigger, target, x, y, pointerX, pointerY });
+    }
+    function hdMove(e) {
+      e.preventDefault();
+      if (e.type === 'touchmove') {
+        pointerX = e.touches[0].clientX;
+        pointerY = e.touches[0].clientY;
+      } else if (e.type === 'mousemove') {
+        pointerX = e.clientX;
+        pointerY = e.clientY;
+      }
+      x = pointerX - ol;
+      y = pointerY - ot;
+      if (border) {
+        const w = window.innerWidth,
+          h = window.innerHeight,
+          cW = target.offsetWidth,
+          cH = target.offsetHeight;
+        x < 0 ? (x = 0) : x > w - cW ? (x = w - cW) : null;
+        y < 0 ? (y = 0) : y > h - cH ? (y = h - cH) : null;
+      }
+      target.style.left = x + 'px';
+      target.style.top = y + 'px';
+      move && move({ e, trigger, target, x, y, pointerX, pointerY });
+    }
+    function hdUp(e) {
+      target.removeEventListener('touchmove', hdMove);
+      target.removeEventListener('touchend', hdUp);
+      document.removeEventListener('mousemove', hdMove);
+      document.removeEventListener('mouseup', hdUp);
+      up && up({ e, trigger, target, x, y, pointerX, pointerY });
+    }
+    function hdDblclick(e) {
+      dblclick && dblclick({ e, trigger, target, x, y, pointerX, pointerY });
+    }
+    trigger.addEventListener('dblclick', hdDblclick);
+    trigger.addEventListener('mousedown', hdDown);
+    trigger.addEventListener('touchstart', hdDown);
+    return function () {
+      trigger.removeEventListener('mousedown', hdDown);
+      trigger.removeEventListener('touchstart', hdDown);
+      trigger.removeEventListener('dblclick', hdDblclick);
+    };
+  }
   init();
 })();

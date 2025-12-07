@@ -1487,13 +1487,13 @@ export function myDrag(opt) {
     target.style.left = x + 'px';
     target.style.top = y + 'px';
     if (localData.get('windowMoveOpacity')) {
-      target.style.opacity = 0.8;
+      target.classList.add('drag_opacity');
     }
     move && move({ e, trigger, target, x, y, pointerX, pointerY });
   }
   function hdUp(e) {
     if (localData.get('windowMoveOpacity')) {
-      target.style.opacity = '';
+      target.classList.remove('drag_opacity');
     }
     toggleUserSelect();
     target.removeEventListener('touchmove', hdMove);
