@@ -181,7 +181,7 @@ export async function renderPlayingList() {
       </div>
       <div v-if="mv" class="play_mv iconfont icon-shipin2"></div>
       <div class="like_hear iconfont {{issc(id) ? 'icon-hear-full active' : 'icon-hear'}}"></div>
-      <div cursor="y" class="del iconfont icon-close-bold"></div>
+      <div cursor="y" class="del iconfont icon-shibai"></div>
     </li>
     <div v-if="totalPage > 1" v-html="getPaging()" style="padding:2rem 0;text-align:center;line-height: 2.6rem;" class="playing_list_paging no_select"></div>
     `,

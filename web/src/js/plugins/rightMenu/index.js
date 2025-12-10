@@ -86,7 +86,7 @@ class RightM {
     this.searchInp.setAttribute('autocomplete', 'off');
     this.searchBox.appendChild(this.searchInp);
     this.clearSearchText = document.createElement('i');
-    this.clearSearchText.className = 'iconfont icon-close-bold';
+    this.clearSearchText.className = 'iconfont icon-shibai';
     this.clearSearchText.setAttribute('cursor', 'y');
     this.searchBox.appendChild(this.clearSearchText);
     this.head.appendChild(this.searchBox);
@@ -405,7 +405,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
           <div class="inp_box">
             <input class='inp' :data-flag="key" :autocomplete="autocomplete" :placeholder="placeholder" :value="value" :type="inputType"/>
             <i v-if="inputType === 'password'" v-show="value !== ''" cursor="y" class="show_pass_btn iconfont icon-kejian"></i>
-            <i cursor="y" class="clean_btn iconfont icon-close-bold {{value === '' ? '' : 'show'}}"></i>
+            <i cursor="y" class="clean_btn iconfont icon-shibai {{value === '' ? '' : 'show'}}"></i>
           </div>
           <p class='err'></p>
         </div>

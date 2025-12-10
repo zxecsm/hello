@@ -847,7 +847,7 @@ function renderPlayList() {
         <span class="artist_name"><i class="artist_name_text">{{artist}}</i></span>
       </div>
       <div v-if="mv" class="play_mv iconfont icon-shipin2"></div>
-      <div cursor="y" class="del iconfont icon-close-bold"></div>
+      <div cursor="y" class="del iconfont icon-shibai"></div>
     </li>
     <div v-html="getPaging()" style="padding:2rem 0;text-align:center;" class="playing_list_paging no_select"></div>
     `,

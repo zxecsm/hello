@@ -2211,7 +2211,7 @@ function showPaste() {
       _tpl(
         `<span cursor="y" class="type iconfont {{waitObj.type==='copy'?'icon-fuzhi':'icon-jiandao'}}"></span>
         <span cursor="y" class="text">粘贴({{waitObj.data.length}})</span>
-        <span cursor="y" class="close iconfont icon-close-bold"></span>`,
+        <span cursor="y" class="close iconfont icon-shibai"></span>`,
         { waitObj }
       )
     )

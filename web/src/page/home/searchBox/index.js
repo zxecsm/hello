@@ -764,7 +764,7 @@ function renderSearchList() {
         <template v-if="type === 'ss'">
           <span class="type_logo iconfont {{flag === 'ts' ? 'icon-tishi' : 'icon-history'}}"></span>
           <span v-html="hdTitleHighlight(splitWord, content)" cursor="y" class="text"></span>
-          <span v-if="flag != 'ts'" cursor="y" class="dellss iconfont icon-close-bold"></span>
+          <span v-if="flag != 'ts'" cursor="y" class="dellss iconfont icon-shibai"></span>
         </template>
         <template v-else-if="type === 'note'">
           <span class="type_logo iconfont icon-jilu"></span>
