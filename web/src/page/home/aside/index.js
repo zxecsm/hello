@@ -270,7 +270,7 @@ function renderAsideList(p, delayScroll = 0) {
     <template v-for="item in _nav">
       <div class="list_title no_select" :data-id="item.id" :flag="item.id==id?'on':'off'">
         <div cursor="y" check="n" class="check_bmlist"></div>
-        <i cursor="y" class="iconfont {{item.share === 1 ? 'icon-24gl-unlock4' : 'icon-24gl-unlock2 active'}}"></i>
+        <i cursor="y" class="iconfont {{item.share === 1 ? 'icon-gl-unlock4' : 'icon-gl-unlock2 active'}}"></i>
         <em cursor="y">{{item.title}}</em>
       </div>
       <ul v-show="item.id==id">
@@ -1294,7 +1294,7 @@ export function bookMarkSetting(e, obj, isHome, el) {
     {
       id: '1',
       text: '弹窗打开',
-      beforeIcon: 'iconfont icon-24gl-minimize',
+      beforeIcon: 'iconfont icon-minimize',
     },
     {
       id: '2',

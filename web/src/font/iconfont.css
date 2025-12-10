@@ -1,8 +1,8 @@
 @font-face {
   font-family: "iconfont"; /* Project id 2809795 */
-  src: url('iconfont.woff2?t=1761904231963') format('woff2'),
-       url('iconfont.woff?t=1761904231963') format('woff'),
-       url('iconfont.ttf?t=1761904231963') format('truetype');
+  src: url('iconfont.woff2?t=1765330035862') format('woff2'),
+       url('iconfont.woff?t=1765330035862') format('woff'),
+       url('iconfont.ttf?t=1765330035862') format('truetype');
 }
 
 .iconfont {
@@ -13,16 +13,28 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.icon-a-ziyuan60:before {
+.icon-hello_cat1:before {
+  content: "\69";
+}
+
+.icon-cat:before {
+  content: "\e63d";
+}
+
+.icon-hello_cat:before {
+  content: "\68";
+}
+
+.icon-cat_c:before {
+  content: "\e60f";
+}
+
+.icon-status:before {
   content: "\e605";
 }
 
 .icon-opacity:before {
   content: "\e61a";
-}
-
-.icon-tuya-copy:before {
-  content: "\ee34";
 }
 
 .icon-tongzhi:before {
@@ -49,14 +61,6 @@
   content: "\e713";
 }
 
-.icon-fontke_svg:before {
-  content: "\e637";
-}
-
-.icon-asterisks-1-copy:before {
-  content: "\e604";
-}
-
 .icon-Redo:before {
   content: "\e95d";
 }
@@ -81,27 +85,27 @@
   content: "\e697";
 }
 
-.icon-24gl-folderPlus:before {
+.icon-folderPlus:before {
   content: "\eac0";
 }
 
-.icon-24gl-fileEmpty:before {
+.icon-gl-fileEmpty:before {
   content: "\eac1";
 }
 
-.icon-24gl-rename:before {
+.icon-gl-rename:before {
   content: "\eb09";
 }
 
-.icon-24gl-volumeZero:before {
+.icon-volumeZero:before {
   content: "\ea0f";
 }
 
-.icon-24gl-volumeLow:before {
+.icon-volumeLow:before {
   content: "\ea0d";
 }
 
-.icon-24gl-volumeMiddle:before {
+.icon-volumeMiddle:before {
   content: "\ea0e";
 }
 
@@ -253,7 +257,7 @@
   content: "\e627";
 }
 
-.icon-24gl-minimize:before {
+.icon-minimize:before {
   content: "\ea6b";
 }
 
@@ -309,7 +313,7 @@
   content: "\e65c";
 }
 
-.icon-15qingkong-1:before {
+.icon-qingkong-1:before {
   content: "\e680";
 }
 
@@ -329,7 +333,7 @@
   content: "\e639";
 }
 
-.icon-24gl-folder:before {
+.icon-gl-folder:before {
   content: "\eabd";
 }
 
@@ -353,11 +357,11 @@
   content: "\ee30";
 }
 
-.icon-24gl-unlock2:before {
+.icon-gl-unlock2:before {
   content: "\e9d6";
 }
 
-.icon-24gl-unlock4:before {
+.icon-gl-unlock4:before {
   content: "\e9d7";
 }
 
@@ -389,7 +393,7 @@
   content: "\ee17";
 }
 
-.icon-31liebiao:before {
+.icon-lliebiao:before {
   content: "\e60c";
 }
 
@@ -457,11 +461,11 @@
   content: "\e65e";
 }
 
-.icon-24gl-volumeCross:before {
+.icon-gl-volumeCross:before {
   content: "\ea0b";
 }
 
-.icon-24gl-volumeHigh:before {
+.icon-volumeHigh:before {
   content: "\ea0c";
 }
 
@@ -545,7 +549,7 @@
   content: "\e600";
 }
 
-.icon-24gl-fileText:before {
+.icon-gl-fileText:before {
   content: "\eabe";
 }
 
@@ -589,7 +593,7 @@
   content: "\e632";
 }
 
-.icon-65zanting:before {
+.icon-zzanting:before {
   content: "\e631";
 }
 

@@ -292,7 +292,7 @@ function shake(target) {
   closeShake(target);
 }
 function selectTabs(e, data, opt = {}, title = '') {
-  const html = `<div class="tabs_wrap"><i cursor="y" class="clean_btn iconfont icon-15qingkong-1"></i></div><p class='err'></p><button cursor="y" class="mtcbtn">提交</button>`;
+  const html = `<div class="tabs_wrap"><i cursor="y" class="clean_btn iconfont icon-qingkong-1"></i></div><p class='err'></p><button cursor="y" class="mtcbtn">提交</button>`;
   let tabsObj = null;
   function isDiff() {
     return !deepEqual(
@@ -413,7 +413,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
         <div v-if="beforeText" class="title">{{beforeText}}</div>
         <div class='texta_box'>
           <textarea title='Ctrl+Enter {{subText}}' class='texta' :data-flag="key" :autocomplete="autocomplete" :placeholder="placeholder">{{value}}</textarea>
-          <i cursor="y" class="clean_btn iconfont icon-15qingkong-1 {{value === '' ? '' : 'show'}}"></i>
+          <i cursor="y" class="clean_btn iconfont icon-qingkong-1 {{value === '' ? '' : 'show'}}"></i>
         </div>
         <p class='err'></p>
       </div>

@@ -1958,6 +1958,7 @@ body {
           height: 8.8rem;
           margin: 0 auto;
           overflow: hidden;
+          opacity: 0.8;
 
           &.active {
             animation: logowidth 1s ease-in-out alternate both;
@@ -2441,6 +2442,7 @@ body {
       .next_btn {
         position: absolute;
         top: 50%;
+        font-size: 2rem;
         transform: translateY(-50%);
         right: -4rem;
       }
@@ -2448,6 +2450,7 @@ body {
       .prev_btn {
         position: absolute;
         top: 50%;
+        font-size: 2rem;
         transform: translateY(-50%);
         left: -4rem;
       }
@@ -3332,7 +3335,9 @@ body {
               transform: scale(1.2);
             }
           }
-
+          .next_btn {
+            font-size: 2rem;
+          }
           @keyframes fontcolor {
             0% {
               color: #000000;

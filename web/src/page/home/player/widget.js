@@ -180,14 +180,14 @@ function toggleMiniLrc() {
 export function miniPlayerPause() {
   $miniPlayer
     .find('.play_btn')
-    .attr('class', 'play_btn iconfont icon-65zanting')
+    .attr('class', 'play_btn iconfont icon-zzanting')
     .css('animation', 'none');
 }
 // 加载
 export function miniPlayerLoading() {
   $miniPlayer
     .find('.play_btn')
-    .attr('class', 'play_btn iconfont icon-65zanting')
+    .attr('class', 'play_btn iconfont icon-zzanting')
     .css('animation', 'fontcolor .5s infinite linear alternate');
 }
 // 播放

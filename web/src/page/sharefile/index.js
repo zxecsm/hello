@@ -328,7 +328,7 @@ async function renderList(top) {
           if (type === 'file') {
             logo = fileLogoType(name, size);
           } else {
-            logo = 'icon-24gl-folder';
+            logo = 'icon-gl-folder';
           }
         }
         return logo;

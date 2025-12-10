@@ -434,7 +434,7 @@ $headWrap
       },
       {
         text: '文件',
-        beforeIcon: 'iconfont icon-24gl-fileText',
+        beforeIcon: 'iconfont icon-gl-fileText',
         param: { value: 'file' },
       },
     ];

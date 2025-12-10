@@ -58,7 +58,7 @@ function getTagFont(type) {
   } else if (type === 'videoplay') {
     font += `icon-shipin1`;
   } else if (type === 'file' || type === 'sharefile') {
-    font += `icon-24gl-folder`;
+    font += `icon-gl-folder`;
   } else if (type === 'notepad') {
     font += `icon-jilu`;
   } else {

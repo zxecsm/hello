@@ -93,10 +93,10 @@ function renderShareList(total, pageNo, top) {
           logo = `icon-shuqian`;
           url += `/sharebm?s=${id}`;
         } else if (type === 'file') {
-          logo = `icon-24gl-fileText`;
+          logo = `icon-gl-fileText`;
           url += `/sharefile?s=${id}`;
         } else if (type === 'dir') {
-          logo = `icon-24gl-folder`;
+          logo = `icon-gl-folder`;
           url += `/sharefile?s=${id}`;
         }
         return { logo, url };

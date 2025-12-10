@@ -1089,9 +1089,9 @@ export function fileLogoType(fname, size) {
     return 'icon-yasuobao2';
   } else {
     if (size === 0) {
-      return 'icon-24gl-fileEmpty';
+      return 'icon-gl-fileEmpty';
     }
-    return 'icon-24gl-fileText';
+    return 'icon-gl-fileText';
   }
 }
 

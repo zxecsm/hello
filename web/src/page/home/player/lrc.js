@@ -270,7 +270,7 @@ export function pauseSong() {
   musicFootBoxPlayBtnPause();
   $lrcFootBtnWrap
     .find('.play_btn')
-    .attr('class', 'play_btn iconfont icon-65zanting')
+    .attr('class', 'play_btn iconfont icon-zzanting')
     .css('animation', 'none');
   miniPlayerPause();
 }
@@ -425,7 +425,7 @@ function songLoading() {
   miniPlayerLoading();
   $lrcFootBtnWrap
     .find('.play_btn')
-    .attr('class', 'play_btn iconfont icon-65zanting')
+    .attr('class', 'play_btn iconfont icon-zzanting')
     .css('animation', 'fontcolor .5s infinite linear alternate');
   musicFootBoxPlayBtnLoading();
 }

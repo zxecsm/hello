@@ -927,7 +927,7 @@ function searchSetting(e) {
     {
       id: '2',
       text: '弹窗打开搜索结果',
-      beforeIcon: 'iconfont icon-24gl-minimize',
+      beforeIcon: 'iconfont icon-minimize',
       afterIcon: openInPop
         ? 'iconfont icon-kaiguan-kai1'
         : 'iconfont icon-kaiguan-guan',

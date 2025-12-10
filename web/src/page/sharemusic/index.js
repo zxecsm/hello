@@ -136,15 +136,15 @@ setPlayVolume();
 export function getVolumeIcon(mediaVolume) {
   let icon = '';
   if (mediaVolume <= 0) {
-    icon = 'icon-24gl-volumeCross';
+    icon = 'icon-gl-volumeCross';
   } else if (mediaVolume < 0.2) {
-    icon = 'icon-24gl-volumeZero';
+    icon = 'icon-volumeZero';
   } else if (mediaVolume < 0.5) {
-    icon = 'icon-24gl-volumeLow';
+    icon = 'icon-volumeLow';
   } else if (mediaVolume < 0.8) {
-    icon = 'icon-24gl-volumeMiddle';
+    icon = 'icon-volumeMiddle';
   } else {
-    icon = 'icon-24gl-volumeHigh';
+    icon = 'icon-volumeHigh';
   }
 
   return icon;
@@ -480,7 +480,7 @@ function pauseSong() {
   $lrcProgressBar.find('.dolt').css('animation-play-state', 'paused');
   $lrcFootBtnWrap
     .find('.play_btn')
-    .attr('class', 'play_btn iconfont icon-65zanting')
+    .attr('class', 'play_btn iconfont icon-zzanting')
     .css('animation', 'none');
 }
 // 播放
@@ -627,7 +627,7 @@ $myAudio
       .css('animation', 'bgcolor .3s infinite linear alternate');
     $lrcFootBtnWrap
       .find('.play_btn')
-      .attr('class', 'play_btn iconfont icon-65zanting')
+      .attr('class', 'play_btn iconfont icon-zzanting')
       .css('animation', 'fontcolor .5s infinite linear alternate');
   })
   .on('playing', function () {

@@ -853,7 +853,7 @@ export function settingMenu(e, isMain) {
     data.push({
       id: '10',
       text: '清理本地配置缓存',
-      beforeIcon: `iconfont icon-15qingkong-1`,
+      beforeIcon: `iconfont icon-qingkong-1`,
     });
   }
   if (isMain) {
@@ -889,7 +889,6 @@ export function settingMenu(e, isMain) {
       } else if (id === '3') {
         const clickLove = localData.get('clickLove');
         const windowMoveOpacity = localData.get('windowMoveOpacity');
-        // const showStars = localData.get('showStars');
         const pmsound = localData.get('pmsound');
         const tip = localData.get('toolTip');
         const data = [
@@ -926,15 +925,6 @@ export function settingMenu(e, isMain) {
               (windowMoveOpacity ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
             param: { value: windowMoveOpacity },
           },
-          // {
-          //   id: '5',
-          //   text: '小星星',
-          //   beforeIcon: 'iconfont icon-asterisks-1-copy',
-          //   afterIcon:
-          //     'iconfont ' +
-          //     (showStars ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
-          //   param: { value: showStars },
-          // },
           {
             id: '6',
             text: '通知提示音',
@@ -989,20 +979,6 @@ export function settingMenu(e, isMain) {
                 localData.set('clickLove', true);
               }
               resetMenu(data);
-              // } else if (id === '5') {
-              //   // 小星星
-              //   if (param.value) {
-              //     curItem.afterIcon = 'iconfont icon-kaiguan-guan';
-              //     curItem.param.value = false;
-              //     _msg.success('关闭成功');
-              //     localData.set('showStars', false);
-              //   } else {
-              //     curItem.afterIcon = 'iconfont icon-kaiguan-kai1';
-              //     curItem.param.value = true;
-              //     _msg.success('开启成功');
-              //     localData.set('showStars', true);
-              //   }
-              //   resetMenu(data);
             } else if (id === '7') {
               // 窗口移动透明
               if (param.value) {
@@ -1110,7 +1086,7 @@ export function settingMenu(e, isMain) {
           {
             id: '2',
             text: '清理缓存',
-            beforeIcon: `iconfont icon-15qingkong-1`,
+            beforeIcon: `iconfont icon-qingkong-1`,
           },
           {
             id: '3',
@@ -1174,7 +1150,7 @@ export function settingMenu(e, isMain) {
                 {
                   id: 'all',
                   text: '所有',
-                  beforeIcon: 'iconfont icon-15qingkong-1',
+                  beforeIcon: 'iconfont icon-qingkong-1',
                   param: { text: '所有', type: '' },
                 },
               ];
@@ -1370,11 +1346,11 @@ function createQrCode(e) {
 function hdTools(e) {
   let data = [
     { id: '1', text: '笔记本', beforeIcon: 'iconfont icon-mingcheng-jiluben' },
-    { id: '2', text: '文件管理', beforeIcon: 'iconfont icon-24gl-folder' },
+    { id: '2', text: '文件管理', beforeIcon: 'iconfont icon-gl-folder' },
     {
       id: '9',
       text: '公开文件目录',
-      beforeIcon: 'iconfont icon-24gl-folder',
+      beforeIcon: 'iconfont icon-gl-folder',
     },
     { id: '5', text: '便条', beforeIcon: 'iconfont icon-jilu' },
     {

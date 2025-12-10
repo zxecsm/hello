@@ -578,10 +578,10 @@ function renderMsgList(list) {
               <span class="c_triangle"></span>
               <template v-if="isRight(_from)">
                 <span style="font-size:1.2rem;">{{size.toFixed(2)}}s</span>
-                <i style="margin-left: 0.4rem;" class="iconfont icon-65zanting"></i>
+                <i style="margin-left: 0.4rem;" class="iconfont icon-zzanting"></i>
               </template>
               <template v-else>
-                <i style="margin-right: 0.4rem;" class="iconfont icon-65zanting"></i>
+                <i style="margin-right: 0.4rem;" class="iconfont icon-zzanting"></i>
                 <span style="font-size:1.2rem;">{{size.toFixed(2)}}s</span>
               </template>
             </div>
@@ -1366,7 +1366,7 @@ function playVoice(a, _this, id) {
   $chatAudio[0].pause();
   $chatListBox
     .find('.c_voice_msg_box i')
-    .attr('class', 'iconfont icon-65zanting');
+    .attr('class', 'iconfont icon-zzanting');
   if (pflag === id) {
     $chatAudio.playflag = '';
     return;
@@ -1381,14 +1381,14 @@ $chatAudio
     $chatAudio.playflag = '';
     $chatListBox
       .find('.c_voice_msg_box i')
-      .attr('class', 'iconfont icon-65zanting');
+      .attr('class', 'iconfont icon-zzanting');
   })
   .on('error', function () {
     _msg.error('语音已过期');
     $chatAudio.playflag = '';
     $chatListBox
       .find('.c_voice_msg_box i')
-      .attr('class', 'iconfont icon-65zanting');
+      .attr('class', 'iconfont icon-zzanting');
   });
 // 发送文本消息
 function sendTextMsg() {
@@ -1827,12 +1827,12 @@ function switchNdnMode(acc, notify) {
     $ndn.css('display', 'block');
     if (notify === 1) {
       $ndn.attr({
-        class: 'ndn_icon iconfont icon-24gl-volumeHigh',
+        class: 'ndn_icon iconfont icon-volumeHigh',
         'data-notify': notify,
       });
     } else {
       $ndn.attr({
-        class: 'ndn_icon iconfont icon-24gl-volumeCross',
+        class: 'ndn_icon iconfont icon-gl-volumeCross',
         'data-notify': notify,
       });
     }

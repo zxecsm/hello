@@ -339,7 +339,7 @@ async function renderList(top) {
           if (type === 'file') {
             logo = fileLogoType(name, size);
           } else {
-            logo = 'icon-24gl-folder';
+            logo = 'icon-gl-folder';
           }
           return logo;
         }
@@ -759,7 +759,7 @@ function rightList(e, obj, el) {
       {
         id: 'newPage',
         text: '新窗口打开',
-        beforeIcon: 'iconfont icon-24gl-minimize',
+        beforeIcon: 'iconfont icon-minimize',
       }
     );
   }
@@ -784,7 +784,7 @@ function rightList(e, obj, el) {
     {
       id: 'rename',
       text: '重命名',
-      beforeIcon: 'iconfont icon-24gl-rename',
+      beforeIcon: 'iconfont icon-gl-rename',
     },
     {
       id: 'copy',
@@ -1556,11 +1556,11 @@ function handleDownloadFile(e) {
 }
 function upFileAndDir(e) {
   const data = [
-    { id: '1', text: '上传文件', beforeIcon: 'iconfont icon-24gl-fileEmpty' },
+    { id: '1', text: '上传文件', beforeIcon: 'iconfont icon-gl-fileEmpty' },
     {
       id: '2',
       text: '上传文件夹',
-      beforeIcon: 'iconfont icon-24gl-folderPlus',
+      beforeIcon: 'iconfont icon-folderPlus',
     },
     {
       id: '3',
@@ -1611,11 +1611,11 @@ function upFileAndDir(e) {
 }
 function createFileAndDir(e) {
   const data = [
-    { id: '1', text: '新建文本', beforeIcon: 'iconfont icon-24gl-fileEmpty' },
+    { id: '1', text: '新建文本', beforeIcon: 'iconfont icon-gl-fileEmpty' },
     {
       id: '2',
       text: '新建文件夹',
-      beforeIcon: 'iconfont icon-24gl-folderPlus',
+      beforeIcon: 'iconfont icon-folderPlus',
     },
     {
       id: '3',

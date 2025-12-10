@@ -455,7 +455,7 @@ export const updatePlayingList = debounce(function (msg) {
         _msg.msg({
           message: `已创建新播放列表，包含 ${playingList.length} 首歌曲`,
           type: 'warning',
-          icon: 'iconfont icon-31liebiao',
+          icon: 'iconfont icon-lliebiao',
           duration: 5000,
         });
       }

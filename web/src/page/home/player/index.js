@@ -744,15 +744,15 @@ export function setPlayVolume() {
 export function getVolumeIcon(mediaVolume) {
   let icon = '';
   if (mediaVolume <= 0) {
-    icon = 'icon-24gl-volumeCross';
+    icon = 'icon-gl-volumeCross';
   } else if (mediaVolume < 0.2) {
-    icon = 'icon-24gl-volumeZero';
+    icon = 'icon-volumeZero';
   } else if (mediaVolume < 0.5) {
-    icon = 'icon-24gl-volumeLow';
+    icon = 'icon-volumeLow';
   } else if (mediaVolume < 0.8) {
-    icon = 'icon-24gl-volumeMiddle';
+    icon = 'icon-volumeMiddle';
   } else {
-    icon = 'icon-24gl-volumeHigh';
+    icon = 'icon-volumeHigh';
   }
 
   return icon;
@@ -1075,7 +1075,7 @@ async function renderSongs(gao) {
     </div>
     <div class="items_list_top_menu_fill"></div>
     <div class="items_list_top_menu">
-      <div v-if="listId !== 'all'" cursor="y" class="play_list_btn iconfont icon-65zanting"></div>
+      <div v-if="listId !== 'all'" cursor="y" class="play_list_btn iconfont icon-zzanting"></div>
       <div class="list_total_num">{{listId === 'all' ? '一共' : '播放全部'}}
         <span>({{songListInfo.len}})</span>
       </div>
@@ -2468,14 +2468,14 @@ const musicFootBoxContentScroll = new ContentScroll(
 export function musicFootBoxPlayBtnPause() {
   $musicFootBox
     .find('.right_btns .play_btn')
-    .attr('class', 'play_btn iconfont icon-65zanting')
+    .attr('class', 'play_btn iconfont icon-zzanting')
     .css('animation', 'none');
 }
 // 加载中
 export function musicFootBoxPlayBtnLoading() {
   $musicFootBox
     .find('.right_btns .play_btn')
-    .attr('class', 'play_btn iconfont icon-65zanting')
+    .attr('class', 'play_btn iconfont icon-zzanting')
     .css('animation', 'fontcolor .5s infinite linear alternate');
 }
 // 开始播放
