@@ -482,7 +482,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { state = 0 } = req._vdata;
+      const { state } = req._vdata;
 
       const { account } = req._hello.userinfo;
 
@@ -738,10 +738,8 @@ route.post(
         name: V.string().notEmpty().min(1).max(fieldLength.filename),
         path: V.string().notEmpty().min(1).max(fieldLength.url),
         type: V.string().trim().enum(['dir', 'file']),
-      }).custom(
-        (obj) => _path.normalize(obj.path, obj.name) !== '/',
-        'path/name 路径不能为: /'
-      ),
+        size: V.number().toNumber().min(0),
+      }),
     })
   ),
   async (req, res) => {
@@ -857,10 +855,7 @@ route.post(
           name: V.string().notEmpty().min(1).max(fieldLength.filename),
           path: V.string().notEmpty().min(1).max(fieldLength.url),
           type: V.string().trim().enum(['dir', 'file']),
-        }).custom(
-          (obj) => _path.normalize(obj.path, obj.name) !== '/',
-          'path/name 路径不能为: /'
-        )
+        })
       )
         .min(1)
         .max(fieldLength.maxPagesize)
@@ -997,10 +992,7 @@ route.post(
           name: V.string().notEmpty().min(1).max(fieldLength.filename),
           path: V.string().notEmpty().min(1).max(fieldLength.url),
           type: V.string().trim().enum(['dir', 'file']),
-        }).custom(
-          (obj) => _path.normalize(obj.path, obj.name) !== '/',
-          'path/name 路径不能为: /'
-        )
+        })
       )
         .min(1)
         .max(fieldLength.maxPagesize)
@@ -1093,10 +1085,7 @@ route.post(
         name: V.string().notEmpty().min(1).max(fieldLength.filename),
         path: V.string().notEmpty().min(1).max(fieldLength.url),
         type: V.string().trim().enum(['dir', 'file']),
-      }).custom(
-        (obj) => _path.normalize(obj.path, obj.name) !== '/',
-        'path/name 路径不能为: /'
-      ),
+      }),
     })
   ),
   async (req, res) => {
@@ -1252,12 +1241,7 @@ route.post(
           name: V.string().notEmpty().min(1).max(fieldLength.filename),
           path: V.string().notEmpty().min(1).max(fieldLength.url),
           type: V.string().trim().enum(['dir', 'file']),
-        }).custom((obj) => {
-          return (
-            _path.normalize(obj.path, obj.name) !== '/' &&
-            _path.normalize(obj.path, obj.name) !== `/${appConfig.trashDirName}`
-          );
-        }, `path/name 路径不能为: / 和 /${appConfig.trashDirName}`)
+        })
       )
         .min(1)
         .max(fieldLength.maxPagesize),
@@ -1508,7 +1492,7 @@ route.post(
     V.object({
       mode: V.string()
         .trim()
-        .pattern(/^[0-7]{3}$/, '必须是三位数字组成'),
+        .pattern(/^[0-7]{3}$/, '必须为三位数字组成'),
       r: V.number().toInt().default(0).enum([0, 1]),
       data: V.array(
         V.object({

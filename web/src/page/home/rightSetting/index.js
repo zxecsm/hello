@@ -604,6 +604,8 @@ function handleForwardMsg(e) {
                 rMenu.validString(val, 1, _d.fieldLength.url) ||
                 rMenu.validUrl(val)
               );
+            } else {
+              return rMenu.validString(val, 0, _d.fieldLength.url);
             }
           },
         },

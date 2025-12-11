@@ -1747,7 +1747,7 @@ route.get(
   }
 );
 
-//编辑分享
+// 编辑分享
 route.post(
   '/edit-share',
   validate(

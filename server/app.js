@@ -305,7 +305,7 @@ app.get(
       const url = `${u.startsWith('http') ? '' : `${protocol}//`}${u}`;
 
       if (!isurl(url)) {
-        paramErr(res, req, '无效的URL', { url });
+        paramErr(res, req, 'url 格式错误', { url });
         return;
       }
 

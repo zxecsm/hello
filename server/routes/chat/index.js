@@ -1123,42 +1123,24 @@ route.post(
     'body',
     V.object({
       state: V.number().toInt().enum([0, 1]),
+      type: V.string().trim().enum(['get', 'post']),
+      link: V.string().trim().default('').allowEmpty().max(fieldLength.url),
+      header: V.object()
+        .default({})
+        .custom((v) => !isTooDeep(v, 5), '对象只能嵌套5层'),
+      body: V.object()
+        .default({})
+        .custom((v) => !isTooDeep(v, 10), '对象只能嵌套10层'),
     })
   ),
   async (req, res) => {
     try {
-      try {
-        const { state } = req._vdata;
-        req._vdata = await V.parse(
-          req.body,
-          V.object({
-            state: V.number().toInt().enum([0, 1]),
-            type: V.string().trim().enum(['get', 'post']),
-            link: V.string()
-              .trim()
-              .default('')
-              .allowEmpty()
-              .max(fieldLength.url)
-              .custom((v) => {
-                if (state === 1) {
-                  return isurl(v);
-                }
-                return true;
-              }, 'url 格式错误'),
-            header: V.object()
-              .default({})
-              .custom((v) => !isTooDeep(v, 5), '对象只能嵌套5层'),
-            body: V.object()
-              .default({})
-              .custom((v) => !isTooDeep(v, 10), '对象只能嵌套10层'),
-          })
-        );
-      } catch (error) {
-        paramErr(res, req, error, 'body');
+      const { state, type, link, header, body } = req._vdata;
+
+      if (state === 1 && !isurl(link)) {
+        paramErr(res, req, 'link 格式错误', 'body');
         return;
       }
-
-      const { state, type, link, header, body } = req._vdata;
 
       const { account } = req._hello.userinfo;
 

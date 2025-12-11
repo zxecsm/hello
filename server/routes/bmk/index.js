@@ -815,7 +815,7 @@ route.post(
     'body',
     V.object({
       title: V.string().trim().min(1).max(fieldLength.title),
-      token: V.string().trim().default('').allowEmpty().max(fieldLength.url),
+      token: V.string().trim().min(1).max(fieldLength.url),
     })
   ),
   async (req, res) => {

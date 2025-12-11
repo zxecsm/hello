@@ -104,7 +104,7 @@ route.get(
       }${urlStr}`;
 
       if (!isurl(url)) {
-        paramErr(res, req, `url 格式错误`, { url });
+        paramErr(res, req, 'url 格式错误', { url });
         return;
       }
 

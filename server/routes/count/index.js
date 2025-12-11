@@ -12,7 +12,6 @@ import {
   syncUpdateData,
   createPagingData,
   isValidDate,
-  isurl,
   writelog,
   concurrencyTasks,
   validate,
@@ -224,7 +223,7 @@ route.post(
         .default('')
         .allowEmpty()
         .max(fieldLength.url)
-        .custom((v) => (v ? isurl(v) : true), 'url 格式错误'),
+        .httpUrl(),
     })
   ),
   async (req, res) => {
@@ -305,7 +304,7 @@ route.post(
         .default('')
         .allowEmpty()
         .max(fieldLength.url)
-        .custom((v) => (v ? isurl(v) : true), 'url 格式错误'),
+        .httpUrl(),
     })
   ),
   async (req, res) => {
