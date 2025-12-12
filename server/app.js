@@ -67,6 +67,7 @@ import V from './utils/validRules.js';
 const __dirname = getDirname(import.meta);
 
 const app = express();
+app.disable('x-powered-by');
 
 // Cookie
 app.use(cookieParser());
