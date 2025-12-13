@@ -55,7 +55,9 @@ const $miniPlayer = $('.mini_player'),
 let miniPlayerCoord = localData.get('miniPlayerCoord'),
   miniLrcCoord = localData.get('miniLrcCoord'),
   mvIsTop = localData.get('mvIsTop'),
-  editLrcIsTop = localData.get('editLrcIsTop');
+  editLrcIsTop = localData.get('editLrcIsTop'),
+  mvSize = localData.get('mvSize'),
+  editLrcSize = localData.get('editLrcSize');
 // 显示/隐藏迷你播放器
 export function showMiniPlayer() {
   $miniPlayer.stop().show(_d.speed);
@@ -314,8 +316,10 @@ export function showEditLrc(sobj) {
     .catch(() => {});
   if (!$editLrcWrap._once) {
     $editLrcWrap._once = true;
-    toSetSize(editBox, 600, 600);
-    toCenter(editBox);
+    const { x, y, w, h } = editLrcSize;
+    toSetSize(editBox, w, h);
+    const obj = x && y ? { left: x, top: y } : null;
+    toCenter(editBox, obj);
   } else {
     myToRest(editBox, false, false);
   }
@@ -375,8 +379,10 @@ export async function playMv(obj) {
   $musicMvWrap.css('display', 'flex');
   if (!$musicMvWrap.once) {
     $musicMvWrap.once = true;
-    toSetSize(mvBox, 600, 600);
-    toCenter(mvBox);
+    const { x, y, w, h } = mvSize;
+    toSetSize(mvBox, w, h);
+    const obj = x && y ? { left: x, top: y } : null;
+    toCenter(mvBox, obj);
   } else {
     myToRest(mvBox, false, false);
   }
@@ -462,6 +468,9 @@ myDrag({
       myToMax(target);
     } else {
       savePopLocationInfo(target, { x, y });
+      mvSize.x = x;
+      mvSize.y = y;
+      localData.set('mvSize', mvSize);
       myToRest(target, pointerX);
     }
   },
@@ -474,12 +483,15 @@ myResize({
   },
   up({ target, x, y }) {
     hideIframeMask();
-    savePopLocationInfo(target, {
+    const obj = {
       x,
       y,
       w: target.offsetWidth,
       h: target.offsetHeight,
-    });
+    };
+    savePopLocationInfo(target, obj);
+    mvSize = obj;
+    localData.set('mvSize', mvSize);
   },
 });
 myDrag({
@@ -503,6 +515,9 @@ myDrag({
       myToMax(target);
     } else {
       savePopLocationInfo(target, { x, y });
+      editLrcSize.x = x;
+      editLrcSize.y = y;
+      localData.set('editLrcSize', editLrcSize);
       myToRest(target, pointerX);
     }
   },
@@ -515,12 +530,15 @@ myResize({
   },
   up({ target, x, y }) {
     hideIframeMask();
-    savePopLocationInfo(target, {
+    const obj = {
       x,
       y,
       w: target.offsetWidth,
       h: target.offsetHeight,
-    });
+    };
+    savePopLocationInfo(target, obj);
+    editLrcSize = obj;
+    localData.set('editLrcSize', editLrcSize);
   },
 });
 // 层级

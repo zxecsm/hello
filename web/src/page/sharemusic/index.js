@@ -80,6 +80,7 @@ const urlparmes = queryURLParams(myOpen()),
   $pMusicListBox = $playingListWrap.find('.p_music_list_wrap'),
   $musicMvWrap = $('.music_mv_wrap'),
   $myVideo = $musicMvWrap.find('.my_video');
+let mvSize = localData.get('mvSize');
 $myAudio[0].preload = 'none';
 if (!shareId) {
   pageErr();
@@ -440,8 +441,10 @@ function playMv(obj) {
   playVideo();
   if (!$musicMvWrap.once) {
     $musicMvWrap.once = true;
-    toSetSize(mvBox, 600, 600);
-    toCenter(mvBox);
+    const { x, y, w, h } = mvSize;
+    toSetSize(mvBox, w, h);
+    const obj = x && y ? { left: x, top: y } : null;
+    toCenter(mvBox, obj);
   } else {
     myToRest(mvBox, false, false);
   }
@@ -1035,6 +1038,9 @@ myDrag({
       myToMax(target);
     } else {
       savePopLocationInfo(target, { x, y });
+      mvSize.x = x;
+      mvSize.y = y;
+      localData.set('mvSize', mvSize);
       myToRest(target, pointerX);
     }
   },
@@ -1045,12 +1051,15 @@ myResize({
     target.style.transition = '0s';
   },
   up({ target, x, y }) {
-    savePopLocationInfo(target, {
+    const obj = {
       x,
       y,
       w: target.offsetWidth,
       h: target.offsetHeight,
-    });
+    };
+    savePopLocationInfo(target, obj);
+    mvSize = obj;
+    localData.set('mvSize', mvSize);
   },
 });
 $lrcMenuWrap

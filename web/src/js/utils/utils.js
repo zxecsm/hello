@@ -1547,7 +1547,7 @@ export function toCenter(el, obj) {
   let x = (w - cw) / 2,
     y = (h - ch) / 2;
 
-  if (obj) {
+  if (obj && _d.screen < w) {
     const { left, top } = obj;
     if (left < w && top < h) {
       x = left;

@@ -159,7 +159,8 @@ const $musicPlayerBox = $('.music_player_box'),
 let mediaVolume = localData.get('mediaVolume'),
   musicPageSize = localData.get('songListPageSize'),
   curSongListSort = localData.get('songListSort'),
-  playerIsTop = localData.get('playerIsTop');
+  playerIsTop = localData.get('playerIsTop'),
+  musicPlayerSize = localData.get('musicPlayerSize');
 function switchPlayerTop() {
   playerIsTop = !playerIsTop;
   setTop();
@@ -2593,8 +2594,10 @@ export function showMusicPlayerBox(cb) {
   lrcScroll(true);
   if (!$musicPlayerBox._once) {
     $musicPlayerBox._once = true;
-    toSetSize(mBox, 600, 800);
-    toCenter(mBox);
+    const { x, y, w, h } = musicPlayerSize;
+    toSetSize(mBox, w, h);
+    const obj = x && y ? { left: x, top: y } : null;
+    toCenter(mBox, obj);
     setPlayVolume();
   } else {
     myToRest(mBox, false, false);
@@ -2683,6 +2686,9 @@ myDrag({
       myToMax(target);
     } else {
       savePopLocationInfo(target, { x, y });
+      musicPlayerSize.x = x;
+      musicPlayerSize.y = y;
+      localData.set('musicPlayerSize', musicPlayerSize);
       myToRest(target, pointerX);
     }
   },
@@ -2695,12 +2701,15 @@ myResize({
   },
   up({ target, x, y }) {
     hideIframeMask();
-    savePopLocationInfo(target, {
+    const obj = {
       x,
       y,
       w: target.offsetWidth,
       h: target.offsetHeight,
-    });
+    };
+    savePopLocationInfo(target, obj);
+    musicPlayerSize = obj;
+    localData.set('musicPlayerSize', musicPlayerSize);
   },
 });
 const allowSlide = {

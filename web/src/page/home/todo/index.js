@@ -43,7 +43,8 @@ let todoList = [],
   todoPageNo = 1,
   todoPageSize = 40,
   undoneCount = 0,
-  todoIsTop = localData.get('todoIsTop');
+  todoIsTop = localData.get('todoIsTop'),
+  todoSize = localData.get('todoSize');
 function switchTodoTop() {
   todoIsTop = !todoIsTop;
   setTop();
@@ -193,8 +194,10 @@ export function showTodoBox() {
   if (isHide) getTodoList(true);
   if (!$todoBox._once) {
     $todoBox._once = true;
-    toSetSize(tBox, 700, 700);
-    toCenter(tBox);
+    const { x, y, w, h } = todoSize;
+    toSetSize(tBox, w, h);
+    const obj = x && y ? { left: x, top: y } : null;
+    toCenter(tBox, obj);
   } else {
     myToRest(tBox, false, false);
   }
@@ -469,6 +472,9 @@ myDrag({
       myToMax(target);
     } else {
       savePopLocationInfo(target, { x, y });
+      todoSize.x = x;
+      todoSize.y = y;
+      localData.set('todoSize', todoSize);
       myToRest(target, pointerX);
     }
   },
@@ -482,12 +488,15 @@ myResize({
   },
   up({ target, x, y }) {
     hideIframeMask();
-    savePopLocationInfo(target, {
+    const obj = {
       x,
       y,
       w: target.offsetWidth,
       h: target.offsetHeight,
-    });
+    };
+    savePopLocationInfo(target, obj);
+    todoSize = obj;
+    localData.set('todoSize', todoSize);
   },
 });
 // 手势关闭

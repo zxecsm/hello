@@ -48,7 +48,8 @@ let countList = [],
   countPageNo = 1,
   expireCount = 0,
   countPageSize = 40,
-  countDownIsTop = localData.get('countDownIsTop');
+  countDownIsTop = localData.get('countDownIsTop'),
+  countDownSize = localData.get('countDownSize');
 function switchCountDownTop() {
   countDownIsTop = !countDownIsTop;
   setTop();
@@ -228,8 +229,10 @@ export function showCountBox() {
   if (isHide) getCountList(true);
   if (!$countBox._once) {
     $countBox._once = true;
-    toSetSize(cBox, 700, 700);
-    toCenter(cBox);
+    const { x, y, w, h } = countDownSize;
+    toSetSize(cBox, w, h);
+    const obj = x && y ? { left: x, top: y } : null;
+    toCenter(cBox, obj);
   } else {
     myToRest(cBox, false, false);
   }
@@ -651,6 +654,9 @@ myDrag({
       myToMax(target);
     } else {
       savePopLocationInfo(target, { x, y });
+      countDownSize.x = x;
+      countDownSize.y = y;
+      localData.set('countDownSize', countDownSize);
       myToRest(target, pointerX);
     }
   },
@@ -664,12 +670,15 @@ myResize({
   },
   up({ target, x, y }) {
     hideIframeMask();
-    savePopLocationInfo(target, {
+    const obj = {
       x,
       y,
       w: target.offsetWidth,
       h: target.offsetHeight,
-    });
+    };
+    savePopLocationInfo(target, obj);
+    countDownSize = obj;
+    localData.set('countDownSize', countDownSize);
   },
 });
 // 手势关闭

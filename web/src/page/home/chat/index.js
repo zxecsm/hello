@@ -91,7 +91,8 @@ const $document = $(document),
 let curChatAccount = _d.chatRoomAccount,
   userList = [],
   helperInfo = '用于接收提示信息和外部信息(回复任意信息查看收信接口API)',
-  chatIsTop = localData.get('chatIsTop');
+  chatIsTop = localData.get('chatIsTop'),
+  chatSize = localData.get('chatSize');
 function switchChatTop() {
   chatIsTop = !chatIsTop;
   setTop();
@@ -792,8 +793,10 @@ export function showChatRoom(chatAcc = curChatAccount) {
     });
   if (!$chatRoomWrap._once) {
     $chatRoomWrap._once = true;
-    toSetSize(chatRoom, 600, 800);
-    toCenter(chatRoom);
+    const { w, h, x, y } = chatSize;
+    toSetSize(chatRoom, w, h);
+    const obj = x && y ? { left: x, top: y } : null;
+    toCenter(chatRoom, obj);
   } else {
     myToRest(chatRoom, false, false);
   }
@@ -2015,6 +2018,9 @@ myDrag({
       myToMax(target);
     } else {
       savePopLocationInfo(target, { x, y });
+      chatSize.x = x;
+      chatSize.y = y;
+      localData.set('chatSize', chatSize);
       myToRest(target, pointerX);
     }
   },
@@ -2027,12 +2033,15 @@ myResize({
   },
   up({ target, x, y }) {
     hideIframeMask();
-    savePopLocationInfo(target, {
+    const obj = {
       x,
       y,
       w: target.offsetWidth,
       h: target.offsetHeight,
-    });
+    };
+    savePopLocationInfo(target, obj);
+    chatSize = obj;
+    localData.set('chatSize', chatSize);
   },
 });
 // 手势

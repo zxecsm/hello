@@ -80,9 +80,35 @@ const defaultData = {
     highlightActiveLine: true,
   },
   iframeSize: {
-    width: 900,
-    height: 800,
+    w: 900,
+    h: 800,
   }, // iframe默认
+  chatSize: {
+    w: 600,
+    h: 800,
+  },
+  musicPlayerSize: {
+    w: 600,
+    h: 800,
+  },
+  countDownSize: {
+    w: 700,
+    h: 700,
+  },
+  todoSize: {
+    w: 700,
+    h: 700,
+  },
+  mvSize: {
+    w: 600,
+    h: 600,
+  },
+  editLrcSize: {
+    w: 600,
+    h: 600,
+  },
+  sysInfoSize: {},
+  userInfoSize: {},
 };
 function encode(obj) {
   return encodeURIComponent(JSON.stringify(obj));

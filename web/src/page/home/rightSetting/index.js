@@ -82,7 +82,9 @@ let tipsFlag = 0;
 const $rightMenuMask = $('.right_menu_mask'),
   $rightBox = $rightMenuMask.find('.right_box'),
   $userInfoWrap = $('.user_info_wrap'),
-  $sysInfoWrap = $('.sys_info_wrap');
+  $sysInfoWrap = $('.sys_info_wrap'),
+  sysInfoSize = localData.get('sysInfoSize'),
+  userInfoSize = localData.get('userInfoSize');
 // 隐藏菜单
 $rightMenuMask.on('click', function (e) {
   if (_getTarget(this, e, '.right_menu_mask', 1)) {
@@ -1715,13 +1717,21 @@ async function hdVerifyLogin(e, verify, account) {
 // 显示个人信息
 export function showUserInfo() {
   hideRightMenu();
+  const userInfoBox = $userInfoWrap[0];
   const isHide = $userInfoWrap.is(':hidden');
 
   $userInfoWrap.stop().fadeIn(_d.speed, () => {
     if (isHide) updateUserInfo();
   });
-  toCenter($userInfoWrap[0]);
-  setZidx($userInfoWrap[0], 'userinfo', hideUserInfo, userInfoIsTop);
+  setZidx(userInfoBox, 'userinfo', hideUserInfo, userInfoIsTop);
+  if (!$userInfoWrap._once) {
+    $userInfoWrap._once = true;
+    const { x, y } = userInfoSize;
+    const obj = x && y ? { left: x, top: y } : null;
+    toCenter(userInfoBox, obj);
+  } else {
+    myToRest(userInfoBox, false, false);
+  }
 }
 export function showSysInfo() {
   const sysBox = $sysInfoWrap[0];
@@ -1732,7 +1742,9 @@ export function showSysInfo() {
   if (isHide) sysStatus.start();
   if (!$sysInfoWrap._once) {
     $sysInfoWrap._once = true;
-    toCenter(sysBox);
+    const { x, y } = sysInfoSize;
+    const obj = x && y ? { left: x, top: y } : null;
+    toCenter(sysBox, obj);
   } else {
     myToRest(sysBox, false, false);
   }
@@ -2067,6 +2079,9 @@ myDrag({
       target.style.left = x + 'px';
     } else {
       savePopLocationInfo(target, { x, y });
+      userInfoSize.x = x;
+      userInfoSize.y = y;
+      localData.set('userInfoSize', userInfoSize);
     }
   },
 });
@@ -2087,6 +2102,9 @@ myDrag({
       target.style.left = x + 'px';
     } else {
       savePopLocationInfo(target, { x, y });
+      sysInfoSize.x = x;
+      sysInfoSize.y = y;
+      localData.set('sysInfoSize', sysInfoSize);
     }
   },
 });

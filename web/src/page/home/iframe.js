@@ -125,7 +125,7 @@ class CreateIframe {
     document.querySelector('#main').append(this.box);
     this.box.style.display = 'flex';
     this.box.style.visibility = 'visible';
-    toSetSize(this.box, iframeSize.width, iframeSize.height);
+    toSetSize(this.box, iframeSize.w, iframeSize.h);
     const windows = popWindow.getList();
     const lastIframe = windows.findLast(
       (item) =>
@@ -153,10 +153,7 @@ class CreateIframe {
         const w = target.offsetWidth;
         const h = target.offsetHeight;
         savePopLocationInfo(target, { x, y, w, h });
-        iframeSize = {
-          width: w,
-          height: h,
-        };
+        iframeSize = { w, h };
         localData.set('iframeSize', iframeSize);
       },
     });
