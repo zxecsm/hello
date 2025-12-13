@@ -79,6 +79,10 @@ const defaultData = {
     tabSize: 2,
     highlightActiveLine: true,
   },
+  iframeSize: {
+    width: 900,
+    height: 800,
+  }, // iframe默认
 };
 function encode(obj) {
   return encodeURIComponent(JSON.stringify(obj));

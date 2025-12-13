@@ -1,5 +1,10 @@
 import _d from '../../js/common/config';
-import { debounce, getScreenSize } from '../../js/utils/utils';
+import {
+  _position,
+  debounce,
+  getScreenSize,
+  toCenter,
+} from '../../js/utils/utils';
 import { removeTagsActive } from './iframe';
 
 let windowList = [];
@@ -66,4 +71,21 @@ export function setZidx(el, id, close, isTop, tagBox) {
     tem = zIdx;
   }
   el.style.zIndex = tem;
+}
+// 动态位置
+export function setPos(el, reference) {
+  const { w, h } = getScreenSize();
+  if (reference && _d.screen < w) {
+    const { left, top } = _position(reference.target, 1);
+    if (
+      top + reference.target.offsetHeight > h ||
+      left + reference.target.offsetWidth > w
+    ) {
+      toCenter(el);
+    } else {
+      toCenter(el, { left: left + 40, top: top + 40 });
+    }
+  } else {
+    toCenter(el);
+  }
 }

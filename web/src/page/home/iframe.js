@@ -4,7 +4,6 @@ import {
   ContentScroll,
   _animate,
   _getTarget,
-  _position,
   _setTimeout,
   getCenterPointDistance,
   getFaviconPath,
@@ -22,11 +21,13 @@ import {
   toCenter,
   toSetSize,
 } from '../../js/utils/utils';
-import { popWindow, setZidx } from './popWindow';
+import { popWindow, setPos, setZidx } from './popWindow';
 import defaultIcon from '../../images/img/default-icon.png';
 import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';
 import _path from '../../js/utils/path';
+import localData from '../../js/common/localData';
+let iframeSize = localData.get('iframeSize');
 const $minimizeBox = $('.minimize_box');
 // 标签logo
 function getTagFont(type) {
@@ -124,30 +125,18 @@ class CreateIframe {
     document.querySelector('#main').append(this.box);
     this.box.style.display = 'flex';
     this.box.style.visibility = 'visible';
-    toSetSize(this.box, 900);
+    toSetSize(this.box, iframeSize.width, iframeSize.height);
     const windows = popWindow.getList();
-    const lastWindow = windows.slice(-1)[0];
-    if (!lastWindow) {
+    const lastIframe = windows.findLast(
+      (item) =>
+        item.id.endsWith('_iframe') &&
+        item.target.style.visibility === 'visible'
+    );
+    if (!lastIframe) {
       toCenter(this.box);
     } else {
-      if (lastWindow.id.includes('_iframe')) {
-        if (isFullScreen(lastWindow.target)) {
-          toCenter(this.box);
-        } else {
-          const lastIframe = windows
-            .filter(
-              (item) =>
-                item.id.includes('_iframe') &&
-                item.target.style.visibility === 'visible'
-            )
-            .slice(-1)[0];
-          if (lastIframe) {
-            const { left, top } = _position(lastIframe.target, 1);
-            toCenter(this.box, { left: left + 40, top: top + 40 });
-          } else {
-            toCenter(this.box);
-          }
-        }
+      if (!isFullScreen(lastIframe.target)) {
+        setPos(this.box, lastIframe);
       } else {
         toCenter(this.box);
       }
@@ -161,12 +150,14 @@ class CreateIframe {
       },
       up({ target, x, y }) {
         hideIframeMask();
-        savePopLocationInfo(target, {
-          x,
-          y,
-          w: target.offsetWidth,
-          h: target.offsetHeight,
-        });
+        const w = target.offsetWidth;
+        const h = target.offsetHeight;
+        savePopLocationInfo(target, { x, y, w, h });
+        iframeSize = {
+          width: w,
+          height: h,
+        };
+        localData.set('iframeSize', iframeSize);
       },
     });
     // 拖动窗口
