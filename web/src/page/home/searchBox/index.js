@@ -978,7 +978,8 @@ function getSearchEngineList() {
     <div v-for="{id,title,logo,color,link},i in _d.searchEngineData" cursor="y" :data-id="id" class="item {{getSearchEngine().id === id ? 'active' : ''}}">
       <img v-if="i == 0" :src="logo" style="width: 4rem;height: 4rem;border-radius: 0.4rem;"/>
       <img v-else style="width: 4rem;height: 4rem;border-radius: 0.4rem;" :data-src="getLogoPath(link,logo)"/>
-      <span class="search_name" style="margin-left:1rem;color:{{color}};flex:auto;">{{title}}</span>
+      <span class="search_name" style="margin-left:1rem;flex:auto;">{{title}}</span>
+      <i class="iconfont icon-color" style="color:{{color}}"></i>
     </div>
     <div class="item add" cursor="true"><i class="icon iconfont icon-tianjia"></i><span class="text">添加搜索引擎</span></div>
     `,
@@ -1192,8 +1193,10 @@ function selectSearch(e) {
     function ({ close, e, box, loading, resetMenu }) {
       if (!box) return;
       const add = _getTarget(box, e, '.add');
-      const img = _getTarget(box, e, 'img');
-      const searchName = _getTarget(box, e, '.search_name');
+      const img = _getTarget(box, e, '.item img');
+      const searchName =
+        _getTarget(box, e, '.item .search_name') ||
+        _getTarget(box, e, '.item i');
       if (img) {
         const engineObj = getSearchEngine($(img).parent().data('id'));
         const { title, id: engineid } = engineObj;
