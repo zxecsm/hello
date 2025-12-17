@@ -365,9 +365,16 @@ $noteBox
       if (item === this) {
         idx = i;
       }
-      arr.push({
-        u1: item.getAttribute('data-src'),
-      });
+      const obj = {};
+      const u2 = item.getAttribute('data-src');
+      const u1 = u2.slice(0, u2.indexOf('?'));
+      if (u1 === u2) {
+        obj.u1 = u1;
+      } else {
+        obj.u1 = u1;
+        obj.u2 = u2;
+      }
+      arr.push(obj);
     });
     imgPreview(arr, idx, { x: e.clientX, y: e.clientY });
   });

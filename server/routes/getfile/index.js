@@ -12,7 +12,7 @@ import { db } from '../../utils/sqlite.js';
 
 import _f from '../../utils/f.js';
 
-import { getCompressionSize, compressionImg } from '../../utils/img.js';
+import { convertImageFormat } from '../../utils/img.js';
 import { validShareState } from '../user/user.js';
 import { fieldLength } from '../config.js';
 import _path from '../../utils/path.js';
@@ -23,10 +23,23 @@ export default async function getFile(req, res, originalPath) {
   try {
     const params = { ...req.query, p: originalPath };
     try {
+      /*
+      cover	填满指定尺寸，超出部分裁剪
+      contain	完整显示，留空白
+      fill	强制拉伸，可能变形
+      inside	等比缩放，不超过指定尺寸
+      outside	等比缩放，至少覆盖指定尺寸
+      */
       req._vdata = await V.parse(
         params,
         V.object({
-          t: V.string().trim().default('').allowEmpty().max(1).alphanumeric(),
+          w: V.number().toInt().default(0).min(0),
+          h: V.number().toInt().default(0).min(0),
+          fit: V.string()
+            .trim()
+            .default('inside')
+            .enum(['inside', 'contain', 'cover', 'fill', 'outside']),
+          c: V.number().toInt().default(0).enum([0, 1]),
           token: V.string()
             .trim()
             .default('')
@@ -40,14 +53,14 @@ export default async function getFile(req, res, originalPath) {
       return;
     }
 
-    let { t, token, p } = req._vdata;
+    let { token, c, p, w, h, fit } = req._vdata;
 
     let { account } = req._hello.userinfo;
 
     const jwtData = token ? await jwt.get(token) : '';
 
     // 以指定的用户身份访问指定的文件
-    if (jwtData && jwtData.data.type === 'temAccessFile') {
+    if (jwtData?.data?.type === 'temAccessFile') {
       account = jwtData.data.data.account;
       p = jwtData.data.data.p;
     }
@@ -191,13 +204,15 @@ export default async function getFile(req, res, originalPath) {
       return;
     }
 
+    let size = stat.size;
+    const quality = c === 1 && size > 300 * 1024 ? 10 : undefined;
+
     try {
       // 生成缩略图
       if (
+        (quality || w || h) &&
         stat.isFile() &&
         isImgFile(path) &&
-        stat.size > 300 * 1024 &&
-        t &&
         [
           'pic',
           'music',
@@ -216,25 +231,35 @@ export default async function getFile(req, res, originalPath) {
         }
 
         let thumbP = '';
+        const flag = `${fit}_${w}_${h}_${quality || 0}`;
+
         if (dir === 'file') {
           thumbP = appConfig.thumbDir(
             dir,
-            `${_path.basename(path)[1]}_${stat.size}.png`
+            `${_path.basename(path)[1]}_${flag}_${size}.webp`
           );
         } else {
           thumbP = appConfig.thumbDir(
             `${
               _path.extname(path.slice(appConfig.appFilesDir().length))[0]
-            }.png`
+            }_${flag}.webp`
           );
         }
 
-        if (!(await _f.exists(thumbP))) {
-          const { x, y } = getCompressionSize(dir);
+        const thumbStat = await _f.lstat(thumbP);
+        if (!thumbStat) {
+          const buf = await convertImageFormat(path, {
+            format: 'webp',
+            width: w || null,
+            height: h || null,
+            quality,
+            fit,
+          });
 
-          const buf = await compressionImg(path, x, y, 20);
-
+          size = buf.length;
           await _f.writeFile(thumbP, buf);
+        } else {
+          size = thumbStat.size;
         }
 
         path = thumbP;
@@ -242,7 +267,7 @@ export default async function getFile(req, res, originalPath) {
     } catch (error) {
       await errLog(req, `生成缩略图失败(${error})-${path}`);
     }
-    res.setHeader('X-File-Size', stat.size);
+    res.setHeader('X-File-Size', size);
     res.sendFile(path, { dotfiles: 'allow' });
   } catch (error) {
     _err(res)(req, error);

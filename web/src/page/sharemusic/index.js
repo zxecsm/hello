@@ -859,7 +859,7 @@ function renderPlayList() {
       getPath(id, pic) {
         return getFilePath(`sharemusic/${id}/${pic}`, {
           token: shareToken,
-          t: 1,
+          c: 1,
         });
       },
       getPaging() {
@@ -1165,7 +1165,7 @@ $lrcMenuWrap
             [
               {
                 u1,
-                u2: u1 + '?t=1',
+                u2: u1 + '?c=1',
               },
             ],
             0,

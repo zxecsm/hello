@@ -5,8 +5,10 @@ import streamp from 'stream/promises';
 import _path from './path.js';
 
 // 创建目录
-function mkdir(path) {
-  return fsp.mkdir(path, { recursive: true });
+async function mkdir(path) {
+  try {
+    await fsp.mkdir(path, { recursive: true });
+  } catch {}
 }
 
 // 创建硬链接

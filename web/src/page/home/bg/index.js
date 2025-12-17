@@ -57,7 +57,7 @@ async function hdUpBg(files) {
     const pro = upPro.add(name);
     if (!isImgFile(name)) {
       pro.fail();
-      _msg.error(`壁纸格式错误`);
+      _msg.error(`不支持的壁纸格式`);
       return;
     }
     if (size <= 0 || size >= _d.fieldLength.maxBgSize * 1024 * 1024) {
@@ -355,7 +355,7 @@ export function renderBgList(y) {
             const $img = $(item);
             const url = getFilePath(
               `/bg/${getBgItem($img.parent().data('id')).url}`,
-              { t: 1 }
+              { c: 1 }
             );
             const cache = cacheFile.hasUrl(url, 'image');
             if (cache) {
@@ -372,7 +372,7 @@ export function renderBgList(y) {
           const $img = $(item);
           const url = getFilePath(
             `/bg/${getBgItem($img.parent().data('id')).url}`,
-            { t: 1 }
+            { c: 1 }
           );
           imgjz(url)
             .then((cache) => {
@@ -422,7 +422,7 @@ function hdPreview() {
     const $item = $(item);
     const { url } = getBgItem($item.parent().data('id'));
     const u1 = getFilePath(`/bg/${url}`);
-    const u2 = getFilePath(`/bg/${url}`, { t: 1 });
+    const u2 = getFilePath(`/bg/${url}`, { c: 1 });
     arr.push({
       u2,
       u1,

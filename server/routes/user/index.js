@@ -1128,7 +1128,7 @@ route.post(
         .trim()
         .min(1)
         .max(fieldLength.filename)
-        .custom((v) => isImgFile(v), '必须图片文件后缀'),
+        .custom((v) => isImgFile(v), '必须为受支持的图片格式'),
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       type: V.string()
         .trim()

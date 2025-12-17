@@ -261,7 +261,7 @@ route.post(
         )
         .min(1)
         .max(fieldLength.filename)
-        .custom(isImgFile, '必须图片文件后缀'),
+        .custom(isImgFile, '必须为受支持的图片格式'),
     })
   ),
   async (req, res) => {

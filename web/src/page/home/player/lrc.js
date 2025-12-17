@@ -899,7 +899,6 @@ $lrcMenuWrap
             [
               {
                 u1,
-                u2: getFilePath(`/music/${playingSongInfo.pic}`, { t: 1 }),
               },
             ],
             0,

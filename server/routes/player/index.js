@@ -1681,7 +1681,7 @@ route.post(
         }
 
         if (!isImgFile(name)) {
-          _err(res, '封面格式错误')(req, name, 1);
+          _err(res, '封面图片格式不支持')(req, name, 1);
           return;
         }
 

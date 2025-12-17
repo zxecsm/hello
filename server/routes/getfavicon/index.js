@@ -23,7 +23,7 @@ import appConfig from '../../data/config.js';
 import _f from '../../utils/f.js';
 
 import timedTask from '../../utils/timedTask.js';
-import { compressionImg } from '../../utils/img.js';
+import { convertImageFormat } from '../../utils/img.js';
 import _crypto from '../../utils/crypto.js';
 import { cleanFavicon } from '../bmk/bmk.js';
 import { _d } from '../../data/data.js';
@@ -172,8 +172,11 @@ route.get(
 
         if (await _f.exists(iconPath)) {
           try {
-            // 压缩图标
-            const buf = await compressionImg(iconPath);
+            const buf = await convertImageFormat(iconPath, {
+              format: 'png',
+              width: 100,
+              height: 100,
+            });
 
             if (buf) {
               await _f.writeFile(iconPath, buf);

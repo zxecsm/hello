@@ -540,7 +540,7 @@ export function moveSongToList(e, pid, ar) {
       cIdx = i;
     }
     if (i < 3 || v.id === pid) return;
-    let p = getFilePath(`/music/${v.pic}`, { t: 1 });
+    let p = getFilePath(`/music/${v.pic}`, { c: 1 });
     if (v.pic === 'history') {
       p = imgHistory;
     } else if (v.pic === 'default') {
@@ -891,7 +891,7 @@ function renderSongList() {
       arr,
       imgTianjia,
       getPic(pic) {
-        let p = getFilePath(`/music/${pic}`, { t: 1 });
+        let p = getFilePath(`/music/${pic}`, { c: 1 });
         if (pic === 'history') {
           p = imgHistory;
         } else if (pic === 'default') {
@@ -1033,7 +1033,7 @@ async function renderSongs(gao) {
     }
   }
   const scObj = ind === 1 ? {} : getCollectSongs();
-  let pic = getFilePath(`/music/${songListInfo.pic}`, { t: 1 });
+  let pic = getFilePath(`/music/${songListInfo.pic}`, { c: 1 });
   if (songListInfo.pic === 'history') {
     pic = imgHistory;
   } else if (songListInfo.pic === 'default') {
@@ -1092,7 +1092,7 @@ async function renderSongs(gao) {
       <div cursor="y" check="n" class="check_state"></div>
       <div v-if="isLoaded" class="downloaded iconfont icon-jiaobiao"></div>
       <div class="song_logo_box">
-        <div class="logo" :data-src="getFilePath('/music/'+picc, {t:1})"></div>
+        <div class="logo" :data-src="getFilePath('/music/'+picc, { c: 1 })"></div>
         <div class="play_gif"></div>
       </div>
       <div class="song_info_wrap">
@@ -1481,7 +1481,7 @@ export async function updateSongCover(obj) {
     const pro = upPro.add(file.name);
     if (!isImgFile(name)) {
       pro.fail();
-      _msg.error(`封面格式错误`);
+      _msg.error(`不支持的封面格式`);
       return;
     }
     if (size <= 0 || size >= _d.fieldLength.maxSongPicSize * 1024 * 1024) {
@@ -1863,7 +1863,7 @@ function songMenu(e, idx, sobj) {
           [
             {
               u1,
-              u2: getFilePath(`/music/${sobj.pic}`, { t: 1 }),
+              u2: getFilePath(`/music/${sobj.pic}`, { c: 1 }),
             },
           ],
           0,

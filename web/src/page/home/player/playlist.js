@@ -169,7 +169,7 @@ export async function renderPlayingList() {
       <div cursor="y" check="n" class="check_state"></div>
       <div v-if="isLoaded" class="downloaded iconfont icon-jiaobiao"></div>
       <div class="logo_wrap">
-        <div class="logo" :data-src="getFilePath('/music/'+pic, {t:1})">
+        <div class="logo" :data-src="getFilePath('/music/'+pic, { c: 1 })">
           <div class="play_gif"></div>
         </div>
       </div>

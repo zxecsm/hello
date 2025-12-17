@@ -353,9 +353,16 @@ $previewBox
       if (item === this) {
         idx = i;
       }
-      arr.push({
-        u1: item.getAttribute('data-src'),
-      });
+      const obj = {};
+      const u2 = item.getAttribute('data-src');
+      const u1 = u2.slice(0, u2.indexOf('?'));
+      if (u1 === u2) {
+        obj.u1 = u1;
+      } else {
+        obj.u1 = u1;
+        obj.u2 = u2;
+      }
+      arr.push(obj);
     });
     imgPreview(arr, idx, { x: e.clientX, y: e.clientY });
   })
@@ -461,7 +468,7 @@ async function hdUpFile(files) {
     const pro = upPro.add(name);
     if (!isImgFile(name)) {
       pro.fail();
-      _msg.error(`图片格式错误`);
+      _msg.error(`不支持的图片格式`);
       return;
     }
     if (size <= 0 || size >= _d.fieldLength.maxPicSize * 1024 * 1024) {

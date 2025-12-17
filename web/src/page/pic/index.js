@@ -72,7 +72,7 @@ async function hdUpFile(files) {
     const pro = upPro.add(name);
     if (!isImgFile(name)) {
       pro.fail();
-      _msg.error(`图片格式错误`);
+      _msg.error(`不支持的图片格式`);
       return;
     }
     if (size <= 0 || size >= _d.fieldLength.maxPicSize * 1024 * 1024) {
@@ -298,7 +298,7 @@ function renderImgList(y) {
             const $img = $(item);
             const obj = getPicItem($img.parent().attr('data-id'));
             if (!obj) return;
-            const url = getFilePath(`/pic/${obj.url}`, { t: 1 });
+            const url = getFilePath(`/pic/${obj.url}`, { c: 1 });
             const cache = cacheFile.hasUrl(url, 'image');
             if (cache) {
               $img
@@ -314,7 +314,7 @@ function renderImgList(y) {
           const $img = $(item);
           const obj = getPicItem($img.parent().attr('data-id'));
           if (!obj) return;
-          const url = getFilePath(`/pic/${obj.url}`, { t: 1 });
+          const url = getFilePath(`/pic/${obj.url}`, { c: 1 });
           imgjz(url)
             .then((cache) => {
               $img
@@ -450,7 +450,7 @@ $imgList
       const $item = $(item);
       const obj = getPicItem($item.parent().attr('data-id'));
       const u1 = getPicPath(obj.url);
-      const u2 = getFilePath(`/pic/${obj.url}`, { t: 1 });
+      const u2 = getFilePath(`/pic/${obj.url}`, { c: 1 });
       arr.push({
         u2,
         u1,

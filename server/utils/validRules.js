@@ -217,14 +217,16 @@ class VNumber extends Validator {
   }
   toInt() {
     return this.preprocess((v) => {
-      if (v === undefined || v === '') return v;
+      if (v === undefined) return v;
+      if (typeof v === 'string' && v.trim() === '') return 0;
       const res = parseInt(v);
       return isNaN(res) ? v : res;
     });
   }
   toNumber() {
     return this.preprocess((v) => {
-      if (v === undefined || v === '') return v;
+      if (v === undefined) return v;
+      if (typeof v === 'string' && v.trim() === '') return 0;
       const res = parseFloat(v);
       return isNaN(res) ? v : res;
     });

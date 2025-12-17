@@ -319,7 +319,7 @@ export async function upLogo(type, cb, id, loading = { start() {}, end() {} }) {
     if (files.length === 0) return;
     const file = files[0];
     if (!isImgFile(file.name)) {
-      _msg.error(`图片格式错误`);
+      _msg.error(`不支持的图片格式`);
       return;
     }
     const controller = new AbortController();

@@ -382,7 +382,7 @@ async function renderList(top) {
       const $item = $(item);
       const { path, name, size } = getFileItem($item.parent().data('id'));
       if (isImgFile(name)) {
-        const url = getFilePath(`/file/${path}/${name}`, { t: 1 }) + `#${size}`;
+        const url = getFilePath(`/file/${path}/${name}`, { c: 1 }) + `#${size}`;
         const cache = cacheFile.hasUrl(url, 'image');
         if (cache) {
           $item.css('background-image', `url(${cache})`);
@@ -396,7 +396,7 @@ async function renderList(top) {
     const $item = $(item);
     const { path, name, size } = getFileItem($item.parent().data('id'));
     if (isImgFile(name)) {
-      const url = getFilePath(`/file/${path}/${name}`, { t: 1 }) + `#${size}`;
+      const url = getFilePath(`/file/${path}/${name}`, { c: 1 }) + `#${size}`;
       imgjz(url)
         .then((cache) => {
           $item.css('background-image', `url(${cache})`);
@@ -566,7 +566,7 @@ async function readFileAndDir(obj, e) {
               const p = `${item.path}/${item.name}`;
               return {
                 u1: getFilePath(`/file/${p}`) + `#${item.size}`,
-                u2: getFilePath(`/file/${p}`, { t: 1 }) + `#${item.size}`,
+                u2: getFilePath(`/file/${p}`, { c: 1 }) + `#${item.size}`,
               };
             });
             if (arr.length === 0) return;

@@ -156,7 +156,7 @@ function getShareData(close, loading = { start() {}, end() {} }) {
           $fileBox.find('.download').text(`下载 (${formatBytes(data.size)})`);
           if (isImgFile(data.name)) {
             const url = getFilePath(`/sharefile/${data.path}/${data.name}`, {
-              t: 1,
+              c: 1,
               token: shareToken,
             });
             loadImg(url)
@@ -369,7 +369,7 @@ async function renderList(top) {
       const { path, name } = getFileItem($item.parent().data('id'));
       if (isImgFile(name)) {
         const url = getFilePath(`/sharefile/${path}/${name}`, {
-          t: 1,
+          c: 1,
           token: shareToken,
         });
         const cache = imgCache.get(url);
@@ -386,7 +386,7 @@ async function renderList(top) {
     const { path, name } = getFileItem($item.parent().data('id'));
     if (isImgFile(name)) {
       const url = getFilePath(`/sharefile/${path}/${name}`, {
-        t: 1,
+        c: 1,
         token: shareToken,
       });
       loadImg(url)
@@ -494,7 +494,7 @@ async function readFileAndDir(obj, e) {
               const p = `${item.path}/${item.name}`;
               return {
                 u1: getFilePath(`/sharefile/${p}`, { token: shareToken }),
-                u2: getFilePath(`/sharefile/${p}`, { t: 1, token: shareToken }),
+                u2: getFilePath(`/sharefile/${p}`, { c: 1, token: shareToken }),
               };
             });
             if (arr.length === 0) return;
@@ -545,7 +545,7 @@ async function readFile(e) {
                   u1: fPath,
                   u2: getFilePath(
                     `/sharefile/${shareObj.path}/${shareObj.name}`,
-                    { t: 1, token: shareToken }
+                    { c: 1, token: shareToken }
                   ),
                 },
               ],
