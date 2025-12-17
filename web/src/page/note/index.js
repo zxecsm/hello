@@ -365,14 +365,18 @@ $noteBox
       if (item === this) {
         idx = i;
       }
-      const obj = {};
+      let obj = {};
       const u2 = item.getAttribute('data-src');
-      const u1 = u2.slice(0, u2.indexOf('?'));
-      if (u1 === u2) {
-        obj.u1 = u1;
+      const index = u2.indexOf('?');
+      if (index >= 0) {
+        obj = {
+          u1: u2.slice(0, index),
+          u2,
+        };
       } else {
-        obj.u1 = u1;
-        obj.u2 = u2;
+        obj = {
+          u1: u2,
+        };
       }
       arr.push(obj);
     });
