@@ -1692,7 +1692,7 @@ route.post(
       let targetPath = appConfig.userRootDir(
         account,
         `${_path.dirname(path)}/${_path.sanitizeFilename(
-          _path.basename(path)[0]
+          _path.basename(path)[0] || 'unknown'
         )}`
       );
 
@@ -1811,7 +1811,9 @@ route.post(
         return;
       }
 
-      const filename = _path.sanitizeFilename(_path.basename(url)[0]);
+      const filename = _path.sanitizeFilename(
+        _path.basename(url)[0] || 'unknown'
+      );
 
       const controller = new AbortController();
       const signal = controller.signal;

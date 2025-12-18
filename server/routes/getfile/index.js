@@ -238,6 +238,7 @@ export default async function getFile(req, res, originalPath) {
           const buf = await convertImageFormat(path, {
             format: 'webp',
             width: w,
+            height: 1024,
           });
 
           size = buf.length;

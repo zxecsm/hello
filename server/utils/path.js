@@ -63,7 +63,8 @@ function normalize(...paths) {
 function basename(path) {
   path = toUnixPath(path);
   path = path.split(/[?#]/)[0];
-  const filename = path.slice(path.lastIndexOf('/') + 1);
+  const idx = path.lastIndexOf('/');
+  const filename = idx < 0 ? path : path.slice(idx + 1);
   return [filename, ...extname(filename)];
 }
 
@@ -71,7 +72,9 @@ function basename(path) {
 function dirname(path) {
   path = toUnixPath(path);
   path = path.split(/[?#]/)[0];
-  return normalize(path.slice(0, path.lastIndexOf('/')) || '/');
+  const idx = path.lastIndexOf('/');
+  if (idx < 0) return '/';
+  return normalize(path.slice(0, idx) || '/');
 }
 
 // 合并路径

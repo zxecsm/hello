@@ -1632,22 +1632,20 @@ route.post(
           title,
           duration,
           artist,
-          pic = '',
+          pic: picBuf = '',
           lrc = '',
           picFormat,
         } = songInfo;
 
-        if (pic) {
+        picFormat = _path.basename(picFormat)[0];
+        let pic = '';
+        if (picFormat && Buffer.isBuffer(picBuf)) {
           // 提取封面
           await _f.writeFile(
-            _path.normalize(tDir, `${songId}.${_path.basename(picFormat)[0]}`),
-            pic
+            _path.normalize(tDir, `${songId}.${picFormat}`),
+            picBuf
           );
-          pic = _path.normalize(
-            timePath,
-            songId,
-            `${songId}.${_path.basename(picFormat)[0]}`
-          );
+          pic = _path.normalize(timePath, songId, `${songId}.${picFormat}`);
         }
 
         await _f.writeFile(_path.normalize(tDir, `${songId}.lrc`), lrc);
