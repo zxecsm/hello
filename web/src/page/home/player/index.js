@@ -540,7 +540,7 @@ export function moveSongToList(e, pid, ar) {
       cIdx = i;
     }
     if (i < 3 || v.id === pid) return;
-    let p = getFilePath(`/music/${v.pic}`, { c: 1 });
+    let p = getFilePath(`/music/${v.pic}`, { w: 256 });
     if (v.pic === 'history') {
       p = imgHistory;
     } else if (v.pic === 'default') {
@@ -891,7 +891,7 @@ function renderSongList() {
       arr,
       imgTianjia,
       getPic(pic) {
-        let p = getFilePath(`/music/${pic}`, { c: 1 });
+        let p = getFilePath(`/music/${pic}`, { w: 256 });
         if (pic === 'history') {
           p = imgHistory;
         } else if (pic === 'default') {
@@ -1033,7 +1033,7 @@ async function renderSongs(gao) {
     }
   }
   const scObj = ind === 1 ? {} : getCollectSongs();
-  let pic = getFilePath(`/music/${songListInfo.pic}`, { c: 1 });
+  let pic = getFilePath(`/music/${songListInfo.pic}`, { w: 256 });
   if (songListInfo.pic === 'history') {
     pic = imgHistory;
   } else if (songListInfo.pic === 'default') {
@@ -1092,7 +1092,7 @@ async function renderSongs(gao) {
       <div cursor="y" check="n" class="check_state"></div>
       <div v-if="isLoaded" class="downloaded iconfont icon-jiaobiao"></div>
       <div class="song_logo_box">
-        <div class="logo" :data-src="getFilePath('/music/'+picc, { c: 1 })"></div>
+        <div class="logo" :data-src="getFilePath('/music/'+picc, { w: 256 })"></div>
         <div class="play_gif"></div>
       </div>
       <div class="song_info_wrap">
@@ -1863,7 +1863,7 @@ function songMenu(e, idx, sobj) {
           [
             {
               u1,
-              u2: getFilePath(`/music/${sobj.pic}`, { c: 1 }),
+              u2: getFilePath(`/music/${sobj.pic}`, { w: 256 }),
             },
           ],
           0,

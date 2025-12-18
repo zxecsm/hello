@@ -355,7 +355,7 @@ export function renderBgList(y) {
             const $img = $(item);
             const url = getFilePath(
               `/bg/${getBgItem($img.parent().data('id')).url}`,
-              { c: 1 }
+              { w: type === 'bg' ? 512 : 256 }
             );
             const cache = cacheFile.hasUrl(url, 'image');
             if (cache) {
@@ -372,7 +372,7 @@ export function renderBgList(y) {
           const $img = $(item);
           const url = getFilePath(
             `/bg/${getBgItem($img.parent().data('id')).url}`,
-            { c: 1 }
+            { w: type === 'bg' ? 512 : 256 }
           );
           imgjz(url)
             .then((cache) => {
@@ -415,6 +415,7 @@ const bgPgnt = pagination($bgList[0], {
 });
 // 预览
 function hdPreview() {
+  const isd = isBigScreen();
   const $this = $(this);
   const idx = $this.index('.bg_img');
   const arr = [];
@@ -422,7 +423,7 @@ function hdPreview() {
     const $item = $(item);
     const { url } = getBgItem($item.parent().data('id'));
     const u1 = getFilePath(`/bg/${url}`);
-    const u2 = getFilePath(`/bg/${url}`, { c: 1 });
+    const u2 = getFilePath(`/bg/${url}`, { w: isd ? 512 : 256 });
     arr.push({
       u2,
       u1,

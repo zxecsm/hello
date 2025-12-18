@@ -859,7 +859,7 @@ function renderPlayList() {
       getPath(id, pic) {
         return getFilePath(`sharemusic/${id}/${pic}`, {
           token: shareToken,
-          c: 1,
+          w: 256,
         });
       },
       getPaging() {

@@ -26,7 +26,7 @@ export default async function getFile(req, res, originalPath) {
       req._vdata = await V.parse(
         params,
         V.object({
-          c: V.number().toInt().default(0).enum([0, 1]),
+          w: V.number().toInt().default(0).min(0),
           token: V.string()
             .trim()
             .default('')
@@ -40,7 +40,7 @@ export default async function getFile(req, res, originalPath) {
       return;
     }
 
-    let { token, c, p } = req._vdata;
+    let { token, p, w } = req._vdata;
 
     let { account } = req._hello.userinfo;
 
@@ -196,8 +196,8 @@ export default async function getFile(req, res, originalPath) {
     try {
       // 生成缩略图
       if (
-        c === 1 &&
-        size > 300 * 1024 &&
+        w > 0 &&
+        !_path.isPathWithin(appConfig.thumbDir(), path, 1) &&
         stat.isFile() &&
         isImgFile(path) &&
         [
@@ -217,18 +217,19 @@ export default async function getFile(req, res, originalPath) {
           dir = 'music';
         }
 
-        let thumbP = '';
+        w = normalizeWidth(w);
 
+        let thumbP = '';
         if (dir === 'file') {
           thumbP = appConfig.thumbDir(
             dir,
-            `${_path.basename(path)[1]}_${size}.webp`
+            `${_path.basename(path)[1]}_${w}_${size}.webp`
           );
         } else {
           thumbP = appConfig.thumbDir(
             `${
               _path.extname(path.slice(appConfig.appFilesDir().length))[0]
-            }.webp`
+            }_${w}.webp`
           );
         }
 
@@ -236,7 +237,7 @@ export default async function getFile(req, res, originalPath) {
         if (!thumbStat) {
           const buf = await convertImageFormat(path, {
             format: 'webp',
-            quality: 10,
+            width: w,
           });
 
           size = buf.length;
@@ -255,4 +256,11 @@ export default async function getFile(req, res, originalPath) {
   } catch (error) {
     _err(res)(req, error);
   }
+}
+
+function normalizeWidth(w) {
+  if (w <= 256) return 256;
+  if (w <= 512) return 512;
+  if (w <= 1024) return 1024;
+  return 1024;
 }

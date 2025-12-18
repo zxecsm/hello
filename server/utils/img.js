@@ -24,7 +24,11 @@ export async function convertImageFormat(
 ) {
   let inputBuf;
   try {
-    inputBuf = await _f.fsp.readFile(path);
+    if (Buffer.isBuffer(path)) {
+      inputBuf = path;
+    } else {
+      inputBuf = await _f.fsp.readFile(path);
+    }
   } catch (err) {
     throw new Error(`读取文件失败: ${path} - ${err.message}`);
   }
