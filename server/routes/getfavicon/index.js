@@ -176,6 +176,7 @@ route.get(
               format: 'png',
               width: 100,
               height: 100,
+              fit: 'cover',
             });
 
             if (buf) {

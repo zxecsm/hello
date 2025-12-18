@@ -161,6 +161,14 @@ app.use(
   })
 );
 
+app.use(
+  '/api/p',
+  express.static(appConfig.picDir(), {
+    dotfiles: 'allow',
+    maxAge: 2592000000,
+  })
+);
+
 app.use(async (req, res, next) => {
   try {
     const {
@@ -396,18 +404,6 @@ app.use(async (req, res, next) => {
     const filePath = path.slice(routePath.length);
     req._hello.path = routePath;
     await getFile(req, res, filePath);
-  } else {
-    next();
-  }
-});
-
-app.use(async (req, res, next) => {
-  const path = req._hello.path;
-  const routePath = '/api/p/';
-  if (path.startsWith(routePath)) {
-    const filePath = path.slice(routePath.length);
-    req._hello.path = routePath;
-    await getFile(req, res, `/pic/${filePath}`);
   } else {
     next();
   }

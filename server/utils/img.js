@@ -11,6 +11,13 @@ export async function getImgInfo(path) {
   return img.metadata();
 }
 
+/*
+  cover	填满指定尺寸，超出部分裁剪
+  contain	完整显示，留空白
+  fill	强制拉伸，可能变形
+  inside	等比缩放，不超过指定尺寸
+  outside	等比缩放，至少覆盖指定尺寸
+*/
 export async function convertImageFormat(
   path,
   { format, width, height, quality, fit = 'inside' } = {}

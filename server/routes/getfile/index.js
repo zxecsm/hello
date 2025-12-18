@@ -23,22 +23,9 @@ export default async function getFile(req, res, originalPath) {
   try {
     const params = { ...req.query, p: originalPath };
     try {
-      /*
-      cover	填满指定尺寸，超出部分裁剪
-      contain	完整显示，留空白
-      fill	强制拉伸，可能变形
-      inside	等比缩放，不超过指定尺寸
-      outside	等比缩放，至少覆盖指定尺寸
-      */
       req._vdata = await V.parse(
         params,
         V.object({
-          w: V.number().toInt().default(0).min(0),
-          h: V.number().toInt().default(0).min(0),
-          fit: V.string()
-            .trim()
-            .default('inside')
-            .enum(['inside', 'contain', 'cover', 'fill', 'outside']),
           c: V.number().toInt().default(0).enum([0, 1]),
           token: V.string()
             .trim()
@@ -53,7 +40,7 @@ export default async function getFile(req, res, originalPath) {
       return;
     }
 
-    let { token, c, p, w, h, fit } = req._vdata;
+    let { token, c, p } = req._vdata;
 
     let { account } = req._hello.userinfo;
 
@@ -205,12 +192,12 @@ export default async function getFile(req, res, originalPath) {
     }
 
     let size = stat.size;
-    const quality = c === 1 && size > 300 * 1024 ? 10 : undefined;
 
     try {
       // 生成缩略图
       if (
-        (quality || w || h) &&
+        c === 1 &&
+        size > 300 * 1024 &&
         stat.isFile() &&
         isImgFile(path) &&
         [
@@ -231,18 +218,17 @@ export default async function getFile(req, res, originalPath) {
         }
 
         let thumbP = '';
-        const flag = `${fit}_${w}_${h}_${quality || 0}`;
 
         if (dir === 'file') {
           thumbP = appConfig.thumbDir(
             dir,
-            `${_path.basename(path)[1]}_${flag}_${size}.webp`
+            `${_path.basename(path)[1]}_${size}.webp`
           );
         } else {
           thumbP = appConfig.thumbDir(
             `${
               _path.extname(path.slice(appConfig.appFilesDir().length))[0]
-            }_${flag}.webp`
+            }.webp`
           );
         }
 
@@ -250,10 +236,7 @@ export default async function getFile(req, res, originalPath) {
         if (!thumbStat) {
           const buf = await convertImageFormat(path, {
             format: 'webp',
-            width: w || null,
-            height: h || null,
-            quality,
-            fit,
+            quality: 10,
           });
 
           size = buf.length;
