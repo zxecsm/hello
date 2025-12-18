@@ -11,7 +11,7 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
     y,
     scale = 1, //缩放
     rotate = 0, // 旋转
-    maxScale = 10, //最大缩放
+    maxScale = 1000, //最大缩放
     minScale = 0.5; //最小缩放//移动状态
   let touches = [], // 触摸点数组
     point1 = { x: 0, y: 0 }, // 第一个点坐标
@@ -384,7 +384,13 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
    * @param {number} maxHeight
    * @returns
    */
-  function getImgSize(naturalWidth, naturalHeight, maxWidth, maxHeight) {
+  function getImgSize(
+    naturalWidth,
+    naturalHeight,
+    maxWidth,
+    maxHeight,
+    minRatio = 0.25
+  ) {
     const imgRatio = naturalWidth / naturalHeight;
     const maxRatio = maxWidth / maxHeight;
     let width, height;
@@ -406,7 +412,28 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
         height = naturalHeight;
       }
     }
-    return { width: width, height: height };
+
+    // 动态最小值
+    const minWidth = maxWidth * minRatio;
+    const minHeight = maxHeight * minRatio;
+
+    // 兜底修正
+    if (width < minWidth) {
+      const scale = minWidth / width;
+      width = minWidth;
+      height *= scale;
+    }
+
+    if (height < minHeight) {
+      const scale = minHeight / height;
+      height = minHeight;
+      width *= scale;
+    }
+
+    return {
+      width: Math.round(width),
+      height: Math.round(height),
+    };
   }
 
   // 图片加载完成后再操作，否则naturalWidth为0
