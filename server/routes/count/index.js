@@ -128,7 +128,7 @@ timedTask.add(async () => {
 
       sendNotificationsToCustomAddresses(
         {
-          _hello: {
+          [kHello]: {
             userinfo: {
               username: appConfig.notifyAccount,
               account: appConfig.notifyAccount,

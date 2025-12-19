@@ -476,7 +476,7 @@ export async function heperMsgAndForward(req, to, text) {
 
   sendNotificationsToCustomAddresses(
     {
-      _hello: {
+      [kHello]: {
         userinfo: {
           username: appConfig.notifyAccount,
           account: appConfig.notifyAccount,
@@ -501,7 +501,7 @@ export async function helloHelperMsg(to, text) {
 
   await sendNotifyMsg(
     {
-      _hello: {
+      [kHello]: {
         userinfo: {
           account: appConfig.notifyAccount,
           username: appConfig.notifyAccount,
