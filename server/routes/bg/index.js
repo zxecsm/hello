@@ -73,7 +73,7 @@ route.get(
       const url = appConfig.bgDir(bgData.url);
 
       if (await _f.exists(url)) {
-        await getFile(req, res, `/bg/${bgData.url}`);
+        await getFile(req, res, `/bg/${bgData.url}`, false);
       } else {
         _err(res, '获取壁纸失败')(req, `${url} 不存在`, 1);
       }

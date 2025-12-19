@@ -23,7 +23,12 @@ import { sym } from '../../utils/symbols.js';
 const kHello = sym('hello');
 const kValidate = sym('validate');
 
-export default async function getFile(req, res, originalPath) {
+export default async function getFile(
+  req,
+  res,
+  originalPath,
+  verifyLogin = true
+) {
   try {
     const params = { ...req.query, p: originalPath };
     try {
@@ -68,7 +73,7 @@ export default async function getFile(req, res, originalPath) {
 
     if (publicArr.includes(dir)) {
     } else if (verifyArr.includes(dir)) {
-      if (!account) {
+      if (!account && verifyLogin) {
         _nologin(res);
         return;
       }
