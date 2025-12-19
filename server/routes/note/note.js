@@ -6,13 +6,16 @@ import _path from '../../utils/path.js';
 import { errLog, formatDate } from '../../utils/utils.js';
 
 import cheerio from '../bmk/cheerio.js';
+import { sym } from '../../utils/symbols.js';
+
+const kHello = sym('hello');
 
 // 保存笔记历史
 export async function saveNoteHistory(req, noteId, content) {
   try {
     if (!content) return;
 
-    const { account } = req._hello.userinfo;
+    const { account } = req[kHello].userinfo;
 
     const noteDir = appConfig.noteHistoryDir(account, noteId);
 

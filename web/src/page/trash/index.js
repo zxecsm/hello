@@ -93,7 +93,7 @@ const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
   },
   keyup(e) {
     if (e.key === 'Enter') {
-      $contentWrap.pagenum = 1;
+      trashPageNo = 1;
       renderList(true);
     }
   },
@@ -107,10 +107,10 @@ function listLoading() {
   pageScrollTop(0);
 }
 let curPageSize = localData.get('trashPageSize');
-$contentWrap.pagenum = 1;
-$contentWrap.list = [];
+let trashPageNo = 1;
+let trashList = [];
 function getListItem(id) {
-  return $contentWrap.list.find((item) => item.id === id) || {};
+  return trashList.find((item) => item.id === id) || {};
 }
 const trashBoxSelector = new BoxSelector(document, {
   selectables: '.item_box',
@@ -198,7 +198,7 @@ function hdHighlight(con) {
 const imgLazy = new LazyLoad();
 const bmLogoLazy = new LazyLoad();
 function renderList(y) {
-  let pagenum = $contentWrap.pagenum,
+  let pagenum = trashPageNo,
     a = wInput.getValue().trim(),
     slogo = 'icon-liebiao1';
   if (a.length > 100) {
@@ -232,8 +232,8 @@ function renderList(y) {
     .then((result) => {
       if (result.code === 1) {
         let { total, data, pageNo, splitWord } = result.data;
-        $contentWrap.list = data;
-        $contentWrap.pagenum = pageNo;
+        trashList = data;
+        trashPageNo = pageNo;
         const html = _tpl(
           `
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
@@ -372,16 +372,16 @@ function renderList(y) {
 }
 const pgnt = pagination($contentWrap[0], {
   change(val) {
-    $contentWrap.pagenum = val;
+    trashPageNo = val;
     renderList(true);
-    _msg.botMsg(`第 ${$contentWrap.pagenum} 页`);
+    _msg.botMsg(`第 ${trashPageNo} 页`);
   },
   changeSize(val) {
     curPageSize = val;
     localData.set('trashPageSize', curPageSize);
-    $contentWrap.pagenum = 1;
+    trashPageNo = 1;
     renderList(true);
-    _msg.botMsg(`第 ${$contentWrap.pagenum} 页`);
+    _msg.botMsg(`第 ${trashPageNo} 页`);
   },
   toTop() {
     pageScrollTop(0);
@@ -460,7 +460,7 @@ $headWrap
             wInput.setValue('');
             HASH = param.value;
           }
-          $contentWrap.pagenum = 1;
+          trashPageNo = 1;
           renderList(true);
         }
       },
@@ -469,11 +469,11 @@ $headWrap
   })
   .on('click', '.inp_box .clean_btn', function () {
     wInput.setValue('').focus();
-    $contentWrap.pagenum = 1;
+    trashPageNo = 1;
     renderList(true);
   })
   .on('click', '.inp_box .search_btn', function () {
-    $contentWrap.pagenum = 1;
+    trashPageNo = 1;
     renderList(true);
   });
 function hdRecover(e, ids, t, cb, isCheck, loading = { start() {}, end() {} }) {

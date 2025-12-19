@@ -284,10 +284,11 @@ async function updateSongInfo() {
       }, 1000);
     });
 }
+let curLrcIdx = 0;
 // 初始歌词
 function lrcInit() {
-  $myAudio._lrcList = [];
-  $myAudio.curLrcIdx = 0;
+  lrcList = [];
+  curLrcIdx = 0;
   $lrcListWrap.find('.lrc_items').html('');
 }
 let songPlayMode = 'order';
@@ -428,6 +429,7 @@ const musicMvContentScroll = new ContentScroll(
   $musicMvWrap.find('.m_top_space p')[0]
 );
 // MV播放
+let mvOnce = false;
 function playMv(obj) {
   const mvBox = $musicMvWrap[0];
   const isHide = $musicMvWrap.is(':hidden');
@@ -439,8 +441,8 @@ function playMv(obj) {
   $myVideo.attr('src', playingSongInfo.mmv);
   toggleMvBtnState();
   playVideo();
-  if (!$musicMvWrap.once) {
-    $musicMvWrap.once = true;
+  if (!mvOnce) {
+    mvOnce = true;
     const { x, y, w, h } = mvSize;
     toSetSize(mvBox, w, h);
     const obj = x && y ? { left: x, top: y } : null;
@@ -507,14 +509,14 @@ function playSong() {
   if (!playingSongInfo) return;
   document.title = `\xa0\xa0\xa0♪正在播放：${playingSongInfo.artist} - ${playingSongInfo.title}`;
   $myAudio[0].play();
-  if ($myAudio._lrcList.length === 0) {
+  if (lrcList.length === 0) {
     musiclrc();
   }
   //保持播放速度
   $myAudio[0].playbackRate = curPlaySpeed[1];
 }
 //歌词处理
-$myAudio._lrcList = [];
+let lrcList = [];
 function musiclrc() {
   if (!playingSongInfo) return;
   const id = playingSongInfo.id;
@@ -530,7 +532,7 @@ function musiclrc() {
           item.idx = idx;
           return item;
         });
-        $myAudio._lrcList = list;
+        lrcList = list;
         let hasfy = !list.every((item) => item.fy === '');
         if (hasfy) {
           $lrcMenuWrap.find('.lrc_translate_btn').stop().show(_d.speed);
@@ -563,22 +565,20 @@ function musiclrc() {
       }
     })
     .catch(() => {
-      $myAudio._lrcList = [];
+      lrcList = [];
     });
 }
 // 设置最接近播放进度的歌词索引
 function setActionLrcIndex() {
   const cTime = Math.round($myAudio[0].currentTime);
-  $myAudio.curLrcIdx = getMinIndex(
-    $myAudio._lrcList.map((item) => Math.abs(cTime - item.t))
-  );
+  curLrcIdx = getMinIndex(lrcList.map((item) => Math.abs(cTime - item.t)));
 }
 // 滚动歌词
 function lrcScroll(immedia) {
   const $lrc = $lrcListWrap.find('.lrc_items');
-  if ($myAudio._lrcList.length === 0) return;
+  if (lrcList.length === 0) return;
   const $lrcdiv = $lrc.children('div'),
-    $activediv = $lrcdiv.eq($myAudio.curLrcIdx),
+    $activediv = $lrcdiv.eq(curLrcIdx),
     wH = $lrcListWrap.outerHeight(),
     lrcmtop = parseFloat(
       window.getComputedStyle($lrc[0]).transform.slice(7).split(',').slice(-1)
@@ -599,7 +599,7 @@ function lrcScroll(immedia) {
   }
 }
 $lrcListWrap.on('click', function () {
-  if ($lrcFootWrap._flag !== 'y') return;
+  if (lrcFootFlag !== 'y') return;
   if (this._isop) {
     $lrcListWrap.css('opacity', 1);
     $lrcBg.removeClass('open');
@@ -618,6 +618,7 @@ const upprog = throttle(function () {
 }, 500);
 // 音乐事件
 let lrcCount = -1; //歌词计数
+let audioFlag = '';
 $myAudio
   .on('loadedmetadata', function () {
     //元数据加载完
@@ -656,15 +657,15 @@ $myAudio
     if ($myAudio[0].paused) return;
     const curTime = Math.round(this.currentTime);
     upprog();
-    if ($myAudio._flag === curTime) return;
-    const list = $myAudio._lrcList || [];
+    if (audioFlag === curTime) return;
+    const list = lrcList || [];
     list
       .filter((item) => item.t === curTime)
       .forEach((item) => {
         lrcCount++;
-        $myAudio._flag = curTime;
+        audioFlag = curTime;
         _setTimeout(() => {
-          $myAudio.curLrcIdx = item.idx;
+          curLrcIdx = item.idx;
           lrcCount--;
           if (lrcCount > 0) {
             lrcScroll(true);
@@ -696,10 +697,8 @@ $lrcProgressBar
       left = pro1.offsetLeft + $musicPlayerWrap[0].offsetLeft,
       percent = (x - left) / pro1.offsetWidth,
       time = playingSongInfo.duration * percent,
-      idx = getMinIndex(
-        $myAudio._lrcList.map((item) => Math.abs(time - item.t))
-      ),
-      lrc = $myAudio._lrcList[idx];
+      idx = getMinIndex(lrcList.map((item) => Math.abs(time - item.t))),
+      lrc = lrcList[idx];
     let str = formartSongTime(time);
     if (lrc) {
       str += `${lrc.p ? `\n${lrc.p}` : ''}${
@@ -1327,6 +1326,7 @@ function zidonghide(timemax, el, ell, fn, fn2, fel) {
       fn2();
     });
 }
+let lrcFootFlag = '';
 zidonghide(
   10,
   '.lrc_box',
@@ -1334,7 +1334,7 @@ zidonghide(
   debounce(
     function () {
       $lrcFootWrap.stop().slideDown(_d.speed, () => {
-        $lrcFootWrap._flag = 'y';
+        lrcFootFlag = 'y';
         lrcScroll();
       });
     },
@@ -1344,7 +1344,7 @@ zidonghide(
   debounce(
     function () {
       $lrcFootWrap.stop().slideUp(_d.speed, () => {
-        $lrcFootWrap._flag = 'n';
+        lrcFootFlag = 'n';
         lrcScroll();
       });
     },

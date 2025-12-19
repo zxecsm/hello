@@ -18,12 +18,15 @@ import { fieldLength } from '../config.js';
 import { readSearchConfig, writeSearchConfig } from './search.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
+import { sym } from '../../utils/symbols.js';
 
 const route = express.Router();
+const kHello = sym('hello');
+const kValidate = sym('validate');
 
 // 验证登录态
 route.use((req, res, next) => {
-  if (req._hello.userinfo.account) {
+  if (req[kHello].userinfo.account) {
     next();
   } else {
     _nologin(res);
@@ -33,7 +36,7 @@ route.use((req, res, next) => {
 // 配置
 route.get('/config', async (req, res) => {
   try {
-    _success(res, 'ok', await readSearchConfig(req._hello.userinfo.account));
+    _success(res, 'ok', await readSearchConfig(req[kHello].userinfo.account));
   } catch (error) {
     _err(res)(req, error);
   }
@@ -61,8 +64,8 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { title, link, color } = req._vdata;
-      const { account } = req._hello.userinfo;
+      const { title, link, color } = req[kValidate];
+      const { account } = req[kHello].userinfo;
       const config = await readSearchConfig(account);
 
       const item = {
@@ -111,8 +114,8 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { title, link, color, id } = req._vdata;
-      const { account } = req._hello.userinfo;
+      const { title, link, color, id } = req[kValidate];
+      const { account } = req[kHello].userinfo;
       const config = await readSearchConfig(account);
 
       if (Array.isArray(config.searchEngineData)) {
@@ -147,8 +150,8 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id } = req._vdata;
-      const { account } = req._hello.userinfo;
+      const { id } = req[kValidate];
+      const { account } = req[kHello].userinfo;
       const config = await readSearchConfig(account);
 
       let log = '';
@@ -181,8 +184,8 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id } = req._vdata;
-      const { account } = req._hello.userinfo;
+      const { id } = req[kValidate];
+      const { account } = req[kHello].userinfo;
       const config = await readSearchConfig(account);
 
       config.searchengineid = id;
@@ -208,8 +211,8 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id } = req._vdata;
-      const { account } = req._hello.userinfo;
+      const { id } = req[kValidate];
+      const { account } = req[kHello].userinfo;
       const config = await readSearchConfig(account);
 
       let log = '';
@@ -254,9 +257,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { title, link } = req._vdata;
+      const { title, link } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
       const config = await readSearchConfig(account);
 
       const item = {
@@ -300,9 +303,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { title, link, id } = req._vdata;
+      const { title, link, id } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
       const config = await readSearchConfig(account);
 
       if (Array.isArray(config.translatorData)) {
@@ -336,9 +339,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id } = req._vdata;
+      const { id } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
       const config = await readSearchConfig(account);
 
       let log = '';
@@ -371,8 +374,8 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id } = req._vdata;
-      const { account } = req._hello.userinfo;
+      const { id } = req[kValidate];
+      const { account } = req[kHello].userinfo;
       const config = await readSearchConfig(account);
 
       config.translatorid = id;
@@ -398,9 +401,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id } = req._vdata;
+      const { id } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
       const config = await readSearchConfig(account);
 
       let log = '';
@@ -439,7 +442,7 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { word } = req._vdata;
+      const { word } = req[kValidate];
 
       _success(res, '获取分词成功', getSplitWord(word))(req, word, 1);
     } catch (error) {
@@ -469,9 +472,9 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { word, pageNo, pageSize } = req._vdata;
+      const { word, pageNo, pageSize } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const historydb = db('history').where({ account, state: 1 });
 
@@ -522,9 +525,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { content } = req._vdata;
+      const { content } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       // 删除重复历史记录
       await db('history').where({ account, content }).delete();
@@ -560,9 +563,9 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { word } = req._vdata;
+      const { word } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       if (!word) {
         // 没有输入返回历史记录最新10条
@@ -686,9 +689,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { ids } = req._vdata;
+      const { ids } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('history')
         .where({ id: { in: ids }, account, state: 1 })

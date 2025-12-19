@@ -151,17 +151,18 @@ export async function setAudioSrc(val) {
 export function setLrcBg(val) {
   $lrcBg.css('background-image', `url("${val}")`).removeClass('lrcbgss');
 }
+let lrcFootFlag = '';
 // 操作按钮框
 export function showLrcFootWrap() {
   $lrcFootWrap.stop().slideDown(_d.speed, () => {
-    $lrcFootWrap._flag = 'y';
+    lrcFootFlag = 'y';
     lrcScroll();
   });
 }
 // 隐藏底部操作框
 export function hideLrcFootWrap() {
   $lrcFootWrap.stop().slideUp(_d.speed, () => {
-    $lrcFootWrap._flag = 'n';
+    lrcFootFlag = 'n';
     lrcScroll();
   });
 }
@@ -398,7 +399,7 @@ export function lrcScroll(immedia) {
 }
 // 显示/隐藏歌词
 $lrcListWrap.on('click', function () {
-  if ($lrcFootWrap._flag !== 'y') return;
+  if (lrcFootFlag !== 'y') return;
   if (this._isop) {
     $lrcListWrap.css('opacity', 1);
     $lrcBg.removeClass('open');
@@ -444,25 +445,27 @@ function songStartPlaying() {
   startPlayingSongLogo();
 }
 // 更新播放时间
+let audioSongId = '';
+let audioFlag = false;
 function songTimeUpdate() {
   if (songIspaused()) return;
   const curPlayTime = Math.round(this.currentTime);
   // 播放50%以上缓存歌曲
   if (this.currentTime / playingSongInfo.duration > 0.5) {
-    if ($myAudio._songid !== playingSongInfo.id) {
-      $myAudio._songid = playingSongInfo.id;
+    if (audioSongId !== playingSongInfo.id) {
+      audioSongId = playingSongInfo.id;
       cacheFile.add(playingSongInfo.uurl, 'music');
     }
   }
   updateSongProgress();
-  if ($myAudio._flag === curPlayTime) return;
+  if (audioFlag === curPlayTime) return;
   const list = lrcList || [];
   list
     .filter((item) => item.t === curPlayTime)
     // 多句同时间排队执行，100ms执行一次
     .forEach((item) => {
       lrcCount++;
-      $myAudio._flag = curPlayTime;
+      audioFlag = curPlayTime;
       _setTimeout(() => {
         activeLrcIndex = item.idx;
         lrcCount--;

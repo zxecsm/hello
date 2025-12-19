@@ -1715,6 +1715,7 @@ async function hdVerifyLogin(e, verify, account) {
   );
 }
 // 显示个人信息
+let userInfoOnce = false;
 export function showUserInfo() {
   hideRightMenu();
   const userInfoBox = $userInfoWrap[0];
@@ -1724,8 +1725,8 @@ export function showUserInfo() {
     if (isHide) updateUserInfo();
   });
   setZidx(userInfoBox, 'userinfo', hideUserInfo, userInfoIsTop);
-  if (!$userInfoWrap._once) {
-    $userInfoWrap._once = true;
+  if (!userInfoOnce) {
+    userInfoOnce = true;
     const { x, y } = userInfoSize;
     const obj = x && y ? { left: x, top: y } : null;
     toCenter(userInfoBox, obj);
@@ -1733,6 +1734,7 @@ export function showUserInfo() {
     myToRest(userInfoBox, false, false);
   }
 }
+let sysInfoOnce = false;
 export function showSysInfo() {
   const sysBox = $sysInfoWrap[0];
   hideRightMenu();
@@ -1740,8 +1742,8 @@ export function showSysInfo() {
   $sysInfoWrap.css('display', 'block');
   setZidx(sysBox, 'sysinfo', hideSysInfo, sysInfoIsTop);
   if (isHide) sysStatus.start();
-  if (!$sysInfoWrap._once) {
-    $sysInfoWrap._once = true;
+  if (!sysInfoOnce) {
+    sysInfoOnce = true;
     const { x, y } = sysInfoSize;
     const obj = x && y ? { left: x, top: y } : null;
     toCenter(sysBox, obj);

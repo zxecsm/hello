@@ -10,7 +10,11 @@ import { fieldLength } from '../config.js';
 import taskState from '../../utils/taskState.js';
 import { validShareState } from '../user/user.js';
 import V from '../../utils/validRules.js';
+import { sym } from '../../utils/symbols.js';
+
 const route = express.Router();
+const kHello = sym('hello');
+const kValidate = sym('validate');
 
 // 获取任务信息
 route.post(
@@ -28,12 +32,12 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { key, token } = req._vdata;
+      const { key, token } = req[kValidate];
 
       let {
         temid,
         userinfo: { account },
-      } = req._hello;
+      } = req[kHello];
 
       try {
         temid = await V.parse(
@@ -92,12 +96,12 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { key, token } = req._vdata;
+      const { key, token } = req[kValidate];
 
       let {
         temid,
         userinfo: { account },
-      } = req._hello;
+      } = req[kHello];
 
       try {
         temid = await V.parse(
@@ -155,12 +159,12 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { token } = req._vdata;
+      const { token } = req[kValidate];
 
       let {
         temid,
         userinfo: { account },
-      } = req._hello;
+      } = req[kHello];
 
       try {
         temid = await V.parse(

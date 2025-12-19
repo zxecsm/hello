@@ -63,8 +63,11 @@ import axios from 'axios';
 import cheerio from './routes/bmk/cheerio.js';
 import { db } from './utils/sqlite.js';
 import V from './utils/validRules.js';
+import { sym } from './utils/symbols.js';
 
 const __dirname = getDirname(import.meta);
+const kHello = sym('hello');
+const kValidate = sym('validate');
 
 const app = express();
 app.disable('x-powered-by');
@@ -81,7 +84,7 @@ const reqLimit = verifyLimit({ space: 10, count: 500 }, false);
 const informReqLimit = debounce(
   async (req) => {
     try {
-      const { os, ip } = req._hello;
+      const { os, ip } = req[kHello];
       await heperMsgAndForward(
         req,
         appConfig.adminAccount,
@@ -125,7 +128,7 @@ app.use(async (req, res, next) => {
         ? jwtData.data.data
         : {}; // 用户信息
 
-    req._hello = {
+    req[kHello] = {
       userinfo,
       path: decodeURIComponent(req.path),
       temid,
@@ -141,7 +144,7 @@ app.use(async (req, res, next) => {
     if (reqLimit.verify(ip, flag)) {
       reqLimit.add(ip, flag);
 
-      await writelog(req, `${method}(${req._hello.path})`);
+      await writelog(req, `${method}(${req[kHello].path})`);
       next();
     } else {
       informReqLimit(req);
@@ -174,9 +177,9 @@ app.use(async (req, res, next) => {
     const {
       jwtData,
       userinfo: { account },
-    } = req._hello;
+    } = req[kHello];
 
-    req._hello.userinfo = {}; // 清空用户信息
+    req[kHello].userinfo = {}; // 清空用户信息
 
     if (
       jwtData &&
@@ -189,12 +192,12 @@ app.use(async (req, res, next) => {
 
       //  对比token生成的时间
       if (user && (user.exp_token_time || 0) < iat) {
-        req._hello.userinfo = user; // 验证身份成功，保存用户信息
-        req._hello.isRoot = user.account === appConfig.adminAccount;
+        req[kHello].userinfo = user; // 验证身份成功，保存用户信息
+        req[kHello].isRoot = user.account === appConfig.adminAccount;
 
         // token剩下一半时间到期，重置token
         if (Date.now() / 1000 - iat >= (exp - iat) / 2) {
-          const { account, username } = req._hello.userinfo;
+          const { account, username } = req[kHello].userinfo;
           await jwt.setCookie(res, { account, username });
         }
       }
@@ -234,7 +237,7 @@ app.all(
   ),
   async (req, res) => {
     try {
-      const { method } = req._hello;
+      const { method } = req[kHello];
 
       const source = req.headers['x-source-service'];
 
@@ -254,7 +257,7 @@ app.all(
         }
       }
 
-      const { chat_id } = req._vdata;
+      const { chat_id } = req[kValidate];
 
       try {
         text = await V.parse(
@@ -296,10 +299,10 @@ app.get(
   ),
   async (req, res) => {
     try {
-      const { u } = req._vdata;
+      const { u } = req[kValidate];
 
       // 检查接口是否开启
-      if (!_d.pubApi.siteInfoApi && !req._hello.userinfo.account) {
+      if (!_d.pubApi.siteInfoApi && !req[kHello].userinfo.account) {
         return _err(res, '接口未开放')(req, u, 1);
       }
 
@@ -398,11 +401,11 @@ app.get(
 );
 
 app.use(async (req, res, next) => {
-  const path = req._hello.path;
+  const path = req[kHello].path;
   const routePath = '/api/f/';
   if (path.startsWith(routePath)) {
     const filePath = path.slice(routePath.length);
-    req._hello.path = routePath;
+    req[kHello].path = routePath;
     await getFile(req, res, filePath);
   } else {
     next();

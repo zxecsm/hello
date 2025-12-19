@@ -18,12 +18,16 @@ import { fieldLength } from '../config.js';
 import _path from '../../utils/path.js';
 import jwt from '../../utils/jwt.js';
 import V from '../../utils/validRules.js';
+import { sym } from '../../utils/symbols.js';
+
+const kHello = sym('hello');
+const kValidate = sym('validate');
 
 export default async function getFile(req, res, originalPath) {
   try {
     const params = { ...req.query, p: originalPath };
     try {
-      req._vdata = await V.parse(
+      req[kValidate] = await V.parse(
         params,
         V.object({
           w: V.number().toInt().default(0).min(0),
@@ -40,9 +44,9 @@ export default async function getFile(req, res, originalPath) {
       return;
     }
 
-    let { token, p, w } = req._vdata;
+    let { token, p, w } = req[kValidate];
 
-    let { account } = req._hello.userinfo;
+    let { account } = req[kHello].userinfo;
 
     const jwtData = token ? await jwt.get(token) : '';
 

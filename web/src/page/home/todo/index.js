@@ -185,6 +185,7 @@ function getTodo(id) {
   return todoList.find((item) => item.id === id) || {};
 }
 // 显示todo
+let showTodoOnce = false;
 export function showTodoBox() {
   const tBox = $todoBox[0];
   hideRightMenu();
@@ -192,8 +193,8 @@ export function showTodoBox() {
   $todoBox.css('display', 'flex');
   setZidx(tBox, 'todo', closeTodoBox, todoIsTop);
   if (isHide) getTodoList(true);
-  if (!$todoBox._once) {
-    $todoBox._once = true;
+  if (!showTodoOnce) {
+    showTodoOnce = true;
     const { x, y, w, h } = todoSize;
     toSetSize(tBox, w, h);
     const obj = x && y ? { left: x, top: y } : null;

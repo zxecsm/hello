@@ -341,18 +341,19 @@ if (HASH === 'new') {
   }
 }
 // 渲染转换显示
+let temNoteFlag = false;
 async function rende() {
   let text = editor.getValue();
   if (HASH === 'new') {
     // 新笔记未上传则保存在本地
     await cacheFile.setData('newNote', text);
   } else {
-    if ($editBox.flag) {
+    if (temNoteFlag) {
       const temNoteObj = (await cacheFile.getData('temNote')) || {};
       temNoteObj[HASH] = text;
       await cacheFile.setData('temNote', temNoteObj);
     }
-    $editBox.flag = true;
+    temNoteFlag = true;
   }
   if ($previewBox.is(':hidden')) return;
   if (text.trim() === '') {
@@ -688,12 +689,13 @@ if (getScreenSize().w <= _d.screen) {
   previewState();
 }
 // 预览切换
+let previewStateFlag = '';
 function previewState() {
-  if (!$headBtns._flag) {
-    $headBtns._flag = 'y';
+  if (!previewStateFlag) {
+    previewStateFlag = 'y';
   }
-  if ($headBtns._flag === 'y') {
-    $headBtns._flag = 'n';
+  if (previewStateFlag === 'y') {
+    previewStateFlag = 'n';
     $headBtns
       .find('.preview_state')
       .attr('class', 'preview_state iconfont icon-kejian');
@@ -701,7 +703,7 @@ function previewState() {
     $editBox.addClass('open');
     $headBtns.find('.to_max_btn').css('display', 'none');
   } else {
-    $headBtns._flag = 'y';
+    previewStateFlag = 'y';
     $headBtns
       .find('.preview_state')
       .attr('class', 'preview_state iconfont icon-bukejian');

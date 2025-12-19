@@ -190,7 +190,7 @@ if (!isRoot()) {
 }
 // 获取图片信息
 function getPicItem(id) {
-  return $imgList.list.find((item) => item.id === id) || {};
+  return picList.find((item) => item.id === id) || {};
 }
 const picBoxSelector = new BoxSelector($imgList[0], {
   selectables: '.img_item',
@@ -248,7 +248,7 @@ function startSelect() {
       check: 'n',
     });
 }
-$imgList.list = [];
+let picList = [];
 // 生成列表
 function renderImgList(y) {
   if (!isRoot()) return;
@@ -261,7 +261,7 @@ function renderImgList(y) {
       if (result.code === 1) {
         const { total, data, pageNo } = result.data;
         picPageNo = pageNo;
-        $imgList.list = data;
+        picList = data;
         const html = _tpl(
           `
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>

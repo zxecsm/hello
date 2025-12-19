@@ -76,7 +76,7 @@ const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
   },
   keyup(e) {
     if (e.key === 'Enter') {
-      $contentWrap.pagenum = 1;
+      historyPageNo = 1;
       renderList(true);
     }
   },
@@ -92,12 +92,12 @@ function listLoading() {
 }
 let curPageSize = localData.get('historyPageSize'),
   hList = [];
-$contentWrap.pagenum = 1;
+let historyPageNo = 1;
 function getItemInfo(id) {
   return hList.find((item) => item.id === id) || {};
 }
 function renderList(y) {
-  const pagenum = $contentWrap.pagenum,
+  const pagenum = historyPageNo,
     word = wInput.getValue().trim();
   if (word.length > 100) {
     _msg.error('搜索内容过长');
@@ -116,7 +116,7 @@ function renderList(y) {
       if (result.code === 1) {
         const { total, data, pageNo, splitWord } = result.data;
         hList = data;
-        $contentWrap.pagenum = pageNo;
+        historyPageNo = pageNo;
         const html = _tpl(
           `
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
@@ -159,16 +159,16 @@ function renderList(y) {
 // 分页
 const pgnt = pagination($contentWrap[0], {
   change(val) {
-    $contentWrap.pagenum = val;
+    historyPageNo = val;
     renderList(true);
-    _msg.botMsg(`第 ${$contentWrap.pagenum} 页`);
+    _msg.botMsg(`第 ${historyPageNo} 页`);
   },
   changeSize(val) {
     curPageSize = val;
     localData.set('historyPageSize', curPageSize);
-    $contentWrap.pagenum = 1;
+    historyPageNo = 1;
     renderList(true);
-    _msg.botMsg(`第 ${$contentWrap.pagenum} 页`);
+    _msg.botMsg(`第 ${historyPageNo} 页`);
   },
   toTop() {
     pageScrollTop(0);
@@ -387,7 +387,7 @@ function addHistory(e) {
         .then((res) => {
           loading.end();
           if (res.code === 1) {
-            $contentWrap.pagenum = 1;
+            historyPageNo = 1;
             renderList(true);
             close();
             _msg.success(res.codeText);
@@ -408,11 +408,11 @@ $headWrap
   .on('click', '.h_add_item_btn', addHistory)
   .on('click', '.inp_box .clean_btn', function () {
     wInput.setValue('').focus();
-    $contentWrap.pagenum = 1;
+    historyPageNo = 1;
     renderList(true);
   })
   .on('click', '.inp_box .search_btn', function () {
-    $contentWrap.pagenum = 1;
+    historyPageNo = 1;
     renderList(true);
   });
 

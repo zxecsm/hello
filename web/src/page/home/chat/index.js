@@ -757,6 +757,7 @@ export function chatMessageNotification(name, data, from, to, logo) {
   }
 }
 //打开聊天窗
+let showChatRoomOnce = false;
 export function showChatRoom(chatAcc = curChatAccount) {
   const chatRoom = $chatRoomWrap[0];
   $showChatRoomBtn.attr('class', 'show_chat_room_btn iconfont icon-liaotian');
@@ -791,8 +792,8 @@ export function showChatRoom(chatAcc = curChatAccount) {
         })
         .catch(() => {});
     });
-  if (!$chatRoomWrap._once) {
-    $chatRoomWrap._once = true;
+  if (!showChatRoomOnce) {
+    showChatRoomOnce = true;
     const { w, h, x, y } = chatSize;
     toSetSize(chatRoom, w, h);
     const obj = x && y ? { left: x, top: y } : null;
@@ -1364,31 +1365,32 @@ function chatMsgMenu(e, cobj) {
   );
 }
 // 播放语音
+let playVoiceFlag = '';
 function playVoice(a, _this, id) {
-  const pflag = $chatAudio.playflag;
+  const pflag = playVoiceFlag;
   $chatAudio[0].pause();
   $chatListBox
     .find('.c_voice_msg_box i')
     .attr('class', 'iconfont icon-zzanting');
   if (pflag === id) {
-    $chatAudio.playflag = '';
+    playVoiceFlag = '';
     return;
   }
-  $chatAudio.playflag = id;
+  playVoiceFlag = id;
   $chatAudio[0].src = a;
   $chatAudio[0].play();
   $(_this).children('i').attr('class', 'iconfont icon-zanting');
 }
 $chatAudio
   .on('ended', function () {
-    $chatAudio.playflag = '';
+    playVoiceFlag = '';
     $chatListBox
       .find('.c_voice_msg_box i')
       .attr('class', 'iconfont icon-zzanting');
   })
   .on('error', function () {
     _msg.error('语音已过期');
-    $chatAudio.playflag = '';
+    playVoiceFlag = '';
     $chatListBox
       .find('.c_voice_msg_box i')
       .attr('class', 'iconfont icon-zzanting');

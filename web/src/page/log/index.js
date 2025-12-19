@@ -32,8 +32,8 @@ const $head = $('.header'),
   $main = $('.main'),
   $stat = $('.stat'),
   $foot = $('.footer');
-$main.pageNo = 1;
-$main.list = [];
+let logPageNo = 1;
+let logList = [];
 let lPageSize = 20,
   sPageSize = 50;
 window.addEventListener('load', () => {
@@ -56,7 +56,7 @@ const wInput = wrapInput($head.find('.inp_box input')[0], {
   },
   keyup(e) {
     if (e.key === 'Enter') {
-      $main.pageNo = 1;
+      logPageNo = 1;
       hdRender();
     }
   },
@@ -121,12 +121,12 @@ function getLogData(name) {
   reqRootLog({ name })
     .then((res) => {
       if (res.code === 1) {
-        $main.list = res.data;
-        $main.pageNo = 1;
+        logList = res.data;
+        logPageNo = 1;
         curName = name;
         hdRender();
-        $stat.pageNo = 1;
-        $stat.list = getStatData(res.data);
+        statPageNo = 1;
+        statList = getStatData(res.data);
         $stat.html('');
         renderStat();
         $head.find('.del_btn').css('display', 'block');
@@ -156,15 +156,15 @@ $head
   .on('click', '.select_btn', getLogList)
   .on('click', '.inp_box .clean_btn', function () {
     wInput.setValue('').focus();
-    $main.pageNo = 1;
+    logPageNo = 1;
     hdRender();
   })
   .on('click', '.inp_box .search_btn', function () {
-    $main.pageNo = 1;
+    logPageNo = 1;
     hdRender();
   });
-$stat.list = [];
-$stat.pageNo = 1;
+let statPageNo = 1;
+let statList = [];
 // 访问统计
 function getStatData(list) {
   const reg = /\[([^\[\]]+)\]\(([0-9A-Fa-f.:]+)\)/,
@@ -197,26 +197,26 @@ function getStatData(list) {
 }
 const spgnt = pagination($stat[0], {
   change(val) {
-    $stat.pageNo = val;
+    statPageNo = val;
     renderStat();
-    _msg.botMsg(`第 ${$stat.pageNo} 页`);
+    _msg.botMsg(`第 ${statPageNo} 页`);
   },
   changeSize(val) {
     sPageSize = val;
-    $stat.pageNo = 1;
+    statPageNo = 1;
     renderStat();
-    _msg.botMsg(`第 ${$stat.pageNo} 页`);
+    _msg.botMsg(`第 ${statPageNo} 页`);
   },
   toTop() {
     $stat.scrollTop(0);
   },
 });
 function renderStat() {
-  const pageTotal = Math.ceil($stat.list.length / sPageSize);
-  $stat.pageNo < 1
-    ? ($stat.pageNo = pageTotal)
-    : $stat.pageNo > pageTotal
-    ? ($stat.pageNo = 1)
+  const pageTotal = Math.ceil(statList.length / sPageSize);
+  statPageNo < 1
+    ? (statPageNo = pageTotal)
+    : statPageNo > pageTotal
+    ? (statPageNo = 1)
     : null;
   const html = _tpl(
     `
@@ -228,16 +228,16 @@ function renderStat() {
     </template>
     `,
     {
-      arr: $stat.list,
-      list: $stat.list.slice(
-        ($stat.pageNo - 1) * sPageSize,
-        $stat.pageNo * sPageSize
+      arr: statList,
+      list: statList.slice(
+        (statPageNo - 1) * sPageSize,
+        statPageNo * sPageSize
       ),
       getPaging() {
         return spgnt.getHTML({
-          pageNo: $stat.pageNo,
+          pageNo: statPageNo,
           pageSize: sPageSize,
-          total: $stat.list.length,
+          total: statList.length,
           small: getScreenSize().w <= _d.screen,
         });
       },
@@ -248,21 +248,21 @@ function renderStat() {
 }
 $stat.on('click', '.ip', function () {
   wInput.setValue(this.textContent);
-  $main.pageNo = 1;
+  logPageNo = 1;
   hdRender();
 });
 // 分页
 const pgnt = pagination($foot[0], {
   change(val) {
-    $main.pageNo = val;
+    logPageNo = val;
     hdRender();
-    _msg.botMsg(`第 ${$main.pageNo} 页`);
+    _msg.botMsg(`第 ${logPageNo} 页`);
   },
   changeSize(val) {
     lPageSize = val;
-    $main.pageNo = 1;
+    logPageNo = 1;
     hdRender();
-    _msg.botMsg(`第 ${$main.pageNo} 页`);
+    _msg.botMsg(`第 ${logPageNo} 页`);
   },
   toTop() {
     pageScrollTop(0);
@@ -271,15 +271,15 @@ const pgnt = pagination($foot[0], {
 // 生成日志列表
 async function hdRender() {
   const word = wInput.getValue().trim();
-  let arr = $main.list;
+  let arr = logList;
   if (word) {
-    arr = $main.list.filter((item) => getWordCount([word], item) > 0);
+    arr = logList.filter((item) => getWordCount([word], item) > 0);
   }
   const pageTotal = Math.ceil(arr.length / lPageSize);
-  $main.pageNo < 1
-    ? ($main.pageNo = pageTotal)
-    : $main.pageNo > pageTotal
-    ? ($main.pageNo = 1)
+  logPageNo < 1
+    ? (logPageNo = pageTotal)
+    : logPageNo > pageTotal
+    ? (logPageNo = 1)
     : null;
   const html = _tpl(
     `
@@ -292,12 +292,12 @@ async function hdRender() {
       word,
       _d,
       arr,
-      list: arr.slice(($main.pageNo - 1) * lPageSize, $main.pageNo * lPageSize),
+      list: arr.slice((logPageNo - 1) * lPageSize, logPageNo * lPageSize),
       hdTitleHighlight,
     }
   );
   pgnt.render({
-    pageNo: $main.pageNo,
+    pageNo: logPageNo,
     pageSize: lPageSize,
     total: arr.length,
     small: getScreenSize().w <= _d.screen,
@@ -319,11 +319,11 @@ function dellog(e, name) {
           .then((res) => {
             if (res.code === 1) {
               _msg.success('删除成功');
-              $main.list = [];
+              logList = [];
               curName = null;
               $main.html('');
               $foot.html('');
-              $stat.list = [];
+              statList = [];
               $stat.html('');
               $head.find('.del_btn').css('display', 'none');
               $head.find('.refresh_btn').css('display', 'none');

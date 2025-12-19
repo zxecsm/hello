@@ -27,12 +27,15 @@ import { computerDay } from './count.js';
 import nanoid from '../../utils/nanoid.js';
 import appConfig from '../../data/config.js';
 import V from '../../utils/validRules.js';
+import { sym } from '../../utils/symbols.js';
 
 const route = express.Router();
+const kHello = sym('hello');
+const kValidate = sym('validate');
 
 // 验证登录态
 route.use((req, res, next) => {
-  if (req._hello.userinfo.account) {
+  if (req[kHello].userinfo.account) {
     next();
   } else {
     _nologin(res);
@@ -158,9 +161,9 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { pageNo, pageSize } = req._vdata;
+      const { pageNo, pageSize } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const total = await db('count_down').where({ account }).count();
 
@@ -228,7 +231,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      let { title, start, end, link } = req._vdata;
+      let { title, start, end, link } = req[kValidate];
 
       start = new Date(start + ' 00:00:00').getTime();
       end = new Date(end + ' 00:00:00').getTime();
@@ -238,7 +241,7 @@ route.post(
         return;
       }
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('count_down').insert({
         id: nanoid(),
@@ -272,9 +275,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { ids } = req._vdata;
+      const { ids } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('count_down')
         .where({ id: { in: ids }, account })
@@ -309,7 +312,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      let { id, title, start, end, link } = req._vdata;
+      let { id, title, start, end, link } = req[kValidate];
 
       start = new Date(start + ' 00:00:00').getTime();
       end = new Date(end + ' 00:00:00').getTime();
@@ -319,7 +322,7 @@ route.post(
         return;
       }
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('count_down').where({ id, account }).update({
         title,
@@ -349,9 +352,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      let { id, top } = req._vdata;
+      let { id, top } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('count_down').where({ id, account }).update({ top });
 
@@ -376,9 +379,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id, state } = req._vdata;
+      const { id, state } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('count_down').where({ id, account }).update({ state });
 

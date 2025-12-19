@@ -58,9 +58,12 @@ import pinyin from '../../utils/pinyin.js';
 import jwt from '../../utils/jwt.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
+import { sym } from '../../utils/symbols.js';
 const maxSonglistCount = 2000;
 
 const route = express.Router();
+const kHello = sym('hello');
+const kValidate = sym('validate');
 
 // 获取歌词
 route.post(
@@ -82,9 +85,9 @@ route.post(
     ];
 
     try {
-      const { id, token } = req._vdata;
+      const { id, token } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       if (!account) {
         if (!token) {
@@ -161,9 +164,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id, token } = req._vdata;
+      const { id, token } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       if (!account) {
         if (!token) {
@@ -221,7 +224,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id, pass } = req._vdata;
+      const { id, pass } = req[kValidate];
 
       const share = await validShareAddUserState(req, ['music'], id, pass);
 
@@ -262,7 +265,7 @@ route.post(
         return;
       }
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       if (account && account != acc) {
         const f = await getFriendInfo(account, acc, 'des');
@@ -292,7 +295,7 @@ route.post(
 
 // 验证登录态
 route.use((req, res, next) => {
-  if (req._hello.userinfo.account) {
+  if (req[kHello].userinfo.account) {
     next();
   } else {
     _nologin(res);
@@ -311,7 +314,7 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { word, pageNo } = req._vdata;
+      const { word, pageNo } = req[kValidate];
 
       const pageSize = 100;
 
@@ -379,11 +382,11 @@ route.get(
   ),
   async (req, res) => {
     try {
-      let { id, pageNo, pageSize, sort, playId, onlyMv } = req._vdata;
+      let { id, pageNo, pageSize, sort, playId, onlyMv } = req[kValidate];
 
       if (id === 'all' && playId) onlyMv = 0;
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       let songList = await getMusicList(account);
 
@@ -564,9 +567,9 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { id } = req._vdata;
+      const { id } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const songListObj = (await getMusicList(account)).find(
         (item) => item.id === id
@@ -608,9 +611,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { list, id } = req._vdata;
+      const { list, id } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const songLists = await getMusicList(account);
 
@@ -664,9 +667,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { history, lastplay, currentTime, duration } = req._vdata;
+      const { history, lastplay, currentTime, duration } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const change = await db('last_play').where({ account }).update({
         song_id: lastplay.id,
@@ -711,7 +714,7 @@ route.post(
 // 最后播放记录
 route.get('/last-play', async (req, res) => {
   try {
-    const { account } = req._hello.userinfo;
+    const { account } = req[kHello].userinfo;
 
     const lastm = await db('last_play')
       .select('song_id,play_current_time,duration')
@@ -772,9 +775,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { data } = req._vdata;
+      const { data } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const change = await db('playing_list')
         .where({ account })
@@ -801,7 +804,7 @@ route.post(
 // 播放列表
 route.get('/playlist', async (req, res) => {
   try {
-    const { account } = req._hello.userinfo;
+    const { account } = req[kHello].userinfo;
 
     const playing = await db('playing_list')
       .select('data')
@@ -843,9 +846,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { fromId, toId } = req._vdata;
+      const { fromId, toId } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await songlistMoveLocation(account, fromId, toId);
 
@@ -869,9 +872,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id } = req._vdata;
+      const { id } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const list = await getMusicList(account);
 
@@ -915,9 +918,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id, name, des, toId } = req._vdata;
+      const { id, name, des, toId } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const list = await getMusicList(account);
 
@@ -925,11 +928,11 @@ route.post(
 
       const log = `${id}-${name}${des ? `-${des}` : ''}`;
 
-      if (id === 'all' && req._hello.isRoot) {
+      if (id === 'all' && req[kHello].isRoot) {
         _d.songList[2].name = name;
         _d.songList[2].des = des;
         _success(res, '更新歌单信息成功')(req, log, 1);
-      } else if (idx < 2 && idx >= 0 && req._hello.isRoot) {
+      } else if (idx < 2 && idx >= 0 && req[kHello].isRoot) {
         _d.songList[idx].name = name;
         _d.songList[idx].des = des;
         _success(res, '更新歌单信息成功')(req, log, 1);
@@ -982,9 +985,9 @@ route.post(
         duration,
         collect_count,
         play_count,
-      } = req._vdata;
+      } = req[kValidate];
 
-      if (!req._hello.isRoot) {
+      if (!req[kHello].isRoot) {
         _err(res, '无权更新歌曲信息')(req, `${id}-${artist}-${title}`, 1);
         return;
       }
@@ -1060,9 +1063,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { name, des } = req._vdata;
+      const { name, des } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const list = await getMusicList(account);
 
@@ -1107,9 +1110,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { fromId, toId, listId } = req._vdata;
+      const { fromId, toId, listId } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await songMoveLocation(account, listId, fromId, toId);
 
@@ -1139,9 +1142,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { ids } = req._vdata;
+      const { ids } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const list = await getMusicList(account);
 
@@ -1183,9 +1186,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id } = req._vdata;
+      const { id } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const list = await getMusicList(account);
 
@@ -1216,9 +1219,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { listId, ids } = req._vdata;
+      const { listId, ids } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       if (listId === 'all') {
         // 限制删除数量
@@ -1232,7 +1235,7 @@ route.post(
           return;
         }
 
-        if (!req._hello.isRoot) {
+        if (!req[kHello].isRoot) {
           _err(res, '无权删除歌曲')(req, `${listId}-${ids.length}`, 1);
           return;
         }
@@ -1296,9 +1299,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      let { fromId, toId, ids } = req._vdata;
+      let { fromId, toId, ids } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const list = await getMusicList(account);
 
@@ -1369,9 +1372,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id } = req._vdata;
+      const { id } = req[kValidate];
 
-      if (!req._hello.isRoot) {
+      if (!req[kHello].isRoot) {
         _err(res, '无权操作')(req, id, 1);
         return;
       }
@@ -1411,7 +1414,7 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { id } = req._vdata;
+      const { id } = req[kValidate];
 
       const musicinfo = await db('songs').select('lrc').where({ id }).findOne();
 
@@ -1453,9 +1456,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id, text } = req._vdata;
+      const { id, text } = req[kValidate];
 
-      if (!req._hello.isRoot) {
+      if (!req[kHello].isRoot) {
         _err(res, '无权操作')(req, id, 1);
         return;
       }
@@ -1530,9 +1533,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { list, title, expireTime, pass } = req._vdata;
+      const { list, title, expireTime, pass } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const id = nanoid();
       const create_at = Date.now();
@@ -1587,7 +1590,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { HASH, name, type, id } = req._vdata;
+      const { HASH, name, type, id } = req[kValidate];
 
       if (type === 'song') {
         if (!HASH) {
@@ -1672,7 +1675,7 @@ route.post(
           return;
         }
 
-        if (!req._hello.isRoot) {
+        if (!req[kHello].isRoot) {
           _err(res, '无权上传封面')(req, id, 1);
           return;
         }
@@ -1750,7 +1753,7 @@ route.post(
           return;
         }
 
-        if (!req._hello.isRoot) {
+        if (!req[kHello].isRoot) {
           _err(res, '无权上传MV')(req, id, 1);
           return;
         }
@@ -1808,7 +1811,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { HASH } = req._vdata;
+      const { HASH } = req[kValidate];
 
       const songInfo = await db('songs')
         .select('url,id')
@@ -1848,9 +1851,9 @@ route.post(
   ),
   async function (req, res) {
     try {
-      const { name, token } = req._vdata;
+      const { name, token } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const share = await validShareState(token, 'music');
 

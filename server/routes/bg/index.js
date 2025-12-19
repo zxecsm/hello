@@ -33,21 +33,28 @@ import _path from '../../utils/path.js';
 import _connect from '../../utils/connect.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
+import { sym } from '../../utils/symbols.js';
+import getFile from '../getfile/index.js';
 
 const route = express.Router();
+const kHello = sym('hello');
+const kValidate = sym('validate');
 
 // 获取随机一张壁纸
 route.get(
   '/r/:type',
   validate(
-    'params',
-    V.object({
-      type: V.string().trim().enum(['d', 'm']),
-    })
+    [
+      'params',
+      V.object({
+        type: V.string().trim().enum(['d', 'm']),
+      }),
+    ],
+    ['query', V.object({ w: V.number().toInt().default(0).min(0) })]
   ),
   async (req, res) => {
     try {
-      const { type } = req._vdata;
+      const { type } = req[kValidate].params;
 
       // 检查壁纸接口是否开启
       if (!_d.pubApi.randomBgApi) {
@@ -66,7 +73,7 @@ route.get(
       const url = appConfig.bgDir(bgData.url);
 
       if (await _f.exists(url)) {
-        res.sendFile(url, { dotfiles: 'allow' });
+        await getFile(req, res, `/bg/${bgData.url}`);
       } else {
         _err(res, '获取壁纸失败')(req, `${url} 不存在`, 1);
       }
@@ -78,7 +85,7 @@ route.get(
 
 // 验证登录态
 route.use((req, res, next) => {
-  if (req._hello.userinfo.account) {
+  if (req[kHello].userinfo.account) {
     next();
   } else {
     _nologin(res);
@@ -114,7 +121,7 @@ route.get(
   validate('query', V.object({ type: V.string().trim().enum(['bg', 'bgxs']) })),
   async (req, res) => {
     try {
-      const { type } = req._vdata;
+      const { type } = req[kValidate];
 
       const bgData = await getRandomBg(type, 'url,id,type');
 
@@ -142,9 +149,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { type, id } = req._vdata;
+      const { type, id } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
       await db('user')
         .where({ account, state: 1 })
         .update({ [type]: id });
@@ -175,7 +182,7 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { type, pageNo, pageSize } = req._vdata;
+      const { type, pageNo, pageSize } = req[kValidate];
 
       const bgdb = db('bg').where({ type });
 
@@ -216,10 +223,10 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const ids = req._vdata;
+      const ids = req[kValidate];
 
       // 验证管理员
-      if (!req._hello.isRoot) {
+      if (!req[kHello].isRoot) {
         _err(res, '无权操作')(req);
         return;
       }
@@ -266,7 +273,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { HASH, name } = req._vdata;
+      const { HASH, name } = req[kValidate];
 
       const bg = await db('bg').select('url').where({ hash: HASH }).findOne();
       if (bg) {
@@ -316,7 +323,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { HASH } = req._vdata;
+      const { HASH } = req[kValidate];
 
       const bg = await db('bg')
         .select('url,id')

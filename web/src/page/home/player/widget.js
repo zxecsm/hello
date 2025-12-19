@@ -117,8 +117,9 @@ export function mvIspaused() {
   return $myVideo[0].paused;
 }
 // 显示/隐藏迷你歌词
+let miniLrcOnce = false;
 export function showMiniLrcBox(once) {
-  if (once && $miniLrcWrap._isone) return;
+  if (once && miniLrcOnce) return;
   $miniLrcWrap.stop().fadeIn(_d.speed);
   const { left, top } = miniLrcCoord;
   const { w, h } = getScreenSize();
@@ -144,7 +145,7 @@ export function setMvplayVolume(value) {
 $miniLrcWrap
   .on('click', '.close', function () {
     hideMiniLrcBox();
-    $miniLrcWrap._isone = true;
+    miniLrcOnce = true;
   })
   .on('click', '.top', switchMiniLrcTopState);
 $miniPlayer
@@ -175,7 +176,8 @@ $miniPlayer
   .on('click', '.show_lrc', toggleMiniLrc);
 // 切换迷你歌词
 function toggleMiniLrc() {
-  $miniLrcWrap.fadeToggle(_d.speed)._isone = true;
+  miniLrcOnce = true;
+  $miniLrcWrap.fadeToggle(_d.speed);
   setZidx($miniLrcWrap[0], 0, 0, miniLrcCoord.isTop);
 }
 // 暂停
@@ -260,23 +262,25 @@ export function closeEditLrcBox() {
   editLrcHeadContentScroll.close();
 }
 // 保存歌词
+let editorLastVal = '';
+let editLrcSongInfo = {};
 function saveLrc() {
   const val = $editLrcWrap.find('textarea').val();
-  if ($editLrcWrap._val === val || !isRoot()) return;
+  if (editorLastVal === val || !isRoot()) return;
   if (getTextSize(val) > _d.fieldLength.lrcSize) {
     _msg.error('歌词文本过长');
     return;
   }
-  $editLrcWrap._val = val;
+  editorLastVal = val;
   reqPlayerEditLrc({
-    id: $editLrcWrap._mobj.id,
+    id: editLrcSongInfo.id,
     text: val,
   })
     .then((result) => {
       if (result.code === 1) {
-        $editLrcWrap._val = val;
+        editorLastVal = val;
         _msg.success(result.codeText);
-        cacheFile.delete($editLrcWrap._mobj.id, 'music');
+        cacheFile.delete(editLrcSongInfo.id, 'music');
         return;
       }
     })
@@ -292,6 +296,7 @@ const editLrcHeadContentScroll = new ContentScroll(
   $editLrcWrap.find('.song_info_text p')[0]
 );
 // 显示编辑歌词
+let editLrcOnce = false;
 export function showEditLrc(sobj) {
   if (!isRoot()) {
     $editLrcWrap.find('.save').remove();
@@ -302,20 +307,20 @@ export function showEditLrc(sobj) {
   $editLrcWrap.css('display', 'flex');
   editLrcHeadContentScroll.init(`${sobj.artist} - ${sobj.title}`);
   $editLrcWrap.find('textarea').val('');
-  $editLrcWrap._mobj = deepClone(sobj);
+  editLrcSongInfo = deepClone(sobj);
   reqPlayerReadLrc({
     id: sobj.id,
   })
     .then((result) => {
       if (result.code === 1) {
-        $editLrcWrap._val = result.data;
+        editorLastVal = result.data;
         $editLrcWrap.find('textarea').val(result.data);
         return;
       }
     })
     .catch(() => {});
-  if (!$editLrcWrap._once) {
-    $editLrcWrap._once = true;
+  if (!editLrcOnce) {
+    editLrcOnce = true;
     const { x, y, w, h } = editLrcSize;
     toSetSize(editBox, w, h);
     const obj = x && y ? { left: x, top: y } : null;
@@ -368,6 +373,7 @@ const musicMvContentScroll = new ContentScroll(
   $musicMvWrap.find('.m_top_space p')[0]
 );
 // MV播放函数
+let mvBoxOnce = false;
 export async function playMv(obj) {
   setPlayingSongInfo(hdSongInfo(obj));
   updateSongInfo();
@@ -377,8 +383,8 @@ export async function playMv(obj) {
   const isHide = musicMvIsHide();
   playVideo();
   $musicMvWrap.css('display', 'flex');
-  if (!$musicMvWrap.once) {
-    $musicMvWrap.once = true;
+  if (!mvBoxOnce) {
+    mvBoxOnce = true;
     const { x, y, w, h } = mvSize;
     toSetSize(mvBox, w, h);
     const obj = x && y ? { left: x, top: y } : null;
@@ -563,28 +569,30 @@ document.addEventListener('touchstart', (e) => {
 });
 
 //桌面大小改变自适应
+let miniLrcIsShow = false;
+let miniPlayerIsShow = false;
 window.addEventListener(
   'resize',
   debounce(function () {
     if (getScreenSize().w > _d.screen) {
-      if ($miniLrcWrap.isshow) {
+      if (miniLrcIsShow) {
         $miniLrcWrap.css('display', 'block');
       }
-      if ($miniPlayer.isshow) {
+      if (miniPlayerIsShow) {
         $miniPlayer.css('display', 'block');
       }
     } else {
       if (!$miniLrcWrap.is(':hidden')) {
         $miniLrcWrap.css('display', 'none');
-        $miniLrcWrap.isshow = true;
+        miniLrcIsShow = true;
       } else {
-        $miniLrcWrap.isshow = false;
+        miniLrcIsShow = false;
       }
       if (!$miniPlayer.is(':hidden')) {
         $miniPlayer.css('display', 'none');
-        $miniPlayer.isshow = true;
+        miniPlayerIsShow = true;
       } else {
-        $miniPlayer.isshow = false;
+        miniPlayerIsShow = false;
       }
     }
   }, 1000)

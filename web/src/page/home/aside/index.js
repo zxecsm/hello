@@ -74,13 +74,14 @@ export function setBookMark(val) {
   }
   bookmark = val;
 }
+let mouseBmFromDom = null;
 const bmMouseElementTracker = new MouseElementTracker($aside.find('.list')[0], {
   delay: 300,
   onStart({ e }) {
     const item = _getTarget($aside[0], e, '.list .bm_item');
     if (isSelecting() || !item || !e.target.className.includes('bm_logo'))
       return true;
-    $aside.bmfromDom = item;
+    mouseBmFromDom = item;
     const obj = getBmItemData(
       $(item).parent().prev().attr('data-id'),
       item.dataset.id
@@ -91,19 +92,19 @@ const bmMouseElementTracker = new MouseElementTracker($aside.find('.list')[0], {
     allowSlide.update();
   },
   onEnd({ dropElement }) {
-    if (!isSelecting() && $aside.bmfromDom) {
+    if (!isSelecting() && mouseBmFromDom) {
       const to = dropElement
         ? _getTarget($aside[0], { target: dropElement }, '.list .bm_item')
         : null;
       if (to) {
         const pid = $(to).parent().prev().attr('data-id');
         const toId = to.dataset.id;
-        const fromId = $aside.bmfromDom.dataset.id;
+        const fromId = mouseBmFromDom.dataset.id;
         if (fromId !== toId) {
           dragMoveBookmark(pid, fromId, toId);
         }
       }
-      $aside.bmfromDom = null;
+      mouseBmFromDom = null;
     }
   },
 });
@@ -132,7 +133,7 @@ function bmListMove(fromId, toId) {
     })
     .catch(() => {});
 }
-
+let mouseBmListFromDom = null;
 const bmListMouseElementTracker = new MouseElementTracker(
   $aside.find('.list')[0],
   {
@@ -140,7 +141,7 @@ const bmListMouseElementTracker = new MouseElementTracker(
     onStart({ e }) {
       const item = _getTarget($aside[0], e, '.list .list_title');
       if (!item || isSelecting() || e.target.tagName !== 'I') return true;
-      $aside.bmListfromDom = item;
+      mouseBmListFromDom = item;
       const obj = getBmListTitleData(item.dataset.id);
       bmListMouseElementTracker.changeInfo(obj.title);
     },
@@ -148,37 +149,33 @@ const bmListMouseElementTracker = new MouseElementTracker(
       allowSlide.update();
     },
     onEnd({ dropElement }) {
-      if (!isSelecting() && $aside.bmListfromDom) {
+      if (!isSelecting() && mouseBmListFromDom) {
         const to = dropElement
           ? _getTarget($aside[0], { target: dropElement }, '.list .list_title')
           : null;
         if (to) {
           const toId = to.dataset.id;
-          const fromId = $aside.bmListfromDom.dataset.id;
+          const fromId = mouseBmListFromDom.dataset.id;
           if (fromId !== toId) {
             bmListMove(fromId, toId);
           }
         }
-        $aside.bmListfromDom = null;
+        mouseBmListFromDom = null;
       }
     },
   }
 );
 
-$asideBtn.activeId = 'hide'; // 记录开启列表id
+let activeBmListId = 'hide'; // 记录开启列表id
 // 获取书签列表
-export function getBookMarkList(
-  activeId = $asideBtn.activeId,
-  p,
-  delayScroll = 0
-) {
+export function getBookMarkList(activeId = activeBmListId, p, delayScroll = 0) {
   if (asideWrapIsHide()) return;
 
   reqBmkList({ id: activeId })
     .then((result) => {
       if (result.code === 1) {
         bookmark = result.data;
-        $asideBtn.activeId = activeId;
+        activeBmListId = activeId;
         renderAsideList(p, delayScroll);
       }
     })
@@ -263,7 +260,7 @@ bmBoxSelector.stop();
 function renderAsideList(p, delayScroll = 0) {
   if (asideWrapIsHide()) return;
   stopSelect();
-  let id = $asideBtn.activeId,
+  let id = activeBmListId,
     _nav = bookmark.list;
   const html = _tpl(
     `
@@ -322,7 +319,7 @@ function renderAsideList(p, delayScroll = 0) {
   $aList.html(html);
   if (p) {
     const curIdx = bookmark.list.findIndex(
-      (item) => item.id === $asideBtn.activeId
+      (item) => item.id === activeBmListId
     );
     if (curIdx >= 0) {
       _setTimeout(() => {
@@ -360,13 +357,10 @@ const asideLoadImg = new LazyLoad();
 
 // 加载logo
 function hdAsideListItemLogo() {
-  if ($asideBtn.activeId === 'hide') return;
+  if (activeBmListId === 'hide') return;
   const bmLogos = [...$aside[0].querySelectorAll('.bm_item')].filter((item) => {
     const $item = $(item);
-    let { logo, link } = getBmItemData(
-      $asideBtn.activeId,
-      $item.attr('data-id')
-    );
+    let { logo, link } = getBmItemData(activeBmListId, $item.attr('data-id'));
 
     if (logo) {
       logo = getFilePath(logo);
@@ -382,10 +376,7 @@ function hdAsideListItemLogo() {
   });
   asideLoadImg.bind(bmLogos, (item) => {
     const $item = $(item);
-    let { logo, link } = getBmItemData(
-      $asideBtn.activeId,
-      $item.attr('data-id')
-    );
+    let { logo, link } = getBmItemData(activeBmListId, $item.attr('data-id'));
 
     if (logo) {
       logo = getFilePath(logo);
@@ -512,7 +503,7 @@ function switchListOpenState() {
     id = $this.attr('data-id');
   if ($this.attr('flag') === 'on') {
     $this.next().css('display', 'none').html('');
-    $asideBtn.activeId = 'hide';
+    activeBmListId = 'hide';
     $this.attr('flag', 'off');
     return;
   }
@@ -571,14 +562,14 @@ $asideWrap
   })
   .on('click', '.bm_item', function () {
     const { link } = getBmItemData(
-      $asideBtn.activeId,
+      activeBmListId,
       this.getAttribute('data-id')
     );
     myOpen(link, '_blank');
   })
   .on('mouseenter', '.bm_item .bm_logo', function () {
     tooltipBookmark(
-      getBmItemData($asideBtn.activeId, this.parentNode.getAttribute('data-id'))
+      getBmItemData(activeBmListId, this.parentNode.getAttribute('data-id'))
     );
   })
   .on('mouseleave', '.bm_item .bm_logo', function () {
@@ -599,7 +590,7 @@ $asideWrap
   .on('click', '.bm_logo', function (e) {
     e.stopPropagation();
     const $this = $(this).parent();
-    const groupId = $asideBtn.activeId;
+    const groupId = activeBmListId;
     bookMarkSetting(
       e,
       {
@@ -615,7 +606,7 @@ $asideWrap
     e.preventDefault();
     if (isMobile() || isSelecting()) return;
     const $this = $(this);
-    const groupId = $asideBtn.activeId;
+    const groupId = activeBmListId;
     bookMarkSetting(
       e,
       {
@@ -647,7 +638,7 @@ $asideWrap
   })
   .on('click', '.move_bm', function (e) {
     const arr = getAsideCheckBmItem();
-    const groupId = $asideBtn.activeId;
+    const groupId = activeBmListId;
     if (arr.length === 0) return;
     moveBookMark(e, groupId, arr);
   })
@@ -805,7 +796,7 @@ longPress($aside[0], '.bm_item', function (e) {
   if (bmMouseElementTracker.active || isSelecting()) return;
   const $this = $(this),
     ev = e.changedTouches[0];
-  const groupId = $asideBtn.activeId;
+  const groupId = activeBmListId;
   bookMarkSetting(
     ev,
     {
@@ -898,7 +889,7 @@ export function addBookMark(e, pid) {
                     if (result.code === 1) {
                       close(true);
                       _msg.success(result.codeText);
-                      if ($asideBtn.activeId === pid) {
+                      if (activeBmListId === pid) {
                         getBookMarkList();
                       }
                       if (pid === 'home') {
@@ -1403,7 +1394,7 @@ function startSelect() {
   } else {
     $aside.find('ul').css('display', 'none').html('');
     const $sidenav = $aside.find('.list_title');
-    $asideBtn.activeId = 'hide';
+    activeBmListId = 'hide';
     $sidenav.attr('flag', 'off');
     $sidenav.find('.check_bmlist').css('display', 'block');
   }
@@ -1442,7 +1433,7 @@ export function showAside() {
   $asideWrap.outerWidth();
   $asideWrap.css('display', 'block').addClass('open');
   $asideBtn.fadeOut(_d.speed);
-  getBookMarkList($asideBtn.activeId, 1, 0);
+  getBookMarkList(activeBmListId, 1, 0);
 }
 
 export function hideAside() {

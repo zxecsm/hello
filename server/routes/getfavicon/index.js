@@ -29,12 +29,16 @@ import { cleanFavicon } from '../bmk/bmk.js';
 import { _d } from '../../data/data.js';
 import { fieldLength } from '../config.js';
 import V from '../../utils/validRules.js';
+import { sym } from '../../utils/symbols.js';
 
 const route = express.Router();
 
 const __dirname = getDirname(import.meta);
 
 const defaultIcon = resolve(__dirname, '../../img/default-icon.png');
+
+const kHello = sym('hello');
+const kValidate = sym('validate');
 
 // 定期清理图标缓存
 timedTask.add(async (flag) => {
@@ -91,10 +95,10 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const urlStr = req._vdata.u;
+      const urlStr = req[kValidate].u;
 
       // 检查接口是否开启
-      if (!_d.pubApi.faviconApi && !req._hello.userinfo.account) {
+      if (!_d.pubApi.faviconApi && !req[kHello].userinfo.account) {
         return _err(res, '接口未开放')(req, urlStr, 1);
       }
 

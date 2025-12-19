@@ -9,8 +9,10 @@ import _f from '../../utils/f.js';
 import { _delDir } from '../file/file.js';
 import { fieldLength } from '../config.js';
 import V from '../../utils/validRules.js';
+import { sym } from '../../utils/symbols.js';
 
 const route = express.Router();
+const kValidate = sym('validate');
 
 // 读取便条
 route.get(
@@ -23,7 +25,7 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { k } = req._vdata;
+      const { k } = req[kValidate];
 
       const p = appConfig.notepadDir(`${k}.md`);
 
@@ -54,7 +56,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { k, data } = req._vdata;
+      const { k, data } = req[kValidate];
 
       const p = appConfig.notepadDir(`${k}.md`);
 

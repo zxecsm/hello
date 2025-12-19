@@ -220,6 +220,7 @@ function getCount(id) {
   return countList.find((item) => item.id === id) || {};
 }
 // 显示
+let showCountBoxFlag = false;
 export function showCountBox() {
   const cBox = $countBox[0];
   hideRightMenu();
@@ -227,8 +228,8 @@ export function showCountBox() {
   cBox.style.display = 'flex';
   setZidx(cBox, 'count', closeCountBox, countDownIsTop);
   if (isHide) getCountList(true);
-  if (!$countBox._once) {
-    $countBox._once = true;
+  if (!showCountBoxFlag) {
+    showCountBoxFlag = true;
     const { x, y, w, h } = countDownSize;
     toSetSize(cBox, w, h);
     const obj = x && y ? { left: x, top: y } : null;

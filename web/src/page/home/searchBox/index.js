@@ -113,6 +113,7 @@ export function searchBoxIsHide() {
   return $searchBoxMask.is(':hidden');
 }
 // 拖动移动书签
+let mouseHomeBmFromDom = null;
 const homeBmMouseElementTracker = new MouseElementTracker($homeBmWrap[0], {
   delay: 300,
   onStart({ e }) {
@@ -125,24 +126,24 @@ const homeBmMouseElementTracker = new MouseElementTracker($homeBmWrap[0], {
     )
       return true;
 
-    $homeBmWrap.homeBmfromDom = item;
+    mouseHomeBmFromDom = item;
     const obj = getHomeBmData(item.dataset.id);
     if (!obj) return true;
     homeBmMouseElementTracker.changeInfo(obj.title);
   },
   onEnd({ dropElement }) {
-    if (homeFootMenuIsHide() && $homeBmWrap.homeBmfromDom) {
+    if (homeFootMenuIsHide() && mouseHomeBmFromDom) {
       const to = dropElement
         ? _getTarget($homeBmWrap[0], { target: dropElement }, '.home_bm_item')
         : null;
       if (to) {
-        let fromId = $homeBmWrap.homeBmfromDom.dataset.id,
+        let fromId = mouseHomeBmFromDom.dataset.id,
           toId = to.dataset.id;
         if (fromId && toId && fromId !== toId) {
           dragMoveBookmark('home', fromId, toId);
         }
       }
-      $homeBmWrap.homeBmfromDom = null;
+      mouseHomeBmFromDom = null;
     }
   },
 });
@@ -753,9 +754,10 @@ function getSearchItem(id) {
   return searchList.find((item) => item.id === id) || {};
 }
 // 生成列表
+let searchSplitWord = [];
 function renderSearchList() {
   const list = searchList;
-  const splitWord = $searchInpWrap.splitWord;
+  const splitWord = searchSplitWord;
   let searchstr = '';
   if (list.length > 0) {
     searchstr = _tpl(
@@ -798,7 +800,7 @@ function getSearchList(val) {
     .then((result) => {
       if (result.code === 1) {
         const { splitWord, list } = result.data;
-        $searchInpWrap.splitWord = splitWord;
+        searchSplitWord = splitWord;
         searchList = list;
         renderSearchList();
       }
@@ -853,7 +855,7 @@ function hdSearchWord(res) {
     res = [];
   }
   if (!res || res.length === 0) return;
-  const val = $searchInpWrap.splitWord;
+  const val = searchSplitWord;
   res = res.map((item, idx) => ({
     content: item,
     flag: 'ts',

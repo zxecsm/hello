@@ -23,6 +23,9 @@ import _f from '../../utils/f.js';
 import { _delDir, cleanEmptyDirectories } from '../file/file.js';
 import _path from '../../utils/path.js';
 import nanoid from '../../utils/nanoid.js';
+import { sym } from '../../utils/symbols.js';
+
+const kHello = sym('hello');
 
 // 获取好友信息
 export async function getFriendInfo(mAcc, fAcc, fields = '*') {
@@ -46,7 +49,7 @@ export async function markAsRead(mAcc, fAcc) {
 
 // 助手回复响应消息
 export async function hdHelloMsg(req, data, type) {
-  let { receive_chat_state, chat_id, account } = req._hello.userinfo;
+  let { receive_chat_state, chat_id, account } = req[kHello].userinfo;
   const origin = getOrigin(req);
 
   const stopMsgText =
@@ -109,7 +112,7 @@ export async function saveChatMsg(account, obj) {
 
 // 推送通知
 export async function sendNotifyMsg(req, to, flag, msgData) {
-  const { account, logo, username } = req._hello.userinfo;
+  const { account, logo, username } = req[kHello].userinfo;
 
   const notifyObj = {
     type: 'chat',
@@ -168,7 +171,7 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
 
         _connect.send(
           key,
-          key === account ? nanoid() : req._hello.temid,
+          key === account ? nanoid() : req[kHello].temid,
           notifyObj
         );
       });
@@ -229,7 +232,7 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
           ? fInfo.des
           : '';
 
-      _connect.send(notifyObj.data.to, req._hello.temid, notifyObj);
+      _connect.send(notifyObj.data.to, req[kHello].temid, notifyObj);
 
       // 如果是抖动，不推送给自己
       if (flag !== 'shake') {
@@ -307,7 +310,7 @@ export async function sendNotificationsToCustomAddresses(req, obj) {
 // 处理转发到自定义地址
 export async function hdForwardToLink(req, list = [], fArr, text, fList = []) {
   if (list.length > 0) {
-    const { username, account: fromAccount } = req._hello.userinfo;
+    const { username, account: fromAccount } = req[kHello].userinfo;
 
     await concurrencyTasks(list, 3, async (item) => {
       const { forward_msg_link, account } = item;
@@ -353,7 +356,7 @@ export async function hdForwardToLink(req, list = [], fArr, text, fList = []) {
 
 // 上线通知
 export async function onlineMsg(req, pass) {
-  const { account, hide, username } = req._hello.userinfo;
+  const { account, hide, username } = req[kHello].userinfo;
 
   const con = _connect.getConnects(); // 获取所有在线
 
@@ -377,7 +380,7 @@ export async function onlineMsg(req, pass) {
         if (f) {
           des = f.des;
         }
-        _connect.send(key, req._hello.temid, {
+        _connect.send(key, req[kHello].temid, {
           type: 'online',
           data: { text: `${des || username} 已上线`, account },
         });

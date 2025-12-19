@@ -122,7 +122,7 @@ const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
   },
   keyup(e) {
     if (e.key === 'Enter') {
-      $contentWrap.pagenum = 1;
+      notePageNo = 1;
       renderList(true);
     }
   },
@@ -205,7 +205,7 @@ function listLoading() {
   pageScrollTop(0);
 }
 // 渲染列表
-$contentWrap.pagenum = 1;
+let notePageNo = 1;
 let notePageSize = localData.get('notePageSize');
 let noteList = [];
 
@@ -279,7 +279,7 @@ function stopSelect() {
 const imgLazy = new LazyLoad();
 // 生成列表
 export function renderList(y) {
-  let pagenum = $contentWrap.pagenum,
+  let pagenum = notePageNo,
     word = wInput.getValue().trim();
   if (word.length > 100) {
     _msg.error('搜索内容过长');
@@ -307,7 +307,7 @@ export function renderList(y) {
       if (result.code === 1) {
         const { total, data, pageNo, splitWord } = result.data;
         noteList = data;
-        $contentWrap.pagenum = pageNo;
+        notePageNo = pageNo;
         const html = _tpl(
           `
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
@@ -403,7 +403,7 @@ const tabsObj = new CreateTabs({
     switchCleanBtnState();
     HASH = data.map((item) => item.id).join('-');
     myOpen(`#${HASH}`);
-    $contentWrap.pagenum = 1;
+    notePageNo = 1;
     renderList(1);
   },
   add({ e, add, data }) {
@@ -442,16 +442,16 @@ function hdHighlight(con) {
 // 分页
 const pgnt = pagination($contentWrap[0], {
   change(val) {
-    $contentWrap.pagenum = val;
+    notePageNo = val;
     renderList(true);
-    _msg.botMsg(`第 ${$contentWrap.pagenum} 页`);
+    _msg.botMsg(`第 ${notePageNo} 页`);
   },
   changeSize(val) {
     notePageSize = val;
     localData.set('notePageSize', notePageSize);
-    $contentWrap.pagenum = 1;
+    notePageNo = 1;
     renderList(true);
-    _msg.botMsg(`第 ${$contentWrap.pagenum} 页`);
+    _msg.botMsg(`第 ${notePageNo} 页`);
   },
   toTop() {
     pageScrollTop(0);
@@ -890,7 +890,7 @@ async function upNote() {
   });
 
   realtime.send({ type: 'updatedata', data: { flag: 'note' } });
-  $contentWrap.pagenum = 1;
+  notePageNo = 1;
   renderList(true);
 }
 $headWrap
@@ -916,11 +916,11 @@ $headWrap
   .on('click', '.h_check_item_btn', hdCheckItemBtn)
   .on('click', '.inp_box .clean_btn', function () {
     wInput.setValue('').focus();
-    $contentWrap.pagenum = 1;
+    notePageNo = 1;
     renderList(true);
   })
   .on('click', '.inp_box .search_btn', function () {
-    $contentWrap.pagenum = 1;
+    notePageNo = 1;
     renderList(true);
   });
 // 获取选中项

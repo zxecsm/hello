@@ -31,8 +31,11 @@ import { getFriendInfo } from '../chat/chat.js';
 import jwt from '../../utils/jwt.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
+import { sym } from '../../utils/symbols.js';
 
 const route = express.Router();
+const kHello = sym('hello');
+const kValidate = sym('validate');
 
 // 分享
 route.post(
@@ -50,7 +53,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id, pass } = req._vdata;
+      const { id, pass } = req[kValidate];
 
       // 验证分享状态，获取分享数据
       const share = await validShareAddUserState(req, ['bookmk'], id, pass);
@@ -75,7 +78,7 @@ route.post(
         data,
       } = share.data;
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       // 如果非自己的分享
       if (account && account != acc) {
@@ -136,9 +139,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { word, pageNo, pageSize, account: acc, category } = req._vdata;
+      const { word, pageNo, pageSize, account: acc, category } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       if (!acc && !account) {
         _nologin(res);
@@ -227,9 +230,9 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { id, account: acc } = req._vdata;
+      const { id, account: acc } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       if (!acc && !account) {
         _nologin(res);
@@ -294,7 +297,7 @@ timedTask.add(async (flag) => {
 
 // 验证登录态
 route.use((req, res, next) => {
-  if (req._hello.userinfo.account) {
+  if (req[kHello].userinfo.account) {
     next();
   } else {
     _nologin(res);
@@ -313,9 +316,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { fromId, toId } = req._vdata;
+      const { fromId, toId } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await bookListMoveLocation(account, fromId, toId);
 
@@ -341,9 +344,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { groupId, fromId, toId } = req._vdata;
+      const { groupId, fromId, toId } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await bookmarkMoveLocation(account, groupId, fromId, toId);
 
@@ -371,9 +374,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { title } = req._vdata;
+      const { title } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const total = await db('bmk_group')
         .where({
@@ -418,9 +421,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { ids } = req._vdata;
+      const { ids } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       // 放入回收站
       await db('bmk_group')
@@ -451,9 +454,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { share, ids } = req._vdata;
+      const { share, ids } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('bmk_group')
         .where({ id: { in: ids }, state: 1, account })
@@ -483,9 +486,9 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { id } = req._vdata;
+      const { id } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('bmk').where({ account, id, state: 1 }).update({ logo: '' });
 
@@ -516,9 +519,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id, title, toId } = req._vdata;
+      const { id, title, toId } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('bmk_group').where({ account, state: 1, id }).update({ title });
 
@@ -555,9 +558,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      let { bms, groupId } = req._vdata;
+      let { bms, groupId } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       // 添加书签的分组必须存在
       if (groupId !== 'home' && !(await bmkGroupExist(account, groupId))) {
@@ -619,9 +622,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { groupId, id, title, link, des, toId } = req._vdata;
+      const { groupId, id, title, link, des, toId } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('bmk')
         .where({ account, state: 1, id, group_id: groupId })
@@ -658,9 +661,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { ids, groupId } = req._vdata;
+      const { ids, groupId } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       // 移动到的分组需要存在
       if (groupId !== 'home' && !(await bmkGroupExist(account, groupId))) {
@@ -731,9 +734,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { ids } = req._vdata;
+      const { ids } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('bmk')
         .where({ id: { in: ids }, state: 1, account })
@@ -767,9 +770,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id, title, expireTime, pass } = req._vdata;
+      const { id, title, expireTime, pass } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const bms = await db('bmk')
         .select('title,link,des')
@@ -820,7 +823,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { title, token } = req._vdata;
+      const { title, token } = req[kValidate];
 
       const share = await validShareState(token, 'bookmk');
 
@@ -831,7 +834,7 @@ route.post(
 
       let arr = share.data.data;
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const total = await db('bmk_group').where({ account, state: 1 }).count();
 
@@ -905,9 +908,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { list } = req._vdata;
+      const { list } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const total = await db('bmk_group').where({ account, state: 1 }).count();
 
@@ -958,7 +961,7 @@ route.post(
 // 导出
 route.get('/export', async (req, res) => {
   try {
-    const { account } = req._hello.userinfo;
+    const { account } = req[kHello].userinfo;
 
     const bms = await db('bmk')
       .select('title,link,des,group_id')

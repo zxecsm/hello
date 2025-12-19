@@ -567,12 +567,13 @@ if (getScreenSize().w <= _d.screen) {
   previewState();
 }
 // 预览切换
+let previewFlag = false;
 function previewState() {
-  if (!$headBtns._flag) {
-    $headBtns._flag = 'y';
+  if (!previewFlag) {
+    previewFlag = 'y';
   }
-  if ($headBtns._flag === 'y') {
-    $headBtns._flag = 'n';
+  if (previewFlag === 'y') {
+    previewFlag = 'n';
     $headBtns
       .find('.preview_state')
       .attr('class', 'preview_state iconfont icon-kejian');
@@ -580,7 +581,7 @@ function previewState() {
     $editBox.addClass('open');
     $headBtns.find('.to_max_btn').css('display', 'none');
   } else {
-    $headBtns._flag = 'y';
+    previewFlag = 'y';
     $headBtns
       .find('.preview_state')
       .attr('class', 'preview_state iconfont icon-bukejian');

@@ -23,8 +23,11 @@ import _f from '../../utils/f.js';
 import nanoid from '../../utils/nanoid.js';
 import appConfig from '../../data/config.js';
 import V from '../../utils/validRules.js';
+import { sym } from '../../utils/symbols.js';
 
 const route = express.Router();
+const kHello = sym('hello');
+const kValidate = sym('validate');
 
 // 读取笔记
 route.get(
@@ -38,7 +41,7 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { v: id, download } = req._vdata;
+      const { v: id, download } = req[kValidate];
 
       const note = await db('note_user_view')
         .select(
@@ -65,7 +68,7 @@ route.get(
 
         await db('note').where({ id }).increment({ visit_count: 1 });
 
-        const { account } = req._hello.userinfo;
+        const { account } = req[kHello].userinfo;
 
         // 公开并且未删除 或 是自己的
         if ((share === 1 && state === 1) || acc === account) {
@@ -137,9 +140,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      let { account: acc, word, category, pageNo, pageSize } = req._vdata;
+      let { account: acc, word, category, pageNo, pageSize } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       if (!acc && !account) {
         _nologin(res);
@@ -346,9 +349,9 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { account: acc } = req._vdata;
+      const { account: acc } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const list = await db('note_category')
         .select('id,title')
@@ -365,7 +368,7 @@ route.get(
 
 // 验证登录态
 route.use((req, res, next) => {
-  if (req._hello.userinfo.account) {
+  if (req[kHello].userinfo.account) {
     next();
   } else {
     _nologin(res);
@@ -383,9 +386,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { state } = req._vdata;
+      const { state } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('user')
         .where({ account, state: 1 })
@@ -399,7 +402,7 @@ route.post(
 );
 route.get('/history-state', async (req, res) => {
   try {
-    const { note_history } = req._hello.userinfo;
+    const { note_history } = req[kHello].userinfo;
     _success(res, 'ok', { note_history });
   } catch (error) {
     _err(res)(req, error);
@@ -420,9 +423,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { ids, share } = req._vdata;
+      const { ids, share } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('note')
         .where({ id: { in: ids }, account, state: 1 })
@@ -454,13 +457,13 @@ route.post(
   ),
   async (req, res) => {
     try {
-      let { ids } = req._vdata;
+      let { ids } = req[kValidate];
 
       ids = ids.filter(
         (item) => ![appConfig.aboutid, appConfig.tipsid].includes(item)
       ); // 过滤关于和tips
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('note')
         .where({ id: { in: ids }, account, state: 1 })
@@ -495,9 +498,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { title, content } = req._vdata;
+      const { title, content } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const create_at = Date.now();
       await db('note').insert({
@@ -535,11 +538,11 @@ route.post(
   ),
   async (req, res) => {
     try {
-      let { id, title, content } = req._vdata;
+      let { id, title, content } = req[kValidate];
 
       const time = Date.now();
 
-      const { account, note_history } = req._hello.userinfo;
+      const { account, note_history } = req[kHello].userinfo;
 
       const note = await db('note')
         .select('content')
@@ -605,7 +608,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      let { id, title, create_at, update_at, visit_count } = req._vdata;
+      let { id, title, create_at, update_at, visit_count } = req[kValidate];
 
       create_at = new Date(create_at + ' 00:00:00').getTime();
       update_at = new Date(update_at + ' 00:00:00').getTime();
@@ -615,7 +618,7 @@ route.post(
         return;
       }
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('note').where({ id, account }).update({
         title,
@@ -647,9 +650,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id, top } = req._vdata;
+      const { id, top } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('note').where({ id, account }).update({ top });
 
@@ -678,9 +681,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id, category } = req._vdata;
+      const { id, category } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const categoryStr = category.join('-');
       await db('note').where({ id, account }).update({ category: categoryStr });
@@ -706,9 +709,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { title, id } = req._vdata;
+      const { title, id } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('note_category').where({ id, account }).update({ title });
 
@@ -732,9 +735,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { title } = req._vdata;
+      const { title } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const total = await db('note_category').count();
 
@@ -769,9 +772,9 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { id } = req._vdata;
+      const { id } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('note_category').where({ id, account }).delete();
 

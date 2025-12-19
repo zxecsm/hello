@@ -14,12 +14,15 @@ import {
 import { fieldLength } from '../config.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
+import { sym } from '../../utils/symbols.js';
 
 const route = express.Router();
+const kHello = sym('hello');
+const kValidate = sym('validate');
 
 // 验证登录态
 route.use((req, res, next) => {
-  if (req._hello.userinfo.account) {
+  if (req[kHello].userinfo.account) {
     next();
   } else {
     _nologin(res);
@@ -42,9 +45,9 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { pageNo, pageSize } = req._vdata;
+      const { pageNo, pageSize } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const total = await db('todo').where({ account }).count();
 
@@ -91,9 +94,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { content } = req._vdata;
+      const { content } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const create_at = Date.now();
       await db('todo').insert({
@@ -126,9 +129,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { ids } = req._vdata;
+      const { ids } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('todo')
         .where({ id: { in: ids }, account })
@@ -155,9 +158,9 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { id, state } = req._vdata;
+      const { id, state } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('todo')
         .where({ id, account })
@@ -184,9 +187,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id, content } = req._vdata;
+      const { id, content } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('todo')
         .where({ id, account })

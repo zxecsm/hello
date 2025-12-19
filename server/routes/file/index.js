@@ -52,8 +52,11 @@ import axios from 'axios';
 import nanoid from '../../utils/nanoid.js';
 import _crypto from '../../utils/crypto.js';
 import V from '../../utils/validRules.js';
+import { sym } from '../../utils/symbols.js';
 
 const route = express.Router();
+const kHello = sym('hello');
+const kValidate = sym('validate');
 
 // 分享文件
 route.post(
@@ -71,9 +74,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id, pass } = req._vdata;
+      const { id, pass } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const share = await validShareAddUserState(
         req,
@@ -188,11 +191,11 @@ route.post(
         word,
         token,
         hidden,
-      } = req._vdata;
+      } = req[kValidate];
 
-      const temid = req._hello.temid;
+      const temid = req[kHello].temid;
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       if (!token && !account) {
         _nologin(res);
@@ -333,7 +336,7 @@ route.post(
                   : 0;
               }
 
-              if (!req._hello.isRoot) {
+              if (!req[kHello].isRoot) {
                 delete obj.mode;
                 delete obj.gid;
                 delete obj.uid;
@@ -403,9 +406,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { path, token } = req._vdata;
+      const { path, token } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       if (!token && !account) {
         _nologin(res);
@@ -464,7 +467,7 @@ route.post(
 
 // 验证登录态
 route.use((req, res, next) => {
-  if (req._hello.userinfo.account) {
+  if (req[kHello].userinfo.account) {
     next();
   } else {
     _nologin(res);
@@ -482,9 +485,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { state } = req._vdata;
+      const { state } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('user')
         .where({ account, state: 1 })
@@ -498,7 +501,7 @@ route.post(
 );
 route.get('/history-state', async (req, res) => {
   try {
-    const { file_history } = req._hello.userinfo;
+    const { file_history } = req[kHello].userinfo;
     _success(res, 'ok', { file_history });
   } catch (error) {
     _err(res)(req, error);
@@ -508,7 +511,7 @@ route.get('/history-state', async (req, res) => {
 // 获取访问路径历史
 route.get('/cd-history', async (req, res) => {
   try {
-    const { account } = req._hello.userinfo;
+    const { account } = req[kHello].userinfo;
     _success(res, 'ok', await readHistoryDirs(account));
   } catch (error) {
     _err(res)(req, error);
@@ -518,7 +521,7 @@ route.get('/cd-history', async (req, res) => {
 // 获取收藏目录
 route.get('/favorites', async (req, res) => {
   try {
-    const { account } = req._hello.userinfo;
+    const { account } = req[kHello].userinfo;
     _success(res, 'ok', await readFavorites(account));
   } catch (error) {
     _err(res)(req, error);
@@ -541,11 +544,11 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { data, type } = req._vdata;
+      const { data, type } = req[kValidate];
 
       const path = _path.normalize(data.path, data.name);
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
       const list = (await readFavorites(account)).filter(
         (item) => item !== path
       );
@@ -582,9 +585,9 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { path } = req._vdata;
+      const { path } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const p = appConfig.userRootDir(account, path);
 
@@ -639,14 +642,14 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { path, name } = req._vdata;
+      const { path, name } = req[kValidate];
 
       if (!_path.isFilename(name)) {
         _err(res, '名称包含了不允许的特殊字符')(req, name, 1);
         return;
       }
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const fpath = appConfig.userRootDir(account, `${path}/${name}`);
 
@@ -683,14 +686,14 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { path, name, targetPath, isSymlink } = req._vdata;
+      const { path, name, targetPath, isSymlink } = req[kValidate];
 
       if (!_path.isFilename(name)) {
         _err(res, '名称包含了不允许的特殊字符')(req, name, 1);
         return;
       }
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const curPath = appConfig.userRootDir(account, `${path}/${name}`);
       const tPath = appConfig.userRootDir(account, targetPath);
@@ -744,9 +747,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { data, title, expireTime, pass } = req._vdata;
+      const { data, title, expireTime, pass } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('share').insert({
         id: nanoid(),
@@ -791,9 +794,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { path, text } = req._vdata;
+      const { path, text } = req[kValidate];
 
-      const { account, file_history } = req._hello.userinfo;
+      const { account, file_history } = req[kHello].userinfo;
 
       const fpath = appConfig.userRootDir(account, path);
 
@@ -867,9 +870,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { path, data, rename } = req._vdata;
+      const { path, data, rename } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const p = appConfig.userRootDir(account, path);
 
@@ -961,9 +964,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { path, data } = req._vdata;
+      const { path, data } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const p = appConfig.userRootDir(account, path);
 
@@ -1004,8 +1007,8 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { path, data, rename } = req._vdata;
-      const { account } = req._hello.userinfo;
+      const { path, data, rename } = req[kValidate];
+      const { account } = req[kHello].userinfo;
 
       const p = appConfig.userRootDir(account, path);
 
@@ -1090,13 +1093,13 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { data } = req._vdata;
+      const { data } = req[kValidate];
 
       const flag = data.type === 'dir' ? '文件夹' : '文件';
 
       const { name, path } = data;
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const p = appConfig.userRootDir(account, path);
 
@@ -1173,11 +1176,11 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { data } = req._vdata;
+      const { data } = req[kValidate];
 
       const { name, path } = data;
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const p = appConfig.userRootDir(account, path);
       const f = _path.normalize(p, name);
@@ -1249,9 +1252,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { data, force } = req._vdata;
+      const { data, force } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const controller = new AbortController();
       const signal = controller.signal;
@@ -1337,7 +1340,7 @@ route.post(
 // 清空回收站
 route.get('/clear-trash', async (req, res) => {
   try {
-    const { account } = req._hello.userinfo;
+    const { account } = req[kHello].userinfo;
 
     const controller = new AbortController();
     const signal = controller.signal;
@@ -1400,14 +1403,14 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { path, name } = req._vdata;
+      const { path, name } = req[kValidate];
 
       if (!_path.isFilename(name)) {
         _err(res, '名称包含了不允许的特殊字符')(req, name, 1);
         return;
       }
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const fpath = appConfig.userRootDir(account, `${path}/${name}`);
 
@@ -1445,7 +1448,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { data, name } = req._vdata;
+      const { data, name } = req[kValidate];
 
       if (!_path.isFilename(name)) {
         _err(res, '名称包含了不允许的特殊字符')(req, name, 1);
@@ -1454,7 +1457,7 @@ route.post(
 
       const flag = data.type === 'dir' ? '文件夹' : '文件';
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const dir = appConfig.userRootDir(account, data.path);
 
@@ -1507,14 +1510,14 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { data, mode, r } = req._vdata;
+      const { data, mode, r } = req[kValidate];
 
-      if (!req._hello.isRoot) {
+      if (!req[kHello].isRoot) {
         _err(res, '无权操作')(req);
         return;
       }
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const controller = new AbortController();
       const signal = controller.signal;
@@ -1581,14 +1584,14 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { data, uid, gid, r } = req._vdata;
+      const { data, uid, gid, r } = req[kValidate];
 
-      if (!req._hello.isRoot) {
+      if (!req[kHello].isRoot) {
         _err(res, '无权操作')(req);
         return;
       }
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const controller = new AbortController();
       const signal = controller.signal;
@@ -1652,9 +1655,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { HASH, name } = req._vdata;
+      const { HASH, name } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const path = appConfig.temDir(`${account}_${HASH}`);
 
@@ -1685,9 +1688,9 @@ route.post(
     }, fieldLength.operationTimeout);
 
     try {
-      const { HASH, count, path } = req._vdata;
+      const { HASH, count, path } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       let targetPath = appConfig.userRootDir(
         account,
@@ -1716,7 +1719,7 @@ route.post(
         clearTimeout(timer);
         timer = null;
       } else {
-        req._hello.temid = nanoid();
+        req[kHello].temid = nanoid();
         syncUpdateData(req, 'file');
       }
 
@@ -1747,9 +1750,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { HASH } = req._vdata;
+      const { HASH } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const path = appConfig.temDir(`${account}_${HASH}`),
         list = await _f.readdir(path);
@@ -1772,9 +1775,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { path } = req._vdata;
+      const { path } = req[kValidate];
 
-      const p = appConfig.userRootDir(req._hello.userinfo.account, path);
+      const p = appConfig.userRootDir(req[kHello].userinfo.account, path);
 
       if (await _f.exists(p)) {
         _success(res);
@@ -1800,9 +1803,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { url, path } = req._vdata;
+      const { url, path } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const targetPath = appConfig.userRootDir(account, path);
 

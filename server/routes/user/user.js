@@ -10,8 +10,10 @@ import { _delDir } from '../file/file.js';
 import shareVerify from '../../utils/shareVerify.js';
 import { isValidShare, errLog, getDirname } from '../../utils/utils.js';
 import jwt from '../../utils/jwt.js';
+import { sym } from '../../utils/symbols.js';
 
 const __dirname = getDirname(import.meta);
+const kHello = sym('hello');
 
 // 获取字体列表
 export async function getFontList() {
@@ -113,7 +115,7 @@ export async function validShareState(shareToken, t) {
 
 // 验证分享
 export async function validShareAddUserState(req, types, id, pass) {
-  const { ip } = req._hello;
+  const { ip } = req[kHello];
 
   if (shareVerify.verify(ip, id)) {
     const share = await db('share_user_view')

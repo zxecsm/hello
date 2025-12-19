@@ -18,6 +18,10 @@ import Lock from './lock.js';
 import nanoid from './nanoid.js';
 import _crypto from './crypto.js';
 import V from './validRules.js';
+import { sym } from './symbols.js';
+
+const kHello = sym('hello');
+const kValidate = sym('validate');
 
 // 获取模块目录
 export function getDirname(meta) {
@@ -45,15 +49,15 @@ export async function writelog(req, str, flag = appConfig.appName) {
     const date = formatDate({ template: '{0}-{1}-{2} {3}:{4}:{5}' });
 
     if (req) {
-      const { country, province, city, isp } = getCity(req._hello.ip);
+      const { country, province, city, isp } = getCity(req[kHello].ip);
 
-      const { username, account } = req._hello.userinfo;
+      const { username, account } = req[kHello].userinfo;
 
       str = `[${date}]${username || account ? ' - ' : ''}${username || ''}${
         account ? `(${account})` : ''
       } - ${str} - [${country} ${province} ${city} ${isp}](${
-        req._hello.ip
-      }) - ${req._hello.os}\n`;
+        req[kHello].ip
+      }) - ${req[kHello].os}\n`;
     } else {
       str = `[${date}] - ${str}\n`;
     }
@@ -87,7 +91,7 @@ export async function writelog(req, str, flag = appConfig.appName) {
 export function uLog(req, str) {
   return writelog(
     req,
-    `${req._hello.method}(${req._hello.path}) - ${str}`,
+    `${req[kHello].method}(${req[kHello].path}) - ${str}`,
     'user'
   );
 }
@@ -96,7 +100,7 @@ export function uLog(req, str) {
 export function errLog(req, err) {
   return writelog(
     req,
-    `${req._hello.method}(${req._hello.path}) - ${err}`,
+    `${req[kHello].method}(${req[kHello].path}) - ${err}`,
     'error'
   );
 }
@@ -116,14 +120,25 @@ export function paramErr(res, req, err = '', data = {}) {
 }
 
 // 参数验证中间件
-export function validate(type, schema, path = '') {
+export function validate(...rules) {
   return async (req, res, next) => {
-    try {
-      req._vdata = await V.parse(req[type], schema, path);
-      next();
-    } catch (error) {
-      paramErr(res, req, error, type);
+    rules = Array.isArray(rules[0]) ? rules : [rules];
+
+    req[kValidate] = {};
+    for (const [type, schema, path = ''] of rules) {
+      try {
+        const res = await V.parse(req[type], schema, path);
+        if (rules.length === 1) {
+          req[kValidate] = res;
+        } else {
+          req[kValidate][type] = res;
+        }
+      } catch (err) {
+        return paramErr(res, req, err, type);
+      }
     }
+
+    next();
   };
 }
 
@@ -678,7 +693,7 @@ export function isValidShare(t) {
 
 // 同步更新数据
 export function syncUpdateData(req, flag, id = '') {
-  _connect.send(req._hello.userinfo.account, req._hello.temid, {
+  _connect.send(req[kHello].userinfo.account, req[kHello].temid, {
     type: 'updatedata',
     data: {
       flag,
@@ -689,7 +704,7 @@ export function syncUpdateData(req, flag, id = '') {
 
 // 错误通知消息
 export function errorNotifyMsg(req, text) {
-  _connect.send(req._hello.userinfo.account, nanoid(), {
+  _connect.send(req[kHello].userinfo.account, nanoid(), {
     type: 'errMsg',
     data: {
       text,

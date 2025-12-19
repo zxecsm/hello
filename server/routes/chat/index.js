@@ -43,12 +43,15 @@ import {
 import _connect from '../../utils/connect.js';
 import _path from '../../utils/path.js';
 import V from '../../utils/validRules.js';
+import { sym } from '../../utils/symbols.js';
 
 const route = express.Router();
+const kHello = sym('hello');
+const kValidate = sym('validate');
 
 // 验证登录态
 route.use((req, res, next) => {
-  if (req._hello.userinfo.account) {
+  if (req[kHello].userinfo.account) {
     next();
   } else {
     _nologin(res);
@@ -67,8 +70,8 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { account: acc, notify } = req._vdata;
-      const { account } = req._hello.userinfo;
+      const { account: acc, notify } = req[kValidate];
+      const { account } = req[kHello].userinfo;
       if (account === acc) {
         paramErr(res, req, `account 不能为: ${account}`, 'body');
         return;
@@ -105,9 +108,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { account: acc, des } = req._vdata;
+      const { account: acc, des } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       if (account === acc) {
         paramErr(res, req, `account 不能为: ${account}`, 'body');
@@ -135,8 +138,8 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { account: acc } = req._vdata,
-        { account, username } = req._hello.userinfo;
+      const { account: acc } = req[kValidate],
+        { account, username } = req[kHello].userinfo;
 
       const f = await getFriendInfo(account, acc, 'des,notify');
       const des = f ? f.des : '';
@@ -232,9 +235,9 @@ route.get(
   ),
   async (req, res) => {
     try {
-      let { account: acc, type, flag, word, start, end } = req._vdata;
+      let { account: acc, type, flag, word, start, end } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       // 标记已读
       await markAsRead(account, acc);
@@ -341,7 +344,7 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { hash } = req._vdata;
+      const { hash } = req[kValidate];
 
       const file = await db('upload')
         .select('url')
@@ -385,7 +388,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { to, content } = req._vdata;
+      const { to, content } = req[kValidate];
 
       let log = to;
       // 非群非助手验证用户是否存在
@@ -406,7 +409,7 @@ route.post(
         type: 'text',
       };
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       // 保存并推送消息
       const msg = await saveChatMsg(account, obj);
@@ -444,7 +447,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { to, id } = req._vdata;
+      const { to, id } = req[kValidate];
 
       let log = to;
       if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
@@ -465,7 +468,7 @@ route.post(
         return;
       }
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const { flag, hash } = chat;
 
@@ -520,9 +523,9 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { clear } = req._vdata;
+      const { clear } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       if (clear === 1) {
         await db('friends')
@@ -571,9 +574,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id, to } = req._vdata;
+      const { id, to } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       let log = to;
       if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
@@ -595,7 +598,7 @@ route.post(
       } else {
         if (to === appConfig.chatRoomAccount) {
           // 群消息只能管理员清空
-          if (req._hello.isRoot) {
+          if (req[kHello].isRoot) {
             await db('chat')
               .where({ _to: appConfig.chatRoomAccount })
               .batchDelete();
@@ -640,8 +643,8 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { to } = req._vdata;
-      const { account } = req._hello.userinfo;
+      const { to } = req[kValidate];
+      const { account } = req[kHello].userinfo;
 
       if (to === account) {
         paramErr(res, req, `to 不能为: ${account}`, 'body');
@@ -685,9 +688,9 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { pageNo, pageSize } = req._vdata;
+      const { pageNo, pageSize } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const total = await db('user').where({ state: 1 }).count();
 
@@ -771,9 +774,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { name, HASH } = req._vdata;
+      const { name, HASH } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const path = appConfig.temDir(`${account}_${HASH}`);
 
@@ -803,9 +806,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { HASH, name, to } = req._vdata;
+      const { HASH, name, to } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       let log = to;
       if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
@@ -895,7 +898,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { HASH, count, name, to, type } = req._vdata;
+      const { HASH, count, name, to, type } = req[kValidate];
 
       let log = to;
       if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
@@ -919,7 +922,7 @@ route.post(
         return;
       }
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const suffix = _path.extname(name)[2];
       const time = Date.now();
@@ -993,9 +996,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { HASH } = req._vdata;
+      const { HASH } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const path = appConfig.temDir(`${account}_${HASH}`),
         arr = await _f.readdir(path);
@@ -1031,7 +1034,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { HASH, type, name, to, size } = req._vdata;
+      const { HASH, type, name, to, size } = req[kValidate];
 
       const upload = await db('upload')
         .select('url')
@@ -1081,7 +1084,7 @@ route.post(
               obj.content = tName;
             }
 
-            const { account } = req._hello.userinfo;
+            const { account } = req[kHello].userinfo;
 
             const msg = await saveChatMsg(account, obj);
             await sendNotifyMsg(req, obj._to, 'addmsg', obj);
@@ -1135,14 +1138,14 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { state, type, link, header, body } = req._vdata;
+      const { state, type, link, header, body } = req[kValidate];
 
       if (state === 1 && !isurl(link)) {
         paramErr(res, req, 'link 格式错误', 'body');
         return;
       }
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const forward_msg_link = JSON.stringify({
         type,

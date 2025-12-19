@@ -412,6 +412,7 @@ async function renderList(top) {
   }
 }
 const lazyImg = new LazyLoad();
+let mouseFromDom = null;
 const mouseElementTracker = new MouseElementTracker(document, {
   delay: 300,
   onStart({ e }) {
@@ -421,7 +422,7 @@ const mouseElementTracker = new MouseElementTracker(document, {
       item &&
       $(item).find('.check_state').attr('check') === 'y'
     ) {
-      $contentWrap.fromDom = item;
+      mouseFromDom = item;
       mouseElementTracker.changeInfo(`选中 ${getCheckDatas().length} 项`);
     } else {
       return true;
@@ -431,8 +432,8 @@ const mouseElementTracker = new MouseElementTracker(document, {
     e = getEventPoints(e)[0];
     if (
       isSelecting() &&
-      $contentWrap.fromDom &&
-      $($contentWrap.fromDom).find('.check_state').attr('check') === 'y'
+      mouseFromDom &&
+      $(mouseFromDom).find('.check_state').attr('check') === 'y'
     ) {
       const to = dropElement
         ? _getTarget(
@@ -455,7 +456,7 @@ const mouseElementTracker = new MouseElementTracker(document, {
           );
         }
       }
-      $contentWrap.fromDom = null;
+      mouseFromDom = null;
     }
   },
 });

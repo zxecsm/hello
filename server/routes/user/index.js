@@ -57,10 +57,13 @@ import getCity from '../../utils/getCity.js';
 import nanoid from '../../utils/nanoid.js';
 import { readSearchConfig, writeSearchConfig } from '../search/search.js';
 import V from '../../utils/validRules.js';
+import { sym } from '../../utils/symbols.js';
 
 const verifyCode = new Map();
 
 const route = express.Router();
+const kHello = sym('hello');
+const kValidate = sym('validate');
 
 // 记录错误
 route.post(
@@ -73,7 +76,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { err } = req._vdata;
+      const { err } = req[kValidate];
 
       await writelog(req, `[ ${err.slice(0, 1000)} ]`, 'panel_error');
 
@@ -148,7 +151,7 @@ route.post(
         return;
       }
 
-      const { username, password } = req._vdata;
+      const { username, password } = req[kValidate];
 
       const userInfo = await db('user').where({ username }).findOne();
 
@@ -177,7 +180,7 @@ route.post(
       await becomeFriends(account, appConfig.chatRoomAccount);
       await becomeFriends(account, appConfig.notifyAccount);
 
-      const { os, ip } = req._hello;
+      const { os, ip } = req[kHello];
 
       await heperMsgAndForward(
         req,
@@ -208,7 +211,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { code, username } = req._vdata;
+      const { code, username } = req[kValidate];
 
       const userinfo = await db('user')
         .select('account, remote_login')
@@ -231,7 +234,7 @@ route.post(
         return;
       }
 
-      const { ip, os } = req._hello;
+      const { ip, os } = req[kHello];
 
       const { country, province, city, isp } = getCity(ip);
 
@@ -265,7 +268,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { code, username } = req._vdata;
+      const { code, username } = req[kValidate];
       const userinfo = await db('user')
         .select('account, remote_login')
         .where({
@@ -308,7 +311,7 @@ route.post(
         username,
       });
 
-      const { os, ip } = req._hello;
+      const { os, ip } = req[kHello];
 
       await heperMsgAndForward(
         req,
@@ -339,8 +342,8 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { username, password } = req._vdata,
-        ip = req._hello.ip;
+      const { username, password } = req[kValidate],
+        ip = req[kHello].ip;
 
       // ip登录错误次数是否超限制
       if (loginVerifyLimit.verify(ip, username)) {
@@ -377,7 +380,7 @@ route.post(
               username,
             });
 
-            const { os, ip } = req._hello;
+            const { os, ip } = req[kHello];
 
             await heperMsgAndForward(
               req,
@@ -423,9 +426,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { token, account, password } = req._vdata;
+      const { token, account, password } = req[kValidate];
 
-      const ip = req._hello.ip;
+      const ip = req[kHello].ip;
 
       // 限制验证次数
       if (towfaVerify.verify(ip, account)) {
@@ -449,7 +452,7 @@ route.post(
             username,
           });
 
-          const { os, ip } = req._hello;
+          const { os, ip } = req[kHello];
 
           await heperMsgAndForward(
             req,
@@ -486,7 +489,7 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { username } = req._vdata;
+      const { username } = req[kValidate];
 
       if (!_d.email.state) {
         _err(res, '管理员未开启邮箱验证功能')(req, username, 1);
@@ -553,9 +556,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { email, code, account } = req._vdata;
+      const { email, code, account } = req[kValidate];
 
-      const ip = req._hello.ip;
+      const ip = req[kHello].ip;
 
       if (emailVerify.verify(ip, email)) {
         const userinfo = await db('user')
@@ -612,7 +615,7 @@ route.post(
 
 // 验证登录态
 route.use((req, res, next) => {
-  if (req._hello.userinfo.account) {
+  if (req[kHello].userinfo.account) {
     next();
   } else {
     _nologin(res);
@@ -630,12 +633,12 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { p } = req._vdata;
+      const { p } = req[kValidate];
 
       const token = await jwt.set(
         {
           type: 'temAccessFile',
-          data: { account: req._hello.userinfo.account, p },
+          data: { account: req[kHello].userinfo.account, p },
         },
         fieldLength.shareTokenExp
       );
@@ -667,7 +670,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { email } = req._vdata;
+      const { email } = req[kValidate];
 
       if (!_d.email.state) {
         _err(res, '管理员未开启邮箱验证功能')(req, email, 1);
@@ -725,9 +728,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { email, code, password } = req._vdata;
+      const { email, code, password } = req[kValidate];
 
-      const { account, password: pd } = req._hello.userinfo;
+      const { account, password: pd } = req[kHello].userinfo;
 
       if (pd && !(await _crypto.verifyPassword(password, pd))) {
         _err(res, '密码错误')(req, email, 1);
@@ -778,7 +781,7 @@ route.post(
 // 获取临时两部验证token
 route.get('/verify', async (req, res) => {
   try {
-    const { account } = req._hello.userinfo;
+    const { account } = req[kHello].userinfo;
 
     _success(res, 'ok', _2fa.create(account));
   } catch (error) {
@@ -804,9 +807,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { token, password } = req._vdata;
+      const { token, password } = req[kValidate];
 
-      const { account, password: pd } = req._hello.userinfo;
+      const { account, password: pd } = req[kHello].userinfo;
       if (pd && !(await _crypto.verifyPassword(password, pd))) {
         _err(res, '密码错误')(req);
         return;
@@ -859,9 +862,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { code } = req._vdata;
+      const { code } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const key = `${account}_${code}`;
 
@@ -912,8 +915,8 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { account, password } = req._hello.userinfo,
-        { oldpassword, newpassword } = req._vdata;
+      const { account, password } = req[kHello].userinfo,
+        { oldpassword, newpassword } = req[kValidate];
 
       //对比原密码
       if ((await _crypto.verifyPassword(oldpassword, password)) || !password) {
@@ -940,10 +943,10 @@ route.get(
   validate('query', V.object({ other: V.number().toInt().enum([0, 1]) })),
   async (req, res) => {
     try {
-      const { other } = req._vdata;
+      const { other } = req[kValidate];
 
       if (other === 1) {
-        const { account, username } = req._hello.userinfo;
+        const { account, username } = req[kHello].userinfo;
         //退出其他登录设备
         await db('user')
           .where({ account, state: 1 })
@@ -975,7 +978,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { username } = req._vdata;
+      const { username } = req[kValidate];
 
       const userinfo = await db('user')
         .where({
@@ -988,7 +991,7 @@ route.post(
         return;
       }
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('user').where({ account, state: 1 }).update({ username });
 
@@ -1018,23 +1021,23 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { password } = req._vdata;
+      const { password } = req[kValidate];
 
-      const { account, username, password: pd } = req._hello.userinfo;
+      const { account, username, password: pd } = req[kHello].userinfo;
 
       if (pd && !(await _crypto.verifyPassword(password, pd))) {
         _err(res, '密码错误')(req);
         return;
       }
 
-      if (req._hello.isRoot || account === appConfig.notifyAccount) {
+      if (req[kHello].isRoot || account === appConfig.notifyAccount) {
         _err(res, '无权操作')(req);
       } else {
         await deleteUser(account);
 
         res.clearCookie('token');
 
-        const { os, ip } = req._hello;
+        const { os, ip } = req[kHello];
 
         await heperMsgAndForward(
           req,
@@ -1066,7 +1069,7 @@ route.get('/userinfo', async (req, res) => {
       email,
       remote_login,
       daily_change_bg,
-    } = req._hello.userinfo;
+    } = req[kHello].userinfo;
 
     verify = verify ? true : '';
 
@@ -1106,7 +1109,7 @@ route.get('/userinfo', async (req, res) => {
 // 删除头像
 route.get('/delete-logo', async (req, res) => {
   try {
-    const { account } = req._hello.userinfo;
+    const { account } = req[kHello].userinfo;
 
     await db('user').where({ account, state: 1 }).update({ logo: '' });
 
@@ -1143,14 +1146,14 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { name, HASH, type, id } = req._vdata;
+      const { name, HASH, type, id } = req[kValidate];
 
       if (['bookmark', 'engine', 'translator'].includes(type) && !id) {
         paramErr(res, req, 'id 不能为空', 'query');
         return;
       }
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const timePath = getTimePath();
 
@@ -1223,7 +1226,7 @@ route.post(
 // 每日更换壁纸
 route.get('/daily-change-bg', async (req, res) => {
   try {
-    const { account, daily_change_bg } = req._hello.userinfo;
+    const { account, daily_change_bg } = req[kHello].userinfo;
 
     let tem;
 
@@ -1251,7 +1254,7 @@ route.get('/daily-change-bg', async (req, res) => {
 // 隐身状态
 route.get('/hide-state', async (req, res) => {
   try {
-    const { account, hide } = req._hello.userinfo;
+    const { account, hide } = req[kHello].userinfo;
 
     let tem;
 
@@ -1280,7 +1283,7 @@ route.get('/hide-state', async (req, res) => {
 // 免密登录状态
 route.get('/remote-login-state', async (req, res) => {
   try {
-    const { account, remote_login } = req._hello.userinfo;
+    const { account, remote_login } = req[kHello].userinfo;
 
     let tem;
 
@@ -1308,7 +1311,7 @@ route.get('/remote-login-state', async (req, res) => {
 route.get('/update-time', async (req, res) => {
   try {
     await db('user')
-      .where({ account: req._hello.userinfo.account, state: 1 })
+      .where({ account: req[kHello].userinfo.account, state: 1 })
       .update({ update_at: Date.now() });
 
     _success(res);
@@ -1345,9 +1348,9 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
-      let id = req._hello.temid;
+      let id = req[kHello].temid;
 
       try {
         id = await V.parse(
@@ -1360,16 +1363,16 @@ route.get(
         return;
       }
 
-      let { flag, page } = req._vdata; //标识和设备ID
+      let { flag, page } = req[kValidate]; //标识和设备ID
 
       if (page === 'home') {
         // 主页才通知在线
         onlineMsg(req);
       }
 
-      req._hello.page = page;
+      req[kHello].page = page;
 
-      const con = _connect.add(account, cb, req._hello);
+      const con = _connect.add(account, cb, req[kHello]);
 
       //初始化指令标识
       if (!flag) {
@@ -1432,11 +1435,11 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
-      let id = req._hello.temid;
+      let id = req[kHello].temid;
 
-      const { type, data } = req._vdata; //指令内容和登录设备ID
+      const { type, data } = req[kValidate]; //指令内容和登录设备ID
 
       try {
         id = await V.parse(
@@ -1680,9 +1683,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { ids } = req._vdata;
+      const { ids } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('share')
         .where({ id: { in: ids }, account })
@@ -1713,9 +1716,9 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { pageNo, pageSize } = req._vdata;
+      const { pageNo, pageSize } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       const total = await db('share').where({ account }).count();
 
@@ -1765,7 +1768,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { id, title, expireTime, pass } = req._vdata;
+      const { id, title, expireTime, pass } = req[kValidate];
 
       const obj = {
         exp_time:
@@ -1774,7 +1777,7 @@ route.post(
         pass,
       };
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db('share').where({ id, account }).update(obj);
 
@@ -1809,7 +1812,7 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { word, type, pageNo, pageSize } = req._vdata;
+      const { word, type, pageNo, pageSize } = req[kValidate];
 
       let fieldArr = [];
       let fields = '';
@@ -1828,7 +1831,7 @@ route.get(
         fieldArr = ['title', 'content'];
       }
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
       const trashdb = db(type === 'bmk' ? 'bmk_bmk_group_view' : type)
         .select(fields)
         .where({
@@ -1962,9 +1965,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { ids, type } = req._vdata;
+      const { ids, type } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db(type)
         .where({ id: { in: ids }, account, state: 0 })
@@ -2021,9 +2024,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      let { ids, type } = req._vdata;
+      let { ids, type } = req[kValidate];
 
-      const { account } = req._hello.userinfo;
+      const { account } = req[kHello].userinfo;
 
       await db(type)
         .where({ id: { in: ids }, account, state: 0 })

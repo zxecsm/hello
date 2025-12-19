@@ -28,12 +28,15 @@ import { _delDir } from '../file/file.js';
 import _path from '../../utils/path.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
+import { sym } from '../../utils/symbols.js';
 
 const route = express.Router();
+const kHello = sym('hello');
+const kValidate = sym('validate');
 
 // 验证登录态
 route.use((req, res, next) => {
-  if (req._hello.userinfo.account) {
+  if (req[kHello].userinfo.account) {
     next();
   } else {
     _nologin(res);
@@ -59,7 +62,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { HASH, name } = req._vdata;
+      const { HASH, name } = req[kValidate];
 
       const pic = await db('pic')
         .select('hash')
@@ -111,7 +114,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { HASH } = req._vdata;
+      const { HASH } = req[kValidate];
 
       const pic = await db('pic')
         .select('id,url')
@@ -135,7 +138,7 @@ route.post(
 );
 
 route.use((req, res, next) => {
-  if (req._hello.isRoot) {
+  if (req[kHello].isRoot) {
     next();
   } else {
     _err(res, '无权操作')(req);
@@ -158,7 +161,7 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { pageNo, pageSize } = req._vdata;
+      const { pageNo, pageSize } = req[kValidate];
 
       const total = await db('pic').count();
 
@@ -197,7 +200,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const ids = req._vdata;
+      const ids = req[kValidate];
 
       const dels = await db('pic')
         .select('url')

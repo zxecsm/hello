@@ -39,12 +39,15 @@ import _crypto from '../../utils/crypto.js';
 import { getSystemUsage } from '../../utils/sys.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
+import { sym } from '../../utils/symbols.js';
 
 const route = express.Router();
+const kHello = sym('hello');
+const kValidate = sym('validate');
 
 // 验证管理员
 route.use((req, res, next) => {
-  if (!req._hello.isRoot) {
+  if (!req[kHello].isRoot) {
     _err(res, '无权操作')(req);
   } else {
     next();
@@ -67,7 +70,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { user, pass, host, secure, port, state } = req._vdata;
+      const { user, pass, host, secure, port, state } = req[kValidate];
       if (state === 1 && !isEmail(user)) {
         paramErr(res, req, 'user 必须为邮箱格式', 'body');
         return;
@@ -109,7 +112,7 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { pageNo, pageSize } = req._vdata;
+      const { pageNo, pageSize } = req[kValidate];
 
       const total = await db('user')
         .where({ account: { '!=': appConfig.notifyAccount } })
@@ -171,7 +174,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { link } = req._vdata;
+      const { link } = req[kValidate];
 
       _d.faviconSpareApi = link;
 
@@ -199,7 +202,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { account, state } = req._vdata;
+      const { account, state } = req[kValidate];
 
       await db('user').where({ account }).update({ state });
 
@@ -230,7 +233,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { account } = req._vdata;
+      const { account } = req[kValidate];
 
       await deleteUser(account); // 删除账号数据
 
@@ -332,7 +335,7 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { type } = req._vdata;
+      const { type } = req[kValidate];
 
       const delP =
         type === 'all' ? appConfig.thumbDir() : appConfig.thumbDir(type);
@@ -383,7 +386,7 @@ route.get(
   ),
   async (req, res) => {
     try {
-      const { name } = req._vdata;
+      const { name } = req[kValidate];
 
       const log = (await _f.readFile(appConfig.logDir(name), null, ''))
         .toString()
@@ -423,7 +426,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { name } = req._vdata;
+      const { name } = req[kValidate];
 
       if (name === 'all') {
         await _delDir(appConfig.logDir());
@@ -467,7 +470,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { randomBgApi, siteInfoApi, faviconApi, echoApi } = req._vdata;
+      const { randomBgApi, siteInfoApi, faviconApi, echoApi } = req[kValidate];
 
       _d.pubApi = {
         randomBgApi: !!randomBgApi,
@@ -496,7 +499,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { uploadSaveDay, faviconCache, siteInfoCache } = req._vdata;
+      const { uploadSaveDay, faviconCache, siteInfoCache } = req[kValidate];
 
       const uploadSaveDayIschange = _d.cacheExp.uploadSaveDay !== uploadSaveDay;
       const faviconCacheIschange = _d.cacheExp.faviconCache !== faviconCache;
@@ -561,7 +564,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { body, head } = req._vdata;
+      const { body, head } = req[kValidate];
 
       await _f.writeFile(appConfig.customDir('custom_head.html'), head);
       await _f.writeFile(appConfig.customDir('custom_body.html'), body);
@@ -584,7 +587,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { flag } = req._vdata;
+      const { flag } = req[kValidate];
 
       if (flag === 'close') {
         _d.tipsFlag = 0;
@@ -621,7 +624,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { email } = req._vdata;
+      const { email } = req[kValidate];
 
       if (!_d.email.state) {
         _err(res, '未开启邮箱验证');
@@ -645,9 +648,9 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { token } = req._vdata;
+      const { token } = req[kValidate];
 
-      const verify = req._hello.userinfo.verify;
+      const verify = req[kHello].userinfo.verify;
 
       if (!verify) {
         _err(res, '未开启两步验证')(req);
@@ -674,7 +677,7 @@ route.post(
   ),
   async (req, res) => {
     try {
-      const { username, password } = req._vdata;
+      const { username, password } = req[kValidate];
 
       const userInfo = await db('user')
         .select('account')

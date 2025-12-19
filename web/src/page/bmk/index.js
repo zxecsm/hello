@@ -119,15 +119,15 @@ const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
 });
 export function setBmkCategoryList(val) {
   if (val === undefined) {
-    return $contentWrap.groupList;
+    return bmkGroupList;
   }
-  $contentWrap.groupList = val;
+  bmkGroupList = val;
 }
 function updataCategory() {
   reqBmkList({ account: urlParams.acc || '' })
     .then((res) => {
       if (res.code === 1) {
-        $contentWrap.groupList = res.data.list;
+        bmkGroupList = res.data.list;
         tabsObj.list = categoryToArr(HASH || '');
         $categoryTag.addClass('open');
       }
@@ -139,7 +139,7 @@ function categoryToArr(category) {
   const c = category.split('-').filter(Boolean);
   const res = [];
   c.forEach((id) => {
-    const cInfo = $contentWrap.groupList.find((item) => item.id === id);
+    const cInfo = bmkGroupList.find((item) => item.id === id);
     if (cInfo) {
       res.push({ ...cInfo, title: cInfo.title });
     }
@@ -155,7 +155,7 @@ function hdCategoryAdd(e, cb, hasList) {
     return;
   }
 
-  const filterList = $contentWrap.groupList.filter(
+  const filterList = bmkGroupList.filter(
     (item) => !hasList.some((i) => i.id === item.id)
   );
 
@@ -239,11 +239,11 @@ function listLoading() {
 let bmksPageNo = 1;
 let bmPageSize = localData.get('bmPageSize');
 
-$contentWrap.list = [];
-$contentWrap.groupList = [];
+let bmklist = [];
+let bmkGroupList = [];
 
 function getItemObj(id) {
-  return $contentWrap.list.find((item) => item.id === id);
+  return bmklist.find((item) => item.id === id);
 }
 
 // 分页
@@ -295,7 +295,7 @@ export function renderList(y) {
     .then((result) => {
       if (result.code === 1) {
         const { total, data, splitWord, pageNo } = result.data;
-        $contentWrap.list = data;
+        bmklist = data;
         bmksPageNo = pageNo;
         const html = _tpl(
           `
@@ -398,7 +398,7 @@ function movebmk(e, arr, loading = { start() {}, end() {} }) {
     .then((res) => {
       loading.end();
       if (res.code === 1) {
-        $contentWrap.groupList = res.data.list;
+        bmkGroupList = res.data.list;
         const data = [
           {
             id: 'home',
@@ -640,9 +640,7 @@ $contentWrap
   .on('click', '.item_title', openBmk)
   .on('contextmenu', '.item_box', bmkContextMenu)
   .on('click', '.item_info .category', function () {
-    tabsObj.list = $contentWrap.groupList.filter(
-      (item) => item.id === this.dataset.id
-    );
+    tabsObj.list = bmkGroupList.filter((item) => item.id === this.dataset.id);
   })
   .on('click', '.item_type', function (e) {
     const $this = $(this).parent();
@@ -734,7 +732,7 @@ $headWrap
   .on('click', '.h_check_item_btn', checkedItemBtn)
   .on('click', '.h_add_item_btn', (e) => {
     if (runState !== 'own') return;
-    if ($contentWrap.groupList.length === 0) {
+    if (bmkGroupList.length === 0) {
       _msg.error('请先创建分组');
       return;
     }
@@ -779,8 +777,8 @@ $headWrap
                     groupId: {
                       beforeText: '选择分组：',
                       type: 'select',
-                      value: $contentWrap.groupList[0].id,
-                      selectItem: $contentWrap.groupList.map((item) => ({
+                      value: bmkGroupList[0].id,
+                      selectItem: bmkGroupList.map((item) => ({
                         value: item.id,
                         text: item.title,
                       })),
@@ -860,7 +858,6 @@ function getSelectItem() {
   $checkArr.each((i, v) => {
     arr.push(v.getAttribute('data-id'));
   });
-  $contentWrap.list;
   arr = arr.map((item) => {
     return getItemObj(item);
   });

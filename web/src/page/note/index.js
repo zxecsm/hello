@@ -163,6 +163,7 @@ $setBtnsWrap
   });
 const noteObj = {};
 let noteInfo = {};
+let userInfoObj = {};
 const highlightWord = new HighlightWord($noteBox[0]);
 if (urlparmes.v) {
   reqNoteRead({ v: urlparmes.v })
@@ -183,7 +184,7 @@ if (urlparmes.v) {
             } catch {}
           }
         }, 1000);
-        $authorInfo._uobj = {
+        userInfoObj = {
           account,
           username,
           email,
@@ -321,12 +322,12 @@ mdWorker.addEventListener('message', (event) => {
 });
 const imgLazy = new LazyLoad();
 $authorInfo.on('click', '.logo', function (e) {
-  const { account, username, email } = $authorInfo._uobj;
+  const { account, username, email } = userInfoObj;
   userLogoMenu(e, account, username, email);
 });
 $noteInfo.on('click', '.category', function () {
   const id = $(this).data('id');
-  const { account, username } = $authorInfo._uobj;
+  const { account, username } = userInfoObj;
   const url = `/notes?acc=${encodeURIComponent(account)}#${id}`;
   if (isIframe()) {
     _myOpen(url, username + '的笔记本');

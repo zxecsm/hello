@@ -165,6 +165,7 @@ const verifyCode = hdOnce(() => {
 });
 
 // 获取书签数据
+let userInfoObj = {};
 function getShareData(close, loading = { start() {}, end() {} }) {
   loading.start();
   reqBmkGetShare({ id: shareId, pass: passCode })
@@ -177,7 +178,7 @@ function getShareData(close, loading = { start() {}, end() {} }) {
         const { username, logo, account, data, title, exp_time, email, token } =
           res.data;
         shareToken = token;
-        $head._uObj = { username, account, email };
+        userInfoObj = { username, account, email };
         defaultTitle = title;
         if (logo) {
           imgjz(getFilePath(`/logo/${account}/${logo}`))
@@ -258,7 +259,7 @@ function saveBm(e) {
 
 $head
   .on('click', '.logo', function (e) {
-    const { account, username, email } = $head._uObj;
+    const { account, username, email } = userInfoObj;
     userLogoMenu(e, account, username, email);
   })
   .on('click', '.save_to_list', saveBm);
