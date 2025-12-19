@@ -1223,7 +1223,8 @@ $songListWrap
     '.song_list_item',
     debounce(
       function () {
-        $songListWrap.addClass('open').listId = $(this).attr('data-id');
+        $songListWrap.addClass('open');
+        curOpenSongListId = $(this).attr('data-id');
         $msuicContentBox.find('.list_items_wrap').addClass('open').scrollTop(0);
         songPageNo = 1;
         getSongs();
