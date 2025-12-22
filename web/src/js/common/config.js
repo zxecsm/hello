@@ -1,14 +1,17 @@
 import nanoid from '../utils/nanoid';
 const levelObj = {
+  hechang: 100, // 何畅（静）
   upProgressbox: 100, // 上传进度（静）
-  rightBox: 101, // 右键菜单（静）
-  imgPreview: 102, // 图片预览（动）
-  msg: 103, // 通知框（静）
-  percentBar: 104, // 调节器（动）
-  popConfirm: 104, // 确认框（动）
-  hechang: 105, // 何畅（静）
-  loading: 107, // 加载动画（静）
-  clickLove: 107, // 点击（动）
+
+  rightBox: 100, // 右键菜单（动）
+  imgPreview: 100, // 图片预览（动）
+  percentBar: 100, // 调节器（动）
+  popConfirm: 100, // 确认框（动）
+  captcha: 100, // 验证码（动）
+
+  loading: 101, // 加载动画（静）
+  msg: 101, // 通知框（动）
+  clickLove: 102, // 点击（动）
 };
 const originURL = window.location.origin;
 const apiPath = '/api';

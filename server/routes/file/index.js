@@ -70,11 +70,17 @@ route.post(
         .default('')
         .allowEmpty()
         .max(fieldLength.sharePass),
+      captchaId: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(fieldLength.id)
+        .alphanumeric(),
     })
   ),
   async (req, res) => {
     try {
-      const { id, pass } = req[kValidate];
+      const { id, pass, captchaId } = req[kValidate];
 
       const { account } = req[kHello].userinfo;
 
@@ -82,11 +88,20 @@ route.post(
         req,
         ['file', 'dir'],
         id,
-        pass
+        pass,
+        captchaId
       );
 
       if (share.state === 3) {
         _nothing(res, share.text);
+        return;
+      }
+
+      if (share.state === 2) {
+        _success(res, share.text, {
+          id: share.id,
+          needCaptcha: share.needCaptcha,
+        })(req, share.id, 1);
         return;
       }
 

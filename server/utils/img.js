@@ -24,7 +24,11 @@ export async function convertImageFormat(
 ) {
   let inputBuf;
   try {
-    inputBuf = await _f.fsp.readFile(path);
+    if (typeof path === 'string') {
+      inputBuf = await _f.fsp.readFile(path);
+    } else {
+      inputBuf = path;
+    }
   } catch (err) {
     throw new Error(`读取文件失败: ${path} - ${err.message}`);
   }
@@ -104,4 +108,13 @@ export async function convertImageFormat(
       `图片转换失败 (${originFormat} → ${targetFormat}): ${err.message}`
     );
   }
+}
+
+export async function svgToBase64Png(svg) {
+  return (
+    'data:image/png;base64,' +
+    (await convertImageFormat(Buffer.from(svg), { format: 'png' })).toString(
+      'base64'
+    )
+  );
 }

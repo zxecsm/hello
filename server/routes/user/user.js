@@ -10,10 +10,9 @@ import { _delDir } from '../file/file.js';
 import shareVerify from '../../utils/shareVerify.js';
 import { isValidShare, errLog, getDirname } from '../../utils/utils.js';
 import jwt from '../../utils/jwt.js';
-import { sym } from '../../utils/symbols.js';
+import captcha from '../../utils/captcha.js';
 
 const __dirname = getDirname(import.meta);
-const kHello = sym('hello');
 
 // 获取字体列表
 export async function getFontList() {
@@ -114,50 +113,51 @@ export async function validShareState(shareToken, t) {
 }
 
 // 验证分享
-export async function validShareAddUserState(req, types, id, pass) {
-  const { ip } = req[kHello];
-
-  if (shareVerify.verify(ip, id)) {
-    const share = await db('share_user_view')
-      .select('username,logo,email,exp_time,title,account,data,pass')
-      .where({ id, type: { in: types } })
-      .findOne();
-
-    if (!share)
-      return {
-        state: 0,
-        text: '分享已取消',
-      };
-
-    if (isValidShare(share.exp_time))
-      return {
-        state: 0,
-        text: '分享已过期',
-      };
-
-    if (share.pass && pass !== share.pass) {
-      // 进入页面第一次空提取码不计算
-      if (pass) {
-        shareVerify.add(ip, id);
-        await errLog(req, `提取码错误(${id})`);
-      }
-
-      return {
-        state: 3,
-        text: '提取码错误',
-      };
-    }
-
-    share.data = JSON.parse(share.data);
-
+export async function validShareAddUserState(req, types, id, pass, captchaId) {
+  const needCaptcha = !shareVerify.verify(id);
+  if (needCaptcha && !captcha.consume(captchaId, id)) {
     return {
-      state: 1,
-      data: share,
-    };
-  } else {
-    return {
-      state: 0,
-      text: '提取码多次错误，请10分钟后再试',
+      state: 2,
+      id,
+      needCaptcha,
+      text: '需要验证验证码，请完成验证',
     };
   }
+
+  const share = await db('share_user_view')
+    .select('username,logo,email,exp_time,title,account,data,pass')
+    .where({ id, type: { in: types } })
+    .findOne();
+
+  if (!share)
+    return {
+      state: 0,
+      text: '分享已取消',
+    };
+
+  if (isValidShare(share.exp_time))
+    return {
+      state: 0,
+      text: '分享已过期',
+    };
+
+  if (share.pass && pass !== share.pass) {
+    // 进入页面第一次空提取码不计算
+    if (pass) {
+      shareVerify.add(id);
+      await errLog(req, `提取码错误(${id})`);
+    }
+
+    return {
+      state: 3,
+      text: '提取码错误',
+    };
+  }
+
+  share.data = JSON.parse(share.data);
+
+  return {
+    state: 1,
+    data: share,
+  };
 }

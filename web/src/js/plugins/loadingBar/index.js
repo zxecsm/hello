@@ -1,4 +1,5 @@
 import _d from '../../common/config';
+import loadingSvg from '../../../images/img/loading.svg';
 // 页面加载进度条效果
 class LoadingBar {
   constructor(options) {
@@ -56,3 +57,42 @@ export const _loadingBar = new LoadingBar({
   setStart() {},
   setEnd() {},
 });
+
+export class MaskLoading {
+  constructor(target = document.body) {
+    this.target = target;
+    this.render();
+  }
+  render() {
+    this.el = document.createElement('div');
+    this.el.style.cssText = `
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 99999;
+    background-image: url(${loadingSvg});
+    background-size: 10rem 10rem;
+    background-position: center;
+    background-repeat: no-repeat;
+    `;
+    this.target.appendChild(this.el);
+  }
+  show(through = false) {
+    if (!through) {
+      this.el.style.pointerEvents = 'auto';
+    } else {
+      this.el.style.pointerEvents = 'none';
+    }
+    this.el.style.display = 'block';
+  }
+  hide() {
+    this.el.style.display = 'none';
+  }
+  close() {
+    this.el.remove();
+  }
+}
+export const maskLoading = new MaskLoading();

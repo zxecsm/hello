@@ -154,3 +154,10 @@ export function reqUserCustomCode() {
 export function reqUserFileToken(data) {
   return _getAjax('/user/file-token', data);
 }
+// 获取验证码
+export function reqUserGetCaptcha(data) {
+  return _getAjax('/user/captcha', data);
+}
+export function reqUserCaptcha(data) {
+  return _postAjax('/user/captcha', data);
+}

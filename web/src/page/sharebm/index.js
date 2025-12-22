@@ -16,7 +16,6 @@ import {
   userLogoMenu,
   LazyLoad,
   getScreenSize,
-  hdOnce,
   isIframe,
   getFaviconPath,
   getFilePath,
@@ -36,6 +35,7 @@ import cacheFile from '../../js/utils/cacheFile';
 import realtime from '../../js/plugins/realtime';
 import { otherWindowMsg, waitLogin } from '../home/home';
 import localData from '../../js/common/localData';
+import captcha from '../../js/plugins/captcha';
 
 const urlparmes = queryURLParams(myOpen()),
   shareId = urlparmes.s;
@@ -156,72 +156,86 @@ let defaultTitle = '';
 function getBmInfo(id) {
   return bmList.find((item) => item.id === id) || {};
 }
-
-const verifyCode = hdOnce(() => {
-  enterPassCode(({ close, val, loading }) => {
-    passCode = val;
-    getShareData(close, loading);
-  });
-});
-
-// 获取书签数据
 let userInfoObj = {};
-function getShareData(close, loading = { start() {}, end() {} }) {
+let captchaId = '';
+let isCaptcha = false;
+enterPassCode(({ close, val, loading, submit }) => {
+  passCode = val;
+  if (isCaptcha) return;
+
   loading.start();
-  reqBmkGetShare({ id: shareId, pass: passCode })
+  reqBmkGetShare({ id: shareId, pass: passCode, captchaId })
     .then((res) => {
-      loading.end();
       if (res.code === 1) {
-        localData.session.set('passCode', passCode, shareId);
-        close && close();
-
-        const { username, logo, account, data, title, exp_time, email, token } =
-          res.data;
-        shareToken = token;
-        userInfoObj = { username, account, email };
-        defaultTitle = title;
-        if (logo) {
-          imgjz(getFilePath(`/logo/${account}/${logo}`))
-            .then((cache) => {
-              $head.find('.logo').css('background-image', `url(${cache})`);
-            })
-            .catch(() => {
-              $head
-                .find('.logo')
-                .css('background-image', `url(${getTextImg(username)})`);
-            });
+        const {
+          username,
+          logo,
+          account,
+          data,
+          title,
+          exp_time,
+          email,
+          token,
+          needCaptcha,
+          id,
+        } = res.data;
+        if (needCaptcha) {
+          isCaptcha = true;
+          captcha(id, {
+            success({ id }) {
+              captchaId = id;
+              submit();
+            },
+            close() {
+              isCaptcha = false;
+            },
+          });
         } else {
-          $head
-            .find('.logo')
-            .css('background-image', `url(${getTextImg(username)})`);
-        }
+          localData.session.set('passCode', passCode, shareId);
+          close && close();
 
-        $head.find('.from').text(username);
-        $head.find('.title').text(title);
-        $head.find('.valid').text(
-          exp_time === 0
-            ? '永久'
-            : formatDate({
-                template: '{0}-{1}-{2} {3}:{4}',
-                timestamp: exp_time,
+          shareToken = token;
+          userInfoObj = { username, account, email };
+          defaultTitle = title;
+          if (logo) {
+            imgjz(getFilePath(`/logo/${account}/${logo}`))
+              .then((cache) => {
+                $head.find('.logo').css('background-image', `url(${cache})`);
               })
-        );
+              .catch(() => {
+                $head
+                  .find('.logo')
+                  .css('background-image', `url(${getTextImg(username)})`);
+              });
+          } else {
+            $head
+              .find('.logo')
+              .css('background-image', `url(${getTextImg(username)})`);
+          }
 
-        bmList = data.map((item, idx) => ({ ...item, id: idx + 1 + '' }));
-        renderList();
-      } else if (res.code === 3) {
-        if (passCode) {
-          _msg.error('提取码错误');
+          $head.find('.from').text(username);
+          $head.find('.title').text(title);
+          $head.find('.valid').text(
+            exp_time === 0
+              ? '永久'
+              : formatDate({
+                  template: '{0}-{1}-{2} {3}:{4}',
+                  timestamp: exp_time,
+                })
+          );
+
+          bmList = data.map((item, idx) => ({ ...item, id: idx + 1 + '' }));
+          renderList();
         }
-        verifyCode();
+      } else if (res.code === 3) {
+        _msg.error('提取码错误');
       }
     })
-    .catch(() => {
+    .catch(() => {})
+    .finally(() => {
       loading.end();
     });
-}
-
-getShareData();
+}, passCode)();
 
 // 保存书签
 function saveBm(e) {

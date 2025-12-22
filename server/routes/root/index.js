@@ -19,9 +19,14 @@ import {
   isEmail,
   concurrencyTasks,
   validate,
+  writelog,
 } from '../../utils/utils.js';
 
-import { becomeFriends, cleanUpload } from '../chat/chat.js';
+import {
+  becomeFriends,
+  cleanUpload,
+  heperMsgAndForward,
+} from '../chat/chat.js';
 
 import { fieldLength } from '../config.js';
 
@@ -734,12 +739,17 @@ timedTask.add(async (flag) => {
     );
 
     if (list.length > 200) {
+      let count = 0;
       list.sort((a, b) => b.time - a.time);
       for (const item of list.slice(200)) {
         const { name, path } = item;
         const p = _path.normalize(path, name);
         await _delDir(p);
+        count++;
       }
+      const text = `日志文件超出200个，已清理：${count}`;
+      await writelog(false, text, 'user');
+      await heperMsgAndForward(null, appConfig.adminAccount, text);
     }
   }
 });

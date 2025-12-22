@@ -16,7 +16,6 @@ import {
   getDarkIcon,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
-import validateImg from './validate';
 import '../../js/common/common.js';
 import _msg from '../../js/plugins/message';
 import {
@@ -31,12 +30,13 @@ import {
 import rMenu from '../../js/plugins/rightMenu/index.js';
 import md5 from '../../js/utils/md5.js';
 import localData from '../../js/common/localData.js';
+import { maskLoading } from '../../js/plugins/loadingBar/index.js';
+import captcha from '../../js/plugins/captcha/index.js';
 const $bg = $('.bg'),
   $box = $('.box'),
   $title = $box.find('.title'),
   $register = $box.find('.register'),
   $darkState = $box.find('.dark_state'),
-  $loading = $('.loading'),
   $submit = $box.find('.submit'),
   $account = $box.find('.account input'),
   $accountErr = $box.find('.account p'),
@@ -175,43 +175,63 @@ $nopd
   })
   .on('click', '.resetpd', resetPassword);
 // 重置密码
-function resetPassword(e) {
+function resetPassword() {
   if (!checkUserName()) {
     shake();
     return;
   }
-  rMenu.pop({ e, text: '获取邮箱验证码？' }, (type) => {
-    if (type === 'confirm') {
-      reqUserEmailCode({ username: accInp.getValue().trim() })
-        .then((res) => {
-          if (res.code === 1) {
-            _msg.success(res.codeText);
-            const { account, email } = res.data;
-            rMenu.inpMenu(
-              false,
-              {
-                items: {
-                  pass: {
-                    beforeText: '邮箱验证码：',
-                    inputType: 'number',
-                    verify(val) {
-                      return (
-                        rMenu.validInteger(val) ||
-                        rMenu.validNumber(val, 0) ||
-                        rMenu.validString(val, 6, 6)
-                      );
-                    },
+  maskLoading.show();
+  reqUserEmailCode({ username: accInp.getValue().trim(), captchaId })
+    .then((res) => {
+      if (res.code === 1) {
+        const { username, needCaptcha } = res.data;
+        if (needCaptcha) {
+          captcha(username, {
+            success({ id }) {
+              captchaId = id;
+              resetPassword();
+            },
+          });
+        } else {
+          _msg.success(res.codeText);
+          const { account, email } = res.data;
+          rMenu.inpMenu(
+            false,
+            {
+              items: {
+                pass: {
+                  beforeText: '邮箱验证码：',
+                  inputType: 'number',
+                  verify(val) {
+                    return (
+                      rMenu.validInteger(val) ||
+                      rMenu.validNumber(val, 0) ||
+                      rMenu.validString(val, 6, 6)
+                    );
                   },
                 },
               },
-              ({ inp, close, loading }) => {
-                const code = inp.pass;
-                loading.start();
-                reqUserResetPass({ email, account, code })
-                  .then((res) => {
-                    loading.end();
-                    if (res.code === 1) {
-                      const { username, account } = res.data;
+            },
+            ({ inp, close, loading, submit }) => {
+              if (isCaptcha) return;
+              const code = inp.pass;
+              loading.start();
+              reqUserResetPass({ email, account, code, captchaId })
+                .then((res) => {
+                  if (res.code === 1) {
+                    const { username, account, needCaptcha } = res.data;
+                    if (needCaptcha) {
+                      isCaptcha = true;
+                      captcha(account, {
+                        success({ id }) {
+                          captchaId = id;
+                          submit();
+                        },
+                        close() {
+                          isCaptcha = false;
+                        },
+                      });
+                    } else {
                       close();
                       localData.set('username', username);
                       localData.set('account', account);
@@ -219,20 +239,24 @@ function resetPassword(e) {
                         myOpen(originurl);
                       });
                     }
-                  })
-                  .catch(() => {
-                    loading.end();
-                  });
-              },
-              '输入邮箱验证码，重置密码',
-              0,
-              1
-            );
-          }
-        })
-        .catch(() => {});
-    }
-  });
+                  }
+                })
+                .catch(() => {})
+                .finally(() => {
+                  loading.end();
+                });
+            },
+            '输入邮箱验证码，重置密码',
+            0,
+            1
+          );
+        }
+      }
+    })
+    .catch(() => {})
+    .finally(() => {
+      maskLoading.hide();
+    });
 }
 $ratify.on('click', '.close', closeRatify).on('click', '.resend', () => {
   changeCode();
@@ -339,131 +363,151 @@ $repassword.next().on('click', function () {
 $password.next().on('click', function () {
   pdInp.setValue('').focus();
 });
+let captchaId = '';
+let isCaptcha = false;
 // 登录
 function hdLogin(obj) {
-  if (!checkUserName() || !_flag) {
+  if (isCaptcha) return;
+  if (!checkUserName()) {
     shake();
     return;
   }
-  _flag = false;
-  validateImg({
-    success() {
-      _flag = true;
-      $loading.stop().fadeIn();
-      reqUserLogin(obj)
-        .then((result) => {
-          $loading.stop().fadeOut();
-          if (result.code === 1) {
-            const { account, verify, username } = result.data;
-            if (verify) {
-              document.body.innerHTML = ''; // 方便填充两步验证码
-              rMenu.inpMenu(
-                false,
-                {
-                  items: {
-                    pass: {
-                      beforeText: '验证码：',
-                      inputType: 'number',
-                      autocomplete: 'one-time-code',
-                      verify(val) {
-                        return (
-                          rMenu.validInteger(val) ||
-                          rMenu.validNumber(val, 0) ||
-                          rMenu.validString(val, 6, 6)
-                        );
-                      },
-                    },
+  maskLoading.show();
+  reqUserLogin(obj)
+    .then((result) => {
+      if (result.code === 1) {
+        const { account, verify, username, needCaptcha } = result.data;
+        if (verify) {
+          document.body.innerHTML = ''; // 方便填充两步验证码
+          rMenu.inpMenu(
+            false,
+            {
+              items: {
+                pass: {
+                  beforeText: '验证码：',
+                  inputType: 'number',
+                  autocomplete: 'one-time-code',
+                  verify(val) {
+                    return (
+                      rMenu.validInteger(val) ||
+                      rMenu.validNumber(val, 0) ||
+                      rMenu.validString(val, 6, 6)
+                    );
                   },
                 },
-                ({ inp, loading }) => {
-                  const token = inp.pass;
-                  loading.start();
-                  reqUserVerifyLogin({
-                    account,
-                    token,
-                    password: obj.password,
-                  })
-                    .then((res) => {
-                      loading.end();
-                      if (res.code === 1) {
-                        const { account, username } = res.data;
-                        localData.set('username', username);
-                        localData.set('account', account);
-                        myOpen(originurl);
-                      }
-                    })
-                    .catch(() => {
-                      loading.end();
-                    });
-                },
-                '两步验证',
-                1,
-                1
-              );
-            } else {
-              localData.set('username', username);
-              localData.set('account', account);
-              myOpen(originurl);
-            }
-          }
-        })
-        .catch(() => {
-          $loading.stop().fadeOut();
-        });
-    },
-    fail() {
-      _msg.error('验证失败');
-    },
-    close() {
-      _flag = true;
-    },
-  });
+              },
+            },
+            ({ inp, loading, submit }) => {
+              if (isCaptcha) return;
+              const token = inp.pass;
+              loading.start();
+              reqUserVerifyLogin({
+                account,
+                token,
+                password: obj.password,
+                captchaId,
+              })
+                .then((res) => {
+                  if (res.code === 1) {
+                    const { account, username, needCaptcha } = res.data;
+                    if (needCaptcha) {
+                      isCaptcha = true;
+                      captcha(account, {
+                        success({ id }) {
+                          captchaId = id;
+                          submit();
+                        },
+                        close() {
+                          isCaptcha = false;
+                        },
+                      });
+                    } else {
+                      localData.set('username', username);
+                      localData.set('account', account);
+                      myOpen(originurl);
+                    }
+                  }
+                })
+                .catch(() => {})
+                .finally(() => {
+                  loading.end();
+                });
+            },
+            '两步验证',
+            1,
+            1
+          );
+        } else if (needCaptcha) {
+          isCaptcha = true;
+          captcha(username, {
+            success({ id }) {
+              captchaId = id;
+              hdSubmit();
+            },
+            close() {
+              isCaptcha = false;
+            },
+          });
+        } else {
+          localData.set('username', username);
+          localData.set('account', account);
+          myOpen(originurl);
+        }
+      }
+    })
+    .catch(() => {})
+    .finally(() => {
+      maskLoading.hide();
+    });
 }
 // 注册
 function hdRegister(obj) {
-  if (!checkUserName() || !checkPassword() || !_flag) {
+  if (isCaptcha) return;
+  if (!checkUserName() || !checkPassword()) {
     shake();
     return;
   }
-  _flag = false;
-  validateImg({
-    success() {
-      _flag = true;
-      $loading.stop().fadeIn();
-      reqUserRegister(obj)
-        .then((result) => {
-          $loading.stop().fadeOut();
-          if (result.code === 1) {
-            const { username, account } = result.data;
-            localData.set('username', username);
-            localData.set('account', account);
-            myOpen(originurl);
-          }
-        })
-        .catch(() => {
-          $loading.stop().fadeOut();
-        });
-    },
-    fail() {
-      _msg.error('验证失败');
-    },
-    close() {
-      _flag = true;
-    },
-  });
+  maskLoading.show();
+  reqUserRegister(obj)
+    .then((result) => {
+      if (result.code === 1) {
+        const { username, account, needCaptcha } = result.data;
+        if (needCaptcha) {
+          isCaptcha = true;
+          captcha(username, {
+            success({ id }) {
+              captchaId = id;
+              hdSubmit();
+            },
+            close() {
+              isCaptcha = false;
+            },
+          });
+        } else {
+          localData.set('username', username);
+          localData.set('account', account);
+          myOpen(originurl);
+        }
+      }
+    })
+    .catch(() => {})
+    .finally(() => {
+      maskLoading.hide();
+    });
 }
-let _flag = true;
 $submit.on('click', hdSubmit);
 function hdSubmit() {
   const account = accInp.getValue().trim(),
     password = pdInp.getValue().trim();
   if (isLoginState) {
     hdLogin({
+      captchaId,
       username: account,
       password: md5.getStringHash(password),
     });
   } else {
     hdRegister({
+      captchaId,
       username: account,
       password: md5.getStringHash(password),
     });

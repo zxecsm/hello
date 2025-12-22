@@ -33,7 +33,6 @@ import {
   enterPassCode,
   userLogoMenu,
   LazyLoad,
-  hdOnce,
   formatNum,
   isFullScreen,
   isIframe,
@@ -64,6 +63,7 @@ import imgPreview from '../../js/plugins/imgPreview';
 import realtime from '../../js/plugins/realtime';
 import { otherWindowMsg, waitLogin } from '../home/home';
 import localData from '../../js/common/localData';
+import captcha from '../../js/plugins/captcha';
 const urlparmes = queryURLParams(myOpen()),
   shareId = urlparmes.s,
   $myAudio = $(new Audio()),
@@ -112,12 +112,6 @@ let playingList = null,
   passCode = localData.session.get('passCode', shareId) || '',
   shareToken = '';
 let defaultShareTitle = '';
-const verifyCode = hdOnce(() => {
-  enterPassCode(({ close, val, loading }) => {
-    passCode = val;
-    getShareData(close, loading);
-  });
-});
 function adjustVolume(e) {
   rMenu.percentBar(e, mediaVolume, function (per) {
     mediaVolume = per;
@@ -150,77 +144,100 @@ export function getVolumeIcon(mediaVolume) {
 
   return icon;
 }
-// 获取分享数据
-function getShareData(close, loading = { start() {}, end() {} }) {
+let captchaId = '';
+let isCaptcha = false;
+enterPassCode(({ close, val, loading, submit }) => {
+  passCode = val;
+  if (isCaptcha) return;
   loading.start();
-  reqPlayerGetShare({ id: shareId, pass: passCode })
+  reqPlayerGetShare({ id: shareId, pass: passCode, captchaId })
     .then((resObj) => {
-      loading.end();
       if (resObj.code === 1) {
-        localData.session.set('passCode', passCode, shareId);
-        close && close();
-        const { account, username, logo, title, exp_time, email, token } =
-          resObj.data;
-        defaultShareTitle = title;
-        shareToken = token;
-        userInfo = { account, username, email };
-        if (logo) {
-          imgjz(getFilePath(`/logo/${account}/${logo}`))
-            .then((cache) => {
-              $lrcHead
-                .find('.user_logo')
-                .css('background-image', `url(${cache})`);
-            })
-            .catch(() => {
-              $lrcHead
-                .find('.user_logo')
-                .css('background-image', `url(${getTextImg(username)})`);
-            });
-        } else {
-          $lrcHead
-            .find('.user_logo')
-            .css('background-image', `url(${getTextImg(username)})`);
-        }
-        $userInfo.find('.from').text(username);
-        $userInfo.find('.title').text(title);
-        $userInfo.find('.valid').text(
-          exp_time === 0
-            ? '永久'
-            : formatDate({
-                template: '{0}-{1}-{2} {3}:{4}',
-                timestamp: exp_time,
-              })
-        );
+        const {
+          account,
+          username,
+          logo,
+          title,
+          exp_time,
+          email,
+          token,
+          needCaptcha,
+          id,
+        } = resObj.data;
 
-        playingList = resObj.data.data;
-        curPlayingList = deepClone(playingList);
-        const pSongInfo = localData.session.get('playingSongInfo');
-        if (pSongInfo) {
-          playingSongInfo = initSongInfo(
-            playingList.find((item) => item.id === pSongInfo.id) ||
-              playingList[0]
-          );
+        if (needCaptcha) {
+          isCaptcha = true;
+          captcha(id, {
+            success({ id }) {
+              captchaId = id;
+              submit();
+            },
+            close() {
+              isCaptcha = false;
+            },
+          });
         } else {
-          playingSongInfo = initSongInfo(playingList[0]);
+          localData.session.set('passCode', passCode, shareId);
+          close && close();
+          defaultShareTitle = title;
+          shareToken = token;
+          userInfo = { account, username, email };
+          if (logo) {
+            imgjz(getFilePath(`/logo/${account}/${logo}`))
+              .then((cache) => {
+                $lrcHead
+                  .find('.user_logo')
+                  .css('background-image', `url(${cache})`);
+              })
+              .catch(() => {
+                $lrcHead
+                  .find('.user_logo')
+                  .css('background-image', `url(${getTextImg(username)})`);
+              });
+          } else {
+            $lrcHead
+              .find('.user_logo')
+              .css('background-image', `url(${getTextImg(username)})`);
+          }
+          $userInfo.find('.from').text(username);
+          $userInfo.find('.title').text(title);
+          $userInfo.find('.valid').text(
+            exp_time === 0
+              ? '永久'
+              : formatDate({
+                  template: '{0}-{1}-{2} {3}:{4}',
+                  timestamp: exp_time,
+                })
+          );
+
+          playingList = resObj.data.data;
+          curPlayingList = deepClone(playingList);
+          const pSongInfo = localData.session.get('playingSongInfo');
+          if (pSongInfo) {
+            playingSongInfo = initSongInfo(
+              playingList.find((item) => item.id === pSongInfo.id) ||
+                playingList[0]
+            );
+          } else {
+            playingSongInfo = initSongInfo(playingList[0]);
+          }
+          toggleMvBtnState();
+          updateSongInfo();
+          $lrcProgressBar
+            .find('.total_time')
+            .text(formartSongTime(playingSongInfo.duration));
         }
-        toggleMvBtnState();
-        updateSongInfo();
-        $lrcProgressBar
-          .find('.total_time')
-          .text(formartSongTime(playingSongInfo.duration));
       } else if (resObj.code === 3) {
-        if (passCode) {
-          _msg.error('提取码错误');
-        }
-        verifyCode();
+        _msg.error('提取码错误');
       }
     })
     .catch(() => {
-      loading.end();
       $musicPlayerWrap.css('display', 'none');
+    })
+    .finally(() => {
+      loading.end();
     });
-}
-getShareData();
+}, passCode)();
 $lrcHead.on('click', '.user_logo', (e) => {
   const { account, username, email } = userInfo;
   userLogoMenu(e, account, username, email);

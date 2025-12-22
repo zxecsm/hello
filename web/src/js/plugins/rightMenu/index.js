@@ -552,7 +552,8 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
             const { value, trimValue } = items[k];
             inp[k] = trimValue ? value.trim() : value;
           });
-          callback && callback({ e, inp, close, items, loading, isDiff });
+          callback &&
+            callback({ e, inp, close, items, loading, isDiff, submit });
         }
       } else if (cleanBtn) {
         const inp = cleanBtn.parentNode.firstElementChild;
@@ -610,6 +611,9 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       }
     },
   });
+  function submit() {
+    r.rightMask.querySelector('button').click();
+  }
   const loading = {
     start() {
       r.loadStart();
@@ -618,6 +622,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       r.loadEnd();
     },
   };
+  return submit;
 }
 function render(data) {
   data = data.map((item) => {

@@ -17,7 +17,6 @@ import {
   getFilePath,
   getScreenSize,
   getTextImg,
-  hdOnce,
   imgjz,
   isImgFile,
   isMobile,
@@ -57,6 +56,7 @@ import imgPreview from '../../js/plugins/imgPreview';
 import realtime from '../../js/plugins/realtime';
 import { otherWindowMsg, waitLogin } from '../home/home';
 import localData from '../../js/common/localData';
+import captcha from '../../js/plugins/captcha';
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
 const $curmbBox = $('.crumb_box');
@@ -89,110 +89,128 @@ let passCode = localData.session.get('passCode', shareId) || '';
 let shareToken = '';
 let shareObj = {};
 let uObj = {};
+let captchaId = '';
+let isCaptcha = false;
 setReadOnly(true); // 只读
-const verifyCode = hdOnce(() => {
-  enterPassCode(({ close, val, loading }) => {
-    passCode = val;
-    getShareData(close, loading);
-  });
-});
-// 获取分享数据
-function getShareData(close, loading = { start() {}, end() {} }) {
+enterPassCode(({ close, val, loading, submit }) => {
+  passCode = val;
+  if (isCaptcha) return;
   loading.start();
-  reqFileGetShare({ id: shareId, pass: passCode })
+  reqFileGetShare({ id: shareId, pass: passCode, captchaId })
     .then((res) => {
-      loading.end();
       if (res.code === 1) {
-        localData.session.set('passCode', passCode, shareId); // 缓存
-        close && close();
-        const { username, logo, account, data, exp_time, title, email, token } =
-          res.data;
-        shareToken = token;
-        uObj = { username, account, email };
-        shareObj = data;
-        if (logo) {
-          imgjz(getFilePath(`/logo/${account}/${logo}`))
-            .then((cache) => {
-              $shareInfo.find('.logo').css('background-image', `url(${cache})`);
-            })
-            .catch(() => {
-              $shareInfo
-                .find('.logo')
-                .css('background-image', `url(${getTextImg(username)})`);
-            });
+        const {
+          username,
+          logo,
+          account,
+          data,
+          exp_time,
+          title,
+          email,
+          token,
+          needCaptcha,
+          id,
+        } = res.data;
+        if (needCaptcha) {
+          isCaptcha = true;
+          captcha(id, {
+            success({ id }) {
+              captchaId = id;
+              submit();
+            },
+            close() {
+              isCaptcha = false;
+            },
+          });
         } else {
-          $shareInfo
-            .find('.logo')
-            .css('background-image', `url(${getTextImg(username)})`);
-        }
-
-        $shareInfo.find('.from').text(username);
-        $shareInfo.find('.title').text(title);
-        $shareInfo.find('.valid').text(
-          exp_time === 0
-            ? '永久'
-            : formatDate({
-                template: '{0}-{1}-{2} {3}:{4}',
-                timestamp: exp_time,
+          localData.session.set('passCode', passCode, shareId); // 缓存
+          close && close();
+          shareToken = token;
+          uObj = { username, account, email };
+          shareObj = data;
+          if (logo) {
+            imgjz(getFilePath(`/logo/${account}/${logo}`))
+              .then((cache) => {
+                $shareInfo
+                  .find('.logo')
+                  .css('background-image', `url(${cache})`);
               })
-        );
-        if (data.type === 'file') {
-          $contentWrap.remove();
-          $pagination.remove();
-          $curmbBox.remove();
-          $search.remove();
-          $header.remove();
-          const [a, , b] = _path.extname(data.name);
-          $fileBox.find('.name').html(
-            _tpl(
-              `
-              <template>
-              {{a}}<span class="suffix">{{b?'.'+b:''}}</span>
-              </template>
-              `,
-              { a, b }
-            )
-          );
-          $fileBox.find('.download').text(`下载 (${formatBytes(data.size)})`);
-          if (isImgFile(data.name)) {
-            const url = getFilePath(`/sharefile/${data.path}/${data.name}`, {
-              w: 256,
-              token: shareToken,
-            });
-            loadImg(url)
-              .then((img) => {
-                $fileBox.find('.logo').html(img);
-              })
-              .catch((img) => {
-                img.src = loadfailImg;
-                $fileBox.find('.logo').html(img);
+              .catch(() => {
+                $shareInfo
+                  .find('.logo')
+                  .css('background-image', `url(${getTextImg(username)})`);
               });
           } else {
-            $fileBox
+            $shareInfo
               .find('.logo')
-              .attr(
-                'class',
-                `logo iconfont ${fileLogoType(data.name, data.size)}`
-              );
+              .css('background-image', `url(${getTextImg(username)})`);
           }
-          $shareInfo.addClass('open');
-          $fileBox.addClass('open');
-        } else if (data.type === 'dir') {
-          $fileBox.remove();
-          updateCurPage();
+
+          $shareInfo.find('.from').text(username);
+          $shareInfo.find('.title').text(title);
+          $shareInfo.find('.valid').text(
+            exp_time === 0
+              ? '永久'
+              : formatDate({
+                  template: '{0}-{1}-{2} {3}:{4}',
+                  timestamp: exp_time,
+                })
+          );
+          if (data.type === 'file') {
+            $contentWrap.remove();
+            $pagination.remove();
+            $curmbBox.remove();
+            $search.remove();
+            $header.remove();
+            const [a, , b] = _path.extname(data.name);
+            $fileBox.find('.name').html(
+              _tpl(
+                `
+                        <template>
+                        {{a}}<span class="suffix">{{b?'.'+b:''}}</span>
+                        </template>
+                        `,
+                { a, b }
+              )
+            );
+            $fileBox.find('.download').text(`下载 (${formatBytes(data.size)})`);
+            if (isImgFile(data.name)) {
+              const url = getFilePath(`/sharefile/${data.path}/${data.name}`, {
+                w: 256,
+                token: shareToken,
+              });
+              loadImg(url)
+                .then((img) => {
+                  $fileBox.find('.logo').html(img);
+                })
+                .catch((img) => {
+                  img.src = loadfailImg;
+                  $fileBox.find('.logo').html(img);
+                });
+            } else {
+              $fileBox
+                .find('.logo')
+                .attr(
+                  'class',
+                  `logo iconfont ${fileLogoType(data.name, data.size)}`
+                );
+            }
+            $shareInfo.addClass('open');
+            $fileBox.addClass('open');
+          } else if (data.type === 'dir') {
+            $fileBox.remove();
+            updateCurPage();
+          }
         }
       } else if (res.code === 3) {
-        if (passCode) {
-          _msg.error('提取码错误');
-        }
-        verifyCode();
+        _msg.error('提取码错误');
       }
     })
-    .catch(() => {
+    .catch(() => {})
+    .finally(() => {
       loading.end();
     });
-}
-getShareData();
+}, passCode)();
 // 更改显示隐藏文件模式
 function changeHiddenFileModel() {
   $header

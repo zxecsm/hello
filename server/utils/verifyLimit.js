@@ -39,6 +39,12 @@ class VerifyLimit {
 
     return true;
   }
+
+  delete(ip, flag = '') {
+    const key = 'key_' + ip + flag;
+
+    this.cache.delete(key);
+  }
 }
 
 function verifyLimit(opt = {}, updateTimestamp = true) {

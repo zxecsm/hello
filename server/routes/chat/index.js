@@ -177,7 +177,7 @@ route.get(
       const user = await getUserInfo(acc, 'username,hide,update_at');
 
       if (!user) {
-        _err(res, '用户不存在')(req, acc, 1);
+        _err(res, '无法获取用户信息')(req, acc, 1);
         return;
       }
 
@@ -396,7 +396,7 @@ route.post(
         const user = await getUserInfo(to, 'account,username');
 
         if (!user) {
-          _err(res, '用户不存在')(req, to, 1);
+          _err(res, '用户无法接收消息')(req, to, 1);
           return;
         }
 
@@ -454,7 +454,7 @@ route.post(
         const user = await getUserInfo(to, 'account,username');
 
         if (!user) {
-          _err(res, '用户不存在')(req, to, 1);
+          _err(res, '用户无法接收消息')(req, to, 1);
           return;
         }
 
@@ -583,7 +583,7 @@ route.post(
         const user = await getUserInfo(to, 'account,username');
 
         if (!user) {
-          _err(res, '用户不存在')(req, to, 1);
+          _err(res, '无法删除消息')(req, to, 1);
           return;
         }
 
@@ -654,7 +654,7 @@ route.post(
       const user = await getUserInfo(to, 'hide,update_at,username');
 
       if (!user) {
-        _err(res, '用户不存在')(req, to, 1);
+        _err(res, '用户无法接收消息')(req, to, 1);
         return;
       }
 
@@ -815,7 +815,7 @@ route.post(
         const user = await getUserInfo(to, 'account,username');
 
         if (!user) {
-          _err(res, '用户不存在')(req, to, 1);
+          _err(res, '用户无法接收消息')(req, to, 1);
           return;
         }
 
@@ -905,7 +905,7 @@ route.post(
         let user = await getUserInfo(to, 'account,username');
 
         if (!user) {
-          _err(res, '用户不存在')(req, to, 1);
+          _err(res, '用户无法接收消息')(req, to, 1);
           return;
         }
 
@@ -1057,7 +1057,7 @@ route.post(
               const user = await getUserInfo(to, 'account,username');
 
               if (!user) {
-                _err(res, '用户不存在')(req, to, 1);
+                _err(res, '用户无法接收消息')(req, to, 1);
                 return;
               }
 

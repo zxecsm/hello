@@ -220,16 +220,36 @@ route.post(
         .default('')
         .allowEmpty()
         .max(fieldLength.sharePass),
+      captchaId: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(fieldLength.id)
+        .alphanumeric(),
     })
   ),
   async (req, res) => {
     try {
-      const { id, pass } = req[kValidate];
+      const { id, pass, captchaId } = req[kValidate];
 
-      const share = await validShareAddUserState(req, ['music'], id, pass);
+      const share = await validShareAddUserState(
+        req,
+        ['music'],
+        id,
+        pass,
+        captchaId
+      );
 
       if (share.state === 0) {
         _err(res, share.text)(req, id, 1);
+        return;
+      }
+
+      if (share.state === 2) {
+        _success(res, share.text, {
+          id: share.id,
+          needCaptcha: share.needCaptcha,
+        })(req, share.id, 1);
         return;
       }
 

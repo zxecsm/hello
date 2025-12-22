@@ -25,6 +25,15 @@ export function queryURLParams(url) {
   );
   return obj;
 }
+export function delay(time) {
+  return new Promise((resolve) => {
+    let timer = setTimeout(() => {
+      clearTimeout(timer);
+      timer = null;
+      resolve();
+    }, time);
+  });
+}
 // 跳转
 export function myOpen(url, _blank) {
   if (!_blank && !url) return window.location.href;
@@ -2400,22 +2409,23 @@ export function getExpState(t) {
   }
 }
 // 验证提取码
-export function enterPassCode(cb) {
-  rMenu.inpMenu(
+export function enterPassCode(cb, defaultValue = '') {
+  return rMenu.inpMenu(
     false,
     {
       items: {
         pass: {
           beforeText: '提取码：',
           inputType: 'password',
+          value: defaultValue,
           verify(val) {
-            return rMenu.validString(val, 1, _d.fieldLength.sharePass);
+            return rMenu.validString(val, 0, _d.fieldLength.sharePass);
           },
         },
       },
     },
-    ({ close, inp, loading }) => {
-      cb && cb({ close, val: inp.pass, loading });
+    ({ close, inp, loading, submit }) => {
+      cb && cb({ close, val: inp.pass, loading, submit });
     },
     0,
     1,
@@ -2584,6 +2594,15 @@ export function isDarkMode() {
     window.matchMedia &&
     window.matchMedia('(prefers-color-scheme: dark)').matches
   );
+}
+export function isDark() {
+  const dark = localData.get('dark');
+  if (dark === 'y') {
+    return true;
+  } else if (dark === 'n') {
+    return false;
+  }
+  return isDarkMode();
 }
 // 验证邮箱
 export function isEmail(email) {

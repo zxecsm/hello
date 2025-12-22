@@ -91,7 +91,7 @@ export async function writelog(req, str, flag = appConfig.appName) {
 export function uLog(req, str) {
   return writelog(
     req,
-    `${req[kHello].method}(${req[kHello].path}) - ${str}`,
+    `${req ? `${req[kHello].method}(${req[kHello].path}) - ` : ''}${str}`,
     'user'
   );
 }
@@ -100,7 +100,7 @@ export function uLog(req, str) {
 export function errLog(req, err) {
   return writelog(
     req,
-    `${req[kHello].method}(${req[kHello].path}) - ${err}`,
+    `${req ? `${req[kHello].method}(${req[kHello].path}) - ` : ''}${err}`,
     'error'
   );
 }

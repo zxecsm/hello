@@ -584,7 +584,9 @@ export async function cleanUpload(req = false) {
     await cleanEmptyDirectories(uploadDir);
 
     if (count) {
-      await writelog(req, `清理到期聊天室文件：${count}`, 'user');
+      const text = `清理到期聊天室文件：${count}`;
+      await writelog(req, text, 'user');
+      await heperMsgAndForward(null, appConfig.adminAccount, text);
     }
   }
 }

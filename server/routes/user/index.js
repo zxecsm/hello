@@ -58,6 +58,7 @@ import nanoid from '../../utils/nanoid.js';
 import { readSearchConfig, writeSearchConfig } from '../search/search.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
+import captcha from '../../utils/captcha.js';
 
 const verifyCode = new Map();
 
@@ -129,7 +130,9 @@ timedTask.add(async (flag) => {
     });
 
     if (num) {
-      await writelog(false, `清理过期临时文件缓存：${num}`, 'user');
+      const text = `清理过期临时缓存文件：${num}`;
+      await writelog(false, text, 'user');
+      await heperMsgAndForward(null, appConfig.adminAccount, text);
     }
   }
 });
@@ -142,21 +145,35 @@ route.post(
     V.object({
       username: V.string().trim().min(1).max(fieldLength.username),
       password: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      captchaId: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(fieldLength.id)
+        .alphanumeric(),
     })
   ),
   async (req, res) => {
     try {
       if (!_d.registerState || registerCount > 20) {
-        _err(res, '已限制注册')(req);
+        _err(res, '已关闭注册功能')(req);
         return;
       }
 
-      const { username, password } = req[kValidate];
+      const { username, password, captchaId } = req[kValidate];
+
+      if (!captcha.consume(captchaId, username)) {
+        _success(res, '需要验证验证码，请完成验证', {
+          needCaptcha: true,
+          username,
+        })(req, username, 1);
+        return;
+      }
 
       const userInfo = await db('user').where({ username }).findOne();
 
       if (userInfo) {
-        _err(res, '用户名已注册')(req, username, 1);
+        _err(res, '用户名无法使用')(req, username, 1);
         return;
       }
 
@@ -223,7 +240,7 @@ route.post(
         .findOne();
 
       if (!userinfo) {
-        _err(res, '用户不存在')(req, username, 1);
+        _err(res, '用户无法免密登录')(req, username, 1);
         return;
       }
 
@@ -279,7 +296,7 @@ route.post(
         .findOne();
 
       if (!userinfo) {
-        _err(res, '用户不存在')(req, username, 1);
+        _err(res, '用户无法免密登录')(req, username, 1);
         return;
       }
 
@@ -329,8 +346,72 @@ route.post(
   }
 );
 
+// 获取验证码
+const captchaVerifyLimit = verifyLimit({ count: 10 });
+route.get(
+  '/captcha',
+  validate(
+    'query',
+    V.object({
+      flag: V.string().trim().min(1).max(fieldLength.id),
+      theme: V.string().trim().default('light').enum(['light', 'dark']),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { flag, theme } = req[kValidate];
+      if (!captchaVerifyLimit.verify(req[kHello].ip, flag)) {
+        _err(res, '请稍后再试')(req, flag, 1);
+        return;
+      }
+      _success(res, 'ok', await captcha.get(flag, theme));
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 验证验证码
+route.post(
+  '/captcha',
+  validate(
+    'body',
+    V.object({
+      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      track: V.array(
+        V.object({
+          x: V.number().toNumber().min(0),
+          y: V.number().toNumber().min(0),
+          t: V.number().toNumber().min(0),
+        })
+      ),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { id, track } = req[kValidate];
+      const { ip } = req[kHello];
+      const { flag } = captcha.getValue(id) || {};
+
+      if (!captcha.verify(id, track)) {
+        if (flag) {
+          captchaVerifyLimit.add(ip, flag);
+        }
+        _err(res, '验证失败，请重试')(req);
+        return;
+      }
+      if (flag) {
+        captchaVerifyLimit.delete(ip, flag);
+      }
+      _success(res, '验证成功')(req);
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
 // 登录
-const loginVerifyLimit = verifyLimit();
+const loginVerifyLimit = verifyLimit({ space: 60 * 30 });
 route.post(
   '/login',
   validate(
@@ -338,115 +419,55 @@ route.post(
     V.object({
       username: V.string().trim().min(1).max(fieldLength.username),
       password: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      captchaId: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(fieldLength.id)
+        .alphanumeric(),
     })
   ),
   async (req, res) => {
     try {
-      const { username, password } = req[kValidate],
-        ip = req[kHello].ip;
+      const { username, password, captchaId } = req[kValidate];
+      const needCaptcha = !loginVerifyLimit.verify(username);
 
-      // ip登录错误次数是否超限制
-      if (loginVerifyLimit.verify(ip, username)) {
-        const userinfo = await db('user')
-          .select('verify,account,password')
-          .where({
-            username,
-            state: 1,
-            account: { '!=': appConfig.notifyAccount },
-          })
-          .findOne();
-
-        if (!userinfo) {
-          _err(res, '用户不存在')(req, username, 1);
-          return;
-        }
-
-        const { verify, account } = userinfo;
-
-        // 验证密码，如果未设置密码或密码正确
-        if (
-          !userinfo.password ||
-          (await _crypto.verifyPassword(password, userinfo.password))
-        ) {
-          if (verify) {
-            // 如果开启两部验证，则继续验证身份
-            _success(res, '账号密码验证成功，请完成两步验证', {
-              account,
-              verify: true,
-            })(req, `${username}-${account}`, 1);
-          } else {
-            await jwt.setCookie(res, {
-              account,
-              username,
-            });
-
-            const { os, ip } = req[kHello];
-
-            await heperMsgAndForward(
-              req,
-              account,
-              `您的账号在 [${os}(${ip})] 登录成功。如非本人操作，请及时修改密码（密码修改成功，全平台清空登录态）`
-            );
-
-            _success(res, '登录成功', { account, username })(
-              req,
-              `${username}-${account}`,
-              1
-            );
-          }
-        } else {
-          loginVerifyLimit.add(ip, username);
-
-          _err(res, '登录密码错误，请重新输入')(
-            req,
-            `${username}-${account}`,
-            1
-          );
-        }
-      } else {
-        _err(res, '登录密码多次错误，请10分钟后再试')(req, username, 1);
+      if (needCaptcha && !captcha.consume(captchaId, username)) {
+        _success(res, '需要验证验证码，请完成验证', {
+          needCaptcha,
+          username,
+        })(req, username, 1);
+        return;
       }
-    } catch (error) {
-      _err(res)(req, error);
-    }
-  }
-);
 
-// 两步验证
-const towfaVerify = verifyLimit();
-route.post(
-  '/verify-login',
-  validate(
-    'body',
-    V.object({
-      token: V.string().trim().min(6).max(6).alphanumeric(),
-      account: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      password: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
-  ),
-  async (req, res) => {
-    try {
-      const { token, account, password } = req[kValidate];
+      const userinfo = await db('user')
+        .select('verify,account,password')
+        .where({
+          username,
+          state: 1,
+          account: { '!=': appConfig.notifyAccount },
+        })
+        .findOne();
 
-      const ip = req[kHello].ip;
+      if (!userinfo) {
+        _err(res, '用户名或密码错误，请重新输入')(req, username, 1);
+        return;
+      }
 
-      // 限制验证次数
-      if (towfaVerify.verify(ip, account)) {
-        const user = await getUserInfo(account, 'username,verify,password');
+      const { verify, account } = userinfo;
 
-        if (!user) {
-          _err(res, '用户不存在')(req, account, 1);
-          return;
-        }
-
-        const { username, verify, password: pd } = user;
-
-        // 验证密码和验证码
-        if (
-          (!pd || (await _crypto.verifyPassword(password, pd))) &&
-          verify &&
-          _2fa.verify(verify, token)
-        ) {
+      // 验证密码，如果未设置密码或密码正确
+      if (
+        !userinfo.password ||
+        (await _crypto.verifyPassword(password, userinfo.password))
+      ) {
+        if (verify) {
+          // 如果开启两部验证，则继续验证身份
+          _success(res, '账号密码验证成功，请完成两步验证', {
+            account,
+            verify: true,
+          })(req, `${username}-${account}`, 1);
+        } else {
           await jwt.setCookie(res, {
             account,
             username,
@@ -465,12 +486,89 @@ route.post(
             `${username}-${account}`,
             1
           );
-        } else {
-          towfaVerify.add(ip, account);
-          _err(res, '验证码错误')(req, `${username}-${account}`, 1);
         }
       } else {
-        _err(res, '验证码多次错误，请10分钟后再试')(req, account, 1);
+        loginVerifyLimit.add(username);
+
+        _err(res, '用户名或密码错误，请重新输入')(
+          req,
+          `${username}-${account}`,
+          1
+        );
+      }
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 两步验证
+const towfaVerify = verifyLimit({ space: 60 * 30 });
+route.post(
+  '/verify-login',
+  validate(
+    'body',
+    V.object({
+      token: V.string().trim().min(6).max(6).alphanumeric(),
+      account: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      password: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      captchaId: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(fieldLength.id)
+        .alphanumeric(),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { token, account, password, captchaId } = req[kValidate];
+      const needCaptcha = !towfaVerify.verify(account);
+
+      if (needCaptcha && !captcha.consume(captchaId, account)) {
+        _success(res, '需要验证验证码，请完成验证', {
+          needCaptcha,
+          account,
+        })(req, account, 1);
+        return;
+      }
+
+      const user = await getUserInfo(account, 'username,verify,password');
+
+      if (!user) {
+        _err(res, '用户无法两步验证')(req, account, 1);
+        return;
+      }
+
+      const { username, verify, password: pd } = user;
+
+      // 验证密码和验证码
+      if (
+        (!pd || (await _crypto.verifyPassword(password, pd))) &&
+        verify &&
+        _2fa.verify(verify, token)
+      ) {
+        await jwt.setCookie(res, {
+          account,
+          username,
+        });
+
+        const { os, ip } = req[kHello];
+
+        await heperMsgAndForward(
+          req,
+          account,
+          `您的账号在 [${os}(${ip})] 登录成功。如非本人操作，请及时修改密码（密码修改成功，全平台清空登录态）`
+        );
+
+        _success(res, '登录成功', { account, username })(
+          req,
+          `${username}-${account}`,
+          1
+        );
+      } else {
+        towfaVerify.add(account);
+        _err(res, '验证码错误，请重新输入')(req, `${username}-${account}`, 1);
       }
     } catch (error) {
       _err(res)(req, error);
@@ -485,14 +583,28 @@ route.get(
     'query',
     V.object({
       username: V.string().trim().min(1).max(fieldLength.username),
+      captchaId: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(fieldLength.id)
+        .alphanumeric(),
     })
   ),
   async (req, res) => {
     try {
-      const { username } = req[kValidate];
+      const { username, captchaId } = req[kValidate];
+
+      if (!captcha.consume(captchaId, username)) {
+        _success(res, '需要验证验证码，请完成验证', {
+          needCaptcha: true,
+          username,
+        })(req, username, 1);
+        return;
+      }
 
       if (!_d.email.state) {
-        _err(res, '管理员未开启邮箱验证功能')(req, username, 1);
+        _err(res, '邮箱验证功能已关闭')(req, username, 1);
         return;
       }
 
@@ -506,7 +618,7 @@ route.get(
         .findOne();
 
       if (!userinfo) {
-        _err(res, '用户不存在')(req, username, 1);
+        _err(res, '用户无法验证邮箱')(req, username, 1);
         return;
       }
 
@@ -543,7 +655,7 @@ route.get(
 );
 
 // 重置密码
-const emailVerify = verifyLimit();
+const emailVerify = verifyLimit({ space: 60 * 30 });
 route.post(
   '/reset-pass',
   validate(
@@ -552,60 +664,68 @@ route.post(
       email: V.string().trim().min(1).max(fieldLength.email).email(),
       code: V.string().trim().min(6).max(6).alphanumeric(),
       account: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      captchaId: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(fieldLength.id)
+        .alphanumeric(),
     })
   ),
   async (req, res) => {
     try {
-      const { email, code, account } = req[kValidate];
+      const { email, code, account, captchaId } = req[kValidate];
+      const needCaptcha = !emailVerify.verify(email);
+      if (needCaptcha && !captcha.consume(captchaId, account)) {
+        _success(res, '需要验证验证码，请完成验证', {
+          needCaptcha,
+          account,
+        })(req, account, 1);
+        return;
+      }
 
-      const ip = req[kHello].ip;
+      const userinfo = await db('user')
+        .select('username')
+        .where({
+          email,
+          account: { '=': account, '!=': appConfig.notifyAccount },
+          state: 1,
+        })
+        .findOne();
 
-      if (emailVerify.verify(ip, email)) {
-        const userinfo = await db('user')
-          .select('username')
-          .where({
-            email,
-            account: { '=': account, '!=': appConfig.notifyAccount },
-            state: 1,
-          })
-          .findOne();
+      if (!userinfo) {
+        _err(res, '用户无法重置密码')(req, account, 1);
+        return;
+      }
 
-        if (!userinfo) {
-          _err(res, '用户不存在')(req, account, 1);
-          return;
-        }
+      const { username } = userinfo;
 
-        const { username } = userinfo;
-
-        if (mailer.get(email) === code) {
-          // 清除密码和两部验证token
-          await db('user')
-            .where({ account, state: 1 })
-            .update({
-              password: '',
-              verify: '',
-              exp_token_time: parseInt(Date.now() / 1000) - 2,
-            });
-
-          await jwt.setCookie(res, {
-            account,
-            username,
+      if (mailer.get(email) === code) {
+        // 清除密码和两部验证token
+        await db('user')
+          .where({ account, state: 1 })
+          .update({
+            password: '',
+            verify: '',
+            exp_token_time: parseInt(Date.now() / 1000) - 2,
           });
 
-          // 删除验证码缓存
-          mailer.del(email);
+        await jwt.setCookie(res, {
+          account,
+          username,
+        });
 
-          _success(res, '已重置密码为空，请尽快修改密码', {
-            account,
-            username,
-          })(req, `${username}-${account}`, 1);
-        } else {
-          emailVerify.add(ip, email);
+        // 删除验证码缓存
+        mailer.del(email);
 
-          _err(res, '验证码错误')(req, `${username}-${account}`, 1);
-        }
+        _success(res, '已重置密码为空，请尽快修改密码', {
+          account,
+          username,
+        })(req, `${username}-${account}`, 1);
       } else {
-        _err(res, '验证码多次错误，请10分钟后再试')(req, account, 1);
+        emailVerify.add(email);
+
+        _err(res, '验证码错误，请重新输入')(req, `${username}-${account}`, 1);
       }
     } catch (error) {
       _err(res)(req, error);
@@ -673,7 +793,7 @@ route.post(
       const { email } = req[kValidate];
 
       if (!_d.email.state) {
-        _err(res, '管理员未开启邮箱验证功能')(req, email, 1);
+        _err(res, '邮箱验证功能已关闭')(req, email, 1);
         return;
       }
 
@@ -733,7 +853,7 @@ route.post(
       const { account, password: pd } = req[kHello].userinfo;
 
       if (pd && !(await _crypto.verifyPassword(password, pd))) {
-        _err(res, '密码错误')(req, email, 1);
+        _err(res, '密码错误，请重新输入')(req, email, 1);
         return;
       }
 
@@ -770,7 +890,7 @@ route.post(
 
         _success(res, '绑定邮箱成功')(req, email, 1);
       } else {
-        _err(res, '验证码错误')(req, email, 1);
+        _err(res, '验证码错误，请重新输入')(req, email, 1);
       }
     } catch (error) {
       _err(res)(req, error);
@@ -811,7 +931,7 @@ route.post(
 
       const { account, password: pd } = req[kHello].userinfo;
       if (pd && !(await _crypto.verifyPassword(password, pd))) {
-        _err(res, '密码错误')(req);
+        _err(res, '密码错误，请重新输入')(req);
         return;
       }
 
@@ -836,7 +956,7 @@ route.post(
 
         _success(res, '开启两步验证成功')(req);
       } else {
-        _err(res, '验证码错误')(req);
+        _err(res, '验证码错误，请重新输入')(req);
       }
     } catch (error) {
       _err(res)(req, error);
@@ -987,7 +1107,7 @@ route.post(
         .findOne();
 
       if (userinfo) {
-        _err(res, '用户名已注册')(req, username, 1);
+        _err(res, '用户名无法使用')(req, username, 1);
         return;
       }
 
@@ -1026,7 +1146,7 @@ route.post(
       const { account, username, password: pd } = req[kHello].userinfo;
 
       if (pd && !(await _crypto.verifyPassword(password, pd))) {
-        _err(res, '密码错误')(req);
+        _err(res, '密码错误，请重新输入')(req);
         return;
       }
 

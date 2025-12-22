@@ -3,6 +3,7 @@ import { _d } from '../../data/data.js';
 import _path from '../../utils/path.js';
 import { db } from '../../utils/sqlite.js';
 import { concurrencyTasks, writelog } from '../../utils/utils.js';
+import { heperMsgAndForward } from '../chat/chat.js';
 import { _delDir, readMenu } from '../file/file.js';
 
 // 更新顺序
@@ -139,7 +140,9 @@ export async function cleanSiteInfo(req = false) {
     });
 
     if (num) {
-      await writelog(req, `删除过期网站描述信息缓存：${num}`, 'user');
+      const text = `删除过期网站描述信息缓存：${num}`;
+      await writelog(req, text, 'user');
+      await heperMsgAndForward(null, appConfig.adminAccount, text);
     }
   }
 }
@@ -167,7 +170,9 @@ export async function cleanFavicon(req = false) {
     });
 
     if (num) {
-      await writelog(req, `删除过期缓存图标：${num}`, 'user');
+      const text = `删除过期缓存图标：${num}`;
+      await writelog(req, text, 'user');
+      await heperMsgAndForward(null, appConfig.adminAccount, text);
     }
   }
 }
