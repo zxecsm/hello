@@ -1427,7 +1427,9 @@ $header
   .on('click', '.h_add_item_btn', createFileAndDir)
   .on('click', '.h_sort_btn', hdFileSort)
   .on('click', '.paste_btn .text', hdPaste)
-  .on('click', '.paste_btn .type', hdPaste)
+  .on('click', '.paste_btn .type', (e) => {
+    rMenu.rightInfo(e, normalizePasteListInfo(), '粘贴信息');
+  })
   .on('click', '.clear_trash_btn', hdClearTrash)
   .on('click', '.h_history', (e) => {
     let data = [];
@@ -1510,19 +1512,22 @@ $header
     hidePaste();
   })
   .on('mouseenter', '.paste_btn', function () {
-    const { type, data } = waitObj;
-    let str = `操作：${type === 'copy' ? '复制' : '剪切'}`;
-    data.forEach((item) => {
-      const { name, type, size } = item;
-      str += `\n${type === 'file' ? '文件' : '目录'}：${name}${
-        size ? ` (${formatBytes(size)})` : ''
-      }`;
-    });
-    toolTip.setTip(str).show();
+    toolTip.setTip(normalizePasteListInfo()).show();
   })
   .on('mouseleave', '.paste_btn', function () {
     toolTip.hide();
   });
+function normalizePasteListInfo() {
+  const { type, data } = waitObj;
+  let str = `操作：${type === 'copy' ? '复制' : '剪切'}`;
+  data.forEach((item) => {
+    const { name, type, size } = item;
+    str += `\n${type === 'file' ? '文件' : '目录'}：${name}${
+      size ? ` (${formatBytes(size)})` : ''
+    }`;
+  });
+  return str;
+}
 
 // 离线下载
 function handleDownloadFile(e) {
