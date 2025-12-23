@@ -347,7 +347,7 @@ route.post(
 );
 
 // 获取验证码
-const captchaVerifyLimit = verifyLimit({ count: 10 });
+const captchaVerifyLimit = verifyLimit({ count: 5 });
 route.get(
   '/captcha',
   validate(
@@ -392,18 +392,23 @@ route.post(
       const { id, track } = req[kValidate];
       const { ip } = req[kHello];
       const { flag } = captcha.getValue(id) || {};
-
-      if (!captcha.verify(id, track)) {
-        if (flag) {
-          captchaVerifyLimit.add(ip, flag);
-        }
-        _err(res, '验证失败，请重试')(req);
-        return;
-      }
       if (flag) {
+        if (!captchaVerifyLimit.verify(ip, flag)) {
+          _err(res, '请稍后再试')(req, flag, 1);
+          return;
+        }
+
+        if (!captcha.verify(id, track)) {
+          captchaVerifyLimit.add(ip, flag);
+          _err(res, '验证失败，请重试')(req, flag, 1);
+          return;
+        }
+
         captchaVerifyLimit.delete(ip, flag);
+        _success(res, '验证成功')(req, flag, 1);
+      } else {
+        _err(res, '验证失败，请重试')(req, id, 1);
       }
-      _success(res, '验证成功')(req);
     } catch (error) {
       _err(res)(req, error);
     }

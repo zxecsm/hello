@@ -14,61 +14,88 @@ const THEMES = {
   dark: { bg: '#222222', piece: '#333333', line: '#2a2a2a', stroke: '#3a3a3a' },
 };
 
-const puzzle = (x, y, s, r) => `
-  M${x} ${y} h${s} v${s} h-${s} Z
-  M${x + s} ${y + s / 2} a${r} ${r} 0 1 1 0 0
-`;
+// 随机整数
+const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
+// 背景 pattern
 function genPattern({ bg, line }) {
-  const size = 16 + ((Math.random() * 8) | 0);
-  const rot = [45, -45, 30, -30][(Math.random() * 4) | 0];
-  const t = (Math.random() * 3) | 0;
-
+  const size = randInt(16, 23);
+  const rot = [45, -45, 30, -30][randInt(0, 3)];
+  const type = randInt(0, 2);
   const body = [
     `<line x1="0" y1="0" x2="0" y2="${size}" stroke="${line}" stroke-width="1"/>`,
     `<line x1="0" y1="0" x2="${size}" y2="${size}" stroke="${line}" stroke-width="1"/>
      <line x1="0" y1="${size}" x2="${size}" y2="0" stroke="${line}" stroke-width="1"/>`,
     `<path d="M0 ${size / 2} L${size / 2} 0 M${size / 2} ${size} L${size} ${
       size / 2
-    }"
-       stroke="${line}" stroke-width="1" fill="none"/>`,
-  ][t];
+    }" stroke="${line}" stroke-width="1" fill="none"/>`,
+  ][type];
 
-  return `
-  <pattern id="p" width="${size}" height="${size}"
-    patternUnits="userSpaceOnUse"
-    patternTransform="rotate(${rot})">
-    <rect width="${size}" height="${size}" fill="${bg}"/>
-    ${body}
-  </pattern>`;
+  return `<pattern id="p" width="${size}" height="${size}" patternUnits="userSpaceOnUse" patternTransform="rotate(${rot})">
+    <rect width="${size}" height="${size}" fill="${bg}"/>${body}</pattern>`;
 }
 
-async function genCaptcha({ w = 400, h = 220, s = 50, theme = 'light' } = {}) {
-  const x = (Math.random() * (w - 2 * s - 20) + s + 10) | 0;
-  const y = (Math.random() * (h - s - 20) + 10) | 0;
-  const r = s / 4;
+// 生成形状路径
+function shapePath(type, cx, cy, s, sides = 5) {
+  const r = s / 2;
+  if (type === 'square') return `M${cx - r} ${cy - r} h${s} v${s} h-${s} Z`;
+  if (type === 'circle')
+    return `M${cx} ${cy} m-${r},0 a${r},${r} 0 1,0 ${s},0 a${r},${r} 0 1,0 -${s},0`;
+  let d = '';
+  for (let i = 0; i < sides; i++) {
+    const a = (2 * Math.PI * i) / sides - Math.PI / 2;
+    const x = cx + r * Math.cos(a);
+    const y = cy + r * Math.sin(a);
+    d += i === 0 ? `M${x} ${y}` : `L${x} ${y}`;
+  }
+  return d + ' Z';
+}
+
+// 随机形状
+function randomShape() {
+  const list = [
+    { type: 'square' },
+    { type: 'circle' },
+    { type: 'polygon', sides: 3 },
+    { type: 'polygon', sides: 5 },
+    { type: 'polygon', sides: 6 },
+  ];
+  return list[randInt(0, list.length - 1)];
+}
+
+// 生成验证码
+async function genCaptcha({
+  w = 400,
+  h = 220,
+  theme = 'light',
+  minS = 40,
+  maxS = 60,
+} = {}) {
+  const s = randInt(minS, maxS);
+  const x = randInt(s, w - s);
+  const y = randInt(s, h - s);
   const t = THEMES[theme] || THEMES.light;
-  const angle = (Math.random() * 2 - 1).toFixed(2);
+  const shape = randomShape();
+
+  const holePath =
+    shape.type === 'polygon'
+      ? shapePath('polygon', x + s / 2, y + s / 2, s, shape.sides)
+      : shapePath(shape.type, x + s / 2, y + s / 2, s);
+  const piecePath =
+    shape.type === 'polygon'
+      ? shapePath('polygon', s / 2, s / 2, s, shape.sides)
+      : shapePath(shape.type, s / 2, s / 2, s);
 
   const bgSVG = `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      ${genPattern(t)}
-      <mask id="m">
-        <rect width="100%" height="100%" fill="white"/>
-        <path d="${puzzle(x, y, s, r)}" fill="black"/>
-      </mask>
-    </defs>
+    <defs>${genPattern(
+      t
+    )}<mask id="m"><rect width="100%" height="100%" fill="white"/><path d="${holePath}" fill="black"/></mask></defs>
     <rect width="100%" height="100%" fill="url(#p)" mask="url(#m)"/>
-    <path d="${puzzle(x, y, s, r)}" fill="none" stroke="${
-    t.stroke
-  }" stroke-width="1"/>
+    <path d="${holePath}" fill="none" stroke="${t.stroke}" stroke-width="1"/>
   </svg>`;
 
-  const pieceSVG = `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" xmlns="http://www.w3.org/2000/svg">
-    <g transform="rotate(${angle} ${s / 2} ${s / 2})">
-      <rect x="-${x}" y="-${y}" width="${w}" height="${h}" fill="${t.piece}"/>
-      <path d="${puzzle(0, 0, s, r)}" fill="${t.piece}"/>
-    </g>
+  const pieceSVG = `<svg width="${s}" height="${s}" xmlns="http://www.w3.org/2000/svg">
+    <path d="${piecePath}" fill="${t.piece}"/>
   </svg>`;
 
   return {
