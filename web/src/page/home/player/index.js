@@ -1583,12 +1583,14 @@ async function upSong() {
     const pro = upPro.add(name);
     if (!isMusicFile(name)) {
       pro.fail();
-      _msg.error(`歌曲格式错误`);
+      _msg.error(`歌曲格式错误：${name}`, null, { reside: true });
       return;
     }
     if (size <= 0 || size >= _d.fieldLength.maxSongSize * 1024 * 1024) {
       pro.fail();
-      _msg.error(`歌曲限制0-${_d.fieldLength.maxSongSize}MB`);
+      _msg.error(`歌曲限制0-${_d.fieldLength.maxSongSize}MB：${name}`, null, {
+        reside: true,
+      });
       return;
     }
     try {
@@ -1617,9 +1619,11 @@ async function upSong() {
         pro.close();
       } else {
         pro.fail();
+        _msg.error(`上传失败：${name}`, null, { reside: true });
       }
     } catch {
       pro.fail();
+      _msg.error(`上传失败：${name}`, null, { reside: true });
     }
   });
   realtime.send({ type: 'updatedata', data: { flag: 'music' } });

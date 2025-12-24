@@ -533,12 +533,14 @@ async function hdUpFile(files) {
     const pro = upPro.add(name);
     if (!isImgFile(name)) {
       pro.fail();
-      _msg.error(`不支持的图片格式`);
+      _msg.error(`不支持的图片格式：${name}`, null, { reside: true });
       return;
     }
     if (size <= 0 || size >= _d.fieldLength.maxPicSize * 1024 * 1024) {
       pro.fail();
-      _msg.error(`图片限制0-${_d.fieldLength.maxPicSize}MB`);
+      _msg.error(`图片限制0-${_d.fieldLength.maxPicSize}MB：${name}`, null, {
+        reside: true,
+      });
       return;
     }
     try {
@@ -578,9 +580,11 @@ async function hdUpFile(files) {
         pro.close();
       } else {
         pro.fail();
+        _msg.error(`上传图片失败：${name}`, null, { reside: true });
       }
     } catch {
       pro.fail();
+      _msg.error(`上传图片失败：${name}`, null, { reside: true });
     }
   });
   fData.forEach((item) => {

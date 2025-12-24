@@ -1577,12 +1577,18 @@ async function sendfile(files, chatAcc) {
     const pro = upPro.add(name);
     if (size === 0) {
       pro.fail('发送失败');
-      _msg.error(`不能发送空文件`);
+      _msg.error(`不能发送空文件：${name}`, null, { reside: true });
       return;
     }
     if (size > _d.fieldLength.maxFileSize * 1024 * 1024 * 1024) {
       pro.fail('发送失败');
-      _msg.error(`发送文件限制0-${_d.fieldLength.maxFileSize}GB`);
+      _msg.error(
+        `发送文件限制0-${_d.fieldLength.maxFileSize}GB：${name}`,
+        null,
+        {
+          reside: true,
+        }
+      );
       return;
     }
     const type = isImgFile(name) ? 'image' : 'file';
@@ -1639,16 +1645,19 @@ async function sendfile(files, chatAcc) {
           pro.close('发送成功');
         } else {
           pro.fail('发送失败');
+          _msg.error(`发送失败：${name}`, null, { reside: true });
         }
       } catch (error) {
         if (error.statusText === 'timeout') {
           pro.close('处理文件中');
         } else {
           pro.fail('发送失败');
+          _msg.error(`发送失败：${name}`, null, { reside: true });
         }
       }
     } catch {
       pro.fail('发送失败');
+      _msg.error(`发送失败：${name}`, null, { reside: true });
     }
   });
 }

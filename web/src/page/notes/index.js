@@ -29,6 +29,7 @@ import {
   _getTarget,
   LazyLoad,
   imgjz,
+  isTextFile,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -856,15 +857,15 @@ async function upNote() {
     const { name, size } = file;
     const pro = upPro.add(name);
 
-    if (!/\.md$/i.test(name)) {
+    if (!/\.md$/i.test(name) || !(await isTextFile(file))) {
       pro.fail();
-      _msg.error(`笔记文件格式错误`);
+      _msg.error(`笔记文件格式错误：${name}`, null, { reside: true });
       return;
     }
 
     if (size > _d.fieldLength.noteSize) {
       pro.fail();
-      _msg.error(`笔记内容过长`);
+      _msg.error(`笔记内容过长：${name}`, null, { reside: true });
       return;
     }
 
@@ -883,9 +884,11 @@ async function upNote() {
         pro.close();
       } else {
         pro.fail();
+        _msg.error(`上传笔记失败：${name}`, null, { reside: true });
       }
     } catch {
       pro.fail();
+      _msg.error(`上传笔记失败：${name}`, null, { reside: true });
     }
   });
 

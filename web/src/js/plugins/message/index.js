@@ -15,6 +15,7 @@ class Msg {
       type: 'info',
       duration: 3000,
       icon: '',
+      reside: false,
     };
     this.opt = Object.assign(defaultOpt, opt);
     if (this.opt.message.length > 100) {
@@ -131,7 +132,9 @@ class Msg {
     this.el.style.transition = '0.3s ease-in-out';
     this.el.style.marginTop = '20px';
     this.el.style.opacity = 0.9;
-    this.hide();
+    if (!this.opt.reside) {
+      this.hide();
+    }
   }
   hide() {
     if (this.opt.duration === 0) return;
@@ -246,12 +249,17 @@ document.addEventListener('visibilitychange', function () {
     cacheMsg = [];
   }
 });
-function success(message = '操作成功', callback, duration = 3000) {
+function success(
+  message = '操作成功',
+  callback,
+  { duration = 3000, reside = false } = {}
+) {
   const opt = {
     message,
     type: 'success',
     duration,
     icon: 'iconfont icon-chenggong',
+    reside,
   };
   if (document.visibilityState === 'hidden') {
     addCache({ opt, callback });
@@ -259,12 +267,17 @@ function success(message = '操作成功', callback, duration = 3000) {
   }
   new Msg(opt, callback);
 }
-function error(message = '操作失败', callback, duration = 6000) {
+function error(
+  message = '操作失败',
+  callback,
+  { duration = 6000, reside = false } = {}
+) {
   const opt = {
     message,
     type: 'error',
     duration,
     icon: 'iconfont icon-shibai',
+    reside,
   };
   if (document.visibilityState === 'hidden') {
     addCache({ opt, callback });
@@ -272,7 +285,7 @@ function error(message = '操作失败', callback, duration = 6000) {
   }
   new Msg(opt, callback);
 }
-function warning(message, callback, duration = 8000) {
+function warning(message, callback, { duration = 8000, reside = false } = {}) {
   // 页面变为不可见时触发
   if (document.visibilityState === 'hidden') {
     _playSound(imgMsg);
@@ -286,6 +299,7 @@ function warning(message, callback, duration = 8000) {
     type: 'warning',
     duration,
     icon: 'iconfont icon-warning-circle',
+    reside,
   };
   if (document.visibilityState === 'hidden') {
     addCache({ opt, callback });
@@ -293,8 +307,8 @@ function warning(message, callback, duration = 8000) {
   }
   new Msg(opt, callback);
 }
-function info(message, callback, duration = 3000) {
-  const opt = { message, duration, icon: 'iconfont icon-info-circle' };
+function info(message, callback, { duration = 3000, reside = false } = {}) {
+  const opt = { message, duration, icon: 'iconfont icon-info-circle', reside };
   if (document.visibilityState === 'hidden') {
     addCache({ opt, callback });
     return;
@@ -318,13 +332,14 @@ function msg(opt, callback, sound) {
   }
   new Msg(opt, callback);
 }
-function online(message, callback, duration = 8000) {
+function online(message, callback, { duration = 8000, reside = false } = {}) {
   playSound(onlineMsg);
   const opt = {
     message,
     duration,
     type: 'success',
     icon: 'iconfont icon-zaixianzixun',
+    reside,
   };
   if (document.visibilityState === 'hidden') {
     addCache({ opt, callback });

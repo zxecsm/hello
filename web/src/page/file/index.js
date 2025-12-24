@@ -1249,12 +1249,18 @@ async function hdUp(files) {
     const pro = upPro.add(name);
     if (size === 0) {
       pro.fail();
-      _msg.error(`不能上传空文件`);
+      _msg.error(`不能上传空文件：${name}`, null, { reside: true });
       return;
     }
     if (size > _d.fieldLength.maxFileSize * 1024 * 1024 * 1024) {
       pro.fail();
-      _msg.error(`上传文件限制0-${_d.fieldLength.maxFileSize}GB`);
+      _msg.error(
+        `上传文件限制0-${_d.fieldLength.maxFileSize}GB： ${name}`,
+        null,
+        {
+          reside: true,
+        }
+      );
       return;
     }
     if (skip) {
@@ -1300,10 +1306,12 @@ async function hdUp(files) {
           pro.close(`文件后台处理中`);
         } else {
           pro.fail();
+          _msg.error(`文件上传失败：${name}`, null, { reside: true });
         }
       }
     } catch {
       pro.fail();
+      _msg.error(`文件上传失败：${name}`, null, { reside: true });
     }
   });
   realtime.send({ type: 'updatedata', data: { flag: 'file' } });

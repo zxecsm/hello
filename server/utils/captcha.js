@@ -2,7 +2,7 @@ import { CacheByExpire } from './cache.js';
 import { svgToBase64Png } from './img.js';
 import nanoid from './nanoid.js';
 
-const cache = new CacheByExpire(30 * 1000);
+const cache = new CacheByExpire(30 * 1000, 30 * 1000);
 
 const THEMES = {
   light: {

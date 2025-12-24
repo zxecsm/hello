@@ -57,12 +57,14 @@ async function hdUpBg(files) {
     const pro = upPro.add(name);
     if (!isImgFile(name)) {
       pro.fail();
-      _msg.error(`不支持的壁纸格式`);
+      _msg.error(`不支持的壁纸格式：${name}`, null, { reside: true });
       return;
     }
     if (size <= 0 || size >= _d.fieldLength.maxBgSize * 1024 * 1024) {
       pro.fail();
-      _msg.error(`壁纸限制0-${_d.fieldLength.maxBgSize}MB`);
+      _msg.error(`壁纸限制0-${_d.fieldLength.maxBgSize}MB：${name}`, null, {
+        reside: true,
+      });
       return;
     }
     try {
@@ -89,9 +91,11 @@ async function hdUpBg(files) {
         pro.close();
       } else {
         pro.fail();
+        _msg.error(`上传壁纸失败：${name}`, null, { reside: true });
       }
     } catch {
       pro.fail();
+      _msg.error(`上传壁纸失败：${name}`, null, { reside: true });
     }
   });
   realtime.send({ type: 'updatedata', data: { flag: 'bg' } });
