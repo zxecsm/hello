@@ -14,15 +14,9 @@ import cacheFile from './cacheFile';
 import localData from '../common/localData';
 // 解析url
 export function queryURLParams(url) {
-  const obj = {};
-  url.replace(
-    /([^?=&#]+)=([^?=&#]+)/g,
-    (...[, $1, $2]) => (obj[decodeURIComponent($1)] = decodeURIComponent($2))
-  );
-  url.replace(
-    /#([^?=&#]+)/g,
-    (...[, $1]) => (obj['HASH'] = decodeURIComponent($1))
-  );
+  const u = new URL(url);
+  const obj = Object.fromEntries(u.searchParams.entries());
+  if (u.hash) obj.HASH = u.hash.slice(1);
   return obj;
 }
 export function delay(time) {
