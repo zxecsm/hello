@@ -13,10 +13,17 @@ import { UpProgress } from '../plugins/UpProgress';
 import cacheFile from './cacheFile';
 import localData from '../common/localData';
 // 解析url
-export function queryURLParams(url) {
-  const u = new URL(url);
-  const obj = Object.fromEntries(u.searchParams.entries());
-  if (u.hash) obj.HASH = u.hash.slice(1);
+export function queryURLParams(url = location.href) {
+  const obj = {};
+  url.replace(/([^?=&#]+)=([^?=&#]*)/g, (_, key, value) => {
+    obj[decodeURIComponent(key)] = decodeURIComponent(value);
+  });
+
+  const hashIndex = url.indexOf('#');
+  if (hashIndex > -1) {
+    obj.HASH = decodeURIComponent(url.slice(hashIndex + 1));
+  }
+
   return obj;
 }
 export function delay(time) {
