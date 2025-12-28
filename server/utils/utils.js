@@ -520,7 +520,7 @@ export function isTooDeep(obj, maxDepth) {
     return false;
   }
 
-  return check(obj, 1);
+  return check(obj, 0);
 }
 
 export function replaceObjectValue(obj, data) {
@@ -769,6 +769,16 @@ export function parseObjectJson(str) {
   try {
     const res = JSON.parse(str);
     if (_type.isObject(res)) return res;
+    throw new Error();
+  } catch {
+    return '';
+  }
+}
+
+export function parseArrayJson(str) {
+  try {
+    const res = JSON.parse(str);
+    if (_type.isArray(res)) return res;
     throw new Error();
   } catch {
     return '';

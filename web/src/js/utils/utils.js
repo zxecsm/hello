@@ -2680,6 +2680,15 @@ export function parseObjectJson(str) {
     return '';
   }
 }
+export function parseArrayJson(str) {
+  try {
+    const res = JSON.parse(str);
+    if (_type.isArray(res)) return res;
+    throw new Error();
+  } catch {
+    return '';
+  }
+}
 export function parseJson(str, defaultValue) {
   try {
     return JSON.parse(str);

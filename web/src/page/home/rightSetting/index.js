@@ -32,6 +32,7 @@ import {
   getDarkIcon,
   savePopLocationInfo,
   getFilePath,
+  parseArrayJson,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -571,7 +572,7 @@ function bindEmail(e) {
 // 编辑消息转发接口
 function handleForwardMsg(e) {
   const { forward_msg_state: state, forward_msg_link } = setUserInfo();
-  const { link, type, header, body } = forward_msg_link;
+  const { link, type, header, body, contentType } = forward_msg_link;
   rMenu.inpMenu(
     e,
     {
@@ -595,11 +596,24 @@ function handleForwardMsg(e) {
             { value: 'post', text: 'POST' },
           ],
         },
+        contentType: {
+          beforeText: '请求体类型：',
+          type: 'select',
+          value: contentType,
+          selectItem: [
+            { value: 'application/json', text: 'json' },
+            {
+              value: 'application/x-www-form-urlencoded',
+              text: 'x-www-form-urlencoded',
+            },
+            { value: 'text/plain', text: 'text' },
+          ],
+        },
         link: {
           beforeText: '接口地址：',
           value: link,
           type: 'textarea',
-          placeholder: 'https://api.xxx.com/xxx?title={{title}}?text={{text}}',
+          placeholder: 'https://api.xxx.com/xxx?title={{title}}&text={{text}}',
           verify(val, items) {
             if (items.state.value === 'y') {
               return (
@@ -615,7 +629,7 @@ function handleForwardMsg(e) {
           beforeText: 'Header：',
           type: 'textarea',
           value: JSON.stringify(header, null, 2),
-          placeholder: `{"user-agent": "xxxx"}`,
+          placeholder: `{"content-type": "application/json"}`,
           verify(val, items) {
             if (items.state.value === 'y' && !parseObjectJson(val)) {
               return 'Header格式错误';
@@ -625,11 +639,18 @@ function handleForwardMsg(e) {
         body: {
           beforeText: 'Body：',
           type: 'textarea',
-          value: JSON.stringify(body, null, 2),
-          placeholder: `{"title": "{{title}}", "text": "{{text}}"}`,
+          value: body,
+          placeholder: `{"title": "{{title}}", "text": "{{text}}"} 或 {{title}}：{{text}}`,
           verify(val, items) {
-            if (items.state.value === 'y' && !parseObjectJson(val)) {
-              return 'Body格式错误';
+            if (items.state.value === 'y') {
+              return rMenu.validString(val, 1, _d.fieldLength.url) ||
+                ((items.type.value === 'get' ||
+                  (items.type.value === 'post' &&
+                    items.contentType.value === 'application/json')) &&
+                  !parseObjectJson(val) &&
+                  !parseArrayJson(val))
+                ? '必须为JSON对象格式'
+                : '';
             }
           },
         },
@@ -637,15 +658,15 @@ function handleForwardMsg(e) {
     },
     function ({ close, inp, loading, isDiff }) {
       if (!isDiff()) return;
-      let { state, link, type, header, body } = inp;
+      let { state, link, type, header, body, contentType } = inp;
       header = parseObjectJson(header) || {};
-      body = parseObjectJson(body) || {};
       loading.start();
       reqChatForwardMsgLink({
         state: state === 'y' ? 1 : 0,
         link,
         type,
         header,
+        contentType,
         body,
       })
         .then((result) => {

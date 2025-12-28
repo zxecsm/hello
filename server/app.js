@@ -241,7 +241,7 @@ app.all(
 
       const source = req.headers['x-source-service'];
 
-      if (source === appConfig.appName) {
+      if (source === appConfig.appFlag) {
         _err(res, '不能转发消息给自己')(req);
         return;
       }

@@ -23,6 +23,8 @@ import {
   isValidDate,
   isTooDeep,
   validate,
+  parseObjectJson,
+  parseArrayJson,
 } from '../../utils/utils.js';
 import { fieldLength } from '../config.js';
 
@@ -1128,21 +1130,44 @@ route.post(
       state: V.number().toInt().enum([0, 1]),
       type: V.string().trim().enum(['get', 'post']),
       link: V.string().trim().default('').allowEmpty().max(fieldLength.url),
+      contentType: V.string()
+        .trim()
+        .default('application/json')
+        .enum([
+          'application/json',
+          'application/x-www-form-urlencoded',
+          'text/plain',
+        ]),
       header: V.object()
         .default({})
-        .custom((v) => !isTooDeep(v, 5), '对象只能嵌套5层'),
-      body: V.object()
-        .default({})
-        .custom((v) => !isTooDeep(v, 10), '对象只能嵌套10层'),
+        .custom((v) => !isTooDeep(v, 1), '对象限制1层'),
+      body: V.string().trim().default('').allowEmpty().max(fieldLength.url),
     })
   ),
   async (req, res) => {
     try {
-      const { state, type, link, header, body } = req[kValidate];
+      const { state, type, link, header, body, contentType } = req[kValidate];
 
-      if (state === 1 && !isurl(link)) {
-        paramErr(res, req, 'link 格式错误', 'body');
-        return;
+      if (state === 1) {
+        if (!isurl(link)) {
+          paramErr(res, req, 'link 格式错误', 'body');
+          return;
+        }
+
+        if (!body) {
+          paramErr(res, req, 'body 不能为空', 'body');
+          return;
+        }
+
+        if (
+          (type === 'get' ||
+            (type === 'post' && contentType === 'application/json')) &&
+          !parseObjectJson(body) &&
+          !parseArrayJson(body)
+        ) {
+          paramErr(res, req, 'body 必须为JSON对象字符串', 'body');
+          return;
+        }
       }
 
       const { account } = req[kHello].userinfo;
@@ -1152,10 +1177,13 @@ route.post(
         link,
         body,
         header,
+        contentType,
       });
 
       if (_f.getTextSize(forward_msg_link) > 10 * 1024) {
-        paramErr(res, req);
+        paramErr(res, req, 'forward_msg_link 字符大小不能超过限制', {
+          forward_msg_link,
+        });
         return;
       }
 

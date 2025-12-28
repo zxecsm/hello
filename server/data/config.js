@@ -1,11 +1,13 @@
 import os from 'os';
 import _path from '../utils/path.js';
+import nanoid from '../utils/nanoid.js';
 
 const userHomeDir = _path.toUnixPath(os.homedir());
 
 const appDataDir = `${userHomeDir}/helloApp`;
 
 const appConfig = {
+  appFlag: nanoid(),
   port: 55555,
   appName: 'hello',
   textFileHistoryDirName: '.history',

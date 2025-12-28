@@ -14,6 +14,7 @@ import {
   parseObjectJson,
   getOrigin,
   writelog,
+  parseArrayJson,
 } from '../../utils/utils.js';
 
 import { getUserInfo } from '../user/user.js';
@@ -314,7 +315,8 @@ export async function hdForwardToLink(req, list = [], fArr, text, fList = []) {
 
     await concurrencyTasks(list, 3, async (item) => {
       const { forward_msg_link, account } = item;
-      let { link, type, header, body } = parseForwardMsgLink(forward_msg_link);
+      let { link, type, header, body, contentType } =
+        parseForwardMsgLink(forward_msg_link);
 
       if (!isurl(link)) return;
       const fe = fArr.find((y) => y.account === account);
@@ -330,9 +332,21 @@ export async function hdForwardToLink(req, list = [], fArr, text, fList = []) {
         text: encodeURIComponent(text),
         title: encodeURIComponent(title),
       });
-      body = replaceObjectValue(body, { title, text });
 
-      header['x-source-service'] = appConfig.appName;
+      if (
+        type === 'get' ||
+        (type === 'post' && contentType === 'application/json')
+      ) {
+        body = replaceObjectValue(
+          parseObjectJson(body) || parseArrayJson(body) || {},
+          { text, title }
+        );
+      } else {
+        body = tplReplace(body, { title, text });
+      }
+
+      if (type === 'post') header['content-type'] = contentType;
+      header['x-source-service'] = appConfig.appFlag;
       if (type === 'get') {
         await axios({
           method: type,
@@ -517,15 +531,15 @@ export async function helloHelperMsg(to, text) {
 
 // 解析forward_msg_link
 export function parseForwardMsgLink(str) {
-  const res = parseObjectJson(str);
-  return (
-    res || {
-      link: '',
-      type: 'get',
-      header: {},
-      body: {},
-    }
-  );
+  const res = parseObjectJson(str) || {};
+  return {
+    link: '',
+    type: 'get',
+    header: {},
+    body: '{}',
+    contentType: 'application/json',
+    ...res,
+  };
 }
 
 // 获取成员列表
