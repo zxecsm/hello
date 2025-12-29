@@ -29,7 +29,7 @@ export const fieldLength = {
   operationTimeout: 10000, // 操作超时时间
   maxFileSlice: 400, // 最大切片数
   maxFileChunk: 50, // 最大分片MB
-  maxBgSize: 10, // 最大壁纸大小MB
+  maxBgSize: 20, // 最大壁纸大小MB
   maxVoiceSize: 3, // 最大语音大小MB
   maxPicSize: 10, // 最大图片大小MB
   maxSongSize: 50, // 最大歌曲大小MB

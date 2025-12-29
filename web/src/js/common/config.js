@@ -74,7 +74,7 @@ const fieldLength = {
   rainCodeSleep: 60 * 5, // 代码雨触发等待时间
   maxFileSize: 19.5, // 最大文件大小GB
   maxPicSize: 10, // 最大图片大小MB
-  maxBgSize: 10, // 最大壁纸大小MB
+  maxBgSize: 20, // 最大壁纸大小MB
   maxSongSize: 50, // 最大音乐大小MB
   maxSongPicSize: 5, // 最大音乐封面大小MB
   maxMvSize: 200, // 最大视频大小MB
