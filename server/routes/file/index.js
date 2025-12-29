@@ -1953,8 +1953,6 @@ route.post(
         return;
       }
 
-      const allFiles = await getAllFile(targetPath);
-
       const controller = new AbortController();
       const signal = controller.signal;
       const taskKey = taskState.add(account, `添加${typeName}...`, controller);
@@ -1962,39 +1960,46 @@ route.post(
       _success(res, 'ok', { key: taskKey });
 
       try {
+        let skip = 0;
         let count = 0;
         let size = 0;
 
-        await concurrencyTasks(allFiles, 5, async (task) => {
-          if (signal.aborted) return;
+        await concurrencyTasks(
+          await getAllFile(targetPath),
+          5,
+          async (task) => {
+            if (signal.aborted) return;
 
-          const p = _path.normalize(task.path, task.name);
+            const p = _path.normalize(task.path, task.name);
 
-          try {
-            if (type === 'music') {
-              if (isMusicFile(p)) {
-                if (await fileToMusic(p)) {
-                  size += task.size;
-                  count++;
-                }
+            try {
+              if (
+                (type === 'music' &&
+                  isMusicFile(p) &&
+                  task.size < fieldLength.maxSongSize * 1024 * 1024 &&
+                  (await fileToMusic(p))) ||
+                (type === 'bg' &&
+                  isImgFile(p) &&
+                  task.size < fieldLength.maxBgSize * 1024 * 1024 &&
+                  (await fileToBg(p)))
+              ) {
+                size += task.size;
+                count++;
+              } else {
+                skip++;
               }
-            } else {
-              if (isImgFile(p)) {
-                if (await fileToBg(p)) {
-                  size += task.size;
-                  count++;
-                }
-              }
+            } catch (error) {
+              await errLog(req, `扫描添加${typeName}失败：${p}(${error})`);
             }
-          } catch (error) {
-            await errLog(req, `扫描添加${typeName}失败：${p}(${error})`);
-          }
 
-          taskState.update(
-            taskKey,
-            `添加${typeName}...${count} (${_f.formatBytes(size)})`
-          );
-        });
+            taskState.update(
+              taskKey,
+              `添加${typeName}...${count} (${_f.formatBytes(
+                size
+              )}) 跳过 ${skip}`
+            );
+          }
+        );
 
         taskState.delete(taskKey);
         uLog(req, `扫描添加${typeName}成功: ${targetPath}(${count})`);
