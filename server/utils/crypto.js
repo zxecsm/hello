@@ -10,6 +10,11 @@ async function sampleHash(filePath) {
     const stats = await fsp.lstat(filePath);
     const fileSize = stats.size;
 
+    if (fileSize <= 256) {
+      const buf = await fsp.readFile(filePath);
+      return createHash('md5').update(buf).digest('hex');
+    }
+
     const maxSampleCount = 100; // 最大取样点数
     const sampleCount = Math.min(
       Math.max(Math.floor(fileSize / 1024), 4),

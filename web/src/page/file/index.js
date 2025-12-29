@@ -43,6 +43,7 @@ import { UpProgress } from '../../js/plugins/UpProgress';
 import bus from '../../js/utils/bus';
 import loadfailImg from '../../images/img/loadfail.png';
 import {
+  reqFileAddFileTo,
   reqFileBreakpoint,
   reqFileCdHistory,
   reqFileChown,
@@ -818,6 +819,13 @@ function rightList(e, obj, el) {
     beforeIcon: 'iconfont icon-about',
   });
   if (isRoot()) {
+    if (obj.type === 'dir') {
+      data.push({
+        id: 'addto',
+        text: '扫面文件到',
+        beforeIcon: 'iconfont icon-shijianchaxun-yimidida-',
+      });
+    }
     data.push(
       {
         id: 'mode',
@@ -841,7 +849,9 @@ function rightList(e, obj, el) {
     data,
     ({ e, id, close, loading }) => {
       // 编辑列表
-      if (id === 'download') {
+      if (id === 'addto') {
+        addTo(e, obj);
+      } else if (id === 'download') {
         close();
         downloadFile(
           [
@@ -887,7 +897,6 @@ function rightList(e, obj, el) {
           {
             e,
             text: `${obj.favorite ? '取消' : ''}收藏文件夹：${obj.name}？`,
-            type: 'confirm',
           },
           (type) => {
             if (type === 'confirm') {
@@ -981,6 +990,49 @@ function rightList(e, obj, el) {
       }
     },
     obj.name
+  );
+}
+function addTo(e, obj) {
+  rMenu.selectMenu(
+    e,
+    [
+      {
+        id: 'music',
+        text: '音乐播放器',
+        beforeIcon: 'iconfont icon-yinle1',
+      },
+      {
+        id: 'bg',
+        text: '壁纸',
+        beforeIcon: 'iconfont icon-tupian',
+      },
+    ],
+    ({ e, id, close }) => {
+      if (id) {
+        const path = _path.normalize('/', obj.path, obj.name);
+        rMenu.pop(
+          {
+            e,
+            text: `确认扫描：${obj.name} 文件到${
+              id === 'music' ? '音乐播放器' : '壁纸'
+            }？`,
+          },
+          (type) => {
+            if (type === 'confirm') {
+              reqFileAddFileTo({ path, type: id })
+                .then((res) => {
+                  if (res.code === 1) {
+                    close(1);
+                    addTask(res.data.key);
+                  }
+                })
+                .catch(() => {});
+            }
+          }
+        );
+      }
+    },
+    '扫描文件到'
   );
 }
 // 编辑权限

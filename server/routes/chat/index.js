@@ -356,7 +356,7 @@ route.get(
       if (file) {
         const u = appConfig.uploadDir(file.url);
 
-        if (await _f.exists(u)) {
+        if ((await _f.getType(u)) === 'file') {
           _success(res, 'ok', {
             isText: await _f.isTextFile(u), // 判断是否文本文件
           });

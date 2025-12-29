@@ -72,7 +72,7 @@ route.get(
       // 获取壁纸 URL 并返回
       const url = appConfig.bgDir(bgData.url);
 
-      if (await _f.exists(url)) {
+      if ((await _f.getType(url)) === 'file') {
         await getFile(req, res, `/bg/${bgData.url}`, false);
       } else {
         _err(res, '获取壁纸失败')(req, `${url} 不存在`, 1);
@@ -331,7 +331,7 @@ route.post(
         .findOne();
 
       if (bg) {
-        if (await _f.exists(appConfig.bgDir(bg.url))) {
+        if ((await _f.getType(appConfig.bgDir(bg.url))) === 'file') {
           _success(res);
           return;
         }

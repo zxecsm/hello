@@ -122,7 +122,7 @@ route.post(
         .findOne();
 
       if (pic) {
-        if (await _f.exists(appConfig.picDir(pic.url))) {
+        if ((await _f.getType(appConfig.picDir(pic.url))) === 'file') {
           _success(res, 'ok', pic);
           return;
         }

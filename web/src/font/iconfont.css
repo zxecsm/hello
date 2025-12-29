@@ -1,8 +1,8 @@
 @font-face {
   font-family: "iconfont"; /* Project id 2809795 */
-  src: url('iconfont.woff2?t=1765671999707') format('woff2'),
-       url('iconfont.woff?t=1765671999707') format('woff'),
-       url('iconfont.ttf?t=1765671999707') format('truetype');
+  src: url('iconfont.woff2?t=1766998387318') format('woff2'),
+       url('iconfont.woff?t=1766998387318') format('woff'),
+       url('iconfont.ttf?t=1766998387318') format('truetype');
 }
 
 .iconfont {
@@ -11,6 +11,10 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-shijianchaxun-yimidida-:before {
+  content: "\e64d";
 }
 
 .icon-color:before {

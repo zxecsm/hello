@@ -118,3 +118,7 @@ export function reqFileGetHistoryState() {
 export function reqFileHistoryState(data) {
   return _postAjax('/file/history-state', data);
 }
+// 扫描文件到
+export function reqFileAddFileTo(data) {
+  return _postAjax('/file/add-file-to', data);
+}

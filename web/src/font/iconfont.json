@@ -6,6 +6,13 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "11472722",
+      "name": "事件查询-壹米滴答-01",
+      "font_class": "shijianchaxun-yimidida-",
+      "unicode": "e64d",
+      "unicode_decimal": 58957
+    },
+    {
       "icon_id": "11981497",
       "name": "color",
       "font_class": "color",

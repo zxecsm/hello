@@ -254,7 +254,7 @@ route.get('/clean-music-file', async (req, res) => {
   try {
     const musicDir = appConfig.musicDir();
 
-    if (await _f.exists(musicDir)) {
+    if ((await _f.getType(musicDir)) === 'dir') {
       const songs = await db('songs').select('url').find();
       const allMusicFile = await getAllFile(musicDir);
 
@@ -282,7 +282,7 @@ route.get('/clean-bg-file', async (req, res) => {
   try {
     const bgDir = appConfig.bgDir();
 
-    if (await _f.exists(bgDir)) {
+    if ((await _f.getType(bgDir)) === 'dir') {
       const bgs = await db('bg').find();
       const allBgFile = await getAllFile(bgDir);
 
@@ -307,7 +307,7 @@ route.get('/clean-pic-file', async (req, res) => {
   try {
     const picDir = appConfig.picDir();
 
-    if (await _f.exists(picDir)) {
+    if ((await _f.getType(picDir)) === 'dir') {
       const pics = await db('pic').find();
       const allPicFile = await getAllFile(picDir);
 

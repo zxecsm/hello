@@ -4,9 +4,20 @@ import { _d } from '../../data/data.js';
 
 import _f from '../../utils/f.js';
 
-import { concurrencyTasks, mixedSort, writelog } from '../../utils/utils.js';
+import {
+  concurrencyTasks,
+  getSongInfo,
+  getTimePath,
+  mixedSort,
+  writelog,
+} from '../../utils/utils.js';
 
 import _path from '../../utils/path.js';
+import _crypto from '../../utils/crypto.js';
+import { db } from '../../utils/sqlite.js';
+import nanoid from '../../utils/nanoid.js';
+import pinyin from '../../utils/pinyin.js';
+import { getImgInfo } from '../../utils/img.js';
 
 // 删除站点文件
 export async function _delDir(path) {
@@ -41,7 +52,7 @@ export async function _delDir(path) {
 
 // 清理空目录
 export async function cleanEmptyDirectories(rootDir) {
-  if (!(await _f.exists(rootDir))) return;
+  if ((await _f.getType(rootDir)) !== 'dir') return;
 
   const allDirs = new Set();
   const stack = [rootDir];
@@ -261,4 +272,94 @@ export async function writeHistoryDirs(account, list) {
     appConfig.fileConfigDir(account, 'cd_history'),
     list.join('\n')
   );
+}
+
+export async function fileToMusic(p) {
+  const HASH = await _crypto.sampleHash(p);
+  if (await db('songs').select('id').where({ hash: HASH }).findOne())
+    return false;
+
+  const songId = nanoid();
+
+  const create_at = Date.now();
+
+  const timePath = getTimePath(create_at);
+
+  const suffix = _path.basename(p)[3];
+
+  const tDir = appConfig.musicDir(timePath, songId);
+  const tName = `${songId}.${suffix}`;
+
+  await _f.cp(p, _path.normalize(tDir, tName));
+  // 读取歌曲元数据
+  const songInfo = await getSongInfo(_path.normalize(tDir, tName));
+
+  let {
+    album = '',
+    year = '',
+    title,
+    duration,
+    artist,
+    pic = '',
+    lrc = '',
+    picFormat,
+  } = songInfo;
+
+  picFormat = _path.basename(picFormat)[0];
+  if (picFormat && pic) {
+    // 提取封面
+    await _f.writeFile(_path.normalize(tDir, `${songId}.${picFormat}`), pic);
+    pic = _path.normalize(timePath, songId, `${songId}.${picFormat}`);
+  }
+
+  await _f.writeFile(_path.normalize(tDir, `${songId}.lrc`), lrc);
+
+  await db('songs').insert({
+    id: songId,
+    create_at,
+    artist,
+    artist_pinyin: pinyin(artist),
+    title,
+    title_pinyin: pinyin(title),
+    duration,
+    album,
+    year,
+    hash: HASH,
+    pic,
+    url: _path.normalize(timePath, songId, tName),
+    lrc: _path.normalize(timePath, songId, `${songId}.lrc`),
+  });
+  return true;
+}
+
+export async function fileToBg(p) {
+  const HASH = await _crypto.sampleHash(p);
+  if (await db('bg').select('url').where({ hash: HASH }).findOne())
+    return false;
+
+  const [, title, , suffix] = _path.basename(p);
+  const create_at = Date.now();
+  const timePath = getTimePath(create_at);
+
+  const tDir = appConfig.bgDir(timePath);
+  const tName = `${HASH}.${suffix}`;
+
+  await _f.cp(p, _path.normalize(tDir, tName));
+
+  // 获取壁纸尺寸进行分类
+  const { width, height } = await getImgInfo(_path.normalize(tDir, tName));
+  const type = width < height ? 'bgxs' : 'bg';
+
+  const url = _path.normalize(timePath, tName);
+
+  await db('bg').insert({
+    create_at,
+    id: nanoid(),
+    hash: HASH,
+    url,
+    type,
+    title,
+  });
+
+  return true;
 }

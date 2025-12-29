@@ -329,7 +329,7 @@ app.get(
         miss = p + '.miss';
 
         // 缓存存在，则使用缓存
-        if (await _f.exists(p)) {
+        if ((await _f.getType(p)) === 'file') {
           _success(
             res,
             'ok',
@@ -338,7 +338,7 @@ app.get(
           return;
         }
 
-        if (await _f.exists(miss)) {
+        if ((await _f.getType(miss)) === 'file') {
           _success(res, 'ok', obj);
           return;
         }

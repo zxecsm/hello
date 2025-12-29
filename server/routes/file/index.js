@@ -16,6 +16,8 @@ import {
   createPagingData,
   getDuplicates,
   validate,
+  isMusicFile,
+  isImgFile,
 } from '../../utils/utils.js';
 
 import appConfig from '../../data/config.js';
@@ -37,6 +39,9 @@ import {
   readHistoryDirs,
   writeHistoryDirs,
   writeFavorites,
+  getAllFile,
+  fileToMusic,
+  fileToBg,
 } from './file.js';
 
 import { fieldLength } from '../config.js';
@@ -306,7 +311,7 @@ route.post(
         let arr = [];
         let count = 0;
 
-        if (await _f.exists(p)) {
+        if ((await _f.getType(p)) === 'dir') {
           const stack = [p];
 
           while (stack.length > 0 && !signal.aborted) {
@@ -891,7 +896,7 @@ route.post(
 
       const p = appConfig.userRootDir(account, path);
 
-      if (!(await _f.exists(p))) {
+      if ((await _f.getType(p)) !== 'dir') {
         _err(res, '目标文件夹不存在')(req, p, 1);
         return;
       }
@@ -985,7 +990,7 @@ route.post(
 
       const p = appConfig.userRootDir(account, path);
 
-      if (!(await _f.exists(p))) {
+      if ((await _f.getType(p)) !== 'dir') {
         _err(res, '目标文件夹不存在')(req, p, 1);
         return;
       }
@@ -1027,7 +1032,7 @@ route.post(
 
       const p = appConfig.userRootDir(account, path);
 
-      if (!(await _f.exists(p))) {
+      if ((await _f.getType(p)) !== 'dir') {
         _err(res, '目标文件夹不存在')(req, p, 1);
         return;
       }
@@ -1200,7 +1205,7 @@ route.post(
       const p = appConfig.userRootDir(account, path);
       const f = _path.normalize(p, name);
 
-      if (!(await _f.exists(f))) {
+      if ((await _f.getType(f)) !== 'file') {
         _err(res, '解压文件不存在')(req, f, 1);
         return;
       }
@@ -1371,7 +1376,7 @@ route.get('/clear-trash', async (req, res) => {
 
       const trashDir = appConfig.trashDir(account);
 
-      if (await _f.exists(trashDir)) {
+      if ((await _f.getType(trashDir)) === 'dir') {
         const list = await _f.fsp.readdir(trashDir);
 
         await concurrencyTasks(list, 5, async (item) => {
@@ -1824,7 +1829,7 @@ route.post(
 
       const targetPath = appConfig.userRootDir(account, path);
 
-      if (!(await _f.exists(targetPath))) {
+      if ((await _f.getType(targetPath)) !== 'dir') {
         _err(res, '目标文件夹不存在')(req, targetPath, 1);
         return;
       }
@@ -1912,6 +1917,86 @@ route.post(
         taskState.delete(taskKey);
         await errLog(req, `下载文件失败: ${url}(${error})`);
         errorNotifyMsg(req, `下载文件失败`);
+      }
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 添加到播放器和壁纸
+route.post(
+  '/add-file-to',
+  validate(
+    'body',
+    V.object({
+      type: V.string().trim().enum(['music', 'bg']),
+      path: V.string().notEmpty().min(1).max(fieldLength.url),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { type, path } = req[kValidate];
+
+      if (!req[kHello].isRoot) {
+        _err(res, '无权操作')(req);
+        return;
+      }
+
+      const typeName = type === 'music' ? '音乐' : '壁纸';
+      const { account } = req[kHello].userinfo;
+
+      const targetPath = appConfig.userRootDir(account, path);
+
+      if ((await _f.getType(targetPath)) !== 'dir') {
+        _err(res, '目标文件夹不存在')(req, targetPath, 1);
+        return;
+      }
+
+      const allFiles = await getAllFile(targetPath);
+
+      const controller = new AbortController();
+      const signal = controller.signal;
+      const taskKey = taskState.add(account, `添加${typeName}...`, controller);
+
+      _success(res, 'ok', { key: taskKey });
+
+      try {
+        let count = 0;
+
+        await concurrencyTasks(allFiles, 5, async (task) => {
+          if (signal.aborted) return;
+
+          const p = _path.normalize(task.path, task.name);
+
+          try {
+            if (type === 'music') {
+              if (isMusicFile(p)) {
+                if (await fileToMusic(p)) {
+                  count++;
+                }
+              }
+            } else {
+              if (isImgFile(p)) {
+                if (await fileToBg(p)) {
+                  count++;
+                }
+              }
+            }
+          } catch (error) {
+            await errLog(req, `扫描添加${typeName}失败：${p}(${error})`);
+          }
+
+          taskState.update(taskKey, `添加${typeName}...${count}`);
+        });
+
+        taskState.delete(taskKey);
+        uLog(req, `扫描添加${typeName}成功: ${targetPath}(${count})`);
+        syncUpdateData(req, type);
+      } catch (error) {
+        taskState.delete(taskKey);
+        await errLog(req, `扫描添加${typeName}失败：${targetPath}(${error})`);
+        errorNotifyMsg(req, `扫描添加${typeName}失败`);
       }
     } catch (error) {
       _err(res)(req, error);

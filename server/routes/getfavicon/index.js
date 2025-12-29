@@ -122,12 +122,12 @@ route.get(
 
         missFlagPath = `${iconPath}.miss`;
 
-        if (await _f.exists(iconPath)) {
+        if ((await _f.getType(iconPath)) === 'file') {
           res.sendFile(iconPath, { dotfiles: 'allow' });
           return;
         }
 
-        if (await _f.exists(missFlagPath)) {
+        if ((await _f.getType(missFlagPath)) === 'file') {
           res.sendFile(defaultIcon, { dotfiles: 'allow' });
           return;
         }
@@ -174,7 +174,7 @@ route.get(
           }
         }
 
-        if (await _f.exists(iconPath)) {
+        if ((await _f.getType(iconPath)) === 'file') {
           try {
             const buf = await convertImageFormat(iconPath, {
               format: 'png',

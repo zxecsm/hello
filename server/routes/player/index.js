@@ -127,7 +127,7 @@ route.post(
 
       const url = appConfig.musicDir(songInfo.lrc);
 
-      if (await _f.exists(url)) {
+      if ((await _f.getType(url)) === 'file') {
         const str = (await _f.readFile(url, null, '')).toString(),
           lrcList = parseLrc(str);
 
@@ -1444,7 +1444,7 @@ route.get(
 
       const url = appConfig.musicDir(musicinfo.lrc);
 
-      if (await _f.exists(url)) {
+      if ((await _f.getType(url)) === 'file') {
         const str = (await _f.readFile(url, null, '')).toString();
         _success(res, 'ok', str);
       } else {
@@ -1841,7 +1841,7 @@ route.post(
       if (songInfo) {
         const url = appConfig.musicDir(songInfo.url);
 
-        if (await _f.exists(url)) {
+        if ((await _f.getType(url)) === 'file') {
           _success(res);
           return;
         }

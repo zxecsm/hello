@@ -564,7 +564,7 @@ export async function cleanUpload(req = false) {
   if (_d.cacheExp.uploadSaveDay > 0) {
     const uploadDir = appConfig.uploadDir();
 
-    if (!(await _f.exists(uploadDir))) return;
+    if ((await _f.getType(uploadDir)) !== 'dir') return;
 
     const now = Date.now();
     const exp = now - _d.cacheExp.uploadSaveDay * 24 * 60 * 60 * 1000;
