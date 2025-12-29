@@ -9,18 +9,20 @@ async function sampleHash(filePath) {
   try {
     const stats = await fsp.lstat(filePath);
     const fileSize = stats.size;
+    const chunkSize = 256;
 
-    if (fileSize <= 256) {
+    if (fileSize <= chunkSize) {
       const buf = await fsp.readFile(filePath);
       return createHash('md5').update(buf).digest('hex');
     }
 
     const maxSampleCount = 100; // 最大取样点数
+    const minSampleCount = 4; // 最小取样点数
     const sampleCount = Math.min(
-      Math.max(Math.floor(fileSize / 1024), 4),
+      Math.max(Math.floor(fileSize / 1024), minSampleCount),
       maxSampleCount
     );
-    const maxOffset = fileSize - 256; // 防止读取超出文件范围
+    const maxOffset = fileSize - chunkSize; // 防止读取超出文件范围
 
     let seed = fileSize;
     const rng = (seed) => {
@@ -34,8 +36,8 @@ async function sampleHash(filePath) {
 
     // 读取指定位置的样本
     const readSample = async (offset) => {
-      const buffer = Buffer.alloc(256);
-      await fd.read(buffer, 0, 256, offset);
+      const buffer = Buffer.alloc(chunkSize);
+      await fd.read(buffer, 0, chunkSize, offset);
       hash.update(buffer);
     };
 

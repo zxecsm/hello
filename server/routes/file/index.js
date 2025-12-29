@@ -1963,6 +1963,7 @@ route.post(
 
       try {
         let count = 0;
+        let size = 0;
 
         await concurrencyTasks(allFiles, 5, async (task) => {
           if (signal.aborted) return;
@@ -1973,12 +1974,14 @@ route.post(
             if (type === 'music') {
               if (isMusicFile(p)) {
                 if (await fileToMusic(p)) {
+                  size += task.size;
                   count++;
                 }
               }
             } else {
               if (isImgFile(p)) {
                 if (await fileToBg(p)) {
+                  size += task.size;
                   count++;
                 }
               }
@@ -1987,7 +1990,10 @@ route.post(
             await errLog(req, `扫描添加${typeName}失败：${p}(${error})`);
           }
 
-          taskState.update(taskKey, `添加${typeName}...${count}`);
+          taskState.update(
+            taskKey,
+            `添加${typeName}...${count} (${_f.formatBytes(size)})`
+          );
         });
 
         taskState.delete(taskKey);
