@@ -20,6 +20,10 @@ function sendMail(to, title, html) {
         user, // 发件人邮箱地址
         pass, // 发件人邮箱密码或者应用专用密码
       },
+      // ---- 超时设置 ----
+      connectionTimeout: 5000, // 连接服务器超时 5s
+      greetingTimeout: 5000, // 等待 greeting 超时 5s
+      socketTimeout: 5000, // 整个会话最长空闲 5s
     });
 
     const options = {

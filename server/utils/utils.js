@@ -63,8 +63,10 @@ export async function writelog(req, str, flag = appConfig.appName) {
     }
 
     const targetPath = appConfig.logDir(`${flag}.log`);
-
-    // console.log(str);
+    if (process.env.NODE_ENV === 'development' && flag !== appConfig.appName) {
+      // eslint-disable-next-line no-console
+      console.log(str);
+    }
     await _f.appendFile(targetPath, str);
 
     const s = await _f.lstat(targetPath);

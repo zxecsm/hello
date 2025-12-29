@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "dev": "nodemon app.js"
+    "dev": "cross-env NODE_ENV=development nodemon app.js",
+    "start": "node app.js"
   },
   "keywords": [],
   "author": "ecan",
@@ -30,6 +31,7 @@
   },
   "description": "This is a favorite",
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "nodemon": "^3.1.11"
   },
   "type": "module"
