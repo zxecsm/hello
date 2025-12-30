@@ -347,7 +347,7 @@ route.post(
 );
 
 // 获取验证码
-const captchaVerifyLimit = verifyLimit({ count: 5 });
+const captchaVerifyLimit = verifyLimit({ count: 10 });
 route.get(
   '/captcha',
   validate(
@@ -360,10 +360,12 @@ route.get(
   async (req, res) => {
     try {
       const { flag, theme } = req[kValidate];
-      if (!captchaVerifyLimit.verify(req[kHello].ip, flag)) {
+      const { ip } = req[kHello];
+      if (!captchaVerifyLimit.verify(ip, flag)) {
         _err(res, '请稍后再试')(req, flag, 1);
         return;
       }
+      captchaVerifyLimit.add(ip, flag);
       _success(res, 'ok', await captcha.get(flag, theme));
     } catch (error) {
       _err(res)(req, error);
@@ -455,6 +457,7 @@ route.post(
         .findOne();
 
       if (!userinfo) {
+        loginVerifyLimit.add(username);
         _err(res, '用户名或密码错误，请重新输入')(req, username, 1);
         return;
       }
@@ -541,6 +544,7 @@ route.post(
       const user = await getUserInfo(account, 'username,verify,password');
 
       if (!user) {
+        towfaVerify.add(account);
         _err(res, '用户无法两步验证')(req, account, 1);
         return;
       }
@@ -699,6 +703,7 @@ route.post(
         .findOne();
 
       if (!userinfo) {
+        emailVerify.add(email);
         _err(res, '用户无法重置密码')(req, account, 1);
         return;
       }
