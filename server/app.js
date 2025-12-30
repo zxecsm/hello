@@ -164,6 +164,14 @@ app.use(
   })
 );
 
+app.use(
+  '/api/p',
+  express.static(appConfig.picDir(), {
+    dotfiles: 'allow',
+    maxAge: 2592000000,
+  })
+);
+
 app.use(async (req, res, next) => {
   try {
     const {
