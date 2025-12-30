@@ -772,7 +772,7 @@ export function showChatRoom(chatAcc = curChatAccount) {
       direction: 'reverse',
     });
   }
-  if (isHide)
+  if (isHide || chatAcc !== curChatAccount)
     openFriend(chatAcc, false, () => {
       reqChatNews()
         .then((result) => {
