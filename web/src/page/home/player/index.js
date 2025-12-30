@@ -541,7 +541,7 @@ export function moveSongToList(e, pid, ar) {
       cIdx = i;
     }
     if (i < 3 || v.id === pid) return;
-    let p = getFilePath(`/music/pic/${v.id}`, { w: 256 });
+    let p = getFilePath(`/music/pic/${v.pic}`, { w: 256 });
     if (v.pic === 'history') {
       p = imgHistory;
     } else if (v.pic === 'default') {
