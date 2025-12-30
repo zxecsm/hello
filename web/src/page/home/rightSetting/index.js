@@ -632,7 +632,7 @@ function handleForwardMsg(e) {
           placeholder: `{"content-type": "application/json"}`,
           verify(val, items) {
             if (items.state.value === 'y' && !parseObjectJson(val)) {
-              return 'Header格式错误';
+              return '必须为JSON对象格式';
             }
           },
         },

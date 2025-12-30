@@ -253,13 +253,13 @@ function toggleMvBtnState() {
 // 处理音乐信息
 function initSongInfo(obj) {
   obj = deepClone(obj);
-  obj.ppic = getFilePath(`sharemusic/${obj.id}/${obj.pic}`, {
+  obj.ppic = getFilePath(`sharemusic/pic/${obj.id}`, {
     token: shareToken,
   });
-  obj.uurl = getFilePath(`sharemusic/${obj.id}/${obj.url}`, {
+  obj.uurl = getFilePath(`sharemusic/url/${obj.id}`, {
     token: shareToken,
   });
-  obj.mmv = getFilePath(`sharemusic/${obj.id}/${obj.mv}`, {
+  obj.mmv = getFilePath(`sharemusic/mv/${obj.id}`, {
     token: shareToken,
   });
   return obj;
@@ -855,9 +855,9 @@ function renderPlayList() {
   );
   const html = _tpl(
     `
-    <li v-for="{title,artist,mv,id,pic} in arr" class="song_item" cursor="y" :data-id="id">
+    <li v-for="{title,artist,mv,id} in arr" class="song_item" cursor="y" :data-id="id">
       <div class="logo_wrap">
-        <div class="logo" :data-src="getPath(id,pic)">
+        <div class="logo" :data-src="getPath(id)">
           <div class="play_gif"></div>
         </div>
       </div>
@@ -872,8 +872,8 @@ function renderPlayList() {
     `,
     {
       arr,
-      getPath(id, pic) {
-        return getFilePath(`sharemusic/${id}/${pic}`, {
+      getPath(id) {
+        return getFilePath(`sharemusic/pic/${id}/`, {
           token: shareToken,
           w: 256,
         });

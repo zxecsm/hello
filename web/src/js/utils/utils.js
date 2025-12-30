@@ -2457,11 +2457,6 @@ export function getFilePath(p, query = {}, prefix = false) {
   if (prefix) return `${_d.originURL}${path}`;
   return path;
 }
-export function getPicPath(p, prefix = false) {
-  const path = `${_path.normalize(_d.picURL, p)}`;
-  if (prefix) return `${_d.originURL}${path}`;
-  return path;
-}
 export function getFaviconPath(u, prefix = false) {
   const path = `${_d.faviconURL}?${qs.stringify({ u })}`;
   if (prefix) return `${_d.originURL}${path}`;

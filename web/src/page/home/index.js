@@ -21,7 +21,6 @@ import {
   getTextImg,
   hdOnce,
   isBigScreen,
-  getIn,
   getFilePath,
   myShuffle,
   isLogin,
@@ -141,7 +140,6 @@ import {
 } from './count_down/index.js';
 import { reqCountList } from '../../api/count.js';
 import { deepClone } from '../../js/utils/template.js';
-import _path from '../../js/utils/path.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
 import { handleAllowLoginMsg, shakeChat, timeMsg } from './home.js';
 import localData from '../../js/common/localData.js';
@@ -202,7 +200,7 @@ const windmill = {
 // 设置壁纸
 export function setBg(obj, cb) {
   windmill.start();
-  const url = getFilePath(`/bg/${obj.url}`);
+  const url = getFilePath(`/bg/${obj.id}`);
   cb && cb();
   imgjz(url)
     .then(() => {
@@ -340,7 +338,7 @@ export function updateUserInfo(cb) {
       if (result.code === 1) {
         setUserInfo(result.data);
         onceInit();
-        const { logo, username, account, bg, bgxs, bgObj } = userInfo;
+        const { logo, username, account, bg, bgxs } = userInfo;
         localData.set('username', username);
         // 标题
         _d.title = `Hello ${username}`;
@@ -374,9 +372,9 @@ export function updateUserInfo(cb) {
           // 更新壁纸
           let bgUrl = '';
           if (isBig) {
-            bgUrl = getFilePath(`/bg/${getIn(bgObj, [bg, 'url'], '')}`);
+            bgUrl = getFilePath(`/bg/${bg}`);
           } else {
-            bgUrl = getFilePath(`/bg/${getIn(bgObj, [bgxs, 'url'], '')}`);
+            bgUrl = getFilePath(`/bg/${bgxs}`);
           }
           imgjz(bgUrl)
             .then((cache) => {
@@ -474,21 +472,21 @@ $randomChangeBgBtn
   .on('contextmenu', function (e) {
     e.preventDefault();
     if (!userInfo.account) return;
-    const { bg, bgxs, bgObj } = userInfo;
-    const obj = isBigScreen() ? getIn(bgObj, [bg]) : getIn(bgObj, [bgxs]);
-    if (!obj || isMobile()) return;
-    hdHomeBgBtn(e, obj);
+    const { bg, bgxs } = userInfo;
+    const id = isBigScreen() ? bg : bgxs;
+    if (!id || isMobile()) return;
+    hdHomeBgBtn(e, id);
   });
 longPress($randomChangeBgBtn[0], function (e) {
   if (!userInfo) return;
-  const { bg, bgxs, bgObj } = userInfo;
-  let obj = isBigScreen() ? getIn(bgObj, [bg]) : getIn(bgObj, [bgxs]);
-  if (!obj) return;
-  let ev = e.changedTouches[0];
-  hdHomeBgBtn(ev, obj);
+  const { bg, bgxs } = userInfo;
+  const id = isBigScreen() ? bg : bgxs;
+  if (!id) return;
+  const ev = e.changedTouches[0];
+  hdHomeBgBtn(ev, id);
 });
 // 壁纸菜单
-function hdHomeBgBtn(e, obj) {
+function hdHomeBgBtn(e, bgId) {
   let data = [
     {
       id: '2',
@@ -515,7 +513,7 @@ function hdHomeBgBtn(e, obj) {
       if (id === '1') {
         delBg(
           e,
-          [obj.id],
+          [bgId],
           () => {
             close();
             changeBg();
@@ -528,7 +526,7 @@ function hdHomeBgBtn(e, obj) {
         imgPreview(
           [
             {
-              u1: getFilePath(`/bg/${obj.url}`),
+              u1: getFilePath(`/bg/${bgId}`),
             },
           ],
           0,
@@ -539,8 +537,8 @@ function hdHomeBgBtn(e, obj) {
         downloadFile(
           [
             {
-              fileUrl: getFilePath(`/bg/${obj.url}`),
-              filename: _path.basename(obj.url)[0] || 'unknown',
+              fileUrl: getFilePath(`/bg/${bgId}`),
+              filename: bgId,
             },
           ],
           'image'

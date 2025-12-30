@@ -466,6 +466,7 @@ route.get(
 
       // 所有歌曲歌单获取最新一首用来读取封面
       const newSong = await db('songs')
+        .select('id,pic')
         .orderBy('serial', 'DESC')
         .limit(1)
         .find();
@@ -494,7 +495,9 @@ route.get(
           delete item.item;
         } else {
           if (item.id === 'all') {
-            const songDB = db('songs');
+            const songDB = db('songs').select(
+              'id,pic,url,title,artist,duration,album,year,collect_count,play_count,create_at,mv'
+            );
             if (onlyMv === 1) {
               songDB.where({ mv: { '!=': '' } });
             }
@@ -565,7 +568,13 @@ route.get(
             item.len = total;
           }
 
-          item.item = item.item.map((m, idx) => ({ ...m, num: idx }));
+          item.item = item.item.map((m, idx) => ({
+            ...m,
+            num: idx,
+            mv: !!m.mv,
+            pic: !!m.pic,
+            url: !!m.url,
+          }));
         }
       }
 
@@ -753,9 +762,17 @@ route.get('/last-play', async (req, res) => {
       obj.currentTime = play_current_time;
       obj.duration = duration;
 
-      const lastplay = await db('songs').where({ id: song_id }).findOne();
+      const lastplay = await db('songs')
+        .select(
+          'id,pic,url,title,artist,duration,album,year,collect_count,play_count,create_at,mv'
+        )
+        .where({ id: song_id })
+        .findOne();
 
       if (lastplay) {
+        lastplay.mv = !!lastplay.mv;
+        lastplay.pic = !!lastplay.pic;
+        lastplay.url = !!lastplay.url;
         obj.lastplay = lastplay;
       }
     }

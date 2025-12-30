@@ -34,7 +34,6 @@ import { popWindow, setZidx } from '../popWindow.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import md5 from '../../../js/utils/md5.js';
-import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
 import { BoxSelector } from '../../../js/utils/boxSelector.js';
@@ -216,8 +215,8 @@ function bgItemMenu(e, obj, el) {
         downloadFile(
           [
             {
-              fileUrl: getFilePath(`/bg/${obj.url}`),
-              filename: _path.basename(obj.url)[0] || 'unknown',
+              fileUrl: getFilePath(`/bg/${obj.id}`),
+              filename: obj.id,
             },
           ],
           'image'
@@ -327,7 +326,7 @@ export function renderBgList(y) {
           `
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
-            <div v-for="{id, url} in data" class="bg_item" :data-id="id">
+            <div v-for="{id} in data" class="bg_item" :data-id="id">
               <div check="n" class="check_level"></div>
               <i cursor="y" class="menu_btn iconfont icon-shoucang"></i>
               <div class="bg_img"></div>
@@ -357,10 +356,9 @@ export function renderBgList(y) {
         const bgImgs = [...$bgList[0].querySelectorAll('.bg_img')].filter(
           (item) => {
             const $img = $(item);
-            const url = getFilePath(
-              `/bg/${getBgItem($img.parent().data('id')).url}`,
-              { w: type === 'bg' ? 512 : 256 }
-            );
+            const url = getFilePath(`/bg/${$img.parent().data('id')}`, {
+              w: type === 'bg' ? 512 : 256,
+            });
             const cache = cacheFile.hasUrl(url, 'image');
             if (cache) {
               $img
@@ -374,10 +372,9 @@ export function renderBgList(y) {
         );
         bglazyImg.bind(bgImgs, async (item) => {
           const $img = $(item);
-          const url = getFilePath(
-            `/bg/${getBgItem($img.parent().data('id')).url}`,
-            { w: type === 'bg' ? 512 : 256 }
-          );
+          const url = getFilePath(`/bg/${$img.parent().data('id')}`, {
+            w: type === 'bg' ? 512 : 256,
+          });
           imgjz(url)
             .then((cache) => {
               $img
@@ -425,9 +422,9 @@ function hdPreview() {
   const arr = [];
   $bgList.find('.bg_img').each((_, item) => {
     const $item = $(item);
-    const { url } = getBgItem($item.parent().data('id'));
-    const u1 = getFilePath(`/bg/${url}`);
-    const u2 = getFilePath(`/bg/${url}`, { w: isd ? 512 : 256 });
+    const bgId = $item.parent().data('id');
+    const u1 = getFilePath(`/bg/${bgId}`);
+    const u2 = getFilePath(`/bg/${bgId}`, { w: isd ? 512 : 256 });
     arr.push({
       u2,
       u1,

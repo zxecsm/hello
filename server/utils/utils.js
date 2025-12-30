@@ -657,7 +657,7 @@ export const _type = (function () {
 // 时间路径
 export function getTimePath(timestamp) {
   return formatDate({
-    template: '{0}/{1}/{2}/{3}',
+    template: '{0}/{1}/{2}/{3}/${4}',
     timestamp: timestamp || Date.now(),
   });
 }

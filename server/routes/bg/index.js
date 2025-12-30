@@ -62,21 +62,14 @@ route.get(
       }
 
       // 从数据库中随机选择一条数据
-      const bgData = await getRandomBg(type === 'd' ? 'bg' : 'bgxs', 'url');
+      const bgData = await getRandomBg(type === 'd' ? 'bg' : 'bgxs', 'id');
 
       // 如果没有数据，返回错误
       if (!bgData) {
         return _err(res, '壁纸库为空')(req);
       }
 
-      // 获取壁纸 URL 并返回
-      const url = appConfig.bgDir(bgData.url);
-
-      if ((await _f.getType(url)) === 'file') {
-        await getFile(req, res, `/bg/${bgData.url}`, false);
-      } else {
-        _err(res, '获取壁纸失败')(req, `${url} 不存在`, 1);
-      }
+      await getFile(req, res, `/bg/${bgData.id}`, false);
     } catch (error) {
       _err(res)(req, error);
     }
@@ -123,7 +116,7 @@ route.get(
     try {
       const { type } = req[kValidate];
 
-      const bgData = await getRandomBg(type, 'url,id,type');
+      const bgData = await getRandomBg(type, 'id,type');
 
       if (!bgData) {
         _err(res, '壁纸库为空，请先上传壁纸')(req);
@@ -195,7 +188,7 @@ route.get(
       let data = [];
       if (total > 0) {
         data = await bgdb
-          .select('id,url,type')
+          .select('id,type')
           .page(pageSize, offset)
           .orderBy('serial', 'DESC')
           .find();

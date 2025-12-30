@@ -541,7 +541,7 @@ export function moveSongToList(e, pid, ar) {
       cIdx = i;
     }
     if (i < 3 || v.id === pid) return;
-    let p = getFilePath(`/music/${v.pic}`, { w: 256 });
+    let p = getFilePath(`/music/pic/${v.id}`, { w: 256 });
     if (v.pic === 'history') {
       p = imgHistory;
     } else if (v.pic === 'default') {
@@ -893,7 +893,7 @@ function renderSongList() {
       arr,
       imgTianjia,
       getPic(pic) {
-        let p = getFilePath(`/music/${pic}`, { w: 256 });
+        let p = getFilePath(`/music/pic/${pic}`, { w: 256 });
         if (pic === 'history') {
           p = imgHistory;
         } else if (pic === 'default') {
@@ -963,7 +963,7 @@ export async function hdLoadedSong(list) {
   for (let i = 0; i < list.length; i++) {
     const item = list[i];
     item.isLoaded = !!(await cacheFile.read(
-      getFilePath(`/music/${item.url}`),
+      getFilePath(`/music/url/${item.id}`),
       'music'
     ));
   }
@@ -1035,7 +1035,7 @@ async function renderSongs(gao) {
     }
   }
   const scObj = ind === 1 ? {} : getCollectSongs();
-  let pic = getFilePath(`/music/${songListInfo.pic}`, { w: 256 });
+  let pic = getFilePath(`/music/pic/${songListInfo.pic}`, { w: 256 });
   if (songListInfo.pic === 'history') {
     pic = imgHistory;
   } else if (songListInfo.pic === 'default') {
@@ -1090,11 +1090,11 @@ async function renderSongs(gao) {
       <div cursor="y" class="checked_song_btn"><i class="iconfont icon-duoxuan"></i></div>
       <div v-if="ind > 0" cursor="y" class="sort_songs"><i class="iconfont icon-paixu"></i></div>
     </div>
-    <div v-for="{title,artist,mv,id,pic:picc,isLoaded} in slist" class="song_item" :data-id="id" :data-issc="issc(id)" cursor="y">
+    <div v-for="{title,artist,mv,id,isLoaded} in slist" class="song_item" :data-id="id" :data-issc="issc(id)" cursor="y">
       <div cursor="y" check="n" class="check_state"></div>
       <div v-if="isLoaded" class="downloaded iconfont icon-jiaobiao"></div>
       <div class="song_logo_box">
-        <div class="logo" :data-src="getFilePath('/music/'+picc, { w: 256 })"></div>
+        <div class="logo" :data-src="getFilePath('/music/pic/'+id, { w: 256 })"></div>
         <div class="play_gif"></div>
       </div>
       <div class="song_info_wrap">
@@ -1866,7 +1866,7 @@ function songMenu(e, idx, sobj) {
           [
             {
               u1,
-              u2: getFilePath(`/music/${sobj.pic}`, { w: 256 }),
+              u2: getFilePath(`/music/pic/${sobj.id}`, { w: 256 }),
             },
           ],
           0,
@@ -2051,8 +2051,8 @@ $msuicContentBox
       arr.reduce((pre, cur) => {
         const fname = `${cur.artist}-${cur.title}`;
         pre.push({
-          fileUrl: getFilePath(`/music/${cur.url}`),
-          filename: `${fname}.${_path.extname(cur.url)[2]}`,
+          fileUrl: getFilePath(`/music/url/${cur.id}`),
+          filename: fname,
         });
         return pre;
       }, []),
@@ -2106,7 +2106,7 @@ $msuicContentBox
     rMenu.pop({ e, text: '确认清除：选中歌曲缓存文件？' }, (type) => {
       if (type === 'confirm') {
         arr.forEach((item) => {
-          cacheFile.delete(getFilePath(`/music/${item.url}`), 'music');
+          cacheFile.delete(getFilePath(`/music/url/${item.id}`), 'music');
           cacheFile.delete(item.id, 'music');
         });
         renderSongs();
@@ -2573,7 +2573,7 @@ export function startPlayingSongLogo() {
 }
 $playingSongLogo.on('click', (e) => {
   const songInfo = setPlayingSongInfo();
-  if (!songInfo.hash) return;
+  if (!songInfo.id) return;
   showSongInfo(e, songInfo);
 });
 // 显示播放器

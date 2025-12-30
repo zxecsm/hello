@@ -18,7 +18,6 @@ const apiPath = '/api';
 const getFileURL = apiPath + '/f';
 const faviconURL = apiPath + '/icon';
 const fontURL = apiPath + '/font';
-const picURL = apiPath + '/p';
 const userConfigDir = '/.h_config';
 // 搜索引擎
 const bingLogo =
@@ -106,7 +105,6 @@ const _d = {
   fieldLength,
   apiPath,
   fontURL,
-  picURL,
   originURL,
   getFileURL,
   faviconURL,

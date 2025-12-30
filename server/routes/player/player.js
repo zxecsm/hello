@@ -16,7 +16,7 @@ export function handleMusicList(arr) {
     }
     const m = v.item[0];
     if (v.len > 0 && m && m.pic) {
-      v.pic = m.pic;
+      v.pic = m.id;
     } else {
       v.pic = 'default';
     }
@@ -55,10 +55,16 @@ export async function batchGetMusics(ids) {
     if (arr.length === 0) return false;
 
     const list = await db('songs')
+      .select(
+        'id,pic,url,title,artist,duration,album,year,collect_count,play_count,create_at,mv'
+      )
       .where({ id: { in: arr } })
       .find();
 
     list.forEach((item) => {
+      item.mv = !!item.mv;
+      item.pic = !!item.pic;
+      item.url = !!item.url;
       res[item.id] = item;
     });
 

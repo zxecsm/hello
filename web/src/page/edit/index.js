@@ -27,7 +27,7 @@ import {
   _myOpen,
   getTextSize,
   toggleUserSelect,
-  getPicPath,
+  getFilePath,
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
@@ -552,10 +552,10 @@ async function hdUpFile(files) {
 
       if (isrepeat.code === 1) {
         pro.close('图片已存在');
-        const { url } = isrepeat.data;
+        const { id } = isrepeat.data;
         fData.push({
           filename: _path.extname(name)[0],
-          url: getPicPath(url),
+          url: getFilePath(`/pic/${id}`),
         });
         //文件已经存在操作
         return;
@@ -572,10 +572,10 @@ async function hdUpFile(files) {
         signal
       );
       if (result.code === 1) {
-        const { url } = result.data;
+        const { id } = result.data;
         fData.push({
           filename: _path.extname(name)[0],
-          url: getPicPath(url),
+          url: getFilePath(`/pic/${id}`),
         });
         pro.close();
       } else {

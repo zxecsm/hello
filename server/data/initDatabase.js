@@ -487,7 +487,10 @@ async function insertInitialData() {
 // 主函数：执行数据库初始化操作
 export default async function initDatabase(noInitData = false) {
   try {
-    await db('user').where({ account: appConfig.adminAccount }).findOne();
+    await db('user')
+      .select('account')
+      .where({ account: appConfig.adminAccount })
+      .findOne();
   } catch {
     try {
       // 如果表不存在则创建表

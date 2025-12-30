@@ -165,11 +165,11 @@ export async function renderPlayingList() {
   arr = await hdLoadedSong(arr);
   const html = _tpl(
     `
-    <li v-for="{title,artist,mv,id,pic,isLoaded} in arr" class="song_item" cursor="y" :data-id="id" :data-issc="issc(id)">
+    <li v-for="{title,artist,mv,id,isLoaded} in arr" class="song_item" cursor="y" :data-id="id" :data-issc="issc(id)">
       <div cursor="y" check="n" class="check_state"></div>
       <div v-if="isLoaded" class="downloaded iconfont icon-jiaobiao"></div>
       <div class="logo_wrap">
-        <div class="logo" :data-src="getFilePath('/music/'+pic, { w: 256 })">
+        <div class="logo" :data-src="getFilePath('/music/pic/'+id, { w: 256 })">
           <div class="play_gif"></div>
         </div>
       </div>
@@ -464,11 +464,7 @@ export const updatePlayingList = debounce(function (msg) {
 }, 1000);
 // 高亮正在播放歌曲
 export function playingListHighlight(isPosition) {
-  if (
-    $pMusicListBox.is(':hidden') ||
-    !setPlayingSongInfo().hash ||
-    !playingList
-  )
+  if ($pMusicListBox.is(':hidden') || !setPlayingSongInfo().id || !playingList)
     return;
   const $song_item = $pMusicListBox.find('.p_foot').find('.song_item');
   $song_item.removeClass('active').find('.play_gif').removeClass('show');

@@ -164,7 +164,7 @@ $miniPlayer
   .on('mouseleave', '.prev_btn', toolTip.hide)
   .on('click', '.top', switchMiniPlayerTopState)
   .on('mouseenter', function () {
-    if (!setPlayingSongInfo().hash) return;
+    if (!setPlayingSongInfo().id) return;
     $(this).attr(
       'title',
       `${setPlayingSongInfo().artist} - ${setPlayingSongInfo().title}`

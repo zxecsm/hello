@@ -170,7 +170,10 @@ route.post(
         return;
       }
 
-      const userInfo = await db('user').where({ username }).findOne();
+      const userInfo = await db('user')
+        .select('account')
+        .where({ username })
+        .findOne();
 
       if (userInfo) {
         _err(res, '用户名无法使用')(req, username, 1);
@@ -1111,6 +1114,7 @@ route.post(
       const { username } = req[kValidate];
 
       const userinfo = await db('user')
+        .select('account')
         .where({
           username,
         })
@@ -1205,17 +1209,6 @@ route.get('/userinfo', async (req, res) => {
 
     forward_msg_link = parseForwardMsgLink(forward_msg_link);
 
-    const bgs = await db('bg')
-      .select('url,id')
-      .where({ id: { in: [bg, bgxs] } })
-      .find();
-
-    const bgObj = {};
-    bgs.forEach((item) => {
-      const { id } = item;
-      bgObj[id] = item;
-    });
-
     _success(res, 'ok', {
       logo,
       username,
@@ -1229,7 +1222,6 @@ route.get('/userinfo', async (req, res) => {
       bgxs,
       hide,
       email,
-      bgObj,
     });
   } catch (error) {
     _err(res)(req, error);

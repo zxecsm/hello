@@ -20,7 +20,6 @@ import {
   isLogin,
   concurrencyTasks,
   _getTarget,
-  getPicPath,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -91,10 +90,10 @@ async function hdUpFile(files) {
 
       if (isrepeat.code === 1) {
         pro.close('图片已存在');
-        const { url } = isrepeat.data;
+        const { id } = isrepeat.data;
         fData.push({
           filename: _path.extname(name)[0],
-          url: getPicPath(url, 1),
+          url: getFilePath(`/pic/${id}`, {}, 1),
         });
         //文件已经存在操作
         return;
@@ -111,10 +110,10 @@ async function hdUpFile(files) {
         signal
       );
       if (result.code === 1) {
-        const { url } = result.data;
+        const { id } = result.data;
         fData.push({
           filename: _path.extname(name)[0],
-          url: getPicPath(url, 1),
+          url: getFilePath(`/pic/${id}`, {}, 1),
         });
         pro.close();
       } else {
@@ -192,10 +191,6 @@ function imgListLoading() {
 if (!isRoot()) {
   $imgList.remove();
 }
-// 获取图片信息
-function getPicItem(id) {
-  return picList.find((item) => item.id === id) || {};
-}
 const picBoxSelector = new BoxSelector($imgList[0], {
   selectables: '.img_item',
   onSelectStart({ e }) {
@@ -252,7 +247,6 @@ function startSelect() {
       check: 'n',
     });
 }
-let picList = [];
 // 生成列表
 function renderImgList(y) {
   if (!isRoot()) return;
@@ -265,7 +259,6 @@ function renderImgList(y) {
       if (result.code === 1) {
         const { total, data, pageNo } = result.data;
         picPageNo = pageNo;
-        picList = data;
         const html = _tpl(
           `
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
@@ -300,9 +293,9 @@ function renderImgList(y) {
         const imgs = [...$imgList[0].querySelectorAll('.img')].filter(
           (item) => {
             const $img = $(item);
-            const obj = getPicItem($img.parent().attr('data-id'));
-            if (!obj) return;
-            const url = getFilePath(`/pic/${obj.url}`, { w: 512 });
+            const picId = $img.parent().attr('data-id');
+            if (!picId) return;
+            const url = getFilePath(`/pic/${picId}`, { w: 512 });
             const cache = cacheFile.hasUrl(url, 'image');
             if (cache) {
               $img
@@ -316,9 +309,9 @@ function renderImgList(y) {
         );
         bglazyImg.bind(imgs, async (item) => {
           const $img = $(item);
-          const obj = getPicItem($img.parent().attr('data-id'));
-          if (!obj) return;
-          const url = getFilePath(`/pic/${obj.url}`, { w: 512 });
+          const picId = $img.parent().attr('data-id');
+          if (!picId) return;
+          const url = getFilePath(`/pic/${picId}`, { w: 512 });
           imgjz(url)
             .then((cache) => {
               $img
@@ -358,11 +351,11 @@ const pgnt = pagination($imgList[0], {
   },
 });
 // 复制
-function copyLink(e, pobj) {
+function copyLink(e, picId) {
   const data = [];
   const obj = {
-    url: getPicPath(pobj.url, 1),
-    filename: pobj.hash,
+    url: getFilePath(`/pic/${picId}`, {}, 1),
+    filename: picId,
   };
   typeTemplateArr.forEach((item, idx) => {
     const { type, template } = item;
@@ -417,7 +410,7 @@ function deletePic(e, ids, cb, isCheck, loading = { start() {}, end() {} }) {
   );
 }
 // 菜单
-function picMenu(e, pobj, el) {
+function picMenu(e, picId, el) {
   const data = [
     { id: '1', text: '复制链接', beforeIcon: 'iconfont icon-fuzhi' },
     { id: '2', text: '选中', beforeIcon: 'iconfont icon-duoxuan' },
@@ -432,9 +425,9 @@ function picMenu(e, pobj, el) {
     data,
     ({ e, close, id, loading }) => {
       if (id === '1') {
-        copyLink(e, pobj);
+        copyLink(e, picId);
       } else if (id === '3') {
-        deletePic(e, [pobj.id], close, false, loading);
+        deletePic(e, [picId], close, false, loading);
       } else if (id === '2') {
         close();
         $imgList.find('.check_level').css('display', 'block');
@@ -452,9 +445,9 @@ $imgList
     const arr = [];
     $imgList.find('.img').each((_, item) => {
       const $item = $(item);
-      const obj = getPicItem($item.parent().attr('data-id'));
-      const u1 = getPicPath(obj.url);
-      const u2 = getFilePath(`/pic/${obj.url}`, { w: 512 });
+      const picId = $item.parent().attr('data-id');
+      const u1 = getFilePath(`/pic/${picId}`);
+      const u2 = getFilePath(`/pic/${picId}`, { w: 512 });
       arr.push({
         u2,
         u1,
@@ -467,7 +460,7 @@ $imgList
     if (isMobile() || isSelecting()) return;
     picMenu(
       e,
-      getPicItem($(this).parent().data('id')),
+      $(this).parent().data('id'),
       this.parentNode.querySelector('.check_level')
     );
   })
@@ -475,7 +468,7 @@ $imgList
     e.preventDefault();
     picMenu(
       e,
-      getPicItem($(this).parent().data('id')),
+      $(this).parent().data('id'),
       this.parentNode.querySelector('.check_level')
     );
   })
@@ -516,7 +509,7 @@ longPress($imgList[0], '.img', function (e) {
   const ev = e.changedTouches[0];
   picMenu(
     ev,
-    getPicItem($(this).parent().data('id')),
+    $(this).parent().data('id'),
     this.parentNode.querySelector('.check_level')
   );
 });

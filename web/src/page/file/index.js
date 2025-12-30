@@ -870,7 +870,7 @@ function rightList(e, obj, el) {
             localData.get('account'),
             `${obj.path}/${obj.name}`.slice(_d.pubDir.length)
           );
-          copyText(`${_d.originURL}${getFilePath(p)}`);
+          copyText(getFilePath(p, {}, 1));
           return;
         }
         loading.start();
@@ -881,9 +881,13 @@ function rightList(e, obj, el) {
               loading.end();
               close();
               copyText(
-                `${_d.originURL}${getFilePath(p, {
-                  token: res.data,
-                })}`
+                getFilePath(
+                  p,
+                  {
+                    token: res.data,
+                  },
+                  1
+                )
               );
             }
           })

@@ -96,7 +96,7 @@ route.post(
 
       await db('pic').insert(obj);
 
-      _success(res, '上传图片成功', obj)(req, obj.url, 1);
+      _success(res, '上传图片成功', { id: obj.id })(req, obj.url, 1);
     } catch (error) {
       _err(res)(req, error);
     }
@@ -123,7 +123,7 @@ route.post(
 
       if (pic) {
         if ((await _f.getType(appConfig.picDir(pic.url))) === 'file') {
-          _success(res, 'ok', pic);
+          _success(res, 'ok', { id: pic.id });
           return;
         }
 
@@ -172,7 +172,7 @@ route.get(
         const offset = (result.pageNo - 1) * pageSize;
 
         list = await db('pic')
-          .select('url,id,hash')
+          .select('id')
           .orderBy('serial', 'desc')
           .page(pageSize, offset)
           .find();

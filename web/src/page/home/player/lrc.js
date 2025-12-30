@@ -278,7 +278,7 @@ export function pauseSong() {
 // 播放音乐
 function playSong() {
   closeMvBox();
-  if (!playingSongInfo.hash) {
+  if (!playingSongInfo.id) {
     _msg.error('请选择需要播放的歌曲');
     return;
   }
@@ -567,7 +567,7 @@ $lrcHead
         data: { state: 0 },
       });
     } else {
-      if (!playingSongInfo.hash) return;
+      if (!playingSongInfo.id) return;
       remotePlayState = !remotePlayState;
       _msg.success('开启远程播放');
       lrcList = [];
@@ -590,9 +590,9 @@ export function hdSongInfo(obj) {
   obj = deepClone(obj);
   obj.title || (obj.title = '真相永远只有一个！');
   obj.artist || (obj.artist = '江户川柯南');
-  obj.ppic = getFilePath(`/music/${obj.pic}`);
-  obj.uurl = getFilePath(`/music/${obj.url}`);
-  obj.mmv = getFilePath(`/music/${obj.mv}`);
+  obj.ppic = getFilePath(`/music/pic/${obj.id}`);
+  obj.uurl = getFilePath(`/music/url/${obj.id}`);
+  obj.mmv = getFilePath(`/music/mv/${obj.id}`);
   return obj;
 }
 // 初始化歌词
@@ -613,7 +613,7 @@ export function musicPlay(obj) {
     playtimer = null;
   }
   playingSongInfo = hdSongInfo(obj); //初始化音乐数据
-  if (!playingSongInfo.hash) {
+  if (!playingSongInfo.id) {
     _msg.error('请选择需要播放的歌曲');
     return;
   }
@@ -759,7 +759,7 @@ $lrcMenuWrap
     'click',
     '.collect_song_btn',
     throttle(function () {
-      if (!playingSongInfo.hash) return;
+      if (!playingSongInfo.id) return;
       const $this = $(this);
       if (!$this.hasClass('active')) {
         songCollect([playingSongInfo.id], () => {
@@ -776,7 +776,7 @@ $lrcMenuWrap
     }, 2000)
   )
   .on('click', '.play_mv_btn', function () {
-    if (!playingSongInfo.hash) return;
+    if (!playingSongInfo.id) return;
     playMv(playingSongInfo);
   })
   .on('click', '.lrc_translate_btn', () => {
@@ -791,11 +791,11 @@ $lrcMenuWrap
     localData.set('showSongTranslation', showfy);
   })
   .on('click', '.share_song_btn', function (e) {
-    if (!playingSongInfo.hash) return;
+    if (!playingSongInfo.id) return;
     shareSongList(e, [playingSongInfo.id]);
   })
   .on('click', '.set_lrc_btn', function (e) {
-    if (!playingSongInfo.hash) return;
+    if (!playingSongInfo.id) return;
     let data = [
       {
         id: '1',
@@ -892,7 +892,7 @@ $lrcMenuWrap
           });
           localData.set('lrcState', lrcState);
         } else if (id === '5') {
-          if (!playingSongInfo.hash) return;
+          if (!playingSongInfo.id) return;
           close();
           showEditLrc(playingSongInfo);
         } else if (id === '6') {
@@ -913,7 +913,7 @@ $lrcMenuWrap
         } else if (id === '9') {
           moveSongToList(e, 'all', [playingSongInfo.id]);
         } else if (id === '11') {
-          if (!playingSongInfo.hash) return;
+          if (!playingSongInfo.id) return;
           let sobj = deepClone(playingSongInfo);
           delSong(
             e,

@@ -291,7 +291,7 @@ route.get(
       const pageSize = fieldLength.chatPageSize;
       let list = [];
 
-      const fields = `logo,email,username,_from,_to,id,create_at,content,hash,size,type,flag`;
+      const fields = `logo,email,username,_from,_to,id,create_at,content,hash,size,type`;
       chatdb.select(fields).limit(pageSize);
 
       if (type === 0 || !offsetMsg) {
@@ -463,7 +463,10 @@ route.post(
         log = `${user.username}-${user.account}`;
       }
 
-      const chat = await db('chat').where({ id }).findOne();
+      const chat = await db('chat')
+        .select('type,flag,content,size,hash')
+        .where({ id })
+        .findOne();
 
       if (!chat) {
         _err(res, '转发的信息不存在')(req, id, 1);
@@ -483,18 +486,12 @@ route.post(
       // 更换发送目标
       chat._to = to;
 
-      // 更新时间
-      delete chat.create_at;
-
       // 文件消息，更新时间，避免被清理
       if (hash) {
         await db('upload')
           .where({ id: hash })
           .update({ update_at: Date.now() });
       }
-
-      // 重新生成id
-      delete chat.id;
 
       const msg = await saveChatMsg(account, chat);
       await sendNotifyMsg(req, to, 'addmsg', chat);
@@ -872,7 +869,7 @@ route.post(
         errLog(req, `发送通知到自定义地址失败(${err})`);
       });
 
-      _success(res, '发送语音消息成功', fobj)(req, `${obj.content}=>${log}`, 1);
+      _success(res, '发送语音消息成功')(req, `${obj.content}=>${log}`, 1);
     } catch (error) {
       _err(res)(req, error);
     }

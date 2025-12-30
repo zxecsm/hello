@@ -283,7 +283,7 @@ route.get('/clean-bg-file', async (req, res) => {
     const bgDir = appConfig.bgDir();
 
     if ((await _f.getType(bgDir)) === 'dir') {
-      const bgs = await db('bg').find();
+      const bgs = await db('bg').select('url').find();
       const allBgFile = await getAllFile(bgDir);
 
       await concurrencyTasks(allBgFile, 5, async (item) => {
@@ -308,7 +308,7 @@ route.get('/clean-pic-file', async (req, res) => {
     const picDir = appConfig.picDir();
 
     if ((await _f.getType(picDir)) === 'dir') {
-      const pics = await db('pic').find();
+      const pics = await db('pic').select('url').find();
       const allPicFile = await getAllFile(picDir);
 
       await concurrencyTasks(allPicFile, 5, async (item) => {
