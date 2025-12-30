@@ -191,7 +191,7 @@ route.post(
 
       const info = await db('songs')
         .select(
-          'title,artist,duration,album,year,collect_count,play_count,create_at'
+          'id,pic,lrc,url,mv,title,artist,duration,album,year,collect_count,play_count,create_at'
         )
         .where({ id })
         .findOne();
@@ -201,6 +201,10 @@ route.post(
         return;
       }
 
+      info.pic = !!info.pic;
+      info.lrc = !!info.lrc;
+      info.url = !!info.url;
+      info.mv = !!info.mv;
       _success(res, 'ok', info);
     } catch (error) {
       _err(res)(req, error);
@@ -342,9 +346,13 @@ route.get(
 
       const curSplit = splitWord.slice(0, 10);
       curSplit[0] = { value: curSplit[0], weight: 10 };
-      const songdb = db('songs').search(curSplit, ['title', 'artist'], {
-        sort: true,
-      });
+      const songdb = db('songs')
+        .select(
+          'id,pic,lrc,url,mv,title,artist,duration,album,year,collect_count,play_count,create_at'
+        )
+        .search(curSplit, ['title', 'artist'], {
+          sort: true,
+        });
 
       const total = await songdb.count();
 
@@ -355,7 +363,13 @@ route.get(
       if (total > 0) {
         const offset = (result.pageNo - 1) * pageSize;
 
-        list = await songdb.page(pageSize, offset).find();
+        list = (await songdb.page(pageSize, offset).find()).map((m) => ({
+          ...m,
+          pic: !!m.pic,
+          lrc: !!m.lrc,
+          url: !!m.url,
+          mv: !!m.mv,
+        }));
       }
 
       _success(res, 'ok', {
@@ -496,7 +510,7 @@ route.get(
         } else {
           if (item.id === 'all') {
             const songDB = db('songs').select(
-              'id,pic,url,title,artist,duration,album,year,collect_count,play_count,create_at,mv'
+              'id,pic,lrc,url,mv,title,artist,duration,album,year,collect_count,play_count,create_at'
             );
             if (onlyMv === 1) {
               songDB.where({ mv: { '!=': '' } });
@@ -574,6 +588,7 @@ route.get(
             mv: !!m.mv,
             pic: !!m.pic,
             url: !!m.url,
+            lrc: !!m.lrc,
           }));
         }
       }
@@ -764,7 +779,7 @@ route.get('/last-play', async (req, res) => {
 
       const lastplay = await db('songs')
         .select(
-          'id,pic,url,title,artist,duration,album,year,collect_count,play_count,create_at,mv'
+          'id,pic,lrc,url,mv,title,artist,duration,album,year,collect_count,play_count,create_at'
         )
         .where({ id: song_id })
         .findOne();
@@ -773,6 +788,7 @@ route.get('/last-play', async (req, res) => {
         lastplay.mv = !!lastplay.mv;
         lastplay.pic = !!lastplay.pic;
         lastplay.url = !!lastplay.url;
+        lastplay.lrc = !!lastplay.lrc;
         obj.lastplay = lastplay;
       }
     }
