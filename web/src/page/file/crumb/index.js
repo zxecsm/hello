@@ -1,8 +1,10 @@
+import { reqFileComplete } from '../../../api/file';
 import _d from '../../../js/common/config';
 import localData from '../../../js/common/localData';
 import bus from '../../../js/utils/bus';
 import _path from '../../../js/utils/path';
 import { _tpl } from '../../../js/utils/template';
+import { isLogin } from '../../../js/utils/utils';
 import HashRouter from './hashRouter';
 import './index.less';
 
@@ -126,12 +128,35 @@ function hdInputKeyup(e) {
     this.blur();
   }
 }
+
+function hdInputKeyDown(e) {
+  if (!isLogin() || window._pageName !== 'file' || this.value.trim() === '')
+    return;
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    reqFileComplete({ path: this.value, type: 'dir' })
+      .then((res) => {
+        if (res.code === 1) {
+          this.value = res.data;
+        }
+      })
+      .catch(() => {});
+  }
+}
+
 const oInp = document.createElement('input');
 oInp.addEventListener('blur', hdInputBlur);
 oInp.addEventListener('keyup', hdInputKeyup);
+oInp.addEventListener('keydown', hdInputKeyDown);
 
 // 编辑路径
 function editPath() {
+  const placeholder =
+    isLogin() && window._pageName === 'file'
+      ? '请输入路径，按Tab键自动补全路径'
+      : '请输入路径';
+  oInp.title = placeholder;
+  oInp.placeholder = placeholder;
   oInp.value = hashRouter.getRoute();
   target.innerHTML = '';
   target.appendChild(oInp);

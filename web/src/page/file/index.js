@@ -48,6 +48,7 @@ import {
   reqFileCdHistory,
   reqFileChown,
   reqFileClearTrash,
+  reqFileComplete,
   reqFileCopy,
   reqFileCreateDir,
   reqFileCreateFile,
@@ -1725,10 +1726,24 @@ function createSymlink(e) {
           },
         },
         targetPath: {
-          beforeText: '目标路径：',
+          beforeText: '目标路径：按Tab键自动补全路径',
           placeholder: '硬链接不支持文件夹',
           verify(val) {
             return rMenu.validString(val, 1, _d.fieldLength.url);
+          },
+          keyDown({ e, value, items, input }) {
+            if (e.key.toLowerCase() === 'tab') {
+              if (value.trim() === '') return;
+              e.preventDefault();
+              const type = items.isSymlink.value === 'y' ? 'all' : 'file';
+              reqFileComplete({ path: value, type: type })
+                .then((res) => {
+                  if (res.code === 1) {
+                    input.setValue(res.data);
+                  }
+                })
+                .catch(() => {});
+            }
           },
         },
         isSymlink: {

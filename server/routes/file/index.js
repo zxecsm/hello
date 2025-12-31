@@ -718,6 +718,13 @@ route.post(
       const curPath = appConfig.userRootDir(account, `${path}/${name}`);
       const tPath = appConfig.userRootDir(account, targetPath);
 
+      const tType = await _f.getType(tPath);
+
+      if (!tType) {
+        _err(res, '目标路径不存在')(req, tPath, 1);
+        return;
+      }
+
       // 过滤回收站
       if (
         (await _f.exists(curPath)) ||
@@ -730,6 +737,10 @@ route.post(
       if (isSymlink) {
         await _f.symlink(tPath, curPath);
       } else {
+        if (tType === 'dir') {
+          _err(res, '不能创建目录的硬链接')(req, tPath, 1);
+          return;
+        }
         await _f.link(tPath, curPath);
       }
 
@@ -1805,6 +1816,49 @@ route.post(
       }
 
       _nothing(res);
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 补全路径
+route.post(
+  '/complete',
+  validate(
+    'body',
+    V.object({
+      path: V.string().notEmpty().min(1).max(fieldLength.url),
+      type: V.string().trim().default('all').enum(['dir', 'file', 'all']),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { path, type } = req[kValidate];
+
+      const p = appConfig.userRootDir(req[kHello].userinfo.account, path);
+      const name = _path.basename(p)[0];
+      const dir = _path.dirname(p);
+      let result = name;
+      if (name) {
+        const dirList = await _f.readdir(dir);
+        if (dirList.length > 0) {
+          let list = [];
+          if (type === 'all') {
+            list = dirList;
+          } else {
+            for (const item of dirList) {
+              if ((await _f.getType(_path.normalize(dir, item))) === type) {
+                list.push(item);
+              }
+            }
+          }
+          list.sort((a, b) => a.length - b.length);
+          result = list.find((item) => item.startsWith(name)) || name;
+        }
+      }
+
+      _success(res, 'ok', _path.normalize(_path.dirname(path), result));
     } catch (error) {
       _err(res)(req, error);
     }

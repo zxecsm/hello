@@ -470,6 +470,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       [...inputs].forEach((item) => {
         const key = item.dataset.flag;
         const verify = items[key].verify;
+        const keyDown = items[key].keyDown;
         const inpBox = item.parentNode;
         const inpItem = inpBox.parentNode;
         const cleanBtn = inpItem.querySelector('.clean_btn');
@@ -497,6 +498,10 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
               errText = verify(items[key].value, items) || '';
             }
             err.textContent = errText;
+          },
+          keydown(e) {
+            keyDown &&
+              keyDown({ e, items, value: items[key].value, input: wInput });
           },
         });
         wrapInputList.push(wInput);

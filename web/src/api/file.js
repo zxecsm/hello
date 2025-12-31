@@ -122,3 +122,7 @@ export function reqFileHistoryState(data) {
 export function reqFileAddFileTo(data) {
   return _postAjax('/file/add-file-to', data);
 }
+// 补全路径
+export function reqFileComplete(data) {
+  return _postAjax('/file/complete', data);
+}
