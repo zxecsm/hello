@@ -1,3 +1,5 @@
+import appConfig from '../data/config.js';
+import { heperMsgAndForward } from '../routes/chat/chat.js';
 import { formatDate, writelog } from './utils.js';
 
 const cbs = new Set();
@@ -22,11 +24,21 @@ let timer = setInterval(() => {
       try {
         cb(flag);
       } catch (error) {
+        heperMsgAndForward(
+          null,
+          appConfig.adminAccount,
+          `定时任务出错 - ${error}`
+        );
         writelog(false, `[ timedTask ] - ${error}`, 'error');
       }
     });
   } catch (error) {
     stop();
+    heperMsgAndForward(
+      null,
+      appConfig.adminAccount,
+      `定时任务出错，已停止 - ${error}`
+    );
     writelog(false, `[ timedTask ] - ${error}`, 'error');
   }
 }, 1000);
