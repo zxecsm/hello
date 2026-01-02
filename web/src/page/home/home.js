@@ -120,6 +120,8 @@ export function otherWindowMsg(msg) {
       },
       1
     );
+  } else if (type === 'errMsg') {
+    _msg.error(data.text, null, { reside: true });
   }
 }
 export function waitLogin(callback) {

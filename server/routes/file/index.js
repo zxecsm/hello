@@ -26,7 +26,7 @@ import { db } from '../../utils/sqlite.js';
 
 import _f from '../../utils/f.js';
 
-import { getFriendInfo } from '../chat/chat.js';
+import { getFriendInfo, heperMsgAndForward } from '../chat/chat.js';
 
 import fileSize from './cacheFileSize.js';
 
@@ -58,6 +58,7 @@ import nanoid from '../../utils/nanoid.js';
 import _crypto from '../../utils/crypto.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
+import _connect from '../../utils/connect.js';
 
 const route = express.Router();
 const kHello = sym('hello');
@@ -641,8 +642,12 @@ route.get(
         }
       } catch (error) {
         taskState.delete(taskKey);
-        await errLog(req, `读取文件夹大小失败(${p}-${error})`);
-        errorNotifyMsg(req, `读取文件夹大小失败`);
+        const errText = `读取文件夹大小失败`;
+        await errLog(req, `${errText}(${p}-${error})`);
+        errorNotifyMsg(req, `${errText}`);
+        if (!_connect.get(account)) {
+          await heperMsgAndForward(req, account, errText);
+        }
       }
     } catch (error) {
       _err(res)(req, error);
@@ -966,8 +971,12 @@ route.post(
         syncUpdateData(req, 'file');
       } catch (error) {
         taskState.delete(taskKey);
-        await errLog(req, `复制文件失败(${error})`);
-        errorNotifyMsg(req, `复制文件失败`);
+        const errText = `复制文件失败`;
+        await errLog(req, `${errText}(${error})`);
+        errorNotifyMsg(req, `${errText}`);
+        if (!_connect.get(account)) {
+          await heperMsgAndForward(req, account, errText);
+        }
       }
     } catch (error) {
       _err(res)(req, error);
@@ -1100,8 +1109,12 @@ route.post(
         syncUpdateData(req, 'file');
       } catch (error) {
         taskState.delete(taskKey);
-        await errLog(req, `移动文件失败(${error})`);
-        errorNotifyMsg(req, `移动文件失败`);
+        const errText = `移动文件失败`;
+        await errLog(req, `${errText}(${error})`);
+        errorNotifyMsg(req, `${errText}`);
+        if (!_connect.get(account)) {
+          await heperMsgAndForward(req, account, errText);
+        }
       }
     } catch (error) {
       _err(res)(req, error);
@@ -1176,8 +1189,12 @@ route.post(
         syncUpdateData(req, 'file');
       } catch (error) {
         taskState.delete(taskKey);
-        await errLog(req, `压缩${flag}失败(${f}-${error})`);
-        errorNotifyMsg(req, `压缩${flag}失败`);
+        const errText = `压缩${flag}失败`;
+        await errLog(req, `${errText}(${f}-${error})`);
+        errorNotifyMsg(req, `${errText}`);
+        if (!_connect.get(account)) {
+          await heperMsgAndForward(req, account, errText);
+        }
       }
     } catch (error) {
       _err(res)(req, error);
@@ -1254,8 +1271,12 @@ route.post(
         syncUpdateData(req, 'file');
       } catch (error) {
         taskState.delete(taskKey);
-        await errLog(req, `解压文件失败(${f}-${error})`);
-        errorNotifyMsg(req, `解压文件失败`);
+        const errText = `解压文件失败`;
+        await errLog(req, `${errText}(${f}-${error})`);
+        errorNotifyMsg(req, `${errText}`);
+        if (!_connect.get(account)) {
+          await heperMsgAndForward(req, account, errText);
+        }
       }
     } catch (error) {
       _err(res)(req, error);
@@ -1359,8 +1380,12 @@ route.post(
         syncUpdateData(req, 'file');
       } catch (error) {
         taskState.delete(taskKey);
-        await errLog(req, `删除文件失败(${error})`);
-        errorNotifyMsg(req, `删除文件失败`);
+        const errText = `删除文件失败`;
+        await errLog(req, `${errText}(${error})`);
+        errorNotifyMsg(req, `${errText}`);
+        if (!_connect.get(account)) {
+          await heperMsgAndForward(req, account, errText);
+        }
       }
     } catch (error) {
       _err(res)(req, error);
@@ -1414,8 +1439,12 @@ route.get('/clear-trash', async (req, res) => {
       syncUpdateData(req, 'file');
     } catch (error) {
       taskState.delete(taskKey);
-      await errLog(req, `清空回收站失败(${error})`);
-      errorNotifyMsg(req, `清空回收站失败`);
+      const errText = `清空回收站失败`;
+      await errLog(req, `${errText}(${error})`);
+      errorNotifyMsg(req, `${errText}`);
+      if (!_connect.get(account)) {
+        await heperMsgAndForward(req, account, errText);
+      }
     }
   } catch (error) {
     _err(res)(req, error);
@@ -1584,8 +1613,12 @@ route.post(
         syncUpdateData(req, 'file');
       } catch (error) {
         taskState.delete(taskKey);
-        await errLog(req, `设置权限失败(${error})`);
-        errorNotifyMsg(req, `设置权限失败`);
+        const errText = `设置权限失败`;
+        await errLog(req, `${errText}(${error})`);
+        errorNotifyMsg(req, `${errText}`);
+        if (!_connect.get(account)) {
+          await heperMsgAndForward(req, account, errText);
+        }
       }
     } catch (error) {
       _err(res)(req, error);
@@ -1661,8 +1694,12 @@ route.post(
         syncUpdateData(req, 'file');
       } catch (error) {
         taskState.delete(taskKey);
-        await errLog(req, `设置用户组失败(${error})`);
-        errorNotifyMsg(req, `设置用户组失败`);
+        const errText = `设置用户组失败`;
+        await errLog(req, `${errText}(${error})`);
+        errorNotifyMsg(req, `${errText}`);
+        if (!_connect.get(account)) {
+          await heperMsgAndForward(req, account, errText);
+        }
       }
     } catch (error) {
       _err(res)(req, error);
@@ -1969,8 +2006,12 @@ route.post(
         syncUpdateData(req, 'file');
       } catch (error) {
         taskState.delete(taskKey);
-        await errLog(req, `下载文件失败: ${url}(${error})`);
-        errorNotifyMsg(req, `下载文件失败`);
+        const errText = `离线下载文件失败`;
+        await errLog(req, `${errText}: ${url}(${error})`);
+        errorNotifyMsg(req, `${errText}`);
+        if (!_connect.get(account)) {
+          await heperMsgAndForward(req, account, errText);
+        }
       }
     } catch (error) {
       _err(res)(req, error);
@@ -2060,8 +2101,12 @@ route.post(
         syncUpdateData(req, type);
       } catch (error) {
         taskState.delete(taskKey);
-        await errLog(req, `扫描添加${typeName}失败：${targetPath}(${error})`);
-        errorNotifyMsg(req, `扫描添加${typeName}失败`);
+        const errText = `扫描添加${typeName}失败`;
+        await errLog(req, `${errText}：${targetPath}(${error})`);
+        errorNotifyMsg(req, `${errText}`);
+        if (!_connect.get(account)) {
+          await heperMsgAndForward(req, account, errText);
+        }
       }
     } catch (error) {
       _err(res)(req, error);

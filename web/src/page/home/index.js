@@ -971,6 +971,8 @@ realtime.init('home').add((res) => {
       handleOnlineMsg(data);
     } else if (type === 'allowLogin') {
       handleAllowLoginMsg(data);
+    } else if (type === 'errMsg') {
+      _msg.error(data.text, null, { reside: true });
     }
   });
 });
