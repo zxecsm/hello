@@ -14,5 +14,5 @@ export async function readSearchConfig(account) {
 // 写入搜索引擎和翻译接口配置
 export async function writeSearchConfig(account, config) {
   const searchConfigPath = appConfig.searchConfigDir(account, 'config.json');
-  return _f.writeFile(searchConfigPath, JSON.stringify(config));
+  return _f.writeFile(searchConfigPath, JSON.stringify(config, null, 2));
 }
