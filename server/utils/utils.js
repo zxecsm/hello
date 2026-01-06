@@ -63,9 +63,8 @@ export async function writelog(req, str, flag = appConfig.appName) {
     }
 
     const targetPath = appConfig.logDir(`${flag}.log`);
-    if (process.env.NODE_ENV === 'development' && flag !== appConfig.appName) {
-      // eslint-disable-next-line no-console
-      console.log(str);
+    if (flag !== appConfig.appName) {
+      devLog(str);
     }
     await _f.appendFile(targetPath, str);
 
@@ -88,7 +87,13 @@ export async function writelog(req, str, flag = appConfig.appName) {
     unLock();
   }
 }
-
+// 开发打印
+export function devLog(str) {
+  if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line no-console
+    console.log(str);
+  }
+}
 // 操作日志
 export function uLog(req, str) {
   return writelog(

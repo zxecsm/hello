@@ -12,6 +12,7 @@ const appConfig = {
   appName: 'hello',
   textFileHistoryDirName: '.history',
   adminAccount: 'root',
+  adminUsername: 'admin',
   notifyAccount: 'hello',
   notifyAccountDes: '服务通知',
   ownAccountDes: '文件传输助手',

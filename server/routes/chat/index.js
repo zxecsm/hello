@@ -244,14 +244,18 @@ route.get(
       // 标记已读
       await markAsRead(account, acc);
 
-      const chatdb = db('chat_user_view');
+      const chatdb = db('chat AS c').join(
+        'user AS u',
+        { 'u.account': { value: 'c._from', raw: true } },
+        { type: 'LEFT' }
+      );
 
       if (acc === appConfig.chatRoomAccount) {
         // 群
-        chatdb.where({ flag: appConfig.chatRoomAccount });
+        chatdb.where({ 'c.flag': appConfig.chatRoomAccount });
       } else {
         chatdb.where({
-          flag: { in: [`${account}-${acc}`, `${acc}-${account}`] },
+          'c.flag': { in: [`${account}-${acc}`, `${acc}-${account}`] },
         });
       }
 
@@ -260,7 +264,7 @@ route.get(
         const sTime = new Date(start + ' 00:00:00').getTime();
         const eTime = new Date(end + ' 00:00:00').getTime();
 
-        chatdb.where({ create_at: { '>=': sTime, '<': eTime } });
+        chatdb.where({ 'c.create_at': { '>=': sTime, '<': eTime } });
       }
 
       let splitWord = [];
@@ -271,7 +275,7 @@ route.get(
 
         const curSplit = splitWord.slice(0, 10);
 
-        chatdb.search(curSplit, ['username', 'content']);
+        chatdb.search(curSplit, ['u.username', 'c.content']);
       }
 
       // 获取游标消息
@@ -282,30 +286,30 @@ route.get(
       // 根据游标定位位置
       if (offsetMsg && type !== 0) {
         if (type === 1) {
-          chatdb.where({ serial: { '<': offsetMsg.serial } });
+          chatdb.where({ 'c.serial': { '<': offsetMsg.serial } });
         } else if (type === 2) {
-          chatdb.where({ serial: { '>': offsetMsg.serial } });
+          chatdb.where({ 'c.serial': { '>': offsetMsg.serial } });
         }
       }
 
       const pageSize = fieldLength.chatPageSize;
       let list = [];
 
-      const fields = `logo,email,username,_from,_to,id,create_at,content,hash,size,type`;
+      const fields = `u.logo,u.email,u.username,c._from,c._to,c.id,c.create_at,c.content,c.hash,c.size,c.type`;
       chatdb.select(fields).limit(pageSize);
 
       if (type === 0 || !offsetMsg) {
         // 打开聊天框或没有游标
-        list = await chatdb.clone().orderBy('serial', 'desc').find();
+        list = await chatdb.clone().orderBy('c.serial', 'desc').find();
         list.reverse();
       } else {
         // 向上截取
         if (type === 1) {
-          list = await chatdb.clone().orderBy('serial', 'desc').find();
+          list = await chatdb.clone().orderBy('c.serial', 'desc').find();
           list.reverse();
         } else if (type === 2) {
           // 向下截取
-          list = await chatdb.clone().orderBy('serial', 'asc').find();
+          list = await chatdb.clone().orderBy('c.serial', 'asc').find();
         }
       }
 

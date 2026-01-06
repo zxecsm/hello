@@ -169,19 +169,25 @@ route.post(
       }
 
       // 非本人只能获取公开的分组书签
-      const bmdb = db('bmk_bmk_group_view').where({
-        account: acc || account,
-        state: 1,
-        group_state: 1,
-      });
+      const bmdb = db('bmk AS b')
+        .join(
+          'bmk_group AS g',
+          { 'b.group_id': { value: 'g.id', raw: true } },
+          { type: 'LEFT' }
+        )
+        .where({
+          'b.account': acc || account,
+          'b.state': 1,
+          'g.state': 1,
+        });
 
       if (acc && acc !== account) {
         // 非本人只能获取公开的分组书签
-        bmdb.where({ group_share: 1 });
+        bmdb.where({ 'g.share': 1 });
       }
 
       if (category.length > 0) {
-        bmdb.where({ group_id: { in: category } });
+        bmdb.where({ 'b.group_id': { in: category } });
       }
 
       let splitWord = [];
@@ -190,9 +196,9 @@ route.post(
 
         const curSplit = splitWord.slice(0, 10);
         curSplit[0] = { value: curSplit[0], weight: 10 };
-        bmdb.search(curSplit, ['title', 'link', 'des'], { sort: true });
+        bmdb.search(curSplit, ['b.title', 'b.link', 'b.des'], { sort: true });
       } else {
-        bmdb.orderBy('serial', 'DESC');
+        bmdb.orderBy('b.serial', 'DESC');
       }
 
       // 匹配结果数
@@ -207,7 +213,9 @@ route.post(
         // 分页
         data = await bmdb
           .page(pageSize, offset)
-          .select('group_title,id,group_id,title,link,des,logo')
+          .select(
+            'g.title AS group_title,b.id,b.group_id,b.title,b.link,b.des,b.logo'
+          )
           .find();
 
         data.forEach((item) => {

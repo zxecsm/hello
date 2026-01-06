@@ -43,11 +43,16 @@ route.get(
     try {
       const { v: id, download } = req[kValidate];
 
-      const note = await db('note_user_view')
-        .select(
-          'account,username,logo,email,create_at,update_at,title,state,share,content,visit_count,category'
+      const note = await db('note AS n')
+        .join(
+          'user AS u',
+          { 'n.account': { value: 'u.account', raw: true } },
+          { type: 'LEFT' }
         )
-        .where({ id })
+        .select(
+          'u.account,u.username,u.logo,u.email,n.create_at,n.update_at,n.title,n.state,n.share,n.content,n.visit_count,n.category'
+        )
+        .where({ 'n.id': id })
         .findOne();
 
       if (note) {

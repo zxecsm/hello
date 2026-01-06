@@ -1940,8 +1940,9 @@ route.get(
       let fields = '';
 
       if (type === 'bmk') {
-        fields = 'id,title,link,des,group_id,group_title,logo';
-        fieldArr = ['title', 'link', 'des'];
+        fields =
+          'b.id,b.title,b.link,b.des,b.group_id,g.title AS group_title,b.logo';
+        fieldArr = ['b.title', 'b.link', 'b.des'];
       } else if (type === 'history') {
         fields = 'id,content';
         fieldArr = ['content'];
@@ -1954,12 +1955,23 @@ route.get(
       }
 
       const { account } = req[kHello].userinfo;
-      const trashdb = db(type === 'bmk' ? 'bmk_bmk_group_view' : type)
-        .select(fields)
-        .where({
+      let trashdb = null;
+      if (type === 'bmk') {
+        trashdb = db('bmk AS b')
+          .join(
+            'bmk_group AS g',
+            {
+              'b.group_id': { value: 'g.id', raw: true },
+            },
+            { type: 'LEFT' }
+          )
+          .where({ 'b.account': account, 'b.state': 0 });
+      } else {
+        trashdb = db(type).select(fields).where({
           account,
           state: 0,
         });
+      }
 
       let splitWord = [];
 
@@ -1970,7 +1982,11 @@ route.get(
         curSplit[0] = { value: curSplit[0], weight: 10 };
         trashdb.search(curSplit, fieldArr, { sort: true });
       } else {
-        trashdb.orderBy(type === 'note' ? 'create_at' : 'serial', 'desc');
+        if (type === 'bmk') {
+          trashdb.orderBy('b.serial', 'desc');
+        } else {
+          trashdb.orderBy(type === 'note' ? 'create_at' : 'serial', 'desc');
+        }
       }
 
       const total = await trashdb.count();

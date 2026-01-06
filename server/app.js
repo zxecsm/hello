@@ -409,7 +409,7 @@ app.use((_, res) => {
 });
 
 initDatabase()
-  .then(() => {
+  .then((initPassword) => {
     app.listen(appConfig.port, (err) => {
       if (err) {
         // eslint-disable-next-line no-console
@@ -422,13 +422,18 @@ initDatabase()
       );
       // eslint-disable-next-line no-console
       console.log(`
-    __   __  ______  __     __       __ 
-   |  | |  ||  ____||  |   |  |    / __ \\
-   |  |_|  || |____ |  |   |  |   | |  | |
-   |   _   ||  ____||  |   |  |   | |  | |
-   |  | |  || |____ |  |__ |  |__ | |__| |
-   |__| |__||______||_____||_____| \\ __ / 
+ __   __  ______  __     __       __ 
+|  | |  ||  ____||  |   |  |    / __ \\
+|  |_|  || |____ |  |   |  |   | |  | |
+|   _   ||  ____||  |   |  |   | |  | |
+|  | |  || |____ |  |__ |  |__ | |__| |
+|__| |__||______||_____||_____| \\ __ / 
    `);
+      if (initPassword) {
+        // eslint-disable-next-line no-console
+        console.log(`\nusername: ${appConfig.adminUsername}\npassword: ${initPassword}
+       `);
+      }
       // eslint-disable-next-line no-console
       console.log(`服务开启成功，访问地址为：\n${arr.join('\n')}`);
     });

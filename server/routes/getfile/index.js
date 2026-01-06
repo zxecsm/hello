@@ -184,9 +184,14 @@ async function getUploadPath(req, res, id, account, dir) {
     return null;
   }
 
-  const msg = await db('chat_upload_view')
-    .select('flag,url')
-    .where({ id })
+  const msg = await db('chat AS c')
+    .join(
+      'upload AS u',
+      { 'c.hash': { value: 'u.id', raw: true } },
+      { type: 'LEFT' }
+    )
+    .select('c.flag,u.url')
+    .where({ 'c.id': id })
     .findOne();
 
   if (
