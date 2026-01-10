@@ -478,7 +478,12 @@ route.post(
       }
 
       createTerminal(account, req[kHello].temid, config);
-      _success(res, '请求连接SSH成功', config.title)(req, id, 1);
+      _success(res, '请求连接SSH成功', {
+        title: config.title,
+        username: config.username,
+        host: config.host,
+        port: config.port,
+      })(req, id, 1);
     } catch (error) {
       _err(res)(req, error);
     }

@@ -85,9 +85,8 @@ const lightTheme = {
 const term = new Terminal({
   cursorBlink: true,
   fontFamily: "Consolas, 'codeFont'",
-  cursorStyle: 'block',
-  scrollback: 1000,
-  convertEol: true,
+  allowProposedApi: true,
+  disableStdin: false,
   fontSize: 14,
 });
 const fitAddon = new FitAddon();
@@ -99,17 +98,19 @@ window.addEventListener('resize', () => fitAddon.fit());
 reqSSHConnect({ id: HASH })
   .then((res) => {
     if (res.code === 1) {
+      const { title, host, port, username } = res.data;
+      const data = `${title}：${username}@${host}:${port}`;
       _setTimeout(() => {
         if (isIframe()) {
           try {
             // 更新标题
             window.parent.openInIframe.iframes
               .get(window.iframeId)
-              .updateTitle(res.data);
+              .updateTitle(data);
           } catch {}
         }
       }, 1000);
-      document.title = res.data;
+      document.title = data;
     }
   })
   .catch(() => {});
@@ -417,9 +418,12 @@ function addCommand(e) {
           value: '',
           type: 'textarea',
           verify(val) {
-            return getTextSize(val) > _d.fieldLength.customCodeSize
-              ? '命令过长'
-              : '';
+            return (
+              rMenu.validString(val, 1) ||
+              (getTextSize(val) > _d.fieldLength.customCodeSize
+                ? '命令过长'
+                : '')
+            );
           },
         },
       },
@@ -578,9 +582,12 @@ function hdComandEdit(e, obj) {
           value: obj.command,
           type: 'textarea',
           verify(val) {
-            return getTextSize(val) > _d.fieldLength.customCodeSize
-              ? '命令过长'
-              : '';
+            return (
+              rMenu.validString(val, 1) ||
+              (getTextSize(val) > _d.fieldLength.customCodeSize
+                ? '命令过长'
+                : '')
+            );
           },
         },
       },

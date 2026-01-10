@@ -6,9 +6,6 @@ body {
   padding: 0;
   overflow: hidden;
 }
-.xterm-helper-textarea {
-  user-select: text;
-}
 #app {
   width: 100%;
   height: 100%;
@@ -63,8 +60,6 @@ body {
     #terminal {
       width: 100%;
       height: 100%;
-      touch-action: manipulation;
-      user-select: none;
     }
   }
   .footer {
@@ -116,6 +111,9 @@ body {
         &:hover {
           border-color: var(--text-hover-color);
         }
+        .title {
+          min-width: 4rem;
+        }
         .set {
           font-size: 0.8em;
           width: 3rem;
@@ -153,6 +151,9 @@ body {
         padding: 0 0 0 0.5rem;
         &:hover {
           border-color: var(--text-hover-color);
+        }
+        .title {
+          min-width: 4rem;
         }
         .set {
           font-size: 0.8em;
