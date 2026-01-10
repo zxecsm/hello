@@ -110,6 +110,7 @@ const _d = {
   getFileURL,
   faviconURL,
   defaultFontFamily: 'Roboto, Arial, sans-serif', // 默认字体
+  codeFontFamily: "Consolas, 'Menlo', 'Monaco', 'Courier New', monospace", // 代码字体
   levelObj,
   speed: 300,
   defaultTranslatorData,

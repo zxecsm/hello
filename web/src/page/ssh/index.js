@@ -84,7 +84,7 @@ const lightTheme = {
 
 const term = new Terminal({
   cursorBlink: true,
-  fontFamily: "Consolas, 'codeFont'",
+  fontFamily: _d.codeFontFamily,
   allowProposedApi: true,
   disableStdin: false,
   fontSize: 14,

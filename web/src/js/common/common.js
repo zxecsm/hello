@@ -87,31 +87,7 @@ window.addEventListener('load', function () {
 ~(function () {
   function handle(e) {
     const randomc = randomColor();
-    if (!localData.get('clickLove')) {
-      // const box = document.createElement('div');
-      // box.style.cssText = `
-      //   position: fixed;
-      //   width: 1.6rem;
-      //   height: 1.6rem;
-      //   margin: -0.8rem 0 0 -0.8rem;
-      //   border-radius: 50%;
-      //   z-index: ${_d.levelObj.clickLove};
-      //   pointer-events: none;
-      //   `;
-      // document.body.appendChild(box);
-
-      // box.style.left = e.clientX + 'px';
-      // box.style.top = e.clientY + 'px';
-      // box.style.backgroundColor = randomc;
-      // box.clientHeight;
-      // box.style.transition = '.8s ease-in-out';
-      // box.style.opacity = 0;
-      // box.style.transform = 'scale(1.5)';
-      // _setTimeout(() => {
-      //   box.remove();
-      // }, 2000);
-      return;
-    }
+    if (!localData.get('clickLove')) return;
     // 心形状
     const box1 = document.createElement('div');
     const box2 = document.createElement('div');

@@ -15,6 +15,7 @@ import 'ace-builds/src-noconflict/ext-searchbox';
 import 'ace-builds/src-noconflict/keybinding-vscode.js';
 // import { copyText } from './utils';
 import localData from '../common/localData';
+import _d from '../common/config';
 
 function createEditor(el) {
   const editor = ace.edit(el);
@@ -26,7 +27,7 @@ function createEditor(el) {
     enableBasicAutocompletion: true, // 启用基本自动完成功能。开启后，编辑器会根据已有的代码提供自动补全建议
     enableSnippets: true, // 简写方式快速插入常用的代码块
     enableLiveAutocompletion: true, // 实时自动完成会根据用户正在输入的内容，动态更新自动补全建议
-    fontFamily: 'codeFont',
+    fontFamily: _d.codeFontFamily,
   });
   // 未选中复制整行
   editor.setOption('copyWithEmptySelection', true);
