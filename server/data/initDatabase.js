@@ -26,9 +26,7 @@ const dbSchema = {
         { name: 'title', type: 'TEXT', notNull: true },
         { name: 'state', type: 'INTEGER', notNull: true, default: 1 },
       ],
-      indexes: [
-        { name: 'idx_bg_type', columns: ['type', 'serial'], unique: false },
-      ],
+      indexes: [],
     },
     bmk: {
       columns: [
@@ -44,13 +42,7 @@ const dbSchema = {
         { name: 'logo', type: 'TEXT', notNull: true, default: '' },
         { name: 'des', type: 'TEXT', notNull: true, default: '' },
       ],
-      indexes: [
-        {
-          name: 'idx_bmk_account_state',
-          columns: ['account', 'state'],
-          unique: false,
-        },
-      ],
+      indexes: [],
     },
     bmk_group: {
       columns: [
@@ -63,13 +55,7 @@ const dbSchema = {
         { name: 'state', type: 'INTEGER', notNull: true, default: 1 },
         { name: 'share', type: 'INTEGER', notNull: true, default: 0 },
       ],
-      indexes: [
-        {
-          name: 'idx_bmk_group_account_state',
-          columns: ['account', 'state'],
-          unique: false,
-        },
-      ],
+      indexes: [],
     },
     chat: {
       columns: [
@@ -85,13 +71,7 @@ const dbSchema = {
         { name: 'size', type: 'REAL', notNull: true, default: 0 },
         { name: 'hash', type: 'TEXT', notNull: true, default: '' },
       ],
-      indexes: [
-        {
-          name: 'idx_chat_flag_create_at',
-          columns: ['flag', 'create_at'],
-          unique: false,
-        },
-      ],
+      indexes: [],
     },
     count_down: {
       columns: [
@@ -106,18 +86,7 @@ const dbSchema = {
         { name: 'link', type: 'TEXT', notNull: true, default: '' },
         { name: 'top', type: 'INTEGER', notNull: true, default: 0 },
       ],
-      indexes: [
-        {
-          name: 'idx_count_down_account_state_end',
-          columns: ['account', 'state', 'end'],
-          unique: false,
-        },
-        {
-          name: 'idx_count_down_account_top_end',
-          columns: ['account', 'top', 'end'],
-          unique: false,
-        },
-      ],
+      indexes: [],
     },
     friends: {
       columns: [
@@ -133,13 +102,7 @@ const dbSchema = {
         { name: 'des', type: 'TEXT', notNull: true, default: '' },
         { name: 'msg', type: 'TEXT', notNull: true, default: '' },
       ],
-      indexes: [
-        {
-          name: 'idx_friends_account_friend',
-          columns: ['account', 'friend'],
-          unique: false,
-        },
-      ],
+      indexes: [],
     },
     history: {
       columns: [
@@ -150,13 +113,7 @@ const dbSchema = {
         { name: 'content', type: 'TEXT', notNull: true },
         { name: 'state', type: 'INTEGER', notNull: true, default: 1 },
       ],
-      indexes: [
-        {
-          name: 'idx_history_account_state',
-          columns: ['account', 'state'],
-          unique: false,
-        },
-      ],
+      indexes: [],
     },
     last_play: {
       columns: [
@@ -167,6 +124,38 @@ const dbSchema = {
         { name: 'state', type: 'INTEGER', notNull: true, default: 1 },
         { name: 'play_current_time', type: 'REAL', notNull: true, default: 0 },
         { name: 'duration', type: 'REAL', notNull: true, default: 0 },
+      ],
+      indexes: [],
+    },
+    ssh: {
+      columns: [
+        { name: 'serial', type: 'INTEGER', primary: true, autoincrement: true },
+        { name: 'create_at', type: 'INTEGER', notNull: true },
+        { name: 'update_at', type: 'INTEGER', notNull: true },
+        { name: 'id', type: 'TEXT', unique: true, notNull: true },
+        { name: 'account', type: 'TEXT', notNull: true },
+        { name: 'port', type: 'INTEGER', notNull: true, default: 22 },
+        { name: 'host', type: 'TEXT', notNull: true },
+        { name: 'password', type: 'TEXT', notNull: true, default: '' },
+        { name: 'username', type: 'TEXT', notNull: true },
+        { name: 'title', type: 'TEXT', notNull: true },
+        { name: 'private_key', type: 'TEXT', notNull: true, default: '' },
+        { name: 'passphrase', type: 'TEXT', notNull: true, default: '' },
+        { name: 'auth_type', type: 'TEXT', notNull: true },
+        { name: 'state', type: 'INTEGER', notNull: true, default: 1 },
+        { name: 'top', type: 'INTEGER', notNull: true, default: 0 },
+        { name: 'category', type: 'TEXT', notNull: true, default: '' },
+      ],
+      indexes: [],
+    },
+    ssh_category: {
+      columns: [
+        { name: 'serial', type: 'INTEGER', primary: true, autoincrement: true },
+        { name: 'create_at', type: 'INTEGER', notNull: true },
+        { name: 'id', type: 'TEXT', unique: true, notNull: true },
+        { name: 'account', type: 'TEXT', notNull: true },
+        { name: 'title', type: 'TEXT', notNull: true },
+        { name: 'state', type: 'INTEGER', notNull: true, default: 1 },
       ],
       indexes: [],
     },
@@ -185,13 +174,7 @@ const dbSchema = {
         { name: 'top', type: 'INTEGER', notNull: true, default: 0 },
         { name: 'category', type: 'TEXT', notNull: true, default: '' },
       ],
-      indexes: [
-        {
-          name: 'idx_note_account_state_share',
-          columns: ['account', 'state', 'share'],
-          unique: false,
-        },
-      ],
+      indexes: [],
     },
     note_category: {
       columns: [
@@ -202,13 +185,7 @@ const dbSchema = {
         { name: 'title', type: 'TEXT', notNull: true },
         { name: 'state', type: 'INTEGER', notNull: true, default: 1 },
       ],
-      indexes: [
-        {
-          name: 'idx_note_category_account_serial',
-          columns: ['account', 'serial'],
-          unique: false,
-        },
-      ],
+      indexes: [],
     },
     pic: {
       columns: [
@@ -245,13 +222,7 @@ const dbSchema = {
         { name: 'exp_time', type: 'INTEGER', notNull: true, default: 0 },
         { name: 'pass', type: 'TEXT', notNull: true, default: '' },
       ],
-      indexes: [
-        {
-          name: 'idx_share_account_serial',
-          columns: ['account', 'serial'],
-          unique: false,
-        },
-      ],
+      indexes: [],
     },
     song_list: {
       columns: [
@@ -284,29 +255,7 @@ const dbSchema = {
         { name: 'pic', type: 'TEXT', notNull: true, default: '' },
         { name: 'lrc', type: 'TEXT', notNull: true, default: '' },
       ],
-      indexes: [
-        { name: 'idx_songs_mv', columns: ['mv'], unique: false },
-        {
-          name: 'idx_songs_collect_count',
-          columns: ['collect_count'],
-          unique: false,
-        },
-        {
-          name: 'idx_songs_play_count',
-          columns: ['play_count'],
-          unique: false,
-        },
-        {
-          name: 'idx_songs_title_pinyin',
-          columns: ['title_pinyin'],
-          unique: false,
-        },
-        {
-          name: 'idx_songs_artist_pinyin',
-          columns: ['artist_pinyin'],
-          unique: false,
-        },
-      ],
+      indexes: [],
     },
     todo: {
       columns: [
@@ -318,14 +267,7 @@ const dbSchema = {
         { name: 'content', type: 'TEXT', notNull: true },
         { name: 'state', type: 'INTEGER', notNull: true, default: 1 },
       ],
-      indexes: [
-        {
-          name: 'idx_todo_account_state_update_at',
-          columns: ['account', 'state', 'update_at'],
-          unique: false,
-        },
-        { name: 'idx_todo_state', columns: ['state'], unique: false },
-      ],
+      indexes: [],
     },
     upload: {
       columns: [
@@ -336,9 +278,7 @@ const dbSchema = {
         { name: 'url', type: 'TEXT', notNull: true },
         { name: 'state', type: 'INTEGER', notNull: true, default: 1 },
       ],
-      indexes: [
-        { name: 'idx_upload_update_at', columns: ['update_at'], unique: false },
-      ],
+      indexes: [],
     },
     user: {
       columns: [
@@ -375,19 +315,7 @@ const dbSchema = {
         },
         { name: 'forward_msg_link', type: 'TEXT', notNull: true, default: '' },
       ],
-      indexes: [
-        {
-          name: 'idx_user_forward_msg_state_account_state',
-          columns: ['forward_msg_state', 'account', 'state'],
-          unique: false,
-        },
-        {
-          name: 'idx_user_account_update_at',
-          columns: ['account', 'update_at'],
-          unique: false,
-        },
-        { name: 'idx_user_email', columns: ['email'], unique: false },
-      ],
+      indexes: [],
     },
   },
 };

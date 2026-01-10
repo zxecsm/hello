@@ -28,7 +28,6 @@ module.exports = merge(require('./webpack.base'), {
     rules: [
       {
         test: /\.css$/i,
-        include: resolve(__dirname, '..', 'src'),
         use: [MiniCssExtractPlugin.loader, 'css-loader', postcssConfig],
       },
       {

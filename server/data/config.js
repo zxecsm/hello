@@ -94,6 +94,9 @@ const appConfig = {
   fileConfigDir(account, ...arg) {
     return _path.normalize(this.configDir(account, 'file_config'), ...arg);
   },
+  sshConfigDir(account, ...arg) {
+    return _path.normalize(this.configDir(account, 'ssh_config'), ...arg);
+  },
   searchConfigDir(account, ...arg) {
     return _path.normalize(this.configDir(account, 'search_config'), ...arg);
   },

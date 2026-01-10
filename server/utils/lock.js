@@ -1,4 +1,4 @@
-class Lock {
+export class Lock {
   constructor() {
     this.isLocked = false;
     this.waitingQueue = [];
@@ -27,6 +27,42 @@ class Lock {
       }
     });
   }
+
+  // 释放锁
+  isFree() {
+    return !this.isLocked && this.waitingQueue.length === 0;
+  }
 }
 
-export default Lock;
+// 全局锁表： flag -> Lock 实例
+const lockMap = new Map();
+
+// 获取某个 flag 的锁
+export async function lock(flag) {
+  if (!lockMap.has(flag)) {
+    lockMap.set(flag, new Lock());
+  }
+
+  const locker = lockMap.get(flag);
+  const unLock = await locker.acquire();
+
+  // 包一层，自动清理无用锁
+  return () => {
+    unLock();
+
+    // 如果没有在等待了，就移除
+    if (locker.isFree()) {
+      lockMap.delete(flag);
+    }
+  };
+}
+
+// 带作用域的锁
+export async function withLock(flag, fn) {
+  const unLock = await lock(flag);
+  try {
+    return await fn();
+  } finally {
+    unLock();
+  }
+}

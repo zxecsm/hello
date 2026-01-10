@@ -114,6 +114,7 @@ export async function saveChatMsg(account, obj) {
 // 推送通知
 export async function sendNotifyMsg(req, to, flag, msgData) {
   const { account, logo, username } = req[kHello].userinfo;
+  const temid = req[kHello].temid;
 
   const notifyObj = {
     type: 'chat',
@@ -170,11 +171,7 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
         notifyObj.notify = fno ? fno.notify : 1;
         notifyObj.data.from.des = fe ? fe.des : '';
 
-        _connect.send(
-          key,
-          key === account ? nanoid() : req[kHello].temid,
-          notifyObj
-        );
+        _connect.send(key, temid, notifyObj, 'all');
       });
 
       return true;
@@ -224,7 +221,7 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
 
     if (notifyObj.data.to === account) {
       // 推送给自己所有在线终端
-      _connect.send(account, nanoid(), notifyObj);
+      _connect.send(account, temid, notifyObj, 'all');
     } else {
       notifyObj.data.from.des =
         account === appConfig.notifyAccount
@@ -233,11 +230,11 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
           ? fInfo.des
           : '';
 
-      _connect.send(notifyObj.data.to, req[kHello].temid, notifyObj);
+      _connect.send(notifyObj.data.to, temid, notifyObj, 'all');
 
       // 如果是抖动，不推送给自己
       if (flag !== 'shake') {
-        _connect.send(account, nanoid(), notifyObj);
+        _connect.send(account, temid, notifyObj, 'all');
       }
     }
   }
@@ -394,10 +391,15 @@ export async function onlineMsg(req, pass) {
         if (f) {
           des = f.des;
         }
-        _connect.send(key, req[kHello].temid, {
-          type: 'online',
-          data: { text: `${des || username} 已上线`, account },
-        });
+        _connect.send(
+          key,
+          req[kHello].temid,
+          {
+            type: 'online',
+            data: { text: `${des || username} 已上线`, account },
+          },
+          'all'
+        );
       });
 
       return true;

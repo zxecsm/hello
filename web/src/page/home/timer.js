@@ -1,5 +1,4 @@
 import { reqPlayerLastPlay } from '../../api/player';
-import { reqUserUpdateTime } from '../../api/user';
 import _msg from '../../js/plugins/message';
 import { _setTimeout, formatDate } from '../../js/utils/utils';
 import {
@@ -75,9 +74,3 @@ export function updateLastPlay(history, y) {
     })
     .catch(() => {});
 }
-// 心跳
-(function heartBeat() {
-  reqUserUpdateTime().finally(() => {
-    _setTimeout(heartBeat, 1000 * 20);
-  });
-})();

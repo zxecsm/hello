@@ -3,6 +3,7 @@ import fsp from 'fs/promises';
 import stream from 'stream';
 import streamp from 'stream/promises';
 import _path from './path.js';
+import { withLock } from './lock.js';
 
 // 创建目录
 async function mkdir(path) {
@@ -116,14 +117,18 @@ async function readdir(path, ...arg) {
 
 // 写入文件
 async function writeFile(path, ...arg) {
-  await mkdir(_path.dirname(path));
-  await fsp.writeFile(path, ...arg);
+  await withLock(path, async () => {
+    await mkdir(_path.dirname(path));
+    await fsp.writeFile(path, ...arg);
+  });
 }
 
 // 追加文件
 async function appendFile(path, ...arg) {
-  await mkdir(_path.dirname(path));
-  await fsp.appendFile(path, ...arg);
+  await withLock(path, async () => {
+    await mkdir(_path.dirname(path));
+    await fsp.appendFile(path, ...arg);
+  });
 }
 
 // 写入流

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="google" content="notranslate" />
+    <meta
+      name="description"
+      content="管理您的SSH终端配置，支持搜索、添加、删除、批量操作和分类整理，帮助您高效管理终端列表"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-status-bar-style" content="black" />
+    <meta name="mobile-web-app-title" content="assets" />
+    <link rel="stylesheet icon" href="../../images/img/icon.png" />
+    <title>终端管理</title>
+  </head>
+
+  <body style="opacity: 0">
+    <div id="app">
+      <div class="head_wrap">
+        <div class="container h_content">
+          <div cursor="y" class="h_go_home iconfont icon-zhuye"></div>
+          <div cursor="y" class="h_check_item_btn iconfont icon-duoxuan"></div>
+          <div cursor="y" class="h_add_item_btn iconfont icon-tianjia"></div>
+          <div class="inp_box">
+            <input autocomplete="off" placeholder="搜索" type="text" />
+            <i cursor="y" class="clean_btn iconfont icon-shibai"></i>
+            <i cursor="y" class="search_btn iconfont icon-search"></i>
+          </div>
+        </div>
+      </div>
+      <div class="fill_box"></div>
+      <div class="category_tag">
+        <div class="container">
+          <div class="title">
+            <span>分类：</span
+            ><span cursor class="clean_category iconfont icon-qingkong-1"></span
+            ><span class="fill"></span
+            ><span cursor="y" class="setting_category">管理分类</span>
+          </div>
+          <div class="list"></div>
+        </div>
+      </div>
+      <div class="container content_wrap"></div>
+      <div class="footer">
+        <div class="container">
+          <span cursor="y" class="iconfont icon-xuanzeweixuanze"></span>
+          <button cursor="y" class="f_delete btn btn_danger">删除</button>
+          <button cursor="y" class="f_close btn btn_info">取消</button>
+        </div>
+      </div>
+      <div class="category_box">
+        <div class="container">
+          <div class="head">
+            <button cursor="" class="btn btn_info close">关闭</button>
+            <button cursor="" class="add_btn btn btn_primary">添加添加</button>
+          </div>
+          <div class="list"></div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

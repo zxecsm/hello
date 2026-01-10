@@ -14,7 +14,6 @@ import getCity from './getCity.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import _path from './path.js';
-import Lock from './lock.js';
 import nanoid from './nanoid.js';
 import _crypto from './crypto.js';
 import V from './validRules.js';
@@ -33,12 +32,8 @@ export function getFilename(meta) {
   return fileURLToPath(meta.url);
 }
 
-const lock = new Lock();
-
 // 记录日志
 export async function writelog(req, str, flag = appConfig.appName) {
-  const unLock = await lock.acquire();
-
   try {
     str = str + '';
 
@@ -83,8 +78,6 @@ export async function writelog(req, str, flag = appConfig.appName) {
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error(err);
-  } finally {
-    unLock();
   }
 }
 // 开发打印
@@ -700,23 +693,33 @@ export function isValidShare(t) {
 
 // 同步更新数据
 export function syncUpdateData(req, flag, id = '') {
-  _connect.send(req[kHello].userinfo.account, req[kHello].temid, {
-    type: 'updatedata',
-    data: {
-      flag,
-      id,
+  _connect.send(
+    req[kHello].userinfo.account,
+    req[kHello].temid,
+    {
+      type: 'updatedata',
+      data: {
+        flag,
+        id,
+      },
     },
-  });
+    'other'
+  );
 }
 
 // 错误通知消息
 export function errorNotifyMsg(req, text) {
-  _connect.send(req[kHello].userinfo.account, nanoid(), {
-    type: 'errMsg',
-    data: {
-      text,
+  _connect.send(
+    req[kHello].userinfo.account,
+    req[kHello].temid,
+    {
+      type: 'errMsg',
+      data: {
+        text,
+      },
     },
-  });
+    'all'
+  );
 }
 
 // 规范化pageNo
@@ -772,23 +775,23 @@ export function myShuffle(arr) {
   return arr;
 }
 
-export function parseObjectJson(str) {
+export function parseObjectJson(str, defaultValue = '') {
   try {
     const res = JSON.parse(str);
     if (_type.isObject(res)) return res;
     throw new Error();
   } catch {
-    return '';
+    return defaultValue;
   }
 }
 
-export function parseArrayJson(str) {
+export function parseArrayJson(str, defaultValue = '') {
   try {
     const res = JSON.parse(str);
     if (_type.isArray(res)) return res;
     throw new Error();
   } catch {
-    return '';
+    return defaultValue;
   }
 }
 

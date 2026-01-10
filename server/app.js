@@ -53,6 +53,7 @@ import todoRoute from './routes/todo/index.js';
 import userRoute from './routes/user/index.js';
 import taskRoute from './routes/task/index.js';
 import echoRoute from './routes/echo/index.js';
+import sshRoute from './routes/ssh/index.js';
 import { fieldLength } from './routes/config.js';
 import getClientIp from './utils/getClientIp.js';
 import getFile from './routes/getfile/index.js';
@@ -217,6 +218,7 @@ app.use('/api/notepad', notepadRoute);
 app.use('/api/task', taskRoute);
 app.use('/api/icon', getfaviconRoute);
 app.use('/api/echo', echoRoute);
+app.use('/api/ssh', sshRoute);
 
 // 收信接口
 app.all(

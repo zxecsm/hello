@@ -600,15 +600,18 @@ route.post(
         _d.tipsFlag = nanoid();
       }
 
-      const temId = nanoid();
-
       Object.keys(_connect.getConnects()).forEach((key) => {
-        _connect.send(key, temId, {
-          type: 'updatedata',
-          data: {
-            flag: 'tips',
+        _connect.send(
+          key,
+          req[kHello].temid,
+          {
+            type: 'updatedata',
+            data: {
+              flag: 'tips',
+            },
           },
-        });
+          'all'
+        );
       });
 
       _success(res, '修改tips状态成功')(req, _d.tipsFlag, 1);

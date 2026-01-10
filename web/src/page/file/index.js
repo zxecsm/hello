@@ -159,6 +159,9 @@ function updatePromptText(path) {
   } else if (_path.isPathWithin(_d.searchConfigDir, path, 1)) {
     color = 'var(--message-success-color)';
     text = '搜索引擎配置目录';
+  } else if (_path.isPathWithin(_d.sshConfigDir, path, 1)) {
+    color = 'var(--message-success-color)';
+    text = 'SSH终端配置目录';
   } else if (isRoot() && _path.isPathWithin(_d.appFilesDir, path, 1)) {
     color = 'var(--message-error-color)';
     text = '程序配置目录，请谨慎操作';

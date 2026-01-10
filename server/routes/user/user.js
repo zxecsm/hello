@@ -54,6 +54,10 @@ export async function deleteUser(account) {
 
   await db('note_category').where({ account }).batchDelete();
 
+  await db('ssh').where({ account }).batchDelete();
+
+  await db('ssh_category').where({ account }).batchDelete();
+
   await db('playing_list').where({ account }).delete();
 
   await db('share').where({ account }).batchDelete();

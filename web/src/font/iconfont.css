@@ -1,8 +1,8 @@
 @font-face {
   font-family: "iconfont"; /* Project id 2809795 */
-  src: url('iconfont.woff2?t=1766998387318') format('woff2'),
-       url('iconfont.woff?t=1766998387318') format('woff'),
-       url('iconfont.ttf?t=1766998387318') format('truetype');
+  src: url('iconfont.woff2?t=1767958204185') format('woff2'),
+       url('iconfont.woff?t=1767958204185') format('woff'),
+       url('iconfont.ttf?t=1767958204185') format('truetype');
 }
 
 .iconfont {
@@ -11,6 +11,18 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-zuoyoushousuo:before {
+  content: "\e7e4";
+}
+
+.icon-terminal:before {
+  content: "\e6dc";
+}
+
+.icon-terminal1:before {
+  content: "\e712";
 }
 
 .icon-shijianchaxun-yimidida-:before {

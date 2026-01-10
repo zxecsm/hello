@@ -205,8 +205,8 @@ export function showFileInfo(e, obj) {
   rMenu.selectMenu(e, data, false, '属性信息');
 }
 // 显示笔记信息
-export function showNoteInfo(e, obj, categoryList) {
-  const { title, create_at, update_at, visit_count, top } = obj;
+export function showNoteInfo(e, obj) {
+  const { title, create_at, update_at, visit_count, top, categoryArr } = obj;
   let data = [
     {
       text: title,
@@ -227,7 +227,7 @@ export function showNoteInfo(e, obj, categoryList) {
       beforeText: '更新：',
     },
     {
-      text: categoryList.join('-') || '--',
+      text: categoryArr.map((item) => item.title).join('-') || '--',
       beforeText: '分类：',
     },
     {
@@ -243,4 +243,42 @@ export function showNoteInfo(e, obj, categoryList) {
     (item.pointer = false), (item.id = idx + 1 + '');
   });
   rMenu.selectMenu(e, data, false, '笔记信息');
+}
+// 显示SSH信息
+export function showSSHInfo(e, obj) {
+  const { title, port, host, username, top, auth_type, categoryArr } = obj;
+  let data = [
+    {
+      text: title,
+      beforeText: '标题：',
+    },
+    {
+      text: categoryArr.map((item) => item.title).join('-') || '--',
+      beforeText: '分类：',
+    },
+    {
+      text: auth_type === 'password' ? '密码' : '密钥',
+      beforeText: '认证方式：',
+    },
+    {
+      text: username,
+      beforeText: '用户名：',
+    },
+    {
+      text: port,
+      beforeText: '端口：',
+    },
+    {
+      text: host,
+      beforeText: '主机：',
+    },
+    {
+      text: top,
+      beforeText: '权重：',
+    },
+  ];
+  data.forEach((item, idx) => {
+    (item.pointer = false), (item.id = idx + 1 + '');
+  });
+  rMenu.selectMenu(e, data, false, 'SSH信息');
 }

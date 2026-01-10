@@ -1,12 +1,12 @@
 import appConfig from '../../data/config.js';
 import _f from '../../utils/f.js';
-import { parseJson } from '../../utils/utils.js';
+import { parseObjectJson } from '../../utils/utils.js';
 
 // 读取搜索引擎和翻译接口配置
 export async function readSearchConfig(account) {
   const searchConfigPath = appConfig.searchConfigDir(account, 'config.json');
-  return parseJson(
-    (await _f.readFile(searchConfigPath, null, '{}')).toString(),
+  return parseObjectJson(
+    (await _f.readFile(searchConfigPath, null, '')).toString(),
     {}
   );
 }

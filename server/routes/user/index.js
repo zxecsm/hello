@@ -59,6 +59,7 @@ import { readSearchConfig, writeSearchConfig } from '../search/search.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
 import captcha from '../../utils/captcha.js';
+import { getSSH, resetSSHExpireTime } from '../ssh/terminal.js';
 
 const verifyCode = new Map();
 
@@ -259,15 +260,20 @@ route.post(
       const { country, province, city, isp } = getCity(ip);
 
       // 发送允许登录消息
-      _connect.send(userinfo.account, nanoid(), {
-        type: 'allowLogin',
-        data: {
-          ip,
-          os,
-          addr: `${country} ${province} ${city} ${isp}`,
-          code,
+      _connect.send(
+        userinfo.account,
+        req[kHello].temid,
+        {
+          type: 'allowLogin',
+          data: {
+            ip,
+            os,
+            addr: `${country} ${province} ${city} ${isp}`,
+            code,
+          },
         },
-      });
+        'all'
+      );
 
       _success(res, '发送登录请求成功')(req, `${username}-${account}`, 1);
     } catch (error) {
@@ -1429,35 +1435,6 @@ route.get('/remote-login-state', async (req, res) => {
   }
 });
 
-// 更新在线时间
-route.get('/update-time', async (req, res) => {
-  try {
-    await db('user')
-      .where({ account: req[kHello].userinfo.account, state: 1 })
-      .update({ update_at: Date.now() });
-
-    _success(res);
-  } catch (error) {
-    _err(res)(req, error);
-  }
-});
-
-function getMsgs(con, id, flag) {
-  // 获取未读取的消息
-  let msgs = con.msgs.slice(0);
-
-  const idx = msgs.findIndex((item) => item.flag === flag);
-
-  if (idx >= 0) {
-    msgs = msgs.slice(idx + 1);
-  }
-
-  // 过滤掉发送者
-  msgs = msgs.filter((item) => item.id != id);
-
-  return msgs.map((item) => item.data);
-}
-
 // 获取推送消息
 route.get(
   '/real-time',
@@ -1472,31 +1449,32 @@ route.get(
     try {
       const { account } = req[kHello].userinfo;
 
-      let id = req[kHello].temid;
+      let { temid, ip, os } = req[kHello];
 
       try {
-        id = await V.parse(
-          id,
+        temid = await V.parse(
+          temid,
           V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
           'temid'
         );
       } catch (error) {
-        paramErr(res, req, error, { temid: id });
+        paramErr(res, req, error, { temid });
         return;
       }
 
       let { flag, page } = req[kValidate]; //标识和设备ID
 
       if (page === 'home') {
+        await db('user')
+          .where({ account, state: 1 })
+          .update({ update_at: Date.now() });
         // 主页才通知在线
         onlineMsg(req);
       }
 
-      req[kHello].page = page;
+      const con = _connect.add(account, cb, { temid, page, ip, os });
 
-      const con = _connect.add(account, cb, req[kHello]);
-
-      //初始化指令标识
+      // 初始化指令标识
       if (!flag) {
         flag = con.flag;
       }
@@ -1504,8 +1482,8 @@ route.get(
       let msgs = [];
 
       function cb() {
-        msgs = getMsgs(con, id, flag);
-        // 验证标识和是否有推送消息
+        msgs = _connect.getMessages(account, temid, flag);
+        // 验证标识和是否有推送消息，没有则继续等待
         if (con.flag === flag || msgs.length === 0) return;
         stop(1);
       }
@@ -1521,6 +1499,7 @@ route.get(
           timer = null;
         }
 
+        // 删除触发器
         con.cbs = con.cbs.filter((item) => item !== cb);
 
         if (state) {
@@ -1529,6 +1508,9 @@ route.get(
           _nothing(res, 'ok', { flag: con.flag });
         }
       }
+
+      // 保活SSH连接
+      resetSSHExpireTime(temid);
     } catch (error) {
       _err(res)(req, error);
     }
@@ -1551,6 +1533,7 @@ route.post(
           'vol',
           'progress',
           'pastefiledata',
+          'ssh',
         ]),
       data: V.object(),
     })
@@ -1574,8 +1557,57 @@ route.post(
         return;
       }
 
+      if (type === 'ssh') {
+        let _vdata = {};
+        try {
+          _vdata = await V.parse(
+            data,
+            V.object({
+              text: V.string()
+                .allowEmpty()
+                .custom(
+                  (v) => _f.getTextSize(v) <= fieldLength.customCodeSize,
+                  `text 不能超过: ${fieldLength.customCodeSize} 字节`
+                ),
+            }),
+            'data'
+          );
+        } catch (error) {
+          paramErr(res, req, error, 'body');
+          return;
+        }
+        const ssh = getSSH(id);
+        if (ssh) {
+          try {
+            // 执行命令
+            ssh.stream.write(_vdata.text);
+          } catch {
+            _connect.send(
+              account,
+              id,
+              {
+                type: 'ssh',
+                data: 'SSH connection failed.',
+              },
+              'self'
+            );
+          }
+        } else {
+          _connect.send(
+            account,
+            id,
+            {
+              type: 'ssh',
+              data: 'SSH connection failed.',
+            },
+            'self'
+          );
+        }
+
+        _success(res);
+      }
       // 多端同步数据
-      if (type === 'updatedata') {
+      else if (type === 'updatedata') {
         let _vdata = {};
         try {
           _vdata = await V.parse(
@@ -1597,8 +1629,10 @@ route.post(
                   'trash',
                   'history',
                   'category',
+                  'sshCategory',
                   'file',
                   'searchConfig',
+                  'quickCommand',
                 ]),
               id: V.string()
                 .trim()
@@ -1643,7 +1677,7 @@ route.post(
 
         data.to = account;
 
-        _connect.send(data.to, id, { type, data });
+        _connect.send(data.to, id, { type, data }, 'other');
 
         _success(res);
       }
@@ -1662,7 +1696,7 @@ route.post(
 
         data.to = account;
 
-        _connect.send(data.to, id, { type, data });
+        _connect.send(data.to, id, { type, data }, 'other');
 
         _success(res);
       }
@@ -1681,7 +1715,7 @@ route.post(
 
         data.to = account;
 
-        _connect.send(data.to, id, { type, data });
+        _connect.send(data.to, id, { type, data }, 'other');
 
         _success(res);
       }
@@ -1700,7 +1734,7 @@ route.post(
 
         data.to = account;
 
-        _connect.send(data.to, id, { type, data });
+        _connect.send(data.to, id, { type, data }, 'other');
 
         _success(res);
       }
@@ -1779,10 +1813,10 @@ route.post(
             return;
           }
 
-          _connect.send(account, id, { type, data });
+          _connect.send(account, id, { type, data }, 'other');
           _success(res);
         } else {
-          _connect.send(account, id, { type, data: {} });
+          _connect.send(account, id, { type, data: {} }, 'other');
           _success(res);
         }
       }
@@ -1918,7 +1952,9 @@ route.get(
   validate(
     'query',
     V.object({
-      type: V.string().trim().enum(['note', 'bmk', 'bmk_group', 'history']),
+      type: V.string()
+        .trim()
+        .enum(['note', 'bmk', 'bmk_group', 'history', 'ssh']),
       word: V.string()
         .trim()
         .default('')
@@ -1950,8 +1986,12 @@ route.get(
         fields = 'id,title';
         fieldArr = ['title'];
       } else if (type === 'note') {
-        fields = 'id,title,content,category';
+        fields =
+          'title,create_at,update_at,id,content,visit_count,top,category';
         fieldArr = ['title', 'content'];
+      } else if (type === 'ssh') {
+        fields = 'id,title,port,host,username,category,top,auth_type';
+        fieldArr = ['title', 'host', 'username', 'port'];
       }
 
       const { account } = req[kHello].userinfo;
@@ -2007,7 +2047,16 @@ route.get(
             .find();
 
           data = data.map((item) => {
-            let { title, content, id, category } = item;
+            let {
+              title,
+              content,
+              id,
+              create_at,
+              update_at,
+              visit_count,
+              top,
+              category,
+            } = item;
             let con = [];
             let images = [];
 
@@ -2063,6 +2112,10 @@ route.get(
             return {
               id,
               title,
+              create_at,
+              update_at,
+              visit_count,
+              top,
               con,
               category,
               categoryArr,
@@ -2074,6 +2127,22 @@ route.get(
             if (!item.group_title) {
               item.group_title = item.group_id === 'home' ? '主页' : '未知分组';
             }
+          });
+        } else if (type === 'ssh') {
+          const sshCategory = await db('ssh_category')
+            .select('id,title')
+            .where({ account })
+            .find();
+          data = data.map((item) => {
+            const cArr = item.category.split('-').filter(Boolean);
+            const categoryArr = sshCategory.filter((item) =>
+              cArr.includes(item.id)
+            );
+
+            return {
+              ...item,
+              categoryArr,
+            };
           });
         }
       }
@@ -2095,7 +2164,9 @@ route.post(
   validate(
     'body',
     V.object({
-      type: V.string().trim().enum(['bmk_group', 'bmk', 'note', 'history']),
+      type: V.string()
+        .trim()
+        .enum(['bmk_group', 'bmk', 'note', 'history', 'ssh']),
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
         .min(1)
         .max(fieldLength.maxPagesize),
@@ -2154,7 +2225,9 @@ route.post(
   validate(
     'body',
     V.object({
-      type: V.string().trim().enum(['bmk_group', 'bmk', 'note', 'history']),
+      type: V.string()
+        .trim()
+        .enum(['bmk_group', 'bmk', 'note', 'history', 'ssh']),
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
         .min(1)
         .max(fieldLength.maxPagesize),

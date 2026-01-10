@@ -6,6 +6,27 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "35980367",
+      "name": "左右收缩",
+      "font_class": "zuoyoushousuo",
+      "unicode": "e7e4",
+      "unicode_decimal": 59364
+    },
+    {
+      "icon_id": "8474381",
+      "name": "terminal",
+      "font_class": "terminal",
+      "unicode": "e6dc",
+      "unicode_decimal": 59100
+    },
+    {
+      "icon_id": "9559578",
+      "name": "terminal",
+      "font_class": "terminal1",
+      "unicode": "e712",
+      "unicode_decimal": 59154
+    },
+    {
       "icon_id": "11472722",
       "name": "事件查询-壹米滴答-01",
       "font_class": "shijianchaxun-yimidida-",

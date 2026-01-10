@@ -238,7 +238,6 @@ route.post(
             'title,create_at,update_at,id,share,content,visit_count,top,category'
           )
           .page(pageSize, offset)
-
           .find();
 
         const noteCategory = await db('note_category')
@@ -650,7 +649,7 @@ route.post(
     'body',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      top: V.number().toInt().min(0),
+      top: V.number().toInt().min(0).max(fieldLength.top),
     })
   ),
   async (req, res) => {

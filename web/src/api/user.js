@@ -47,10 +47,6 @@ export function reqUserAllowLoginReq(data) {
 export function reqUserLogout(param) {
   return _getAjax('/user/logout', param);
 }
-// 更新
-export function reqUserUpdateTime() {
-  return _getAjax('/user/update-time', {}, { load: 0, stopErrorMsg: 1 });
-}
 // 上传logo
 export function reqUserUpLogo(data, file, cb, signal) {
   return _upFile(`/user/up-logo`, data, file, cb, signal);

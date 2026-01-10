@@ -62,6 +62,10 @@ function getTagFont(type) {
     font += `icon-gl-folder`;
   } else if (type === 'notepad') {
     font += `icon-jilu`;
+  } else if (type === 'sshlist') {
+    font += `icon-terminal1`;
+  } else if (type === 'ssh') {
+    font += `icon-terminal`;
   } else {
     font += `icon-shoucang`;
   }

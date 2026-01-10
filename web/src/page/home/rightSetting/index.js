@@ -1372,6 +1372,7 @@ function hdTools(e) {
   let data = [
     { id: '1', text: '笔记本', beforeIcon: 'iconfont icon-mingcheng-jiluben' },
     { id: '2', text: '文件管理', beforeIcon: 'iconfont icon-gl-folder' },
+    { id: '10', text: '终端管理', beforeIcon: 'iconfont icon-terminal1' },
     {
       id: '9',
       text: '公开文件目录',
@@ -1445,6 +1446,9 @@ function hdTools(e) {
         close();
         hideRightMenu();
         openInIframe(`/file/#${_d.pubDir}`, '文件管理');
+      } else if (id === '10') {
+        close();
+        showSSHList();
       }
     },
     '工具'
@@ -1916,6 +1920,10 @@ export function showNote() {
 export function showHistory() {
   hideRightMenu();
   openInIframe('/history', '搜索历史');
+}
+export function showSSHList() {
+  hideRightMenu();
+  openInIframe('/sshlist', '终端管理');
 }
 export function showBmk() {
   hideRightMenu();

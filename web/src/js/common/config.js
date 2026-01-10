@@ -55,7 +55,7 @@ const searchWord = [
 ];
 const fieldLength = {
   title: 200, // 标题名称
-  expTime: 999, // 过期时间天
+  expTime: 99999, // 过期时间天
   sharePass: 20, // 分享提取码
   url: 2000, // 网址路径
   des: 500, // 备注
@@ -64,7 +64,7 @@ const fieldLength = {
   chatDes: 20, // 用户备注
   chatContent: 3000, // 消息文本
   countTitle: 300, // 倒计时标题
-  top: 9999, // 置顶
+  top: 99999, // 置顶
   username: 20, // 用户名
   email: 255, // 邮箱
   todoContent: 500, // 代办内容
@@ -101,6 +101,7 @@ const _d = {
   appFilesDir: `${userConfigDir}/appFiles`,
   userLogoDir: `${userConfigDir}/logo`,
   searchConfigDir: `${userConfigDir}/search_config`,
+  sshConfigDir: `${userConfigDir}/ssh_config`,
   fileHistoryDirName: '.history',
   fieldLength,
   apiPath,

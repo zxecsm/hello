@@ -65,6 +65,14 @@ let noteFontSize = localData.get('noteFontSize'),
 // 加宽
 if (noteWiden) {
   $contentWrap.addClass('big');
+  $setBtnsWrap
+    .find('.note_box_width')
+    .attr('class', 'note_box_width iconfont icon-zuoyoushousuo');
+} else {
+  $contentWrap.removeClass('big');
+  $setBtnsWrap
+    .find('.note_box_width')
+    .attr('class', 'note_box_width iconfont icon-kuandukuoda');
 }
 export function getContentW() {
   return $contentWrap.outerWidth();
@@ -112,14 +120,14 @@ $setBtnsWrap
   })
   .on('click', '.note_box_width', function () {
     if (!noteWiden) {
-      noteWiden = true;
       $contentWrap.addClass('big');
-      localData.set('noteWiden', noteWiden);
+      this.className = 'note_box_width iconfont icon-zuoyoushousuo';
     } else {
-      noteWiden = false;
       $contentWrap.removeClass('big');
-      localData.set('noteWiden', noteWiden);
+      this.className = 'note_box_width iconfont icon-kuandukuoda';
     }
+    noteWiden = !noteWiden;
+    localData.set('noteWiden', noteWiden);
   })
   .on('click', '.font_size_btn', (e) => {
     rMenu.percentBar(e, noteFontSize, (percent) => {

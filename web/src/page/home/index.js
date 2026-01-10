@@ -51,7 +51,7 @@ import {
   showPicture,
   showRightMenu,
   showRootPage,
-  showTrash,
+  showSSHList,
   updateRightBoxUsername,
   updateTipsFlag,
 } from './rightSetting/index.js';
@@ -656,7 +656,7 @@ function keyboard(e) {
     }
     // 回收站
     else if (key === 't') {
-      showTrash();
+      showSSHList();
     }
     // 跳到笔记
     else if (key === 'n') {

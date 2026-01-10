@@ -10,8 +10,8 @@ export const fieldLength = {
   des: 500, // 备注
   chatContent: 3000, // 消息文本
   chatDes: 20, // 用户备注
-  top: 9999, // 置顶
-  expTime: 999, // 过期时间天
+  top: 99999, // 置顶
+  expTime: 99999, // 过期时间天
   countTitle: 300, // 倒计时标题
   username: 20, // 用户名
   email: 255, // 邮箱

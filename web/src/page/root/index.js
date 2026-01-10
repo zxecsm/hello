@@ -542,7 +542,7 @@ function setEmail(e) {
           verify(val, items) {
             if (items.state.value === 'y') {
               return (
-                rMenu.validInteger(val) || rMenu.validNumber(val, 0, 65535)
+                rMenu.validInteger(val) || rMenu.validNumber(val, 1, 65535)
               );
             }
           },

@@ -1,5 +1,5 @@
 export class CacheByExpire {
-  constructor(ttl, cleanupInterval = 0, hooks = {}) {
+  constructor(ttl, cleanupInterval = 0, { onDelete } = {}) {
     if (ttl <= 0) {
       throw new Error('TTL must be positive numbers');
     }
@@ -7,11 +7,7 @@ export class CacheByExpire {
     this.ttl = ttl; // 存储缓存过期时间
     this.cache = new Map(); // 使用 Map 来存储缓存
 
-    // 注册钩子
-    this.hooks = {
-      onSet: hooks.onSet || null, // 设置缓存时的钩子
-      onDelete: hooks.onDelete || null, // 删除缓存时的钩子
-    };
+    this.onDelete = onDelete; // 删除缓存时的回调函数
 
     if (cleanupInterval > 0) {
       this.cleanupIntervalId = setInterval(
@@ -38,14 +34,17 @@ export class CacheByExpire {
   set(key, value, ttl = this.ttl) {
     if (this.isDestroyed) return;
 
+    const entry = this.cache.get(key);
+    if (entry) {
+      this.delete(entry.key, entry.value);
+    }
+
     const expireTime = Date.now() + ttl; // 设置条目的过期时间
     this.cache.set(key, { value, expireTime });
 
     if (this.cleanupInterval === 0) {
       this.cleanup();
     }
-
-    this.hooks.onSet?.(key, value);
   }
 
   // 获取缓存条目
@@ -115,7 +114,7 @@ export class CacheByExpire {
   delete(key, value) {
     if (this.isDestroyed) return;
     this.cache.delete(key);
-    this.hooks.onDelete?.(key, value);
+    this.onDelete?.(key, value);
   }
 
   // 销毁

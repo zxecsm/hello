@@ -2,7 +2,7 @@ import $ from 'jquery';
 import '../../css/common/reset.css';
 import '../../css/common/common.css';
 import '../../font/iconfont.css';
-import './index.less';
+import '../notes/index.less';
 import {
   throttle,
   _myOpen,
@@ -10,7 +10,6 @@ import {
   myOpen,
   toLogin,
   scrollState,
-  showQcode,
   queryURLParams,
   isIframe,
   wrapInput,
@@ -18,35 +17,16 @@ import {
   longPress,
   isMobile,
   hdTitleHighlight,
-  formatDate,
   isLogin,
-  isValidDate,
-  formatNum,
-  downloadFile,
-  getFileReader,
-  getFiles,
-  concurrencyTasks,
   _getTarget,
-  LazyLoad,
-  imgjz,
-  isTextFile,
+  getTextSize,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
 import realtime from '../../js/plugins/realtime';
-import {
-  reqNoteCategory,
-  reqNoteDelete,
-  reqNoteEditInfo,
-  reqNoteSearch,
-  reqNoteSetCategory,
-  reqNoteState,
-  reqNoteTop,
-  reqNoteUpNote,
-} from '../../api/note';
-import { CreateTabs } from './tabs';
+import { CreateTabs } from '../notes/tabs/index';
 import {
   isHideCategoryBox,
   renderCategoryList,
@@ -54,57 +34,50 @@ import {
 } from './category';
 import toolTip from '../../js/plugins/tooltip';
 import rMenu from '../../js/plugins/rightMenu';
-import { showNoteInfo } from '../../js/utils/showinfo';
+import { showSSHInfo } from '../../js/utils/showinfo';
 import { _tpl } from '../../js/utils/template';
-import { UpProgress } from '../../js/plugins/UpProgress';
 import { BoxSelector } from '../../js/utils/boxSelector';
-import { otherWindowMsg, waitLogin } from '../home/home';
-import imgPreview from '../../js/plugins/imgPreview';
-import cacheFile from '../../js/utils/cacheFile';
-import loadingSvg from '../../images/img/loading.svg';
+import { otherWindowMsg } from '../home/home';
 import localData from '../../js/common/localData';
+import {
+  reqSSHAdd,
+  reqSSHCategory,
+  reqSSHDelete,
+  reqSSHEdit,
+  reqSSHSearch,
+  reqSSHSetCategory,
+  reqSSHTop,
+} from '../../api/ssh';
 const $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
   $categoryTag = $('.category_tag'),
   $footer = $('.footer');
-let runState = 'own';
-let noteCategoryList = [];
+let sshCategoryList = [];
 const urlParams = queryURLParams(myOpen());
 let { HASH } = urlParams;
-if (urlParams.acc && urlParams.acc !== localData.get('account')) {
-  runState = 'other';
-  $headWrap.find('.h_add_item_btn').remove();
-  $headWrap.find('.h_check_item_btn').remove();
-  $categoryTag.find('.setting_category').remove();
-} else {
-  if (!isLogin()) {
-    toLogin();
-  }
+if (!isLogin()) {
+  toLogin();
 }
-waitLogin(() => {
-  realtime.init().add((res) => {
-    res.forEach((item) => {
-      if (!urlParams.acc || urlParams.acc === localData.get('account')) {
-        const {
-          type,
-          data: { flag },
-        } = item;
-        if (type === 'updatedata') {
-          if (flag === 'note' || flag === 'category') {
-            renderCategoryList(1);
-          }
-        }
+realtime.init().add((res) => {
+  res.forEach((item) => {
+    const {
+      type,
+      data: { flag },
+    } = item;
+    if (type === 'updatedata') {
+      if (flag === 'ssh' || flag === 'sshCategory') {
+        renderCategoryList(1);
       }
-      otherWindowMsg(item);
-    });
+    }
+    otherWindowMsg(item);
   });
 });
 
-export function setNoteCategoryList(val) {
+export function setSSHCategoryList(val) {
   if (val === undefined) {
-    return noteCategoryList;
+    return sshCategoryList;
   }
-  noteCategoryList = val;
+  sshCategoryList = val;
 }
 // 搜索
 const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
@@ -123,23 +96,17 @@ const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
   },
   keyup(e) {
     if (e.key === 'Enter') {
-      notePageNo = 1;
+      sshPageNo = 1;
       renderList(true);
     }
   },
 });
 function updataCategory() {
-  reqNoteCategory({ account: urlParams.acc || '' })
+  reqSSHCategory()
     .then((res) => {
       if (res.code === 1) {
-        noteCategoryList = res.data;
+        sshCategoryList = res.data;
         const list = categoryToArr(HASH || '');
-        if (runState === 'own' && HASH && HASH.includes('locked')) {
-          list.unshift({
-            id: 'locked',
-            title: '私密笔记',
-          });
-        }
         tabsObj.list = list;
         $categoryTag.addClass('open');
       }
@@ -148,25 +115,16 @@ function updataCategory() {
 }
 updataCategory();
 // 添加分类条件
-function hdCategoryAdd(e, cb, hasList, hasLocked = false) {
+function hdCategoryAdd(e, cb, hasList) {
   if (hasList.length >= 10) {
     _msg.error('分类最多10个');
     return;
   }
 
-  const filterList = noteCategoryList.filter(
+  const filterList = sshCategoryList.filter(
     (item) => !hasList.some((i) => i.id === item.id)
   );
-  if (
-    hasLocked &&
-    runState === 'own' &&
-    !hasList.some((item) => item.id === 'locked')
-  ) {
-    filterList.unshift({
-      id: 'locked',
-      title: '私密笔记',
-    });
-  }
+
   const data = [];
   if (filterList.length === 0) {
     _msg.error('没有可选分类');
@@ -206,11 +164,11 @@ function listLoading() {
   pageScrollTop(0);
 }
 // 渲染列表
-let notePageNo = 1;
-let notePageSize = localData.get('notePageSize');
-let noteList = [];
+let sshPageNo = 1;
+let sshPageSize = localData.get('sshPageSize');
+let sshList = [];
 
-const noteBoxSelector = new BoxSelector(document, {
+const sshBoxSelector = new BoxSelector(document, {
   selectables: '.item_box',
   onSelectStart({ e }) {
     if (
@@ -243,7 +201,7 @@ const noteBoxSelector = new BoxSelector(document, {
     });
   },
 });
-noteBoxSelector.stop();
+sshBoxSelector.stop();
 function isSelecting() {
   return !$footer.is(':hidden');
 }
@@ -252,7 +210,7 @@ function startSelect() {
   $footer
     .stop()
     .slideDown(_d.speed, () => {
-      noteBoxSelector.start();
+      sshBoxSelector.start();
     })
     .find('span')
     .attr({
@@ -269,7 +227,7 @@ function stopSelect() {
   $footer
     .stop()
     .slideUp(_d.speed, () => {
-      noteBoxSelector.stop();
+      sshBoxSelector.stop();
     })
     .find('span')
     .attr({
@@ -277,16 +235,15 @@ function stopSelect() {
       check: 'n',
     });
 }
-const imgLazy = new LazyLoad();
 // 生成列表
 export function renderList(y) {
-  let pagenum = notePageNo,
+  let pagenum = sshPageNo,
     word = wInput.getValue().trim();
   if (word.length > 100) {
     _msg.error('搜索内容过长');
     return;
   }
-  let showpage = notePageSize;
+  let showpage = sshPageSize;
   const category = tabsObj.list.map((item) => item.id);
 
   if (category.length > 10) {
@@ -297,8 +254,7 @@ export function renderList(y) {
   if (y) {
     listLoading();
   }
-  reqNoteSearch({
-    account: urlParams.acc || '',
+  reqSSHSearch({
     word,
     pageNo: pagenum,
     pageSize: showpage,
@@ -307,30 +263,28 @@ export function renderList(y) {
     .then((result) => {
       if (result.code === 1) {
         const { total, data, pageNo, splitWord } = result.data;
-        noteList = data;
-        notePageNo = pageNo;
+        sshList = data;
+        sshPageNo = pageNo;
         const html = _tpl(
           `
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
-            <template v-for="{title,share,id,con,top,categoryArr,images} in data">
+            <template v-for="{id,title,port,host,username,categoryArr,top} in data">
               <ul class="item_box" :data-id="id">
                 <div cursor="y" check="n" class="check_state"></div>
-                <li class="item_type iconfont icon-jilu"></li>
+                <li class="item_type iconfont icon-terminal"></li>
                 <li v-html="hdTitleHighlight(splitWord,title)" cursor="y" class="item_title"></li>
                 <li v-if="top != 0 && !word && category.length === 0" class="top_btn iconfont icon-zhiding" style="color: var(--color5);"></li>
-                <li v-if="runState === 'own'" cursor="y" class="lock_state iconfont {{share === 0? 'icon-gl-unlock2 open': 'icon-gl-unlock4'}}"></li>
-                <li v-if="runState === 'own'" cursor="y" class="set_btn iconfont icon-maohao"></li>
+                <li cursor="y" class="set_btn iconfont icon-maohao"></li>
               </ul>
-              <div v-if="categoryArr.length > 0 || (con && con.length > 0)" class="item_info">
+              <div class="item_info">
                 <template v-if="categoryArr.length > 0">
                   <span cursor="y" v-for="cgs in categoryArr" :data-id="cgs.id" class="category">
                     <span style="color:var(--icon-color);margin-right:0.4rem;">#</span>{{cgs.title}}
                   </span>
                   <br/>
                 </template>
-                <img class="default_size" v-for="img in images" :src="loadingSvg" cursor="y" :data-src="img.src" :alt="img.alt" :title="img.alt" />
-                <span v-if="con && con.length > 0" v-html="hdHighlight(con)"></span>
+                <span v-html="hdTitleHighlight(splitWord, 'ssh -P'+' '+port+' '+username+'@'+host)"></span>
               </div>
             </template>
             <div v-html="getPaging()" class="pagingbox"></div>
@@ -341,9 +295,6 @@ export function renderList(y) {
             data,
             word,
             splitWord,
-            runState,
-            loadingSvg,
-            hdHighlight,
             getPaging() {
               return pgnt.getHTML({
                 pageSize: showpage,
@@ -363,28 +314,6 @@ export function renderList(y) {
         if (y) {
           pageScrollTop(0);
         }
-        imgLazy.bind(
-          [...$contentWrap[0].querySelectorAll('img')].filter((item) => {
-            const url = item.getAttribute('data-src');
-            const cache = cacheFile.hasUrl(url, 'image');
-            if (cache) {
-              item.src = cache;
-              item.classList.remove('default_size');
-            }
-            return !cache;
-          }),
-          (item) => {
-            const url = item.getAttribute('data-src');
-            imgjz(url)
-              .then((cache) => {
-                item.src = cache;
-                item.classList.remove('default_size');
-              })
-              .catch(() => {
-                item.style.display = 'none';
-              });
-          }
-        );
       }
     })
     .catch(() => {});
@@ -404,7 +333,7 @@ const tabsObj = new CreateTabs({
     switchCleanBtnState();
     HASH = data.map((item) => item.id).join('-');
     myOpen(`#${HASH}`);
-    notePageNo = 1;
+    sshPageNo = 1;
     renderList(1);
   },
   add({ e, add, data }) {
@@ -419,57 +348,40 @@ const tabsObj = new CreateTabs({
     );
   },
 });
-// 获取笔记信息
-function getNoteInfo(id) {
-  return noteList.find((item) => item.id === id) || {};
-}
-// 搜索高亮显示
-function hdHighlight(con) {
-  return _tpl(
-    `
-    <template v-for="{type,value} in con">
-      <template v-if="type === 'text'">{{value}}</template>
-      <template v-else-if="type === 'icon'">
-        <span style="color:var(--btn-danger-color);">{{value}}</span><br/>
-      </template>
-      <span v-else-if="type === 'word'" style="color:var(--btn-danger-color);">{{value}}</span>
-    </template>
-    `,
-    {
-      con,
-    }
-  );
+// 获取信息
+function getSSHInfo(id) {
+  return sshList.find((item) => item.id === id) || {};
 }
 // 分页
 const pgnt = pagination($contentWrap[0], {
   change(val) {
-    notePageNo = val;
+    sshPageNo = val;
     renderList(true);
-    _msg.botMsg(`第 ${notePageNo} 页`);
+    _msg.botMsg(`第 ${sshPageNo} 页`);
   },
   changeSize(val) {
-    notePageSize = val;
-    localData.set('notePageSize', notePageSize);
-    notePageNo = 1;
+    sshPageSize = val;
+    localData.set('sshPageSize', sshPageSize);
+    sshPageNo = 1;
     renderList(true);
-    _msg.botMsg(`第 ${notePageNo} 页`);
+    _msg.botMsg(`第 ${sshPageNo} 页`);
   },
   toTop() {
     pageScrollTop(0);
   },
 });
-// 删除笔记
-function deleteNote(e, ids, cb, title, loading = { start() {}, end() {} }) {
+// 删除
+function deleteSSH(e, ids, cb, title, loading = { start() {}, end() {} }) {
   rMenu.pop(
     {
       e,
-      text: `确认删除：${title || '选中的笔记'}？`,
+      text: `确认删除：${title || '选中的SSH配置'}？`,
       confirm: { type: 'danger', text: '删除' },
     },
     (type) => {
       if (type === 'confirm') {
         loading.start();
-        reqNoteDelete({ ids })
+        reqSSHDelete({ ids })
           .then((result) => {
             loading.end();
             if (result.code === 1) {
@@ -485,7 +397,7 @@ function deleteNote(e, ids, cb, title, loading = { start() {}, end() {} }) {
     }
   );
 }
-// 置顶笔记
+// 置顶
 function toTop(e, obj) {
   rMenu.inpMenu(
     e,
@@ -509,7 +421,7 @@ function toTop(e, obj) {
       if (!isDiff()) return;
       const w = inp.num;
       loading.start();
-      reqNoteTop({ id: obj.id, top: w })
+      reqSSHTop({ id: obj.id, top: w })
         .then((res) => {
           loading.end();
           if (res.code === 1) {
@@ -522,15 +434,15 @@ function toTop(e, obj) {
           loading.end();
         });
     },
-    '置顶笔记'
+    '置顶'
   );
 }
 function categoryToArr(category) {
   const cArr = category.split('-').filter(Boolean);
-  return noteCategoryList.filter((item) => cArr.includes(item.id));
+  return sshCategoryList.filter((item) => cArr.includes(item.id));
 }
-// 笔记添加分类
-function noteEditCategory(e, obj) {
+// 添加分类
+function sshEditCategory(e, obj) {
   rMenu.selectTabs(
     e,
     categoryToArr(obj.category),
@@ -553,7 +465,7 @@ function noteEditCategory(e, obj) {
       submit({ close, data, loading, isDiff }) {
         if (!isDiff()) return;
         loading.start();
-        reqNoteSetCategory({
+        reqSSHSetCategory({
           id: obj.id,
           category: data.map((item) => item.id),
         })
@@ -573,17 +485,7 @@ function noteEditCategory(e, obj) {
     '编辑分类'
   );
 }
-function verifyDate(obj) {
-  let { create_at, update_at } = obj;
-  create_at = new Date(create_at).getTime();
-  update_at = new Date(update_at).getTime();
-  if (create_at > update_at) {
-    _msg.error('创建日期不能大于更新日期');
-    return false;
-  }
-  return true;
-}
-function editNoteInfo(e, obj) {
+function editSSHInfo(e, obj) {
   rMenu.inpMenu(
     e,
     {
@@ -596,53 +498,70 @@ function editNoteInfo(e, obj) {
             return rMenu.validString(val, 1, _d.fieldLength.title);
           },
         },
-        count: {
-          beforeText: '阅读量：',
-          value: obj.visit_count,
-          inputType: 'number',
+        auth_type: {
+          beforeText: '认证方式：',
+          type: 'select',
+          value: obj.auth_type,
+          selectItem: [
+            { value: 'password', text: '密码' },
+            { value: 'key', text: '密钥' },
+          ],
+        },
+        host: {
+          beforeText: '主机：IP或域名',
+          value: obj.host,
           verify(val) {
-            return rMenu.validInteger(val) || rMenu.validNumber(val, 0);
+            return rMenu.validString(val, 1, _d.fieldLength.filename);
           },
         },
-        create_at: {
-          beforeText: '创建日期：',
-          placeholder: 'YYYY-MM-DD',
-          inputType: 'date',
-          value: formatDate({
-            template: '{0}-{1}-{2}',
-            timestamp: obj.create_at,
-          }),
+        port: {
+          beforeText: '端口：',
+          value: obj.port,
           verify(val) {
-            if (!isValidDate(val)) {
-              return '请输入正确的日期';
-            }
+            return rMenu.validInteger(val) || rMenu.validNumber(val, 1, 65535);
           },
         },
-        update_at: {
-          beforeText: '更新日期：',
-          placeholder: 'YYYY-MM-DD',
-          inputType: 'date',
-          value: formatDate({
-            template: '{0}-{1}-{2}',
-            timestamp: obj.update_at,
-          }),
+        username: {
+          beforeText: '用户名：',
+          value: obj.username,
           verify(val) {
-            if (!isValidDate(val)) {
-              return '请输入正确的日期';
-            }
+            return rMenu.validString(val, 1, _d.fieldLength.filename);
+          },
+        },
+        password: {
+          beforeText: '密码：',
+          value: obj.password,
+          inputType: 'password',
+          verify(val) {
+            return rMenu.validString(val, 0, _d.fieldLength.filename);
+          },
+        },
+        private_key: {
+          beforeText: '密钥：',
+          value: obj.private_key,
+          type: 'textarea',
+          verify(val) {
+            return getTextSize(val) > _d.fieldLength.customCodeSize
+              ? '密钥过长'
+              : '';
+          },
+        },
+        passphrase: {
+          beforeText: '密钥口令：',
+          value: obj.passphrase,
+          inputType: 'password',
+          verify(val) {
+            return rMenu.validString(val, 0, _d.fieldLength.filename);
           },
         },
       },
     },
     function ({ close, inp, loading, isDiff }) {
-      if (!isDiff() || !verifyDate(inp)) return;
+      if (!isDiff()) return;
       loading.start();
-      reqNoteEditInfo({
+      reqSSHEdit({
         id: obj.id,
-        title: inp.title,
-        create_at: inp.create_at,
-        update_at: inp.update_at,
-        visit_count: inp.count,
+        ...inp,
       })
         .then((result) => {
           loading.end();
@@ -657,54 +576,32 @@ function editNoteInfo(e, obj) {
           loading.end();
         });
     },
-    '编辑笔记信息'
+    '编辑SSH配置'
   );
 }
 $contentWrap
   .on('click', '.set_btn', function (e) {
-    if (runState !== 'own') return;
     const $this = $(this).parent();
-    const obj = getNoteInfo($this.attr('data-id'));
-    const { id: noteid, title, top } = obj;
+    const obj = getSSHInfo($this.attr('data-id'));
+    const { id: sshid, title, top } = obj;
     const data = [
       { id: '1', text: '置顶', beforeIcon: 'iconfont icon-zhiding' },
       { id: '2', text: '分类', beforeIcon: 'iconfont icon-liebiao1' },
-      { id: '3', text: '二维码', beforeIcon: 'iconfont icon-erweima' },
-      { id: '4', text: '笔记信息', beforeIcon: 'iconfont icon-bianji' },
-      { id: '7', text: '历史版本', beforeIcon: 'iconfont icon-history' },
-      { id: '5', text: '笔记内容', beforeIcon: 'iconfont icon-bianji' },
-      {
-        id: '6',
-        text: '删除',
-        beforeIcon: 'iconfont icon-shanchu',
-      },
+      { id: '4', text: '编辑', beforeIcon: 'iconfont icon-bianji' },
+      { id: '6', text: '删除', beforeIcon: 'iconfont icon-shanchu' },
     ];
     rMenu.selectMenu(
       e,
       data,
       ({ close, e, id, loading }) => {
         if (id === '1') {
-          toTop(e, { id: noteid, top });
+          toTop(e, { id: sshid, top });
         } else if (id === '2') {
-          noteEditCategory(e, obj);
-        } else if (id === '3') {
-          showQcode(
-            e,
-            `${_d.originURL}/note?v=${encodeURIComponent(noteid)}`,
-            title
-          );
+          sshEditCategory(e, obj);
         } else if (id === '4') {
-          editNoteInfo(e, obj);
-        } else if (id === '5') {
-          close();
-          e.stopPropagation();
-          _myOpen(`/edit#${encodeURIComponent(noteid)}`, title);
+          editSSHInfo(e, obj);
         } else if (id === '6') {
-          deleteNote(e, [noteid], close, title, loading);
-        } else if (id === '7') {
-          close();
-          e.stopPropagation();
-          _myOpen(`/file#${_d.noteHistoryDir}/${noteid}`, '文件管理');
+          deleteSSH(e, [sshid], close, title, loading);
         }
       },
       title
@@ -712,86 +609,37 @@ $contentWrap
   })
   .on('click', '.item_title', function (e) {
     e.stopPropagation();
-    const val = wInput.getValue().trim();
-    const { title, id } = getNoteInfo($(this).parent().attr('data-id'));
-    _myOpen(
-      `/note?v=${encodeURIComponent(id)}${
-        val ? '#' + encodeURIComponent(val) : ''
-      }`,
-      title
-    );
-  })
-  .on('click', 'img', function (e) {
-    const imgs = $contentWrap.find('img');
-    let idx = 0;
-    const arr = [];
-    imgs.each((i, item) => {
-      if (item === this) {
-        idx = i;
-      }
-      arr.push({
-        u1: item.getAttribute('data-src'),
-      });
-    });
-    imgPreview(arr, idx, { x: e.clientX, y: e.clientY });
+    const { title, id } = getSSHInfo($(this).parent().attr('data-id'));
+    _myOpen(`/ssh#${id}`, title);
   })
   .on('click', '.item_info .category', function () {
     tabsObj.list = categoryToArr(this.dataset.id);
   })
   .on('contextmenu', '.item_box', function (e) {
-    if (runState !== 'own') return;
     e.preventDefault();
     if (isMobile() || isSelecting()) return;
     hdCheckItemBtn();
     checkedItem(this.querySelector('.check_state'));
   })
   .on('mouseenter', '.item_box .item_type', function () {
-    const { create_at, update_at, visit_count, top, categoryArr } = getNoteInfo(
-      $(this).parent().attr('data-id')
-    );
+    const { title, port, host, username, top, auth_type, categoryArr } =
+      getSSHInfo($(this).parent().attr('data-id'));
     const arr = categoryArr.map((item) => item.title);
-    const str = `创建：${formatDate({
-      template: '{0}-{1}-{2}',
-      timestamp: create_at,
-    })}\n更新：${formatDate({
-      template: '{0}-{1}-{2}',
-      timestamp: update_at,
-    })}\n分类：${arr.join('-') || '--'}\n阅读：${formatNum(
-      visit_count
-    )}\n权重：${top}`;
+    const str = `标题：${title}\n分类：${arr.join('-') || '--'}\n认证方式：${
+      auth_type === 'password' ? '密码' : '密钥'
+    }\n用户名：${username}\n主机：${host}\n端口：${port}\n权重：${top}`;
     toolTip.setTip(str).show();
   })
   .on('mouseleave', '.item_box .item_type', function () {
     toolTip.hide();
   })
   .on('click', '.item_type', function (e) {
-    const obj = getNoteInfo($(this).parent().attr('data-id'));
-    showNoteInfo(e, obj);
+    const obj = getSSHInfo($(this).parent().attr('data-id'));
+    showSSHInfo(e, obj);
   })
-  .on(
-    'click',
-    '.lock_state',
-    throttle(function () {
-      if (runState !== 'own') return;
-      const $this = $(this).parent();
-      const obj = getNoteInfo($this.attr('data-id'));
-      changeNoteState([obj.id], obj.share === 0 ? 1 : 0);
-    }, 2000)
-  )
   .on('click', '.check_state', function () {
     checkedItem(this);
   });
-// 切换笔记状态
-function changeNoteState(ids, share) {
-  reqNoteState({ ids, share })
-    .then((result) => {
-      if (result.code === 1) {
-        _msg.success(result.codeText);
-        renderList();
-      }
-    })
-    .catch(() => {});
-}
 if (isIframe()) {
   $headWrap.find('.h_go_home').remove();
 }
@@ -800,9 +648,8 @@ longPress($contentWrap[0], '.item_box', function () {
   hdCheckItemBtn();
   checkedItem(this.querySelector('.check_state'));
 });
-// 选中笔记
+// 选中
 function checkedItem(el) {
-  if (runState !== 'own') return;
   const $this = $(el),
     check = $this.attr('check');
   if (check === 'n') {
@@ -832,97 +679,117 @@ function updateSelectInfo() {
 }
 // 开启选中
 function hdCheckItemBtn() {
-  if (runState !== 'own') return;
   if (isSelecting()) {
     stopSelect();
   } else {
     startSelect();
   }
 }
-// 上传笔记
-async function upNote() {
-  const files = await getFiles({ multiple: 'multiple', accept: '.md' });
-  if (files.length === 0) return;
-
-  const controller = new AbortController();
-  const signal = controller.signal;
-
-  const upPro = new UpProgress(() => {
-    controller.abort();
-  });
-
-  await concurrencyTasks(files, 3, async (file) => {
-    if (signal.aborted) return;
-    const { name, size } = file;
-    const pro = upPro.add(name);
-
-    if (!/\.md$/i.test(name) || !(await isTextFile(file))) {
-      pro.fail();
-      _msg.error(`笔记文件格式错误：${name}`, null, { reside: true });
-      return;
-    }
-
-    if (size > _d.fieldLength.noteSize) {
-      pro.fail();
-      _msg.error(`笔记内容过长：${name}`, null, { reside: true });
-      return;
-    }
-
-    try {
-      const content = await getFileReader(file, 'text');
-
-      const res = await reqNoteUpNote(
-        { title: name.slice(0, -3), content },
-        (percent) => {
-          pro.update(percent);
-        },
-        signal
-      );
-
-      if (res.code === 1) {
-        pro.close();
-      } else {
-        pro.fail();
-        _msg.error(`上传笔记失败：${name}`, null, { reside: true });
-      }
-    } catch {
-      pro.fail();
-      _msg.error(`上传笔记失败：${name}`, null, { reside: true });
-    }
-  });
-
-  realtime.send({ type: 'updatedata', data: { flag: 'note' } });
-  notePageNo = 1;
-  renderList(true);
-}
 $headWrap
   .on('click', '.h_go_home', function () {
     myOpen('/');
   })
   .on('click', '.h_add_item_btn', function (e) {
-    if (runState !== 'own') return;
-    e.stopPropagation();
-    const data = [
-      { id: 'add', text: '新建笔记', beforeIcon: 'iconfont icon-tianjia' },
-      { id: 'up', text: '上传笔记', beforeIcon: 'iconfont icon-upload' },
-    ];
-    rMenu.selectMenu(e, data, ({ close, id }) => {
-      close();
-      if (id === 'add') {
-        _myOpen('/edit#new', '新笔记');
-      } else if (id === 'up') {
-        upNote();
-      }
-    });
+    rMenu.inpMenu(
+      e,
+      {
+        subText: '提交',
+        items: {
+          title: {
+            beforeText: '标题：',
+            value: '',
+            verify(val) {
+              return rMenu.validString(val, 1, _d.fieldLength.title);
+            },
+          },
+          auth_type: {
+            beforeText: '认证方式：',
+            type: 'select',
+            value: 'password',
+            selectItem: [
+              { value: 'password', text: '密码' },
+              { value: 'key', text: '密钥' },
+            ],
+          },
+          host: {
+            beforeText: '主机：IP或域名',
+            value: '',
+            verify(val) {
+              return rMenu.validString(val, 1, _d.fieldLength.filename);
+            },
+          },
+          port: {
+            beforeText: '端口：',
+            value: 22,
+            verify(val) {
+              return (
+                rMenu.validInteger(val) || rMenu.validNumber(val, 1, 65535)
+              );
+            },
+          },
+          username: {
+            beforeText: '用户名：',
+            value: '',
+            verify(val) {
+              return rMenu.validString(val, 1, _d.fieldLength.filename);
+            },
+          },
+          password: {
+            beforeText: '密码：',
+            value: '',
+            inputType: 'password',
+            verify(val) {
+              return rMenu.validString(val, 0, _d.fieldLength.filename);
+            },
+          },
+          private_key: {
+            beforeText: '密钥：',
+            value: '',
+            type: 'textarea',
+            verify(val) {
+              return getTextSize(val) > _d.fieldLength.customCodeSize
+                ? '密钥过长'
+                : '';
+            },
+          },
+          passphrase: {
+            beforeText: '密钥口令：',
+            value: '',
+            inputType: 'password',
+            verify(val) {
+              return rMenu.validString(val, 0, _d.fieldLength.filename);
+            },
+          },
+        },
+      },
+      function ({ close, inp, loading, isDiff }) {
+        if (!isDiff()) return;
+        loading.start();
+        reqSSHAdd(inp)
+          .then((result) => {
+            loading.end();
+            if (result.code === 1) {
+              close(true);
+              _msg.success(result.codeText);
+              renderList();
+              return;
+            }
+          })
+          .catch(() => {
+            loading.end();
+          });
+      },
+      '添加SSH配置'
+    );
   })
   .on('click', '.h_check_item_btn', hdCheckItemBtn)
   .on('click', '.inp_box .clean_btn', function () {
     wInput.setValue('').focus();
-    notePageNo = 1;
+    sshPageNo = 1;
     renderList(true);
   })
   .on('click', '.inp_box .search_btn', function () {
-    notePageNo = 1;
+    sshPageNo = 1;
     renderList(true);
   });
 // 获取选中项
@@ -939,42 +806,16 @@ function getCheckItems() {
 }
 $footer
   .on('click', '.f_delete', function (e) {
-    if (runState !== 'own') return;
     const ids = getCheckItems();
     if (ids.length === 0) return;
-    deleteNote(e, ids);
-  })
-  .on('click', '.f_download', function () {
-    const ids = getCheckItems();
-    if (ids.length === 0) return;
-    downloadFile(
-      ids.map((id) => ({
-        fileUrl: `/api/note/read?v=${id}&download=1`,
-        filename: getNoteInfo(id).title + '.md',
-      }))
-    );
-    stopSelect();
-  })
-  .on('click', '.f_clock', function () {
-    if (runState !== 'own') return;
-    const ids = getCheckItems();
-    if (ids.length === 0) return;
-    changeNoteState(ids, 0);
-  })
-  .on('click', '.f_open', function () {
-    if (runState !== 'own') return;
-    const ids = getCheckItems();
-    if (ids.length === 0) return;
-    changeNoteState(ids, 1);
+    deleteSSH(e, ids);
   })
   .on('click', '.f_close', function () {
-    if (runState !== 'own') return;
     stopSelect();
   })
   .on('click', 'span', switchCheckAll);
 
 function switchCheckAll() {
-  if (runState !== 'own') return;
   const $checkBtn = $footer.find('span');
   let che = $checkBtn.attr('check');
   che === 'y' ? (che = 'n') : (che = 'y');

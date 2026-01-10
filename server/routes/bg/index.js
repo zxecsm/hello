@@ -98,12 +98,17 @@ timedTask.add(async (flag) => {
       .batchUpdate({ bg: bg ? bg.id : '', bgxs: bgxs ? bgxs.id : '' });
 
     Object.keys(_connect.getConnects()).forEach((key) => {
-      _connect.send(key, nanoid(), {
-        type: 'updatedata',
-        data: {
-          flag: 'userinfo',
+      _connect.send(
+        key,
+        nanoid(),
+        {
+          type: 'updatedata',
+          data: {
+            flag: 'userinfo',
+          },
         },
-      });
+        'all'
+      );
     });
   }
 });

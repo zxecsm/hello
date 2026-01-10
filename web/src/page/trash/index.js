@@ -27,6 +27,8 @@ import {
   imgjz,
   getFaviconPath,
   getFilePath,
+  formatDate,
+  formatNum,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -39,7 +41,11 @@ import {
   reqUserTrashList,
 } from '../../api/user';
 import rMenu from '../../js/plugins/rightMenu';
-import { showBmkInfo } from '../../js/utils/showinfo';
+import {
+  showBmkInfo,
+  showNoteInfo,
+  showSSHInfo,
+} from '../../js/utils/showinfo';
 import { reqSearchConfig } from '../../api/search';
 import { _tpl } from '../../js/utils/template';
 import { BoxSelector } from '../../js/utils/boxSelector';
@@ -49,6 +55,7 @@ import cacheFile from '../../js/utils/cacheFile';
 import loadingSvg from '../../images/img/loading.svg';
 import defaultIcon from '../../images/img/default-icon.png';
 import localData from '../../js/common/localData';
+import toolTip from '../../js/plugins/tooltip';
 if (!isLogin()) {
   toLogin();
 }
@@ -220,6 +227,9 @@ function renderList(y) {
   } else if (HASH === 'bmk') {
     slogo = 'icon-shuqian';
     btnText = '书签';
+  } else if (HASH === 'ssh') {
+    slogo = 'icon-terminal';
+    btnText = '终端';
   }
   $headWrap.find('.select_btn').text(btnText);
   let showpage = curPageSize;
@@ -238,7 +248,7 @@ function renderList(y) {
           `
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
-            <template v-for="{title,id,link,content,con,des,group_title,categoryArr,images} in list">
+            <template v-for="{title,id,link,content,con,des,group_title,categoryArr,images,port,username,host} in list">
               <ul class="item_box" :data-id="id" :data-type="HASH">
                 <div cursor="y" check="n" class="check_state"></div>
                 <li class="item_type iconfont {{slogo}}"></li>
@@ -264,6 +274,15 @@ function renderList(y) {
                 <a cursor="y" v-html="hdTitleHighlight(splitWord, link)" href="{{link}}" target="_blank"></a>
                 <br/>
                 <span v-html="hdTitleHighlight(splitWord, des)"></span>
+              </div>
+              <div class="item_info" v-else-if="HASH === 'ssh'">
+                <template v-if="categoryArr.length > 0">
+                  <span v-for="cgs in categoryArr" class="category">
+                    <span style="color:var(--icon-color);margin-right:0.4rem;">#</span>{{cgs.title}}
+                  </span>
+                  <br/>
+                </template>
+                <span v-html="hdTitleHighlight(splitWord, 'ssh -P'+' '+port+' '+username+'@'+host)"></span>
               </div>
             </template >
             <div v-html="getPaging()" class="pagingbox"></div>
@@ -401,6 +420,8 @@ function getTypeText(type) {
       return '书签';
     case 'history':
       return '历史记录';
+    case 'ssh':
+      return '终端';
     default:
       return '';
   }
@@ -416,6 +437,11 @@ $headWrap
         text: '笔记',
         beforeIcon: 'iconfont icon-jilu',
         param: { value: 'note' },
+      },
+      {
+        text: '终端',
+        beforeIcon: 'iconfont icon-terminal1',
+        param: { value: 'ssh' },
       },
       {
         text: '书签分组',
@@ -629,15 +655,48 @@ $contentWrap
     startSelect();
     checkedItem(this.querySelector('.check_state'));
   })
+  .on('mouseenter', '.item_box .item_type', function () {
+    const $this = $(this).parent();
+    const type = $this.attr('data-type');
+    const obj = getListItem($this.attr('data-id'));
+    if (type === 'note') {
+      const { create_at, update_at, visit_count, top, categoryArr } = obj;
+      const arr = categoryArr.map((item) => item.title);
+      const str = `创建：${formatDate({
+        template: '{0}-{1}-{2}',
+        timestamp: create_at,
+      })}\n更新：${formatDate({
+        template: '{0}-{1}-{2}',
+        timestamp: update_at,
+      })}\n分类：${arr.join('-') || '--'}\n阅读：${formatNum(
+        visit_count
+      )}\n权重：${top}`;
+      toolTip.setTip(str).show();
+    } else if (type === 'ssh') {
+      const { title, port, host, username, top, auth_type, categoryArr } = obj;
+      const arr = categoryArr.map((item) => item.title);
+      const str = `标题：${title}\n分类：${arr.join('-') || '--'}\n认证方式：${
+        auth_type === 'password' ? '密码' : '密钥'
+      }\n用户名：${username}\n主机：${host}\n端口：${port}\n权重：${top}`;
+      toolTip.setTip(str).show();
+    }
+  })
+  .on('mouseleave', '.item_box .item_type', function () {
+    toolTip.hide();
+  })
   .on('click', '.item_type', function (e) {
     const $this = $(this).parent();
     const type = $this.attr('data-type');
     const obj = getListItem($this.attr('data-id'));
     if (type === 'bmk') {
       showBmkInfo(e, obj);
+    } else if (type === 'ssh') {
+      showSSHInfo(e, obj);
+    } else if (type === 'note') {
+      showNoteInfo(e, obj);
     } else if (type === 'history') {
       copyText(obj.content);
-    } else if (type === 'note' || type === 'bmk_group') {
+    } else if (type === 'bmk_group') {
       copyText(obj.title);
     }
   })
@@ -660,6 +719,9 @@ $contentWrap
     } else if (type === 'note') {
       e.stopPropagation();
       _myOpen(`/note?v=${encodeURIComponent(obj.id)}`, obj.title);
+    } else if (type === 'ssh') {
+      e.stopPropagation();
+      _myOpen(`/ssh#${obj.id}`, obj.title);
     }
   })
   .on('click', 'img', function (e) {
