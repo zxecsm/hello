@@ -3,15 +3,24 @@ import { CacheByExpire } from '../../utils/cache.js';
 import { devLog } from '../../utils/utils.js';
 import _connect from '../../utils/connect.js';
 
+function closeSSHClient(sshClient) {
+  try {
+    sshClient.end();
+  } catch (error) {
+    devLog(error);
+  }
+}
+
 // 缓存SSH连接
 const sshCache = new CacheByExpire(60 * 1000, 60 * 1000, {
-  onDelete(_, ssh) {
-    try {
-      if (ssh) {
-        ssh.sshClient.end();
-      }
-    } catch (error) {
-      devLog(error);
+  beforeDelete(_, ssh) {
+    if (ssh) {
+      closeSSHClient(ssh.sshClient);
+    }
+  },
+  beforeReplace(_, ssh) {
+    if (ssh) {
+      closeSSHClient(ssh.sshClient);
     }
   },
 });

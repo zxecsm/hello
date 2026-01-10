@@ -1998,6 +1998,7 @@ route.get(
       let trashdb = null;
       if (type === 'bmk') {
         trashdb = db('bmk AS b')
+          .select(fields)
           .join(
             'bmk_group AS g',
             {

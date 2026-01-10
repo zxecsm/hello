@@ -14,7 +14,7 @@ const cacheFile = {
   },
   // URL对象缓存
   urlCache: new CacheByExpire(5 * 60 * 1000, 5 * 60 * 1000, {
-    onDelete: (_, url) => {
+    beforeDelete: (_, url) => {
       // 清除url缓存，释放URL对象
       if (url) {
         URL.revokeObjectURL(url);

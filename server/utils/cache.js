@@ -1,13 +1,27 @@
 export class CacheByExpire {
-  constructor(ttl, cleanupInterval = 0, { onDelete } = {}) {
-    if (ttl <= 0) {
-      throw new Error('TTL must be positive numbers');
+  constructor(
+    ttl,
+    cleanupInterval = 0,
+    { beforeDelete, afterDelete, beforeReplace, afterReplace } = {}
+  ) {
+    if (!Number.isFinite(ttl) || ttl <= 0) {
+      throw new Error('TTL must be a positive finite number');
+    }
+
+    if (!Number.isFinite(cleanupInterval) || cleanupInterval < 0) {
+      throw new Error('cleanupInterval must be a non-negative number');
     }
 
     this.ttl = ttl; // 存储缓存过期时间
-    this.cache = new Map(); // 使用 Map 来存储缓存
+    this.cache = new Map();
 
-    this.onDelete = onDelete; // 删除缓存时的回调函数
+    this.beforeDelete = beforeDelete;
+    this.afterDelete = afterDelete;
+    this.beforeReplace = beforeReplace;
+    this.afterReplace = afterReplace;
+
+    this.cleanupInterval = cleanupInterval; // 清理间隔
+    this.isDestroyed = false; // 标记缓存是否被销毁
 
     if (cleanupInterval > 0) {
       this.cleanupIntervalId = setInterval(
@@ -15,14 +29,20 @@ export class CacheByExpire {
         cleanupInterval
       ); // 定时清理缓存
     }
+  }
 
-    this.cleanupInterval = cleanupInterval; // 清理间隔
-    this.isDestroyed = false; // 标记缓存是否被销毁
+  // 内部 ttl 校验
+  _validateTTL(ttl) {
+    if (!Number.isFinite(ttl) || ttl <= 0) {
+      throw new Error('TTL must be a positive finite number');
+    }
   }
 
   // 重置条目的过期时间
   resetExpireTime(key, ttl = this.ttl) {
     if (this.isDestroyed) return;
+
+    this._validateTTL(ttl);
 
     const entry = this.cache.get(key);
     if (entry) {
@@ -34,13 +54,19 @@ export class CacheByExpire {
   set(key, value, ttl = this.ttl) {
     if (this.isDestroyed) return;
 
-    const entry = this.cache.get(key);
-    if (entry) {
-      this.delete(entry.key, entry.value);
+    this._validateTTL(ttl);
+
+    const oldEntry = this.cache.get(key);
+    if (oldEntry) {
+      this.beforeReplace?.(key, oldEntry.value, value);
     }
 
-    const expireTime = Date.now() + ttl; // 设置条目的过期时间
+    const expireTime = Date.now() + ttl;
     this.cache.set(key, { value, expireTime });
+
+    if (oldEntry) {
+      this.afterReplace?.(key, oldEntry.value, value);
+    }
 
     if (this.cleanupInterval === 0) {
       this.cleanup();
@@ -52,23 +78,26 @@ export class CacheByExpire {
     if (this.isDestroyed) return null;
 
     const entry = this.cache.get(key);
-    if (entry && Date.now() < entry.expireTime) {
-      return entry.value; // 返回缓存值
+    if (!entry) return null;
+
+    if (Date.now() < entry.expireTime) {
+      return entry.value;
     }
 
-    // 如果条目过期或不存在，删除该条目
-    this.delete(key, entry ? entry.value : undefined);
-    return null; // 缓存已过期或不存在
+    this.delete(key);
+    return null;
   }
 
   // 获取缓存条目数
   size() {
+    if (this.isDestroyed) return 0;
+    this.cleanup();
     return this.cache.size;
   }
 
   // 获取缓存的数据
   getCacheData() {
-    if (this.isDestroyed) return;
+    if (this.isDestroyed) return {};
 
     this.cleanup();
 
@@ -81,14 +110,19 @@ export class CacheByExpire {
 
   // 删除过期的缓存条目
   cleanup() {
-    if (this.isDestroyed) return; // 如果缓存已经销毁，停止清理
+    if (this.isDestroyed) return;
 
     const now = Date.now();
-    // 如果距离上次清理时间超过了设置的清理间隔
-    for (const [key, { expireTime, value }] of this.cache) {
+    const expiredKeys = [];
+
+    for (const [key, { expireTime }] of this.cache) {
       if (expireTime <= now) {
-        this.delete(key, value);
+        expiredKeys.push(key);
       }
+    }
+
+    for (const key of expiredKeys) {
+      this.delete(key);
     }
   }
 
@@ -96,11 +130,16 @@ export class CacheByExpire {
   clearByValue(matches) {
     if (this.isDestroyed || typeof matches !== 'function') return;
 
-    // 遍历缓存，删除匹配的条目
+    const keysToDelete = [];
+
     for (const [k, { value: v }] of this.cache) {
       if (matches(k, v)) {
-        this.delete(k, v); // 删除匹配的缓存条目
+        keysToDelete.push(k);
       }
+    }
+
+    for (const k of keysToDelete) {
+      this.delete(k);
     }
   }
 
@@ -111,22 +150,30 @@ export class CacheByExpire {
   }
 
   // 删除缓存条目
-  delete(key, value) {
+  delete(key) {
     if (this.isDestroyed) return;
+
+    const entry = this.cache.get(key);
+    if (!entry) return;
+
+    this.beforeDelete?.(key, entry.value);
     this.cache.delete(key);
-    this.onDelete?.(key, value);
+    this.afterDelete?.(key, entry.value);
   }
 
-  // 销毁
+  // 销毁缓存
   destroy() {
-    if (this.isDestroyed) return; // 如果已经销毁，则不重复销毁
-
-    this.clear();
+    if (this.isDestroyed) return;
 
     if (this.cleanupIntervalId) {
-      clearInterval(this.cleanupIntervalId); // 停止定时清理任务
+      clearInterval(this.cleanupIntervalId);
     }
 
-    this.isDestroyed = true; // 设置销毁标志
+    const keys = Array.from(this.cache.keys());
+    for (const key of keys) {
+      this.delete(key);
+    }
+
+    this.isDestroyed = true;
   }
 }
