@@ -28,7 +28,6 @@ import {
   getTextSize,
   isDarkMode,
   isIframe,
-  isMobile,
   myOpen,
   pageErr,
   queryURLParams,
@@ -44,8 +43,7 @@ const $app = $('#app'),
   $footer = $('.footer'),
   $shortcuts = $footer.find('.shortcuts'),
   $quickGroup = $footer.find('.quick_group'),
-  $quickCommands = $footer.find('.quick_commands'),
-  $keyboardWakeup = $('.keyboard_wakeup');
+  $quickCommands = $footer.find('.quick_commands');
 const urlParams = queryURLParams(myOpen());
 const { HASH } = urlParams;
 if (!HASH) {
@@ -128,7 +126,7 @@ realtime.init().add((res) => {
   });
 });
 
-term.onData((d) => sendSSH(d));
+term.onData((d) => handleTermInput(d));
 function sendSSH(text, enter = false) {
   if (!text) return;
   if (enter) text += '\r';
@@ -391,6 +389,7 @@ $quickCommands
   .on('click', '.title', (e) => {
     const obj = getCommandInfo(curQuickGroupId, e.target.parentNode.dataset.id);
     sendSSH(obj.command, !!obj.enter);
+    term.focus();
   })
   .on('click', '.set', (e) => {
     hdComandMenu(
@@ -683,77 +682,24 @@ const keyMap = {
   ArrowRight: '\x1b[C',
 };
 
-function sendSSHKey(key, focus = false) {
-  if (!key) return;
-
-  let out;
-
-  if (ctrlActive) {
-    if (key.length === 1) {
-      // Ctrl+A ~ Ctrl+Z
-      out = String.fromCharCode(key.toUpperCase().charCodeAt(0) - 64);
-    } else {
-      out = keyMap[key];
-    }
-    resetCtrlArt();
-  } else if (altActive) {
-    // Alt + key => ESC + key
-    out = key.length === 1 ? '\x1b' + key : keyMap[key];
-    resetCtrlArt();
-  } else {
-    out = keyMap[key] || key;
-  }
-
-  if (out) sendSSH(out);
-  if (focus) term.focus();
-}
-
-function resetCtrlArt() {
+function resetCtrlAlt() {
   ctrlActive = false;
   $shortcuts.find('.ctrl').removeClass('active');
   altActive = false;
   $shortcuts.find('.alt').removeClass('active');
 }
-$keyboardWakeup.on('input', function () {
-  if (!isMobile()) return;
-
-  const key = this.value;
-  if (!key) return;
-
-  handleIMEInput(key);
-  this.value = '';
-});
-
-function handleIMEInput(key) {
-  if (ctrlActive && key.length === 1) {
-    sendSSH(String.fromCharCode(key.toUpperCase().charCodeAt(0) - 64));
-    resetCtrlArt();
-  } else if (altActive && key.length === 1) {
-    sendSSH('\x1b' + key);
-    resetCtrlArt();
-  } else {
-    sendSSH(key);
-  }
-  term.focus();
-}
-$app.on('keydown', function (e) {
-  if ((!ctrlActive && !altActive) || isMobile()) return;
-
-  const key = e.key;
-  // 单字符 or 特殊键
-  if (key.length === 1 || keyMap[key]) {
-    sendSSHKey(key);
-  }
-});
 
 $shortcuts.on('click', '.esc,.tab,.up,.down,.left,.right', function () {
   for (const cls of this.classList) {
     const key = classToKey[cls];
-    if (key) {
-      sendSSHKey(key, 1);
-      break;
-    }
+    if (!key) continue;
+
+    const out = keyMap[key] || key;
+
+    if (out) sendSSH(out);
+    break; // 找到第一个匹配的 class 就处理
   }
+  term.focus();
 });
 
 $shortcuts.on('click', '.ctrl', function () {
@@ -761,7 +707,7 @@ $shortcuts.on('click', '.ctrl', function () {
   altActive = false;
   $(this).toggleClass('active', ctrlActive);
   $shortcuts.find('.alt').removeClass('active');
-  if (isMobile() && ctrlActive) $keyboardWakeup.focus();
+  if (ctrlActive) term.focus();
 });
 
 $shortcuts.on('click', '.alt', function () {
@@ -769,8 +715,28 @@ $shortcuts.on('click', '.alt', function () {
   ctrlActive = false;
   $(this).toggleClass('active', altActive);
   $shortcuts.find('.ctrl').removeClass('active');
-  if (isMobile() && altActive) $keyboardWakeup.focus();
+  if (altActive) term.focus();
 });
+
+// 处理 term 输入 + Ctrl/Alt
+function handleTermInput(text) {
+  if (!text) return;
+
+  let out = text;
+
+  // Ctrl 单字符
+  if (ctrlActive && text.length === 1) {
+    out = String.fromCharCode(text.toUpperCase().charCodeAt(0) - 64);
+    resetCtrlAlt();
+  }
+  // Alt 单字符
+  else if (altActive && text.length === 1) {
+    out = '\x1b' + text;
+    resetCtrlAlt();
+  }
+
+  sendSSH(out);
+}
 
 let isFullHeight = false;
 let isFullWidth = false;
