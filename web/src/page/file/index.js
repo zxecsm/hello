@@ -1175,7 +1175,7 @@ function hdShare(e, obj) {
           loading.end();
           if (result.code === 1) {
             close(1);
-            _myOpen(`/sharelist`, '分享列表');
+            _myOpen(`/sharelist`, '分享管理');
           }
         })
         .catch(() => {

@@ -1,10 +1,11 @@
 import JSZip from 'jszip';
 import { CacheByExpire } from './cache';
 import md5 from './md5';
-import { downloadBlob, getFiles, isTextFile } from './utils';
+import { _setTimeout, downloadBlob, getFiles, isTextFile } from './utils';
 import _msg from '../plugins/message';
 import _d from '../common/config';
 import localData from '../common/localData';
+import { withLock } from './lock';
 
 const cacheFile = {
   // 缓存状态
@@ -18,6 +19,13 @@ const cacheFile = {
       // 清除url缓存，释放URL对象
       if (url) {
         URL.revokeObjectURL(url);
+      }
+    },
+    beforeReplace: (_, url, newUrl) => {
+      if (url !== newUrl) {
+        _setTimeout(() => {
+          URL.revokeObjectURL(url);
+        }, 1000);
       }
     },
   }),
@@ -104,11 +112,7 @@ const cacheFile = {
   },
   // 加载文件
   async loadFile(url) {
-    try {
-      return (await fetch(url)).blob();
-    } catch (error) {
-      throw error;
-    }
+    return (await fetch(url)).blob();
   },
   // 添加文件
   async add(url, type = _d.appName, file) {
@@ -148,17 +152,19 @@ const cacheFile = {
   },
   // 写入文件缓存
   async writeCache(hash, data) {
-    try {
-      const fileHandle = await (
-        await this.getDirectory()
-      ).getFileHandle(hash, { create: true });
-      const writable = await fileHandle.createWritable();
-      await writable.write(data);
-      await writable.close();
-      return true;
-    } catch {
-      return false;
-    }
+    return withLock(hash, async () => {
+      try {
+        const fileHandle = await (
+          await this.getDirectory()
+        ).getFileHandle(hash, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(data);
+        await writable.close();
+        return true;
+      } catch {
+        return false;
+      }
+    });
   },
   // 删除文件缓存
   async delete(url, type = _d.appName) {

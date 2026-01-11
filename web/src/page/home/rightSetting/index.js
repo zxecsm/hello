@@ -2039,7 +2039,7 @@ $rightBox
   .on('click', '.r_setting', settingMenu)
   .on('click', '.show_share_list', function () {
     hideRightMenu();
-    openInIframe(`/sharelist`, '分享列表');
+    openInIframe(`/sharelist`, '分享管理');
   })
   .on('click', '.show_music_player', () => {
     showMusicPlayerBox();

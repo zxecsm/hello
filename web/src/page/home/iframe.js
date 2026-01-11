@@ -366,7 +366,7 @@ function addHideBox(iframeBox) {
   box.setAttribute('iframeId', iframeBox.id);
 
   const close = document.createElement('span');
-  close.className = 'close_btn iconfont icon-close-bold';
+  close.className = 'close_btn iconfont icon-shibai';
   const title = document.createElement('span');
   title.className = 'title';
   title.textContent = iframeBox.name;

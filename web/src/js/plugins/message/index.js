@@ -64,7 +64,7 @@ class Msg {
     this.progress = document.createElement('div');
     this.progress.className = 'progress';
     this.oClose = document.createElement('i');
-    this.oClose.className = 'close iconfont icon-close-bold';
+    this.oClose.className = 'close iconfont icon-shibai';
     this.oClose.setAttribute('cursor', '');
     if (this.opt.icon) {
       this.el.appendChild(this.oIcon);

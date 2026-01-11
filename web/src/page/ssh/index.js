@@ -28,6 +28,7 @@ import {
   getTextSize,
   isDarkMode,
   isIframe,
+  isMobile,
   myOpen,
   pageErr,
   queryURLParams,
@@ -43,7 +44,8 @@ const $app = $('#app'),
   $footer = $('.footer'),
   $shortcuts = $footer.find('.shortcuts'),
   $quickGroup = $footer.find('.quick_group'),
-  $quickCommands = $footer.find('.quick_commands');
+  $quickCommands = $footer.find('.quick_commands'),
+  $keyboardWakeup = $('.keyboard_wakeup');
 const urlParams = queryURLParams(myOpen());
 const { HASH } = urlParams;
 if (!HASH) {
@@ -127,6 +129,11 @@ realtime.init().add((res) => {
 });
 
 term.onData((d) => sendSSH(d));
+function sendSSH(text, enter = false) {
+  if (!text) return;
+  if (enter) text += '\r';
+  realtime.send({ type: 'ssh', data: { text } });
+}
 // 黑暗模式
 function changeTheme(dark) {
   if (dark === 'y') {
@@ -655,38 +662,95 @@ function moveQuickCommand(fromId, toId) {
 let ctrlActive = false;
 let altActive = false;
 
-// 简化键映射
-const keyMap = {
-  Enter: '\r',
-  Backspace: '\x08',
-  Esc: '\x1b',
-  Tab: '\t',
-  top: '\x1b[A',
-  down: '\x1b[B',
-  left: '\x1b[D',
-  right: '\x1b[C',
+const classToKey = {
+  esc: 'Escape',
+  tab: 'Tab',
+  up: 'ArrowUp',
+  down: 'ArrowDown',
+  left: 'ArrowLeft',
+  right: 'ArrowRight',
 };
 
-$app.on('keydown', function (e) {
-  if (!ctrlActive && !altActive) return;
+const keyMap = {
+  Enter: '\r',
+  Tab: '\t',
+  Escape: '\x1b',
+  Backspace: '\x08',
 
-  e.preventDefault();
-  e.stopPropagation();
+  ArrowUp: '\x1b[A',
+  ArrowDown: '\x1b[B',
+  ArrowLeft: '\x1b[D',
+  ArrowRight: '\x1b[C',
+};
+
+function sendSSHKey(key, focus = false) {
+  if (!key) return;
+
+  let out;
+
+  if (ctrlActive) {
+    if (key.length === 1) {
+      // Ctrl+A ~ Ctrl+Z
+      out = String.fromCharCode(key.toUpperCase().charCodeAt(0) - 64);
+    } else {
+      out = keyMap[key];
+    }
+    resetCtrlArt();
+  } else if (altActive) {
+    // Alt + key => ESC + key
+    out = key.length === 1 ? '\x1b' + key : keyMap[key];
+    resetCtrlArt();
+  } else {
+    out = keyMap[key] || key;
+  }
+
+  if (out) sendSSH(out);
+  if (focus) term.focus();
+}
+
+function resetCtrlArt() {
+  ctrlActive = false;
+  $shortcuts.find('.ctrl').removeClass('active');
+  altActive = false;
+  $shortcuts.find('.alt').removeClass('active');
+}
+$keyboardWakeup.on('input', function () {
+  if (!isMobile()) return;
+
+  const key = this.value;
+  if (!key) return;
+
+  handleIMEInput(key);
+  this.value = '';
+});
+
+function handleIMEInput(key) {
+  if (ctrlActive && key.length === 1) {
+    sendSSH(String.fromCharCode(key.toUpperCase().charCodeAt(0) - 64));
+    resetCtrlArt();
+  } else if (altActive && key.length === 1) {
+    sendSSH('\x1b' + key);
+    resetCtrlArt();
+  } else {
+    sendSSH(key);
+  }
+  term.focus();
+}
+$app.on('keydown', function (e) {
+  if ((!ctrlActive && !altActive) || isMobile()) return;
 
   const key = e.key;
-
-  // 只处理单字符或特殊键
+  // 单字符 or 特殊键
   if (key.length === 1 || keyMap[key]) {
-    sendSSH(key);
+    sendSSHKey(key);
   }
 });
 
-$shortcuts.on('click', '.esc,.tab,.top,.down,.left,.right', function () {
-  const el = this.classList;
-
-  for (const key in keyMap) {
-    if (el.contains(key)) {
-      sendSSH(keyMap[key]);
+$shortcuts.on('click', '.esc,.tab,.up,.down,.left,.right', function () {
+  for (const cls of this.classList) {
+    const key = classToKey[cls];
+    if (key) {
+      sendSSHKey(key, 1);
       break;
     }
   }
@@ -697,6 +761,7 @@ $shortcuts.on('click', '.ctrl', function () {
   altActive = false;
   $(this).toggleClass('active', ctrlActive);
   $shortcuts.find('.alt').removeClass('active');
+  if (isMobile() && ctrlActive) $keyboardWakeup.focus();
 });
 
 $shortcuts.on('click', '.alt', function () {
@@ -704,34 +769,8 @@ $shortcuts.on('click', '.alt', function () {
   ctrlActive = false;
   $(this).toggleClass('active', altActive);
   $shortcuts.find('.ctrl').removeClass('active');
+  if (isMobile() && altActive) $keyboardWakeup.focus();
 });
-
-function sendSSH(key, enter = false) {
-  if (!key) return;
-
-  let out = key;
-
-  if (ctrlActive) {
-    if (key.length === 1) {
-      out = String.fromCharCode(key.toUpperCase().charCodeAt(0) - 64);
-    } else if (keyMap[key]) {
-      out = keyMap[key];
-    }
-    ctrlActive = false;
-    $shortcuts.find('.ctrl').removeClass('active');
-  } else if (altActive) {
-    if (key.length === 1) out = '\x1b' + key;
-    altActive = false;
-    $shortcuts.find('.alt').removeClass('active');
-  } else {
-    out = keyMap[key] || key;
-  }
-
-  if (enter) out += '\r';
-
-  realtime.send({ type: 'ssh', data: { text: out } });
-  term.focus();
-}
 
 let isFullHeight = false;
 let isFullWidth = false;
@@ -756,4 +795,5 @@ $sshBox
       this.className = 'iconfont icon-kuandukuoda full_width';
     }
     isFullWidth = !isFullWidth;
+    fitAddon.fit();
   });

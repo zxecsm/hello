@@ -981,7 +981,7 @@ function shareBmList(e, obj) {
           if (result.code === 1) {
             hideAside();
             close(1);
-            openInIframe(`/sharelist`, '分享列表');
+            openInIframe(`/sharelist`, '分享管理');
           }
         })
         .catch(() => {

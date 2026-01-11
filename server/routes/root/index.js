@@ -585,7 +585,7 @@ route.post(
 route.post(
   '/tips',
   validate(
-    'bosy',
+    'body',
     V.object({
       flag: V.string().trim().enum(['close', 'update']),
     })

@@ -103,7 +103,7 @@ export function showCountInfo(e, obj) {
   const { start, end, link, top, state } = obj;
   const data = [
     {
-      text: state === 0 ? '开启' : '关闭',
+      text: state === 1 ? '开启' : '关闭',
       beforeText: '状态：',
     },
     {

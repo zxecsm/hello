@@ -63,7 +63,7 @@ class CreateTask {
     this.progress.className = 'progress';
     this.progress.textContent = '...';
     this.cancelBtn = document.createElement('div');
-    this.cancelBtn.className = 'cancel_task iconfont icon-close-bold';
+    this.cancelBtn.className = 'cancel_task iconfont icon-shibai';
     this.cancelBtn.setAttribute('cursor', 'y');
     this.cancelBtn.dataset.key = this.key;
     this.task.appendChild(this.progress);
@@ -118,3 +118,4 @@ $taskBox.on('click', '.cancel_task', async (e) => {
     }
   } catch {}
 });
+// addTask('test');

@@ -131,7 +131,7 @@ export class UpProgress {
     this.proList = document.createElement('div');
     this.proList.className = 'pro_list';
     this.closeBtn = document.createElement('div');
-    this.closeBtn.className = `close_btn iconfont icon-close-bold`;
+    this.closeBtn.className = `close_btn iconfont icon-shibai`;
     this.closeBtn.setAttribute('cursor', 'y');
 
     this.item.appendChild(this.closeBtn);
@@ -155,3 +155,5 @@ export class UpProgress {
     return new Progress(name, iconfont, this);
   }
 }
+// const test = new UpProgress();
+// test.add('test');
