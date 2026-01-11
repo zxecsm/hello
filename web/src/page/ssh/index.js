@@ -38,6 +38,7 @@ import rMenu from '../../js/plugins/rightMenu/index.js';
 import _d from '../../js/common/config.js';
 import _msg from '../../js/plugins/message/index.js';
 import { MouseElementTracker } from '../../js/utils/boxSelector.js';
+import toolTip from '../../js/plugins/tooltip/index.js';
 const $app = $('#app'),
   $sshBox = $app.find('.ssh_box'),
   $footer = $('.footer'),
@@ -186,8 +187,9 @@ function renderCommand() {
   const html = _tpl(
     `
     <div cursor="y" v-for="{id,title} in list" :data-id=id class="command_item">
+      <span class="icon iconfont icon-terminal"></span>
       <span class="title">{{title}}</span>
-      <span class="set iconfont icon-maohao"></span>
+      <span class="close iconfont icon-shibai"></span>
     </div>
     <div class="add iconfont icon-tianjia" cursor="y"></div>
     `,
@@ -391,8 +393,25 @@ $quickCommands
     sendSSH(obj.command, !!obj.enter);
     term.focus();
   })
-  .on('click', '.set', (e) => {
+  .on('click', '.icon', (e) => {
     hdComandMenu(
+      e,
+      getCommandInfo(curQuickGroupId, e.target.parentNode.dataset.id)
+    );
+  })
+  .on('mouseenter', '.icon', (e) => {
+    const { command, enter } = getCommandInfo(
+      curQuickGroupId,
+      e.target.parentNode.dataset.id
+    );
+    const str = `命令：${command}\n自动执行：${enter ? '是' : '否'}`;
+    toolTip.setTip(str).show();
+  })
+  .on('mouseleave', '.icon', function () {
+    toolTip.hide();
+  })
+  .on('click', '.close', (e) => {
+    hdCommandDelete(
       e,
       getCommandInfo(curQuickGroupId, e.target.parentNode.dataset.id)
     );
@@ -458,27 +477,13 @@ function hdComandMenu(e, obj) {
   const data = [
     { id: 'edit', text: '编辑', beforeIcon: 'iconfont icon-bianji' },
     { id: 'move', text: '移动到', beforeIcon: 'iconfont icon-moveto' },
-    {
-      id: 'delete',
-      text: '删除',
-      beforeIcon: 'iconfont icon-shanchu',
-    },
   ];
   rMenu.selectMenu(
     e,
     data,
-    ({ e, close, id, loading }) => {
+    ({ e, id }) => {
       if (id === 'edit') {
         hdComandEdit(e, obj);
-      } else if (id === 'delete') {
-        hdCommandDelete(
-          e,
-          obj,
-          () => {
-            close();
-          },
-          loading
-        );
       } else if (id === 'move') {
         moveToGroup(e, obj);
       }
@@ -535,7 +540,7 @@ function moveToGroup(e, obj) {
     '移动命令到分组'
   );
 }
-function hdCommandDelete(e, obj, cb, loading = { start() {}, end() {} }) {
+function hdCommandDelete(e, obj) {
   rMenu.pop(
     {
       e,
@@ -544,19 +549,14 @@ function hdCommandDelete(e, obj, cb, loading = { start() {}, end() {} }) {
     },
     (t) => {
       if (t === 'confirm') {
-        loading.start();
         reqSSHDeleteQuick({ id: obj.id, groupId: curQuickGroupId })
           .then((res) => {
-            loading.end();
             if (res.code === 1) {
-              cb && cb();
               renderList(1);
               _msg.success(res.codeText);
             }
           })
-          .catch(() => {
-            loading.end();
-          });
+          .catch(() => {});
       }
     }
   );

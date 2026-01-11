@@ -58,7 +58,11 @@ body {
         font-weight: bold;
       }
     }
-
+    .close_btn {
+      &:hover {
+        color: var(--btn-danger-color);
+      }
+    }
     .res_total_num {
       line-height: 4rem;
       flex: none;
@@ -90,6 +94,9 @@ body {
       .clear {
         display: none;
         flex: none;
+        &:hover {
+          color: var(--btn-danger-color);
+        }
       }
     }
   }

@@ -56,11 +56,14 @@
         text-align: center;
         &:hover {
           color: var(--text-hover-color);
-          transform: scale(1.2);
+          transform: scale(1.1);
         }
       }
       .close {
         font-size: 1.8rem;
+        &:hover {
+          color: var(--btn-danger-color);
+        }
       }
       .search_box {
         flex: auto;
@@ -93,6 +96,11 @@
           font-size: 1.6rem;
           display: none;
           flex: none;
+        }
+        .clear {
+          &:hover {
+            color: var(--btn-danger-color);
+          }
         }
       }
       .title {
@@ -133,7 +141,7 @@
           color: var(--text-hover-color);
           .icon:first-of-type,
           img {
-            transform: scale(1.2);
+            transform: scale(1.1);
           }
         }
         &.stop {
@@ -209,7 +217,7 @@
             flex: none;
             font-size: 1.1em;
             &:hover {
-              color: var(--text-hover-color);
+              color: var(--btn-danger-color);
             }
             &.show {
               display: block;
@@ -297,8 +305,8 @@
             bottom: 0;
             font-size: 1.1em;
             &:hover {
-              color: var(--text-hover-color);
-              transform: scale(1.2);
+              color: var(--btn-danger-color);
+              transform: scale(1.1);
             }
             &.show {
               display: block;
@@ -342,8 +350,8 @@
           bottom: 0;
           font-size: 1.1em;
           &:hover {
-            color: var(--text-hover-color);
-            transform: scale(1.2);
+            color: var(--btn-danger-color);
+            transform: scale(1.1);
           }
         }
       }

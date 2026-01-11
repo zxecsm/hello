@@ -64,6 +64,11 @@ body {
           display: none;
           flex: none;
         }
+        .clean_btn {
+          &:hover {
+            color: var(--btn-danger-color);
+          }
+        }
         .search_btn {
           display: block;
         }
@@ -97,12 +102,17 @@ body {
         .close {
           width: 3rem;
           &:hover {
-            transform: scale(1.2);
+            transform: scale(1.1);
           }
         }
       }
       .paste_btn {
         display: none;
+        .close {
+          &:hover {
+            color: var(--btn-danger-color);
+          }
+        }
       }
       .h_btn {
         flex: none;
@@ -161,7 +171,7 @@ body {
         &:hover {
           background-color: var(--color9);
           .logo {
-            transform: scale(1.2);
+            transform: scale(1.1);
           }
         }
         .check_state {
@@ -360,7 +370,7 @@ body {
         width: 4rem;
         &:hover {
           color: var(--text-hover-color);
-          transform: scale(1.2);
+          transform: scale(1.1);
         }
         &.deactive {
           color: var(--color9);
@@ -403,7 +413,7 @@ body {
         line-height: 1.5;
         &:hover {
           color: var(--text-hover-color);
-          transform: scale(1.2);
+          transform: scale(1.1);
         }
       }
 
@@ -457,7 +467,7 @@ body {
     text-align: center;
     &:hover {
       color: var(--text-hover-color);
-      transform: scale(1.2);
+      transform: scale(1.1);
     }
   }
   .list {
@@ -491,7 +501,7 @@ body {
         text-align: center;
         &:hover {
           color: var(--btn-danger-color);
-          transform: scale(1.2);
+          transform: scale(1.1);
         }
       }
     }

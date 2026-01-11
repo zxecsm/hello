@@ -58,6 +58,11 @@ html {
           display: none;
           flex: none;
         }
+        .clean_btn {
+          &:hover {
+            color: var(--btn-danger-color);
+          }
+        }
         .search_btn {
           display: block;
         }
@@ -105,8 +110,8 @@ html {
       .clean_category {
         display: none;
         &:hover {
-          color: var(--text-hover-color);
-          transform: scale(1.2);
+          color: var(--btn-danger-color);
+          transform: scale(1.1);
         }
       }
       .fill {
@@ -155,7 +160,7 @@ html {
       &:hover {
         background-color: var(--color9);
         .item_type {
-          transform: scale(1.2);
+          transform: scale(1.1);
         }
       }
 
@@ -185,14 +190,14 @@ html {
 
         &:hover {
           color: var(--text-hover-color);
-          transform: scale(1.2);
+          transform: scale(1.1);
         }
       }
 
       .del_item {
         &:hover {
           color: var(--btn-danger-color);
-          transform: scale(1.2);
+          transform: scale(1.1);
         }
       }
 
@@ -209,7 +214,7 @@ html {
       .lock_state {
         &:hover {
           color: var(--text-hover-color);
-          transform: scale(1.2);
+          transform: scale(1.1);
         }
 
         &.open {
@@ -290,7 +295,7 @@ html {
         line-height: 1.5;
         &:hover {
           color: var(--text-hover-color);
-          transform: scale(1.2);
+          transform: scale(1.1);
         }
       }
 
@@ -342,7 +347,7 @@ html {
         }
         .set_btn:hover {
           color: var(--text-hover-color);
-          transform: scale(1.2);
+          transform: scale(1.1);
         }
       }
     }

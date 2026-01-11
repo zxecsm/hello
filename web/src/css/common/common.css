@@ -325,7 +325,7 @@ textarea:-ms-input-placeholder {
   line-height: 1.5;
 }
 .inp_box i:hover {
-  transform: scale(1.2);
+  transform: scale(1.1);
   color: var(--text-hover-color);
 }
 .shake {

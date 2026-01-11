@@ -86,7 +86,7 @@ class RightM {
     this.searchInp.setAttribute('autocomplete', 'off');
     this.searchBox.appendChild(this.searchInp);
     this.clearSearchText = document.createElement('i');
-    this.clearSearchText.className = 'iconfont icon-shibai';
+    this.clearSearchText.className = 'clear iconfont icon-shibai';
     this.clearSearchText.setAttribute('cursor', 'y');
     this.searchBox.appendChild(this.clearSearchText);
     this.head.appendChild(this.searchBox);
