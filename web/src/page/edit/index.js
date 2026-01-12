@@ -58,10 +58,10 @@ const $contentWrap = $('.content_wrap'),
   $headBtns = $contentWrap.find('.head_btns'),
   $editWrap = $contentWrap.find('.edit_wrap'),
   $editBox = $editWrap.find('.edit_box'),
-  $themeCss = $('.theme_css'),
+  $themeCss = $('<link class="theme_css" rel="stylesheet" />'),
   $previewBox = $editWrap.find('.preview_box'),
   $resize = $previewBox.find('.resize');
-
+document.head.appendChild($themeCss[0]);
 let editNoteFontSize = localData.get('editNoteFontSize');
 if (!isIframe()) {
   waitLogin(() => {

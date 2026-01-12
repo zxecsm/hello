@@ -51,12 +51,13 @@ let urlparmes = queryURLParams(myOpen()),
 let hdNoteDirPosition = () => {};
 const $setBtnsWrap = $('.set_btns_wrap'),
   $contentWrap = $('.content_wrap'),
-  $themeCss = $('.theme_css'),
+  $themeCss = $('<link class="theme_css" rel="stylesheet" />'),
   $noteInfo = $contentWrap.find('.note_info'),
   $noteBox = $contentWrap.find('.note_box'),
   $pageSearchWrap = $('.page_search_wrap'),
   $authorInfo = $contentWrap.find('.author_info'),
   $fillBox = $contentWrap.find('.fill_box');
+document.head.appendChild($themeCss[0]);
 let noteFontSize = localData.get('noteFontSize'),
   noteWiden = localData.get('noteWiden'),
   highlightnum = 0,
