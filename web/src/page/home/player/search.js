@@ -46,7 +46,6 @@ import toolTip from '../../../js/plugins/tooltip/index.js';
 import { showSongInfo } from '../../../js/utils/showinfo.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl } from '../../../js/utils/template.js';
-import _path from '../../../js/utils/path.js';
 import pagination from '../../../js/plugins/pagination/index.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
 const $searchMusicWrap = $('.music_player_box .search_music_wrap');
@@ -243,12 +242,12 @@ function searchListSongSetting(e, sobj) {
         );
       } else if (id === '7') {
         close();
-        let fname = `${sobj.artist} - ${sobj.title}`;
+        const fname = `${sobj.artist} - ${sobj.title}`;
         downloadFile(
           [
             {
               fileUrl: sobj.uurl,
-              filename: `${fname}.${_path.extname(sobj.url)[2]}`,
+              filename: fname,
             },
           ],
           'music'

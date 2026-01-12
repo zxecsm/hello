@@ -33,6 +33,7 @@ import {
   getDuplicates,
   _mySlide,
   getDateDiff,
+  getTextSize,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
@@ -90,6 +91,7 @@ import {
 import { otherWindowMsg } from '../home/home';
 import localData from '../../js/common/localData';
 import { reqUserFileToken } from '../../api/user';
+import { reqSSHEdit, reqSSHInfo } from '../../api/ssh';
 const $contentWrap = $('.content_wrap');
 const $pagination = $('.pagination');
 const $curmbBox = $('.crumb_box');
@@ -711,6 +713,13 @@ function hdContextMenu(e) {
       beforeIcon: 'iconfont icon-upload',
     },
   ];
+  if (isRoot()) {
+    data.push({
+      id: 'ssh',
+      text: '在终端打开',
+      beforeIcon: 'iconfont icon-terminal1',
+    });
+  }
   rMenu.selectMenu(e, data, async ({ e, close, id }) => {
     if (id === 'select') {
       close();
@@ -721,6 +730,17 @@ function hdContextMenu(e) {
       createFileAndDir(e);
     } else if (id === 'up') {
       upFileAndDir(e);
+    } else if (id === 'ssh') {
+      if (isRoot()) {
+        close();
+        e.stopPropagation();
+        _myOpen(
+          `/ssh?p=${decodeURIComponent(
+            _path.normalize('/', curFileDirPath)
+          )}#local`,
+          '终端'
+        );
+      }
     }
   });
 }
@@ -767,6 +787,13 @@ function rightList(e, obj, el) {
         beforeIcon: 'iconfont icon-minimize',
       }
     );
+    if (isRoot()) {
+      data.push({
+        id: 'ssh',
+        text: '在终端打开',
+        beforeIcon: 'iconfont icon-terminal1',
+      });
+    }
   }
   data.push({
     id: 'share',
@@ -851,7 +878,18 @@ function rightList(e, obj, el) {
     data,
     ({ e, id, close, loading }) => {
       // 编辑列表
-      if (id === 'addto') {
+      if (id === 'ssh') {
+        if (isRoot()) {
+          close();
+          e.stopPropagation();
+          _myOpen(
+            `/ssh?p=${decodeURIComponent(
+              _path.normalize('/', obj.path, obj.name)
+            )}#local`,
+            '终端'
+          );
+        }
+      } else if (id === 'addto') {
         addTo(e, obj);
       } else if (id === 'download') {
         close();
@@ -1284,6 +1322,9 @@ function hdCheckItem(el) {
 if (isIframe()) {
   $header.find('.h_go_home').remove();
 }
+if (!isRoot()) {
+  $header.find('.h_ssh').remove();
+}
 // 上传
 async function hdUp(files) {
   const controller = new AbortController();
@@ -1497,6 +1538,7 @@ $header
     rMenu.rightInfo(e, normalizePasteListInfo(), '粘贴信息');
   })
   .on('click', '.clear_trash_btn', hdClearTrash)
+  .on('click', '.h_ssh', editSSHInfo)
   .on('click', '.h_history', (e) => {
     let data = [];
     reqFileCdHistory()
@@ -1583,6 +1625,108 @@ $header
   .on('mouseleave', '.paste_btn', function () {
     toolTip.hide();
   });
+function editSSHInfo(e) {
+  if (!isRoot()) return;
+  const id = 'local';
+  reqSSHInfo({ id }).then((res) => {
+    if (res.code === 1) {
+      const obj = res.data;
+      rMenu.inpMenu(
+        e,
+        {
+          subText: '提交',
+          items: {
+            title: {
+              beforeText: '标题：',
+              value: obj.title || '',
+              verify(val) {
+                return rMenu.validString(val, 1, _d.fieldLength.title);
+              },
+            },
+            auth_type: {
+              beforeText: '认证方式：',
+              type: 'select',
+              value: obj.auth_type || 'password',
+              selectItem: [
+                { value: 'password', text: '密码' },
+                { value: 'key', text: '密钥' },
+              ],
+            },
+            host: {
+              beforeText: '主机：IP或域名',
+              value: obj.host || '',
+              verify(val) {
+                return rMenu.validString(val, 1, _d.fieldLength.filename);
+              },
+            },
+            port: {
+              beforeText: '端口：',
+              value: obj.port || 22,
+              verify(val) {
+                return (
+                  rMenu.validInteger(val) || rMenu.validNumber(val, 1, 65535)
+                );
+              },
+            },
+            username: {
+              beforeText: '用户名：',
+              value: obj.username || '',
+              verify(val) {
+                return rMenu.validString(val, 1, _d.fieldLength.filename);
+              },
+            },
+            password: {
+              beforeText: '密码：',
+              value: obj.password || '',
+              inputType: 'password',
+              verify(val) {
+                return rMenu.validString(val, 0, _d.fieldLength.filename);
+              },
+            },
+            private_key: {
+              beforeText: '密钥：',
+              value: obj.private_key || '',
+              type: 'textarea',
+              verify(val) {
+                return getTextSize(val) > _d.fieldLength.customCodeSize
+                  ? '密钥过长'
+                  : '';
+              },
+            },
+            passphrase: {
+              beforeText: '密钥口令：',
+              value: obj.passphrase || '',
+              inputType: 'password',
+              verify(val) {
+                return rMenu.validString(val, 0, _d.fieldLength.filename);
+              },
+            },
+          },
+        },
+        function ({ close, inp, loading, isDiff }) {
+          if (!isDiff()) return;
+          loading.start();
+          reqSSHEdit({
+            id,
+            ...inp,
+          })
+            .then((result) => {
+              loading.end();
+              if (result.code === 1) {
+                close(true);
+                _msg.success(result.codeText);
+                return;
+              }
+            })
+            .catch(() => {
+              loading.end();
+            });
+        },
+        '编辑本机SSH配置'
+      );
+    }
+  });
+}
 function normalizePasteListInfo() {
   const { type, data } = waitObj;
   let str = `操作：${type === 'copy' ? '复制' : '剪切'}`;

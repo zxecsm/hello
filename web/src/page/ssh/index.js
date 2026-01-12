@@ -46,7 +46,7 @@ const $app = $('#app'),
   $quickGroup = $footer.find('.quick_group'),
   $quickCommands = $footer.find('.quick_commands');
 const urlParams = queryURLParams(myOpen());
-const { HASH } = urlParams;
+const { HASH, p = '' } = urlParams;
 if (!HASH) {
   pageErr();
 }
@@ -96,7 +96,7 @@ term.open(document.getElementById('terminal'));
 fitAddon.fit();
 window.addEventListener('resize', () => fitAddon.fit());
 
-reqSSHConnect({ id: HASH })
+reqSSHConnect({ id: HASH, defaultPath: p })
   .then((res) => {
     if (res.code === 1) {
       const { title, host, port, username } = res.data;

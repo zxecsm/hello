@@ -136,7 +136,6 @@ import { hideIframeMask, showIframeMask } from '../iframe.js';
 import { _tpl, deepClone } from '../../../js/utils/template.js';
 import notifyMusicControlPanel from './notifyMusicControlPanel.js';
 import md5 from '../../../js/utils/md5.js';
-import _path from '../../../js/utils/path.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
 import {
@@ -1843,7 +1842,7 @@ function songMenu(e, idx, sobj) {
           [
             {
               fileUrl: sobj.uurl,
-              filename: `${fname}.${_path.extname(sobj.url)[2]}`,
+              filename: fname,
             },
           ],
           'music'

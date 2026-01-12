@@ -36,7 +36,7 @@ export function resetSSHExpireTime(temid) {
 }
 
 // 创建终端
-export function createTerminal(account, temid, config) {
+export function createTerminal(account, temid, config, defaultPath = '') {
   const sshClient = new Client();
   sshClient.on('ready', () => {
     sshClient.shell((err, stream) => {
@@ -72,7 +72,10 @@ export function createTerminal(account, temid, config) {
           'self'
         )
       );
-
+      if (defaultPath) {
+        stream.write(`cd ${defaultPath}\r`);
+        stream.write('clear\r');
+      }
       sshCache.set(temid, { stream, sshClient });
     });
   });

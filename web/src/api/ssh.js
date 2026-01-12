@@ -84,3 +84,7 @@ export function reqSSHMoveQuickGroup(data) {
 export function reqSSHMoveToGroup(data) {
   return _postAjax(`/ssh/move-to-group`, data);
 }
+// 获取SSH配置
+export function reqSSHInfo(data) {
+  return _getAjax(`/ssh/info`, data);
+}

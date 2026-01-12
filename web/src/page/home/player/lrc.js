@@ -66,7 +66,6 @@ import { showSongInfo } from '../../../js/utils/showinfo.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl, deepClone } from '../../../js/utils/template.js';
 import notifyMusicControlPanel from './notifyMusicControlPanel.js';
-import _path from '../../../js/utils/path.js';
 import { getSearchSongs } from './search.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
@@ -935,7 +934,7 @@ $lrcMenuWrap
             [
               {
                 fileUrl: playingSongInfo.uurl,
-                filename: `${fname}.${_path.extname(playingSongInfo.url)[2]}`,
+                filename: fname,
               },
             ],
             'music'

@@ -57,7 +57,6 @@ import rMenu from '../../js/plugins/rightMenu';
 import { _tpl, deepClone } from '../../js/utils/template';
 import { initRainCodeSleep } from '../../js/common/codeRain';
 import notifyMusicControlPanel from '../home/player/notifyMusicControlPanel';
-import _path from '../../js/utils/path';
 import { imgCache } from '../../js/utils/imgCache';
 import imgPreview from '../../js/plugins/imgPreview';
 import realtime from '../../js/plugins/realtime';
@@ -1193,11 +1192,11 @@ $lrcMenuWrap
           showSongInfo(e, playingSongInfo, shareToken, loading);
         } else if (id === '10') {
           close();
-          let fname = `${playingSongInfo.artist}-${playingSongInfo.title}`;
+          const fname = `${playingSongInfo.artist}-${playingSongInfo.title}`;
           downloadFile([
             {
               fileUrl: playingSongInfo.uurl,
-              filename: `${fname}.${_path.extname(playingSongInfo.url)[2]}`,
+              filename: fname,
             },
           ]);
         }

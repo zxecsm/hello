@@ -21,6 +21,7 @@ import {
   readQuickCommands,
   writeQuickCommands,
 } from './ssh.js';
+import _path from '../../utils/path.js';
 
 const route = express.Router();
 const kHello = sym('hello');
@@ -278,9 +279,36 @@ route.post(
         passphrase,
         auth_type,
       } = req[kValidate];
+      if (id === 'local' && !req[kHello].isRoot) {
+        _err(res, '无权操作')(req);
+        return;
+      }
+
       const { account } = req[kHello].userinfo;
       const now = Date.now();
 
+      if (id === 'local') {
+        const ssh = await db('ssh').where({ id, account }).findOne();
+        if (!ssh) {
+          await db('ssh').insert({
+            id,
+            port,
+            username,
+            title,
+            password,
+            host,
+            private_key,
+            passphrase,
+            auth_type,
+            create_at: now,
+            update_at: now,
+            account,
+          });
+          syncUpdateData(req, 'ssh');
+          _success(res, '添加本机SSH配置成功')(req, title, 1);
+          return;
+        }
+      }
       await db('ssh').where({ id, account }).update({
         port,
         username,
@@ -295,6 +323,32 @@ route.post(
       syncUpdateData(req, 'ssh');
 
       _success(res, '更新SSH配置成功')(req, title, 1);
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  }
+);
+
+// 获取ssh配置
+route.get(
+  '/info',
+  validate(
+    'query',
+    V.object({
+      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+    })
+  ),
+  async (req, res) => {
+    try {
+      const { id } = req[kValidate];
+      const { account } = req[kHello].userinfo;
+      const ssh = await db('ssh')
+        .select(
+          'id,title,port,host,username,auth_type,passphrase,password,private_key'
+        )
+        .where({ id, account })
+        .findOne();
+      _success(res, 'ok', ssh || {});
     } catch (error) {
       _err(res)(req, error);
     }
@@ -457,11 +511,12 @@ route.post(
     'body',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      defaultPath: V.string().trim().allowEmpty().max(fieldLength.url),
     })
   ),
   async (req, res) => {
     try {
-      const { id } = req[kValidate];
+      const { id, defaultPath } = req[kValidate];
 
       const { account } = req[kHello].userinfo;
 
@@ -476,8 +531,13 @@ route.post(
         _err(res, '获取配置信息失败')(req, id, 1);
         return;
       }
-
-      createTerminal(account, req[kHello].temid, config);
+      const dPath = _path.normalize('/', defaultPath);
+      createTerminal(
+        account,
+        req[kHello].temid,
+        config,
+        dPath && dPath !== '/' ? dPath : ''
+      );
       _success(res, '请求连接SSH成功', {
         title: config.title,
         username: config.username,

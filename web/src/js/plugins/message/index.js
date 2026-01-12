@@ -276,7 +276,7 @@ function error(
     message,
     type: 'error',
     duration,
-    icon: 'iconfont icon-shibai',
+    icon: 'iconfont icon-warning-circle',
     reside,
   };
   if (document.visibilityState === 'hidden') {
