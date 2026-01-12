@@ -282,7 +282,7 @@ function renderList(y) {
                   </span>
                   <br/>
                 </template>
-                <span v-html="hdTitleHighlight(splitWord, 'ssh -P'+' '+port+' '+username+'@'+host)"></span>
+                <span v-html="hdTitleHighlight(splitWord, 'ssh -p'+' '+port+' '+username+'@'+host)"></span>
               </div>
             </template >
             <div v-html="getPaging()" class="pagingbox"></div>
