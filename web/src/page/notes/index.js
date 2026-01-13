@@ -459,31 +459,20 @@ const pgnt = pagination($contentWrap[0], {
   },
 });
 // 删除笔记
-function deleteNote(e, ids, cb, title, loading = { start() {}, end() {} }) {
-  rMenu.pop(
-    {
-      e,
-      text: `确认删除：${title || '选中的笔记'}？`,
-      confirm: { type: 'danger', text: '删除' },
-    },
-    (type) => {
-      if (type === 'confirm') {
-        loading.start();
-        reqNoteDelete({ ids })
-          .then((result) => {
-            loading.end();
-            if (result.code === 1) {
-              cb && cb();
-              _msg.success(result.codeText);
-              renderList();
-            }
-          })
-          .catch(() => {
-            loading.end();
-          });
+function deleteNote(ids, cb, loading = { start() {}, end() {} }) {
+  loading.start();
+  reqNoteDelete({ ids })
+    .then((result) => {
+      loading.end();
+      if (result.code === 1) {
+        cb && cb();
+        _msg.success(result.codeText);
+        renderList();
       }
-    }
-  );
+    })
+    .catch(() => {
+      loading.end();
+    });
 }
 // 置顶笔记
 function toTop(e, obj) {
@@ -700,7 +689,7 @@ $contentWrap
           e.stopPropagation();
           _myOpen(`/edit#${encodeURIComponent(noteid)}`, title);
         } else if (id === '6') {
-          deleteNote(e, [noteid], close, title, loading);
+          deleteNote([noteid], close, loading);
         } else if (id === '7') {
           close();
           e.stopPropagation();
@@ -938,11 +927,11 @@ function getCheckItems() {
   return arr;
 }
 $footer
-  .on('click', '.f_delete', function (e) {
+  .on('click', '.f_delete', function () {
     if (runState !== 'own') return;
     const ids = getCheckItems();
     if (ids.length === 0) return;
-    deleteNote(e, ids);
+    deleteNote(ids);
   })
   .on('click', '.f_download', function () {
     const ids = getCheckItems();

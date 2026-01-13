@@ -132,31 +132,20 @@ function editCategory(e, obj) {
   );
 }
 // 删除分类
-function deleteCategory(e, obj, cb, loading = { start() {}, end() {} }) {
-  rMenu.pop(
-    {
-      e,
-      text: `确认删除：${obj.title}？`,
-      confirm: { text: '删除', type: 'danger' },
-    },
-    (t) => {
-      if (t === 'confirm') {
-        loading.start();
-        reqBmkDeleteGroup({ ids: [obj.id] })
-          .then((res) => {
-            loading.end();
-            if (res.code === 1) {
-              cb && cb();
-              renderCategoryList(1);
-              _msg.success(res.codeText);
-            }
-          })
-          .catch(() => {
-            loading.end();
-          });
+function deleteCategory(obj, cb, loading = { start() {}, end() {} }) {
+  loading.start();
+  reqBmkDeleteGroup({ ids: [obj.id] })
+    .then((res) => {
+      loading.end();
+      if (res.code === 1) {
+        cb && cb();
+        renderCategoryList(1);
+        _msg.success(res.codeText);
       }
-    }
-  );
+    })
+    .catch(() => {
+      loading.end();
+    });
 }
 // 操作分类
 function hdCategory(e) {
@@ -173,7 +162,7 @@ function hdCategory(e) {
       if (id === 'edit') {
         editCategory(e, obj);
       } else if (id === 'delete') {
-        deleteCategory(e, obj, close, loading);
+        deleteCategory(obj, close, loading);
       }
     },
     obj.title

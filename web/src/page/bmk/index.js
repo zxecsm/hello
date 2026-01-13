@@ -404,7 +404,6 @@ function movebmk(e, arr, loading = { start() {}, end() {} }) {
             id: 'home',
             text: '主页',
             beforeIcon: 'iconfont icon-liebiao1',
-            param: { title: '主页' },
           },
         ];
         res.data.list.sort((a, b) => a.num - b.num);
@@ -413,67 +412,53 @@ function movebmk(e, arr, loading = { start() {}, end() {} }) {
             id: item.id,
             text: item.title,
             beforeIcon: 'iconfont icon-liebiao1',
-            param: { title: item.title },
           });
         });
         rMenu.selectMenu(
           e,
           data,
-          ({ e, close, id, param, loading }) => {
+          ({ close, id, loading }) => {
             if (id) {
-              let toid = id,
-                groupTitle = param.title;
-              rMenu.pop(
-                {
-                  e,
-                  text: `确认${
-                    runState === 'own' ? '移动' : '添加'
-                  }到：${groupTitle}？`,
-                },
-                (type) => {
-                  if (type === 'confirm') {
-                    if (runState === 'own') {
-                      loading.start();
-                      reqBmkToGroup({
-                        ids: arr.map((item) => item.id),
-                        groupId: toid,
-                      })
-                        .then((result) => {
-                          loading.end();
-                          if (result.code === 1) {
-                            close(true);
-                            _msg.success(result.codeText);
-                            renderList();
-                          }
-                        })
-                        .catch(() => {
-                          loading.end();
-                        });
-                    } else if (runState === 'other') {
-                      loading.start();
-                      reqBmkAddBmk({
-                        bms: arr.map((item) => ({
-                          title: item.title,
-                          link: item.link,
-                          des: item.des,
-                        })),
-                        groupId: toid,
-                      })
-                        .then((result) => {
-                          loading.end();
-                          if (result.code === 1) {
-                            close(true);
-                            _msg.success(result.codeText);
-                            renderList();
-                          }
-                        })
-                        .catch(() => {
-                          loading.end();
-                        });
+              let toid = id;
+              if (runState === 'own') {
+                loading.start();
+                reqBmkToGroup({
+                  ids: arr.map((item) => item.id),
+                  groupId: toid,
+                })
+                  .then((result) => {
+                    loading.end();
+                    if (result.code === 1) {
+                      close(true);
+                      _msg.success(result.codeText);
+                      renderList();
                     }
-                  }
-                }
-              );
+                  })
+                  .catch(() => {
+                    loading.end();
+                  });
+              } else if (runState === 'other') {
+                loading.start();
+                reqBmkAddBmk({
+                  bms: arr.map((item) => ({
+                    title: item.title,
+                    link: item.link,
+                    des: item.des,
+                  })),
+                  groupId: toid,
+                })
+                  .then((result) => {
+                    loading.end();
+                    if (result.code === 1) {
+                      close(true);
+                      _msg.success(result.codeText);
+                      renderList();
+                    }
+                  })
+                  .catch(() => {
+                    loading.end();
+                  });
+              }
             }
           },
           `${runState === 'own' ? '移动' : '添加'}书签到分组`
@@ -584,31 +569,20 @@ function bmMenu(e) {
         movebmk(e, [obj], loading);
       } else if (id === '3') {
         if (runState !== 'own') return;
-        rMenu.pop(
-          {
-            e,
-            text: `确认删除：${obj.title}？`,
-            confirm: { type: 'danger', text: '删除' },
-          },
-          (type) => {
-            if (type === 'confirm') {
-              loading.start();
-              reqBmkDeleteBmk({ ids: [obj.id] })
-                .then((result) => {
-                  loading.end();
-                  if (result.code === 1) {
-                    _msg.success(result.codeText);
-                    close();
-                    renderList();
-                    return;
-                  }
-                })
-                .catch(() => {
-                  loading.end();
-                });
+        loading.start();
+        reqBmkDeleteBmk({ ids: [obj.id] })
+          .then((result) => {
+            loading.end();
+            if (result.code === 1) {
+              _msg.success(result.codeText);
+              close();
+              renderList();
+              return;
             }
-          }
-        );
+          })
+          .catch(() => {
+            loading.end();
+          });
       }
     },
     obj.title
@@ -865,29 +839,18 @@ function getSelectItem() {
 }
 
 // 删除选中
-function hdDeleteCheck(e) {
+function hdDeleteCheck() {
   if (runState !== 'own') return;
   const arr = getSelectItem();
-  rMenu.pop(
-    {
-      e,
-      text: `确认删除：选中的书签？`,
-      confirm: { type: 'danger', text: '删除' },
-    },
-    (type) => {
-      if (type === 'confirm') {
-        reqBmkDeleteBmk({ ids: arr.map((item) => item.id) })
-          .then((result) => {
-            if (result.code === 1) {
-              _msg.success(result.codeText);
-              renderList();
-              return;
-            }
-          })
-          .catch(() => {});
+  reqBmkDeleteBmk({ ids: arr.map((item) => item.id) })
+    .then((result) => {
+      if (result.code === 1) {
+        _msg.success(result.codeText);
+        renderList();
+        return;
       }
-    }
-  );
+    })
+    .catch(() => {});
 }
 
 function hdBmkMoveList(e) {

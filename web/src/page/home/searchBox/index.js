@@ -406,10 +406,10 @@ $searchBoxMask
     e.stopPropagation();
     checkedHomeBm(this);
   })
-  .on('click', '.delete_bm', function (e) {
+  .on('click', '.delete_bm', function () {
     const arr = getHomeCheckBmItem();
     if (arr.length === 0) return;
-    delBm(e, arr);
+    delBm(arr);
   })
   .on('click', '.move_bm', function (e) {
     const arr = getHomeCheckBmItem();

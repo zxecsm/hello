@@ -12,7 +12,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
   } else {
     const install = localData.get('install') || 0;
     const t = Date.now();
-    if (t - install < 5 * 24 * 60 * 60 * 1000) return;
+    if (t - install < 7 * 24 * 60 * 60 * 1000) return;
     rMenu.pop(
       {
         e: false,

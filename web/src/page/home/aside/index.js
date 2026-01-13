@@ -469,32 +469,21 @@ function addBmList(e) {
 }
 
 // 删除书签
-export function delBm(e, arr, cb, text, loading = { start() {}, end() {} }) {
-  rMenu.pop(
-    {
-      e,
-      text: `确认删除：${text || '选中的书签'}？`,
-      confirm: { type: 'danger', text: '删除' },
-    },
-    (type) => {
-      if (type === 'confirm') {
-        loading.start();
-        reqBmkDeleteBmk({ ids: arr })
-          .then((result) => {
-            loading.end();
-            if (result.code === 1) {
-              _msg.success(result.codeText);
-              cb && cb();
-              getBookMarkList();
-              getHomeBmList();
-            }
-          })
-          .catch(() => {
-            loading.end();
-          });
+export function delBm(arr, cb, loading = { start() {}, end() {} }) {
+  loading.start();
+  reqBmkDeleteBmk({ ids: arr })
+    .then((result) => {
+      loading.end();
+      if (result.code === 1) {
+        _msg.success(result.codeText);
+        cb && cb();
+        getBookMarkList();
+        getHomeBmList();
       }
-    }
-  );
+    })
+    .catch(() => {
+      loading.end();
+    });
 }
 
 // 切换分组打开状态
@@ -625,15 +614,15 @@ $asideWrap
   .on('click', '.check_bmlist', function () {
     checkAsideBmList(this);
   })
-  .on('click', '.delete_bm', function (e) {
+  .on('click', '.delete_bm', function () {
     if (isSelectingBm) {
       const arr = getAsideCheckBmItem();
       if (arr.length === 0) return;
-      delBm(e, arr);
+      delBm(arr);
     } else {
       const arr = getAsideCheckBmList();
       if (arr.length === 0) return;
-      delBmList(e, arr);
+      delBmList(arr);
     }
   })
   .on('click', '.move_bm', function (e) {
@@ -740,7 +729,7 @@ export function moveBookMark(e, pid, arr) {
         id: item.id,
         text: item.title,
         beforeIcon: 'iconfont icon-liebiao1',
-        param: { id: item.id, title: item.title },
+        param: { id: item.id },
       });
     }
   });
@@ -751,28 +740,23 @@ export function moveBookMark(e, pid, arr) {
   rMenu.selectMenu(
     e,
     data,
-    ({ e, close, id, param, loading }) => {
+    ({ close, id, param, loading }) => {
       if (id) {
-        const groupId = param.id,
-          groupTitle = param.title;
-        rMenu.pop({ e, text: `确认移动到：${groupTitle}？` }, (type) => {
-          if (type === 'confirm') {
-            loading.start();
-            reqBmkToGroup({ ids: arr, groupId })
-              .then((result) => {
-                loading.end();
-                if (result.code === 1) {
-                  close(true);
-                  _msg.success(result.codeText);
-                  getBookMarkList();
-                  getHomeBmList();
-                }
-              })
-              .catch(() => {
-                loading.end();
-              });
-          }
-        });
+        const groupId = param.id;
+        loading.start();
+        reqBmkToGroup({ ids: arr, groupId })
+          .then((result) => {
+            loading.end();
+            if (result.code === 1) {
+              close(true);
+              _msg.success(result.codeText);
+              getBookMarkList();
+              getHomeBmList();
+            }
+          })
+          .catch(() => {
+            loading.end();
+          });
       }
     },
     '移动书签到分组'
@@ -992,31 +976,20 @@ function shareBmList(e, obj) {
 }
 
 // 删除分组
-function delBmList(e, arr, cb, text, loading = { start() {}, end() {} }) {
-  rMenu.pop(
-    {
-      e,
-      text: `确认删除：${text || '选中的分组'}？`,
-      confirm: { type: 'danger', text: '删除' },
-    },
-    (type) => {
-      if (type === 'confirm') {
-        loading.start();
-        reqBmkDeleteGroup({ ids: arr })
-          .then((result) => {
-            loading.end();
-            if (result.code === 1) {
-              cb && cb();
-              _msg.success(result.codeText);
-              getBookMarkList();
-            }
-          })
-          .catch(() => {
-            loading.end();
-          });
+function delBmList(arr, cb, loading = { start() {}, end() {} }) {
+  loading.start();
+  reqBmkDeleteGroup({ ids: arr })
+    .then((result) => {
+      loading.end();
+      if (result.code === 1) {
+        cb && cb();
+        _msg.success(result.codeText);
+        getBookMarkList();
       }
-    }
-  );
+    })
+    .catch(() => {
+      loading.end();
+    });
 }
 
 // 更改分组状态
@@ -1092,12 +1065,10 @@ function asideListMenu(e, obj, el) {
       } else if (id === 'del') {
         //删除列表
         delBmList(
-          e,
           [obj.id],
           () => {
             close();
           },
-          obj.title,
           loading
         );
       } else if (id === 'share') {
@@ -1347,12 +1318,10 @@ export function bookMarkSetting(e, obj, isHome, el) {
       } else if (id === '6') {
         // 删除书签
         delBm(
-          e,
           [obj.id],
           () => {
             close();
           },
-          obj.title,
           loading
         );
       }

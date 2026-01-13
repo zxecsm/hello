@@ -178,8 +178,9 @@ function getUserList(top) {
     .catch(() => {});
 }
 // 展示用户列表
-function renderUserList(pageNo, total, totalPage, top) {
+async function renderUserList(pageNo, total, totalPage, top) {
   if (chatRoomWrapIsHide() || $userListWrap.is(':hidden')) return;
+  const temMsgs = await getTemMsgs();
   const html = _tpl(
     `
     <button v-if="hasNoRead" cursor="y" class="clear_msg btn btn_primary">标记为已读</button>
@@ -188,7 +189,7 @@ function renderUserList(pageNo, total, totalPage, top) {
       <li cursor="y" class="user_logo" style="{{online === 1 ? '' : 'filter: grayscale(1);'}}"></li>
       <li cursor="y" class="user_name">
         <span class="name">{{des || username}}</span>
-        <span v-if="msg" class="msg">{{msg}}</span>
+        <span v-if="hdMsg(msg,account)" class="msg">{{hdMsg(msg,account)}}</span>
       </li>
       <li v-if="account !== notifyAccount" :cursor="online === 1 ? 'y' : ''" :style=getStyle(account,online) class="online iconfont icon-tuichudenglu1"></li>
     </ul>
@@ -199,6 +200,10 @@ function renderUserList(pageNo, total, totalPage, top) {
       hasNoRead: userList.some((item) => item.read === 0),
       userList,
       totalPage,
+      hdMsg(msg, account) {
+        const tem = temMsgs[account];
+        return tem ? `草稿：${tem}` : msg;
+      },
       getStyle(account, online) {
         let color = 'var(--color6)';
         if (setUserInfo().account === account) {
@@ -1428,8 +1433,11 @@ function switchShakeBtn() {
     $shakeBtn.css('display', 'block');
   }
 }
+async function getTemMsgs() {
+  return (await cacheFile.getData('temChatMsg')) || {};
+}
 const saveTemChatMsg = debounce(async (val) => {
-  const temChatMsg = (await cacheFile.getData('temChatMsg')) || {};
+  const temChatMsg = await getTemMsgs();
   temChatMsg[curChatAccount] = val;
   await cacheFile.setData('temChatMsg', temChatMsg);
 }, 1000);

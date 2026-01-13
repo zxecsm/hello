@@ -201,32 +201,21 @@ function getSearchEngine() {
   );
 }
 // 删除
-function deleteHistory(e, ids, isCheck) {
-  rMenu.pop(
-    {
-      e,
-      text: `确认删除：${isCheck ? '选中的' : ''}历史记录？`,
-      confirm: { type: 'danger', text: '删除' },
-    },
-    (type) => {
-      if (type === 'confirm') {
-        reqSearchDelete({ ids })
-          .then((result) => {
-            if (result.code === 1) {
-              _msg.success(result.codeText);
-              renderList();
-            }
-          })
-          .catch(() => {});
+function deleteHistory(ids) {
+  reqSearchDelete({ ids })
+    .then((result) => {
+      if (result.code === 1) {
+        _msg.success(result.codeText);
+        renderList();
       }
-    }
-  );
+    })
+    .catch(() => {});
 }
 $contentWrap
-  .on('click', '.del_item', function (e) {
+  .on('click', '.del_item', function () {
     const $this = $(this);
     const id = $this.parent().attr('data-id');
-    deleteHistory(e, [id]);
+    deleteHistory([id]);
   })
   .on('click', '.item_title', function () {
     const { content } = getItemInfo($(this).parent().attr('data-id'));
@@ -417,17 +406,17 @@ $headWrap
   });
 
 $footer
-  .on('click', '.f_delete', function (e) {
+  .on('click', '.f_delete', function () {
     const $itemBox = $contentWrap.find('.item_box'),
       $checkArr = $itemBox.filter(
         (_, item) => $(item).find('.check_state').attr('check') === 'y'
       );
     if ($checkArr.length === 0) return;
     const arr = [];
-    $checkArr.each((i, v) => {
+    $checkArr.each((_, v) => {
       arr.push(v.getAttribute('data-id'));
     });
-    deleteHistory(e, arr, 1);
+    deleteHistory(arr);
   })
   .on('click', '.f_close', stopSelect)
   .on('click', 'span', switchCheckAll);

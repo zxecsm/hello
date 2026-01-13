@@ -156,29 +156,19 @@ function getUserInfo(acc) {
   return userList.find((item) => item.account === acc) || {};
 }
 // 修改用户状态
-function changeUserState(e, obj) {
-  const { state, account, username } = obj;
-  rMenu.pop(
-    {
-      e,
-      text: `确认${state === 1 ? '停用' : '启用'}：${username}(${account})？`,
-    },
-    (type) => {
-      if (type === 'confirm') {
-        reqRootAccountState({
-          account,
-          state: state === 1 ? 0 : 1,
-        })
-          .then((result) => {
-            if (result.code === 1) {
-              _msg.success(result.codeText);
-              getUserList();
-            }
-          })
-          .catch(() => {});
+function changeUserState(obj) {
+  const { state, account } = obj;
+  reqRootAccountState({
+    account,
+    state: state === 1 ? 0 : 1,
+  })
+    .then((result) => {
+      if (result.code === 1) {
+        _msg.success(result.codeText);
+        getUserList();
       }
-    }
-  );
+    })
+    .catch(() => {});
 }
 // 删除
 function deleteAccount(e, obj) {
@@ -208,10 +198,10 @@ function deleteAccount(e, obj) {
   );
 }
 $list
-  .on('click', '.user_state', function (e) {
+  .on('click', '.user_state', function () {
     const $this = $(this).parent().parent();
     const uInfo = getUserInfo($this.attr('data-acc'));
-    changeUserState(e, uInfo);
+    changeUserState(uInfo);
   })
   .on('click', '.del_account', function (e) {
     const $this = $(this).parent().parent();

@@ -1427,11 +1427,11 @@ function hdTools(e) {
         rMenu.selectMenu(
           e,
           data,
-          ({ e, close, id, loading }) => {
+          ({ close, id, loading }) => {
             if (id === '1') {
               importBm(close, loading);
             } else if (id === '2') {
-              exportBm(e, close, loading);
+              exportBm(close, loading);
             }
           },
           '导入/导出书签'
@@ -1814,30 +1814,20 @@ function importBm(cb, loading = { start() {}, end() {} }) {
     });
 }
 // 导出书签
-function exportBm(e, cb, loading = { start() {}, end() {} }) {
-  rMenu.pop(
-    {
-      e,
-      text: '确认导出？',
-    },
-    (type) => {
-      if (type === 'confirm') {
-        loading.start();
-        reqBmkExport()
-          .then((res) => {
-            loading.end();
-            if (res.code === 1) {
-              downloadText(hdExportBm(res.data), 'bookmark.html');
-              cb && cb();
-            }
-          })
-          .catch(() => {
-            loading.end();
-            _msg.error('导出书签失败');
-          });
+function exportBm(cb, loading = { start() {}, end() {} }) {
+  loading.start();
+  reqBmkExport()
+    .then((res) => {
+      loading.end();
+      if (res.code === 1) {
+        downloadText(hdExportBm(res.data), 'bookmark.html');
+        cb && cb();
       }
-    }
-  );
+    })
+    .catch(() => {
+      loading.end();
+      _msg.error('导出书签失败');
+    });
 }
 // 退出
 function userLogout(e) {

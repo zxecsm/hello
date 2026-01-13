@@ -371,31 +371,20 @@ const pgnt = pagination($contentWrap[0], {
   },
 });
 // 删除
-function deleteSSH(e, ids, cb, title, loading = { start() {}, end() {} }) {
-  rMenu.pop(
-    {
-      e,
-      text: `确认删除：${title || '选中的SSH配置'}？`,
-      confirm: { type: 'danger', text: '删除' },
-    },
-    (type) => {
-      if (type === 'confirm') {
-        loading.start();
-        reqSSHDelete({ ids })
-          .then((result) => {
-            loading.end();
-            if (result.code === 1) {
-              cb && cb();
-              _msg.success(result.codeText);
-              renderList();
-            }
-          })
-          .catch(() => {
-            loading.end();
-          });
+function deleteSSH(ids, cb, loading = { start() {}, end() {} }) {
+  loading.start();
+  reqSSHDelete({ ids })
+    .then((result) => {
+      loading.end();
+      if (result.code === 1) {
+        cb && cb();
+        _msg.success(result.codeText);
+        renderList();
       }
-    }
-  );
+    })
+    .catch(() => {
+      loading.end();
+    });
 }
 // 置顶
 function toTop(e, obj) {
@@ -601,7 +590,7 @@ $contentWrap
         } else if (id === '4') {
           editSSHInfo(e, obj);
         } else if (id === '6') {
-          deleteSSH(e, [sshid], close, title, loading);
+          deleteSSH([sshid], close, loading);
         }
       },
       title
@@ -805,10 +794,10 @@ function getCheckItems() {
   return arr;
 }
 $footer
-  .on('click', '.f_delete', function (e) {
+  .on('click', '.f_delete', function () {
     const ids = getCheckItems();
     if (ids.length === 0) return;
-    deleteSSH(e, ids);
+    deleteSSH(ids);
   })
   .on('click', '.f_close', function () {
     stopSelect();

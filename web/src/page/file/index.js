@@ -937,31 +937,21 @@ function rightList(e, obj, el) {
       } else if (id === 'share') {
         hdShare(e, obj);
       } else if (id === 'favorite') {
-        rMenu.pop(
-          {
-            e,
-            text: `${obj.favorite ? '取消' : ''}收藏文件夹：${obj.name}？`,
-          },
-          (type) => {
-            if (type === 'confirm') {
-              loading.start();
-              reqFileFavorites({
-                data: obj,
-                type: obj.favorite ? 'del' : 'add',
-              })
-                .then((res) => {
-                  if (res.code === 1) {
-                    loading.end();
-                    close();
-                    updateCurPage();
-                  }
-                })
-                .catch(() => {
-                  loading.end();
-                });
+        loading.start();
+        reqFileFavorites({
+          data: obj,
+          type: obj.favorite ? 'del' : 'add',
+        })
+          .then((res) => {
+            if (res.code === 1) {
+              loading.end();
+              close();
+              updateCurPage();
             }
-          }
-        );
+          })
+          .catch(() => {
+            loading.end();
+          });
       } else if (id === 'rename') {
         hdRename(e, obj, () => {
           close();
@@ -993,7 +983,6 @@ function rightList(e, obj, el) {
         close();
       } else if (id === 'compress') {
         hdCompress(
-          e,
           obj,
           () => {
             close();
@@ -1002,7 +991,6 @@ function rightList(e, obj, el) {
         );
       } else if (id === 'decompress') {
         hdDeCompress(
-          e,
           obj,
           () => {
             close();
@@ -1254,60 +1242,40 @@ document.addEventListener('paste', pasteFile);
   });
 })();
 // 解压
-async function hdDeCompress(e, obj, cb, loading) {
-  rMenu.pop(
-    {
-      e,
-      text: `确认解压文件：${obj.name}？`,
-    },
-    async (type) => {
-      if (type === 'confirm') {
-        try {
-          loading.start();
-          const res = await reqFileUnZip({ data: obj });
-          loading.end();
-          if (res.code === 1) {
-            addTask(res.data.key, updateCurPage);
-            cb && cb();
-          }
-        } catch (error) {
-          loading.end();
-          if (error.statusText === 'timeout') {
-            _msg.success(`文件后台处理中`);
-          }
-          cb && cb();
-        }
-      }
+async function hdDeCompress(obj, cb, loading) {
+  try {
+    loading.start();
+    const res = await reqFileUnZip({ data: obj });
+    loading.end();
+    if (res.code === 1) {
+      addTask(res.data.key, updateCurPage);
+      cb && cb();
     }
-  );
+  } catch (error) {
+    loading.end();
+    if (error.statusText === 'timeout') {
+      _msg.success(`文件后台处理中`);
+    }
+    cb && cb();
+  }
 }
 // 压缩
-async function hdCompress(e, obj, cb, loading = { start() {}, end() {} }) {
-  rMenu.pop(
-    {
-      e,
-      text: `确认压缩${obj.type === 'dir' ? '文件夹' : '文件'}：${obj.name}？`,
-    },
-    async (type) => {
-      if (type === 'confirm') {
-        try {
-          loading.start();
-          const res = await reqFileZip({ data: obj });
-          loading.end();
-          if (res.code === 1) {
-            addTask(res.data.key, updateCurPage);
-            cb && cb();
-          }
-        } catch (error) {
-          loading.end();
-          if (error.statusText === 'timeout') {
-            _msg.success(`文件后台处理中`);
-          }
-          cb && cb();
-        }
-      }
+async function hdCompress(obj, cb, loading = { start() {}, end() {} }) {
+  try {
+    loading.start();
+    const res = await reqFileZip({ data: obj });
+    loading.end();
+    if (res.code === 1) {
+      addTask(res.data.key, updateCurPage);
+      cb && cb();
     }
-  );
+  } catch (error) {
+    loading.end();
+    if (error.statusText === 'timeout') {
+      _msg.success(`文件后台处理中`);
+    }
+    cb && cb();
+  }
 }
 // 选中
 function hdCheckItem(el) {
@@ -2340,11 +2308,11 @@ $footer
   .on('click', '.f_delete', function (e) {
     hdDel(e, getCheckDatas());
   })
-  .on('click', '.f_compress', function (e) {
-    hdCompress(e, getCheckDatas()[0]);
+  .on('click', '.f_compress', function () {
+    hdCompress(getCheckDatas()[0]);
   })
-  .on('click', '.f_decompress', function (e) {
-    hdDeCompress(e, getCheckDatas()[0]);
+  .on('click', '.f_decompress', function () {
+    hdDeCompress(getCheckDatas()[0]);
   })
   .on('click', '.f_share', function (e) {
     hdShare(e, getCheckDatas()[0]);

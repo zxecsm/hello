@@ -554,7 +554,7 @@ export function moveSongToList(e, pid, ar) {
   }
   const html = _tpl(
     `
-    <div v-for="v in list" :data-name="v.name" cursor="y" class="item" :data-id="v.id">
+    <div v-for="v in list" cursor="y" class="item" :data-id="v.id">
       <img style="width: 4rem;height: 4rem;border-radius: 0.4rem;" :data-src="v.pic"/>
       <span style="margin-left:1rem;">{{v.name}}</span>
     </div>
@@ -571,43 +571,30 @@ export function moveSongToList(e, pid, ar) {
       let _this = _getTarget(box, e, '.item');
       if (_this) {
         let $this = $(_this),
-          tid = $this.attr('data-id'),
-          listname = $this.attr('data-name');
+          tid = $this.attr('data-id');
         const toObj = musicList.find((item) => item.id === tid);
         if (toObj.len + ar.length > _d.maxSongList) {
           _msg.error(`歌单限制${_d.maxSongList}首`);
           return;
         }
-        rMenu.pop(
-          {
-            e,
-            text: `确认${
-              pid === 'all' || cIdx < 3 ? '添加到' : '移动到'
-            }：${listname}？`,
-          },
-          (type) => {
-            if (type === 'confirm') {
-              loading.start();
-              reqPlayerSongToList({
-                fromId: pid,
-                toId: tid,
-                ids: ar,
-              })
-                .then((result) => {
-                  loading.end();
-                  if (result.code === 1) {
-                    close(true);
-                    _msg.success(result.codeText);
-                    getSongList();
-                    return;
-                  }
-                })
-                .catch(() => {
-                  loading.end();
-                });
+        loading.start();
+        reqPlayerSongToList({
+          fromId: pid,
+          toId: tid,
+          ids: ar,
+        })
+          .then((result) => {
+            loading.end();
+            if (result.code === 1) {
+              close(true);
+              _msg.success(result.codeText);
+              getSongList();
+              return;
             }
-          }
-        );
+          })
+          .catch(() => {
+            loading.end();
+          });
       }
     },
     `${pid === 'all' || cIdx < 3 ? '添加歌曲' : '移动歌曲'}到歌单`
@@ -1353,23 +1340,13 @@ function songListMenu(e, sid) {
           _msg.error();
         }
       } else if (id === '3') {
-        rMenu.pop(
+        downloadFile([
           {
-            e,
-            text: '确认导出？',
+            fileUrl: `/api/player/export?id=${sid}`,
+            filename: `${name}.json`,
           },
-          async (type) => {
-            if (type === 'confirm') {
-              downloadFile([
-                {
-                  fileUrl: `/api/player/export?id=${sid}`,
-                  filename: `${name}.json`,
-                },
-              ]);
-              close();
-            }
-          }
-        );
+        ]);
+        close();
       } else if (id === '4') {
         deleteSongList(e, name, sid, close, loading);
       }
