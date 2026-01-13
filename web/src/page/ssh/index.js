@@ -41,6 +41,7 @@ import { MouseElementTracker } from '../../js/utils/boxSelector.js';
 import toolTip from '../../js/plugins/tooltip/index.js';
 const $app = $('#app'),
   $sshBox = $app.find('.ssh_box'),
+  $logText = $app.find('.log_text'),
   $footer = $('.footer'),
   $shortcuts = $footer.find('.shortcuts'),
   $quickGroup = $footer.find('.quick_group'),
@@ -71,7 +72,7 @@ const darkTheme = {
 const lightTheme = {
   background: '#ffffff',
   foreground: '#24292e',
-  cursor: '#24292e',
+  cursor: '#888888',
   selectionBackground: '#c8e1ff',
   black: '#24292e',
   red: '#d73a49',
@@ -84,18 +85,32 @@ const lightTheme = {
 };
 
 const term = new Terminal({
-  cursorBlink: true,
   fontFamily: _d.codeFontFamily,
-  allowProposedApi: true,
-  disableStdin: false,
+  allowProposedApi: true, // 是否允许使用实验性 API
+  disableStdin: false, // 是否禁用输入
   fontSize: 14,
+  cursorBlink: true, // 光标是否闪烁
+  cursorStyle: 'block', // block | bar | underline 光标样式
+  scrollOnUserInput: true, // 输入时是否自动滚动到底部
+  scrollback: 5000, // 回滚行数
 });
 const fitAddon = new FitAddon();
 term.loadAddon(fitAddon);
 term.open(document.getElementById('terminal'));
 fitAddon.fit();
 window.addEventListener('resize', () => fitAddon.fit());
+function getAllText(term) {
+  const buffer = term.buffer.active;
+  let result = '';
 
+  for (let i = 0; i < buffer.length; i++) {
+    const line = buffer.getLine(i);
+    if (!line) continue;
+    result += line.translateToString(true) + '\n';
+  }
+
+  return result;
+}
 reqSSHConnect({ id: HASH, defaultPath: p })
   .then((res) => {
     if (res.code === 1) {
@@ -773,4 +788,28 @@ $sshBox
     }
     isFullWidth = !isFullWidth;
     fitAddon.fit();
+  })
+  .on('click', '.btns .log_btn', function () {
+    if ($logText.css('display') === 'none') {
+      this.className = 'iconfont icon-terminal log_btn';
+      $logText.show();
+      $logText.text(getAllText(term)).scrollTop($logText[0].scrollHeight);
+    } else {
+      $logText.hide();
+      this.className = 'iconfont icon-fuzhi log_btn';
+      $logText.text('');
+    }
   });
+document.addEventListener('click', function (e) {
+  if (
+    $logText.css('display') === 'none' ||
+    e.target === $logText[0] ||
+    _getTarget($sshBox[0], e, '.btns')
+  )
+    return;
+  $logText.hide();
+  $sshBox
+    .find('.btns .log_btn')
+    .removeClass('icon-terminal')
+    .addClass('icon-fuzhi');
+});
