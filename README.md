@@ -13,6 +13,17 @@ services:
       - '55555:55555'
 ```
 
+```
+sudo docker run -d \
+  --name hello \
+  --restart unless-stopped \
+  -e TZ=Asia/Shanghai \
+  -v /:/root/helloApp \
+  -p 55555:55555 \
+  ghcr.io/zxecsm/hello:latest
+  # zxecsm/hello:latest
+```
+
 歌词格式：`[00:00.00]歌词<=>翻译`
 
 随机壁纸
