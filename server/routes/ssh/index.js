@@ -518,7 +518,10 @@ route.post(
     try {
       const { id, defaultPath } = req[kValidate];
 
-      const { account } = req[kHello].userinfo;
+      const {
+        userinfo: { account },
+        temid,
+      } = req[kHello];
 
       const config = await db('ssh')
         .select(
@@ -534,7 +537,7 @@ route.post(
       const dPath = _path.normalize('/', defaultPath);
       createTerminal(
         account,
-        req[kHello].temid,
+        temid,
         config,
         dPath && dPath !== '/' ? dPath : ''
       );
@@ -543,7 +546,7 @@ route.post(
         username: config.username,
         host: config.host,
         port: config.port,
-      })(req, id, 1);
+      })(req, `${config.title}：${temid}`, 1);
     } catch (error) {
       _err(res)(req, error);
     }
