@@ -1581,13 +1581,13 @@ route.post(
           try {
             // 执行命令
             ssh.stream.write(_vdata.text);
-          } catch {
+          } catch (error) {
             _connect.send(
               account,
               id,
               {
                 type: 'ssh',
-                data: 'SSH connection failed.',
+                data: `SSH Error: ${error.message}`,
               },
               'self'
             );
@@ -1598,7 +1598,7 @@ route.post(
             id,
             {
               type: 'ssh',
-              data: 'SSH connection failed.',
+              data: 'SSH connection has been disconnected. Please reconnect.',
             },
             'self'
           );
