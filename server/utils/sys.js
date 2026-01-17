@@ -39,41 +39,29 @@ const getNetSpeed = (() => {
   let last = { rx: 0, tx: 0, time: 0 };
 
   return async () => {
-    const base = '/sys/class/net';
-    const physicalRegex = /^(eth|en|wl)/;
-
     try {
-      const ifaces = (await _f.readdir(base)).filter((name) => physicalRegex.test(name));
+      const content = (await _f.readFile('/proc/net/dev', null, '')).toString();
 
-      let currentRx = 0;
-      let currentTx = 0;
+      let totalRx = 0;
+      let totalTx = 0;
 
-      const stats = await Promise.all(
-        ifaces.map(async (iface) => {
-          const path = `${base}/${iface}`;
-          try {
-            const state = (await _f.readFile(`${path}/operstate`, null, '')).toString().trim();
-            if (state !== 'up') return null;
+      const lines = content.split('\n');
 
-            const [rx, tx] = await Promise.all([
-              _f.readFile(`${path}/statistics/rx_bytes`, null, '0'),
-              _f.readFile(`${path}/statistics/tx_bytes`, null, '0'),
-            ]);
+      for (const line of lines) {
+        const trimmed = line.trim();
+        // eth0: 95293989600 49177599    0  435    0     0          0         0 26449124473 31286392    0    0    0     0       0          0
+        if (!/^(eth|en|wl)/.test(trimmed)) continue;
 
-            return { rx: parseInt(rx), tx: parseInt(tx) };
-          } catch {
-            return null;
-          }
-        }),
-      );
+        const parts = trimmed.split(':');
+        if (parts.length < 2) continue;
 
-      // 汇总
-      stats.forEach((s) => {
-        if (s) {
-          currentRx += s.rx;
-          currentTx += s.tx;
+        const stats = parts[1].trim().split(/\s+/).filter(Boolean);
+
+        if (stats.length >= 9) {
+          totalRx += parseInt(stats[0]) || 0; // Receive
+          totalTx += parseInt(stats[8]) || 0; // Transmit
         }
-      });
+      }
 
       const now = Date.now();
       let speed = { rx: 0, tx: 0 };
@@ -82,13 +70,13 @@ const getNetSpeed = (() => {
         const interval = (now - last.time) / 1000;
         if (interval > 0) {
           speed = {
-            rx: (currentRx - last.rx) / interval,
-            tx: (currentTx - last.tx) / interval,
+            rx: Math.max(0, (totalRx - last.rx) / interval),
+            tx: Math.max(0, (totalTx - last.tx) / interval),
           };
         }
       }
 
-      last = { rx: currentRx, tx: currentTx, time: now };
+      last = { rx: totalRx, tx: totalTx, time: now };
       return speed;
     } catch {
       return { rx: 0, tx: 0 };

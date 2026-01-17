@@ -8,7 +8,7 @@ services:
     environment:
       - TZ=Asia/Shanghai
     volumes:
-      - /sys/class/net:/sys/class/net:ro
+      - /proc/net/dev:/proc/net/dev:ro
       - /:/root/helloApp
     ports:
       - '55555:55555'
@@ -19,7 +19,7 @@ sudo docker run -d \
   --name hello \
   --restart unless-stopped \
   -e TZ=Asia/Shanghai \
-  -v /sys/class/net:/sys/class/net:ro \
+  -v /proc/net/dev:/proc/net/dev:ro \
   -v /:/root/helloApp \
   -p 55555:55555 \
   ghcr.io/zxecsm/hello:latest
