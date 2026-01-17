@@ -64,13 +64,7 @@ function randomShape() {
 }
 
 // 生成验证码
-async function genCaptcha({
-  w = 400,
-  h = 220,
-  theme = 'light',
-  minS = 40,
-  maxS = 60,
-} = {}) {
+async function genCaptcha({ w = 400, h = 220, theme = 'light', minS = 40, maxS = 60 } = {}) {
   const s = randInt(minS, maxS);
   const x = randInt(s, w - s);
   const y = randInt(s, h - s);
@@ -88,7 +82,7 @@ async function genCaptcha({
 
   const bgSVG = `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
     <defs>${genPattern(
-      t
+      t,
     )}<mask id="m"><rect width="100%" height="100%" fill="white"/><path d="${holePath}" fill="black"/></mask></defs>
     <rect width="100%" height="100%" fill="url(#p)" mask="url(#m)"/>
     <path d="${holePath}" fill="none" stroke="${t.stroke}" stroke-width="1"/>
@@ -183,9 +177,7 @@ function verifyTrack(track, targetX) {
 
   // 5. 速度方差
   const meanV = velocities.reduce((s, v) => s + v, 0) / velocities.length;
-  const variance =
-    velocities.reduce((s, v) => s + Math.pow(v - meanV, 2), 0) /
-    velocities.length;
+  const variance = velocities.reduce((s, v) => s + Math.pow(v - meanV, 2), 0) / velocities.length;
   if (variance < 0.001) return false;
 
   return true;

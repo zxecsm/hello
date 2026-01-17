@@ -45,11 +45,7 @@ import {
 import _d from '../../js/common/config';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
-import {
-  reqPlayerGetShare,
-  reqPlayerLrc,
-  reqPlayerSaveShare,
-} from '../../api/player';
+import { reqPlayerGetShare, reqPlayerLrc, reqPlayerSaveShare } from '../../api/player';
 import pagination from '../../js/plugins/pagination';
 import toolTip from '../../js/plugins/tooltip';
 import { showSongInfo } from '../../js/utils/showinfo';
@@ -94,12 +90,8 @@ if (!isIframe()) {
     });
   });
 }
-const lrcHeadContentScrollName = new ContentScroll(
-  $lrcHead.find('.song_name div')[0]
-);
-const lrcHeadContentScrollArtist = new ContentScroll(
-  $lrcHead.find('.artist_name div')[0]
-);
+const lrcHeadContentScrollName = new ContentScroll($lrcHead.find('.song_name div')[0]);
+const lrcHeadContentScrollArtist = new ContentScroll($lrcHead.find('.artist_name div')[0]);
 const defaultTitle = document.title;
 let playingList = null,
   curPlayingList = null,
@@ -152,17 +144,8 @@ enterPassCode(({ close, val, loading, submit }) => {
   reqPlayerGetShare({ id: shareId, pass: passCode, captchaId })
     .then((resObj) => {
       if (resObj.code === 1) {
-        const {
-          account,
-          username,
-          logo,
-          title,
-          exp_time,
-          email,
-          token,
-          needCaptcha,
-          id,
-        } = resObj.data;
+        const { account, username, logo, title, exp_time, email, token, needCaptcha, id } =
+          resObj.data;
 
         if (needCaptcha) {
           isCaptcha = true;
@@ -184,19 +167,13 @@ enterPassCode(({ close, val, loading, submit }) => {
           if (logo) {
             imgjz(getFilePath(`/logo/${account}/${logo}`))
               .then((cache) => {
-                $lrcHead
-                  .find('.user_logo')
-                  .css('background-image', `url(${cache})`);
+                $lrcHead.find('.user_logo').css('background-image', `url(${cache})`);
               })
               .catch(() => {
-                $lrcHead
-                  .find('.user_logo')
-                  .css('background-image', `url(${getTextImg(username)})`);
+                $lrcHead.find('.user_logo').css('background-image', `url(${getTextImg(username)})`);
               });
           } else {
-            $lrcHead
-              .find('.user_logo')
-              .css('background-image', `url(${getTextImg(username)})`);
+            $lrcHead.find('.user_logo').css('background-image', `url(${getTextImg(username)})`);
           }
           $userInfo.find('.from').text(username);
           $userInfo.find('.title').text(title);
@@ -206,7 +183,7 @@ enterPassCode(({ close, val, loading, submit }) => {
               : formatDate({
                   template: '{0}-{1}-{2} {3}:{4}',
                   timestamp: exp_time,
-                })
+                }),
           );
 
           playingList = resObj.data.data;
@@ -214,17 +191,14 @@ enterPassCode(({ close, val, loading, submit }) => {
           const pSongInfo = localData.session.get('playingSongInfo');
           if (pSongInfo) {
             playingSongInfo = initSongInfo(
-              playingList.find((item) => item.id === pSongInfo.id) ||
-                playingList[0]
+              playingList.find((item) => item.id === pSongInfo.id) || playingList[0],
             );
           } else {
             playingSongInfo = initSongInfo(playingList[0]);
           }
           toggleMvBtnState();
           updateSongInfo();
-          $lrcProgressBar
-            .find('.total_time')
-            .text(formartSongTime(playingSongInfo.duration));
+          $lrcProgressBar.find('.total_time').text(formartSongTime(playingSongInfo.duration));
         }
       } else if (resObj.code === 3) {
         _msg.error('提取码错误');
@@ -273,9 +247,7 @@ async function updateSongInfo() {
   loadImg(playingSongInfo.ppic)
     .then(() => {
       if (id !== playingSongInfo.id) return;
-      $lrcBg
-        .css('background-image', `url("${playingSongInfo.ppic}")`)
-        .removeClass('lrcbgss');
+      $lrcBg.css('background-image', `url("${playingSongInfo.ppic}")`).removeClass('lrcbgss');
       _setTimeout(() => {
         if (id !== playingSongInfo.id) return;
         notifyMusicControlPanel.updateMetadata({
@@ -340,9 +312,7 @@ function changePlayMode() {
       }
       break;
   }
-  $lrcFootBtnWrap
-    .find('.random_play_btn')
-    .attr('class', `random_play_btn ${icon}`);
+  $lrcFootBtnWrap.find('.random_play_btn').attr('class', `random_play_btn ${icon}`);
   _msg.msg({ message: text, icon });
 }
 function getNextSongInfo() {
@@ -377,8 +347,7 @@ function playNextSong() {
   musicPlay(getNextSongInfo());
 }
 function showWillPlaySongInfo(type) {
-  const { artist, title } =
-    type === 'next' ? getNextSongInfo() : getPrevSongInfo();
+  const { artist, title } = type === 'next' ? getNextSongInfo() : getPrevSongInfo();
   let str = '播放列表为空';
   if (artist && title) {
     str = `${type === 'next' ? '下一曲' : '上一曲'}：${artist} - ${title}`;
@@ -430,9 +399,7 @@ function musicPlay(obj) {
   playingSongInfo = initSongInfo(obj); //初始化音乐数据
   localData.session.set('playingSongInfo', playingSongInfo);
   const songText = `${playingSongInfo.artist} - ${playingSongInfo.title}`;
-  $lrcProgressBar
-    .find('.total_time')
-    .text(formartSongTime(playingSongInfo.duration));
+  $lrcProgressBar.find('.total_time').text(formartSongTime(playingSongInfo.duration));
   _msg.msg({ message: songText, icon: 'iconfont icon-yinle1' });
   playingListHighlight(false);
   $lrcBg.addClass('lrcbgss'); //背景透明
@@ -441,9 +408,7 @@ function musicPlay(obj) {
   toggleMvBtnState();
   playSong();
 }
-const musicMvContentScroll = new ContentScroll(
-  $musicMvWrap.find('.m_top_space p')[0]
-);
+const musicMvContentScroll = new ContentScroll($musicMvWrap.find('.m_top_space p')[0]);
 // MV播放
 let mvOnce = false;
 function playMv(obj) {
@@ -475,9 +440,7 @@ function playMv(obj) {
       direction: 'reverse',
     });
   }
-  musicMvContentScroll.init(
-    `${playingSongInfo.artist} - ${playingSongInfo.title}`
-  );
+  musicMvContentScroll.init(`${playingSongInfo.artist} - ${playingSongInfo.title}`);
   playingListHighlight(false);
   lrcInit();
   $myVideo[0].playbackRate = curPlaySpeed[1];
@@ -518,7 +481,7 @@ function playSong() {
       },
       (target) => {
         target.style.display = 'none';
-      }
+      },
     );
     musicMvContentScroll.close();
   }
@@ -555,8 +518,7 @@ function musiclrc() {
         } else {
           $lrcMenuWrap.find('.lrc_translate_btn').stop().hide(_d.speed);
         }
-        const showFy =
-          localData.get('showSongTranslation') && hasfy ? true : false;
+        const showFy = localData.get('showSongTranslation') && hasfy ? true : false;
         const html = _tpl(
           `
           <div v-for="{p,fy} in list">
@@ -567,7 +529,7 @@ function musiclrc() {
           {
             list,
             showFy,
-          }
+          },
         );
         $lrcListWrap
           .find('.lrc_items')
@@ -596,9 +558,7 @@ function lrcScroll(immedia) {
   const $lrcdiv = $lrc.children('div'),
     $activediv = $lrcdiv.eq(curLrcIdx),
     wH = $lrcListWrap.outerHeight(),
-    lrcmtop = parseFloat(
-      window.getComputedStyle($lrc[0]).transform.slice(7).split(',').slice(-1)
-    ),
+    lrcmtop = parseFloat(window.getComputedStyle($lrc[0]).transform.slice(7).split(',').slice(-1)),
     mtop = lrcmtop - _position($activediv[0]).top + wH * 0.4;
   $lrcdiv.removeClass('active');
   $activediv.addClass('active');
@@ -627,9 +587,7 @@ $lrcListWrap.on('click', function () {
   }
 });
 const upprog = throttle(function () {
-  $lrcProgressBar
-    .find('.current_time')
-    .text(formartSongTime($myAudio[0].currentTime));
+  $lrcProgressBar.find('.current_time').text(formartSongTime($myAudio[0].currentTime));
   proTime($myAudio[0].currentTime / playingSongInfo.duration, true);
 }, 500);
 // 音乐事件
@@ -642,9 +600,7 @@ $myAudio
   .on('waiting', function () {
     //缺少数据加载效果
     if ($myAudio[0].paused) return;
-    $lrcProgressBar
-      .find('.dolt')
-      .css('animation', 'bgcolor .3s infinite linear alternate');
+    $lrcProgressBar.find('.dolt').css('animation', 'bgcolor .3s infinite linear alternate');
     $lrcFootBtnWrap
       .find('.play_btn')
       .attr('class', 'play_btn iconfont icon-zzanting')
@@ -653,9 +609,7 @@ $myAudio
   .on('playing', function () {
     //准备开始播放
     if ($myAudio[0].paused) return;
-    $lrcProgressBar
-      .find('.dolt')
-      .css('animation', 'bgcolor 2s infinite linear alternate');
+    $lrcProgressBar.find('.dolt').css('animation', 'bgcolor 2s infinite linear alternate');
     $lrcFootBtnWrap
       .find('.play_btn')
       .attr('class', 'play_btn iconfont icon-zanting')
@@ -700,10 +654,7 @@ notifyMusicControlPanel
     $myAudio[0].currentTime = Math.max($myAudio[0].currentTime - 10, 0);
   })
   .bind('seekforward', () => {
-    $myAudio[0].currentTime = Math.min(
-      $myAudio[0].currentTime + 10,
-      playingSongInfo.duration
-    );
+    $myAudio[0].currentTime = Math.min($myAudio[0].currentTime + 10, playingSongInfo.duration);
   });
 //进度条
 $lrcProgressBar
@@ -732,10 +683,7 @@ const probox = $lrcProgressBar.find('.probox')[0],
   dolt = $lrcProgressBar.find('.dolt')[0];
 function proTime(percent, y) {
   percent <= 0 ? (percent = 0) : percent >= 1 ? (percent = 1) : null;
-  const val =
-    (pro1.offsetWidth - dolt.offsetWidth) * percent +
-    dolt.offsetWidth / 2 +
-    'px';
+  const val = (pro1.offsetWidth - dolt.offsetWidth) * percent + dolt.offsetWidth / 2 + 'px';
   const per = percent * 100 + '%';
   if (dolt.offsetWidth) {
     pro2.style.width = val;
@@ -836,8 +784,8 @@ function renderPlayList() {
       .html(
         _tpl(
           `<p style="padding: 2rem 0;text-align: center;pointer-events: none;">{{_d.emptyList}}</p>`,
-          { _d }
-        )
+          { _d },
+        ),
       );
     return;
   }
@@ -846,12 +794,9 @@ function renderPlayList() {
   playingPageNum < 1
     ? (playingPageNum = totalPage)
     : playingPageNum > totalPage
-    ? (playingPageNum = 1)
-    : null;
-  const arr = playingList.slice(
-    (playingPageNum - 1) * playingSize,
-    playingPageNum * playingSize
-  );
+      ? (playingPageNum = 1)
+      : null;
+  const arr = playingList.slice((playingPageNum - 1) * playingSize, playingPageNum * playingSize);
   const html = _tpl(
     `
     <li v-for="{title,artist,mv,id} in arr" class="song_item" cursor="y" :data-id="id">
@@ -883,12 +828,10 @@ function renderPlayList() {
           total: playingList.length,
         });
       },
-    }
+    },
   );
   $pMusicListBox.find('.p_foot').html(html);
-  const logos = [
-    ...$pMusicListBox.find('.p_foot')[0].querySelectorAll('.logo'),
-  ].filter((item) => {
+  const logos = [...$pMusicListBox.find('.p_foot')[0].querySelectorAll('.logo')].filter((item) => {
     const $img = $(item);
     const u = $img.attr('data-src');
     const cache = imgCache.get(u);
@@ -955,7 +898,7 @@ $pMusicListBox.on('click', '.save_playing_list', function (e) {
           loading.end();
         });
     },
-    '保存歌单'
+    '保存歌单',
   );
 });
 function getPlayingListItem(id) {
@@ -979,22 +922,14 @@ $pMusicListBox
     playMv(sobj);
   })
   .on('mouseenter', '.song_item .logo_wrap', function () {
-    const {
-      title,
-      artist,
-      album,
-      year,
-      duration,
-      create_at,
-      play_count,
-      collect_count,
-    } = getPlayingListItem($(this).parent().attr('data-id'));
+    const { title, artist, album, year, duration, create_at, play_count, collect_count } =
+      getPlayingListItem($(this).parent().attr('data-id'));
     const str = `歌曲：${title || '--'}\n歌手：${artist || '--'}\n专辑：${
       album || '--'
     }\n发布年份：${year || '--'}\n时长：${formartSongTime(
-      duration
+      duration,
     )}\n播放量：${formatNum(play_count)}\n收藏量：${formatNum(
-      collect_count
+      collect_count,
     )}\n添加时间：${formatDate({
       template: `{0}-{1}-{2}`,
       timestamp: create_at,
@@ -1024,7 +959,7 @@ function playingListHighlight(a) {
   $song_item.removeClass('active').find('.play_gif').removeClass('show');
   const y = Array.prototype.findIndex.call(
     $song_item,
-    (item) => item.dataset.id === playingSongInfo.id
+    (item) => item.dataset.id === playingSongInfo.id,
   );
   if (y < 0) return;
   const cur = $song_item.eq(y);
@@ -1183,7 +1118,7 @@ $lrcMenuWrap
               },
             ],
             0,
-            { x: e.clientX, y: e.clientY }
+            { x: e.clientX, y: e.clientY },
           );
         } else if (id === '7') {
           close();
@@ -1201,7 +1136,7 @@ $lrcMenuWrap
           ]);
         }
       },
-      playingSongInfo.artist + ' - ' + playingSongInfo.title
+      playingSongInfo.artist + ' - ' + playingSongInfo.title,
     );
   })
   .on('click', '.volume_btn', adjustVolume)
@@ -1240,7 +1175,7 @@ $lrcMenuWrap
           _msg.msg({ message: b + 'X', icon: 'iconfont icon-sudu' });
         }
       },
-      '歌曲播放速度'
+      '歌曲播放速度',
     );
   })
   .find('.play_speed_btn')
@@ -1260,7 +1195,7 @@ window.addEventListener(
   'resize',
   throttle(function () {
     dmwidth = window.innerWidth;
-  }, 1000)
+  }, 1000),
 );
 $musicMvWrap.on('click', '.m_close', function () {
   pauseVideo();
@@ -1274,7 +1209,7 @@ $musicMvWrap.on('click', '.m_close', function () {
     },
     (target) => {
       target.style.display = 'none';
-    }
+    },
   );
 
   musicMvContentScroll.close();
@@ -1355,7 +1290,7 @@ zidonghide(
       });
     },
     500,
-    true
+    true,
   ),
   debounce(
     function () {
@@ -1365,7 +1300,7 @@ zidonghide(
       });
     },
     500,
-    true
+    true,
   ),
-  '.lrc_menu_wrap'
+  '.lrc_menu_wrap',
 );

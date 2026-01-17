@@ -39,7 +39,7 @@ export function renderCategoryList(updateNoteList = false) {
           `,
           {
             list: res.data,
-          }
+          },
         );
         $list.html(html);
       }
@@ -91,7 +91,7 @@ function addCategory(e) {
           loading.end();
         });
     },
-    '添加笔记分类'
+    '添加笔记分类',
   );
 }
 // 编辑分类
@@ -127,7 +127,7 @@ function editCategory(e, obj) {
           loading.end();
         });
     },
-    '编辑笔记分类'
+    '编辑笔记分类',
   );
 }
 // 删除分类
@@ -154,7 +154,7 @@ function deleteCategory(e, obj, cb, loading = { start() {}, end() {} }) {
             loading.end();
           });
       }
-    }
+    },
   );
 }
 // 操作分类
@@ -175,7 +175,7 @@ function hdCategory(e) {
         deleteCategory(e, obj, close, loading);
       }
     },
-    obj.title
+    obj.title,
   );
 }
 $categoryBox

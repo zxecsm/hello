@@ -47,18 +47,12 @@ class Validator {
 
   enum(arr) {
     const set = new Set(arr);
-    return this._addRule(
-      (v) => set.has(v),
-      `必须为其中之一: ${arr.join(', ')}`
-    );
+    return this._addRule((v) => set.has(v), `必须为其中之一: ${arr.join(', ')}`);
   }
 
   notEnum(arr) {
     const set = new Set(arr);
-    return this._addRule(
-      (v) => !set.has(v),
-      `不能为其中之一: ${arr.join(', ')}`
-    );
+    return this._addRule((v) => !set.has(v), `不能为其中之一: ${arr.join(', ')}`);
   }
 
   not(v) {
@@ -130,7 +124,7 @@ class VString extends Validator {
   email() {
     return this.pattern(
       /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-      '不是合规的 email 地址'
+      '不是合规的 email 地址',
     );
   }
   trim() {
@@ -153,17 +147,23 @@ class VString extends Validator {
   }
   enum(arr) {
     const set = new Set(arr);
-    return this._addRule((v) => {
-      if (this._canBeEmpty(v)) return true;
-      return set.has(v);
-    }, `必须为其中之一: ${arr.join(', ')}`);
+    return this._addRule(
+      (v) => {
+        if (this._canBeEmpty(v)) return true;
+        return set.has(v);
+      },
+      `必须为其中之一: ${arr.join(', ')}`,
+    );
   }
   notEnum(arr) {
     const set = new Set(arr);
-    return this._addRule((v) => {
-      if (this._canBeEmpty(v)) return true;
-      return !set.has(v);
-    }, `不能为其中之一: ${arr.join(', ')}`);
+    return this._addRule(
+      (v) => {
+        if (this._canBeEmpty(v)) return true;
+        return !set.has(v);
+      },
+      `不能为其中之一: ${arr.join(', ')}`,
+    );
   }
   not(v) {
     return this._addRule((val) => {
@@ -278,10 +278,7 @@ class VObject extends Validator {
   constructor(shape) {
     super();
     this.shape = shape;
-    this._addRule(
-      (v) => typeof v === 'object' && v !== null && !Array.isArray(v),
-      '必须是对象'
-    );
+    this._addRule((v) => typeof v === 'object' && v !== null && !Array.isArray(v), '必须是对象');
   }
 
   async _run(value, path) {

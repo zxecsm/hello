@@ -30,8 +30,7 @@ const cacheFile = {
     },
   }),
   // 文件缓存支持
-  supported:
-    navigator.storage && typeof navigator.storage.getDirectory === 'function',
+  supported: navigator.storage && typeof navigator.storage.getDirectory === 'function',
   // 获取文件系统
   getDirectory() {
     return navigator.storage.getDirectory();
@@ -52,10 +51,7 @@ const cacheFile = {
       return;
     }
 
-    await this.writeCache(
-      hash,
-      encodeURIComponent(JSON.stringify({ data: value }))
-    );
+    await this.writeCache(hash, encodeURIComponent(JSON.stringify({ data: value })));
   },
   // 获取配置数据
   async getData(key, type = _d.appName) {
@@ -142,9 +138,7 @@ const cacheFile = {
   // 读取文件缓存
   async readCache(hash) {
     try {
-      const fileHandle = await (
-        await this.getDirectory()
-      ).getFileHandle(hash, { create: false });
+      const fileHandle = await (await this.getDirectory()).getFileHandle(hash, { create: false });
       return fileHandle.getFile();
     } catch {
       return null;
@@ -154,9 +148,7 @@ const cacheFile = {
   async writeCache(hash, data) {
     return withLock(hash, async () => {
       try {
-        const fileHandle = await (
-          await this.getDirectory()
-        ).getFileHandle(hash, { create: true });
+        const fileHandle = await (await this.getDirectory()).getFileHandle(hash, { create: true });
         const writable = await fileHandle.createWritable();
         await writable.write(data);
         await writable.close();
@@ -188,10 +180,7 @@ const cacheFile = {
       const dirHandle = await this.getDirectory();
 
       for await (const entry of dirHandle.values()) {
-        if (
-          entry.kind === 'file' &&
-          (!type || entry.name.startsWith(`${type}_`))
-        ) {
+        if (entry.kind === 'file' && (!type || entry.name.startsWith(`${type}_`))) {
           res.push(entry);
         }
       }
@@ -209,10 +198,7 @@ const cacheFile = {
       const dirHandle = await this.getDirectory();
       let count = 0;
       for await (const entry of dirHandle.values()) {
-        if (
-          entry.kind === 'file' &&
-          (!type || entry.name.startsWith(`${type}_`))
-        ) {
+        if (entry.kind === 'file' && (!type || entry.name.startsWith(`${type}_`))) {
           const cachedURL = this.urlCache.get(entry.name);
           if (cachedURL) {
             this.urlCache.delete(entry.name, cachedURL);
@@ -273,12 +259,8 @@ const cacheFile = {
           pack.push({ name: entryName, file });
 
           _msg.botMsg(
-            `缓存分包：${packName}_${packs.length + 1} - ${(
-              size /
-              1024 /
-              1024
-            ).toFixed(2)}M`,
-            1
+            `缓存分包：${packName}_${packs.length + 1} - ${(size / 1024 / 1024).toFixed(2)}M`,
+            1,
           );
           if (size > 500 * 1024 * 1024) {
             packs.push({ size, pack, num: packs.length + 1 });
@@ -303,10 +285,7 @@ const cacheFile = {
 
         const pName = `${packName}_${num}.zip`;
 
-        _msg.botMsg(
-          `开始压缩：${pName} - ${(size / 1024 / 1024).toFixed(2)}M`,
-          1
-        );
+        _msg.botMsg(`开始压缩：${pName} - ${(size / 1024 / 1024).toFixed(2)}M`, 1);
         // 生成zip文件并下载
         const content = await zip.generateAsync({
           type: 'blob',
@@ -348,7 +327,7 @@ const cacheFile = {
               } catch {}
             }
           }
-        })
+        }),
       );
     } catch (error) {
       throw error;

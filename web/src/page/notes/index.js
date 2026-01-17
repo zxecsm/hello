@@ -47,11 +47,7 @@ import {
   reqNoteUpNote,
 } from '../../api/note';
 import { CreateTabs } from './tabs';
-import {
-  isHideCategoryBox,
-  renderCategoryList,
-  showCategoryBox,
-} from './category';
+import { isHideCategoryBox, renderCategoryList, showCategoryBox } from './category';
 import toolTip from '../../js/plugins/tooltip';
 import rMenu from '../../js/plugins/rightMenu';
 import { showNoteInfo } from '../../js/utils/showinfo';
@@ -154,14 +150,8 @@ function hdCategoryAdd(e, cb, hasList, hasLocked = false) {
     return;
   }
 
-  const filterList = noteCategoryList.filter(
-    (item) => !hasList.some((i) => i.id === item.id)
-  );
-  if (
-    hasLocked &&
-    runState === 'own' &&
-    !hasList.some((item) => item.id === 'locked')
-  ) {
+  const filterList = noteCategoryList.filter((item) => !hasList.some((i) => i.id === item.id));
+  if (hasLocked && runState === 'own' && !hasList.some((item) => item.id === 'locked')) {
     filterList.unshift({
       id: 'locked',
       title: '私密笔记',
@@ -189,7 +179,7 @@ function hdCategoryAdd(e, cb, hasList, hasLocked = false) {
         cb && cb({ param, close });
       }
     },
-    '选择分类'
+    '选择分类',
   );
 }
 $categoryTag
@@ -213,10 +203,7 @@ let noteList = [];
 const noteBoxSelector = new BoxSelector(document, {
   selectables: '.item_box',
   onSelectStart({ e }) {
-    if (
-      _getTarget($contentWrap[0], e, '.item_box') ||
-      _getTarget($contentWrap[0], e, '.item_info')
-    )
+    if (_getTarget($contentWrap[0], e, '.item_box') || _getTarget($contentWrap[0], e, '.item_info'))
       return true;
   },
   onSelectEnd() {
@@ -355,7 +342,7 @@ export function renderList(y) {
             category,
             hdTitleHighlight,
             _d,
-          }
+          },
         );
         stopSelect();
         $contentWrap.html(html).addClass('open');
@@ -383,7 +370,7 @@ export function renderList(y) {
               .catch(() => {
                 item.style.display = 'none';
               });
-          }
+          },
         );
       }
     })
@@ -415,7 +402,7 @@ const tabsObj = new CreateTabs({
         add(param);
       },
       data,
-      1
+      1,
     );
   },
 });
@@ -437,7 +424,7 @@ function hdHighlight(con) {
     `,
     {
       con,
-    }
+    },
   );
 }
 // 分页
@@ -486,10 +473,7 @@ function toTop(e, obj) {
           inputType: 'number',
           placeholder: '0：取消；数值越大越靠前',
           verify(val) {
-            return (
-              rMenu.validInteger(val) ||
-              rMenu.validNumber(val, 0, _d.fieldLength.top)
-            );
+            return rMenu.validInteger(val) || rMenu.validNumber(val, 0, _d.fieldLength.top);
           },
         },
       },
@@ -511,7 +495,7 @@ function toTop(e, obj) {
           loading.end();
         });
     },
-    '置顶笔记'
+    '置顶笔记',
   );
 }
 function categoryToArr(category) {
@@ -536,7 +520,7 @@ function noteEditCategory(e, obj) {
             close();
             add(param);
           },
-          data
+          data,
         );
       },
       submit({ close, data, loading, isDiff }) {
@@ -559,7 +543,7 @@ function noteEditCategory(e, obj) {
           });
       },
     },
-    '编辑分类'
+    '编辑分类',
   );
 }
 function verifyDate(obj) {
@@ -646,7 +630,7 @@ function editNoteInfo(e, obj) {
           loading.end();
         });
     },
-    '编辑笔记信息'
+    '编辑笔记信息',
   );
 }
 $contentWrap
@@ -677,11 +661,7 @@ $contentWrap
         } else if (id === '2') {
           noteEditCategory(e, obj);
         } else if (id === '3') {
-          showQcode(
-            e,
-            `${_d.originURL}/note?v=${encodeURIComponent(noteid)}`,
-            title
-          );
+          showQcode(e, `${_d.originURL}/note?v=${encodeURIComponent(noteid)}`, title);
         } else if (id === '4') {
           editNoteInfo(e, obj);
         } else if (id === '5') {
@@ -696,19 +676,14 @@ $contentWrap
           _myOpen(`/file#${_d.noteHistoryDir}/${noteid}`, '文件管理');
         }
       },
-      title
+      title,
     );
   })
   .on('click', '.item_title', function (e) {
     e.stopPropagation();
     const val = wInput.getValue().trim();
     const { title, id } = getNoteInfo($(this).parent().attr('data-id'));
-    _myOpen(
-      `/note?v=${encodeURIComponent(id)}${
-        val ? '#' + encodeURIComponent(val) : ''
-      }`,
-      title
-    );
+    _myOpen(`/note?v=${encodeURIComponent(id)}${val ? '#' + encodeURIComponent(val) : ''}`, title);
   })
   .on('click', 'img', function (e) {
     const imgs = $contentWrap.find('img');
@@ -736,7 +711,7 @@ $contentWrap
   })
   .on('mouseenter', '.item_box .item_type', function () {
     const { create_at, update_at, visit_count, top, categoryArr } = getNoteInfo(
-      $(this).parent().attr('data-id')
+      $(this).parent().attr('data-id'),
     );
     const arr = categoryArr.map((item) => item.title);
     const str = `创建：${formatDate({
@@ -745,9 +720,7 @@ $contentWrap
     })}\n更新：${formatDate({
       template: '{0}-{1}-{2}',
       timestamp: update_at,
-    })}\n分类：${arr.join('-') || '--'}\n阅读：${formatNum(
-      visit_count
-    )}\n权重：${top}`;
+    })}\n分类：${arr.join('-') || '--'}\n阅读：${formatNum(visit_count)}\n权重：${top}`;
     toolTip.setTip(str).show();
   })
   .on('mouseleave', '.item_box .item_type', function () {
@@ -765,7 +738,7 @@ $contentWrap
       const $this = $(this).parent();
       const obj = getNoteInfo($this.attr('data-id'));
       changeNoteState([obj.id], obj.share === 0 ? 1 : 0);
-    }, 2000)
+    }, 2000),
   )
   .on('click', '.check_state', function () {
     checkedItem(this);
@@ -803,9 +776,7 @@ function checkedItem(el) {
 }
 function updateSelectInfo() {
   const $itemBox = $contentWrap.find('.item_box'),
-    $checkArr = $itemBox.filter(
-      (_, item) => $(item).find('.check_state').attr('check') === 'y'
-    );
+    $checkArr = $itemBox.filter((_, item) => $(item).find('.check_state').attr('check') === 'y');
   _msg.botMsg(`选中：${$checkArr.length}项`);
   if ($checkArr.length === $itemBox.length) {
     $footer.find('span').attr({
@@ -865,7 +836,7 @@ async function upNote() {
         (percent) => {
           pro.update(percent);
         },
-        signal
+        signal,
       );
 
       if (res.code === 1) {
@@ -917,9 +888,7 @@ $headWrap
 // 获取选中项
 function getCheckItems() {
   const $itemBox = $contentWrap.find('.item_box'),
-    $checkArr = $itemBox.filter(
-      (_, item) => $(item).find('.check_state').attr('check') === 'y'
-    );
+    $checkArr = $itemBox.filter((_, item) => $(item).find('.check_state').attr('check') === 'y');
   const arr = [];
   $checkArr.each((i, v) => {
     arr.push(v.getAttribute('data-id'));
@@ -940,7 +909,7 @@ $footer
       ids.map((id) => ({
         fileUrl: `/api/note/read?v=${id}&download=1`,
         filename: getNoteInfo(id).title + '.md',
-      }))
+      })),
     );
     stopSelect();
   })
@@ -968,10 +937,7 @@ function switchCheckAll() {
   let che = $checkBtn.attr('check');
   che === 'y' ? (che = 'n') : (che = 'y');
   $checkBtn.attr({
-    class:
-      che === 'y'
-        ? 'iconfont icon-xuanzeyixuanze'
-        : 'iconfont icon-xuanzeweixuanze',
+    class: che === 'y' ? 'iconfont icon-xuanzeyixuanze' : 'iconfont icon-xuanzeweixuanze',
     check: che,
   });
   const $itemBox = $contentWrap.find('.item_box');
@@ -989,7 +955,7 @@ scrollState(
     } else {
       $headWrap.addClass('open');
     }
-  }, 1000)
+  }, 1000),
 );
 document.addEventListener('keydown', function (e) {
   if (!isHideCategoryBox()) return;

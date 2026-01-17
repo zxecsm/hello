@@ -27,9 +27,7 @@ const taskState = {
     return this.tasks.get(key) || null;
   },
   getTaskList(account) {
-    return Array.from(this.tasks.keys()).filter((key) =>
-      key.startsWith(`${account}_`)
-    );
+    return Array.from(this.tasks.keys()).filter((key) => key.startsWith(`${account}_`));
   },
 };
 

@@ -107,7 +107,7 @@ editor.getSession().on(
   debounce(function () {
     switchUndoState();
     rende();
-  }, 1000)
+  }, 1000),
 );
 // 1. 获取当前的VSCode键盘处理器
 const vscodeHandler = editor.keyBinding.getKeyboardHandler();
@@ -191,7 +191,7 @@ function syncScrollFromEditor(noAnimate) {
 
   // 获取预览最靠近编辑器第一行的行号
   const curLine = getMinIndex(
-    previewLines.map((item) => Math.abs(firstVisibleRow - item.dataset.line))
+    previewLines.map((item) => Math.abs(firstVisibleRow - item.dataset.line)),
   );
   let firstElement = previewLines[curLine];
   if (firstElement) {
@@ -207,7 +207,7 @@ function syncScrollFromEditor(noAnimate) {
         {
           scrollTop: offset,
         },
-        _d.speed
+        _d.speed,
       );
     }
   }
@@ -218,7 +218,7 @@ editor.session.on(
   'changeScrollTop',
   debounce(() => {
     syncScrollFromEditor();
-  }, 200)
+  }, 200),
 );
 // 预览区滚动同步到编辑器
 function syncScrollFromPreview() {
@@ -227,9 +227,7 @@ function syncScrollFromPreview() {
   if ($editBox.is(':hidden')) return;
   const scrollTop = $previewBox.find('.content').scrollTop();
 
-  let firstVisibleElement = previewLines.find(
-    (el) => el.offsetTop >= scrollTop
-  );
+  let firstVisibleElement = previewLines.find((el) => el.offsetTop >= scrollTop);
 
   if (firstVisibleElement) {
     const line = parseInt(firstVisibleElement.getAttribute('data-line'), 10);
@@ -262,8 +260,7 @@ if (!k || !/^[\w]+$/.test(k)) {
           beforeText: '便条Key：',
           verify(val) {
             return (
-              rMenu.validString(val, 1, _d.fieldLength.filename) ||
-              rMenu.validAlphanumeric(val)
+              rMenu.validString(val, 1, _d.fieldLength.filename) || rMenu.validAlphanumeric(val)
             );
           },
         },
@@ -274,7 +271,7 @@ if (!k || !/^[\w]+$/.test(k)) {
     },
     0,
     1,
-    1
+    1,
   );
 } else {
   reqGetNotePad({ k })
@@ -321,9 +318,7 @@ function rende() {
 mdWorker.addEventListener('message', (event) => {
   $previewBox.find('.content').html(event.data);
   previewLines = [...$previewBox[0].querySelectorAll(`[data-line]`)];
-  const imgs = [
-    ...$previewBox.find('.content')[0].querySelectorAll('img'),
-  ].filter((item) => {
+  const imgs = [...$previewBox.find('.content')[0].querySelectorAll('img')].filter((item) => {
     const url = item.getAttribute('data-src');
     const cache = cacheFile.hasUrl(url, 'image');
     if (cache) {
@@ -497,7 +492,7 @@ async function hdUpFile(files) {
         (percent) => {
           pro.update(percent);
         },
-        signal
+        signal,
       );
       if (result.code === 1) {
         const { id } = result.data;
@@ -564,7 +559,7 @@ function settingEdit(e) {
         setEditor(e, editor);
       }
     },
-    '设置'
+    '设置',
   );
 }
 if (getScreenSize().w <= _d.screen) {
@@ -578,17 +573,13 @@ function previewState() {
   }
   if (previewFlag === 'y') {
     previewFlag = 'n';
-    $headBtns
-      .find('.preview_state')
-      .attr('class', 'preview_state iconfont icon-kejian');
+    $headBtns.find('.preview_state').attr('class', 'preview_state iconfont icon-kejian');
     $previewBox.css('display', 'none');
     $editBox.addClass('open');
     $headBtns.find('.to_max_btn').css('display', 'none');
   } else {
     previewFlag = 'y';
-    $headBtns
-      .find('.preview_state')
-      .attr('class', 'preview_state iconfont icon-bukejian');
+    $headBtns.find('.preview_state').attr('class', 'preview_state iconfont icon-bukejian');
     $previewBox.css('display', 'block');
     $editBox.removeClass('open');
     $headBtns.find('.to_max_btn').css('display', 'block');
@@ -640,8 +631,7 @@ function openNotepad(e) {
           beforeText: '便条Key：',
           verify(val) {
             return (
-              rMenu.validString(val, 1, _d.fieldLength.filename) ||
-              rMenu.validAlphanumeric(val)
+              rMenu.validString(val, 1, _d.fieldLength.filename) || rMenu.validAlphanumeric(val)
             );
           },
         },
@@ -651,7 +641,7 @@ function openNotepad(e) {
       close();
       myOpen(`/notepad?k=${inp.key}`);
     },
-    '切换到指定便条'
+    '切换到指定便条',
   );
 }
 if (isIframe()) {

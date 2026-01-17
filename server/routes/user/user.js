@@ -129,14 +129,8 @@ export async function validShareAddUserState(req, types, id, pass, captchaId) {
   }
 
   const share = await db('share AS s')
-    .join(
-      'user AS u',
-      { 'u.account': { value: 's.account', raw: true } },
-      { type: 'LEFT' }
-    )
-    .select(
-      'u.username,u.logo,u.email,s.exp_time,s.title,s.account,s.data,s.pass'
-    )
+    .join('user AS u', { 'u.account': { value: 's.account', raw: true } }, { type: 'LEFT' })
+    .select('u.username,u.logo,u.email,s.exp_time,s.title,s.account,s.data,s.pass')
     .where({ 's.id': id, 's.type': { in: types } })
     .findOne();
 

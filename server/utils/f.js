@@ -81,7 +81,7 @@ async function cp(from, to, { signal, progress, renameMode = false } = {}) {
           },
         }),
         writeStream,
-        { signal }
+        { signal },
       );
       if (renameMode) await del(f);
       progress?.({ count: 1 });
@@ -170,12 +170,7 @@ async function chmod(path, mode, { signal, progress, recursive = false } = {}) {
 }
 
 // 设置用户组
-async function chown(
-  path,
-  uid,
-  gid,
-  { signal, progress, recursive = false } = {}
-) {
+async function chown(path, uid, gid, { signal, progress, recursive = false } = {}) {
   if (!(await getType(path))) return;
 
   if (!recursive) {

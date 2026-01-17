@@ -50,7 +50,7 @@ route.get(
         type: V.string().trim().enum(['d', 'm']),
       }),
     ],
-    ['query', V.object({ w: V.number().toInt().default(0).min(0) })]
+    ['query', V.object({ w: V.number().toInt().default(0).min(0) })],
   ),
   async (req, res) => {
     try {
@@ -73,7 +73,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 验证登录态
@@ -107,7 +107,7 @@ timedTask.add(async (flag) => {
             flag: 'userinfo',
           },
         },
-        'all'
+        'all',
       );
     });
   }
@@ -132,7 +132,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 更换壁纸
@@ -143,7 +143,7 @@ route.post(
     V.object({
       type: V.string().trim().enum(['bg', 'bgxs']),
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -160,7 +160,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 壁纸列表
@@ -171,12 +171,8 @@ route.get(
     V.object({
       type: V.string().trim().enum(['bg', 'bgxs']),
       pageNo: V.number().toInt().default(1).min(1),
-      pageSize: V.number()
-        .toInt()
-        .default(40)
-        .min(1)
-        .max(fieldLength.bgPageSize),
-    })
+      pageSize: V.number().toInt().default(40).min(1).max(fieldLength.bgPageSize),
+    }),
   ),
   async (req, res) => {
     try {
@@ -192,11 +188,7 @@ route.get(
 
       let data = [];
       if (total > 0) {
-        data = await bgdb
-          .select('id,type')
-          .page(pageSize, offset)
-          .orderBy('serial', 'DESC')
-          .find();
+        data = await bgdb.select('id,type').page(pageSize, offset).orderBy('serial', 'DESC').find();
       }
 
       _success(res, 'ok', {
@@ -206,7 +198,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除壁纸
@@ -217,7 +209,7 @@ route.post(
     V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
       .min(1)
       .max(fieldLength.bgPageSize),
-    'ids'
+    'ids',
   ),
   async (req, res) => {
     try {
@@ -249,7 +241,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 上传
@@ -261,13 +253,11 @@ route.post(
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       name: V.string()
         .trim()
-        .preprocess((v) =>
-          typeof v === 'string' ? _path.sanitizeFilename(v) : v
-        )
+        .preprocess((v) => (typeof v === 'string' ? _path.sanitizeFilename(v) : v))
         .min(1)
         .max(fieldLength.filename)
         .custom(isImgFile, '必须为受支持的图片格式'),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -307,7 +297,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 重复
@@ -317,16 +307,13 @@ route.post(
     'body',
     V.object({
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
       const { HASH } = req[kValidate];
 
-      const bg = await db('bg')
-        .select('url,id')
-        .where({ hash: HASH })
-        .findOne();
+      const bg = await db('bg').select('url,id').where({ hash: HASH }).findOne();
 
       if (bg) {
         if ((await _f.getType(appConfig.bgDir(bg.url))) === 'file') {
@@ -342,7 +329,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 export default route;

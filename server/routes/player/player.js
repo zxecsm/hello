@@ -56,7 +56,7 @@ export async function batchGetMusics(ids) {
 
     const list = await db('songs')
       .select(
-        'id,pic,lrc,url,mv,title,artist,duration,album,year,collect_count,play_count,create_at'
+        'id,pic,lrc,url,mv,title,artist,duration,album,year,collect_count,play_count,create_at',
       )
       .where({ id: { in: arr } })
       .find();
@@ -77,10 +77,7 @@ export async function batchGetMusics(ids) {
 
 // 获取歌曲列表
 export async function getMusicList(account) {
-  let songListObj = await db('song_list')
-    .select('data')
-    .where({ account })
-    .findOne();
+  let songListObj = await db('song_list').select('data').where({ account }).findOne();
 
   const list = [
     { name: '播放历史', pic: 'img/history.jpg', item: [], id: 'history' },

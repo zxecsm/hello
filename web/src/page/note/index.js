@@ -66,14 +66,10 @@ let noteFontSize = localData.get('noteFontSize'),
 // 加宽
 if (noteWiden) {
   $contentWrap.addClass('big');
-  $setBtnsWrap
-    .find('.note_box_width')
-    .attr('class', 'note_box_width iconfont icon-zuoyoushousuo');
+  $setBtnsWrap.find('.note_box_width').attr('class', 'note_box_width iconfont icon-zuoyoushousuo');
 } else {
   $contentWrap.removeClass('big');
-  $setBtnsWrap
-    .find('.note_box_width')
-    .attr('class', 'note_box_width iconfont icon-kuandukuoda');
+  $setBtnsWrap.find('.note_box_width').attr('class', 'note_box_width iconfont icon-kuandukuoda');
 }
 export function getContentW() {
   return $contentWrap.outerWidth();
@@ -164,7 +160,7 @@ $setBtnsWrap
         }
         copyText(text);
       },
-      '复制笔记'
+      '复制笔记',
     );
   })
   .on('click', '.set_btn', () => {
@@ -178,8 +174,7 @@ if (urlparmes.v) {
   reqNoteRead({ v: urlparmes.v })
     .then((result) => {
       if (result.code === 1) {
-        const { title, content, account, username, logo, category, email } =
-          result.data;
+        const { title, content, account, username, logo, category, email } = result.data;
         noteInfo = result.data;
         noteObj.md = content;
         titleName = title;
@@ -187,9 +182,7 @@ if (urlparmes.v) {
           if (isIframe()) {
             try {
               // 更新标题
-              window.parent.openInIframe.iframes
-                .get(window.iframeId)
-                .updateTitle(titleName);
+              window.parent.openInIframe.iframes.get(window.iframeId).updateTitle(titleName);
             } catch {}
           }
         }, 1000);
@@ -250,10 +243,7 @@ if (urlparmes.v) {
 } else {
   pageErr();
 }
-function updateNoteInfo(
-  { create_at, visit_count, update_at, category, account } = {},
-  content
-) {
+function updateNoteInfo({ create_at, visit_count, update_at, category, account } = {}, content) {
   if (![_d.aboutid, _d.tipsid].includes(urlparmes.v)) {
     const readInfo = noteReadInfo(content);
     const $headInfo = $noteInfo.find('div');
@@ -274,8 +264,8 @@ function updateNoteInfo(
           formatNum,
           readInfo,
           update_at,
-        }
-      )
+        },
+      ),
     );
     if (category) {
       reqNoteCategory({ account })
@@ -289,7 +279,7 @@ function updateNoteInfo(
               `,
               {
                 list,
-              }
+              },
             );
             $headInfo.append(html);
           }
@@ -419,9 +409,7 @@ const hdSearchWord = debounce(function () {
   const _length = $highlightWords.length;
   highlightnum = 0;
   if (_length > 0) {
-    $pageSearchWrap
-      .find('.res_total_num')
-      .text(`${highlightnum + 1}/${_length}`);
+    $pageSearchWrap.find('.res_total_num').text(`${highlightnum + 1}/${_length}`);
     highlightPosition(highlightnum);
   }
 }, 500);
@@ -458,8 +446,8 @@ function nextPrevSearch(isNext) {
   highlightnum >= _length
     ? (highlightnum = 0)
     : highlightnum < 0
-    ? (highlightnum = _length - 1)
-    : null;
+      ? (highlightnum = _length - 1)
+      : null;
   $pageSearchWrap.find('.res_total_num').text(`${highlightnum + 1}/${_length}`);
   highlightPosition(highlightnum);
 }

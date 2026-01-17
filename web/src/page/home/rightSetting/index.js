@@ -164,8 +164,8 @@ export function showRightMenu() {
     ">{{num}}</em>
       </template>
       `,
-        { num }
-      )
+        { num },
+      ),
     );
   $rightBox.find('.show_count span').html(
     _tpl(
@@ -176,8 +176,8 @@ export function showRightMenu() {
   ">{{expireCount}}</em>
     </template>
     `,
-      { expireCount }
-    )
+      { expireCount },
+    ),
   );
   switchTipsBtn();
   setZidx($rightMenuMask[0], 'rightmenu', hideRightMenu);
@@ -234,7 +234,7 @@ function changeUsername(e) {
           loading.end();
         });
     },
-    '修改用户名'
+    '修改用户名',
   );
 }
 // 每日更换壁纸
@@ -286,7 +286,7 @@ export function hideUserInfo() {
     },
     (target) => {
       target.style.display = 'none';
-    }
+    },
   );
 }
 export function hideSysInfo() {
@@ -308,7 +308,7 @@ export function hideSysInfo() {
       target.style.display = 'none';
       sysStatus.end();
       popWindow.remove('sysinfo');
-    }
+    },
   );
 }
 // 上传头像
@@ -330,10 +330,7 @@ export async function upLogo(type, cb, id, loading = { start() {}, end() {} }) {
       controller.abort();
     });
     const pro = upPro.add(file.name);
-    if (
-      file.size <= 0 ||
-      file.size >= _d.fieldLength.maxLogoSize * 1024 * 1024
-    ) {
+    if (file.size <= 0 || file.size >= _d.fieldLength.maxLogoSize * 1024 * 1024) {
       pro.fail();
       _msg.error(`图片限制0-${_d.fieldLength.maxLogoSize}MB`);
       return;
@@ -346,7 +343,7 @@ export async function upLogo(type, cb, id, loading = { start() {}, end() {} }) {
       function (percent) {
         pro.update(percent);
       },
-      signal
+      signal,
     )
       .then((result) => {
         loading.end();
@@ -399,20 +396,18 @@ function hdUserLogo(e) {
             updateUserInfo();
           },
           '',
-          loading
+          loading,
         );
       } else if (id === '2') {
         close();
         imgPreview(
           [
             {
-              u1: getFilePath(
-                `/logo/${setUserInfo().account}/${setUserInfo().logo}`
-              ),
+              u1: getFilePath(`/logo/${setUserInfo().account}/${setUserInfo().logo}`),
             },
           ],
           0,
-          { x: e.clientX, y: e.clientY }
+          { x: e.clientX, y: e.clientY },
         );
       } else if (id === '3') {
         rMenu.pop(
@@ -436,11 +431,11 @@ function hdUserLogo(e) {
                   loading.end();
                 });
             }
-          }
+          },
         );
       }
     },
-    '头像选项'
+    '头像选项',
   );
 }
 // 绑定邮箱
@@ -482,10 +477,10 @@ function bindEmail(e) {
                   loading.end();
                 });
             }
-          }
+          },
         );
       },
-      '请输入用户密码认证'
+      '请输入用户密码认证',
     );
   } else {
     rMenu.inpMenu(
@@ -497,10 +492,7 @@ function bindEmail(e) {
             inputType: 'email',
             autocomplete: 'email',
             verify(val) {
-              return (
-                rMenu.validString(val, 1, _d.fieldLength.email) ||
-                rMenu.validEmail(val)
-              );
+              return rMenu.validString(val, 1, _d.fieldLength.email) || rMenu.validEmail(val);
             },
           },
         },
@@ -557,7 +549,7 @@ function bindEmail(e) {
                       loading.end();
                     });
                 },
-                '绑定邮箱'
+                '绑定邮箱',
               );
             }
           })
@@ -565,7 +557,7 @@ function bindEmail(e) {
             loading.end();
           });
       },
-      '输入邮箱，获取验证码'
+      '输入邮箱，获取验证码',
     );
   }
 }
@@ -616,10 +608,7 @@ function handleForwardMsg(e) {
           placeholder: 'https://api.xxx.com/xxx?title={{title}}&text={{text}}',
           verify(val, items) {
             if (items.state.value === 'y') {
-              return (
-                rMenu.validString(val, 1, _d.fieldLength.url) ||
-                rMenu.validUrl(val)
-              );
+              return rMenu.validString(val, 1, _d.fieldLength.url) || rMenu.validUrl(val);
             } else {
               return rMenu.validString(val, 0, _d.fieldLength.url);
             }
@@ -682,7 +671,7 @@ function handleForwardMsg(e) {
           loading.end();
         });
     },
-    '编辑转发接口'
+    '编辑转发接口',
   );
 }
 // 用户信息
@@ -696,9 +685,7 @@ $userInfoWrap
   .on('click', '.u_close_btn', hideUserInfo)
   .on('click', '.user_logo div', hdUserLogo)
   .on('click', '.top', switchUserInfoState);
-$sysInfoWrap
-  .on('click', '.c_close_btn', hideSysInfo)
-  .on('click', '.top', switchSysInfoTopState);
+$sysInfoWrap.on('click', '.c_close_btn', hideSysInfo).on('click', '.top', switchSysInfoTopState);
 // 更新用户信息
 export function renderUserinfo() {
   const { username, logo, account } = setUserInfo();
@@ -714,15 +701,13 @@ export function renderUserinfo() {
     `,
     {
       ...setUserInfo(),
-    }
+    },
   );
   $userInfoWrap.find('.user_list').html(html);
   if (logo) {
     imgjz(getFilePath(`/logo/${account}/${logo}`))
       .then((cache) => {
-        $userInfoWrap
-          .find('.user_logo div')
-          .css('background-image', `url(${cache})`);
+        $userInfoWrap.find('.user_logo div').css('background-image', `url(${cache})`);
       })
       .catch(() => {
         $userInfoWrap
@@ -730,9 +715,7 @@ export function renderUserinfo() {
           .css('background-image', `url(${getTextImg(username)})`);
       });
   } else {
-    $userInfoWrap
-      .find('.user_logo div')
-      .css('background-image', `url(${getTextImg(username)})`);
+    $userInfoWrap.find('.user_logo div').css('background-image', `url(${getTextImg(username)})`);
   }
 }
 // 设置君子锁
@@ -762,7 +745,7 @@ function setGentlemanLock(e) {
         _msg.success();
       }
     },
-    '防君子不防小人'
+    '防君子不防小人',
   );
 }
 // 设置字体
@@ -823,7 +806,7 @@ function setPageFont(e, loading = { start() {}, end() {} }) {
               }
             }
           },
-          '选择字体'
+          '选择字体',
         );
       }
     })
@@ -862,9 +845,7 @@ export function settingMenu(e, isMain) {
       id: '5',
       text: '叉叉靠右',
       beforeIcon: `iconfont icon-close-bold`,
-      afterIcon:
-        'iconfont ' +
-        (headBtnToRight ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+      afterIcon: 'iconfont ' + (headBtnToRight ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
       param: { value: headBtnToRight },
     },
   ];
@@ -936,9 +917,7 @@ export function settingMenu(e, isMain) {
             id: '4',
             text: '点击爱心',
             beforeIcon: 'iconfont icon-dianji',
-            afterIcon:
-              'iconfont ' +
-              (clickLove ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+            afterIcon: 'iconfont ' + (clickLove ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
             param: { value: clickLove },
           },
           {
@@ -946,17 +925,14 @@ export function settingMenu(e, isMain) {
             text: '窗口移动透明',
             beforeIcon: 'iconfont icon-opacity',
             afterIcon:
-              'iconfont ' +
-              (windowMoveOpacity ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+              'iconfont ' + (windowMoveOpacity ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
             param: { value: windowMoveOpacity },
           },
           {
             id: '6',
             text: '通知提示音',
             beforeIcon: 'iconfont icon-tongzhi',
-            afterIcon:
-              'iconfont ' +
-              (pmsound ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+            afterIcon: 'iconfont ' + (pmsound ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
             param: { value: pmsound },
           },
         ];
@@ -965,8 +941,7 @@ export function settingMenu(e, isMain) {
             id: '7',
             text: '鼠标移入显示提示信息',
             beforeIcon: 'iconfont icon-tishi',
-            afterIcon:
-              'iconfont ' + (tip ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+            afterIcon: 'iconfont ' + (tip ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
             param: { value: tip },
           });
         }
@@ -985,7 +960,7 @@ export function settingMenu(e, isMain) {
                 localData.get('pageGrayscale'),
                 throttle(function (per) {
                   localData.set('pageGrayscale', per);
-                }, 500)
+                }, 500),
               );
             } else if (id === '3') {
               // 字体列表
@@ -1048,7 +1023,7 @@ export function settingMenu(e, isMain) {
               resetMenu(data);
             }
           },
-          '个性化设置'
+          '个性化设置',
         );
       } else if (id === '4') {
         let dark = '';
@@ -1103,9 +1078,7 @@ export function settingMenu(e, isMain) {
             id: '1',
             text: '缓存状态',
             beforeIcon: `iconfont icon-xinxi`,
-            afterIcon:
-              'iconfont ' +
-              (cacheState ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+            afterIcon: 'iconfont ' + (cacheState ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
             param: { value: cacheState },
           },
           {
@@ -1144,9 +1117,7 @@ export function settingMenu(e, isMain) {
               resetMenu(data);
             } else if (id === '2') {
               const { quota } = await cacheFile.getEstimateSize();
-              const titleText = `选择要清除的缓存：可用缓存空间大约(${formatBytes(
-                quota
-              )})`;
+              const titleText = `选择要清除的缓存：可用缓存空间大约(${formatBytes(quota)})`;
               const data = [
                 {
                   id: 'music',
@@ -1195,9 +1166,7 @@ export function settingMenu(e, isMain) {
                     rMenu.pop(
                       {
                         e,
-                        text: `确认清空：${param.text}缓存？大约：${formatBytes(
-                          size
-                        )}`,
+                        text: `确认清空：${param.text}缓存？大约：${formatBytes(size)}`,
                       },
                       async (type) => {
                         if (type === 'confirm') {
@@ -1225,11 +1194,11 @@ export function settingMenu(e, isMain) {
                             _msg.error();
                           }
                         }
-                      }
+                      },
                     );
                   }
                 },
-                titleText
+                titleText,
               );
             } else if (id === '3') {
               rMenu.pop(
@@ -1256,7 +1225,7 @@ export function settingMenu(e, isMain) {
                       _msg.error();
                     }
                   }
-                }
+                },
               );
             } else if (id === '4') {
               const size = await cacheFile.size();
@@ -1277,19 +1246,17 @@ export function settingMenu(e, isMain) {
                       _msg.error();
                     }
                   }
-                }
+                },
               );
             }
           },
-          '缓存管理(关闭缓存后，会停止新增歌曲和图片的缓存文件。已缓存的文件不受影响)'
+          '缓存管理(关闭缓存后，会停止新增歌曲和图片的缓存文件。已缓存的文件不受影响)',
         );
       } else if (id === '10') {
         rMenu.pop(
           {
             e,
-            text: `确认清空: 本地配置缓存？大约：${formatBytes(
-              localData.getSize()
-            )}`,
+            text: `确认清空: 本地配置缓存？大约：${formatBytes(localData.getSize())}`,
           },
           (type) => {
             if (type === 'confirm') {
@@ -1305,11 +1272,11 @@ export function settingMenu(e, isMain) {
                 _msg.error();
               }
             }
-          }
+          },
         );
       }
     },
-    '设置'
+    '设置',
   );
 }
 // Admin
@@ -1330,7 +1297,7 @@ function hdAdmin(e) {
         showLogPage();
       }
     },
-    '管理员菜单'
+    '管理员菜单',
   );
 }
 export function showRootPage() {
@@ -1364,7 +1331,7 @@ function createQrCode(e) {
         .then(close)
         .catch(() => {});
     },
-    '生成二维码'
+    '生成二维码',
   );
 }
 // 工具
@@ -1434,7 +1401,7 @@ function hdTools(e) {
               exportBm(close, loading);
             }
           },
-          '导入/导出书签'
+          '导入/导出书签',
         );
       } else if (id === '7') {
         close();
@@ -1451,7 +1418,7 @@ function hdTools(e) {
         showSSHList();
       }
     },
-    '工具'
+    '工具',
   );
 }
 // 修改密码
@@ -1505,7 +1472,7 @@ function changeUserPd(e) {
           loading.end();
         });
     },
-    '修改密码'
+    '修改密码',
   );
 }
 // 注销账号
@@ -1554,10 +1521,10 @@ function closeAccount(e) {
                 loading.end();
               });
           }
-        }
+        },
       );
     },
-    '请输入用户密码认证'
+    '请输入用户密码认证',
   );
 }
 // 账号设置
@@ -1639,7 +1606,7 @@ function hdAccountManage(e) {
                 }
               });
             },
-            '请输入用户密码认证'
+            '请输入用户密码认证',
           );
         } else {
           loading.start();
@@ -1656,7 +1623,7 @@ function hdAccountManage(e) {
         }
       }
     },
-    '账号管理'
+    '账号管理',
   );
 }
 /* 
@@ -1682,7 +1649,7 @@ async function hdVerifyLogin(e, verify, account) {
     {
       verify,
       url,
-    }
+    },
   );
   rMenu.rightMenu(
     e,
@@ -1732,11 +1699,11 @@ async function hdVerifyLogin(e, verify, account) {
                 loading.end();
               });
           },
-          '开启两步验证'
+          '开启两步验证',
         );
       }
     },
-    '配置两步验证'
+    '配置两步验证',
   );
 }
 // 显示个人信息
@@ -1860,7 +1827,7 @@ function userLogout(e) {
           }
         })
         .catch(() => {});
-    }
+    },
   );
 }
 // 设置tips
@@ -1888,7 +1855,7 @@ function setTipsFlag(e) {
           });
       }
     },
-    'Tips提示状态'
+    'Tips提示状态',
   );
 }
 longPress($rightBox[0], '.tips', function (e) {
@@ -1902,10 +1869,7 @@ export function showTrash() {
 }
 export function showNote() {
   hideRightMenu();
-  openInIframe(
-    `/notes?acc=${encodeURIComponent(localData.get('account'))}`,
-    '笔记本'
-  );
+  openInIframe(`/notes?acc=${encodeURIComponent(localData.get('account'))}`, '笔记本');
 }
 export function showHistory() {
   hideRightMenu();
@@ -1917,10 +1881,7 @@ export function showSSHList() {
 }
 export function showBmk() {
   hideRightMenu();
-  openInIframe(
-    `/bmk?acc=${encodeURIComponent(localData.get('account'))}`,
-    '书签夹'
-  );
+  openInIframe(`/bmk?acc=${encodeURIComponent(localData.get('account'))}`, '书签夹');
 }
 export function showFileManage() {
   hideRightMenu();
@@ -1953,21 +1914,17 @@ const sysStatus = (() => {
     bgColor: '#88888880',
     strokeWidth: 8,
   };
-  const sys = [
-    { type: 'cpu' },
-    { type: 'mem' },
-    { type: 'swap' },
-    { type: 'disk' },
-  ].map(({ type }) => {
-    return {
-      type,
-      text: $sysInfoWrap.find(`.list .${type} .text`)[0],
-      bar: new CircularProgressBar(
-        $sysInfoWrap.find(`.list .${type} .progress`)[0],
-        options
-      ),
-    };
-  });
+  const sys = [{ type: 'cpu' }, { type: 'mem' }, { type: 'swap' }, { type: 'disk' }].map(
+    ({ type }) => {
+      return {
+        type,
+        text: $sysInfoWrap.find(`.list .${type} .text`)[0],
+        bar: new CircularProgressBar($sysInfoWrap.find(`.list .${type} .progress`)[0], options),
+      };
+    },
+  );
+  const rxText = $sysInfoWrap.find('.net .rx .text')[0];
+  const txText = $sysInfoWrap.find('.net .tx .text')[0];
   let timer = null;
   function start() {
     end();
@@ -1984,6 +1941,8 @@ const sysStatus = (() => {
               text.textContent = `${formatBytes(used)} / ${formatBytes(total)}`;
             }
           });
+          rxText.textContent = formatBytes(res.data.net.rx);
+          txText.textContent = formatBytes(res.data.net.tx);
           timer = setTimeout(start, 1000);
         }
       })
@@ -2056,7 +2015,7 @@ function hdExportBm(arr) {
     str += `<DT><H3>${encodeHtml(item.title)}</H3>\n<DL><p>\n`;
     item.children.forEach((y) => {
       str += `<DT><A HREF="${encodeUrlAttr(y.link)}" DESCRIPTION="${encodeHtml(
-        y.des
+        y.des,
       )}">${encodeHtml(y.title)}</A>\n`;
     });
     str += `</DL><p>\n`;

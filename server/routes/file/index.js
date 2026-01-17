@@ -70,18 +70,9 @@ route.post(
     'body',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      pass: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.sharePass),
-      captchaId: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.id)
-        .alphanumeric(),
-    })
+      pass: V.string().trim().default('').allowEmpty().max(fieldLength.sharePass),
+      captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+    }),
   ),
   async (req, res) => {
     try {
@@ -89,13 +80,7 @@ route.post(
 
       const { account } = req[kHello].userinfo;
 
-      const share = await validShareAddUserState(
-        req,
-        ['file', 'dir'],
-        id,
-        pass,
-        captchaId
-      );
+      const share = await validShareAddUserState(req, ['file', 'dir'], id, pass, captchaId);
 
       if (share.state === 3) {
         _nothing(res, share.text);
@@ -115,15 +100,7 @@ route.post(
         return;
       }
 
-      let {
-        username,
-        logo,
-        email,
-        exp_time,
-        title,
-        account: acc,
-        data,
-      } = share.data;
+      let { username, logo, email, exp_time, title, account: acc, data } = share.data;
 
       if (account && account != acc) {
         const f = await getFriendInfo(account, acc, 'des');
@@ -141,13 +118,13 @@ route.post(
         title,
         token: await jwt.set(
           { type: 'share', data: { id, types: ['file', 'dir'] } },
-          fieldLength.shareTokenExp
+          fieldLength.shareTokenExp,
         ),
       })(req, id, 1);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 读取目录
@@ -177,41 +154,20 @@ route.post(
     V.object({
       path: V.string().min(1).notEmpty().max(fieldLength.url),
       pageNo: V.number().toInt().default(1).min(1),
-      pageSize: V.number()
-        .default(20)
-        .toInt()
-        .min(1)
-        .max(fieldLength.maxPagesize),
-      sortType: V.string()
-        .trim()
-        .default('time')
-        .enum(['name', 'time', 'size', 'type']),
+      pageSize: V.number().default(20).toInt().min(1).max(fieldLength.maxPagesize),
+      sortType: V.string().trim().default('time').enum(['name', 'time', 'size', 'type']),
       isDesc: V.number().default(1).toInt().enum([0, 1]),
       subDir: V.number().default(0).toInt().enum([0, 1]),
       update: V.number().default(0).toInt().enum([0, 1]),
-      word: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.searchWord),
+      word: V.string().trim().default('').allowEmpty().max(fieldLength.searchWord),
       token: V.string().trim().default('').allowEmpty().max(fieldLength.url),
       hidden: V.number().default(0).toInt().enum([0, 1]),
-    })
+    }),
   ),
   async (req, res) => {
     try {
-      const {
-        path,
-        pageNo,
-        pageSize,
-        sortType,
-        isDesc,
-        subDir,
-        update,
-        word,
-        token,
-        hidden,
-      } = req[kValidate];
+      const { path, pageNo, pageSize, sortType, isDesc, subDir, update, word, token, hidden } =
+        req[kValidate];
 
       const temid = req[kHello].temid;
 
@@ -251,9 +207,7 @@ route.post(
       if (account && !token) {
         try {
           // 保存路径历史
-          const list = (await readHistoryDirs(account)).filter(
-            (item) => item !== path
-          );
+          const list = (await readHistoryDirs(account)).filter((item) => item !== path);
 
           list.push(path);
 
@@ -284,16 +238,10 @@ route.post(
           res,
           'ok',
           createPagingData(
-            fileListSortAndCacheSize(
-              cacheList,
-              rootP,
-              sortType,
-              isDesc,
-              hidden
-            ),
+            fileListSortAndCacheSize(cacheList, rootP, sortType, isDesc, hidden),
             pageSize,
-            pageNo
-          )
+            pageNo,
+          ),
         );
 
         return;
@@ -343,17 +291,11 @@ route.post(
                 obj.fileType === 'symlink' &&
                 _path.isPathWithin(rootP, obj.linkTarget, 1)
               ) {
-                obj.linkTarget = _path.normalize(
-                  '/' + item.linkTarget.slice(rootP.length)
-                );
+                obj.linkTarget = _path.normalize('/' + item.linkTarget.slice(rootP.length));
               }
 
               if (favorites && item.type === 'dir') {
-                obj.favorite = favorites.includes(
-                  _path.normalize(path, item.name)
-                )
-                  ? 1
-                  : 0;
+                obj.favorite = favorites.includes(_path.normalize(path, item.name)) ? 1 : 0;
               }
 
               if (!req[kHello].isRoot) {
@@ -363,10 +305,7 @@ route.post(
               }
 
               // 关键词过滤
-              if (
-                !word ||
-                (word && obj.name.toLowerCase().includes(word.toLowerCase()))
-              ) {
+              if (!word || (word && obj.name.toLowerCase().includes(word.toLowerCase()))) {
                 arr.push(obj);
               }
             }
@@ -386,8 +325,8 @@ route.post(
             createPagingData(
               fileListSortAndCacheSize(arr, rootP, sortType, isDesc, hidden),
               pageSize,
-              pageNo
-            )
+              pageNo,
+            ),
           );
         } else {
           // 超时缓存结果
@@ -411,7 +350,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 读取文件
@@ -422,7 +361,7 @@ route.post(
     V.object({
       path: V.string().default('').allowEmpty().max(fieldLength.url),
       token: V.string().trim().default('').allowEmpty().max(fieldLength.url),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -482,7 +421,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 验证登录态
@@ -501,7 +440,7 @@ route.post(
     'body',
     V.object({
       state: V.number().toInt().default(0).enum([0, 1]),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -509,15 +448,13 @@ route.post(
 
       const { account } = req[kHello].userinfo;
 
-      await db('user')
-        .where({ account, state: 1 })
-        .update({ file_history: state });
+      await db('user').where({ account, state: 1 }).update({ file_history: state });
 
       _success(res, `${state === 0 ? '关闭' : '开启'}文件历史记录成功`)(req);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 route.get('/history-state', async (req, res) => {
   try {
@@ -560,7 +497,7 @@ route.post(
         path: V.string().notEmpty().min(1).max(fieldLength.url),
         type: V.string().trim().equal('dir'),
       }),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -569,9 +506,7 @@ route.post(
       const path = _path.normalize(data.path, data.name);
 
       const { account } = req[kHello].userinfo;
-      const list = (await readFavorites(account)).filter(
-        (item) => item !== path
-      );
+      const list = (await readFavorites(account)).filter((item) => item !== path);
 
       if (type === 'add') {
         list.push(path);
@@ -586,12 +521,12 @@ route.post(
       _success(res, `${type === 'add' ? '' : '移除'}收藏文件夹成功`)(
         req,
         appConfig.userRootDir(account, path),
-        1
+        1,
       );
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 读取目录大小
@@ -601,7 +536,7 @@ route.get(
     'query',
     V.object({
       path: V.string().notEmpty().min(1).max(fieldLength.url),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -626,10 +561,7 @@ route.get(
           progress({ size: s, count: c }) {
             if (s) size += s;
             if (c) count++;
-            taskState.update(
-              taskKey,
-              `读取文件夹大小...${count} (${_f.formatBytes(size)})`
-            );
+            taskState.update(taskKey, `读取文件夹大小...${count} (${_f.formatBytes(size)})`);
           },
         });
 
@@ -648,7 +580,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 新建文件
@@ -659,7 +591,7 @@ route.post(
     V.object({
       path: V.string().notEmpty().min(1).max(fieldLength.url),
       name: V.string().trim().min(1).max(fieldLength.filename),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -690,7 +622,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 创建符号链接
@@ -703,7 +635,7 @@ route.post(
       name: V.string().trim().min(1).max(fieldLength.filename),
       targetPath: V.string().notEmpty().min(1).max(fieldLength.url),
       isSymlink: V.number().toInt().default(1).enum([0, 1]),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -727,10 +659,7 @@ route.post(
       }
 
       // 过滤回收站
-      if (
-        (await _f.exists(curPath)) ||
-        appConfig.trashDir(account) === curPath
-      ) {
+      if ((await _f.exists(curPath)) || appConfig.trashDir(account) === curPath) {
         _err(res, '已存在重名文件')(req, curPath, 1);
         return;
       }
@@ -753,7 +682,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 分享
@@ -764,18 +693,14 @@ route.post(
     V.object({
       title: V.string().trim().min(1).max(fieldLength.title),
       expireTime: V.number().toInt().max(fieldLength.expTime),
-      pass: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.sharePass),
+      pass: V.string().trim().default('').allowEmpty().max(fieldLength.sharePass),
       data: V.object({
         name: V.string().notEmpty().min(1).max(fieldLength.filename),
         path: V.string().notEmpty().min(1).max(fieldLength.url),
         type: V.string().trim().enum(['dir', 'file']),
         size: V.number().toNumber().min(0),
       }),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -788,8 +713,7 @@ route.post(
         create_at: Date.now(),
         account,
         type: data.type,
-        exp_time:
-          expireTime === 0 ? 0 : Date.now() + expireTime * 24 * 60 * 60 * 1000,
+        exp_time: expireTime === 0 ? 0 : Date.now() + expireTime * 24 * 60 * 60 * 1000,
         title,
         pass,
         data: JSON.stringify(data),
@@ -800,12 +724,12 @@ route.post(
       _success(res, `分享${data.type === 'dir' ? '文件夹' : '文件'}成功`)(
         req,
         appConfig.userRootDir(account, data.path, data.name),
-        1
+        1,
       );
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 保存文件
@@ -820,9 +744,9 @@ route.post(
         .allowEmpty()
         .custom(
           (v) => _f.getTextSize(v) <= fieldLength.textFileSize,
-          `编辑文本文件不能超过: ${fieldLength.textFileSize} 字节`
+          `编辑文本文件不能超过: ${fieldLength.textFileSize} 字节`,
         ),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -849,7 +773,7 @@ route.post(
 
               const historyDir = _path.normalize(
                 _path.dirname(fpath),
-                appConfig.textFileHistoryDirName
+                appConfig.textFileHistoryDirName,
               );
 
               const newName = `${filename}_${formatDate({
@@ -874,7 +798,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 复制
@@ -890,15 +814,12 @@ route.post(
           name: V.string().notEmpty().min(1).max(fieldLength.filename),
           path: V.string().notEmpty().min(1).max(fieldLength.url),
           type: V.string().trim().enum(['dir', 'file']),
-        })
+        }),
       )
         .min(1)
         .max(fieldLength.maxPagesize)
-        .custom(
-          (arr) => getDuplicates(arr, ['name']).length === 0,
-          '不能有同名文件或文件夹'
-        ),
-    })
+        .custom((arr) => getDuplicates(arr, ['name']).length === 0, '不能有同名文件或文件夹'),
+    }),
   ),
   async (req, res) => {
     try {
@@ -950,17 +871,11 @@ route.post(
             progress({ size: s, count: c }) {
               if (s) size += s;
               if (c) count++;
-              taskState.update(
-                taskKey,
-                `复制文件...${count} (${_f.formatBytes(size)})`
-              );
+              taskState.update(taskKey, `复制文件...${count} (${_f.formatBytes(size)})`);
             },
           });
 
-          await uLog(
-            req,
-            `复制${type === 'dir' ? '文件夹' : '文件'}(${f}=>${to})`
-          );
+          await uLog(req, `复制${type === 'dir' ? '文件夹' : '文件'}(${f}=>${to})`);
         });
 
         taskState.done(taskKey);
@@ -974,7 +889,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 是否存在同名文件
@@ -989,11 +904,11 @@ route.post(
           name: V.string().notEmpty().min(1).max(fieldLength.filename),
           path: V.string().notEmpty().min(1).max(fieldLength.url),
           type: V.string().trim().enum(['dir', 'file']),
-        })
+        }),
       )
         .min(1)
         .max(fieldLength.maxPagesize),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1012,7 +927,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 移动
@@ -1028,15 +943,12 @@ route.post(
           name: V.string().notEmpty().min(1).max(fieldLength.filename),
           path: V.string().notEmpty().min(1).max(fieldLength.url),
           type: V.string().trim().enum(['dir', 'file']),
-        })
+        }),
       )
         .min(1)
         .max(fieldLength.maxPagesize)
-        .custom(
-          (arr) => getDuplicates(arr, ['name']).length === 0,
-          '不能有同名文件或文件夹'
-        ),
-    })
+        .custom((arr) => getDuplicates(arr, ['name']).length === 0, '不能有同名文件或文件夹'),
+    }),
   ),
   async (req, res) => {
     try {
@@ -1085,17 +997,11 @@ route.post(
               if (!s && !c) return;
               if (s) size += s;
               if (c) count++;
-              taskState.update(
-                taskKey,
-                `移动文件...${count} (${_f.formatBytes(size)})`
-              );
+              taskState.update(taskKey, `移动文件...${count} (${_f.formatBytes(size)})`);
             },
           });
 
-          await uLog(
-            req,
-            `移动${type === 'dir' ? '文件夹' : '文件'}(${f}=>${t})`
-          );
+          await uLog(req, `移动${type === 'dir' ? '文件夹' : '文件'}(${f}=>${t})`);
         });
 
         taskState.done(taskKey);
@@ -1109,7 +1015,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 压缩
@@ -1123,7 +1029,7 @@ route.post(
         path: V.string().notEmpty().min(1).max(fieldLength.url),
         type: V.string().trim().enum(['dir', 'file']),
       }),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1166,10 +1072,7 @@ route.post(
         await zipper.zip([data], t, {
           signal,
           progress({ size, count }) {
-            taskState.update(
-              taskKey,
-              `压缩文件...${count} (${_f.formatBytes(size)})`
-            );
+            taskState.update(taskKey, `压缩文件...${count} (${_f.formatBytes(size)})`);
           },
         });
 
@@ -1186,7 +1089,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 解压缩
@@ -1200,14 +1103,11 @@ route.post(
           .notEmpty()
           .min(1)
           .max(fieldLength.filename)
-          .custom(
-            (v) => _path.extname(v)[2].toLowerCase() === 'zip',
-            '必须是.zip文件'
-          ),
+          .custom((v) => _path.extname(v)[2].toLowerCase() === 'zip', '必须是.zip文件'),
         path: V.string().notEmpty().min(1).max(fieldLength.url),
         type: V.string().trim().equal('file'),
       }),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1245,10 +1145,7 @@ route.post(
         await zipper.unzip(f, t, {
           signal,
           progress({ size, count }) {
-            taskState.update(
-              taskKey,
-              `解压文件...${count} (${_f.formatBytes(size)})`
-            );
+            taskState.update(taskKey, `解压文件...${count} (${_f.formatBytes(size)})`);
           },
         });
 
@@ -1265,7 +1162,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除
@@ -1280,11 +1177,11 @@ route.post(
           name: V.string().notEmpty().min(1).max(fieldLength.filename),
           path: V.string().notEmpty().min(1).max(fieldLength.url),
           type: V.string().trim().enum(['dir', 'file']),
-        })
+        }),
       )
         .min(1)
         .max(fieldLength.maxPagesize),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1325,10 +1222,7 @@ route.post(
               progress({ size: s, count: c }) {
                 if (s) size += s;
                 if (c) count++;
-                taskState.update(
-                  taskKey,
-                  `删除文件...${count} (${_f.formatBytes(size)})`
-                );
+                taskState.update(taskKey, `删除文件...${count} (${_f.formatBytes(size)})`);
               },
             });
           } else {
@@ -1344,20 +1238,14 @@ route.post(
                 if (!s && !c) return;
                 if (s) size += s;
                 if (c) count++;
-                taskState.update(
-                  taskKey,
-                  `放入回收站...${count} (${_f.formatBytes(size)})`
-                );
+                taskState.update(taskKey, `放入回收站...${count} (${_f.formatBytes(size)})`);
               },
             });
 
             handleType = '回收';
           }
 
-          await uLog(
-            req,
-            `${handleType}${type === 'dir' ? '文件夹' : '文件'}(${p})`
-          );
+          await uLog(req, `${handleType}${type === 'dir' ? '文件夹' : '文件'}(${p})`);
         });
 
         taskState.done(taskKey);
@@ -1371,7 +1259,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 清空回收站
@@ -1406,10 +1294,7 @@ route.get('/clear-trash', async (req, res) => {
             progress({ size: s, count: c }) {
               if (s) size += s;
               if (c) count++;
-              taskState.update(
-                taskKey,
-                `删除文件...${count} (${_f.formatBytes(size)})`
-              );
+              taskState.update(taskKey, `删除文件...${count} (${_f.formatBytes(size)})`);
             },
           });
         });
@@ -1437,7 +1322,7 @@ route.post(
     V.object({
       path: V.string().notEmpty().min(1).max(fieldLength.url),
       name: V.string().trim().min(1).max(fieldLength.filename),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1467,7 +1352,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 重命名
@@ -1482,7 +1367,7 @@ route.post(
         path: V.string().notEmpty().min(1).max(fieldLength.url),
         type: V.string().trim().enum(['dir', 'file']),
       }),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1522,7 +1407,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 文件权限
@@ -1540,11 +1425,11 @@ route.post(
           name: V.string().notEmpty().min(1).max(fieldLength.filename),
           path: V.string().notEmpty().min(1).max(fieldLength.url),
           type: V.string().trim().enum(['dir', 'file']),
-        })
+        }),
       )
         .min(1)
         .max(fieldLength.maxPagesize),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1598,7 +1483,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 文件用户组
@@ -1615,11 +1500,11 @@ route.post(
           name: V.string().notEmpty().min(1).max(fieldLength.filename),
           path: V.string().notEmpty().min(1).max(fieldLength.url),
           type: V.string().trim().enum(['dir', 'file']),
-        })
+        }),
       )
         .min(1)
         .max(fieldLength.maxPagesize),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1659,10 +1544,7 @@ route.post(
             recursive: r,
           });
 
-          await uLog(
-            req,
-            `${r ? '递归' : ''}设置用户组为uid：${uid} gid：${gid}(${p})`
-          );
+          await uLog(req, `${r ? '递归' : ''}设置用户组为uid：${uid} gid：${gid}(${p})`);
         });
 
         taskState.done(taskKey);
@@ -1676,7 +1558,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 上传
@@ -1691,7 +1573,7 @@ route.post(
         .min(1)
         .max(20)
         .pattern(/^_[0-9]+$/, '必须 _ 开头数字结尾'),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1707,7 +1589,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 合并文件
@@ -1719,7 +1601,7 @@ route.post(
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       count: V.number().toInt().min(1).max(fieldLength.maxFileSlice),
       path: V.string().notEmpty().min(1).max(fieldLength.url),
-    })
+    }),
   ),
   async (req, res) => {
     let timer = setTimeout(() => {
@@ -1734,9 +1616,7 @@ route.post(
 
       let targetPath = appConfig.userRootDir(
         account,
-        `${_path.dirname(path)}/${_path.sanitizeFilename(
-          _path.basename(path)[0] || 'unknown'
-        )}`
+        `${_path.dirname(path)}/${_path.sanitizeFilename(_path.basename(path)[0] || 'unknown')}`,
       );
 
       if (targetPath === appConfig.trashDir(account)) {
@@ -1748,12 +1628,7 @@ route.post(
         await _f.del(targetPath);
       }
 
-      await mergefile(
-        count,
-        appConfig.temDir(`${account}_${HASH}`),
-        targetPath,
-        HASH
-      );
+      await mergefile(count, appConfig.temDir(`${account}_${HASH}`), targetPath, HASH);
 
       if (timer) {
         clearTimeout(timer);
@@ -1776,7 +1651,7 @@ route.post(
 
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 断点续传
@@ -1786,7 +1661,7 @@ route.post(
     'body',
     V.object({
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1801,7 +1676,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 重复
@@ -1811,7 +1686,7 @@ route.post(
     'body',
     V.object({
       path: V.string().notEmpty().min(1).max(fieldLength.url),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1828,7 +1703,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 补全路径
@@ -1839,7 +1714,7 @@ route.post(
     V.object({
       path: V.string().notEmpty().min(1).max(fieldLength.url),
       type: V.string().trim().default('all').enum(['dir', 'file', 'all']),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1871,7 +1746,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 离线下载
@@ -1882,7 +1757,7 @@ route.post(
     V.object({
       url: V.string().trim().min(1).max(fieldLength.url).httpUrl(),
       path: V.string().notEmpty().min(1).max(fieldLength.url),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1897,23 +1772,15 @@ route.post(
         return;
       }
 
-      const filename = _path.sanitizeFilename(
-        _path.basename(url)[0] || 'unknown'
-      );
+      const filename = _path.sanitizeFilename(_path.basename(url)[0] || 'unknown');
 
       const controller = new AbortController();
       const signal = controller.signal;
-      const taskKey = taskState.add(
-        account,
-        `下载文件: ${filename}`,
-        controller
-      );
+      const taskKey = taskState.add(account, `下载文件: ${filename}`, controller);
 
       _success(res, 'ok', { key: taskKey });
 
-      const temPath = appConfig.temDir(
-        `${account}_${_crypto.getStringHash(url)}`
-      );
+      const temPath = appConfig.temDir(`${account}_${_crypto.getStringHash(url)}`);
       try {
         const stats = await _f.lstat(temPath);
         let downloadedBytes = stats ? stats.size : 0;
@@ -1953,22 +1820,19 @@ route.post(
               downloadedBytes += chunk.length;
               taskState.update(
                 taskKey,
-                `下载文件: ${filename} (${_f.formatBytes(downloadedBytes)})`
+                `下载文件: ${filename} (${_f.formatBytes(downloadedBytes)})`,
               );
               callback(null, chunk);
             },
           }),
           writer,
-          { signal }
+          { signal },
         );
 
         let outputFilePath = _path.normalize(targetPath, filename);
 
         // 已存在添加后缀
-        if (
-          (await _f.exists(outputFilePath)) ||
-          outputFilePath === appConfig.trashDir(account)
-        ) {
+        if ((await _f.exists(outputFilePath)) || outputFilePath === appConfig.trashDir(account)) {
           outputFilePath = await getUniqueFilename(outputFilePath);
         }
 
@@ -1985,7 +1849,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 添加到播放器和壁纸
@@ -1996,7 +1860,7 @@ route.post(
     V.object({
       type: V.string().trim().enum(['music', 'bg']),
       path: V.string().notEmpty().min(1).max(fieldLength.url),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -2028,42 +1892,36 @@ route.post(
         let count = 0;
         let size = 0;
 
-        await concurrencyTasks(
-          await getAllFile(targetPath),
-          5,
-          async (task) => {
-            if (signal.aborted) return;
+        await concurrencyTasks(await getAllFile(targetPath), 5, async (task) => {
+          if (signal.aborted) return;
 
-            const p = _path.normalize(task.path, task.name);
+          const p = _path.normalize(task.path, task.name);
 
-            try {
-              if (
-                (type === 'music' &&
-                  isMusicFile(p) &&
-                  task.size < fieldLength.maxSongSize * 1024 * 1024 &&
-                  (await fileToMusic(p))) ||
-                (type === 'bg' &&
-                  isImgFile(p) &&
-                  task.size < fieldLength.maxBgSize * 1024 * 1024 &&
-                  (await fileToBg(p)))
-              ) {
-                size += task.size;
-                count++;
-              } else {
-                skip++;
-              }
-            } catch (error) {
-              await errLog(req, `扫描添加${typeName}失败：${p}(${error})`);
+          try {
+            if (
+              (type === 'music' &&
+                isMusicFile(p) &&
+                task.size < fieldLength.maxSongSize * 1024 * 1024 &&
+                (await fileToMusic(p))) ||
+              (type === 'bg' &&
+                isImgFile(p) &&
+                task.size < fieldLength.maxBgSize * 1024 * 1024 &&
+                (await fileToBg(p)))
+            ) {
+              size += task.size;
+              count++;
+            } else {
+              skip++;
             }
-
-            taskState.update(
-              taskKey,
-              `添加${typeName}...${count} (${_f.formatBytes(
-                size
-              )}) 跳过 ${skip}`
-            );
+          } catch (error) {
+            await errLog(req, `扫描添加${typeName}失败：${p}(${error})`);
           }
-        );
+
+          taskState.update(
+            taskKey,
+            `添加${typeName}...${count} (${_f.formatBytes(size)}) 跳过 ${skip}`,
+          );
+        });
 
         taskState.done(taskKey);
         uLog(req, `扫描添加${typeName}成功: ${targetPath}(${count})`);
@@ -2077,7 +1935,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 export default route;

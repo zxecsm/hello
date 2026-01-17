@@ -36,12 +36,8 @@ route.get(
     'query',
     V.object({
       pageNo: V.number().toInt().default(1).min(1),
-      pageSize: V.number()
-        .toInt()
-        .default(40)
-        .min(1)
-        .max(fieldLength.maxPagesize),
-    })
+      pageSize: V.number().toInt().default(40).min(1).max(fieldLength.maxPagesize),
+    }),
   ),
   async (req, res) => {
     try {
@@ -80,7 +76,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 增加待办
@@ -90,7 +86,7 @@ route.post(
     'body',
     V.object({
       content: V.string().trim().min(1).max(fieldLength.todoContent),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -113,7 +109,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除待办
@@ -125,7 +121,7 @@ route.post(
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
         .min(1)
         .max(fieldLength.maxPagesize),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -143,7 +139,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 待办状态
@@ -154,7 +150,7 @@ route.get(
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       state: V.number().toInt().enum([0, 1]),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -162,9 +158,7 @@ route.get(
 
       const { account } = req[kHello].userinfo;
 
-      await db('todo')
-        .where({ id, account })
-        .update({ state, update_at: Date.now() });
+      await db('todo').where({ id, account }).update({ state, update_at: Date.now() });
 
       syncUpdateData(req, 'todolist');
 
@@ -172,7 +166,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 编辑待办
@@ -183,7 +177,7 @@ route.post(
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       content: V.string().trim().min(1).max(fieldLength.todoContent),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -191,9 +185,7 @@ route.post(
 
       const { account } = req[kHello].userinfo;
 
-      await db('todo')
-        .where({ id, account })
-        .update({ content, update_at: Date.now() });
+      await db('todo').where({ id, account }).update({ content, update_at: Date.now() });
 
       syncUpdateData(req, 'todolist');
 
@@ -201,7 +193,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 export default route;

@@ -51,23 +51,18 @@ route.post(
     V.object({
       name: V.string()
         .trim()
-        .preprocess((v) =>
-          typeof v === 'string' ? _path.sanitizeFilename(v) : v
-        )
+        .preprocess((v) => (typeof v === 'string' ? _path.sanitizeFilename(v) : v))
         .min(1)
         .max(fieldLength.filename)
         .custom((v) => isImgFile(v), '必须为受支持的图片格式'),
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
       const { HASH, name } = req[kValidate];
 
-      const pic = await db('pic')
-        .select('hash')
-        .where({ hash: HASH })
-        .findOne();
+      const pic = await db('pic').select('hash').where({ hash: HASH }).findOne();
 
       if (pic) {
         _err(res, '图片已存在')(req, HASH, 1);
@@ -100,7 +95,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 重复图片
@@ -110,16 +105,13 @@ route.post(
     'body',
     V.object({
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
       const { HASH } = req[kValidate];
 
-      const pic = await db('pic')
-        .select('id,url')
-        .where({ hash: HASH })
-        .findOne();
+      const pic = await db('pic').select('id,url').where({ hash: HASH }).findOne();
 
       if (pic) {
         if ((await _f.getType(appConfig.picDir(pic.url))) === 'file') {
@@ -134,7 +126,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 route.use((req, res, next) => {
@@ -152,12 +144,8 @@ route.get(
     'query',
     V.object({
       pageNo: V.number().toInt().default(1).min(1),
-      pageSize: V.number()
-        .toInt()
-        .default(40)
-        .min(1)
-        .max(fieldLength.bgPageSize),
-    })
+      pageSize: V.number().toInt().default(40).min(1).max(fieldLength.bgPageSize),
+    }),
   ),
   async (req, res) => {
     try {
@@ -171,11 +159,7 @@ route.get(
       if (total > 0) {
         const offset = (result.pageNo - 1) * pageSize;
 
-        list = await db('pic')
-          .select('id')
-          .orderBy('serial', 'desc')
-          .page(pageSize, offset)
-          .find();
+        list = await db('pic').select('id').orderBy('serial', 'desc').page(pageSize, offset).find();
       }
 
       _success(res, 'ok', {
@@ -185,7 +169,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除图片
@@ -196,7 +180,7 @@ route.post(
     V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
       .min(1)
       .max(fieldLength.bgPageSize),
-    'ids'
+    'ids',
   ),
   async (req, res) => {
     try {
@@ -223,7 +207,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 export default route;

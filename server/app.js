@@ -86,17 +86,13 @@ const informReqLimit = debounce(
   async (req) => {
     try {
       const { os, ip } = req[kHello];
-      await heperMsgAndForward(
-        req,
-        appConfig.adminAccount,
-        `[${os}(${ip})] 请求频率超过限制`
-      );
+      await heperMsgAndForward(req, appConfig.adminAccount, `[${os}(${ip})] 请求频率超过限制`);
     } catch (error) {
       await writelog(req, `[ informReqLimit ] - ${error}`, 'error');
     }
   },
   5000,
-  1
+  1,
 );
 
 app.use(async (req, res, next) => {
@@ -106,13 +102,8 @@ app.use(async (req, res, next) => {
     try {
       temid = await V.parse(
         temid,
-        V.string()
-          .trim()
-          .default('')
-          .allowEmpty()
-          .max(fieldLength.id)
-          .alphanumeric(),
-        'temid'
+        V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+        'temid',
       );
     } catch (error) {
       paramErr(res, req, error, { temid });
@@ -124,10 +115,7 @@ app.use(async (req, res, next) => {
 
     // 身份验证
     const jwtData = await jwt.get(req.cookies.token);
-    const userinfo =
-      jwtData && jwtData.data.type === 'authentication'
-        ? jwtData.data.data
-        : {}; // 用户信息
+    const userinfo = jwtData && jwtData.data.type === 'authentication' ? jwtData.data.data : {}; // 用户信息
 
     req[kHello] = {
       userinfo,
@@ -162,7 +150,7 @@ app.use(
   express.static(appConfig.fontDir(), {
     dotfiles: 'allow',
     maxAge: 2592000000,
-  })
+  }),
 );
 
 app.use(async (req, res, next) => {
@@ -227,7 +215,7 @@ app.all(
     'params',
     V.object({
       chat_id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -254,11 +242,7 @@ app.all(
       const { chat_id } = req[kValidate];
 
       try {
-        text = await V.parse(
-          text,
-          V.string().trim().min(1).max(fieldLength.chatContent),
-          'text'
-        );
+        text = await V.parse(text, V.string().trim().min(1).max(fieldLength.chatContent), 'text');
       } catch (error) {
         paramErr(res, req, error, { text });
       }
@@ -279,7 +263,7 @@ app.all(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 获取页面信息
@@ -289,7 +273,7 @@ app.get(
     'query',
     V.object({
       u: V.string().trim().min(1).max(fieldLength.url),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -316,19 +300,13 @@ app.get(
         await uLog(req, `获取网站信息(${u})`);
         const { host, pathname } = new URL(url);
 
-        p = appConfig.siteinfoDir(
-          `${_crypto.getStringHash(`${host}${pathname}`)}.json`
-        );
+        p = appConfig.siteinfoDir(`${_crypto.getStringHash(`${host}${pathname}`)}.json`);
 
         miss = p + '.miss';
 
         // 缓存存在，则使用缓存
         if ((await _f.getType(p)) === 'file') {
-          _success(
-            res,
-            'ok',
-            parseJson((await _f.fsp.readFile(p)).toString(), {})
-          );
+          _success(res, 'ok', parseJson((await _f.fsp.readFile(p)).toString(), {}));
           return;
         }
 
@@ -353,10 +331,7 @@ app.get(
           });
         }
 
-        if (
-          !result?.headers ||
-          !result.headers['content-type']?.includes('text/html')
-        ) {
+        if (!result?.headers || !result.headers['content-type']?.includes('text/html')) {
           throw new Error('只允许获取HTML文件');
         }
 
@@ -391,7 +366,7 @@ app.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 app.use(async (req, res, next) => {
@@ -419,8 +394,7 @@ initDatabase()
         process.exit(1);
       }
       const arr = getLocalhost().map(
-        (item) =>
-          `http://${item}${appConfig.port === 80 ? '' : `:${appConfig.port}`}`
+        (item) => `http://${item}${appConfig.port === 80 ? '' : `:${appConfig.port}`}`,
       );
       // eslint-disable-next-line no-console
       console.log(`
@@ -452,12 +426,7 @@ function getLocalhost() {
   Object.keys(obj).forEach((item) => {
     let value = obj[item];
     if (Object.prototype.toString.call(value).slice(8, -1) === 'Array') {
-      arr = [
-        ...arr,
-        ...value
-          .filter((item) => item.family === 'IPv4')
-          .map((item) => item.address),
-      ];
+      arr = [...arr, ...value.filter((item) => item.family === 'IPv4').map((item) => item.address)];
     }
   });
   return arr;

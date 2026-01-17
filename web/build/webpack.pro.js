@@ -33,12 +33,7 @@ module.exports = merge(require('./webpack.base'), {
       {
         test: /\.less$/i,
         include: resolve(__dirname, '..', 'src'),
-        use: [
-          MiniCssExtractPlugin.loader,
-          'css-loader',
-          postcssConfig,
-          'less-loader',
-        ],
+        use: [MiniCssExtractPlugin.loader, 'css-loader', postcssConfig, 'less-loader'],
       },
       {
         test: /\.m?js$/,

@@ -21,7 +21,7 @@ export async function saveNoteHistory(req, noteId, content) {
 
     const notePath = _path.normalize(
       noteDir,
-      `${formatDate({ template: '{0}_{1}_{2}-{3}_{4}_{5}' })}.md`
+      `${formatDate({ template: '{0}_{1}_{2}-{3}_{4}_{5}' })}.md`,
     );
 
     await _f.writeFile(notePath, content);

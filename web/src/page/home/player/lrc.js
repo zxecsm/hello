@@ -53,11 +53,7 @@ import {
   updatePlayerBottomProgress,
   updateSongInfo,
 } from './index.js';
-import {
-  playingListHighlight,
-  setPlayingList,
-  showPlayingList,
-} from './playlist.js';
+import { playingListHighlight, setPlayingList, showPlayingList } from './playlist.js';
 import _d from '../../../js/common/config.js';
 import { reqPlayerLrc } from '../../../api/player.js';
 import { resetLastPlayCount, updateLastPlay } from '../timer.js';
@@ -203,9 +199,7 @@ export function switchPlayMode() {
       }
       break;
   }
-  $lrcFootBtnWrap
-    .find('.random_play_btn')
-    .attr('class', `random_play_btn ${icon}`);
+  $lrcFootBtnWrap.find('.random_play_btn').attr('class', `random_play_btn ${icon}`);
   _msg.msg({ message: text, icon });
 }
 // 上一曲
@@ -253,8 +247,7 @@ $lrcFootBtnWrap
   .on('mouseleave', '.prev_play_btn', toolTip.hide)
   .on('mouseleave', '.next_play', toolTip.hide);
 export function showWillPlaySongInfo(type) {
-  const { artist, title } =
-    type === 'next' ? getNextSongInfo() : getPrevSongInfo();
+  const { artist, title } = type === 'next' ? getNextSongInfo() : getPrevSongInfo();
   let str = '播放列表为空';
   if (artist && title) {
     str = `${type === 'next' ? '下一曲' : '上一曲'}：${artist} - ${title}`;
@@ -353,7 +346,7 @@ async function renderLrc() {
     {
       list,
       showFy,
-    }
+    },
   );
   $lrcListWrap
     .find('.lrc_items')
@@ -378,9 +371,7 @@ export function lrcScroll(immedia) {
   const $lrcdiv = $lrc.children('div'),
     $activediv = $lrcdiv.eq(activeLrcIndex),
     wH = $lrcListWrap.outerHeight(),
-    lrcmtop = parseFloat(
-      window.getComputedStyle($lrc[0]).transform.slice(7).split(',').slice(-1)
-    ),
+    lrcmtop = parseFloat(window.getComputedStyle($lrc[0]).transform.slice(7).split(',').slice(-1)),
     mtop = lrcmtop - _position($activediv[0]).top + wH * 0.4;
   $lrcdiv.removeClass('active');
   $activediv.addClass('active');
@@ -411,17 +402,13 @@ $lrcListWrap.on('click', function () {
 });
 // 更新播放进度
 export const updateSongProgress = throttle(function () {
-  $lrcProgressBar
-    .find('.current_time')
-    .text(formartSongTime(setSongCurrentTime()));
+  $lrcProgressBar.find('.current_time').text(formartSongTime(setSongCurrentTime()));
   setSongProgressBar(setSongCurrentTime() / playingSongInfo.duration, true);
 }, 500);
 // 歌曲加载中
 function songLoading() {
   if (songIspaused()) return;
-  $lrcProgressBar
-    .find('.dolt')
-    .css('animation', 'bgcolor .3s infinite linear alternate');
+  $lrcProgressBar.find('.dolt').css('animation', 'bgcolor .3s infinite linear alternate');
   miniPlayerLoading();
   $lrcFootBtnWrap
     .find('.play_btn')
@@ -432,9 +419,7 @@ function songLoading() {
 // 歌曲开始播放
 function songStartPlaying() {
   if (songIspaused()) return;
-  $lrcProgressBar
-    .find('.dolt')
-    .css('animation', 'bgcolor 2s infinite linear alternate');
+  $lrcProgressBar.find('.dolt').css('animation', 'bgcolor 2s infinite linear alternate');
   $lrcFootBtnWrap
     .find('.play_btn')
     .attr('class', 'play_btn iconfont icon-zanting')
@@ -505,17 +490,11 @@ notifyMusicControlPanel
     setSongCurrentTime(Math.max(setSongCurrentTime() - 10, 0));
   })
   .bind('seekforward', () => {
-    setSongCurrentTime(
-      Math.min(setSongCurrentTime() + 10, playingSongInfo.duration)
-    );
+    setSongCurrentTime(Math.min(setSongCurrentTime() + 10, playingSongInfo.duration));
   });
 // 滚动歌曲信息
-const lrcHeadContentScrollName = new ContentScroll(
-  $lrcHead.find('.song_name div')[0]
-);
-const lrcHeadContentScrollArtist = new ContentScroll(
-  $lrcHead.find('.artist_name i')[0]
-);
+const lrcHeadContentScrollName = new ContentScroll($lrcHead.find('.song_name div')[0]);
+const lrcHeadContentScrollArtist = new ContentScroll($lrcHead.find('.artist_name i')[0]);
 export function updateLrcHeadSongInfo(obj) {
   lrcHeadContentScrollName.init(obj.title);
   lrcHeadContentScrollArtist.init(obj.artist);
@@ -658,9 +637,7 @@ export function toggleLrcMenuWrapBtnsState() {
       .find('.collect_song_btn')
       .attr('class', 'collect_song_btn iconfont icon-hear-full active');
   } else {
-    $lrcMenuWrap
-      .find('.collect_song_btn')
-      .attr('class', 'collect_song_btn iconfont icon-hear');
+    $lrcMenuWrap.find('.collect_song_btn').attr('class', 'collect_song_btn iconfont icon-hear');
   }
 }
 // 显示歌词
@@ -762,17 +739,14 @@ $lrcMenuWrap
       const $this = $(this);
       if (!$this.hasClass('active')) {
         songCollect([playingSongInfo.id], () => {
-          $this.attr(
-            'class',
-            'collect_song_btn iconfont icon-hear-full active'
-          );
+          $this.attr('class', 'collect_song_btn iconfont icon-hear-full active');
         });
       } else {
         songCloseCollect(playingSongInfo.id, () => {
           $this.attr('class', 'collect_song_btn iconfont icon-hear');
         });
       }
-    }, 2000)
+    }, 2000),
   )
   .on('click', '.play_mv_btn', function () {
     if (!playingSongInfo.id) return;
@@ -904,7 +878,7 @@ $lrcMenuWrap
               },
             ],
             0,
-            { x: e.clientX, y: e.clientY }
+            { x: e.clientX, y: e.clientY },
           );
         } else if (id === '7') {
           close();
@@ -923,7 +897,7 @@ $lrcMenuWrap
               close();
             },
             `${sobj.artist} - ${sobj.title}`,
-            loading
+            loading,
           );
         } else if (id === '8') {
           showSongInfo(e, playingSongInfo, '', loading);
@@ -937,11 +911,11 @@ $lrcMenuWrap
                 filename: fname,
               },
             ],
-            'music'
+            'music',
           );
         }
       },
-      `${playingSongInfo.artist} - ${playingSongInfo.title}`
+      `${playingSongInfo.artist} - ${playingSongInfo.title}`,
     );
   })
   .on('click', '.play_speed_btn', function (e) {
@@ -979,7 +953,7 @@ $lrcMenuWrap
           _msg.msg({ message: b + 'X', icon: 'iconfont icon-sudu' });
         }
       },
-      '歌曲播放速度'
+      '歌曲播放速度',
     );
   })
   .find('.play_speed_btn')

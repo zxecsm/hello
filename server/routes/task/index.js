@@ -1,11 +1,5 @@
 import express from 'express';
-import {
-  _err,
-  _nologin,
-  _success,
-  paramErr,
-  validate,
-} from '../../utils/utils.js';
+import { _err, _nologin, _success, paramErr, validate } from '../../utils/utils.js';
 import { fieldLength } from '../config.js';
 import taskState from '../../utils/taskState.js';
 import { validShareState } from '../user/user.js';
@@ -28,7 +22,7 @@ route.post(
         .max(fieldLength.id * 2)
         .alphanumeric(),
       token: V.string().trim().default('').allowEmpty().max(fieldLength.url),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -43,7 +37,7 @@ route.post(
         temid = await V.parse(
           temid,
           V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-          'temid'
+          'temid',
         );
       } catch (error) {
         paramErr(res, req, error, { temid });
@@ -80,7 +74,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 取消任务
@@ -95,7 +89,7 @@ route.post(
         .max(fieldLength.id * 2)
         .alphanumeric(),
       token: V.string().trim().default('').allowEmpty().max(fieldLength.url),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -110,7 +104,7 @@ route.post(
         temid = await V.parse(
           temid,
           V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-          'temid'
+          'temid',
         );
       } catch (error) {
         paramErr(res, req, error, { temid });
@@ -148,7 +142,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 获取任务列表
@@ -158,7 +152,7 @@ route.post(
     'body',
     V.object({
       token: V.string().trim().default('').allowEmpty().max(fieldLength.url),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -173,7 +167,7 @@ route.post(
         temid = await V.parse(
           temid,
           V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-          'temid'
+          'temid',
         );
       } catch (error) {
         paramErr(res, req, error, { temid });
@@ -200,7 +194,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 export default route;

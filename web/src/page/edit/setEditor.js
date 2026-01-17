@@ -136,6 +136,6 @@ export function setEditor(e, editor, cb) {
       editor.setHighlightActiveLine(editorOption.highlightActiveLine);
       cb && cb();
     },
-    '编辑器配置'
+    '编辑器配置',
   );
 }

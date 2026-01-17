@@ -38,7 +38,7 @@ export class CreateTabs {
       `,
       {
         ...this.opt,
-      }
+      },
     );
     _tpl.html(this.box, html);
   }
@@ -66,8 +66,7 @@ export class CreateTabs {
       const id = close.parentNode.dataset.id;
       this.remove(id);
     } else if (addTab) {
-      this.opt.add &&
-        this.opt.add({ e, add: this.add.bind(this), data: this.opt.data });
+      this.opt.add && this.opt.add({ e, add: this.add.bind(this), data: this.opt.data });
     }
   }
   get list() {

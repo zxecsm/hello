@@ -20,7 +20,7 @@ export async function getImgInfo(path) {
 */
 export async function convertImageFormat(
   path,
-  { format, width, height, quality, fit = 'inside' } = {}
+  { format, width, height, quality, fit = 'inside' } = {},
 ) {
   let inputBuf;
   try {
@@ -69,23 +69,16 @@ export async function convertImageFormat(
   const compressionOptions = {};
 
   if (quality !== undefined && quality >= 1 && quality <= 100) {
-    const isCompressibleSource = [
-      'jpeg',
-      'jpg',
-      'webp',
-      'avif',
-      'tiff',
-      'png',
-    ].includes(originFormat);
+    const isCompressibleSource = ['jpeg', 'jpg', 'webp', 'avif', 'tiff', 'png'].includes(
+      originFormat,
+    );
 
     // 只有源图是可压缩格式时，才应用 quality（避免对 gif/heif 等无效设置）
     if (isCompressibleSource) {
       switch (targetFormat) {
         case 'png':
           // PNG compressionLevel: 0（最快）~9（最大压缩）
-          compressionOptions.compressionLevel = Math.round(
-            9 * (1 - quality / 100)
-          );
+          compressionOptions.compressionLevel = Math.round(9 * (1 - quality / 100));
           break;
         case 'jpeg':
         case 'jpg':
@@ -104,17 +97,13 @@ export async function convertImageFormat(
   try {
     return await processedImg.toBuffer();
   } catch (err) {
-    throw new Error(
-      `图片转换失败 (${originFormat} → ${targetFormat}): ${err.message}`
-    );
+    throw new Error(`图片转换失败 (${originFormat} → ${targetFormat}): ${err.message}`);
   }
 }
 
 export async function svgToBase64Png(svg) {
   return (
     'data:image/png;base64,' +
-    (await convertImageFormat(Buffer.from(svg), { format: 'png' })).toString(
-      'base64'
-    )
+    (await convertImageFormat(Buffer.from(svg), { format: 'png' })).toString('base64')
   );
 }

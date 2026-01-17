@@ -6,12 +6,7 @@ import _msg from '../../js/plugins/message';
 import { renderList, setBmkCategoryList } from '.';
 import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';
-import {
-  reqBmkAddGroup,
-  reqBmkDeleteGroup,
-  reqBmkEditGroup,
-  reqBmkList,
-} from '../../api/bmk';
+import { reqBmkAddGroup, reqBmkDeleteGroup, reqBmkEditGroup, reqBmkList } from '../../api/bmk';
 const $categoryBox = $('.category_box');
 export function isHideCategoryBox() {
   return $categoryBox.is(':hidden');
@@ -40,7 +35,7 @@ export function renderCategoryList(updateBmkList = false) {
           `,
           {
             list: res.data.list,
-          }
+          },
         );
         $list.html(html);
       }
@@ -92,7 +87,7 @@ function addCategory(e) {
           loading.end();
         });
     },
-    '添加书签分组'
+    '添加书签分组',
   );
 }
 // 编辑分类
@@ -128,7 +123,7 @@ function editCategory(e, obj) {
           loading.end();
         });
     },
-    '编辑书签分组'
+    '编辑书签分组',
   );
 }
 // 删除分类
@@ -165,7 +160,7 @@ function hdCategory(e) {
         deleteCategory(obj, close, loading);
       }
     },
-    obj.title
+    obj.title,
   );
 }
 $categoryBox

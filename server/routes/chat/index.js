@@ -68,7 +68,7 @@ route.post(
     V.object({
       account: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       notify: V.number().toInt().default(1).enum([0, 1]),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -82,15 +82,11 @@ route.post(
       await becomeFriends(account, acc);
       await db('friends').where({ friend: acc, account }).update({ notify });
 
-      _success(res, `${notify === 0 ? '开启' : '关闭'}免打扰成功`)(
-        req,
-        `${acc}-${notify}`,
-        1
-      );
+      _success(res, `${notify === 0 ? '开启' : '关闭'}免打扰成功`)(req, `${acc}-${notify}`, 1);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 设置备注
@@ -106,7 +102,7 @@ route.post(
         .alphanumeric()
         .notEnum([appConfig.notifyAccount, appConfig.chatRoomAccount]),
       des: V.string().trim().default('').allowEmpty().max(fieldLength.chatDes),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -126,7 +122,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 获取备注
@@ -136,7 +132,7 @@ route.get(
     'query',
     V.object({
       account: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -201,7 +197,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 读取消息
@@ -212,17 +208,8 @@ route.get(
     V.object({
       account: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       type: V.number().toInt().enum([0, 1, 2]),
-      flag: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.id)
-        .alphanumeric(),
-      word: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.searchWord),
+      flag: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+      word: V.string().trim().default('').allowEmpty().max(fieldLength.searchWord),
       start: V.string()
         .trim()
         .default('')
@@ -233,7 +220,7 @@ route.get(
         .default('')
         .allowEmpty()
         .custom((v) => (v ? isValidDate(v) : true), '必须 YYYY-MM-DD 格式'),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -247,7 +234,7 @@ route.get(
       const chatdb = db('chat AS c').join(
         'user AS u',
         { 'u.account': { value: 'c._from', raw: true } },
-        { type: 'LEFT' }
+        { type: 'LEFT' },
       );
 
       if (acc === appConfig.chatRoomAccount) {
@@ -336,7 +323,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 文件过期
@@ -346,16 +333,13 @@ route.get(
     'query',
     V.object({
       hash: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
       const { hash } = req[kValidate];
 
-      const file = await db('upload')
-        .select('url')
-        .where({ id: hash })
-        .findOne();
+      const file = await db('upload').select('url').where({ id: hash }).findOne();
 
       if (file) {
         const u = appConfig.uploadDir(file.url);
@@ -372,7 +356,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 接收信息
@@ -390,7 +374,7 @@ route.post(
     V.object({
       to: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       content: V.string().trim().min(1).max(fieldLength.chatContent),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -430,15 +414,11 @@ route.post(
         errLog(req, `发送通知到自定义地址失败(${err})`);
       });
 
-      _success(res, `发送${chatType[obj.type]}消息成功`)(
-        req,
-        `${content}=>${log}`,
-        1
-      );
+      _success(res, `发送${chatType[obj.type]}消息成功`)(req, `${content}=>${log}`, 1);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 转发消息
@@ -449,7 +429,7 @@ route.post(
     V.object({
       to: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -467,10 +447,7 @@ route.post(
         log = `${user.username}-${user.account}`;
       }
 
-      const chat = await db('chat')
-        .select('type,flag,content,size,hash')
-        .where({ id })
-        .findOne();
+      const chat = await db('chat').select('type,flag,content,size,hash').where({ id }).findOne();
 
       if (!chat) {
         _err(res, '转发的信息不存在')(req, id, 1);
@@ -492,9 +469,7 @@ route.post(
 
       // 文件消息，更新时间，避免被清理
       if (hash) {
-        await db('upload')
-          .where({ id: hash })
-          .update({ update_at: Date.now() });
+        await db('upload').where({ id: hash }).update({ update_at: Date.now() });
       }
 
       const msg = await saveChatMsg(account, chat);
@@ -512,7 +487,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 未读消息
@@ -522,7 +497,7 @@ route.get(
     'query',
     V.object({
       clear: V.number().toInt().default(0).enum([0, 1]),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -531,9 +506,7 @@ route.get(
       const { account } = req[kHello].userinfo;
 
       if (clear === 1) {
-        await db('friends')
-          .where({ account, read: 0 })
-          .batchUpdate({ read: 1 });
+        await db('friends').where({ account, read: 0 }).batchUpdate({ read: 1 });
         _success(res, '消息标记已读成功')(req);
         return;
       }
@@ -557,7 +530,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除消息
@@ -566,14 +539,9 @@ route.post(
   validate(
     'body',
     V.object({
-      id: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.id)
-        .alphanumeric(),
+      id: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
       to: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -602,9 +570,7 @@ route.post(
         if (to === appConfig.chatRoomAccount) {
           // 群消息只能管理员清空
           if (req[kHello].isRoot) {
-            await db('chat')
-              .where({ _to: appConfig.chatRoomAccount })
-              .batchDelete();
+            await db('chat').where({ _to: appConfig.chatRoomAccount }).batchDelete();
 
             await sendNotifyMsg(req, to, 'clear');
 
@@ -627,7 +593,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 抖一下
@@ -642,7 +608,7 @@ route.post(
         .max(fieldLength.id)
         .alphanumeric()
         .notEnum([appConfig.chatRoomAccount, appConfig.notifyAccount]),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -672,7 +638,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 成员
@@ -682,12 +648,8 @@ route.get(
     'query',
     V.object({
       pageNo: V.number().toInt().default(1).min(1),
-      pageSize: V.number()
-        .toInt()
-        .default(10)
-        .min(1)
-        .max(fieldLength.userPageSize),
-    })
+      pageSize: V.number().toInt().default(10).min(1).max(fieldLength.userPageSize),
+    }),
   ),
   async (req, res) => {
     try {
@@ -707,17 +669,7 @@ route.get(
       const cons = _connect.getConnects();
 
       const list = users.map((u) => {
-        const {
-          username,
-          account: acc,
-          update_at,
-          logo,
-          hide,
-          email,
-          des,
-          read,
-          msg,
-        } = u;
+        const { username, account: acc, update_at, logo, hide, email, des, read, msg } = u;
 
         const con = cons[acc];
 
@@ -758,7 +710,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 接收文件
@@ -773,7 +725,7 @@ route.post(
         .max(20)
         .pattern(/^_[0-9]+$/, '必须 _ 开头数字结尾'),
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -789,7 +741,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 接收语音
@@ -805,7 +757,7 @@ route.post(
         .pattern(/\.wav$/, '必须.wav结尾'),
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       to: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -825,10 +777,7 @@ route.post(
         log = `${user.username}-${user.account}`;
       }
 
-      const upload = await db('upload')
-        .select('url')
-        .where({ id: HASH })
-        .findOne();
+      const upload = await db('upload').select('url').where({ id: HASH }).findOne();
 
       if (upload) {
         _err(res, '语音发送失败')(req, `语音=>${log}`, 1);
@@ -877,7 +826,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 合并文件
@@ -890,14 +839,12 @@ route.post(
       count: V.number().toInt().min(1).max(fieldLength.maxFileSlice),
       name: V.string()
         .trim()
-        .preprocess((v) =>
-          typeof v === 'string' ? _path.sanitizeFilename(v) : v
-        )
+        .preprocess((v) => (typeof v === 'string' ? _path.sanitizeFilename(v) : v))
         .min(1)
         .max(fieldLength.filename),
       to: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       type: V.string().trim().enum(['image', 'file']),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -915,10 +862,7 @@ route.post(
         log = `${user.username}-${user.account}`;
       }
 
-      const upload = await db('upload')
-        .select('url')
-        .where({ id: HASH })
-        .findOne();
+      const upload = await db('upload').select('url').where({ id: HASH }).findOne();
 
       if (upload) {
         _err(res, '文件发送失败')(req, `${name}=>${log}`, 1);
@@ -936,12 +880,7 @@ route.post(
 
       const targetPath = _path.normalize(tDir, tName);
 
-      await mergefile(
-        count,
-        appConfig.temDir(`${account}_${HASH}`),
-        targetPath,
-        HASH
-      );
+      await mergefile(count, appConfig.temDir(`${account}_${HASH}`), targetPath, HASH);
 
       const fobj = {
         id: HASH,
@@ -977,15 +916,11 @@ route.post(
         errLog(req, `发送通知到自定义地址失败(${err})`);
       });
 
-      _success(res, `发送${chatType[type]}消息成功`)(
-        req,
-        `${obj.content}=>${log}`,
-        1
-      );
+      _success(res, `发送${chatType[type]}消息成功`)(req, `${obj.content}=>${log}`, 1);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 断点续传
@@ -995,7 +930,7 @@ route.post(
     'body',
     V.object({
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1010,7 +945,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 检查上传文件是否重复
@@ -1024,25 +959,20 @@ route.post(
       to: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       name: V.string()
         .trim()
-        .preprocess((v) =>
-          typeof v === 'string' ? _path.sanitizeFilename(v) : v
-        )
+        .preprocess((v) => (typeof v === 'string' ? _path.sanitizeFilename(v) : v))
         .min(1)
         .max(fieldLength.filename),
       size: V.number()
         .toNumber()
         .min(0)
         .max(fieldLength.maxFileSlice * fieldLength.maxFileChunk * 1024 * 1024),
-    })
+    }),
   ),
   async (req, res) => {
     try {
       const { HASH, type, name, to, size } = req[kValidate];
 
-      const upload = await db('upload')
-        .select('url')
-        .where({ id: HASH })
-        .findOne();
+      const upload = await db('upload').select('url').where({ id: HASH }).findOne();
 
       if (upload) {
         // 文件已存在则，跳过上传
@@ -1053,10 +983,7 @@ route.post(
           let log = to;
 
           if (!stats.isDirectory() && stats.size === size) {
-            if (
-              to !== appConfig.chatRoomAccount &&
-              to !== appConfig.notifyAccount
-            ) {
+            if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
               const user = await getUserInfo(to, 'account,username');
 
               if (!user) {
@@ -1067,9 +994,7 @@ route.post(
               log = `${user.username}-${user.account}`;
             }
 
-            await db('upload')
-              .where({ id: HASH })
-              .update({ update_at: Date.now() });
+            await db('upload').where({ id: HASH }).update({ update_at: Date.now() });
 
             const suffix = _path.extname(name)[2];
 
@@ -1100,11 +1025,7 @@ route.post(
               errLog(req, `发送通知到自定义地址失败(${err})`);
             });
 
-            _success(res, `发送${chatType[type]}消息成功`)(
-              req,
-              `${obj.content}=>${log}`,
-              1
-            );
+            _success(res, `发送${chatType[type]}消息成功`)(req, `${obj.content}=>${log}`, 1);
           } else {
             _success(res, `发送失败`)(req, `${name}=>${log}`, 1);
           }
@@ -1119,7 +1040,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 配置自定义转发地址接口
@@ -1134,16 +1055,12 @@ route.post(
       contentType: V.string()
         .trim()
         .default('application/json')
-        .enum([
-          'application/json',
-          'application/x-www-form-urlencoded',
-          'text/plain',
-        ]),
+        .enum(['application/json', 'application/x-www-form-urlencoded', 'text/plain']),
       header: V.object()
         .default({})
         .custom((v) => !isTooDeep(v, 1), '对象限制1层'),
       body: V.string().trim().default('').allowEmpty().max(fieldLength.url),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1161,8 +1078,7 @@ route.post(
         }
 
         if (
-          (type === 'get' ||
-            (type === 'post' && contentType === 'application/json')) &&
+          (type === 'get' || (type === 'post' && contentType === 'application/json')) &&
           !parseObjectJson(body) &&
           !parseArrayJson(body)
         ) {
@@ -1190,13 +1106,7 @@ route.post(
 
       if (state === 1) {
         try {
-          await hdForwardToLink(
-            req,
-            [{ forward_msg_link }],
-            [],
-            '测试消息',
-            []
-          );
+          await hdForwardToLink(req, [{ forward_msg_link }], [], '测试消息', []);
         } catch (error) {
           _err(res, '发送测试消息失败')(req, error, 1);
           return;
@@ -1212,7 +1122,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 export default route;

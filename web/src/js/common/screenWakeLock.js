@@ -20,7 +20,7 @@ const ScreenWakeLock = (() => {
             requestLock();
           }
         },
-        { once: true }
+        { once: true },
       );
     } catch {
       wakeLock = null;

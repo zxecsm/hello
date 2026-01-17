@@ -120,9 +120,7 @@ reqSSHConnect({ id: HASH, defaultPath: p })
         if (isIframe()) {
           try {
             // 更新标题
-            window.parent.openInIframe.iframes
-              .get(window.iframeId)
-              .updateTitle(data);
+            window.parent.openInIframe.iframes.get(window.iframeId).updateTitle(data);
           } catch {}
         }
       }, 1000);
@@ -194,7 +192,7 @@ function renderQuickGroup() {
     {
       curQuickGroupList,
       curQuickGroupId,
-    }
+    },
   );
   $quickGroup.html(html);
 }
@@ -210,7 +208,7 @@ function renderCommand() {
     `,
     {
       list: getCurQuickGroup(curQuickGroupId)?.commands || [],
-    }
+    },
   );
   $quickCommands.html(html);
 }
@@ -237,9 +235,7 @@ $quickGroup
     hdGroupMenu(e, getCurQuickGroup(e.target.parentNode.dataset.id));
   });
 function hdGroupMenu(e, obj) {
-  const data = [
-    { id: 'edit', text: '编辑', beforeIcon: 'iconfont icon-bianji' },
-  ];
+  const data = [{ id: 'edit', text: '编辑', beforeIcon: 'iconfont icon-bianji' }];
   if (obj.id !== 'default') {
     data.push({
       id: 'delete',
@@ -260,11 +256,11 @@ function hdGroupMenu(e, obj) {
           () => {
             close();
           },
-          loading
+          loading,
         );
       }
     },
-    obj.title
+    obj.title,
   );
 }
 function hdGroupDelete(e, obj, cb, loading = { start() {}, end() {} }) {
@@ -290,7 +286,7 @@ function hdGroupDelete(e, obj, cb, loading = { start() {}, end() {} }) {
             loading.end();
           });
       }
-    }
+    },
   );
 }
 function hdGroupEdit(e, obj) {
@@ -325,7 +321,7 @@ function hdGroupEdit(e, obj) {
           loading.end();
         });
     },
-    '编辑分组'
+    '编辑分组',
   );
 }
 let mouseGroupFromDom = null;
@@ -397,7 +393,7 @@ function addGroup(e) {
           loading.end();
         });
     },
-    '添加分组'
+    '添加分组',
   );
 }
 
@@ -409,16 +405,10 @@ $quickCommands
     term.focus();
   })
   .on('click', '.icon', (e) => {
-    hdComandMenu(
-      e,
-      getCommandInfo(curQuickGroupId, e.target.parentNode.dataset.id)
-    );
+    hdComandMenu(e, getCommandInfo(curQuickGroupId, e.target.parentNode.dataset.id));
   })
   .on('mouseenter', '.icon', (e) => {
-    const { command, enter } = getCommandInfo(
-      curQuickGroupId,
-      e.target.parentNode.dataset.id
-    );
+    const { command, enter } = getCommandInfo(curQuickGroupId, e.target.parentNode.dataset.id);
     const str = `命令：${command}\n自动执行：${enter ? '是' : '否'}`;
     toolTip.setTip(str).show();
   })
@@ -426,10 +416,7 @@ $quickCommands
     toolTip.hide();
   })
   .on('click', '.close', (e) => {
-    hdCommandDelete(
-      e,
-      getCommandInfo(curQuickGroupId, e.target.parentNode.dataset.id)
-    );
+    hdCommandDelete(e, getCommandInfo(curQuickGroupId, e.target.parentNode.dataset.id));
   });
 function addCommand(e) {
   rMenu.inpMenu(
@@ -460,9 +447,7 @@ function addCommand(e) {
           verify(val) {
             return (
               rMenu.validString(val, 1) ||
-              (getTextSize(val) > _d.fieldLength.customCodeSize
-                ? '命令过长'
-                : '')
+              (getTextSize(val) > _d.fieldLength.customCodeSize ? '命令过长' : '')
             );
           },
         },
@@ -485,7 +470,7 @@ function addCommand(e) {
           loading.end();
         });
     },
-    '添加快捷命令'
+    '添加快捷命令',
   );
 }
 function hdComandMenu(e, obj) {
@@ -503,7 +488,7 @@ function hdComandMenu(e, obj) {
         moveToGroup(e, obj);
       }
     },
-    obj.title
+    obj.title,
   );
 }
 function moveToGroup(e, obj) {
@@ -547,7 +532,7 @@ function moveToGroup(e, obj) {
           });
       }
     },
-    '移动命令到分组'
+    '移动命令到分组',
   );
 }
 function hdCommandDelete(e, obj) {
@@ -568,7 +553,7 @@ function hdCommandDelete(e, obj) {
           })
           .catch(() => {});
       }
-    }
+    },
   );
 }
 function hdComandEdit(e, obj) {
@@ -600,9 +585,7 @@ function hdComandEdit(e, obj) {
           verify(val) {
             return (
               rMenu.validString(val, 1) ||
-              (getTextSize(val) > _d.fieldLength.customCodeSize
-                ? '命令过长'
-                : '')
+              (getTextSize(val) > _d.fieldLength.customCodeSize ? '命令过长' : '')
             );
           },
         },
@@ -625,7 +608,7 @@ function hdComandEdit(e, obj) {
           loading.end();
         });
     },
-    '编辑快捷命令'
+    '编辑快捷命令',
   );
 }
 let mouseQuickFromDom = null;
@@ -808,8 +791,5 @@ document.addEventListener('click', function (e) {
   )
     return;
   $logText.hide();
-  $sshBox
-    .find('.btns .log_btn')
-    .removeClass('icon-terminal')
-    .addClass('icon-fuzhi');
+  $sshBox.find('.btns .log_btn').removeClass('icon-terminal').addClass('icon-fuzhi');
 });

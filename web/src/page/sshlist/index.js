@@ -27,11 +27,7 @@ import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
 import realtime from '../../js/plugins/realtime';
 import { CreateTabs } from '../notes/tabs/index';
-import {
-  isHideCategoryBox,
-  renderCategoryList,
-  showCategoryBox,
-} from './category';
+import { isHideCategoryBox, renderCategoryList, showCategoryBox } from './category';
 import toolTip from '../../js/plugins/tooltip';
 import rMenu from '../../js/plugins/rightMenu';
 import { showSSHInfo } from '../../js/utils/showinfo';
@@ -121,9 +117,7 @@ function hdCategoryAdd(e, cb, hasList) {
     return;
   }
 
-  const filterList = sshCategoryList.filter(
-    (item) => !hasList.some((i) => i.id === item.id)
-  );
+  const filterList = sshCategoryList.filter((item) => !hasList.some((i) => i.id === item.id));
 
   const data = [];
   if (filterList.length === 0) {
@@ -147,7 +141,7 @@ function hdCategoryAdd(e, cb, hasList) {
         cb && cb({ param, close });
       }
     },
-    '选择分类'
+    '选择分类',
   );
 }
 $categoryTag
@@ -171,10 +165,7 @@ let sshList = [];
 const sshBoxSelector = new BoxSelector(document, {
   selectables: '.item_box',
   onSelectStart({ e }) {
-    if (
-      _getTarget($contentWrap[0], e, '.item_box') ||
-      _getTarget($contentWrap[0], e, '.item_info')
-    )
+    if (_getTarget($contentWrap[0], e, '.item_box') || _getTarget($contentWrap[0], e, '.item_info'))
       return true;
   },
   onSelectEnd() {
@@ -306,7 +297,7 @@ export function renderList(y) {
             category,
             hdTitleHighlight,
             _d,
-          }
+          },
         );
         stopSelect();
         $contentWrap.html(html).addClass('open');
@@ -344,7 +335,7 @@ const tabsObj = new CreateTabs({
         add(param);
       },
       data,
-      1
+      1,
     );
   },
 });
@@ -398,10 +389,7 @@ function toTop(e, obj) {
           inputType: 'number',
           placeholder: '0：取消；数值越大越靠前',
           verify(val) {
-            return (
-              rMenu.validInteger(val) ||
-              rMenu.validNumber(val, 0, _d.fieldLength.top)
-            );
+            return rMenu.validInteger(val) || rMenu.validNumber(val, 0, _d.fieldLength.top);
           },
         },
       },
@@ -423,7 +411,7 @@ function toTop(e, obj) {
           loading.end();
         });
     },
-    '置顶'
+    '置顶',
   );
 }
 function categoryToArr(category) {
@@ -448,7 +436,7 @@ function sshEditCategory(e, obj) {
             close();
             add(param);
           },
-          data
+          data,
         );
       },
       submit({ close, data, loading, isDiff }) {
@@ -471,7 +459,7 @@ function sshEditCategory(e, obj) {
           });
       },
     },
-    '编辑分类'
+    '编辑分类',
   );
 }
 function editSSHInfo(e, obj) {
@@ -530,9 +518,7 @@ function editSSHInfo(e, obj) {
           value: obj.private_key,
           type: 'textarea',
           verify(val) {
-            return getTextSize(val) > _d.fieldLength.customCodeSize
-              ? '密钥过长'
-              : '';
+            return getTextSize(val) > _d.fieldLength.customCodeSize ? '密钥过长' : '';
           },
         },
         passphrase: {
@@ -565,7 +551,7 @@ function editSSHInfo(e, obj) {
           loading.end();
         });
     },
-    '编辑SSH配置'
+    '编辑SSH配置',
   );
 }
 $contentWrap
@@ -593,7 +579,7 @@ $contentWrap
           deleteSSH([sshid], close, loading);
         }
       },
-      title
+      title,
     );
   })
   .on('click', '.item_title', function (e) {
@@ -611,8 +597,9 @@ $contentWrap
     checkedItem(this.querySelector('.check_state'));
   })
   .on('mouseenter', '.item_box .item_type', function () {
-    const { title, port, host, username, top, auth_type, categoryArr } =
-      getSSHInfo($(this).parent().attr('data-id'));
+    const { title, port, host, username, top, auth_type, categoryArr } = getSSHInfo(
+      $(this).parent().attr('data-id'),
+    );
     const arr = categoryArr.map((item) => item.title);
     const str = `标题：${title}\n分类：${arr.join('-') || '--'}\n认证方式：${
       auth_type === 'password' ? '密码' : '密钥'
@@ -650,9 +637,7 @@ function checkedItem(el) {
 }
 function updateSelectInfo() {
   const $itemBox = $contentWrap.find('.item_box'),
-    $checkArr = $itemBox.filter(
-      (_, item) => $(item).find('.check_state').attr('check') === 'y'
-    );
+    $checkArr = $itemBox.filter((_, item) => $(item).find('.check_state').attr('check') === 'y');
   _msg.botMsg(`选中：${$checkArr.length}项`);
   if ($checkArr.length === $itemBox.length) {
     $footer.find('span').attr({
@@ -711,9 +696,7 @@ $headWrap
             beforeText: '端口：',
             value: 22,
             verify(val) {
-              return (
-                rMenu.validInteger(val) || rMenu.validNumber(val, 1, 65535)
-              );
+              return rMenu.validInteger(val) || rMenu.validNumber(val, 1, 65535);
             },
           },
           username: {
@@ -736,9 +719,7 @@ $headWrap
             value: '',
             type: 'textarea',
             verify(val) {
-              return getTextSize(val) > _d.fieldLength.customCodeSize
-                ? '密钥过长'
-                : '';
+              return getTextSize(val) > _d.fieldLength.customCodeSize ? '密钥过长' : '';
             },
           },
           passphrase: {
@@ -768,7 +749,7 @@ $headWrap
             loading.end();
           });
       },
-      '添加SSH配置'
+      '添加SSH配置',
     );
   })
   .on('click', '.h_check_item_btn', hdCheckItemBtn)
@@ -784,9 +765,7 @@ $headWrap
 // 获取选中项
 function getCheckItems() {
   const $itemBox = $contentWrap.find('.item_box'),
-    $checkArr = $itemBox.filter(
-      (_, item) => $(item).find('.check_state').attr('check') === 'y'
-    );
+    $checkArr = $itemBox.filter((_, item) => $(item).find('.check_state').attr('check') === 'y');
   const arr = [];
   $checkArr.each((i, v) => {
     arr.push(v.getAttribute('data-id'));
@@ -809,10 +788,7 @@ function switchCheckAll() {
   let che = $checkBtn.attr('check');
   che === 'y' ? (che = 'n') : (che = 'y');
   $checkBtn.attr({
-    class:
-      che === 'y'
-        ? 'iconfont icon-xuanzeyixuanze'
-        : 'iconfont icon-xuanzeweixuanze',
+    class: che === 'y' ? 'iconfont icon-xuanzeyixuanze' : 'iconfont icon-xuanzeweixuanze',
     check: che,
   });
   const $itemBox = $contentWrap.find('.item_box');
@@ -830,7 +806,7 @@ scrollState(
     } else {
       $headWrap.addClass('open');
     }
-  }, 1000)
+  }, 1000),
 );
 document.addEventListener('keydown', function (e) {
   if (!isHideCategoryBox()) return;

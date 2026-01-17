@@ -18,7 +18,7 @@ import initDatabase from './initDatabase.js';
         data.map((item) => {
           delete item.serial;
           return item;
-        })
+        }),
       );
       console.log(`insert ${name} success`); // eslint-disable-line no-console
     }

@@ -60,7 +60,7 @@ route.post(
         .default('')
         .allowEmpty()
         .custom((v) => (v ? isValidColor(v) : true), '必须 #XXXXXX 格式'),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -89,7 +89,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 编辑搜索引擎
@@ -110,7 +110,7 @@ route.post(
         .default('')
         .custom((v) => (v ? isValidColor(v) : true), '必须 #XXXXXX 格式'),
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -136,7 +136,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除搜索引擎
@@ -146,7 +146,7 @@ route.post(
     'body',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -170,7 +170,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 切换搜索引擎
@@ -180,7 +180,7 @@ route.post(
     'body',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -197,7 +197,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 清除搜索引擎LOGO
@@ -207,7 +207,7 @@ route.post(
     'body',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -229,15 +229,11 @@ route.post(
         }
       }
 
-      _success(res, '删除搜索引擎LOGO成功')(
-        req,
-        `${id}${log ? `-${log}` : ''}`,
-        1
-      );
+      _success(res, '删除搜索引擎LOGO成功')(req, `${id}${log ? `-${log}` : ''}`, 1);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 添加翻译接口
@@ -253,7 +249,7 @@ route.post(
         .max(fieldLength.url)
         .httpUrl()
         .custom((v) => v.includes('{{}}'), '必须包含{{}}'),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -282,7 +278,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 编辑翻译接口
@@ -299,7 +295,7 @@ route.post(
         .httpUrl()
         .custom((v) => v.includes('{{}}'), '必须包含{{}}'),
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -325,7 +321,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除翻译接口
@@ -335,7 +331,7 @@ route.post(
     'body',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -360,7 +356,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 切换翻译接口
@@ -370,7 +366,7 @@ route.post(
     'body',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -387,7 +383,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 清除翻译接口LOGO
@@ -397,7 +393,7 @@ route.post(
     'body',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -420,15 +416,11 @@ route.post(
         }
       }
 
-      _success(res, '删除翻译接口LOGO成功')(
-        req,
-        `${id}${log ? `-${log}` : ''}`,
-        1
-      );
+      _success(res, '删除翻译接口LOGO成功')(req, `${id}${log ? `-${log}` : ''}`, 1);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 分词
@@ -438,7 +430,7 @@ route.get(
     'query',
     V.object({
       word: V.string().trim().min(1).max(fieldLength.searchWord),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -448,7 +440,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 搜索历史
@@ -457,18 +449,10 @@ route.get(
   validate(
     'query',
     V.object({
-      word: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.searchWord),
+      word: V.string().trim().default('').allowEmpty().max(fieldLength.searchWord),
       pageNo: V.number().toInt().default(1).min(1),
-      pageSize: V.number()
-        .toInt()
-        .default(80)
-        .min(1)
-        .max(fieldLength.maxPagesize),
-    })
+      pageSize: V.number().toInt().default(80).min(1).max(fieldLength.maxPagesize),
+    }),
   ),
   async (req, res) => {
     try {
@@ -497,10 +481,7 @@ route.get(
 
       let data = [];
       if (total > 0) {
-        data = await historydb
-          .select('id,content')
-          .page(pageSize, offset)
-          .find();
+        data = await historydb.select('id,content').page(pageSize, offset).find();
       }
 
       _success(res, 'ok', {
@@ -511,7 +492,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 保存搜索历史
@@ -521,7 +502,7 @@ route.post(
     'body',
     V.object({
       content: V.string().trim().min(1).max(fieldLength.searchHistory),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -545,7 +526,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 搜索 历史、笔记、书签
@@ -554,12 +535,8 @@ route.get(
   validate(
     'query',
     V.object({
-      word: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.searchWord),
-    })
+      word: V.string().trim().default('').allowEmpty().max(fieldLength.searchWord),
+    }),
   ),
   async (req, res) => {
     try {
@@ -673,7 +650,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除历史记录
@@ -685,7 +662,7 @@ route.post(
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
         .min(1)
         .max(fieldLength.maxPagesize),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -706,7 +683,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 export default route;

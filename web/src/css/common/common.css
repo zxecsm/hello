@@ -28,11 +28,11 @@ html {
   --color8: #dddddd;
   --color9: #ebebeb;
   --color10: #ffffff;
-  --bg-color-o1: rgb(255 255 255/ 20%);
-  --bg-color-o2: rgb(255 255 255/ 40%);
-  --bg-color-o3: rgb(255 255 255/ 60%);
-  --bg-color-o4: rgb(255 255 255/ 80%);
-  --bg-color-o5: rgb(255 255 255/ 90%);
+  --bg-color-o1: rgb(255 255 255/20%);
+  --bg-color-o2: rgb(255 255 255/40%);
+  --bg-color-o3: rgb(255 255 255/60%);
+  --bg-color-o4: rgb(255 255 255/80%);
+  --bg-color-o5: rgb(255 255 255/90%);
 
   --a-color: #2a64f6;
 
@@ -57,11 +57,9 @@ html {
   --cursor-default: url('../../images/pointer/blue/default.cur'), default;
   --cursor-pointer: url('../../images/pointer/blue/pointer.cur'), pointer;
   --cursor-ew-resize: url('../../images/pointer/blue/ew-resize.cur'), ew-resize;
-  --cursor-nesw-resize: url('../../images/pointer/blue/nesw-resize.cur'),
-    nesw-resize;
+  --cursor-nesw-resize: url('../../images/pointer/blue/nesw-resize.cur'), nesw-resize;
   --cursor-ns-resize: url('../../images/pointer/blue/ns-resize.cur'), ns-resize;
-  --cursor-nwse-resize: url('../../images/pointer/blue/nwse-resize.cur'),
-    nwse-resize;
+  --cursor-nwse-resize: url('../../images/pointer/blue/nwse-resize.cur'), nwse-resize;
   --message-success-color: #146c43;
   --message-success-bg: #d1e7dd;
   --message-success-border: #a3cfbb;
@@ -117,14 +115,10 @@ html.dark {
   --btn-danger-hover-border-color: #f56c6c;
   --cursor-default: url('../../images/pointer/orange/default.cur'), default;
   --cursor-pointer: url('../../images/pointer/orange/pointer.cur'), pointer;
-  --cursor-ew-resize: url('../../images/pointer/orange/ew-resize.cur'),
-    ew-resize;
-  --cursor-nesw-resize: url('../../images/pointer/orange/nesw-resize.cur'),
-    nesw-resize;
-  --cursor-ns-resize: url('../../images/pointer/orange/ns-resize.cur'),
-    ns-resize;
-  --cursor-nwse-resize: url('../../images/pointer/orange/nwse-resize.cur'),
-    nwse-resize;
+  --cursor-ew-resize: url('../../images/pointer/orange/ew-resize.cur'), ew-resize;
+  --cursor-nesw-resize: url('../../images/pointer/orange/nesw-resize.cur'), nesw-resize;
+  --cursor-ns-resize: url('../../images/pointer/orange/ns-resize.cur'), ns-resize;
+  --cursor-nwse-resize: url('../../images/pointer/orange/nwse-resize.cur'), nwse-resize;
   --message-success-color: #75b798;
   --message-success-bg: #051b11;
   --message-success-border: #0f5132;

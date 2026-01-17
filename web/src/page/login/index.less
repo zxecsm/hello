@@ -30,11 +30,12 @@ html {
   .box {
     position: relative;
     background-color: var(--bg-color-o2);
-    background-image: url('../../images/img/left_open.png'),
-      url('../../images/img/right_open.png');
+    background-image: url('../../images/img/left_open.png'), url('../../images/img/right_open.png');
     background-repeat: no-repeat;
     background-size: 14%;
-    background-position: 0 100%, 100% 100%;
+    background-position:
+      0 100%,
+      100% 100%;
     width: 90%;
     max-width: 50rem;
     padding: 3rem 3rem 7rem 3rem;
@@ -49,13 +50,15 @@ html {
       z-index: 11;
     }
     &.open {
-      transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+      transition:
+        transform 0.3s ease-in-out,
+        opacity 0.3s ease-in-out;
       transform: none;
       opacity: 1;
     }
     &.close {
-      background-image: url('../../images/img/left_close.png'),
-        url('../../images/img/right_close.png');
+      background-image:
+        url('../../images/img/left_close.png'), url('../../images/img/right_close.png');
     }
     .title {
       font-size: 3rem;

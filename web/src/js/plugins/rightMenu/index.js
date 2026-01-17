@@ -113,8 +113,7 @@ class RightM {
         } else {
           this.clearSearchText.style.display = 'block';
         }
-        this.opt.searchCallback &&
-          this.opt.searchCallback('change', val.trim());
+        this.opt.searchCallback && this.opt.searchCallback('change', val.trim());
       },
       focus: (e) => {
         e.target.parentNode.classList.add('focus');
@@ -131,9 +130,7 @@ class RightM {
       },
     });
     // 标题滚动
-    this.titleScroll = new ContentScroll(
-      this.title.querySelector('.scroll_text')
-    );
+    this.titleScroll = new ContentScroll(this.title.querySelector('.scroll_text'));
     this.titleScroll.init(this.opt.title);
     // 拖拽移动位置
     this.dragClose = myDrag({
@@ -168,7 +165,7 @@ class RightM {
         },
       },
       200,
-      100
+      100,
     );
     this.renderList(this.opt.html);
     this.hdPosition(this.opt.e);
@@ -225,10 +222,7 @@ class RightM {
   hdClick(e) {
     const close = this.close.bind(this);
     if (e.target === this.rightMask) {
-      if (
-        !this.opt.readyToCloseAll ||
-        this.opt.readyToCloseAll.call(this, { e, close })
-      ) {
+      if (!this.opt.readyToCloseAll || this.opt.readyToCloseAll.call(this, { e, close })) {
         this.close(1, e);
       }
     } else if (e.target === this.hClose) {
@@ -243,8 +237,7 @@ class RightM {
     }
   }
   hdKeyup(e) {
-    this.opt.keyup &&
-      this.opt.keyup.call(this, { e, close: this.close.bind(this) });
+    this.opt.keyup && this.opt.keyup.call(this, { e, close: this.close.bind(this) });
   }
   close(all, e) {
     if (all) {
@@ -297,7 +290,7 @@ function selectTabs(e, data, opt = {}, title = '') {
   function isDiff() {
     return !deepEqual(
       tabsObj.list.map((item) => item.id),
-      data.map((item) => item.id)
+      data.map((item) => item.id),
     );
   }
   const r = rightM({
@@ -349,8 +342,7 @@ function selectTabs(e, data, opt = {}, title = '') {
           errText = opt.verify(tabsObj.list) || '';
         }
         if (!errText) {
-          opt.submit &&
-            opt.submit({ e, close, data: tabsObj.list, loading, isDiff });
+          opt.submit && opt.submit({ e, close, data: tabsObj.list, loading, isDiff });
         } else {
           shake(this.rightBox);
         }
@@ -432,7 +424,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
         const s = selectItem.find((s) => s.value === value);
         return s ? s.text : '';
       },
-    }
+    },
   );
   function unBindInput() {
     wrapInputList.forEach((item) => {
@@ -450,7 +442,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
     });
     return !deepEqual(
       curItemsArr.map((item) => item.value),
-      initItemsArr.map((item) => item.value)
+      initItemsArr.map((item) => item.value),
     );
   }
   const r = rightM({
@@ -500,8 +492,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
             err.textContent = errText;
           },
           keydown(e) {
-            keyDown &&
-              keyDown({ e, items, value: items[key].value, input: wInput });
+            keyDown && keyDown({ e, items, value: items[key].value, input: wInput });
           },
         });
         wrapInputList.push(wInput);
@@ -557,8 +548,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
             const { value, trimValue } = items[k];
             inp[k] = trimValue ? value.trim() : value;
           });
-          callback &&
-            callback({ e, inp, close, items, loading, isDiff, submit });
+          callback && callback({ e, inp, close, items, loading, isDiff, submit });
         }
       } else if (cleanBtn) {
         const inp = cleanBtn.parentNode.firstElementChild;
@@ -591,7 +581,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
             }
           },
           beforeText,
-          true
+          true,
         );
       } else if (showPassBtn) {
         const inp = showPassBtn.parentNode.firstElementChild;
@@ -664,7 +654,7 @@ function render(data) {
       <i v-if="afterIcon" class="icon {{afterIcon}}"></i>
     </div>
     `,
-    { data }
+    { data },
   );
 }
 function selectMenu(e, data, callback, title = '') {
@@ -712,8 +702,7 @@ function selectMenu(e, data, callback, title = '') {
       if (item) {
         const id = item.dataset.id;
         const d = data.find((item) => item.id === id);
-        callback &&
-          callback({ e, close, resetMenu, id, param: d.param || {}, loading });
+        callback && callback({ e, close, resetMenu, id, param: d.param || {}, loading });
       }
     },
   };
@@ -765,9 +754,7 @@ function rightMenu(e, html, callback, title = '') {
       if (isOnce) return;
       isOnce = true;
       const items = this.content.querySelectorAll('.item');
-      const cur = Array.prototype.find.call(items, (item) =>
-        item.className.includes('active')
-      );
+      const cur = Array.prototype.find.call(items, (item) => item.className.includes('active'));
       if (cur) {
         let t = _position(cur).top;
         _setTimeout(() => {
@@ -978,15 +965,13 @@ function percentBar(e, percent, callback) {
   // 计算进度位置
   function calculationPosition(per) {
     per <= 0 ? (per = 0) : per >= 1 ? (per = 1) : null;
-    const val =
-      (pro1Box.offsetWidth - dolt.offsetWidth) * per + dolt.offsetWidth / 2;
+    const val = (pro1Box.offsetWidth - dolt.offsetWidth) * per + dolt.offsetWidth / 2;
     pro2Box.style.width = val + 'px';
     percentBox.textContent = parseInt(per * 100) + '%';
   }
   function move(e) {
     percent =
-      (e.clientX - pro1BoxL - dolt.offsetWidth / 2) /
-      (pro1Box.offsetWidth - dolt.offsetWidth);
+      (e.clientX - pro1BoxL - dolt.offsetWidth / 2) / (pro1Box.offsetWidth - dolt.offsetWidth);
     percent <= 0 ? (percent = 0) : percent >= 1 ? (percent = 1) : null;
     calculationPosition(percent);
     callback && callback(percent, 'move');

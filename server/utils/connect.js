@@ -24,9 +24,7 @@ function add(account, cb, client) {
   connect.cbs.push(cb);
 
   if (client?.temid) {
-    const clientInfo = connect.onlines.find(
-      (item) => item.temid === client.temid
-    );
+    const clientInfo = connect.onlines.find((item) => item.temid === client.temid);
     if (clientInfo) {
       Object.assign(clientInfo, client);
     } else {
@@ -38,7 +36,7 @@ function add(account, cb, client) {
 
     // 清理超过 30 秒未活跃的在线设备
     connect.onlines = connect.onlines.filter(
-      (item) => now - item.time < 30 * 1000 && item.page === 'home'
+      (item) => now - item.time < 30 * 1000 && item.page === 'home',
     );
   }
 

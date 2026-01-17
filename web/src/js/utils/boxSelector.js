@@ -67,11 +67,7 @@ export class BoxSelector {
   }
 
   isKeepOld() {
-    return (
-      this.keyDownMap['Shift'] ||
-      this.keyDownMap['Control'] ||
-      this.keyDownMap['Meta']
-    );
+    return this.keyDownMap['Shift'] || this.keyDownMap['Control'] || this.keyDownMap['Meta'];
   }
 
   destroy() {
@@ -163,12 +159,7 @@ export class BoxSelector {
 
     if (e.type.startsWith('touch')) e.preventDefault();
 
-    const {
-      x: currentX,
-      y: currentY,
-      clientY,
-      clientX,
-    } = this.getEventPoint(e);
+    const { x: currentX, y: currentY, clientY, clientX } = this.getEventPoint(e);
 
     const left = Math.min(this.startX, currentX);
     const top = Math.min(this.startY, currentY);
@@ -216,9 +207,7 @@ export class BoxSelector {
     let allItems = [];
 
     if (this.options.selectables) {
-      allItems = Array.from(
-        this.container.querySelectorAll(this.options.selectables)
-      );
+      allItems = Array.from(this.container.querySelectorAll(this.options.selectables));
 
       allItems.forEach((el) => {
         const elRect = el.getBoundingClientRect();
@@ -262,12 +251,7 @@ export class BoxSelector {
   }
 
   isOverlap(r1, r2) {
-    return !(
-      r2.left > r1.right ||
-      r2.right < r1.left ||
-      r2.top > r1.bottom ||
-      r2.bottom < r1.top
-    );
+    return !(r2.left > r1.right || r2.right < r1.left || r2.top > r1.bottom || r2.bottom < r1.top);
   }
 }
 
@@ -314,8 +298,7 @@ export class AutoScroller {
   }
 
   getDirection(clientX, clientY) {
-    const { containerRect, clientHeight, clientWidth } =
-      this.getContainerInfo();
+    const { containerRect, clientHeight, clientWidth } = this.getContainerInfo();
 
     const offsetY = clientY - containerRect.top;
     const offsetX = clientX - containerRect.left;
@@ -336,36 +319,23 @@ export class AutoScroller {
 
     const direction = this.getDirection(clientX, clientY);
 
-    const {
-      scrollTop,
-      scrollLeft,
-      clientHeight,
-      clientWidth,
-      scrollHeight,
-      scrollWidth,
-    } = this.getContainerInfo();
+    const { scrollTop, scrollLeft, clientHeight, clientWidth, scrollHeight, scrollWidth } =
+      this.getContainerInfo();
 
-    const canScroll =
-      direction.top || direction.bottom || direction.left || direction.right;
+    const canScroll = direction.top || direction.bottom || direction.left || direction.right;
 
     if (canScroll) {
       if (!this.scrollTimer) {
         this.scrollTimer = setInterval(() => {
           if (direction.top && scrollTop > 0) {
             this.scrollBy(0, -this.scrollSpeed);
-          } else if (
-            direction.bottom &&
-            scrollTop + clientHeight < scrollHeight
-          ) {
+          } else if (direction.bottom && scrollTop + clientHeight < scrollHeight) {
             this.scrollBy(0, this.scrollSpeed);
           }
 
           if (direction.left && scrollLeft > 0) {
             this.scrollBy(-this.scrollSpeed, 0);
-          } else if (
-            direction.right &&
-            scrollLeft + clientWidth < scrollWidth
-          ) {
+          } else if (direction.right && scrollLeft + clientWidth < scrollWidth) {
             this.scrollBy(this.scrollSpeed, 0);
           }
         }, 16);
@@ -472,11 +442,7 @@ export class MouseElementTracker {
     this.timer = setTimeout(() => {
       this.clear();
       let isStop = false;
-      if (
-        Math.abs(this.currentX - clientX) > 5 ||
-        Math.abs(this.currentY - clientY) > 5
-      )
-        return;
+      if (Math.abs(this.currentX - clientX) > 5 || Math.abs(this.currentY - clientY) > 5) return;
 
       if (typeof this.options.onStart === 'function') {
         isStop = this.options.onStart({ e });

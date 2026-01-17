@@ -26,7 +26,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
         } else if (type === 'cancel') {
           localData.set('install', t);
         }
-      }
+      },
     );
     return e.preventDefault();
   }

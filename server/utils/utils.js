@@ -71,8 +71,8 @@ export async function writelog(req, str, flag = appConfig.appName) {
         appConfig.logDir(
           `${formatDate({
             template: '{0}{1}{2}_{3}{4}{5}',
-          })}_${flag}.log`
-        )
+          })}_${flag}.log`,
+        ),
       );
     }
   } catch (err) {
@@ -92,7 +92,7 @@ export function uLog(req, str) {
   return writelog(
     req,
     `${req ? `${req[kHello].method}(${req[kHello].path}) - ` : ''}${str}`,
-    'user'
+    'user',
   );
 }
 
@@ -101,7 +101,7 @@ export function errLog(req, err) {
   return writelog(
     req,
     `${req ? `${req[kHello].method}(${req[kHello].path}) - ` : ''}${err}`,
-    'error'
+    'error',
   );
 }
 
@@ -148,10 +148,7 @@ export function isValidColor(value) {
 }
 
 // 格式时间日期
-export function formatDate({
-  template = '{0}-{1}-{2} {3}:{4}:{5}',
-  timestamp = Date.now(),
-} = {}) {
+export function formatDate({ template = '{0}-{1}-{2} {3}:{4}:{5}', timestamp = Date.now() } = {}) {
   const date = new Date(+timestamp);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -254,13 +251,7 @@ export function _setTimeout(callback, time) {
 }
 
 //接收文件
-export async function receiveFiles(
-  req,
-  uploadDir,
-  filename,
-  maxFileSizeMB = 5,
-  HASH
-) {
+export async function receiveFiles(req, uploadDir, filename, maxFileSizeMB = 5, HASH) {
   req.setTimeout(1000 * 60 * 10); // 10分钟超时
 
   const maxFileSize = maxFileSizeMB * 1024 * 1024;
@@ -284,9 +275,7 @@ export async function receiveFiles(
     throw new Error('No file uploaded');
   }
 
-  const uploadedFile = Array.isArray(files[fileKey])
-    ? files[fileKey][0]
-    : files[fileKey];
+  const uploadedFile = Array.isArray(files[fileKey]) ? files[fileKey][0] : files[fileKey];
   const newPath = _path.normalize(uploadDir, uploadedFile.newFilename);
   const originalPath = _path.normalize(uploadDir, filename);
 
@@ -322,7 +311,7 @@ export async function mergefile(count, from, to, HASH) {
           callback(null, chunk);
         },
       }),
-      await _f.createWriteStream(temFile, { flags: 'a' }) // 'a' 追加模式
+      await _f.createWriteStream(temFile, { flags: 'a' }), // 'a' 追加模式
     );
 
     await _f.del(filePath);
@@ -343,9 +332,7 @@ export function isurl(url) {
   try {
     const newUrl = new URL(url);
     // 检查协议是否为 http 或 https
-    return newUrl.protocol === 'http:' || newUrl.protocol === 'https:'
-      ? newUrl
-      : false;
+    return newUrl.protocol === 'http:' || newUrl.protocol === 'https:' ? newUrl : false;
   } catch {
     return false; // 捕获错误并返回 false
   }
@@ -358,10 +345,7 @@ export function isImgFile(name) {
 
 // 转义正则符号
 export function encodeStr(keyword) {
-  return keyword.replace(
-    /[\[\(\$\^\.\]\*\\\?\+\{\}\\|\)]/gi,
-    (key) => `\\${key}`
-  );
+  return keyword.replace(/[\[\(\$\^\.\]\*\\\?\+\{\}\\|\)]/gi, (key) => `\\${key}`);
 }
 
 // 搜索词所在索引
@@ -466,9 +450,7 @@ export function unique(arr, keys) {
         item = item[k];
       });
     }
-    return obj.hasOwnProperty(typeof item + item)
-      ? false
-      : (obj[typeof item + item] = true);
+    return obj.hasOwnProperty(typeof item + item) ? false : (obj[typeof item + item] = true);
   });
 }
 
@@ -603,9 +585,7 @@ export async function getSongInfo(path) {
     pic = getIn(metadata, ['common', 'picture', '0', 'data'], ''),
     picFormat = getIn(metadata, ['common', 'picture', '0', 'format'], ''),
     lrc = getIn(metadata, ['native', `ID3v2.3`], []);
-  lrc = lrc.find(
-    (item) => item !== null && typeof item === 'object' && item.id === 'USLT'
-  );
+  lrc = lrc.find((item) => item !== null && typeof item === 'object' && item.id === 'USLT');
   lrc = lrc && getIn(lrc, ['value', 'text'], '');
   return {
     duration,
@@ -703,7 +683,7 @@ export function syncUpdateData(req, flag, id = '') {
         id,
       },
     },
-    'other'
+    'other',
   );
 }
 
@@ -718,7 +698,7 @@ export function errorNotifyMsg(req, text) {
         text,
       },
     },
-    'all'
+    'all',
   );
 }
 
@@ -870,7 +850,7 @@ export function mixedSort(a, b) {
 export function isChinese(str) {
   if (
     /^[\u4E00-\u9FCC\u3400-\u4DB5\uFA0E\uFA0F\uFA11\uFA13\uFA14\uFA1F\uFA21\uFA23\uFA24\uFA27-\uFA29]|[\ud840-\ud868][\udc00-\udfff]|\ud869[\udc00-\uded6\udf00-\udfff]|[\ud86a-\ud86c][\udc00-\udfff]|\ud86d[\udc00-\udf34\udf40-\udfff]|\ud86e[\udc00-\udc1d]+/.test(
-      str
+      str,
     )
   ) {
     return true;
@@ -883,7 +863,7 @@ export function isChinese(str) {
 export function getOrigin(req) {
   try {
     const refererUrl = new URL(
-      req.headers.origin || req.headers.referer || `http://${req.headers.host}`
+      req.headers.origin || req.headers.referer || `http://${req.headers.host}`,
     );
     return `${refererUrl.protocol}//${refererUrl.host}`;
   } catch {

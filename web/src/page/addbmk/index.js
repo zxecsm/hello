@@ -31,10 +31,7 @@ window.addEventListener('load', async () => {
               placeholder: 'https://',
               value: HASH,
               verify(val) {
-                return (
-                  rMenu.validString(val, 1, _d.fieldLength.url) ||
-                  rMenu.validUrl(val)
-                );
+                return rMenu.validString(val, 1, _d.fieldLength.url) || rMenu.validUrl(val);
               },
             },
           },
@@ -57,11 +54,7 @@ window.addEventListener('load', async () => {
                         beforeText: '标题：',
                         value: title,
                         verify(val) {
-                          return rMenu.validString(
-                            val,
-                            1,
-                            _d.fieldLength.title
-                          );
+                          return rMenu.validString(val, 1, _d.fieldLength.title);
                         },
                       },
                       groupId: {
@@ -79,8 +72,7 @@ window.addEventListener('load', async () => {
                         value: u,
                         verify(val) {
                           return (
-                            rMenu.validString(val, 1, _d.fieldLength.url) ||
-                            rMenu.validUrl(val)
+                            rMenu.validString(val, 1, _d.fieldLength.url) || rMenu.validUrl(val)
                           );
                         },
                       },
@@ -122,7 +114,7 @@ window.addEventListener('load', async () => {
                   },
                   '添加书签',
                   1,
-                  1
+                  1,
                 );
               }
             })
@@ -132,7 +124,7 @@ window.addEventListener('load', async () => {
         },
         '添加书签',
         1,
-        1
+        1,
       );
     }
   } catch {}

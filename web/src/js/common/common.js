@@ -30,11 +30,7 @@ import bear from '../plugins/bear';
 import ScreenWakeLock from './screenWakeLock';
 import _path from '../utils/path';
 window._pageName =
-  myOpen()
-    .split(/[?#]/)[0]
-    .replace(_d.originURL, '')
-    .split('/')
-    .filter(Boolean)[0] || 'home';
+  myOpen().split(/[?#]/)[0].replace(_d.originURL, '').split('/').filter(Boolean)[0] || 'home';
 if (isIframe() && window._pageName !== '404') {
   if (window._pageName === 'home') {
     pageErr();
@@ -53,9 +49,7 @@ if (isLogin()) {
   ~(function getGentlemanLock() {
     const gentlemanLockPd = localData.get('gentlemanLockPd');
     if (gentlemanLockPd) {
-      const pd =
-        localData.session.get('gentlemanLockPd') ||
-        prompt('请输入君子锁密码：');
+      const pd = localData.session.get('gentlemanLockPd') || prompt('请输入君子锁密码：');
       if (pd === gentlemanLockPd) {
         localData.session.set('gentlemanLockPd', pd);
       } else {
@@ -217,15 +211,13 @@ const toolBox = (() => {
         const size = localData.get('htmlFontSize') + 1;
         localData.set('htmlFontSize', size);
       }
-    }, 200)
+    }, 200),
   );
   return toolBox;
 })();
 function updateToolBoxDarkBtn(dark) {
   if (toolBox) {
-    toolBox.querySelector('.dark').className = `dark iconfont ${getDarkIcon(
-      dark
-    )}`;
+    toolBox.querySelector('.dark').className = `dark iconfont ${getDarkIcon(dark)}`;
   }
 }
 updateToolBoxDarkBtn(localData.get('dark'));
@@ -257,19 +249,15 @@ localData.onChange(({ key }) => {
     changeHtmlFontSize(localData.get('htmlFontSize'), 1);
   }
 });
-window
-  .matchMedia('(prefers-color-scheme: dark)')
-  .addEventListener('change', (event) => {
-    if (localData.get('dark') != 's') return;
-    const dark = event.matches ? 'y' : 'n';
-    darkMode(dark);
-  });
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
+  if (localData.get('dark') != 's') return;
+  const dark = event.matches ? 'y' : 'n';
+  darkMode(dark);
+});
 function updateGrayscale() {
   if (!isIframe()) {
     // 黑白
-    document.documentElement.style.filter = `grayscale(${localData.get(
-      'pageGrayscale'
-    )})`;
+    document.documentElement.style.filter = `grayscale(${localData.get('pageGrayscale')})`;
   }
 }
 updateGrayscale();

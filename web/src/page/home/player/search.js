@@ -33,12 +33,7 @@ import {
   upMv,
   updateSongCover,
 } from './index.js';
-import {
-  changePlayState,
-  hdSongInfo,
-  musicPlay,
-  setPlayingSongInfo,
-} from './lrc.js';
+import { changePlayState, hdSongInfo, musicPlay, setPlayingSongInfo } from './lrc.js';
 import { playMv, showEditLrc } from './widget.js';
 import { updateNewPlayList } from './playlist.js';
 import { reqPlayerSearch } from '../../../api/player.js';
@@ -127,14 +122,12 @@ export function getSearchSongs(top, pageNo = searchMusicPageNo) {
                   total,
                 });
               },
-            }
+            },
           );
           $searchMusicWrap.find('ul').html(html);
           searchListLazyImg.bind(
-            hdMusicImgCache(
-              $searchMusicWrap.find('ul')[0].querySelectorAll('.logo')
-            ),
-            musicLoadImg
+            hdMusicImgCache($searchMusicWrap.find('ul')[0].querySelectorAll('.logo')),
+            musicLoadImg,
           );
           return;
         }
@@ -238,7 +231,7 @@ function searchListSongSetting(e, sobj) {
             close();
           },
           `${sobj.artist} - ${sobj.title}`,
-          loading
+          loading,
         );
       } else if (id === '7') {
         close();
@@ -250,7 +243,7 @@ function searchListSongSetting(e, sobj) {
               filename: fname,
             },
           ],
-          'music'
+          'music',
         );
       } else if (id === '6') {
         moveSongToList(e, 'all', [sobj.id]);
@@ -275,7 +268,7 @@ function searchListSongSetting(e, sobj) {
             },
           ],
           0,
-          { x: e.clientX, y: e.clientY }
+          { x: e.clientX, y: e.clientY },
         );
       } else if (id === '5') {
         showSongInfo(e, sobj, '', loading);
@@ -287,7 +280,7 @@ function searchListSongSetting(e, sobj) {
             close();
           },
           `${sobj.artist} - ${sobj.title}`,
-          loading
+          loading,
         );
       } else if (id === '11') {
         close();
@@ -297,7 +290,7 @@ function searchListSongSetting(e, sobj) {
         upMv(sobj);
       }
     },
-    `${sobj.artist} - ${sobj.title}`
+    `${sobj.artist} - ${sobj.title}`,
   );
 }
 // 播放搜索列表
@@ -345,7 +338,7 @@ $searchMusicWrap
       } else {
         songCollect([sobj.id]);
       }
-    }, 2000)
+    }, 2000),
   )
   .on('click', '.play_mv', function (e) {
     const $this = $(this).parent();

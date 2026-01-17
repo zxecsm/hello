@@ -15,7 +15,7 @@ const jwt = {
     try {
       const { payload } = await jwtDecrypt(
         token,
-        createSecretKey(Buffer.from(_d.tokenKey, 'base64url'))
+        createSecretKey(Buffer.from(_d.tokenKey, 'base64url')),
       );
       return payload;
     } catch {

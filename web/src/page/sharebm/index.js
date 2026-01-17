@@ -78,7 +78,7 @@ function renderList() {
     `,
     {
       list: bmList.slice((pageNo - 1) * bmPageSize, pageNo * bmPageSize),
-    }
+    },
   );
 
   pgnt.render({
@@ -167,18 +167,8 @@ enterPassCode(({ close, val, loading, submit }) => {
   reqBmkGetShare({ id: shareId, pass: passCode, captchaId })
     .then((res) => {
       if (res.code === 1) {
-        const {
-          username,
-          logo,
-          account,
-          data,
-          title,
-          exp_time,
-          email,
-          token,
-          needCaptcha,
-          id,
-        } = res.data;
+        const { username, logo, account, data, title, exp_time, email, token, needCaptcha, id } =
+          res.data;
         if (needCaptcha) {
           isCaptcha = true;
           captcha(id, {
@@ -203,14 +193,10 @@ enterPassCode(({ close, val, loading, submit }) => {
                 $head.find('.logo').css('background-image', `url(${cache})`);
               })
               .catch(() => {
-                $head
-                  .find('.logo')
-                  .css('background-image', `url(${getTextImg(username)})`);
+                $head.find('.logo').css('background-image', `url(${getTextImg(username)})`);
               });
           } else {
-            $head
-              .find('.logo')
-              .css('background-image', `url(${getTextImg(username)})`);
+            $head.find('.logo').css('background-image', `url(${getTextImg(username)})`);
           }
 
           $head.find('.from').text(username);
@@ -221,7 +207,7 @@ enterPassCode(({ close, val, loading, submit }) => {
               : formatDate({
                   template: '{0}-{1}-{2} {3}:{4}',
                   timestamp: exp_time,
-                })
+                }),
           );
 
           bmList = data.map((item, idx) => ({ ...item, id: idx + 1 + '' }));
@@ -267,7 +253,7 @@ function saveBm(e) {
           loading.end();
         });
     },
-    '保存书签到分组'
+    '保存书签到分组',
   );
 }
 
@@ -292,9 +278,7 @@ $box
   })
   .on('mouseenter', '.bm_item .logo', function () {
     const { title, link, des } = getBmInfo($(this).parent().attr('data-id'));
-    const str = `名称：${title || '--'}\n链接：${link || '--'}\n描述：${
-      des || '--'
-    }`;
+    const str = `名称：${title || '--'}\n链接：${link || '--'}\n描述：${des || '--'}`;
     toolTip.setTip(str).show();
   })
   .on('mouseleave', '.bm_item .logo', function () {

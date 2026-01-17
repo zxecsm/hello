@@ -117,8 +117,7 @@
       b.onmouseleave = null;
 
       // hover 高亮色（根据主题自动调整）
-      const hoverColor = window.matchMedia('(prefers-color-scheme: dark)')
-        .matches
+      const hoverColor = window.matchMedia('(prefers-color-scheme: dark)').matches
         ? 'rgba(255,255,255,0.20)' // 深色主题：亮一点
         : 'rgba(0,0,0,0.10)'; // 浅色主题：暗一点
 
@@ -261,9 +260,7 @@
     });
 
     // 系统主题变化
-    window
-      .matchMedia('(prefers-color-scheme: dark)')
-      .addEventListener('change', applyTheme);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
 
     // 全局事件
     document.addEventListener('selectionchange', handle);
@@ -285,10 +282,7 @@
         const active = document.activeElement;
 
         // ⭐ 只要选中的是 input / textarea → 根据输入框定位
-        if (
-          active &&
-          (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')
-        ) {
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
           const rect = active.getBoundingClientRect();
           showToolboxAtRect(rect);
           return;
@@ -326,8 +320,7 @@
     function showToolboxCenter() {
       toolbox.style.display = 'flex';
       toolbox.style.left = (window.innerWidth - toolbox.offsetWidth) / 2 + 'px';
-      toolbox.style.top =
-        (window.innerHeight - toolbox.offsetHeight) / 2 + 'px';
+      toolbox.style.top = (window.innerHeight - toolbox.offsetHeight) / 2 + 'px';
     }
 
     window.SelectionToolbox = { addButton };

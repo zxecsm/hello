@@ -23,10 +23,7 @@ const appConfig = {
   tipsid: 'tips',
 
   appFilesDir(...arg) {
-    return _path.normalize(
-      this.configDir(this.adminAccount, 'appFiles'),
-      ...arg
-    );
+    return _path.normalize(this.configDir(this.adminAccount, 'appFiles'), ...arg);
   },
   bgDir(...arg) {
     return _path.normalize(this.appFilesDir('bg'), ...arg);
@@ -75,15 +72,11 @@ const appConfig = {
   },
 
   userRootDir(account, ...arg) {
-    const path =
-      account === this.adminAccount ? appDataDir : this.userFilesDir(account);
+    const path = account === this.adminAccount ? appDataDir : this.userFilesDir(account);
     return _path.normalize(path, ...arg);
   },
   trashDir(account, ...arg) {
-    return _path.normalize(
-      this.userRootDir(account, this.trashDirName),
-      ...arg
-    );
+    return _path.normalize(this.userRootDir(account, this.trashDirName), ...arg);
   },
   configDir(account, ...arg) {
     return _path.normalize(this.userRootDir(account, '.h_config'), ...arg);

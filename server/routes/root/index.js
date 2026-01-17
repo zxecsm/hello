@@ -22,20 +22,11 @@ import {
   writelog,
 } from '../../utils/utils.js';
 
-import {
-  becomeFriends,
-  cleanUpload,
-  heperMsgAndForward,
-} from '../chat/chat.js';
+import { becomeFriends, cleanUpload, heperMsgAndForward } from '../chat/chat.js';
 
 import { fieldLength } from '../config.js';
 
-import {
-  _delDir,
-  cleanEmptyDirectories,
-  getAllFile,
-  readMenu,
-} from '../file/file.js';
+import { _delDir, cleanEmptyDirectories, getAllFile, readMenu } from '../file/file.js';
 
 import { deleteUser } from '../user/user.js';
 import _path from '../../utils/path.js';
@@ -71,7 +62,7 @@ route.post(
       host: V.string().trim().default('').allowEmpty().max(fieldLength.email),
       secure: V.number().toInt().enum([0, 1]),
       port: V.number().toInt().default(465).min(0),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -98,7 +89,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 获取用户列表
@@ -108,12 +99,8 @@ route.get(
     'query',
     V.object({
       pageNo: V.number().toInt().min(1).default(1),
-      pageSize: V.number()
-        .toInt()
-        .min(1)
-        .max(fieldLength.userPageSize)
-        .default(10),
-    })
+      pageSize: V.number().toInt().min(1).max(fieldLength.userPageSize).default(10),
+    }),
   ),
   async (req, res) => {
     try {
@@ -160,7 +147,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 备用图标api
@@ -169,13 +156,8 @@ route.post(
   validate(
     'body',
     V.object({
-      link: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.url)
-        .httpUrl(),
-    })
+      link: V.string().trim().default('').allowEmpty().max(fieldLength.url).httpUrl(),
+    }),
   ),
   async (req, res) => {
     try {
@@ -187,7 +169,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 账号状态
@@ -203,7 +185,7 @@ route.post(
         .alphanumeric()
         .notEnum([appConfig.notifyAccount, appConfig.adminAccount]),
       state: V.number().toInt().default(1).enum([1, 0]),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -219,7 +201,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 刪除账号
@@ -234,7 +216,7 @@ route.post(
         .max(fieldLength.id)
         .alphanumeric()
         .notEnum([appConfig.notifyAccount, appConfig.adminAccount]),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -246,7 +228,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 清理歌曲文件
@@ -261,9 +243,7 @@ route.get('/clean-music-file', async (req, res) => {
       await concurrencyTasks(allMusicFile, 5, async (item) => {
         const { path, name } = item;
 
-        const url = `${path.slice(musicDir.length + 1)}/${
-          _path.extname(name)[0]
-        }`;
+        const url = `${path.slice(musicDir.length + 1)}/${_path.extname(name)[0]}`;
         if (!songs.some((item) => _path.extname(item.url)[0] === url)) {
           await _delDir(_path.normalize(path, name));
         }
@@ -333,17 +313,14 @@ route.get(
   validate(
     'query',
     V.object({
-      type: V.string()
-        .trim()
-        .enum(['pic', 'music', 'bg', 'upload', 'all', 'file']),
-    })
+      type: V.string().trim().enum(['pic', 'music', 'bg', 'upload', 'all', 'file']),
+    }),
   ),
   async (req, res) => {
     try {
       const { type } = req[kValidate];
 
-      const delP =
-        type === 'all' ? appConfig.thumbDir() : appConfig.thumbDir(type);
+      const delP = type === 'all' ? appConfig.thumbDir() : appConfig.thumbDir(type);
 
       await _delDir(delP);
 
@@ -351,7 +328,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 设置注册状态
@@ -359,11 +336,7 @@ route.post('/register-state', async (req, res) => {
   try {
     _d.registerState = !_d.registerState;
 
-    _success(
-      res,
-      `${_d.registerState ? '开启' : '关闭'}注册成功`,
-      _d.registerState
-    )(req);
+    _success(res, `${_d.registerState ? '开启' : '关闭'}注册成功`, _d.registerState)(req);
   } catch (error) {
     _err(res)(req, error);
   }
@@ -387,7 +360,7 @@ route.get(
     'query',
     V.object({
       name: V.string().notEmpty().min(1).max(fieldLength.filename),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -403,15 +376,13 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 日志文件列表
 route.get('/log-list', async (req, res) => {
   try {
-    const list = (await readMenu(appConfig.logDir())).filter(
-      (f) => f.type === 'file'
-    );
+    const list = (await readMenu(appConfig.logDir())).filter((f) => f.type === 'file');
 
     list.sort((a, b) => b.time - a.time);
     _success(res, 'ok', list);
@@ -427,7 +398,7 @@ route.post(
     'body',
     V.object({
       name: V.string().notEmpty().min(1).max(fieldLength.filename),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -443,7 +414,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 回收站状态
@@ -451,11 +422,7 @@ route.post('/trash-state', async (req, res) => {
   try {
     _d.trashState = !_d.trashState;
 
-    _success(
-      res,
-      `${_d.trashState ? '开启' : '关闭'}文件回收站成功`,
-      _d.trashState
-    )(req);
+    _success(res, `${_d.trashState ? '开启' : '关闭'}文件回收站成功`, _d.trashState)(req);
   } catch (error) {
     _err(res)(req, error);
   }
@@ -471,7 +438,7 @@ route.post(
       siteInfoApi: V.number().toInt().enum([0, 1]),
       faviconApi: V.number().toInt().enum([0, 1]),
       echoApi: V.number().toInt().enum([0, 1]),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -488,7 +455,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 文件缓存时间
@@ -500,7 +467,7 @@ route.post(
       uploadSaveDay: V.number().toInt().min(0).max(fieldLength.expTime),
       faviconCache: V.number().toInt().min(0).max(fieldLength.expTime),
       siteInfoCache: V.number().toInt().min(0).max(fieldLength.expTime),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -532,7 +499,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 清理数据库
@@ -556,16 +523,16 @@ route.post(
         .allowEmpty()
         .custom(
           (v) => _f.getTextSize(v) <= fieldLength.customCodeSize,
-          `文本内容不能超过: ${fieldLength.customCodeSize} 字节`
+          `文本内容不能超过: ${fieldLength.customCodeSize} 字节`,
         ),
       head: V.string()
         .default('')
         .allowEmpty()
         .custom(
           (v) => _f.getTextSize(v) <= fieldLength.customCodeSize,
-          `文本内容不能超过: ${fieldLength.customCodeSize} 字节`
+          `文本内容不能超过: ${fieldLength.customCodeSize} 字节`,
         ),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -578,7 +545,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // tipsFlag
@@ -588,7 +555,7 @@ route.post(
     'body',
     V.object({
       flag: V.string().trim().enum(['close', 'update']),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -610,7 +577,7 @@ route.post(
               flag: 'tips',
             },
           },
-          'all'
+          'all',
         );
       });
 
@@ -618,7 +585,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 测试邮箱
@@ -628,7 +595,7 @@ route.post(
     'body',
     V.object({
       email: V.string().trim().min(1).max(fieldLength.email).email(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -644,16 +611,13 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 测试两步验证
 route.post(
   '/test-tfa',
-  validate(
-    'body',
-    V.object({ token: V.string().trim().min(6).max(6).alphanumeric() })
-  ),
+  validate('body', V.object({ token: V.string().trim().min(6).max(6).alphanumeric() })),
   async (req, res) => {
     try {
       const { token } = req[kValidate];
@@ -670,7 +634,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 创建帐号
@@ -681,16 +645,13 @@ route.post(
     V.object({
       username: V.string().trim().min(1).max(fieldLength.username),
       password: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
       const { username, password } = req[kValidate];
 
-      const userInfo = await db('user')
-        .select('account')
-        .where({ username })
-        .findOne();
+      const userInfo = await db('user').select('account').where({ username }).findOne();
       if (userInfo) {
         _err(res, '用户名已注册')(req, username, 1);
         return;
@@ -711,15 +672,11 @@ route.post(
       await becomeFriends(account, appConfig.chatRoomAccount);
       await becomeFriends(account, appConfig.notifyAccount);
 
-      _success(res, '创建账号成功', { account, username })(
-        req,
-        `${username}-${account}`,
-        1
-      );
+      _success(res, '创建账号成功', { account, username })(req, `${username}-${account}`, 1);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 系统状态
@@ -737,9 +694,7 @@ timedTask.add(async (flag) => {
     await cleanUpload();
 
     // 定期清理LOG文件
-    const list = (await readMenu(appConfig.logDir())).filter(
-      (f) => f.type === 'file'
-    );
+    const list = (await readMenu(appConfig.logDir())).filter((f) => f.type === 'file');
 
     if (list.length > 200) {
       let count = 0;

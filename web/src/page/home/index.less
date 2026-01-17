@@ -116,7 +116,9 @@ body {
     background-attachment: fixed;
     background-position: center;
     opacity: 0.9;
-    transition: background-image 0.5s ease-in-out, transform 0.5s ease-in-out,
+    transition:
+      background-image 0.5s ease-in-out,
+      transform 0.5s ease-in-out,
       opacity 0.5s ease-in-out;
     z-index: 1;
 
@@ -132,7 +134,8 @@ body {
     top: 0;
     left: 0;
     z-index: 1;
-    transition: backdrop-filter 0.5s ease-in-out,
+    transition:
+      backdrop-filter 0.5s ease-in-out,
       -webkit-backdrop-filter 0.5s ease-in-out;
   }
   /* 壁纸 */
@@ -556,7 +559,8 @@ body {
       transform: translateX(100%);
       top: 6rem;
       border-radius: 0.6rem;
-      transition: transform var(--speed-duration) var(--speed-timing),
+      transition:
+        transform var(--speed-duration) var(--speed-timing),
         opacity var(--speed-duration) var(--speed-timing);
       width: 90%;
       max-width: 30rem;
@@ -815,6 +819,22 @@ body {
           width: 65%;
           font-size: 1.6em;
         }
+      }
+    }
+    .net {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding-top: 1rem;
+      .rx,
+      .tx {
+        padding: 0 0.5rem;
+      }
+      .rx {
+        color: var(--message-success-color);
+      }
+      .tx {
+        color: var(--message-error-color);
       }
     }
   }
@@ -2515,7 +2535,9 @@ body {
     .one,
     .tow {
       padding: 1rem;
-      transition: color 0.3s ease-in-out, letter-spacing 0.3s ease-in-out;
+      transition:
+        color 0.3s ease-in-out,
+        letter-spacing 0.3s ease-in-out;
       line-height: 1.5;
 
       &.open {
@@ -2826,7 +2848,9 @@ body {
                 margin: 0.5rem auto;
                 width: 80%;
                 padding-top: 80%;
-                transition: top 0.1s, box-shadow 0.1s;
+                transition:
+                  top 0.1s,
+                  box-shadow 0.1s;
                 border-radius: 0.5rem;
                 box-shadow: 0.3rem 0.3rem 0.5rem var(--color5);
 
@@ -3441,7 +3465,8 @@ body {
               z-index: -1;
               backdrop-filter: blur(10px);
               -webkit-backdrop-filter: blur(10px);
-              transition: backdrop-filter 0.5s ease-in-out,
+              transition:
+                backdrop-filter 0.5s ease-in-out,
                 -webkit-backdrop-filter 0.5s ease-in-out;
             }
             &.open {

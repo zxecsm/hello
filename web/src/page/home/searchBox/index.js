@@ -57,10 +57,7 @@ import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { showBmk, showHistory, upLogo } from '../rightSetting/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
-import {
-  BoxSelector,
-  MouseElementTracker,
-} from '../../../js/utils/boxSelector.js';
+import { BoxSelector, MouseElementTracker } from '../../../js/utils/boxSelector.js';
 import localData from '../../../js/common/localData.js';
 import { setUserInfo } from '../index.js';
 const $searchBoxMask = $('.search_box_mask'),
@@ -183,7 +180,7 @@ function getHomeBmData(id) {
 function getHomeCheckBmItem() {
   const $homeBmItem = $homeBmWrap.find('.home_bm_item'),
     $checkArr = $homeBmItem.filter(
-      (_, item) => $(item).find('.check_home_bm').attr('check') === 'y'
+      (_, item) => $(item).find('.check_home_bm').attr('check') === 'y',
     );
   const arr = [];
   $checkArr.each((i, v) => {
@@ -245,7 +242,7 @@ function renderHomeBmList() {
     {
       list,
       imgTianjia,
-    }
+    },
   );
   $homeBmWrap.find('ul').html(html);
   lazyLoadHomeBmLogo();
@@ -253,9 +250,7 @@ function renderHomeBmList() {
 // 加载logo
 const homeLoadImg = new LazyLoad();
 function lazyLoadHomeBmLogo() {
-  const logos = [
-    ...$homeBmWrap.find('ul')[0].querySelectorAll('.home_bm_item'),
-  ].filter((item) => {
+  const logos = [...$homeBmWrap.find('ul')[0].querySelectorAll('.home_bm_item')].filter((item) => {
     const $item = $(item);
     const flag = $item.find('.home_bm_logo').attr('x');
     if (flag === 'add') return;
@@ -320,12 +315,7 @@ $searchBoxMask
     const $this = $(this);
     const id = $this.attr('data-id');
     if (!id) return;
-    bookMarkSetting(
-      e,
-      getHomeBmData(id),
-      'home',
-      this.querySelector('.check_home_bm')
-    );
+    bookMarkSetting(e, getHomeBmData(id), 'home', this.querySelector('.check_home_bm'));
   })
   .on('mouseenter', '.home_bm_item p', function () {
     const id = $(this).parent().attr('data-id');
@@ -338,9 +328,7 @@ $searchBoxMask
   })
   .on('click', '.type_logo', function (e) {
     const $this = $(this).parent();
-    const { type, content, link, des, title, group_title } = getSearchItem(
-      $this.attr('data-id')
-    );
+    const { type, content, link, des, title, group_title } = getSearchItem($this.attr('data-id'));
     let str = '';
     if (type === 'ss') {
       copyText(content);
@@ -357,7 +345,7 @@ $searchBoxMask
   })
   .on('mouseenter', '.search_item .type_logo', function () {
     const { type, content, link, des, title, group_title } = getSearchItem(
-      $(this).parent().attr('data-id')
+      $(this).parent().attr('data-id'),
     );
     let str = '';
     if (type === 'ss') {
@@ -379,27 +367,17 @@ $searchBoxMask
     const $this = $(this);
     const id = $this.parent().attr('data-id');
     if (!id) return;
-    bookMarkSetting(
-      e,
-      getHomeBmData(id),
-      'home',
-      this.parentNode.querySelector('.check_home_bm')
-    );
+    bookMarkSetting(e, getHomeBmData(id), 'home', this.parentNode.querySelector('.check_home_bm'));
   })
   .on('click', '.home_foot_menu .flex_wrap div', function () {
     let che = $(this).attr('check');
     che === 'y' ? (che = 'n') : (che = 'y');
     $homeFootMenu.find('.flex_wrap div').attr({
-      class:
-        che === 'y'
-          ? 'iconfont icon-xuanzeyixuanze'
-          : 'iconfont icon-xuanzeweixuanze',
+      class: che === 'y' ? 'iconfont icon-xuanzeyixuanze' : 'iconfont icon-xuanzeweixuanze',
       check: che,
     });
     const $checks = $homeBmWrap.find('.home_bm_item').find('.check_home_bm');
-    $checks
-      .attr('check', che)
-      .css('background-color', che === 'y' ? _d.checkColor : 'transparent');
+    $checks.attr('check', che).css('background-color', che === 'y' ? _d.checkColor : 'transparent');
     _msg.botMsg(`选中：${che === 'y' ? $checks.length : 0}项`);
   })
   .on('click', '.check_home_bm', function (e) {
@@ -454,10 +432,7 @@ function updateSelectingInfo() {
   const $bms = $homeBmWrap.find('.home_bm_item'),
     $checkArr = $bms.filter((_, item) => {
       const $item = $(item);
-      return (
-        $item.attr('data-id') &&
-        $item.find('.check_home_bm').attr('check') === 'y'
-      );
+      return $item.attr('data-id') && $item.find('.check_home_bm').attr('check') === 'y';
     });
   _msg.botMsg(`选中：${$checkArr.length}项`);
   if ($checkArr.length === $bms.length - 1) {
@@ -479,12 +454,7 @@ longPress($searchBoxMask[0], '.home_bm_item', function (e) {
     ev = e.changedTouches[0];
   const id = $this.attr('data-id');
   if (!id) return;
-  bookMarkSetting(
-    ev,
-    getHomeBmData(id),
-    'home',
-    this.querySelector('.check_home_bm')
-  );
+  bookMarkSetting(ev, getHomeBmData(id), 'home', this.querySelector('.check_home_bm'));
 });
 // 显示搜索框
 export function showSearchBox() {
@@ -542,18 +512,12 @@ const searchInput = wrapInput($searchInpWrap.find('.inp_box input')[0], {
 // 获取搜索引擎
 function getSearchEngine(id) {
   if (id) return _d.searchEngineData.find((s) => s.id === id);
-  return (
-    _d.searchEngineData.find((s) => s.id === curSearchID) ||
-    _d.searchEngineData[0]
-  );
+  return _d.searchEngineData.find((s) => s.id === curSearchID) || _d.searchEngineData[0];
 }
 // 获取翻译
 function getTranslator(id) {
   if (id) return _d.translatorData.find((t) => t.id === id);
-  return (
-    _d.translatorData.find((t) => t.id === curtranslatorID) ||
-    _d.translatorData[0]
-  );
+  return _d.translatorData.find((t) => t.id === curtranslatorID) || _d.translatorData[0];
 }
 
 // 获取提示词服务
@@ -566,20 +530,14 @@ export async function updateSearchConfig(loading) {
     const res = await reqSearchConfig();
     if (res.code === 1) {
       if (Array.isArray(res.data.searchEngineData)) {
-        _d.searchEngineData = [
-          _d.defaultSearchEngineData,
-          ...res.data.searchEngineData,
-        ];
+        _d.searchEngineData = [_d.defaultSearchEngineData, ...res.data.searchEngineData];
       }
       if (res.data.searchengineid) {
         curSearchID = res.data.searchengineid;
         localData.set('searchengine', res.data.searchengineid);
       }
       if (Array.isArray(res.data.translatorData)) {
-        _d.translatorData = [
-          _d.defaultTranslatorData,
-          ...res.data.translatorData,
-        ];
+        _d.translatorData = [_d.defaultTranslatorData, ...res.data.translatorData];
       }
       if (res.data.translatorid) {
         curtranslatorID = res.data.translatorid;
@@ -611,9 +569,7 @@ async function switchSearchEngine() {
     $searchBoxBtn.attr('src', logo);
     $searchInpWrap.find('img').attr('src', logo);
   }
-  $searchInpWrap
-    .find('.content')
-    .css('box-shadow', `0 0 0.2rem ${color || 'var(--icon-color)'}`);
+  $searchInpWrap.find('.content').css('box-shadow', `0 0 0.2rem ${color || 'var(--icon-color)'}`);
 }
 // 搜索提示词
 function toSearch(val) {
@@ -653,10 +609,7 @@ function toTranslator() {
   const word = searchInput.getValue().trim();
   if (word === '') return;
   saveSearchText(word);
-  const u = getTranslator().link.replace(
-    /\{\{(.*?)\}\}/g,
-    encodeURIComponent(word)
-  );
+  const u = getTranslator().link.replace(/\{\{(.*?)\}\}/g, encodeURIComponent(word));
   if (isSearchOpenPop()) {
     openInIframe(u, word);
     return;
@@ -666,8 +619,7 @@ function toTranslator() {
 // 选中搜索结果
 function selectSearchItem(e) {
   const key = e.key,
-    listlength =
-      $searchInpWrap.find('.search_list_box ul').children('li').length - 1;
+    listlength = $searchInpWrap.find('.search_list_box ul').children('li').length - 1;
   if (key !== 'ArrowDown' && key !== 'ArrowUp') {
     searchResultIdx = -1;
     return;
@@ -689,9 +641,7 @@ function selectSearchItem(e) {
   if ($activeItem.length > 0) {
     const value = $activeItem.text().trim();
     searchInput.setValue(value);
-    $searchInpWrap
-      .find('.search_list_box')
-      .scrollTop(_position($activeItem[0]).top);
+    $searchInpWrap.find('.search_list_box').scrollTop(_position($activeItem[0]).top);
   }
 }
 // 点击搜索项
@@ -782,7 +732,7 @@ function renderSearchList() {
         list,
         hdTitleHighlight,
         splitWord,
-      }
+      },
     );
   }
   $searchInpWrap.find('.search_list_box ul').html(searchstr);
@@ -807,10 +757,7 @@ function getSearchList(val) {
       const wordLink = getSearchWordLink();
       if (wordLink.link && val) {
         const script = document.createElement('script');
-        script.src = wordLink.link.replace(
-          /\{\{(.*?)\}\}/g,
-          encodeURIComponent(val)
-        );
+        script.src = wordLink.link.replace(/\{\{(.*?)\}\}/g, encodeURIComponent(val));
         document.body.appendChild(script);
         document.body.removeChild(script);
       }
@@ -894,7 +841,7 @@ function switchSearchCallWord(e) {
         _msg.success();
       }
     },
-    '选择提示词服务'
+    '选择提示词服务',
   );
 }
 // 搜索设置
@@ -930,9 +877,7 @@ function searchSetting(e) {
       id: '2',
       text: '弹窗打开搜索结果',
       beforeIcon: 'iconfont icon-minimize',
-      afterIcon: openInPop
-        ? 'iconfont icon-kaiguan-kai1'
-        : 'iconfont icon-kaiguan-guan',
+      afterIcon: openInPop ? 'iconfont icon-kaiguan-kai1' : 'iconfont icon-kaiguan-guan',
       param: { openInPop },
     },
   ];
@@ -969,7 +914,7 @@ function searchSetting(e) {
         selectTranslator(e);
       }
     },
-    '设置'
+    '设置',
   );
 }
 $searchBoxMask.on('click', '.setting', searchSetting);
@@ -994,7 +939,7 @@ function getSearchEngineList() {
         return getFaviconPath(link);
       },
       getSearchEngine,
-    }
+    },
   );
 }
 function editEngine(e, obj, resetMenu, preClose) {
@@ -1052,7 +997,7 @@ function editEngine(e, obj, resetMenu, preClose) {
           loading.end();
         });
     },
-    '编辑搜索引擎'
+    '编辑搜索引擎',
   );
 }
 function handleEngineLogo(e, obj, resetMenu, preClose) {
@@ -1084,7 +1029,7 @@ function handleEngineLogo(e, obj, resetMenu, preClose) {
             preClose();
           },
           engineid,
-          loading
+          loading,
         );
       } else if (id === '2') {
         rMenu.pop(
@@ -1110,11 +1055,11 @@ function handleEngineLogo(e, obj, resetMenu, preClose) {
                   loading.end();
                 });
             }
-          }
+          },
         );
       }
     },
-    '图标设置'
+    '图标设置',
   );
 }
 function deleteEngine(e, obj, loading, resetMenu, close) {
@@ -1185,7 +1130,7 @@ function addEngine(e, resetMenu) {
           loading.end();
         });
     },
-    '添加搜索引擎'
+    '添加搜索引擎',
   );
 }
 function selectSearch(e) {
@@ -1196,9 +1141,7 @@ function selectSearch(e) {
       if (!box) return;
       const add = _getTarget(box, e, '.add');
       const img = _getTarget(box, e, '.item img');
-      const searchName =
-        _getTarget(box, e, '.item .search_name') ||
-        _getTarget(box, e, '.item i');
+      const searchName = _getTarget(box, e, '.item .search_name') || _getTarget(box, e, '.item i');
       if (img) {
         const engineObj = getSearchEngine($(img).parent().data('id'));
         const { title, id: engineid } = engineObj;
@@ -1232,7 +1175,7 @@ function selectSearch(e) {
               deleteEngine(e, engineObj, loading, resetMenu, close);
             }
           },
-          title
+          title,
         );
       } else if (add) {
         addEngine(e, resetMenu);
@@ -1253,7 +1196,7 @@ function selectSearch(e) {
           });
       }
     },
-    '选择搜索引擎'
+    '选择搜索引擎',
   );
 }
 function getTranslatorList() {
@@ -1275,7 +1218,7 @@ function getTranslatorList() {
         return getFaviconPath(link);
       },
       getTranslator,
-    }
+    },
   );
 }
 function editTranslator(e, obj, resetMenu, preClose) {
@@ -1324,7 +1267,7 @@ function editTranslator(e, obj, resetMenu, preClose) {
           loading.end();
         });
     },
-    '编辑翻译接口'
+    '编辑翻译接口',
   );
 }
 function handleTranslatorLogo(e, obj, resetMenu, preClose) {
@@ -1356,7 +1299,7 @@ function handleTranslatorLogo(e, obj, resetMenu, preClose) {
             preClose();
           },
           tid,
-          loading
+          loading,
         );
       } else if (id === '2') {
         rMenu.pop(
@@ -1382,11 +1325,11 @@ function handleTranslatorLogo(e, obj, resetMenu, preClose) {
                   loading.end();
                 });
             }
-          }
+          },
         );
       }
     },
-    '图标设置'
+    '图标设置',
   );
 }
 function deleteTranslator(e, obj, loading, resetMenu, close) {
@@ -1449,7 +1392,7 @@ function addTranslator(e, resetMenu) {
           loading.end();
         });
     },
-    '添加翻译接口'
+    '添加翻译接口',
   );
 }
 function selectTranslator(e) {
@@ -1494,7 +1437,7 @@ function selectTranslator(e) {
               deleteTranslator(e, translatorObj, loading, resetMenu, close);
             }
           },
-          title
+          title,
         );
       } else if (add) {
         addTranslator(e, resetMenu);
@@ -1515,7 +1458,7 @@ function selectTranslator(e) {
           });
       }
     },
-    '选择翻译接口'
+    '选择翻译接口',
   );
 }
 document.addEventListener('click', function (e) {

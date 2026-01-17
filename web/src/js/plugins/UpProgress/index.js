@@ -10,7 +10,7 @@ const progressBox = _tpl.getDom(
   <div class="list"></div>
 </div>
 `,
-  { _d }
+  { _d },
 )[0];
 document.body.appendChild(progressBox);
 

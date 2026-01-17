@@ -27,12 +27,7 @@ import pagination from '../../js/plugins/pagination';
 import { UpProgress } from '../../js/plugins/UpProgress';
 import _msg from '../../js/plugins/message';
 import loadfailImg from '../../images/img/loadfail.png';
-import {
-  reqPicDelete,
-  reqPicList,
-  reqPicRepeat,
-  reqPicUp,
-} from '../../api/pic';
+import { reqPicDelete, reqPicList, reqPicRepeat, reqPicUp } from '../../api/pic';
 import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';
 import md5 from '../../js/utils/md5';
@@ -107,7 +102,7 @@ async function hdUpFile(files) {
         (percent) => {
           pro.update(percent);
         },
-        signal
+        signal,
       );
       if (result.code === 1) {
         const { id } = result.data;
@@ -283,30 +278,28 @@ function renderImgList(y) {
                 small: getScreenSize().w <= _d.screen,
               });
             },
-          }
+          },
         );
         stopSelect();
         $imgList.html(html).addClass('open');
         if (y) {
           $imgList.scrollTop(0);
         }
-        const imgs = [...$imgList[0].querySelectorAll('.img')].filter(
-          (item) => {
-            const $img = $(item);
-            const picId = $img.parent().attr('data-id');
-            if (!picId) return;
-            const url = getFilePath(`/pic/${picId}`, { w: 512 });
-            const cache = cacheFile.hasUrl(url, 'image');
-            if (cache) {
-              $img
-                .css({
-                  'background-image': `url(${cache})`,
-                })
-                .addClass('load');
-            }
-            return !cache;
+        const imgs = [...$imgList[0].querySelectorAll('.img')].filter((item) => {
+          const $img = $(item);
+          const picId = $img.parent().attr('data-id');
+          if (!picId) return;
+          const url = getFilePath(`/pic/${picId}`, { w: 512 });
+          const cache = cacheFile.hasUrl(url, 'image');
+          if (cache) {
+            $img
+              .css({
+                'background-image': `url(${cache})`,
+              })
+              .addClass('load');
           }
-        );
+          return !cache;
+        });
         bglazyImg.bind(imgs, async (item) => {
           const $img = $(item);
           const picId = $img.parent().attr('data-id');
@@ -378,7 +371,7 @@ function copyLink(e, picId) {
         copyText(param.text);
       }
     },
-    '选择复制链接类型'
+    '选择复制链接类型',
   );
 }
 // 删除
@@ -406,7 +399,7 @@ function deletePic(e, ids, cb, isCheck, loading = { start() {}, end() {} }) {
             loading.end();
           });
       }
-    }
+    },
   );
 }
 // 菜单
@@ -435,7 +428,7 @@ function picMenu(e, picId, el) {
         checkedImg(el);
       }
     },
-    '操作图片'
+    '操作图片',
   );
 }
 $imgList
@@ -458,19 +451,11 @@ $imgList
   .on('contextmenu', '.img', function (e) {
     e.preventDefault();
     if (isMobile() || isSelecting()) return;
-    picMenu(
-      e,
-      $(this).parent().data('id'),
-      this.parentNode.querySelector('.check_level')
-    );
+    picMenu(e, $(this).parent().data('id'), this.parentNode.querySelector('.check_level'));
   })
   .on('click', '.menu_btn', function (e) {
     e.preventDefault();
-    picMenu(
-      e,
-      $(this).parent().data('id'),
-      this.parentNode.querySelector('.check_level')
-    );
+    picMenu(e, $(this).parent().data('id'), this.parentNode.querySelector('.check_level'));
   })
   .on('click', '.check_level', function () {
     checkedImg(this);
@@ -488,9 +473,7 @@ function checkedImg(el) {
 }
 function updateSelectInfo() {
   const $imgItem = $imgList.find('.img_item'),
-    $checkArr = $imgItem.filter(
-      (_, item) => $(item).find('.check_level').attr('check') === 'y'
-    );
+    $checkArr = $imgItem.filter((_, item) => $(item).find('.check_level').attr('check') === 'y');
   _msg.botMsg(`选中：${$checkArr.length}项`);
   if ($checkArr.length === $imgItem.length) {
     $footer.find('span').attr({
@@ -507,11 +490,7 @@ function updateSelectInfo() {
 longPress($imgList[0], '.img', function (e) {
   if (isSelecting()) return;
   const ev = e.changedTouches[0];
-  picMenu(
-    ev,
-    $(this).parent().data('id'),
-    this.parentNode.querySelector('.check_level')
-  );
+  picMenu(ev, $(this).parent().data('id'), this.parentNode.querySelector('.check_level'));
 });
 // url模板
 const typeTemplateArr = [
@@ -549,7 +528,7 @@ const showLink = (function () {
       `,
       {
         typeTemplateArr,
-      }
+      },
     );
     const htmlC = _tpl(
       `
@@ -566,7 +545,7 @@ const showLink = (function () {
             return obj[key];
           });
         },
-      }
+      },
     );
     $head.html(htmlH);
     $content.html(htmlC);
@@ -599,9 +578,7 @@ const showLink = (function () {
 $footer
   .on('click', '.f_delete', function (e) {
     const $imgItem = $imgList.find('.img_item'),
-      $checkArr = $imgItem.filter(
-        (_, item) => $(item).find('.check_level').attr('check') === 'y'
-      );
+      $checkArr = $imgItem.filter((_, item) => $(item).find('.check_level').attr('check') === 'y');
     if ($checkArr.length === 0) return;
     const arr = [];
     $checkArr.each((i, v) => {
@@ -614,10 +591,7 @@ $footer
     let che = $(this).attr('check');
     che === 'y' ? (che = 'n') : (che = 'y');
     $footer.find('span').attr({
-      class:
-        che === 'y'
-          ? 'iconfont icon-xuanzeyixuanze'
-          : 'iconfont icon-xuanzeweixuanze',
+      class: che === 'y' ? 'iconfont icon-xuanzeyixuanze' : 'iconfont icon-xuanzeweixuanze',
       check: che,
     });
     let $imgItem = $imgList.find('.img_item');

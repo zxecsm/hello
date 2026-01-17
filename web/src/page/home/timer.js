@@ -1,17 +1,8 @@
 import { reqPlayerLastPlay } from '../../api/player';
 import _msg from '../../js/plugins/message';
 import { _setTimeout, formatDate } from '../../js/utils/utils';
-import {
-  getSongList,
-  musicPlayerIsHide,
-  setCurOpenSongListId,
-  setMusicList,
-} from './player';
-import {
-  setPlayingSongInfo,
-  setSongCurrentTime,
-  songIspaused,
-} from './player/lrc';
+import { getSongList, musicPlayerIsHide, setCurOpenSongListId, setMusicList } from './player';
+import { setPlayingSongInfo, setSongCurrentTime, songIspaused } from './player/lrc';
 let lastPlayCount = 0; // 同步播放进度计数
 (function timerFn() {
   try {
@@ -60,11 +51,7 @@ export function updateLastPlay(history, y) {
       if (result.code === 1) {
         if (y) {
           if (!musicPlayerIsHide()) {
-            if (
-              setMusicList().findIndex(
-                (item) => item.id === setCurOpenSongListId()
-              ) === 0
-            ) {
+            if (setMusicList().findIndex((item) => item.id === setCurOpenSongListId()) === 0) {
               getSongList();
             }
           }

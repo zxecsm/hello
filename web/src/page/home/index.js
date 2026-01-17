@@ -55,12 +55,7 @@ import {
   updateRightBoxUsername,
   updateTipsFlag,
 } from './rightSetting/index.js';
-import {
-  closeTodoBox,
-  getTodoList,
-  setTodoUndone,
-  todoMsg,
-} from './todo/index.js';
+import { closeTodoBox, getTodoList, setTodoUndone, todoMsg } from './todo/index.js';
 import { closeBgBox, delBg, renderBgList, showBgBox } from './bg/index.js';
 import { getBookMarkList, showAside, toggleAside } from './aside/index.js';
 import {
@@ -122,22 +117,10 @@ import {
   pauseVideo,
   playVideo,
 } from './player/widget.js';
-import {
-  playingListHighlight,
-  renderPlayingList,
-  setPlayingList,
-} from './player/playlist.js';
-import {
-  reqPlayerGetLastPlay,
-  reqPlayerGetPlayList,
-} from '../../api/player.js';
+import { playingListHighlight, renderPlayingList, setPlayingList } from './player/playlist.js';
+import { reqPlayerGetLastPlay, reqPlayerGetPlayList } from '../../api/player.js';
 import rMenu from '../../js/plugins/rightMenu/index.js';
-import {
-  closeCountBox,
-  countMsg,
-  getCountList,
-  setExpireCount,
-} from './count_down/index.js';
+import { closeCountBox, countMsg, getCountList, setExpireCount } from './count_down/index.js';
 import { reqCountList } from '../../api/count.js';
 import { deepClone } from '../../js/utils/template.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
@@ -185,7 +168,7 @@ export function resizeBgFilter(e) {
     curFilterBg / 20,
     throttle(function (per) {
       bgFilter(parseInt(per * 20));
-    }, 500)
+    }, 500),
   );
 }
 // 风车
@@ -263,10 +246,7 @@ async function closeLoading() {
         if (result.code === 1) {
           const { group, friend } = result.data;
           if (group + friend > 0) {
-            $showChatRoomBtn.attr(
-              'class',
-              'show_chat_room_btn run iconfont icon-xiaoxi'
-            );
+            $showChatRoomBtn.attr('class', 'show_chat_room_btn run iconfont icon-xiaoxi');
             _msg.msg(
               {
                 message: '您有新的消息，请注意查收',
@@ -278,13 +258,10 @@ async function closeLoading() {
                 if (type === 'click') {
                   showChatRoom();
                 }
-              }
+              },
             );
           } else {
-            $showChatRoomBtn.attr(
-              'class',
-              'show_chat_room_btn iconfont icon-liaotian'
-            );
+            $showChatRoomBtn.attr('class', 'show_chat_room_btn iconfont icon-liaotian');
           }
         }
       })
@@ -354,10 +331,7 @@ export function updateUserInfo(cb) {
               $userLogoBtn.css('background-image', `url(${cache})`);
             })
             .catch(() => {
-              $userLogoBtn.css(
-                'background-image',
-                `url(${getTextImg(username)})`
-              );
+              $userLogoBtn.css('background-image', `url(${getTextImg(username)})`);
             });
         } else {
           $userLogoBtn.css('background-image', `url(${getTextImg(username)})`);
@@ -467,7 +441,7 @@ $randomChangeBgBtn
     'click',
     throttle(function () {
       changeBg();
-    }, 2000)
+    }, 2000),
   )
   .on('contextmenu', function (e) {
     e.preventDefault();
@@ -519,7 +493,7 @@ function hdHomeBgBtn(e, bgId) {
             changeBg();
           },
           false,
-          loading
+          loading,
         );
       } else if (id === '2') {
         close();
@@ -530,7 +504,7 @@ function hdHomeBgBtn(e, bgId) {
             },
           ],
           0,
-          { x: e.clientX, y: e.clientY }
+          { x: e.clientX, y: e.clientY },
         );
       } else if (id === '3') {
         close();
@@ -541,11 +515,11 @@ function hdHomeBgBtn(e, bgId) {
               filename: bgId,
             },
           ],
-          'image'
+          'image',
         );
       }
     },
-    '壁纸选项'
+    '壁纸选项',
   );
 }
 // 快捷键
@@ -694,17 +668,13 @@ window.addEventListener(
       curScreenWidth = screenWidth;
       updateUserInfo();
     }
-  }, 500)
+  }, 500),
 );
 function isCurChatRoom(chatAccount, from, to) {
   return (
     (chatAccount === _d.chatRoomAccount && to === _d.chatRoomAccount) ||
-    (from === userInfo.account &&
-      to === userInfo.account &&
-      chatAccount === userInfo.account) ||
-    (to === userInfo.account &&
-      from !== userInfo.account &&
-      from === chatAccount) ||
+    (from === userInfo.account && to === userInfo.account && chatAccount === userInfo.account) ||
+    (to === userInfo.account && from !== userInfo.account && from === chatAccount) ||
     (from === userInfo.account && to === chatAccount)
   );
 }
@@ -726,16 +696,13 @@ function hdChatType(resData, notify) {
         msgData.content,
         from.account,
         to,
-        from.logo
+        from.logo,
       );
     }
     // 聊天框是隐藏
     if (chatRoomWrapIsHide()) {
       if (isAlert(from.account)) {
-        $showChatRoomBtn.attr(
-          'class',
-          'show_chat_room_btn run iconfont icon-xiaoxi'
-        );
+        $showChatRoomBtn.attr('class', 'show_chat_room_btn run iconfont icon-xiaoxi');
       }
       // 聊天框显示
     } else {
@@ -762,21 +729,13 @@ function hdChatType(resData, notify) {
               // 是最后一页
               if (canToBottom()) {
                 const cH = $chatListBox[0].clientHeight;
-                if (
-                  $chatListBox[0].scrollHeight -
-                    $chatListBox[0].scrollTop -
-                    cH <
-                  cH
-                ) {
-                  renderChatMsg.push(
-                    data,
-                    $chatListBox.find('.chat_item').last()
-                  );
+                if ($chatListBox[0].scrollHeight - $chatListBox[0].scrollTop - cH < cH) {
+                  renderChatMsg.push(data, $chatListBox.find('.chat_item').last());
                   $chatListBox.stop().animate(
                     {
                       scrollTop: $chatListBox[0].scrollHeight,
                     },
-                    1000
+                    1000,
                   );
                 } else {
                   chatMsgData.push(data);
@@ -809,13 +768,7 @@ function hdChatType(resData, notify) {
     // 撤回消息
   } else if (flag === 'del') {
     if (isNotify(from.account, notify)) {
-      chatMessageNotification(
-        from.des || from.username,
-        '撤回消息',
-        from.account,
-        to,
-        from.logo
-      );
+      chatMessageNotification(from.des || from.username, '撤回消息', from.account, to, from.logo);
     }
     if (!chatRoomWrapIsHide()) {
       if (isCurChatRoom(chatAccount, from.account, to)) {
@@ -836,7 +789,7 @@ function hdChatType(resData, notify) {
         '清空聊天记录',
         from.account,
         to,
-        from.logo
+        from.logo,
       );
     }
     if (!chatRoomWrapIsHide()) {
@@ -852,7 +805,7 @@ function hdChatType(resData, notify) {
         '抖了一下窗口',
         from.account,
         to,
-        from.logo
+        from.logo,
       );
       shakeChat();
     }
@@ -893,7 +846,7 @@ function hdUpdatedataType(resData) {
           setCurPlayingList(
             setSongPlayMode() === 'random'
               ? myShuffle(deepClone(setPlayingList()))
-              : deepClone(setPlayingList())
+              : deepClone(setPlayingList()),
           );
           await renderPlayingList();
           playingListHighlight();

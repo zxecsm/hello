@@ -78,7 +78,7 @@ export function countMsg() {
       if (type === 'click') {
         showCountBox();
       }
-    }
+    },
   );
 }
 export function setExpireCount(val) {
@@ -164,7 +164,7 @@ function renderCountList(total, toTop) {
           small: getScreenSize().w <= _d.screen,
         });
       },
-    }
+    },
   );
   $countList.html(html);
   if (toTop) {
@@ -272,7 +272,7 @@ export function closeCountBox() {
       target.style.display = 'none';
       popWindow.remove('count');
       $countList.html('');
-    }
+    },
   );
 }
 $cheadBtns
@@ -300,10 +300,7 @@ function addCount(e) {
           placeholder: 'https://',
           verify(val) {
             if (!val) return;
-            return (
-              rMenu.validString(val, 0, _d.fieldLength.url) ||
-              rMenu.validUrl(val)
-            );
+            return rMenu.validString(val, 0, _d.fieldLength.url) || rMenu.validUrl(val);
           },
         },
         start: {
@@ -347,7 +344,7 @@ function addCount(e) {
           loading.end();
         });
     },
-    '新增倒计时'
+    '新增倒计时',
   );
 }
 // 删除
@@ -416,10 +413,7 @@ function editCount(e, count) {
           value: count.link,
           verify(val) {
             if (!val) return;
-            return (
-              rMenu.validString(val, 0, _d.fieldLength.url) ||
-              rMenu.validUrl(val)
-            );
+            return rMenu.validString(val, 0, _d.fieldLength.url) || rMenu.validUrl(val);
           },
         },
         start: {
@@ -469,7 +463,7 @@ function editCount(e, count) {
           loading.end();
         });
     },
-    '编辑倒计时'
+    '编辑倒计时',
   );
 }
 export function verifyDate(obj) {
@@ -490,9 +484,7 @@ function countMenu(e) {
     {
       id: 'state',
       text: count.state === 1 ? '关闭' : '开启',
-      beforeIcon: `iconfont ${
-        count.state === 1 ? 'icon-shibai' : 'icon-chenggong'
-      }`,
+      beforeIcon: `iconfont ${count.state === 1 ? 'icon-shibai' : 'icon-chenggong'}`,
     },
     {
       id: 'edit',
@@ -518,7 +510,7 @@ function countMenu(e) {
           () => {
             close();
           },
-          loading
+          loading,
         );
       } else if (id === 'top') {
         toTop(e, count);
@@ -538,7 +530,7 @@ function countMenu(e) {
           });
       }
     },
-    count.title
+    count.title,
   );
 }
 // 置顶
@@ -553,10 +545,7 @@ function toTop(e, obj) {
           inputType: 'number',
           placeholder: '0：取消；数值越大越靠前',
           verify(val) {
-            return (
-              rMenu.validInteger(val) ||
-              rMenu.validNumber(val, 0, _d.fieldLength.top)
-            );
+            return rMenu.validInteger(val) || rMenu.validNumber(val, 0, _d.fieldLength.top);
           },
         },
       },
@@ -579,7 +568,7 @@ function toTop(e, obj) {
           loading.end();
         });
     },
-    '置顶'
+    '置顶',
   );
 }
 $countList
@@ -592,12 +581,10 @@ $countList
     const $this = $(this).parent();
     const id = $this.attr('data-id');
     const { start, end, link, state, top } = getCount(id);
-    const str = `状态：${state === 1 ? '开启' : '关闭'}\n开始日期：${formatDate(
-      {
-        template: '{0}-{1}-{2}',
-        timestamp: start,
-      }
-    )}\n结束日期：${formatDate({
+    const str = `状态：${state === 1 ? '开启' : '关闭'}\n开始日期：${formatDate({
+      template: '{0}-{1}-{2}',
+      timestamp: start,
+    })}\n结束日期：${formatDate({
       template: '{0}-{1}-{2}',
       timestamp: end,
     })}\n权重：${top}\n链接：${link || '--'}`;

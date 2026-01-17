@@ -81,7 +81,7 @@ export function todoMsg() {
       if (type === 'click') {
         showTodoBox();
       }
-    }
+    },
   );
 }
 // 加载
@@ -155,7 +155,7 @@ function renderTodoList(total, toTop) {
           small: getScreenSize().w <= _d.screen,
         });
       },
-    }
+    },
   );
   $todoList.html(html);
   if (toTop) {
@@ -237,7 +237,7 @@ export function closeTodoBox() {
       target.style.display = 'none';
       popWindow.remove('todo');
       $todoList.html('');
-    }
+    },
   );
 }
 $theadBtns
@@ -278,7 +278,7 @@ function addTodo(e) {
           loading.end();
         });
     },
-    '新增待办事项'
+    '新增待办事项',
   );
 }
 // 删除事项
@@ -362,7 +362,7 @@ function editTodo(e, todo) {
           loading.end();
         });
     },
-    '编辑待办事项'
+    '编辑待办事项',
   );
 }
 // 菜单
@@ -400,14 +400,14 @@ function todoMenu(e) {
           () => {
             close();
           },
-          loading
+          loading,
         );
       } else if (id === 'copy') {
         copyText(todo.content);
         close();
       }
     },
-    todo.content
+    todo.content,
   );
 }
 $todoList

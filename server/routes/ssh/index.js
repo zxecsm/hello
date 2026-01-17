@@ -42,23 +42,13 @@ route.post(
   validate(
     'body',
     V.object({
-      word: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.searchWord),
+      word: V.string().trim().default('').allowEmpty().max(fieldLength.searchWord),
       pageNo: V.number().toInt().default(1).min(1),
-      pageSize: V.number()
-        .toInt()
-        .default(20)
-        .min(1)
-        .max(fieldLength.maxPagesize),
-      category: V.array(
-        V.string().trim().min(1).max(fieldLength.id).alphanumeric()
-      )
+      pageSize: V.number().toInt().default(20).min(1).max(fieldLength.maxPagesize),
+      category: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
         .default([])
         .max(10),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -71,7 +61,7 @@ route.post(
       if (category.length > 0) {
         sshdb.search(
           category,
-          category.map(() => 'category')
+          category.map(() => 'category'),
         );
       }
 
@@ -99,21 +89,16 @@ route.post(
         const offset = (result.pageNo - 1) * pageSize;
         list = await sshdb
           .select(
-            'id,title,port,host,username,category,top,auth_type,passphrase,password,private_key'
+            'id,title,port,host,username,category,top,auth_type,passphrase,password,private_key',
           )
           .page(pageSize, offset)
           .find();
 
-        const sshCategory = await db('ssh_category')
-          .select('id,title')
-          .where({ account })
-          .find();
+        const sshCategory = await db('ssh_category').select('id,title').where({ account }).find();
 
         list = list.map((item) => {
           const cArr = item.category.split('-').filter(Boolean);
-          const categoryArr = sshCategory.filter((item) =>
-            cArr.includes(item.id)
-          );
+          const categoryArr = sshCategory.filter((item) => cArr.includes(item.id));
 
           return {
             ...item,
@@ -130,7 +115,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 获取分类
@@ -159,7 +144,7 @@ route.post(
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
         .min(1)
         .max(fieldLength.maxPagesize),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -178,7 +163,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 添加ssh
@@ -190,16 +175,8 @@ route.post(
       port: V.number().toInt().default(22).min(1).max(65535),
       username: V.string().trim().min(1).max(fieldLength.filename),
       title: V.string().trim().min(1).max(fieldLength.title),
-      password: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.filename),
-      passphrase: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.filename),
+      password: V.string().trim().default('').allowEmpty().max(fieldLength.filename),
+      passphrase: V.string().trim().default('').allowEmpty().max(fieldLength.filename),
       host: V.string().trim().min(1).max(fieldLength.filename),
       private_key: V.string()
         .trim()
@@ -207,10 +184,10 @@ route.post(
         .allowEmpty()
         .custom(
           (v) => _f.getTextSize(v) <= fieldLength.customCodeSize,
-          `ssh key不能超过: ${fieldLength.customCodeSize} 字节`
+          `ssh key不能超过: ${fieldLength.customCodeSize} 字节`,
         ),
       auth_type: V.string().trim().enum(['password', 'key']),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -231,7 +208,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 编辑ssh
@@ -244,16 +221,8 @@ route.post(
       port: V.number().toInt().default(22).min(1).max(65535),
       username: V.string().trim().min(1).max(fieldLength.filename),
       title: V.string().trim().min(1).max(fieldLength.title),
-      password: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.filename),
-      passphrase: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.filename),
+      password: V.string().trim().default('').allowEmpty().max(fieldLength.filename),
+      passphrase: V.string().trim().default('').allowEmpty().max(fieldLength.filename),
       host: V.string().trim().min(1).max(fieldLength.filename),
       private_key: V.string()
         .trim()
@@ -261,24 +230,15 @@ route.post(
         .allowEmpty()
         .custom(
           (v) => _f.getTextSize(v) <= fieldLength.customCodeSize,
-          `ssh key不能超过: ${fieldLength.customCodeSize} 字节`
+          `ssh key不能超过: ${fieldLength.customCodeSize} 字节`,
         ),
       auth_type: V.string().trim().enum(['password', 'key']),
-    })
+    }),
   ),
   async (req, res) => {
     try {
-      const {
-        id,
-        port,
-        username,
-        title,
-        password,
-        host,
-        private_key,
-        passphrase,
-        auth_type,
-      } = req[kValidate];
+      const { id, port, username, title, password, host, private_key, passphrase, auth_type } =
+        req[kValidate];
       if (id === 'local' && !req[kHello].isRoot) {
         _err(res, '无权操作')(req);
         return;
@@ -326,7 +286,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 获取ssh配置
@@ -336,23 +296,21 @@ route.get(
     'query',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
       const { id } = req[kValidate];
       const { account } = req[kHello].userinfo;
       const ssh = await db('ssh')
-        .select(
-          'id,title,port,host,username,auth_type,passphrase,password,private_key'
-        )
+        .select('id,title,port,host,username,auth_type,passphrase,password,private_key')
         .where({ id, account })
         .findOne();
       _success(res, 'ok', ssh || {});
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 置顶权重
@@ -363,7 +321,7 @@ route.post(
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       top: V.number().toInt().min(0).max(fieldLength.top),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -379,7 +337,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 编辑分类
@@ -389,12 +347,10 @@ route.post(
     'body',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      category: V.array(
-        V.string().trim().min(1).max(fieldLength.id).alphanumeric()
-      )
+      category: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
         .default([])
         .max(10),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -411,7 +367,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 编辑分类
@@ -422,7 +378,7 @@ route.post(
     V.object({
       title: V.string().trim().min(1).max(fieldLength.title),
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -438,7 +394,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 添加分类
@@ -448,7 +404,7 @@ route.post(
     'body',
     V.object({
       title: V.string().trim().min(1).max(fieldLength.title),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -475,7 +431,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除分类
@@ -485,7 +441,7 @@ route.get(
     'query',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -501,7 +457,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 连接ssh
@@ -512,7 +468,7 @@ route.post(
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       defaultPath: V.string().trim().allowEmpty().max(fieldLength.url),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -524,9 +480,7 @@ route.post(
       } = req[kHello];
 
       const config = await db('ssh')
-        .select(
-          'title,port,username,password,host,private_key,passphrase,auth_type'
-        )
+        .select('title,port,username,password,host,private_key,passphrase,auth_type')
         .where({ id, account })
         .findOne();
 
@@ -535,12 +489,7 @@ route.post(
         return;
       }
       const dPath = _path.normalize('/', defaultPath);
-      createTerminal(
-        account,
-        temid,
-        config,
-        dPath && dPath !== '/' ? dPath : ''
-      );
+      createTerminal(account, temid, config, dPath && dPath !== '/' ? dPath : '');
       _success(res, '请求连接SSH成功', {
         title: config.title,
         username: config.username,
@@ -550,7 +499,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 获取快捷命令
@@ -569,22 +518,17 @@ route.post(
   validate(
     'body',
     V.object({
-      id: V.string()
-        .trim()
-        .default('default')
-        .min(1)
-        .max(fieldLength.id)
-        .alphanumeric(),
+      id: V.string().trim().default('default').min(1).max(fieldLength.id).alphanumeric(),
       title: V.string().trim().min(1).max(fieldLength.title),
       command: V.string()
         .notEmpty()
         .min(1)
         .custom(
           (v) => _f.getTextSize(v) <= fieldLength.customCodeSize,
-          `command 不能超过: ${fieldLength.customCodeSize} 字节`
+          `command 不能超过: ${fieldLength.customCodeSize} 字节`,
         ),
       enter: V.number().toInt().default(0).enum([0, 1]),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -611,7 +555,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 编辑快捷命令
@@ -620,12 +564,7 @@ route.post(
   validate(
     'body',
     V.object({
-      groupId: V.string()
-        .trim()
-        .default('default')
-        .min(1)
-        .max(fieldLength.id)
-        .alphanumeric(),
+      groupId: V.string().trim().default('default').min(1).max(fieldLength.id).alphanumeric(),
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       title: V.string().trim().min(1).max(fieldLength.title),
       command: V.string()
@@ -633,10 +572,10 @@ route.post(
         .min(1)
         .custom(
           (v) => _f.getTextSize(v) <= fieldLength.customCodeSize,
-          `command 不能超过: ${fieldLength.customCodeSize} 字节`
+          `command 不能超过: ${fieldLength.customCodeSize} 字节`,
         ),
       enter: V.number().toInt().default(0).enum([0, 1]),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -660,7 +599,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除快捷命令
@@ -671,7 +610,7 @@ route.post(
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       groupId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -688,7 +627,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 移动快捷命令位置
@@ -700,7 +639,7 @@ route.post(
       fromId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       toId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       groupId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -708,15 +647,11 @@ route.post(
       const { account } = req[kHello].userinfo;
       await quickMoveLocation(account, groupId, fromId, toId);
       syncUpdateData(req, 'quickCommand');
-      _success(res, '移动快捷命令位置成功')(
-        req,
-        `${groupId}: ${fromId} => ${toId}`,
-        1
-      );
+      _success(res, '移动快捷命令位置成功')(req, `${groupId}: ${fromId} => ${toId}`, 1);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 移动快捷命令到分组
@@ -728,7 +663,7 @@ route.post(
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       fromId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       toId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -738,12 +673,10 @@ route.post(
       const fIdx = quickGroupList.findIndex((item) => item.id === fromId);
       const tIdx = quickGroupList.findIndex((item) => item.id === toId);
       if (fIdx >= 0 && tIdx >= 0 && fIdx !== tIdx) {
-        const fCommand = quickGroupList[fIdx].commands.find(
-          (item) => item.id === id
-        );
+        const fCommand = quickGroupList[fIdx].commands.find((item) => item.id === id);
         if (fCommand) {
           quickGroupList[fIdx].commands = quickGroupList[fIdx].commands.filter(
-            (item) => item.id !== id
+            (item) => item.id !== id,
           );
           quickGroupList[tIdx].commands.push(fCommand);
           await writeQuickCommands(account, quickGroupList);
@@ -755,7 +688,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 添加快捷命令分组
@@ -765,7 +698,7 @@ route.post(
     'body',
     V.object({
       title: V.string().trim().min(1).max(fieldLength.title),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -781,7 +714,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 编辑快捷命令分组
@@ -792,7 +725,7 @@ route.post(
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       title: V.string().trim().min(1).max(fieldLength.title),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -811,7 +744,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 移动快捷命令分组位置
@@ -822,7 +755,7 @@ route.post(
     V.object({
       fromId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       toId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -834,7 +767,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除快捷命令分组
@@ -843,21 +776,14 @@ route.post(
   validate(
     'body',
     V.object({
-      id: V.string()
-        .trim()
-        .min(1)
-        .max(fieldLength.id)
-        .alphanumeric()
-        .not('default'),
-    })
+      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric().not('default'),
+    }),
   ),
   async (req, res) => {
     try {
       const { id } = req[kValidate];
       const { account } = req[kHello].userinfo;
-      const quickGroupList = (await readQuickCommands(account)).filter(
-        (item) => item.id !== id
-      );
+      const quickGroupList = (await readQuickCommands(account)).filter((item) => item.id !== id);
       await writeQuickCommands(account, quickGroupList);
 
       syncUpdateData(req, 'quickCommand');
@@ -865,7 +791,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 export default route;

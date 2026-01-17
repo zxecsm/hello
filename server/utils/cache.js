@@ -2,7 +2,7 @@ export class CacheByExpire {
   constructor(
     ttl,
     cleanupInterval = 0,
-    { beforeDelete, afterDelete, beforeReplace, afterReplace } = {}
+    { beforeDelete, afterDelete, beforeReplace, afterReplace } = {},
   ) {
     if (!Number.isFinite(ttl) || ttl <= 0) {
       throw new Error('TTL must be a positive finite number');
@@ -24,10 +24,7 @@ export class CacheByExpire {
     this.isDestroyed = false; // 标记缓存是否被销毁
 
     if (cleanupInterval > 0) {
-      this.cleanupIntervalId = setInterval(
-        () => this.cleanup(),
-        cleanupInterval
-      ); // 定时清理缓存
+      this.cleanupIntervalId = setInterval(() => this.cleanup(), cleanupInterval); // 定时清理缓存
     }
   }
 

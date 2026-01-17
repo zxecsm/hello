@@ -54,10 +54,7 @@ import toolTip from '../../../js/plugins/tooltip/index.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
-import {
-  BoxSelector,
-  MouseElementTracker,
-} from '../../../js/utils/boxSelector.js';
+import { BoxSelector, MouseElementTracker } from '../../../js/utils/boxSelector.js';
 import localData from '../../../js/common/localData.js';
 
 const $asideBtn = $('.aside_btn'),
@@ -79,13 +76,9 @@ const bmMouseElementTracker = new MouseElementTracker($aside.find('.list')[0], {
   delay: 300,
   onStart({ e }) {
     const item = _getTarget($aside[0], e, '.list .bm_item');
-    if (isSelecting() || !item || !e.target.className.includes('bm_logo'))
-      return true;
+    if (isSelecting() || !item || !e.target.className.includes('bm_logo')) return true;
     mouseBmFromDom = item;
-    const obj = getBmItemData(
-      $(item).parent().prev().attr('data-id'),
-      item.dataset.id
-    );
+    const obj = getBmItemData($(item).parent().prev().attr('data-id'), item.dataset.id);
     bmMouseElementTracker.changeInfo(obj.title);
   },
   onMove() {
@@ -134,37 +127,34 @@ function bmListMove(fromId, toId) {
     .catch(() => {});
 }
 let mouseBmListFromDom = null;
-const bmListMouseElementTracker = new MouseElementTracker(
-  $aside.find('.list')[0],
-  {
-    delay: 300,
-    onStart({ e }) {
-      const item = _getTarget($aside[0], e, '.list .list_title');
-      if (!item || isSelecting() || e.target.tagName !== 'I') return true;
-      mouseBmListFromDom = item;
-      const obj = getBmListTitleData(item.dataset.id);
-      bmListMouseElementTracker.changeInfo(obj.title);
-    },
-    onMove() {
-      allowSlide.update();
-    },
-    onEnd({ dropElement }) {
-      if (!isSelecting() && mouseBmListFromDom) {
-        const to = dropElement
-          ? _getTarget($aside[0], { target: dropElement }, '.list .list_title')
-          : null;
-        if (to) {
-          const toId = to.dataset.id;
-          const fromId = mouseBmListFromDom.dataset.id;
-          if (fromId !== toId) {
-            bmListMove(fromId, toId);
-          }
+const bmListMouseElementTracker = new MouseElementTracker($aside.find('.list')[0], {
+  delay: 300,
+  onStart({ e }) {
+    const item = _getTarget($aside[0], e, '.list .list_title');
+    if (!item || isSelecting() || e.target.tagName !== 'I') return true;
+    mouseBmListFromDom = item;
+    const obj = getBmListTitleData(item.dataset.id);
+    bmListMouseElementTracker.changeInfo(obj.title);
+  },
+  onMove() {
+    allowSlide.update();
+  },
+  onEnd({ dropElement }) {
+    if (!isSelecting() && mouseBmListFromDom) {
+      const to = dropElement
+        ? _getTarget($aside[0], { target: dropElement }, '.list .list_title')
+        : null;
+      if (to) {
+        const toId = to.dataset.id;
+        const fromId = mouseBmListFromDom.dataset.id;
+        if (fromId !== toId) {
+          bmListMove(fromId, toId);
         }
-        mouseBmListFromDom = null;
       }
-    },
-  }
-);
+      mouseBmListFromDom = null;
+    }
+  },
+});
 
 let activeBmListId = 'hide'; // 记录开启列表id
 // 获取书签列表
@@ -292,35 +282,30 @@ function renderAsideList(p, delayScroll = 0) {
         asidePageNo < 1
           ? (asidePageNo = pageTotal)
           : asidePageNo > pageTotal
-          ? (asidePageNo = 1)
-          : null;
-        return item.item.slice(
-          (asidePageNo - 1) * asidePageSize,
-          asidePageNo * asidePageSize
-        );
+            ? (asidePageNo = 1)
+            : null;
+        return item.item.slice((asidePageNo - 1) * asidePageSize, asidePageNo * asidePageSize);
       },
       getPaging(item) {
         const pageTotal = Math.ceil(item.item.length / asidePageSize);
         asidePageNo < 1
           ? (asidePageNo = pageTotal)
           : asidePageNo > pageTotal
-          ? (asidePageNo = 1)
-          : null;
+            ? (asidePageNo = 1)
+            : null;
         return asidePgnt.getHTML({
           pageNo: asidePageNo,
           pageSize: asidePageSize,
           total: item.item.length,
         });
       },
-    }
+    },
   );
 
   const $aList = $aside.find('.list');
   $aList.html(html);
   if (p) {
-    const curIdx = bookmark.list.findIndex(
-      (item) => item.id === activeBmListId
-    );
+    const curIdx = bookmark.list.findIndex((item) => item.id === activeBmListId);
     if (curIdx >= 0) {
       _setTimeout(() => {
         const $listTitle = $aList.find('.list_title').eq(curIdx);
@@ -328,7 +313,7 @@ function renderAsideList(p, delayScroll = 0) {
           {
             scrollTop: _position($listTitle[0]).top + $aList[0].scrollTop,
           },
-          _d.speed
+          _d.speed,
         );
       }, delayScroll);
     }
@@ -389,9 +374,7 @@ function hdAsideListItemLogo() {
         $bm_logo.css('background-image', `url(${cache})`).addClass('load');
       })
       .catch(() => {
-        $bm_logo
-          .css('background-image', `url(${defaultIcon})`)
-          .addClass('load');
+        $bm_logo.css('background-image', `url(${defaultIcon})`).addClass('load');
       });
   });
 }
@@ -410,9 +393,7 @@ function getBmItemData(groupId, id) {
 // 获取选中书签
 function getAsideCheckBmItem() {
   const $bmItem = $aside.find('.bm_item'),
-    $checkArr = $bmItem.filter(
-      (_, item) => $(item).find('.check_bm').attr('check') === 'y'
-    );
+    $checkArr = $bmItem.filter((_, item) => $(item).find('.check_bm').attr('check') === 'y');
   const arr = [];
   $checkArr.each((_, v) => {
     arr.push(v.getAttribute('data-id'));
@@ -423,9 +404,7 @@ function getAsideCheckBmItem() {
 // 选中的分组
 function getAsideCheckBmList() {
   const $bmItem = $aside.find('.list_title'),
-    $checkArr = $bmItem.filter(
-      (_, item) => $(item).find('.check_bmlist').attr('check') === 'y'
-    );
+    $checkArr = $bmItem.filter((_, item) => $(item).find('.check_bmlist').attr('check') === 'y');
   const arr = [];
   $checkArr.each((_, v) => {
     arr.push(v.getAttribute('data-id'));
@@ -464,7 +443,7 @@ function addBmList(e) {
           loading.end();
         });
     },
-    '添加书签分组'
+    '添加书签分组',
   );
 }
 
@@ -507,10 +486,7 @@ function hdCheckAll() {
   let che = $(this).attr('check');
   che === 'y' ? (che = 'n') : (che = 'y');
   $aside.find('.foot_menu .flex_wrap div').attr({
-    class:
-      che === 'y'
-        ? 'iconfont icon-xuanzeyixuanze'
-        : 'iconfont icon-xuanzeweixuanze',
+    class: che === 'y' ? 'iconfont icon-xuanzeyixuanze' : 'iconfont icon-xuanzeweixuanze',
     check: che,
   });
   if (isSelectingBm) {
@@ -532,9 +508,7 @@ function hdCheckAll() {
 
 export function tooltipBookmark(obj) {
   const { title, link, des } = obj;
-  const str = `名称：${title || '--'}\n链接：${link || '--'}\n描述：${
-    des || '--'
-  }`;
+  const str = `名称：${title || '--'}\n链接：${link || '--'}\n描述：${des || '--'}`;
   toolTip.setTip(str).show();
 }
 
@@ -543,23 +517,14 @@ $asideWrap
   .on('click', '.list_title i', function (e) {
     // 菜单
     const $this = $(this).parent();
-    asideListMenu(
-      e,
-      getBmListTitleData($this.attr('data-id')),
-      $this.find('.check_bmlist')[0]
-    );
+    asideListMenu(e, getBmListTitleData($this.attr('data-id')), $this.find('.check_bmlist')[0]);
   })
   .on('click', '.bm_item', function () {
-    const { link } = getBmItemData(
-      activeBmListId,
-      this.getAttribute('data-id')
-    );
+    const { link } = getBmItemData(activeBmListId, this.getAttribute('data-id'));
     myOpen(link, '_blank');
   })
   .on('mouseenter', '.bm_item .bm_logo', function () {
-    tooltipBookmark(
-      getBmItemData(activeBmListId, this.parentNode.getAttribute('data-id'))
-    );
+    tooltipBookmark(getBmItemData(activeBmListId, this.parentNode.getAttribute('data-id')));
   })
   .on('mouseleave', '.bm_item .bm_logo', function () {
     toolTip.hide();
@@ -570,11 +535,7 @@ $asideWrap
     e.preventDefault();
     if (isMobile() || isSelecting()) return;
     const $this = $(this);
-    asideListMenu(
-      e,
-      getBmListTitleData($this.attr('data-id')),
-      $this.find('.check_bmlist')[0]
-    );
+    asideListMenu(e, getBmListTitleData($this.attr('data-id')), $this.find('.check_bmlist')[0]);
   })
   .on('click', '.bm_logo', function (e) {
     e.stopPropagation();
@@ -587,7 +548,7 @@ $asideWrap
         ...getBmItemData(groupId, $this.attr('data-id')),
       },
       0,
-      this.parentNode.querySelector('.check_bm')
+      this.parentNode.querySelector('.check_bm'),
     );
   })
   .on('contextmenu', '.bm_item', function (e) {
@@ -603,7 +564,7 @@ $asideWrap
         ...getBmItemData(groupId, $this.attr('data-id')),
       },
       0,
-      this.querySelector('.check_bm')
+      this.querySelector('.check_bm'),
     );
   })
   .on('click', '.foot_menu .flex_wrap div', hdCheckAll)
@@ -663,9 +624,7 @@ function checkAsideBm(el) {
 }
 function updateBmSelectInfo() {
   const $sidenav = $aside.find('.bm_item'),
-    $checkArr = $sidenav.filter(
-      (_, item) => $(item).find('.check_bm').attr('check') === 'y'
-    );
+    $checkArr = $sidenav.filter((_, item) => $(item).find('.check_bm').attr('check') === 'y');
   _msg.botMsg(`选中：${$checkArr.length}项`);
   if ($checkArr.length === $sidenav.length) {
     $aside.find('.foot_menu .flex_wrap div').attr({
@@ -693,9 +652,7 @@ function checkAsideBmList(el) {
 }
 function updateBmListSelectInfo() {
   const $sidenav = $aside.find('.list_title'),
-    $checkArr = $sidenav.filter(
-      (_, item) => $(item).find('.check_bmlist').attr('check') === 'y'
-    );
+    $checkArr = $sidenav.filter((_, item) => $(item).find('.check_bmlist').attr('check') === 'y');
   _msg.botMsg(`选中：${$checkArr.length}项`);
   if ($checkArr.length === $sidenav.length) {
     $aside.find('.foot_menu .flex_wrap div').attr({
@@ -759,7 +716,7 @@ export function moveBookMark(e, pid, arr) {
           });
       }
     },
-    '移动书签到分组'
+    '移动书签到分组',
   );
 }
 
@@ -768,11 +725,7 @@ longPress($aside[0], '.list_title', function (e) {
   if (bmListMouseElementTracker.active || isSelecting()) return;
   const $this = $(this),
     ev = e.changedTouches[0];
-  asideListMenu(
-    ev,
-    getBmListTitleData($this.attr('data-id')),
-    $this.find('.check_bmlist')[0]
-  );
+  asideListMenu(ev, getBmListTitleData($this.attr('data-id')), $this.find('.check_bmlist')[0]);
 });
 
 // 书签菜单
@@ -788,7 +741,7 @@ longPress($aside[0], '.bm_item', function (e) {
       ...getBmItemData(groupId, $this.attr('data-id')),
     },
     0,
-    this.querySelector('.check_bm')
+    this.querySelector('.check_bm'),
   );
 });
 
@@ -803,10 +756,7 @@ export function addBookMark(e, pid) {
           beforeText: '网址：',
           placeholder: 'https://',
           verify(val) {
-            return (
-              rMenu.validString(val, 1, _d.fieldLength.url) ||
-              rMenu.validUrl(val)
-            );
+            return rMenu.validString(val, 1, _d.fieldLength.url) || rMenu.validUrl(val);
           },
         },
       },
@@ -837,10 +787,7 @@ export function addBookMark(e, pid) {
                     placeholder: 'https://',
                     value: u,
                     verify(val) {
-                      return (
-                        rMenu.validString(val, 1, _d.fieldLength.url) ||
-                        rMenu.validUrl(val)
-                      );
+                      return rMenu.validString(val, 1, _d.fieldLength.url) || rMenu.validUrl(val);
                     },
                   },
                   des: {
@@ -885,7 +832,7 @@ export function addBookMark(e, pid) {
                     loading.end();
                   });
               },
-              '添加书签'
+              '添加书签',
             );
           }
         })
@@ -893,7 +840,7 @@ export function addBookMark(e, pid) {
           loading.end();
         });
     },
-    '添加书签'
+    '添加书签',
   );
 }
 
@@ -947,32 +894,28 @@ function editBmList(e, obj) {
           loading.end();
         });
     },
-    '编辑书签分组'
+    '编辑书签分组',
   );
 }
 
 // 分享分组
 function shareBmList(e, obj) {
-  createShare(
-    e,
-    { name: obj.title, title: '分享书签分组' },
-    ({ close, inp, loading }) => {
-      const { title, pass, expireTime } = inp;
-      loading.start();
-      reqBmkShare({ id: obj.id, title, pass, expireTime })
-        .then((result) => {
-          loading.end();
-          if (result.code === 1) {
-            hideAside();
-            close(1);
-            openInIframe(`/sharelist`, '分享管理');
-          }
-        })
-        .catch(() => {
-          loading.end();
-        });
-    }
-  );
+  createShare(e, { name: obj.title, title: '分享书签分组' }, ({ close, inp, loading }) => {
+    const { title, pass, expireTime } = inp;
+    loading.start();
+    reqBmkShare({ id: obj.id, title, pass, expireTime })
+      .then((result) => {
+        loading.end();
+        if (result.code === 1) {
+          hideAside();
+          close(1);
+          openInIframe(`/sharelist`, '分享管理');
+        }
+      })
+      .catch(() => {
+        loading.end();
+      });
+  });
 }
 
 // 删除分组
@@ -1069,7 +1012,7 @@ function asideListMenu(e, obj, el) {
           () => {
             close();
           },
-          loading
+          loading,
         );
       } else if (id === 'share') {
         changeBmListState(
@@ -1078,7 +1021,7 @@ function asideListMenu(e, obj, el) {
           () => {
             close();
           },
-          loading
+          loading,
         );
       } else if (id === 'check') {
         isSelectingBm = false;
@@ -1087,7 +1030,7 @@ function asideListMenu(e, obj, el) {
         close();
       }
     },
-    obj.title
+    obj.title,
   );
 }
 
@@ -1100,7 +1043,7 @@ function upBmLogo(obj) {
       getBookMarkList();
       getHomeBmList();
     },
-    obj.id
+    obj.id,
   );
 }
 
@@ -1131,10 +1074,7 @@ function editBm(e, obj, isHome) {
           placeholder: 'https://',
           value: obj.link,
           verify(val) {
-            return (
-              rMenu.validString(val, 1, _d.fieldLength.url) ||
-              rMenu.validUrl(val)
-            );
+            return rMenu.validString(val, 1, _d.fieldLength.url) || rMenu.validUrl(val);
           },
         },
         des: {
@@ -1164,8 +1104,7 @@ function editBm(e, obj, isHome) {
           }
           tid = (bookmark.home.find((item) => item.num === idx) || {}).id || '';
         } else {
-          const arr =
-            (bookmark.list.find((item) => item.id === pid) || {}).item || [];
+          const arr = (bookmark.list.find((item) => item.id === pid) || {}).item || [];
           lastNum = arr.length - 1;
           if (idx > lastNum) {
             idx = lastNum;
@@ -1197,7 +1136,7 @@ function editBm(e, obj, isHome) {
           loading.end();
         });
     },
-    '编辑书签'
+    '编辑书签',
   );
 }
 // 设置logo
@@ -1243,11 +1182,11 @@ function setBmLogo(e, obj, isHome) {
                   loading.end();
                 });
             }
-          }
+          },
         );
       }
     },
-    '图标设置'
+    '图标设置',
   );
 }
 // 操作书签
@@ -1322,11 +1261,11 @@ export function bookMarkSetting(e, obj, isHome, el) {
           () => {
             close();
           },
-          loading
+          loading,
         );
       }
     },
-    obj.title
+    obj.title,
   );
 }
 
@@ -1343,10 +1282,7 @@ function stopSelect() {
   const $check = isSelectingBm
     ? $aside.find('.bm_item .check_bm')
     : $aside.find('.list_title .check_bmlist');
-  $check
-    .css('display', 'none')
-    .attr('check', 'n')
-    .css('background-color', 'transparent');
+  $check.css('display', 'none').attr('check', 'n').css('background-color', 'transparent');
   $aside
     .find('.foot_menu')
     .stop()

@@ -1,10 +1,5 @@
 import _d from '../../js/common/config';
-import {
-  _position,
-  debounce,
-  getScreenSize,
-  toCenter,
-} from '../../js/utils/utils';
+import { _position, debounce, getScreenSize, toCenter } from '../../js/utils/utils';
 import { removeTagsActive } from './iframe';
 
 let windowList = [];
@@ -77,10 +72,7 @@ export function setPos(el, reference) {
   const { w, h } = getScreenSize();
   if (reference && _d.screen < w) {
     const { left, top } = _position(reference.target, 1);
-    if (
-      top + reference.target.offsetHeight > h ||
-      left + reference.target.offsetWidth > w
-    ) {
+    if (top + reference.target.offsetHeight > h || left + reference.target.offsetWidth > w) {
       toCenter(el);
     } else {
       toCenter(el, { left: left + 40, top: top + 40 });

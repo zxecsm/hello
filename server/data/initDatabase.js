@@ -330,9 +330,7 @@ function normalizeDefault(val) {
 
 // 根据 JSON 配置对比现有表字段
 function diffColumns(existingColumns, configColumns, tableSql) {
-  const existingMap = Object.fromEntries(
-    existingColumns.map((c) => [c.name, c])
-  );
+  const existingMap = Object.fromEntries(existingColumns.map((c) => [c.name, c]));
   const configMap = Object.fromEntries(configColumns.map((c) => [c.name, c]));
 
   const toAdd = [];
@@ -375,15 +373,7 @@ function diffColumns(existingColumns, configColumns, tableSql) {
 // 根据配置生成 CREATE TABLE 语句
 function getTableSql(tableName, columns) {
   const colsSQL = columns.map((col) => {
-    const {
-      name,
-      type,
-      primary,
-      autoincrement,
-      notNull,
-      unique,
-      default: defaultVal,
-    } = col;
+    const { name, type, primary, autoincrement, notNull, unique, default: defaultVal } = col;
 
     let sql = `"${name}" ${type}`;
 
@@ -394,8 +384,7 @@ function getTableSql(tableName, columns) {
 
     if (defaultVal !== undefined) {
       // 默认值
-      const val =
-        typeof defaultVal === 'string' ? `'${defaultVal}'` : defaultVal;
+      const val = typeof defaultVal === 'string' ? `'${defaultVal}'` : defaultVal;
       sql += ` DEFAULT ${val}`;
     }
 
@@ -417,9 +406,7 @@ async function syncIndexes(tableName, configIndexes) {
     if (!dbIdx) {
       needCreate = true;
     } else {
-      const dbCols = (await allSql(`PRAGMA index_info('${idx.name}')`)).map(
-        (c) => c.name
-      );
+      const dbCols = (await allSql(`PRAGMA index_info('${idx.name}')`)).map((c) => c.name);
       if (dbCols.join(',') !== idx.columns.join(',')) {
         await runSql(`DROP INDEX IF EXISTS "${idx.name}"`);
         devLog(`索引 ${idx.name} 删除`);
@@ -432,7 +419,7 @@ async function syncIndexes(tableName, configIndexes) {
       await runSql(
         `CREATE ${unique} INDEX IF NOT EXISTS "${
           idx.name
-        }" ON "${tableName}" (${idx.columns.join(',')});`
+        }" ON "${tableName}" (${idx.columns.join(',')});`,
       );
       devLog(`索引 ${idx.name} 创建成功`);
     }
@@ -468,16 +455,12 @@ async function createTables() {
       } else {
         // 表已存在 → 获取原始建表语句（判断 AUTOINCREMENT）
         const tableSqlRes = await allSql(
-          `SELECT sql FROM sqlite_master WHERE type='table' AND name='${tableName}'`
+          `SELECT sql FROM sqlite_master WHERE type='table' AND name='${tableName}'`,
         );
         const tableSql = tableSqlRes[0]?.sql || '';
 
         // 对比字段
-        const { toAdd, toChange, toRemove } = diffColumns(
-          existingColumns,
-          columns,
-          tableSql
-        );
+        const { toAdd, toChange, toRemove } = diffColumns(existingColumns, columns, tableSql);
 
         // 需要修改或删除字段 → 临时表迁移
         if (toRemove.length > 0 || toChange.length > 0) {
@@ -489,13 +472,13 @@ async function createTables() {
           const commonCols = existingColumns
             .map((c) => c.name)
             .filter(
-              (n) => columns.some((col) => col.name === n) && n !== 'serial' // 过滤自增主键
+              (n) => columns.some((col) => col.name === n) && n !== 'serial', // 过滤自增主键
             );
           if (commonCols.length > 0) {
             await runSql(
               `INSERT INTO "${tmpTable}" (${commonCols.join(
-                ','
-              )}) SELECT ${commonCols.join(',')} FROM "${tableName}";`
+                ',',
+              )}) SELECT ${commonCols.join(',')} FROM "${tableName}";`,
             );
           }
 
@@ -563,9 +546,7 @@ async function insertInitialData() {
           account: appConfig.adminAccount,
           username: appConfig.adminUsername,
           chat_id: nanoid(),
-          password: await _crypto.hashPassword(
-            _crypto.getStringHash(initPassword)
-          ),
+          password: await _crypto.hashPassword(_crypto.getStringHash(initPassword)),
         },
         {
           create_at: nowTime,
@@ -594,11 +575,7 @@ async function insertInitialData() {
           title: 'About',
           share: 1,
           content: (
-            await _f.readFile(
-              resolve(__dirname, './default_about.md'),
-              null,
-              ''
-            )
+            await _f.readFile(resolve(__dirname, './default_about.md'), null, '')
           ).toString(),
         },
         {
@@ -622,9 +599,7 @@ async function insertInitialData() {
 
 // 删除视图
 async function dropViews() {
-  const views = await allSql(
-    `SELECT name FROM sqlite_master WHERE type='view'`
-  );
+  const views = await allSql(`SELECT name FROM sqlite_master WHERE type='view'`);
 
   for (const row of views) {
     await runSql(`DROP VIEW IF EXISTS "${row.name}"`);

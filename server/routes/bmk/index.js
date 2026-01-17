@@ -44,31 +44,16 @@ route.post(
     'body',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      pass: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.sharePass),
-      captchaId: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.id)
-        .alphanumeric(),
-    })
+      pass: V.string().trim().default('').allowEmpty().max(fieldLength.sharePass),
+      captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+    }),
   ),
   async (req, res) => {
     try {
       const { id, pass, captchaId } = req[kValidate];
 
       // 验证分享状态，获取分享数据
-      const share = await validShareAddUserState(
-        req,
-        ['bookmk'],
-        id,
-        pass,
-        captchaId
-      );
+      const share = await validShareAddUserState(req, ['bookmk'], id, pass, captchaId);
 
       if (share.state === 0) {
         _err(res, share.text)(req, id, 1);
@@ -88,15 +73,7 @@ route.post(
         return;
       }
 
-      let {
-        username,
-        logo,
-        email,
-        exp_time,
-        title,
-        account: acc,
-        data,
-      } = share.data;
+      let { username, logo, email, exp_time, title, account: acc, data } = share.data;
 
       const { account } = req[kHello].userinfo;
 
@@ -118,13 +95,13 @@ route.post(
         title,
         token: await jwt.set(
           { type: 'share', data: { id, types: ['bookmk'] } },
-          fieldLength.shareTokenExp
+          fieldLength.shareTokenExp,
         ),
       })(req, id, 1);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 搜索书签
@@ -133,29 +110,14 @@ route.post(
   validate(
     'body',
     V.object({
-      word: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.searchWord),
+      word: V.string().trim().default('').allowEmpty().max(fieldLength.searchWord),
       pageNo: V.number().toInt().default(1).min(1),
-      pageSize: V.number()
-        .toInt()
-        .default(20)
-        .min(1)
-        .max(fieldLength.maxPagesize),
-      account: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.id)
-        .alphanumeric(),
-      category: V.array(
-        V.string().trim().min(1).max(fieldLength.id).alphanumeric()
-      )
+      pageSize: V.number().toInt().default(20).min(1).max(fieldLength.maxPagesize),
+      account: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+      category: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
         .default([])
         .max(10),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -170,11 +132,7 @@ route.post(
 
       // 非本人只能获取公开的分组书签
       const bmdb = db('bmk AS b')
-        .join(
-          'bmk_group AS g',
-          { 'b.group_id': { value: 'g.id', raw: true } },
-          { type: 'LEFT' }
-        )
+        .join('bmk_group AS g', { 'b.group_id': { value: 'g.id', raw: true } }, { type: 'LEFT' })
         .where({
           'b.account': acc || account,
           'b.state': 1,
@@ -213,9 +171,7 @@ route.post(
         // 分页
         data = await bmdb
           .page(pageSize, offset)
-          .select(
-            'g.title AS group_title,b.id,b.group_id,b.title,b.link,b.des,b.logo'
-          )
+          .select('g.title AS group_title,b.id,b.group_id,b.title,b.link,b.des,b.logo')
           .find();
 
         data.forEach((item) => {
@@ -233,7 +189,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 获取列表
@@ -242,19 +198,9 @@ route.get(
   validate(
     'query',
     V.object({
-      id: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.id)
-        .alphanumeric(),
-      account: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.id)
-        .alphanumeric(),
-    })
+      id: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+      account: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+    }),
   ),
   async (req, res) => {
     try {
@@ -313,7 +259,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除网址描述缓存信息
@@ -340,7 +286,7 @@ route.post(
     V.object({
       fromId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       toId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -356,7 +302,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 书签移动
@@ -368,7 +314,7 @@ route.post(
       groupId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       fromId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       toId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -380,15 +326,11 @@ route.post(
 
       syncUpdateData(req, 'bookmark');
 
-      _success(res, '移动书签位置成功')(
-        req,
-        `${groupId}: ${fromId}=>${toId}`,
-        1
-      );
+      _success(res, '移动书签位置成功')(req, `${groupId}: ${fromId}=>${toId}`, 1);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 新建分组
@@ -398,7 +340,7 @@ route.post(
     'body',
     V.object({
       title: V.string().trim().min(1).max(fieldLength.title),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -433,7 +375,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除分组
@@ -445,7 +387,7 @@ route.post(
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
         .min(1)
         .max(fieldLength.maxPagesize),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -465,7 +407,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 分组状态
@@ -478,7 +420,7 @@ route.post(
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
         .min(1)
         .max(fieldLength.maxPagesize),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -492,15 +434,11 @@ route.post(
 
       syncUpdateData(req, 'bookmark');
 
-      _success(res, `${share === 1 ? '公开' : '锁定'}分组成功`)(
-        req,
-        ids.length,
-        1
-      );
+      _success(res, `${share === 1 ? '公开' : '锁定'}分组成功`)(req, ids.length, 1);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除自定义书签logo
@@ -510,7 +448,7 @@ route.get(
     'query',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -526,7 +464,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 编辑分组
@@ -537,13 +475,8 @@ route.post(
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       title: V.string().trim().min(1).max(fieldLength.title),
-      toId: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.id)
-        .alphanumeric(),
-    })
+      toId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+    }),
   ),
   async (req, res) => {
     try {
@@ -563,7 +496,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 添加书签
@@ -578,11 +511,11 @@ route.post(
           title: V.string().trim().min(1).max(fieldLength.title),
           link: V.string().trim().min(1).max(fieldLength.url).httpUrl(),
           des: V.string().trim().default('').allowEmpty().max(fieldLength.des),
-        })
+        }),
       )
         .min(1)
         .max(fieldLength.maxPagesize),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -596,9 +529,7 @@ route.post(
         return;
       }
 
-      const total = await db('bmk')
-        .where({ account, state: 1, group_id: groupId })
-        .count();
+      const total = await db('bmk').where({ account, state: 1, group_id: groupId }).count();
 
       // 计算添加的书签和现有的书签
       if (total + bms.length > fieldLength.bmk) {
@@ -626,7 +557,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 编辑书签
@@ -637,16 +568,11 @@ route.post(
     V.object({
       groupId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      toId: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.id)
-        .alphanumeric(),
+      toId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
       title: V.string().trim().min(1).max(fieldLength.title),
       link: V.string().trim().min(1).max(fieldLength.url).httpUrl(),
       des: V.string().trim().default('').allowEmpty().max(fieldLength.des),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -664,15 +590,11 @@ route.post(
 
       syncUpdateData(req, 'bookmark');
 
-      _success(res, '更新书签信息成功')(
-        req,
-        `${groupId}: ${id}-${title}-${link}-${des}`,
-        1
-      );
+      _success(res, '更新书签信息成功')(req, `${groupId}: ${id}-${title}-${link}-${des}`, 1);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 书签移动到分组
@@ -685,7 +607,7 @@ route.post(
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
         .min(1)
         .max(fieldLength.maxPagesize),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -699,9 +621,7 @@ route.post(
         return;
       }
 
-      const total = await db('bmk')
-        .where({ group_id: groupId, account, state: 1 })
-        .count();
+      const total = await db('bmk').where({ group_id: groupId, account, state: 1 }).count();
 
       // 计算分组书签数量
       if (total + ids.length > fieldLength.bmk) {
@@ -746,7 +666,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除书签
@@ -758,7 +678,7 @@ route.post(
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
         .min(1)
         .max(fieldLength.maxPagesize),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -777,7 +697,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 分享分组
@@ -789,12 +709,8 @@ route.post(
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       title: V.string().trim().min(1).max(fieldLength.title),
       expireTime: V.number().toInt().max(fieldLength.expTime),
-      pass: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.sharePass),
-    })
+      pass: V.string().trim().default('').allowEmpty().max(fieldLength.sharePass),
+    }),
   ),
   async (req, res) => {
     try {
@@ -816,8 +732,7 @@ route.post(
       const obj = {
         id: nanoid(),
         create_at: Date.now(),
-        exp_time:
-          expireTime === 0 ? 0 : Date.now() + expireTime * 24 * 60 * 60 * 1000,
+        exp_time: expireTime === 0 ? 0 : Date.now() + expireTime * 24 * 60 * 60 * 1000,
         title,
         pass,
         data: JSON.stringify(bms),
@@ -831,12 +746,12 @@ route.post(
       _success(res, '分享分组成功', { id: obj.id })(
         req,
         `${id}: ${title}-${obj.id}-${bms.length}`,
-        1
+        1,
       );
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 保存分享
@@ -847,7 +762,7 @@ route.post(
     V.object({
       title: V.string().trim().min(1).max(fieldLength.title),
       token: V.string().trim().min(1).max(fieldLength.url),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -903,7 +818,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 导入
@@ -919,20 +834,16 @@ route.post(
             V.object({
               title: V.string().trim().min(1).max(fieldLength.title),
               link: V.string().trim().min(1).max(fieldLength.url).httpUrl(),
-              des: V.string()
-                .trim()
-                .default('')
-                .allowEmpty()
-                .max(fieldLength.des),
-            })
+              des: V.string().trim().default('').allowEmpty().max(fieldLength.des),
+            }),
           )
             .min(1)
             .max(fieldLength.bmk),
-        })
+        }),
       )
         .min(1)
         .max(fieldLength.bmkGroup),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -983,7 +894,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 导出

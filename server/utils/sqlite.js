@@ -27,7 +27,7 @@ class DB {
       (err) => {
         // eslint-disable-next-line no-console
         if (err) console.error('PRAGMA Error:', err.message);
-      }
+      },
     );
   }
 
@@ -131,7 +131,7 @@ class Database {
         acc.params.push(...clauseWords);
         return acc;
       },
-      { scoreParts: [], params: [] }
+      { scoreParts: [], params: [] },
     );
 
     return { clause: '(' + scoreParts.join(' OR ') + ')', params };
@@ -148,9 +148,7 @@ class Database {
         const val = w && typeof w === 'object' ? w.value : w;
         const weight = w && typeof w === 'object' ? w.weight || 1 : 1;
 
-        scoreParts.push(
-          `(CASE WHEN LOWER(${field}) LIKE LOWER(?) THEN ${weight} ELSE 0 END)`
-        );
+        scoreParts.push(`(CASE WHEN LOWER(${field}) LIKE LOWER(?) THEN ${weight} ELSE 0 END)`);
         params.push(`%${val}%`);
       });
     });
@@ -159,17 +157,11 @@ class Database {
   }
 
   search(words, fields, { flag, sort = false } = {}) {
-    const { clause: searchClause, params: searchParams } = Database.searchSql(
-      words,
-      fields
-    );
+    const { clause: searchClause, params: searchParams } = Database.searchSql(words, fields);
     if (searchClause) this.whereRaw(searchClause, searchParams, { flag });
 
     if (sort) {
-      const { scoreSql, params: scoreParams } = Database.scoreSql(
-        words,
-        fields
-      );
+      const { scoreSql, params: scoreParams } = Database.scoreSql(words, fields);
       if (scoreSql) {
         this.orderBy(scoreSql, 'DESC', { params: scoreParams, flag });
       }
@@ -211,9 +203,7 @@ class Database {
     for (const [key, value] of Object.entries(conditions)) {
       // --- OR ---
       if (key === '$or' && Array.isArray(value)) {
-        const parts = value
-          .map((v) => this._parseCondition(v))
-          .filter((x) => x.clause);
+        const parts = value.map((v) => this._parseCondition(v)).filter((x) => x.clause);
         if (parts.length) {
           clauses.push(`(${parts.map((p) => p.clause).join(' OR ')})`);
           parts.forEach((p) => params.push(...p.params));
@@ -223,9 +213,7 @@ class Database {
 
       // --- AND ---
       if (key === '$and' && Array.isArray(value)) {
-        const parts = value
-          .map((v) => this._parseWhere(v))
-          .filter((x) => x.clause);
+        const parts = value.map((v) => this._parseWhere(v)).filter((x) => x.clause);
         if (parts.length) {
           clauses.push(`(${parts.map((p) => p.clause).join(' AND ')})`);
           parts.forEach((p) => params.push(...p.params));
@@ -291,9 +279,7 @@ class Database {
         switch (op) {
           case 'like':
           case 'notLike':
-            clauses.push(
-              `${key} ${op === 'like' ? 'LIKE' : 'NOT LIKE'} ${place}`
-            );
+            clauses.push(`${key} ${op === 'like' ? 'LIKE' : 'NOT LIKE'} ${place}`);
             if (useParam) params.push(value);
             break;
 
@@ -307,17 +293,13 @@ class Database {
 
           case 'isNull':
           case 'isNotNull':
-            clauses.push(
-              `${key} ${op === 'isNull' ? 'IS NULL' : 'IS NOT NULL'}`
-            );
+            clauses.push(`${key} ${op === 'isNull' ? 'IS NULL' : 'IS NOT NULL'}`);
             break;
 
           case 'between':
           case 'notBetween':
             if (Array.isArray(value) && value.length === 2) {
-              clauses.push(
-                `${key} ${op === 'between' ? 'BETWEEN' : 'NOT BETWEEN'} ? AND ?`
-              );
+              clauses.push(`${key} ${op === 'between' ? 'BETWEEN' : 'NOT BETWEEN'} ? AND ?`);
               params.push(value[0], value[1]);
             }
             break;
@@ -395,11 +377,7 @@ class Database {
 
   // ===== JOIN =====
   join(table, onConditions, { type = 'INNER', flag } = {}) {
-    if (
-      onConditions &&
-      typeof onConditions === 'object' &&
-      !Array.isArray(onConditions)
-    ) {
+    if (onConditions && typeof onConditions === 'object' && !Array.isArray(onConditions)) {
       const { clause, params } = this._parseWhere(onConditions);
       if (clause) {
         this._joins.push({
@@ -425,12 +403,7 @@ class Database {
     return this;
   }
 
-  joinRaw(
-    table,
-    onConditions = '',
-    params = [],
-    { type = 'INNER', flag } = {}
-  ) {
+  joinRaw(table, onConditions = '', params = [], { type = 'INNER', flag } = {}) {
     if (onConditions && typeof onConditions === 'string') {
       this._joins.push({
         type: type.toUpperCase(),
@@ -456,9 +429,7 @@ class Database {
 
   _buildSelectSQL() {
     // SELECT 字段
-    const fields = this._fields.length
-      ? this._fields.map((f) => f.clause).join(', ')
-      : '*';
+    const fields = this._fields.length ? this._fields.map((f) => f.clause).join(', ') : '*';
 
     let sql = `SELECT ${fields} FROM ${this._table}`;
     const params = [];
@@ -492,9 +463,7 @@ class Database {
 
     // ORDER
     if (this._orders.length) {
-      const orderClause = this._orders
-        .map((o) => `${o.field} ${o.direction}`)
-        .join(', ');
+      const orderClause = this._orders.map((o) => `${o.field} ${o.direction}`).join(', ');
       sql += ` ORDER BY ${orderClause}`;
 
       for (const o of this._orders) {
@@ -546,12 +515,8 @@ class Database {
     let lastResult = null;
     for (let i = 0; i < list.length; i += batchSize) {
       const batch = list.slice(i, i + batchSize);
-      const placeholders = batch
-        .map(() => `(${keys.map(() => '?').join(',')})`)
-        .join(',');
-      const sql = `INSERT INTO ${this._table} (${keys.join(
-        ','
-      )}) VALUES ${placeholders}`;
+      const placeholders = batch.map(() => `(${keys.map(() => '?').join(',')})`).join(',');
+      const sql = `INSERT INTO ${this._table} (${keys.join(',')}) VALUES ${placeholders}`;
       lastResult = await this.db.run(sql, batch.flatMap(Object.values));
     }
     return lastResult;
@@ -560,8 +525,7 @@ class Database {
   async update(data, { all = false } = {}) {
     if (!data || !Object.keys(data).length) return 0;
 
-    if (!all && !this._wheres.length)
-      throw new Error('Unsafe UPDATE: missing WHERE');
+    if (!all && !this._wheres.length) throw new Error('Unsafe UPDATE: missing WHERE');
 
     const copy = this.clone();
     const sets = Object.keys(data)
@@ -582,8 +546,7 @@ class Database {
   }
 
   async delete({ all = false } = {}) {
-    if (!all && !this._wheres.length)
-      throw new Error('Unsafe DELETE: missing WHERE');
+    if (!all && !this._wheres.length) throw new Error('Unsafe DELETE: missing WHERE');
 
     const copy = this.clone();
     let sql = `DELETE FROM ${copy._table}`;
@@ -616,11 +579,7 @@ class Database {
   }
 
   async count() {
-    const row = await this.clone()
-      .clearPage()
-      .clearSelect()
-      .select(`COUNT(*) AS c`)
-      .findOne();
+    const row = await this.clone().clearPage().clearSelect().select(`COUNT(*) AS c`).findOne();
     return row?.c || 0;
   }
 
@@ -696,8 +655,7 @@ class Database {
   [ 1, 3, 5 ]
   */
   async increment(sets, { all = false } = {}) {
-    if (!all && !this._wheres.length)
-      throw new Error('Unsafe increment: missing WHERE');
+    if (!all && !this._wheres.length) throw new Error('Unsafe increment: missing WHERE');
 
     const keys = Object.keys(sets);
     if (!keys.length) return null;
@@ -743,7 +701,7 @@ class Database {
   batchDiffUpdate(updateRules, conditions = {}) {
     if (!Object.keys(conditions || {}).length)
       throw new Error(
-        'batchDiffUpdate: missing conditions — updating entire table is not allowed.'
+        'batchDiffUpdate: missing conditions — updating entire table is not allowed.',
       );
 
     const valueParams = [];
@@ -756,13 +714,10 @@ class Database {
       items.forEach((row) => valueParams.push(row[match], row[field]));
     }
 
-    const { clause: whereClauseRaw, params: whereParams } =
-      this._parseWhere(conditions);
+    const { clause: whereClauseRaw, params: whereParams } = this._parseWhere(conditions);
     const whereClause = whereClauseRaw ? `WHERE ${whereClauseRaw}` : '';
 
-    const sql = `UPDATE ${this._table} SET ${setFragments.join(
-      ', '
-    )} ${whereClause}`;
+    const sql = `UPDATE ${this._table} SET ${setFragments.join(', ')} ${whereClause}`;
     return this.db.run(sql, [...valueParams, ...whereParams]);
   }
 }

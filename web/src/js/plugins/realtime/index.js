@@ -1,8 +1,4 @@
-import {
-  reqUserError,
-  reqUserGetRealTime,
-  reqUserRealTime,
-} from '../../../api/user';
+import { reqUserError, reqUserGetRealTime, reqUserRealTime } from '../../../api/user';
 
 const realtime = {
   flag: '',

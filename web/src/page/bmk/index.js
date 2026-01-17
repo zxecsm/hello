@@ -52,11 +52,7 @@ import { BoxSelector } from '../../js/utils/boxSelector';
 import { otherWindowMsg, waitLogin } from '../home/home';
 import cacheFile from '../../js/utils/cacheFile';
 import localData from '../../js/common/localData';
-import {
-  isHideCategoryBox,
-  renderCategoryList,
-  showCategoryBox,
-} from './category';
+import { isHideCategoryBox, renderCategoryList, showCategoryBox } from './category';
 
 const $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
@@ -155,9 +151,7 @@ function hdCategoryAdd(e, cb, hasList) {
     return;
   }
 
-  const filterList = bmkGroupList.filter(
-    (item) => !hasList.some((i) => i.id === item.id)
-  );
+  const filterList = bmkGroupList.filter((item) => !hasList.some((i) => i.id === item.id));
 
   const data = [];
   if (filterList.length === 0) {
@@ -183,7 +177,7 @@ function hdCategoryAdd(e, cb, hasList) {
         cb && cb({ param, close });
       }
     },
-    '选择分组'
+    '选择分组',
   );
 }
 
@@ -221,7 +215,7 @@ const tabsObj = new CreateTabs({
         close();
         add(param);
       },
-      data
+      data,
     );
   },
 });
@@ -335,7 +329,7 @@ export function renderList(y) {
               total,
               small: getScreenSize().w <= _d.screen,
             }),
-          }
+          },
         );
 
         stopSelect();
@@ -349,9 +343,7 @@ export function renderList(y) {
         loadImg.bind(
           [...$contentWrap[0].querySelectorAll('.logo')].filter((item) => {
             const $item = $(item);
-            let { logo, link } = getItemObj(
-              $item.parent().prev().attr('data-id')
-            );
+            let { logo, link } = getItemObj($item.parent().prev().attr('data-id'));
 
             if (logo) {
               logo = getFilePath(logo);
@@ -366,9 +358,7 @@ export function renderList(y) {
           }),
           (item) => {
             const $item = $(item);
-            let { logo, link } = getItemObj(
-              $item.parent().prev().attr('data-id')
-            );
+            let { logo, link } = getItemObj($item.parent().prev().attr('data-id'));
 
             if (logo) {
               logo = getFilePath(logo);
@@ -380,11 +370,9 @@ export function renderList(y) {
                 $item.css('background-image', `url(${cache})`).addClass('load');
               })
               .catch(() => {
-                $item
-                  .css('background-image', `url(${defaultIcon})`)
-                  .addClass('load');
+                $item.css('background-image', `url(${defaultIcon})`).addClass('load');
               });
-          }
+          },
         );
       }
     })
@@ -461,7 +449,7 @@ function movebmk(e, arr, loading = { start() {}, end() {} }) {
               }
             }
           },
-          `${runState === 'own' ? '移动' : '添加'}书签到分组`
+          `${runState === 'own' ? '移动' : '添加'}书签到分组`,
         );
       }
     })
@@ -486,9 +474,7 @@ function bmMenu(e) {
   data.push({
     id: '2',
     text: runState === 'own' ? '移动到' : '添加到',
-    beforeIcon: `iconfont ${
-      runState === 'own' ? 'icon-moveto' : 'icon-icon-test'
-    }`,
+    beforeIcon: `iconfont ${runState === 'own' ? 'icon-moveto' : 'icon-icon-test'}`,
   });
   if (runState === 'own') {
     data.push({
@@ -520,10 +506,7 @@ function bmMenu(e) {
                 placeholder: 'https://',
                 value: obj.link,
                 verify(val) {
-                  return (
-                    rMenu.validString(val, 1, _d.fieldLength.url) ||
-                    rMenu.validUrl(val)
-                  );
+                  return rMenu.validString(val, 1, _d.fieldLength.url) || rMenu.validUrl(val);
                 },
               },
               des: {
@@ -563,7 +546,7 @@ function bmMenu(e) {
                 loading.end();
               });
           },
-          '编辑书签'
+          '编辑书签',
         );
       } else if (id === '2') {
         movebmk(e, [obj], loading);
@@ -585,7 +568,7 @@ function bmMenu(e) {
           });
       }
     },
-    obj.title
+    obj.title,
   );
 }
 
@@ -666,9 +649,7 @@ function checkItem(el) {
 
 function updateSelectInfo() {
   const $itemBox = $contentWrap.find('.item_box'),
-    $checkArr = $itemBox.filter(
-      (_, item) => $(item).find('.check_state').attr('check') === 'y'
-    );
+    $checkArr = $itemBox.filter((_, item) => $(item).find('.check_state').attr('check') === 'y');
   _msg.botMsg(`选中：${$checkArr.length}项`);
   if ($checkArr.length === $itemBox.length) {
     footerCheckIocnState('y');
@@ -719,10 +700,7 @@ $headWrap
             beforeText: '网址：',
             placeholder: 'https://',
             verify(val) {
-              return (
-                rMenu.validString(val, 1, _d.fieldLength.url) ||
-                rMenu.validUrl(val)
-              );
+              return rMenu.validString(val, 1, _d.fieldLength.url) || rMenu.validUrl(val);
             },
           },
         },
@@ -762,10 +740,7 @@ $headWrap
                       placeholder: 'https://',
                       value: u,
                       verify(val) {
-                        return (
-                          rMenu.validString(val, 1, _d.fieldLength.url) ||
-                          rMenu.validUrl(val)
-                        );
+                        return rMenu.validString(val, 1, _d.fieldLength.url) || rMenu.validUrl(val);
                       },
                     },
                     des: {
@@ -803,7 +778,7 @@ $headWrap
                       loading.end();
                     });
                 },
-                '添加书签'
+                '添加书签',
               );
             }
           })
@@ -811,7 +786,7 @@ $headWrap
             loading.end();
           });
       },
-      '添加书签'
+      '添加书签',
     );
   })
   .on('click', '.h_go_home', hdGoHome)
@@ -824,9 +799,7 @@ $headWrap
 // 获取选中项
 function getSelectItem() {
   const $itemBox = $contentWrap.find('.item_box'),
-    $checkArr = $itemBox.filter(
-      (_, item) => $(item).find('.check_state').attr('check') === 'y'
-    );
+    $checkArr = $itemBox.filter((_, item) => $(item).find('.check_state').attr('check') === 'y');
   if ($checkArr.length === 0) return;
   let arr = [];
   $checkArr.each((i, v) => {
@@ -909,10 +882,7 @@ function hdCheckAll() {
 
 function footerCheckIocnState(state) {
   $footer.find('span').attr({
-    class:
-      state === 'y'
-        ? 'iconfont icon-xuanzeyixuanze'
-        : 'iconfont icon-xuanzeweixuanze',
+    class: state === 'y' ? 'iconfont icon-xuanzeyixuanze' : 'iconfont icon-xuanzeweixuanze',
     check: state,
   });
 }
@@ -931,7 +901,7 @@ scrollState(
     } else {
       $headWrap.addClass('open');
     }
-  }, 1000)
+  }, 1000),
 );
 
 document.addEventListener('keydown', function (e) {

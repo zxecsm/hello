@@ -102,7 +102,7 @@ editor.getSession().on(
   debounce(function () {
     switchUndoState();
     rende();
-  }, 1000)
+  }, 1000),
 );
 function switchUndoState() {
   if (aceEditor.hasUndo(editor)) {
@@ -199,7 +199,7 @@ function syncScrollFromEditor(noAnimate) {
 
   // 获取预览最靠近编辑器第一行的行号
   const curLine = getMinIndex(
-    previewLines.map((item) => Math.abs(firstVisibleRow - item.dataset.line))
+    previewLines.map((item) => Math.abs(firstVisibleRow - item.dataset.line)),
   );
   // let firstElement = $previewBox[0].querySelector(
   //   `[data-line="${firstVisibleRow}"]`
@@ -218,7 +218,7 @@ function syncScrollFromEditor(noAnimate) {
         {
           scrollTop: offset,
         },
-        _d.speed
+        _d.speed,
       );
     }
   }
@@ -229,7 +229,7 @@ editor.session.on(
   'changeScrollTop',
   debounce(() => {
     syncScrollFromEditor();
-  }, 200)
+  }, 200),
 );
 // 预览区滚动同步到编辑器
 function syncScrollFromPreview() {
@@ -239,9 +239,7 @@ function syncScrollFromPreview() {
   if ($editBox.is(':hidden')) return;
   const scrollTop = $previewBox.find('.content').scrollTop();
 
-  let firstVisibleElement = previewLines.find(
-    (el) => el.offsetTop >= scrollTop
-  );
+  let firstVisibleElement = previewLines.find((el) => el.offsetTop >= scrollTop);
 
   if (firstVisibleElement) {
     const line = parseInt(firstVisibleElement.getAttribute('data-line'), 10);
@@ -292,9 +290,7 @@ function updateIframeTitle(title) {
   if (isIframe()) {
     try {
       // 更新标题
-      window.parent.openInIframe.iframes
-        .get(window.iframeId)
-        .updateTitle(title);
+      window.parent.openInIframe.iframes.get(window.iframeId).updateTitle(title);
     } catch {}
   }
 }
@@ -369,9 +365,7 @@ async function rende() {
 mdWorker.addEventListener('message', (event) => {
   $previewBox.find('.content').html(event.data);
   previewLines = [...$previewBox[0].querySelectorAll(`[data-line]`)];
-  const imgs = [
-    ...$previewBox.find('.content')[0].querySelectorAll('img'),
-  ].filter((item) => {
+  const imgs = [...$previewBox.find('.content')[0].querySelectorAll('img')].filter((item) => {
     const url = item.getAttribute('data-src');
     const cache = cacheFile.hasUrl(url, 'image');
     if (cache) {
@@ -569,7 +563,7 @@ async function hdUpFile(files) {
         (percent) => {
           pro.update(percent);
         },
-        signal
+        signal,
       );
       if (result.code === 1) {
         const { id } = result.data;
@@ -642,9 +636,7 @@ async function settingEdit(e) {
       id: 'history',
       text: '保存笔记历史',
       beforeIcon: 'iconfont icon-history',
-      afterIcon:
-        'iconfont ' +
-        (noteHistoryState ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+      afterIcon: 'iconfont ' + (noteHistoryState ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
       param: { value: noteHistoryState },
     });
   }
@@ -686,7 +678,7 @@ async function settingEdit(e) {
           });
       }
     },
-    '设置'
+    '设置',
   );
 }
 if (getScreenSize().w <= _d.screen) {
@@ -700,17 +692,13 @@ function previewState() {
   }
   if (previewStateFlag === 'y') {
     previewStateFlag = 'n';
-    $headBtns
-      .find('.preview_state')
-      .attr('class', 'preview_state iconfont icon-kejian');
+    $headBtns.find('.preview_state').attr('class', 'preview_state iconfont icon-kejian');
     $previewBox.css('display', 'none');
     $editBox.addClass('open');
     $headBtns.find('.to_max_btn').css('display', 'none');
   } else {
     previewStateFlag = 'y';
-    $headBtns
-      .find('.preview_state')
-      .attr('class', 'preview_state iconfont icon-bukejian');
+    $headBtns.find('.preview_state').attr('class', 'preview_state iconfont icon-bukejian');
     $previewBox.css('display', 'block');
     $editBox.removeClass('open');
     $headBtns.find('.to_max_btn').css('display', 'block');

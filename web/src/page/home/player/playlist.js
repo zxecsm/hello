@@ -27,12 +27,7 @@ import {
   songCollect,
   songTooltip,
 } from './index.js';
-import {
-  changePlayState,
-  musicPlay,
-  setPlayingSongInfo,
-  setSongPlayMode,
-} from './lrc.js';
+import { changePlayState, musicPlay, setPlayingSongInfo, setSongPlayMode } from './lrc.js';
 import { playMv } from './widget.js';
 import { reqPlayerPlayList } from '../../../api/player.js';
 import pagination from '../../../js/plugins/pagination/index.js';
@@ -66,7 +61,7 @@ export function diffPlayingList(arr) {
       (item, idx) =>
         item.id === playingList[idx].id &&
         item.title === playingList[idx].title &&
-        item.artist === playingList[idx].artist
+        item.artist === playingList[idx].artist,
     );
   return res;
 }
@@ -74,9 +69,7 @@ export function diffPlayingList(arr) {
 export function updateNewPlayList(list) {
   if (diffPlayingList(list)) {
     setCurPlayingList(
-      setSongPlayMode() === 'random'
-        ? myShuffle(deepClone(list))
-        : deepClone(list)
+      setSongPlayMode() === 'random' ? myShuffle(deepClone(list)) : deepClone(list),
     );
     playingList = deepClone(list);
     updatePlayingList(1);
@@ -90,9 +83,7 @@ export function showPlayingList() {
       if (!playingList) {
         playingList = [];
       }
-      const idx = playingList.findIndex(
-        (v) => setPlayingSongInfo().id === v.id
-      );
+      const idx = playingList.findIndex((v) => setPlayingSongInfo().id === v.id);
       if (idx >= 0) {
         playingPageNo = Math.ceil((idx + 1) / playingPageSize);
       } else {
@@ -146,8 +137,8 @@ export async function renderPlayingList() {
       .html(
         _tpl(
           `<p style="padding: 2rem 0;text-align: center;pointer-events: none;">{{_d.emptyList}}</p>`,
-          { _d }
-        )
+          { _d },
+        ),
       );
     return;
   }
@@ -156,11 +147,11 @@ export async function renderPlayingList() {
   playingPageNo < 1
     ? (playingPageNo = totalPage)
     : playingPageNo > totalPage
-    ? (playingPageNo = 1)
-    : null;
+      ? (playingPageNo = 1)
+      : null;
   let arr = playingList.slice(
     (playingPageNo - 1) * playingPageSize,
-    playingPageNo * playingPageSize
+    playingPageNo * playingPageSize,
   );
   arr = await hdLoadedSong(arr);
   const html = _tpl(
@@ -198,14 +189,12 @@ export async function renderPlayingList() {
           total: playingList.length,
         });
       },
-    }
+    },
   );
   $pMusicListBox.find('.p_foot').html(html);
   playListLazyImg.bind(
-    hdMusicImgCache(
-      $pMusicListBox.find('.p_foot')[0].querySelectorAll('.logo')
-    ),
-    musicLoadImg
+    hdMusicImgCache($pMusicListBox.find('.p_foot')[0].querySelectorAll('.logo')),
+    musicLoadImg,
   );
 }
 // 分页
@@ -277,10 +266,7 @@ $pMusicListBox
     state = state === 'y' ? 'n' : 'y';
     const $item = $pMusicListBox.find('.check_state');
     $this.attr({
-      class:
-        state === 'y'
-          ? 'iconfont icon-xuanzeyixuanze'
-          : 'iconfont icon-xuanzeweixuanze',
+      class: state === 'y' ? 'iconfont icon-xuanzeyixuanze' : 'iconfont icon-xuanzeweixuanze',
       check: state,
     });
     $item
@@ -352,9 +338,7 @@ function updateSelectInfo() {
   const $item = $pMusicListBox.find('.song_item');
   const $checkArr = $item.filter((_, item) => {
     const $item = $(item);
-    return (
-      $item.attr('data-id') && $item.find('.check_state').attr('check') === 'y'
-    );
+    return $item.attr('data-id') && $item.find('.check_state').attr('check') === 'y';
   });
   _msg.botMsg(`选中：${$checkArr.length}项`);
   if ($checkArr.length === $item.length) {
@@ -439,7 +423,7 @@ $pMusicListBox
       } else {
         songCollect([sobj.id]);
       }
-    }, 2000)
+    }, 2000),
   );
 // 更新播放列表
 export const updatePlayingList = debounce(function (msg) {
@@ -464,13 +448,12 @@ export const updatePlayingList = debounce(function (msg) {
 }, 1000);
 // 高亮正在播放歌曲
 export function playingListHighlight(isPosition) {
-  if ($pMusicListBox.is(':hidden') || !setPlayingSongInfo().id || !playingList)
-    return;
+  if ($pMusicListBox.is(':hidden') || !setPlayingSongInfo().id || !playingList) return;
   const $song_item = $pMusicListBox.find('.p_foot').find('.song_item');
   $song_item.removeClass('active').find('.play_gif').removeClass('show');
   const idx = Array.prototype.findIndex.call(
     $song_item,
-    (item) => item.dataset.id === setPlayingSongInfo().id
+    (item) => item.dataset.id === setPlayingSongInfo().id,
   );
   if (idx < 0) return;
   const cur = $song_item.eq(idx);

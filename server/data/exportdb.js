@@ -9,9 +9,7 @@ import appConfig from './config.js';
 
     // 导出数据库到JSON文件
     const tables = [];
-    const tableList = await allSql(
-      `SELECT name FROM sqlite_master WHERE type='table';`
-    );
+    const tableList = await allSql(`SELECT name FROM sqlite_master WHERE type='table';`);
     for (const table of tableList) {
       const list = await allSql(`SELECT * FROM ${table.name}`);
       table.data = list;

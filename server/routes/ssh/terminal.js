@@ -76,24 +76,14 @@ export function createTerminal(account, temid, config, defaultPath = '') {
   sshClient.on('ready', () => {
     sshClient.shell((err, stream) => {
       if (err) {
-        _connect.send(
-          account,
-          temid,
-          { type: 'ssh', data: `SSH Error: ${err.message}` },
-          'self'
-        );
+        _connect.send(account, temid, { type: 'ssh', data: `SSH Error: ${err.message}` }, 'self');
         return cleanup();
       }
 
       sshObj.stream = stream;
 
       stream.on('data', (d) => {
-        _connect.send(
-          account,
-          temid,
-          { type: 'ssh', data: d.toString() },
-          'self'
-        );
+        _connect.send(account, temid, { type: 'ssh', data: d.toString() }, 'self');
       });
 
       stream.on('close', cleanup);
@@ -107,12 +97,7 @@ export function createTerminal(account, temid, config, defaultPath = '') {
   });
 
   sshClient.on('error', (err) => {
-    _connect.send(
-      account,
-      temid,
-      { type: 'ssh', data: `SSH Error: ${err.message}` },
-      'self'
-    );
+    _connect.send(account, temid, { type: 'ssh', data: `SSH Error: ${err.message}` }, 'self');
     cleanup();
   });
 

@@ -62,8 +62,7 @@ export class CircularProgressBar {
 
     this.wrapper = wrapper;
     this.progressCircle = wrapper.querySelector('.progress-ring');
-    this.progressCircle.style.transition =
-      'stroke-dashoffset 0.6s ease, stroke 0.3s ease';
+    this.progressCircle.style.transition = 'stroke-dashoffset 0.6s ease, stroke 0.3s ease';
     this.setColor(this.color);
     this.progressText = textDiv;
     this.titleDiv = wrapper.querySelector('.title');

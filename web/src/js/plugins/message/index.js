@@ -139,9 +139,7 @@ class Msg {
   hide() {
     if (this.opt.duration === 0) return;
     this.progress.style.opacity = 1;
-    this.progress.style.transition = `width ${
-      this.opt.duration / 1000
-    }s linear`;
+    this.progress.style.transition = `width ${this.opt.duration / 1000}s linear`;
     this.progress.style.width = '0';
     this.timer = setTimeout(() => {
       clearTimeout(this.timer);
@@ -216,8 +214,7 @@ const botMsg = (function () {
     }
 
     textbox.textContent = str;
-    box.style.transition =
-      'transform 0.3s ease-in-out,opacity 0.3s ease-in-out';
+    box.style.transition = 'transform 0.3s ease-in-out,opacity 0.3s ease-in-out';
     box.style.transform = 'none';
     box.style.opacity = '1';
 
@@ -249,11 +246,7 @@ document.addEventListener('visibilitychange', function () {
     cacheMsg = [];
   }
 });
-function success(
-  message = '操作成功',
-  callback,
-  { duration = 3000, reside = false } = {}
-) {
+function success(message = '操作成功', callback, { duration = 3000, reside = false } = {}) {
   const opt = {
     message,
     type: 'success',
@@ -267,11 +260,7 @@ function success(
   }
   new Msg(opt, callback);
 }
-function error(
-  message = '操作失败',
-  callback,
-  { duration = 6000, reside = false } = {}
-) {
+function error(message = '操作失败', callback, { duration = 6000, reside = false } = {}) {
   const opt = {
     message,
     type: 'error',

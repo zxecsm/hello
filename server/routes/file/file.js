@@ -26,10 +26,7 @@ export async function _delDir(path) {
   if (_d.trashState) {
     const trashDir = appConfig.trashDir(appConfig.adminAccount);
 
-    if (
-      _path.isPathWithin(path, trashDir, true) ||
-      _path.isPathWithin(trashDir, path, true)
-    ) {
+    if (_path.isPathWithin(path, trashDir, true) || _path.isPathWithin(trashDir, path, true)) {
       return _f.del(path);
     }
 
@@ -217,16 +214,10 @@ export async function getUniqueFilename(path) {
   const filename = _path.basename(path)[0] || 'unknown';
 
   let counter = 0;
-  let newPath = _path.normalize(
-    dir,
-    _path.randomFilenameSuffix(filename, ++counter)
-  );
+  let newPath = _path.normalize(dir, _path.randomFilenameSuffix(filename, ++counter));
 
   while (await _f.exists(newPath)) {
-    newPath = _path.normalize(
-      dir,
-      _path.randomFilenameSuffix(filename, ++counter)
-    );
+    newPath = _path.normalize(dir, _path.randomFilenameSuffix(filename, ++counter));
   }
 
   return newPath;
@@ -240,9 +231,7 @@ export async function hasSameNameFile(targetPath, list) {
 
 // 读取收藏目录
 export async function readFavorites(account) {
-  return (
-    await _f.readFile(appConfig.fileConfigDir(account, 'favorites'), null, '')
-  )
+  return (await _f.readFile(appConfig.fileConfigDir(account, 'favorites'), null, ''))
     .toString()
     .split('\n')
     .filter(Boolean);
@@ -250,17 +239,12 @@ export async function readFavorites(account) {
 
 // 写入收藏目录
 export async function writeFavorites(account, list) {
-  await _f.writeFile(
-    appConfig.fileConfigDir(account, 'favorites'),
-    list.join('\n')
-  );
+  await _f.writeFile(appConfig.fileConfigDir(account, 'favorites'), list.join('\n'));
 }
 
 // 读取历史目录
 export async function readHistoryDirs(account) {
-  return (
-    await _f.readFile(appConfig.fileConfigDir(account, 'cd_history'), null, '')
-  )
+  return (await _f.readFile(appConfig.fileConfigDir(account, 'cd_history'), null, ''))
     .toString()
     .split('\n')
     .filter(Boolean);
@@ -268,16 +252,12 @@ export async function readHistoryDirs(account) {
 
 // 写入历史目录
 export async function writeHistoryDirs(account, list) {
-  await _f.writeFile(
-    appConfig.fileConfigDir(account, 'cd_history'),
-    list.join('\n')
-  );
+  await _f.writeFile(appConfig.fileConfigDir(account, 'cd_history'), list.join('\n'));
 }
 
 export async function fileToMusic(p) {
   const HASH = await _crypto.sampleHash(p);
-  if (await db('songs').select('id').where({ hash: HASH }).findOne())
-    return false;
+  if (await db('songs').select('id').where({ hash: HASH }).findOne()) return false;
 
   const songId = nanoid();
 
@@ -294,16 +274,7 @@ export async function fileToMusic(p) {
   // 读取歌曲元数据
   const songInfo = await getSongInfo(_path.normalize(tDir, tName));
 
-  let {
-    album = '',
-    year = '',
-    title,
-    duration,
-    artist,
-    pic = '',
-    lrc = '',
-    picFormat,
-  } = songInfo;
+  let { album = '', year = '', title, duration, artist, pic = '', lrc = '', picFormat } = songInfo;
 
   picFormat = _path.basename(picFormat)[0];
   if (picFormat && pic) {
@@ -334,8 +305,7 @@ export async function fileToMusic(p) {
 
 export async function fileToBg(p) {
   const HASH = await _crypto.sampleHash(p);
-  if (await db('bg').select('url').where({ hash: HASH }).findOne())
-    return false;
+  if (await db('bg').select('url').where({ hash: HASH }).findOne()) return false;
 
   const [, title, , suffix] = _path.basename(p);
   const create_at = Date.now();

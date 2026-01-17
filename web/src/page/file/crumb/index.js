@@ -35,9 +35,7 @@ function updatePageInfo() {
 }
 function saveFileHistory(path) {
   if (!path) return;
-  const list = localData
-    .get('fileHistory')
-    .filter((item) => item && item !== path);
+  const list = localData.get('fileHistory').filter((item) => item && item !== path);
   list.push(path);
   if (list.length > _d.fieldLength.cdHistoryLength) {
     list.slice(-_d.fieldLength.cdHistoryLength);
@@ -60,7 +58,7 @@ function renderCrumb(HASH) {
     </template>
     <div cursor="y" class="refresh iconfont icon-suijibofang"></div>
     `,
-    { pathArr: pathToArr(HASH), hasBack, hasForward }
+    { pathArr: pathToArr(HASH), hasBack, hasForward },
   );
   _tpl.html(target, html);
 }
@@ -130,8 +128,7 @@ function hdInputKeyup(e) {
 }
 
 function hdInputKeyDown(e) {
-  if (!isLogin() || window._pageName !== 'file' || this.value.trim() === '')
-    return;
+  if (!isLogin() || window._pageName !== 'file' || this.value.trim() === '') return;
   if (e.key === 'Tab') {
     e.preventDefault();
     reqFileComplete({ path: this.value, type: 'dir' })
@@ -152,9 +149,7 @@ oInp.addEventListener('keydown', hdInputKeyDown);
 // 编辑路径
 function editPath() {
   const placeholder =
-    isLogin() && window._pageName === 'file'
-      ? '请输入路径，按Tab键自动补全路径'
-      : '请输入路径';
+    isLogin() && window._pageName === 'file' ? '请输入路径，按Tab键自动补全路径' : '请输入路径';
   oInp.title = placeholder;
   oInp.placeholder = placeholder;
   oInp.value = hashRouter.getRoute();

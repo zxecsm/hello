@@ -83,11 +83,7 @@ import { addTask } from './task';
 import { reqTaskList } from '../../api/task';
 import cacheFile from '../../js/utils/cacheFile';
 import imgPreview from '../../js/plugins/imgPreview';
-import {
-  BoxSelector,
-  getEventPoints,
-  MouseElementTracker,
-} from '../../js/utils/boxSelector';
+import { BoxSelector, getEventPoints, MouseElementTracker } from '../../js/utils/boxSelector';
 import { otherWindowMsg } from '../home/home';
 import localData from '../../js/common/localData';
 import { reqUserFileToken } from '../../api/user';
@@ -112,9 +108,7 @@ function changeHiddenFileModel() {
     .find('.h_hidden_file_btn')
     .attr(
       'class',
-      `h_btn h_hidden_file_btn iconfont ${
-        hiddenFile ? 'icon-kejian' : 'icon-bukejian'
-      }`
+      `h_btn h_hidden_file_btn iconfont ${hiddenFile ? 'icon-kejian' : 'icon-bukejian'}`,
     );
 }
 if (isIframe()) {
@@ -143,10 +137,7 @@ function updatePromptText(path) {
   if (isRoot() && path === '/') {
     color = 'var(--message-error-color)';
     text = '系统根目录，请谨慎操作';
-  } else if (
-    isRoot() &&
-    dangerDir.some((p) => _path.isPathWithin(p, path, 1))
-  ) {
+  } else if (isRoot() && dangerDir.some((p) => _path.isPathWithin(p, path, 1))) {
     color = 'var(--message-error-color)';
     text = '系统文件目录，请谨慎操作';
   } else if (_path.basename(path)[0] === _d.fileHistoryDirName) {
@@ -174,20 +165,14 @@ function updatePromptText(path) {
     color = 'var(--message-success-color)';
     text = '用户书签/头像图标目录';
   } else if (_path.isPathWithin(_d.userConfigDir, path, 1)) {
-    color = isRoot()
-      ? 'var(--message-error-color)'
-      : 'var(--message-warning-color)';
+    color = isRoot() ? 'var(--message-error-color)' : 'var(--message-warning-color)';
     text = '用户配置目录，请谨慎操作';
   } else if (_path.isPathWithin(_d.trashDir, path, 1)) {
     color = 'var(--message-warning-color)';
     text = '回收站目录，请谨慎操作';
   }
   if (color) {
-    $promptText
-      .css('display', 'block')
-      .find('.text')
-      .css('color', color)
-      .text(text);
+    $promptText.css('display', 'block').find('.text').css('color', color).text(text);
   } else {
     $promptText.css('display', 'none');
   }
@@ -199,13 +184,9 @@ function changeListShowModel() {
     .find('.h_showmodel_btn')
     .attr(
       'class',
-      `h_btn h_showmodel_btn iconfont ${
-        fileShowGrid ? 'icon-liebiao' : 'icon-liebiao1'
-      }`
+      `h_btn h_showmodel_btn iconfont ${fileShowGrid ? 'icon-liebiao' : 'icon-liebiao1'}`,
     );
-  $contentWrap
-    .find('.container')
-    .attr('class', `container ${fileShowGrid ? 'grid' : ''}`);
+  $contentWrap.find('.container').attr('class', `container ${fileShowGrid ? 'grid' : ''}`);
 }
 changeListShowModel();
 let pageNo = 1;
@@ -334,8 +315,7 @@ async function renderList(top) {
       list: fileListData.data,
       logoColor(type, fileType) {
         if (type === 'dir') return type;
-        if (type === 'file' && (fileType === 'symlink' || fileType === 'file'))
-          return '';
+        if (type === 'file' && (fileType === 'symlink' || fileType === 'file')) return '';
         return 'other';
       },
       hdLogo(name, type, size) {
@@ -361,7 +341,7 @@ async function renderList(top) {
         return { a, b };
       },
       _d,
-    }
+    },
   );
 
   if (fileListData.total > 0) {
@@ -382,22 +362,19 @@ async function renderList(top) {
   $pagination.addClass('open');
   $header.addClass('open');
   $curmbBox.addClass('open');
-  const logoImgs = [...$contentWrap[0].querySelectorAll('.logo.is_img')].filter(
-    (item) => {
-      const $item = $(item);
-      const { path, name, size } = getFileItem($item.parent().data('id'));
-      if (isImgFile(name)) {
-        const url =
-          getFilePath(`/file/${path}/${name}`, { w: 256 }) + `#${size}`;
-        const cache = cacheFile.hasUrl(url, 'image');
-        if (cache) {
-          $item.css('background-image', `url(${cache})`);
-        }
-        return !cache;
+  const logoImgs = [...$contentWrap[0].querySelectorAll('.logo.is_img')].filter((item) => {
+    const $item = $(item);
+    const { path, name, size } = getFileItem($item.parent().data('id'));
+    if (isImgFile(name)) {
+      const url = getFilePath(`/file/${path}/${name}`, { w: 256 }) + `#${size}`;
+      const cache = cacheFile.hasUrl(url, 'image');
+      if (cache) {
+        $item.css('background-image', `url(${cache})`);
       }
-      return false;
+      return !cache;
     }
-  );
+    return false;
+  });
   lazyImg.bind(logoImgs, async (item) => {
     const $item = $(item);
     const { path, name, size } = getFileItem($item.parent().data('id'));
@@ -422,11 +399,7 @@ const mouseElementTracker = new MouseElementTracker(document, {
   delay: 300,
   onStart({ e }) {
     const item = _getTarget($contentWrap[0], e, '.content_wrap .file_item');
-    if (
-      isSelecting() &&
-      item &&
-      $(item).find('.check_state').attr('check') === 'y'
-    ) {
+    if (isSelecting() && item && $(item).find('.check_state').attr('check') === 'y') {
       mouseFromDom = item;
       mouseElementTracker.changeInfo(`选中 ${getCheckDatas().length} 项`);
     } else {
@@ -441,11 +414,7 @@ const mouseElementTracker = new MouseElementTracker(document, {
       $(mouseFromDom).find('.check_state').attr('check') === 'y'
     ) {
       const to = dropElement
-        ? _getTarget(
-            $contentWrap[0],
-            { target: dropElement },
-            '.content_wrap .file_item'
-          )
+        ? _getTarget($contentWrap[0], { target: dropElement }, '.content_wrap .file_item')
         : null;
       if (to) {
         const toId = to.dataset.id;
@@ -457,7 +426,7 @@ const mouseElementTracker = new MouseElementTracker(document, {
             data,
             false,
             `${toData.path}/${toData.name}`,
-            `移动 ${data.length} 项到：${toData.name}？`
+            `移动 ${data.length} 项到：${toData.name}？`,
           );
         }
       }
@@ -567,7 +536,7 @@ async function readFileAndDir(obj, e) {
           // 图片
           if (isImgFile(p)) {
             const list = fileListData.data.filter(
-              (item) => item.type === 'file' && isImgFile(item.name)
+              (item) => item.type === 'file' && isImgFile(item.name),
             );
             const arr = list.map((item) => {
               const p = `${item.path}/${item.name}`;
@@ -580,7 +549,7 @@ async function readFileAndDir(obj, e) {
             imgPreview(
               arr,
               list.findIndex((item) => item.id === obj.id),
-              { x: e.clientX, y: e.clientY }
+              { x: e.clientX, y: e.clientY },
             );
           } else if (isVideoFile(p)) {
             // 视频
@@ -590,10 +559,7 @@ async function readFileAndDir(obj, e) {
             _myOpen(fPath, obj.name);
           } else {
             // 其他下载
-            downloadFile(
-              [{ fileUrl: fPath + `#${size}`, filename: name }],
-              'image'
-            );
+            downloadFile([{ fileUrl: fPath + `#${size}`, filename: name }], 'image');
           }
         }
       }
@@ -606,11 +572,7 @@ $contentWrap
     if (fileShowGrid) {
       readFileAndDir(getFileItem(id), e);
     } else {
-      rightList(
-        e,
-        getFileItem(id),
-        this.parentNode.querySelector('.check_state')
-      );
+      rightList(e, getFileItem(id), this.parentNode.querySelector('.check_state'));
     }
   })
   .on('click', '.size', function () {
@@ -629,11 +591,7 @@ $contentWrap
   .on('click', '.name', function (e) {
     const id = this.parentNode.dataset.id;
     if (fileShowGrid) {
-      rightList(
-        e,
-        getFileItem(id),
-        this.parentNode.querySelector('.check_state')
-      );
+      rightList(e, getFileItem(id), this.parentNode.querySelector('.check_state'));
     } else {
       readFileAndDir(getFileItem(id), e);
     }
@@ -669,9 +627,7 @@ $contentWrap
     const str = `名称：${name}\n类型：${type === 'dir' ? '文件夹' : '文件'}${
       type === 'file' && fileType !== 'file' ? `(${fileTypeName})` : ''
     }\n路径：${path}${
-      type === 'file' && fileType === 'symlink'
-        ? ` => ${linkTarget}(${linkTargetTypeName})`
-        : ''
+      type === 'file' && fileType === 'symlink' ? ` => ${linkTarget}(${linkTargetTypeName})` : ''
     }${mode ? `\n权限：${mode}\n用户ID：${uid}\n用户组ID：${gid}` : ''}${
       type === 'dir' && favorite !== undefined
         ? `\n收藏状态：${favorite ? '已收藏' : '未收藏'}`
@@ -690,11 +646,7 @@ $contentWrap
     if (isMobile() || isSelecting()) return;
     const fileItem = _getTarget(this, e, '.content_wrap .file_item');
     if (fileItem) {
-      rightList(
-        e,
-        getFileItem(fileItem.dataset.id),
-        fileItem.querySelector('.check_state')
-      );
+      rightList(e, getFileItem(fileItem.dataset.id), fileItem.querySelector('.check_state'));
     } else {
       hdContextMenu(e);
     }
@@ -734,12 +686,7 @@ function hdContextMenu(e) {
       if (isRoot()) {
         close();
         e.stopPropagation();
-        _myOpen(
-          `/ssh?p=${decodeURIComponent(
-            _path.normalize('/', curFileDirPath)
-          )}#local`,
-          '终端'
-        );
+        _myOpen(`/ssh?p=${decodeURIComponent(_path.normalize('/', curFileDirPath))}#local`, '终端');
       }
     }
   });
@@ -749,11 +696,7 @@ longPress($contentWrap[0], function (e) {
   const ev = e.changedTouches[0];
   const fileItem = _getTarget(this, ev, '.content_wrap .file_item');
   if (fileItem) {
-    rightList(
-      ev,
-      getFileItem(fileItem.dataset.id),
-      fileItem.querySelector('.check_state')
-    );
+    rightList(ev, getFileItem(fileItem.dataset.id), fileItem.querySelector('.check_state'));
   } else {
     hdContextMenu(ev);
   }
@@ -785,7 +728,7 @@ function rightList(e, obj, el) {
         id: 'newPage',
         text: '新窗口打开',
         beforeIcon: 'iconfont icon-minimize',
-      }
+      },
     );
     if (isRoot()) {
       data.push({
@@ -827,7 +770,7 @@ function rightList(e, obj, el) {
       id: 'cut',
       text: '剪切',
       beforeIcon: 'iconfont icon-jiandao',
-    }
+    },
   );
   if (_path.extname(obj.name)[2].toLowerCase() === 'zip') {
     data.push({
@@ -865,7 +808,7 @@ function rightList(e, obj, el) {
         id: 'user',
         text: '用户组',
         beforeIcon: 'iconfont icon-chengyuan',
-      }
+      },
     );
   }
   data.push({
@@ -883,10 +826,8 @@ function rightList(e, obj, el) {
           close();
           e.stopPropagation();
           _myOpen(
-            `/ssh?p=${decodeURIComponent(
-              _path.normalize('/', obj.path, obj.name)
-            )}#local`,
-            '终端'
+            `/ssh?p=${decodeURIComponent(_path.normalize('/', obj.path, obj.name))}#local`,
+            '终端',
           );
         }
       } else if (id === 'addto') {
@@ -896,19 +837,18 @@ function rightList(e, obj, el) {
         downloadFile(
           [
             {
-              fileUrl:
-                getFilePath(`/file/${obj.path}/${obj.name}`) + `#${obj.size}`,
+              fileUrl: getFilePath(`/file/${obj.path}/${obj.name}`) + `#${obj.size}`,
               filename: obj.name,
             },
           ],
-          'image'
+          'image',
         );
       } else if (id === 'copyLink') {
         if (_path.isPathWithin(_d.pubDir, obj.path, 1)) {
           const p = _path.normalize(
             '/pub',
             localData.get('account'),
-            `${obj.path}/${obj.name}`.slice(_d.pubDir.length)
+            `${obj.path}/${obj.name}`.slice(_d.pubDir.length),
           );
           copyText(getFilePath(p, {}, 1));
           return;
@@ -926,8 +866,8 @@ function rightList(e, obj, el) {
                   {
                     token: res.data,
                   },
-                  1
-                )
+                  1,
+                ),
               );
             }
           })
@@ -971,7 +911,7 @@ function rightList(e, obj, el) {
           () => {
             close();
           },
-          loading
+          loading,
         );
       } else if (id === 'cut') {
         waitObj = {
@@ -987,7 +927,7 @@ function rightList(e, obj, el) {
           () => {
             close();
           },
-          loading
+          loading,
         );
       } else if (id === 'decompress') {
         hdDeCompress(
@@ -995,7 +935,7 @@ function rightList(e, obj, el) {
           () => {
             close();
           },
-          loading
+          loading,
         );
       } else if (id === 'info') {
         showFileInfo(e, obj);
@@ -1015,13 +955,10 @@ function rightList(e, obj, el) {
       } else if (id === 'newPage') {
         close();
         e.stopPropagation();
-        _myOpen(
-          `/file#${_path.normalize('/', obj.path, obj.name)}`,
-          '文件管理'
-        );
+        _myOpen(`/file#${_path.normalize('/', obj.path, obj.name)}`, '文件管理');
       }
     },
-    obj.name
+    obj.name,
   );
 }
 function addTo(e, obj) {
@@ -1045,9 +982,7 @@ function addTo(e, obj) {
         rMenu.pop(
           {
             e,
-            text: `确认扫描：${obj.name} 文件到${
-              id === 'music' ? '音乐播放器' : '壁纸'
-            }？`,
+            text: `确认扫描：${obj.name} 文件到${id === 'music' ? '音乐播放器' : '壁纸'}？`,
           },
           (type) => {
             if (type === 'confirm') {
@@ -1060,11 +995,11 @@ function addTo(e, obj) {
                 })
                 .catch(() => {});
             }
-          }
+          },
         );
       }
     },
-    '扫描文件到'
+    '扫描文件到',
   );
 }
 // 编辑权限
@@ -1118,10 +1053,10 @@ function editFileMode(e, data) {
                 loading.end();
               });
           }
-        }
+        },
       );
     },
-    '修改权限'
+    '修改权限',
   );
 }
 // 编辑用户组
@@ -1182,10 +1117,10 @@ function editFileChown(e, data) {
                 loading.end();
               });
           }
-        }
+        },
       );
     },
-    '修改用户组'
+    '修改用户组',
   );
 }
 // 分享
@@ -1207,7 +1142,7 @@ function hdShare(e, obj) {
         .catch(() => {
           loading.end();
         });
-    }
+    },
   );
 }
 // 粘贴文件
@@ -1321,13 +1256,9 @@ async function hdUp(files) {
     }
     if (size > _d.fieldLength.maxFileSize * 1024 * 1024 * 1024) {
       pro.fail();
-      _msg.error(
-        `上传文件限制0-${_d.fieldLength.maxFileSize}GB： ${name}`,
-        null,
-        {
-          reside: true,
-        }
-      );
+      _msg.error(`上传文件限制0-${_d.fieldLength.maxFileSize}GB： ${name}`, null, {
+        reside: true,
+      });
       return;
     }
     if (skip) {
@@ -1394,10 +1325,7 @@ function createFile(e) {
         name: {
           beforeText: '文件名：',
           verify(val) {
-            return (
-              rMenu.validString(val, 1, _d.fieldLength.filename) ||
-              rMenu.validFilename(val)
-            );
+            return rMenu.validString(val, 1, _d.fieldLength.filename) || rMenu.validFilename(val);
           },
         },
       },
@@ -1421,7 +1349,7 @@ function createFile(e) {
         loading.end();
       }
     },
-    '新建文本'
+    '新建文本',
   );
 }
 // 创建目录
@@ -1434,10 +1362,7 @@ function createDir(e) {
         name: {
           beforeText: '文件夹名：',
           verify(val) {
-            return (
-              rMenu.validString(val, 1, _d.fieldLength.filename) ||
-              rMenu.validFilename(val)
-            );
+            return rMenu.validString(val, 1, _d.fieldLength.filename) || rMenu.validFilename(val);
           },
         },
       },
@@ -1460,7 +1385,7 @@ function createDir(e) {
         loading.end();
       }
     },
-    '新建文件夹'
+    '新建文件夹',
   );
 }
 $header
@@ -1543,7 +1468,7 @@ $header
               curmb.toGo(param.path, { pageNo: 1, top: 0 });
             }
           },
-          '历史文件夹'
+          '历史文件夹',
         );
       });
   })
@@ -1576,7 +1501,7 @@ $header
                 curmb.toGo(param.path, { pageNo: 1, top: 0 });
               }
             },
-            '收藏文件夹'
+            '收藏文件夹',
           );
         }
       })
@@ -1631,9 +1556,7 @@ function editSSHInfo(e) {
               beforeText: '端口：',
               value: obj.port || 22,
               verify(val) {
-                return (
-                  rMenu.validInteger(val) || rMenu.validNumber(val, 1, 65535)
-                );
+                return rMenu.validInteger(val) || rMenu.validNumber(val, 1, 65535);
               },
             },
             username: {
@@ -1656,9 +1579,7 @@ function editSSHInfo(e) {
               value: obj.private_key || '',
               type: 'textarea',
               verify(val) {
-                return getTextSize(val) > _d.fieldLength.customCodeSize
-                  ? '密钥过长'
-                  : '';
+                return getTextSize(val) > _d.fieldLength.customCodeSize ? '密钥过长' : '';
               },
             },
             passphrase: {
@@ -1690,7 +1611,7 @@ function editSSHInfo(e) {
               loading.end();
             });
         },
-        '编辑本机SSH配置'
+        '编辑本机SSH配置',
       );
     }
   });
@@ -1718,10 +1639,7 @@ function handleDownloadFile(e) {
           beforeText: '下载文件链接地址：',
           placeholder: '仅支持http/https网络链接',
           verify(val) {
-            return (
-              rMenu.validString(val, 1, _d.fieldLength.url) ||
-              rMenu.validUrl(val)
-            );
+            return rMenu.validString(val, 1, _d.fieldLength.url) || rMenu.validUrl(val);
           },
         },
       },
@@ -1736,7 +1654,7 @@ function handleDownloadFile(e) {
         })
         .catch(() => {});
     },
-    '离线下载文件'
+    '离线下载文件',
   );
 }
 function upFileAndDir(e) {
@@ -1751,9 +1669,7 @@ function upFileAndDir(e) {
       id: '3',
       text: '忽略同名文件',
       beforeIcon: 'iconfont icon-hulve',
-      afterIcon:
-        'iconfont ' +
-        (skipUpSameNameFiles ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+      afterIcon: 'iconfont ' + (skipUpSameNameFiles ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
       param: { value: skipUpSameNameFiles },
     },
   ];
@@ -1791,7 +1707,7 @@ function upFileAndDir(e) {
         resetMenu(data);
       }
     },
-    '上传选项'
+    '上传选项',
   );
 }
 function createFileAndDir(e) {
@@ -1820,7 +1736,7 @@ function createFileAndDir(e) {
         createSymlink(e);
       }
     },
-    '新建选项'
+    '新建选项',
   );
 }
 function createSymlink(e) {
@@ -1832,10 +1748,7 @@ function createSymlink(e) {
         name: {
           beforeText: '文件名：',
           verify(val) {
-            return (
-              rMenu.validString(val, 1, _d.fieldLength.filename) ||
-              rMenu.validFilename(val)
-            );
+            return rMenu.validString(val, 1, _d.fieldLength.filename) || rMenu.validFilename(val);
           },
         },
         targetPath: {
@@ -1890,7 +1803,7 @@ function createSymlink(e) {
         loading.end();
       }
     },
-    '新建符号链接'
+    '新建符号链接',
   );
 }
 // 处理粘贴
@@ -1904,24 +1817,21 @@ function hdPaste(e) {
 }
 // 清空回收站
 function hdClearTrash(e) {
-  rMenu.pop(
-    { e, text: '确认清空回收站？', confirm: { type: 'danger', text: '清空' } },
-    (type) => {
-      if (type === 'confirm') {
-        reqFileClearTrash()
-          .then((res) => {
-            if (res.code === 1) {
-              addTask(res.data.key, updateCurPage);
-            }
-          })
-          .catch((error) => {
-            if (error.statusText === 'timeout') {
-              _msg.success(`文件后台处理中`);
-            }
-          });
-      }
+  rMenu.pop({ e, text: '确认清空回收站？', confirm: { type: 'danger', text: '清空' } }, (type) => {
+    if (type === 'confirm') {
+      reqFileClearTrash()
+        .then((res) => {
+          if (res.code === 1) {
+            addTask(res.data.key, updateCurPage);
+          }
+        })
+        .catch((error) => {
+          if (error.statusText === 'timeout') {
+            _msg.success(`文件后台处理中`);
+          }
+        });
     }
-  );
+  });
 }
 // 排序
 function hdFileSort(e) {
@@ -1982,7 +1892,7 @@ function hdFileSort(e) {
         localData.set('fileSort', fileSort);
       }
     },
-    '选择列表排序方式'
+    '选择列表排序方式',
   );
 }
 // 复制
@@ -2050,13 +1960,7 @@ async function hdCopy(e, data, cb) {
   }
 }
 // 移动
-async function hdCut(
-  e,
-  data,
-  cb,
-  toPath = curFileDirPath,
-  text = '确认粘贴？'
-) {
+async function hdCut(e, data, cb, toPath = curFileDirPath, text = '确认粘贴？') {
   const type = await rMenu.pop.p({ e, text });
   if (type === 'confirm') {
     try {
@@ -2122,9 +2026,7 @@ async function hdCut(
 // 获取选中
 function getCheckItem() {
   const $cItem = $contentWrap.find('.file_item');
-  return $cItem.filter(
-    (_, item) => $(item).find('.check_state').attr('check') === 'y'
-  );
+  return $cItem.filter((_, item) => $(item).find('.check_state').attr('check') === 'y');
 }
 function getCheckDatas() {
   let arr = [];
@@ -2226,7 +2128,7 @@ function renderFoot() {
         return checkData.every((item) => item.type === 'file');
       },
       isRoot,
-    }
+    },
   );
   if (isSelecting()) {
     _msg.botMsg(`选中：${len}项`);
@@ -2270,7 +2172,7 @@ $footer
         }
         return pre;
       }, []),
-      'image'
+      'image',
     );
     closeCheck();
   })
@@ -2319,9 +2221,7 @@ $footer
   });
 // 删除
 function hdDel(e, arr, cb, loading = { start() {}, end() {} }) {
-  if (
-    arr.some((item) => _path.normalize(item.path, item.name) === _d.trashDir)
-  ) {
+  if (arr.some((item) => _path.normalize(item.path, item.name) === _d.trashDir)) {
     _msg.error(`不能删除回收站目录：${_d.trashDir}`);
     return;
   }
@@ -2335,10 +2235,7 @@ function hdDel(e, arr, cb, loading = { start() {}, end() {} }) {
     confirm: { type: 'danger', text: '删除' },
   };
   // 不是回收站目录
-  if (
-    curFileDirPath !== _d.trashDir &&
-    !_path.isPathWithin(_d.trashDir, curFileDirPath)
-  ) {
+  if (curFileDirPath !== _d.trashDir && !_path.isPathWithin(_d.trashDir, curFileDirPath)) {
     opt.cancel = { text: '放入回收站', type: 'primary' };
     opt.confirm.text = '直接删除';
   }
@@ -2374,10 +2271,7 @@ function hdRename(e, obj, cb) {
           beforeText: `${obj.type === 'file' ? '文件' : '文件夹'}名：`,
           value: obj.name,
           verify(val) {
-            return (
-              rMenu.validString(val, 1, _d.fieldLength.filename) ||
-              rMenu.validFilename(val)
-            );
+            return rMenu.validString(val, 1, _d.fieldLength.filename) || rMenu.validFilename(val);
           },
         },
       },
@@ -2399,7 +2293,7 @@ function hdRename(e, obj, cb) {
         loading.end();
       }
     },
-    `重命名${obj.type === 'file' ? '文件' : '文件夹'}`
+    `重命名${obj.type === 'file' ? '文件' : '文件夹'}`,
   );
 }
 // 显示/隐藏粘贴
@@ -2411,8 +2305,8 @@ function showPaste() {
         `<span cursor="y" class="type iconfont {{waitObj.type==='copy'?'icon-fuzhi':'icon-jiandao'}}"></span>
         <span cursor="y" class="text">粘贴({{waitObj.data.length}})</span>
         <span cursor="y" class="close iconfont icon-shibai"></span>`,
-        { waitObj }
-      )
+        { waitObj },
+      ),
     )
     .css('display', 'block');
 }

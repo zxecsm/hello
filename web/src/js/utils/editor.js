@@ -147,7 +147,7 @@ const aceEditor = {
     const idx = filePath.lastIndexOf('.');
     const suffix = idx >= 0 ? filePath.slice(idx + 1) : '';
     editor.session.setMode(
-      overrides[suffix.toLowerCase()] || modelist.getModeForPath(filePath).mode
+      overrides[suffix.toLowerCase()] || modelist.getModeForPath(filePath).mode,
     );
   },
 };

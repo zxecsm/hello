@@ -2,27 +2,14 @@ import { reqPlayerSongInfo } from '../../api/player';
 import rMenu from '../plugins/rightMenu';
 import { formatBytes, formartSongTime, formatDate, formatNum } from './utils';
 // 显示歌曲信息
-export function showSongInfo(
-  e,
-  sobj,
-  token,
-  loading = { start() {}, end() {} }
-) {
+export function showSongInfo(e, sobj, token, loading = { start() {}, end() {} }) {
   loading.start();
   reqPlayerSongInfo({ id: sobj.id, token })
     .then((res) => {
       loading.end();
       if (res.code === 1) {
-        const {
-          title,
-          artist,
-          duration,
-          album,
-          year,
-          collect_count,
-          play_count,
-          create_at,
-        } = res.data;
+        const { title, artist, duration, album, year, collect_count, play_count, create_at } =
+          res.data;
         const data = [
           {
             text: title,
@@ -61,7 +48,7 @@ export function showSongInfo(
           },
         ];
         data.forEach((item, idx) => {
-          (item.pointer = false), (item.id = idx + 1 + '');
+          ((item.pointer = false), (item.id = idx + 1 + ''));
         });
         rMenu.selectMenu(e, data, false, '歌曲信息');
       }
@@ -94,7 +81,7 @@ export function showBmkInfo(e, obj) {
     });
   }
   data.forEach((item, idx) => {
-    (item.pointer = false), (item.id = idx + 1 + '');
+    ((item.pointer = false), (item.id = idx + 1 + ''));
   });
   rMenu.selectMenu(e, data, false, '书签信息');
 }
@@ -130,7 +117,7 @@ export function showCountInfo(e, obj) {
     },
   ];
   data.forEach((item, idx) => {
-    (item.pointer = false), (item.id = idx + 1 + '');
+    ((item.pointer = false), (item.id = idx + 1 + ''));
   });
   rMenu.selectMenu(e, data, false, '倒计时信息');
 }
@@ -146,11 +133,7 @@ export function showFileInfo(e, obj) {
         obj.type === 'dir'
           ? '文件夹'
           : '文件' +
-            `${
-              obj.type === 'file' && obj.fileType !== 'file'
-                ? `(${obj.fileTypeName})`
-                : ''
-            }`,
+            `${obj.type === 'file' && obj.fileType !== 'file' ? `(${obj.fileTypeName})` : ''}`,
       beforeText: '类型：',
     },
     {
@@ -177,7 +160,7 @@ export function showFileInfo(e, obj) {
       {
         text: obj.gid,
         beforeText: '用户组ID：',
-      }
+      },
     );
   }
   if (obj.favorite !== undefined && obj.type === 'dir') {
@@ -197,10 +180,10 @@ export function showFileInfo(e, obj) {
         timestamp: obj.time,
       }),
       beforeText: '更新时间：',
-    }
+    },
   );
   data.forEach((item, idx) => {
-    (item.pointer = false), (item.id = idx + 1 + '');
+    ((item.pointer = false), (item.id = idx + 1 + ''));
   });
   rMenu.selectMenu(e, data, false, '属性信息');
 }
@@ -240,7 +223,7 @@ export function showNoteInfo(e, obj) {
     },
   ];
   data.forEach((item, idx) => {
-    (item.pointer = false), (item.id = idx + 1 + '');
+    ((item.pointer = false), (item.id = idx + 1 + ''));
   });
   rMenu.selectMenu(e, data, false, '笔记信息');
 }
@@ -278,7 +261,7 @@ export function showSSHInfo(e, obj) {
     },
   ];
   data.forEach((item, idx) => {
-    (item.pointer = false), (item.id = idx + 1 + '');
+    ((item.pointer = false), (item.id = idx + 1 + ''));
   });
   rMenu.selectMenu(e, data, false, 'SSH信息');
 }

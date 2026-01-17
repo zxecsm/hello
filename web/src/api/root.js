@@ -28,27 +28,15 @@ export function reqRootDeleteAccount(data) {
 }
 // 清理音乐文件
 export function reqRootCleanMusicFile() {
-  return _getAjax(
-    '/root/clean-music-file',
-    {},
-    { timeout: _d.fieldLength.operationTimeout }
-  );
+  return _getAjax('/root/clean-music-file', {}, { timeout: _d.fieldLength.operationTimeout });
 }
 // 清理壁纸文件
 export function reqRootCleanBgFile() {
-  return _getAjax(
-    '/root/clean-bg-file',
-    {},
-    { timeout: _d.fieldLength.operationTimeout }
-  );
+  return _getAjax('/root/clean-bg-file', {}, { timeout: _d.fieldLength.operationTimeout });
 }
 // 清理pic文件
 export function reqRootCleanPicFile() {
-  return _getAjax(
-    '/root/clean-pic-file',
-    {},
-    { timeout: _d.fieldLength.operationTimeout }
-  );
+  return _getAjax('/root/clean-pic-file', {}, { timeout: _d.fieldLength.operationTimeout });
 }
 // 清空缩略图
 export function reqRootCleanThumbFile(data) {
@@ -70,11 +58,7 @@ export function reqRootUpdateTokenKey() {
 }
 // 清理数据库
 export function reqRootCleanDatabase() {
-  return _postAjax(
-    '/root/clean-database',
-    {},
-    { timeout: _d.fieldLength.operationTimeout }
-  );
+  return _postAjax('/root/clean-database', {}, { timeout: _d.fieldLength.operationTimeout });
 }
 // tips
 export function reqRootTips(data) {

@@ -30,17 +30,12 @@ const kHello = sym('hello');
 
 // 获取好友信息
 export async function getFriendInfo(mAcc, fAcc, fields = '*') {
-  return await db('friends')
-    .select(fields)
-    .where({ account: mAcc, friend: fAcc })
-    .findOne();
+  return await db('friends').select(fields).where({ account: mAcc, friend: fAcc }).findOne();
 }
 
 // 标记为已读
 export async function markAsRead(mAcc, fAcc) {
-  const change = await db('friends')
-    .where({ friend: fAcc, account: mAcc })
-    .update({ read: 1 });
+  const change = await db('friends').where({ friend: fAcc, account: mAcc }).update({ read: 1 });
 
   // 不是好友，变为好友
   if (change.changes === 0) {
@@ -53,8 +48,7 @@ export async function hdHelloMsg(req, data, type) {
   let { receive_chat_state, chat_id, account } = req[kHello].userinfo;
   const origin = getOrigin(req);
 
-  const stopMsgText =
-    '接口为关闭状态\n\n回复 start 开启接口 或 update 开启并更新接口';
+  const stopMsgText = '接口为关闭状态\n\n回复 start 开启接口 或 update 开启并更新接口';
 
   let msgText = `收信接口：\nGET：${origin}/api/s/${chat_id}?text=消息内容\nPOST：${origin}/api/s/${chat_id} body：{"text": "消息内容"}\n\n回复 update 更新接口 回复 stop 关闭接口`;
 
@@ -63,25 +57,19 @@ export async function hdHelloMsg(req, data, type) {
   if (type === 'text' && text === 'update') {
     chat_id = nanoid();
 
-    await db('user')
-      .where({ account, state: 1 })
-      .update({ receive_chat_state: 1, chat_id });
+    await db('user').where({ account, state: 1 }).update({ receive_chat_state: 1, chat_id });
 
     msgText = `收信接口：\nGET：${origin}/api/s/${chat_id}?text=消息内容\nPOST：${origin}/api/s/${chat_id} body：{"text": "消息内容"}\n\n回复 update 更新接口 回复 stop 关闭接口`;
 
     await uLog(req, `更新收信接口成功(${chat_id})`);
   } else if (type === 'text' && text === 'stop') {
-    await db('user')
-      .where({ account, state: 1 })
-      .update({ receive_chat_state: 0 });
+    await db('user').where({ account, state: 1 }).update({ receive_chat_state: 0 });
 
     msgText = stopMsgText;
 
     await uLog(req, `关闭收信接口成功(${chat_id})`);
   } else if (type === 'text' && text === 'start') {
-    await db('user')
-      .where({ account, state: 1 })
-      .update({ receive_chat_state: 1 });
+    await db('user').where({ account, state: 1 }).update({ receive_chat_state: 1 });
 
     await uLog(req, `开启收信接口成功(${chat_id})`);
   } else {
@@ -100,9 +88,7 @@ export async function saveChatMsg(account, obj) {
   obj._from = account;
 
   obj.flag =
-    obj._to === appConfig.chatRoomAccount
-      ? appConfig.chatRoomAccount
-      : `${account}-${obj._to}`;
+    obj._to === appConfig.chatRoomAccount ? appConfig.chatRoomAccount : `${account}-${obj._to}`;
 
   if (!obj.id) obj.id = nanoid();
   if (!obj.create_at) obj.create_at = Date.now();
@@ -212,10 +198,7 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
       .where({ account, friend: notifyObj.data.to })
       .update({ update_at: t, msg: `您：${msgText}` });
     // 如果不是好友，成为好友
-    if (
-      (notifyObj.data.to !== account && change.changes === 0) ||
-      change2.changes === 0
-    ) {
+    if ((notifyObj.data.to !== account && change.changes === 0) || change2.changes === 0) {
       await becomeFriends(account, notifyObj.data.to, 1, 0, msgText);
     }
 
@@ -224,11 +207,7 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
       _connect.send(account, temid, notifyObj, 'all');
     } else {
       notifyObj.data.from.des =
-        account === appConfig.notifyAccount
-          ? appConfig.notifyAccountDes
-          : fInfo
-          ? fInfo.des
-          : '';
+        account === appConfig.notifyAccount ? appConfig.notifyAccountDes : fInfo ? fInfo.des : '';
 
       _connect.send(notifyObj.data.to, temid, notifyObj, 'all');
 
@@ -312,8 +291,7 @@ export async function hdForwardToLink(req, list = [], fArr, text, fList = []) {
 
     await concurrencyTasks(list, 3, async (item) => {
       const { forward_msg_link, account } = item;
-      let { link, type, header, body, contentType } =
-        parseForwardMsgLink(forward_msg_link);
+      let { link, type, header, body, contentType } = parseForwardMsgLink(forward_msg_link);
 
       if (!isurl(link)) return;
       const fe = fArr.find((y) => y.account === account);
@@ -321,23 +299,18 @@ export async function hdForwardToLink(req, list = [], fArr, text, fList = []) {
       if (fno && fno.notify === 0) return;
       const des = fe ? fe.des : '';
       const title =
-        fromAccount === appConfig.notifyAccount
-          ? appConfig.notifyAccountDes
-          : des || username;
+        fromAccount === appConfig.notifyAccount ? appConfig.notifyAccountDes : des || username;
 
       link = tplReplace(link, {
         text: encodeURIComponent(text),
         title: encodeURIComponent(title),
       });
 
-      if (
-        type === 'get' ||
-        (type === 'post' && contentType === 'application/json')
-      ) {
-        body = replaceObjectValue(
-          parseObjectJson(body) || parseArrayJson(body) || {},
-          { text, title }
-        );
+      if (type === 'get' || (type === 'post' && contentType === 'application/json')) {
+        body = replaceObjectValue(parseObjectJson(body) || parseArrayJson(body) || {}, {
+          text,
+          title,
+        });
       } else {
         body = tplReplace(body, { title, text });
       }
@@ -398,7 +371,7 @@ export async function onlineMsg(req, pass) {
             type: 'online',
             data: { text: `${des || username} 已上线`, account },
           },
-          'all'
+          'all',
         );
       });
 
@@ -408,13 +381,7 @@ export async function onlineMsg(req, pass) {
 }
 
 // 成为朋友
-export async function becomeFriends(
-  me,
-  friend,
-  read1 = 1,
-  read2 = 1,
-  msg = ''
-) {
+export async function becomeFriends(me, friend, read1 = 1, read2 = 1, msg = '') {
   if (
     friend !== appConfig.chatRoomAccount &&
     friend !== appConfig.notifyAccount &&
@@ -435,12 +402,8 @@ export async function becomeFriends(
     })
     .find();
 
-  const isFriend1 = frs.some(
-    (item) => item.account === me && item.friend === friend
-  );
-  const isFriend2 = frs.some(
-    (item) => item.account === friend && item.friend === me
-  );
+  const isFriend1 = frs.some((item) => item.account === me && item.friend === friend);
+  const isFriend2 = frs.some((item) => item.account === friend && item.friend === me);
 
   const create_at = Date.now();
   if (
@@ -499,7 +462,7 @@ export async function heperMsgAndForward(req, to, text) {
         },
       },
     },
-    msg
+    msg,
   ).catch((err) => {
     errLog(req, `发送通知到自定义地址失败(${err})`);
   });
@@ -526,7 +489,7 @@ export async function helloHelperMsg(to, text) {
     },
     to,
     'addmsg',
-    msgObj
+    msgObj,
   );
   return msg;
 }
@@ -547,13 +510,11 @@ export function parseForwardMsgLink(str) {
 // 获取成员列表
 export function getChatUserList(account, pageSize, offset) {
   return db('user AS u')
-    .select(
-      'f.des,f.read,f.msg,u.update_at,u.username,u.account,u.logo,u.email,u.hide'
-    )
+    .select('f.des,f.read,f.msg,u.update_at,u.username,u.account,u.logo,u.email,u.hide')
     .join(
       'friends AS f',
       { 'u.account': { value: 'f.friend', raw: true }, 'f.account': account },
-      { type: 'LEFT' }
+      { type: 'LEFT' },
     )
     .where({ 'u.state': 1 })
     .orderBy('f.update_at', 'DESC')

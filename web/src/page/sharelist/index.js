@@ -20,11 +20,7 @@ import _msg from '../../js/plugins/message';
 import pagination from '../../js/plugins/pagination';
 import _d from '../../js/common/config';
 import realtime from '../../js/plugins/realtime';
-import {
-  reqUserDeleteShare,
-  reqUserEditShare,
-  reqUserShareList,
-} from '../../api/user';
+import { reqUserDeleteShare, reqUserEditShare, reqUserShareList } from '../../api/user';
 import { _tpl } from '../../js/utils/template';
 import { otherWindowMsg } from '../home/home';
 import rMenu from '../../js/plugins/rightMenu';
@@ -111,7 +107,7 @@ function renderShareList(total, pageNo, top) {
           small: getScreenSize().w <= _d.screen,
         });
       },
-    }
+    },
   );
   $shareList.html(html).addClass('open');
   $headBtns.addClass('open');
@@ -173,7 +169,7 @@ function deleteShare(e, obj) {
           })
           .catch(() => {});
       }
-    }
+    },
   );
 }
 // 编辑
@@ -200,7 +196,7 @@ function editShare(e, obj) {
         .catch(() => {
           loading.end();
         });
-    }
+    },
   );
 }
 $shareList
@@ -252,7 +248,7 @@ $headBtns
             })
             .catch(() => {});
         }
-      }
+      },
     );
   })
   .on('click', '.h_go_home', function () {

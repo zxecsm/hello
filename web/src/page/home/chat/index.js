@@ -119,39 +119,34 @@ export function chatRoomWrapIsHide() {
   return $chatRoomWrap.is(':hidden');
 }
 // 搜索消息框
-const chatSearchInput = wrapInput(
-  $chatHeadBtns.find('.search_msg_inp input')[0],
-  {
-    update(val) {
-      if (val === '') {
-        $chatHeadBtns.find('.search_msg_inp .clean_btn').css('display', 'none');
-      } else {
-        $chatHeadBtns
-          .find('.search_msg_inp .clean_btn')
-          .css('display', 'block');
-      }
-    },
-    focus(e) {
-      $(e.target).parent().addClass('focus');
-      $chatHeadBtns.find('.search_btn').css('display', 'none');
-    },
-    blur(e) {
-      const $inpBox = $(e.target).parent();
-      $inpBox.removeClass('focus');
-      if (chatSearchInput.getValue().trim() === '') {
-        $inpBox.fadeOut(300, () => {
-          $chatHeadBtns.find('.search_btn').slideDown(300);
-        });
-        chatSearchInput.setValue('');
-      }
-    },
-    keyup(e) {
-      if (e.key === 'Enter') {
-        openFriend(curChatAccount);
-      }
-    },
-  }
-);
+const chatSearchInput = wrapInput($chatHeadBtns.find('.search_msg_inp input')[0], {
+  update(val) {
+    if (val === '') {
+      $chatHeadBtns.find('.search_msg_inp .clean_btn').css('display', 'none');
+    } else {
+      $chatHeadBtns.find('.search_msg_inp .clean_btn').css('display', 'block');
+    }
+  },
+  focus(e) {
+    $(e.target).parent().addClass('focus');
+    $chatHeadBtns.find('.search_btn').css('display', 'none');
+  },
+  blur(e) {
+    const $inpBox = $(e.target).parent();
+    $inpBox.removeClass('focus');
+    if (chatSearchInput.getValue().trim() === '') {
+      $inpBox.fadeOut(300, () => {
+        $chatHeadBtns.find('.search_btn').slideDown(300);
+      });
+      chatSearchInput.setValue('');
+    }
+  },
+  keyup(e) {
+    if (e.key === 'Enter') {
+      openFriend(curChatAccount);
+    }
+  },
+});
 let userPageNo = 1,
   userPageSize = localData.get('userListPageSize'),
   isForward = false, // 转发状态
@@ -227,7 +222,7 @@ async function renderUserList(pageNo, total, totalPage, top) {
       getPaging() {
         return pgnt.getHTML({ pageNo, total, pageSize: userPageSize });
       },
-    }
+    },
   );
   $userListBox.html(html);
   if (top) {
@@ -256,42 +251,28 @@ const pgnt = pagination($userListBox[0], {
 });
 // 懒加载图片
 function lazyLoadChatLogo() {
-  const userLogos = [...$userListBox[0].querySelectorAll('.user_logo')].filter(
-    (item) => {
-      const $item = $(item);
-      let {
-        username,
-        account,
-        logo,
-        des = '',
-      } = getUserItem($item.parent().data('account'));
-      if (logo) {
-        logo = getFilePath(`/logo/${account}/${logo}`);
-      }
-      if (account === _d.notifyAccount) {
-        logo = imgHelloLogo;
-      }
-      const cache = logo
-        ? cacheFile.hasUrl(logo, 'image')
-        : getTextImg(des || username);
-      if (cache) {
-        $item
-          .css({
-            'background-image': `url(${cache})`,
-          })
-          .addClass('load');
-      }
-      return !cache;
+  const userLogos = [...$userListBox[0].querySelectorAll('.user_logo')].filter((item) => {
+    const $item = $(item);
+    let { username, account, logo, des = '' } = getUserItem($item.parent().data('account'));
+    if (logo) {
+      logo = getFilePath(`/logo/${account}/${logo}`);
     }
-  );
+    if (account === _d.notifyAccount) {
+      logo = imgHelloLogo;
+    }
+    const cache = logo ? cacheFile.hasUrl(logo, 'image') : getTextImg(des || username);
+    if (cache) {
+      $item
+        .css({
+          'background-image': `url(${cache})`,
+        })
+        .addClass('load');
+    }
+    return !cache;
+  });
   cUserListLoad.bind(userLogos, (item) => {
     const $item = $(item);
-    let {
-      username,
-      account,
-      logo,
-      des = '',
-    } = getUserItem($item.parent().data('account'));
+    let { username, account, logo, des = '' } = getUserItem($item.parent().data('account'));
     if (logo) {
       logo = getFilePath(`/logo/${account}/${logo}`);
     }
@@ -331,7 +312,7 @@ export function closeChatRoom() {
       cUserListLoad.unBind();
       cUserLogoLoad.unBind();
       updateOnlineStatus.clear();
-    }
+    },
   );
 }
 // 清空消息
@@ -357,7 +338,7 @@ function clearMsg(e) {
           })
           .catch(() => {});
       }
-    }
+    },
   );
 }
 // 处理转发信息
@@ -399,7 +380,7 @@ $chatHeadBtns
         return;
       }
       openFriend(_d.chatRoomAccount);
-    }, 2000)
+    }, 2000),
   )
   .on('click', '.search_msg_inp .clean_btn', function () {
     chatSearchInput.setValue('').focus();
@@ -418,8 +399,8 @@ $chatHeadBtns
         getUserList(true);
       },
       500,
-      true
-    )
+      true,
+    ),
   );
 // 获取消息数据
 function getChatItem(id) {
@@ -436,9 +417,7 @@ function sliceChatList(isPush, $item) {
     }
   }
   if (isPush) {
-    $chatListBox.scrollTop(
-      $item[0].offsetTop - $chatListBox.height() + $item.height()
-    );
+    $chatListBox.scrollTop($item[0].offsetTop - $chatListBox.height() + $item.height());
   } else {
     $chatListBox.scrollTop($item[0].offsetTop - 20);
   }
@@ -462,7 +441,7 @@ export const renderChatMsg = {
         .data('nomore', 1)
         .find('.head')
         .prepend(
-          '<div class="nomore" style="text-align: center;font-size: 1.4rem;color: var(--text-hover-color);">没有更多了<div>'
+          '<div class="nomore" style="text-align: center;font-size: 1.4rem;color: var(--text-hover-color);">没有更多了<div>',
         );
       return;
     }
@@ -479,9 +458,7 @@ export const renderChatMsg = {
   toBottom() {
     $chatListBox
       .find('.chat_list')
-      .html(
-        renderMsgList(chatMsgData.get().slice(-_d.fieldLength.chatPageSize))
-      );
+      .html(renderMsgList(chatMsgData.get().slice(-_d.fieldLength.chatPageSize)));
     $chatListBox.scrollTop($chatListBox[0].scrollHeight);
     chatimgLoad();
   },
@@ -623,13 +600,12 @@ function renderMsgList(list) {
         return _from === setUserInfo().account ? true : false;
       },
       getUsername(username, des, _to, _from) {
-        if (_to !== _d.chatRoomAccount || _from === setUserInfo().account)
-          return '';
+        if (_to !== _d.chatRoomAccount || _from === setUserInfo().account) return '';
         return des || username || '未知';
       },
       fileLogoType,
       formatBytes,
-    }
+    },
   );
   return html;
 }
@@ -708,7 +684,7 @@ export function chatMessageNotification(name, data, from, to, logo) {
         showChatRoom(to === _d.chatRoomAccount ? to : from);
       }
     },
-    1
+    1,
   );
   if (logo) {
     logo = getFilePath(`/logo/${from}/${logo}`);
@@ -728,7 +704,7 @@ export function chatMessageNotification(name, data, from, to, logo) {
             },
             () => {
               showChatRoom(to === _d.chatRoomAccount ? to : from);
-            }
+            },
           );
         }
       })
@@ -742,7 +718,7 @@ export function chatMessageNotification(name, data, from, to, logo) {
             },
             () => {
               showChatRoom(to === _d.chatRoomAccount ? to : from);
-            }
+            },
           );
         }
       });
@@ -756,7 +732,7 @@ export function chatMessageNotification(name, data, from, to, logo) {
         },
         () => {
           showChatRoom(to === _d.chatRoomAccount ? to : from);
-        }
+        },
       );
     }
   }
@@ -814,8 +790,8 @@ $showChatRoomBtn.on(
       showChatRoom();
     },
     500,
-    true
-  )
+    true,
+  ),
 );
 // 用户菜单
 function userMenu(e, msgObj, isUserList) {
@@ -905,11 +881,7 @@ function userMenu(e, msgObj, isUserList) {
                       placeholder: '为空则不设置',
                       value: des,
                       verify(val) {
-                        return rMenu.validString(
-                          val,
-                          0,
-                          _d.fieldLength.chatDes
-                        );
+                        return rMenu.validString(val, 0, _d.fieldLength.chatDes);
                       },
                     },
                   },
@@ -938,7 +910,7 @@ function userMenu(e, msgObj, isUserList) {
                       loading.end();
                     });
                 },
-                '设置备注'
+                '设置备注',
               );
             } else if (id === '2') {
               copyText(_from);
@@ -946,7 +918,7 @@ function userMenu(e, msgObj, isUserList) {
               mailTo(email);
             }
           },
-          '用户信息'
+          '用户信息',
         );
       } else if (id === '4') {
         close();
@@ -959,7 +931,7 @@ function userMenu(e, msgObj, isUserList) {
         close();
       }
     },
-    des || username
+    des || username,
   );
 }
 // 打开文件
@@ -983,10 +955,8 @@ function openChatFile(target) {
         } else {
           if (isVideoFile(content)) {
             openInIframe(
-              `/videoplay#${encodeURIComponent(
-                getFilePath(`/upload/${msgId}/${content}`)
-              )}`,
-              content
+              `/videoplay#${encodeURIComponent(getFilePath(`/upload/${msgId}/${content}`))}`,
+              content,
             );
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(content)) {
             openInIframe(getFilePath(`/upload/${msgId}/${content}`), content);
@@ -998,7 +968,7 @@ function openChatFile(target) {
                   filename: content,
                 },
               ],
-              'image'
+              'image',
             );
           }
         }
@@ -1024,7 +994,7 @@ function openChatImg(target) {
             },
           ],
           0,
-          target
+          target,
         );
         return;
       }
@@ -1039,8 +1009,7 @@ function scrollTopMsg() {
     const firstItem = $chatListBox.find('.chat_item').first();
     if (firstItem.length === 0) return;
     if (
-      $chatListBox.find('.chat_list').outerHeight() <
-        $chatListBox.outerHeight() ||
+      $chatListBox.find('.chat_list').outerHeight() < $chatListBox.outerHeight() ||
       firstItem.data('nomore') === 1
     )
       return;
@@ -1072,10 +1041,8 @@ function scrollTopMsg() {
     } else if (idx > 0) {
       if (chatRoomWrapIsHide()) return;
       renderChatMsg.unshift(
-        chatMsgData
-          .get()
-          .slice(Math.max(idx - _d.fieldLength.chatPageSize, 0), idx),
-        firstItem
+        chatMsgData.get().slice(Math.max(idx - _d.fieldLength.chatPageSize, 0), idx),
+        firstItem,
       );
     }
   }
@@ -1090,10 +1057,7 @@ function scrollBottomMsg() {
     const idx = list.findIndex((item) => item.id === chatId);
     if (idx > 0 && idx < list.length - 1) {
       if (chatRoomWrapIsHide()) return;
-      renderChatMsg.push(
-        list.slice(idx + 1, idx + 1 + _d.fieldLength.chatPageSize),
-        lastItem
-      );
+      renderChatMsg.push(list.slice(idx + 1, idx + 1 + _d.fieldLength.chatPageSize), lastItem);
     }
   }
 }
@@ -1129,11 +1093,7 @@ $chatListBox
   .on('click', '.c_voice_msg_box', function () {
     if (getSelectText() !== '') return;
     const id = $(this).parent().parent().parent().attr('data-id');
-    playVoice(
-      getFilePath(`/upload/${id}/${getChatItem(id).content}`),
-      this,
-      id
-    );
+    playVoice(getFilePath(`/upload/${id}/${getChatItem(id).content}`), this, id);
   })
   .on('click', '.c_img', function () {
     if (getSelectText() !== '') return;
@@ -1197,7 +1157,7 @@ function hdDateSearchChat(e) {
       openFriend(curChatAccount);
       close();
     },
-    '选择消息日期范围'
+    '选择消息日期范围',
   );
 }
 export function getSearchDateLimit() {
@@ -1207,9 +1167,7 @@ function changeDateSearchState() {
   const { start, end } = searchDateLimit;
   const $dateSearch = $chatRoomWrap.find('.date_search');
   if (start && end) {
-    $dateSearch
-      .find('.date_text')
-      .text(`${searchDateLimit.start} >> ${searchDateLimit.end}`);
+    $dateSearch.find('.date_text').text(`${searchDateLimit.start} >> ${searchDateLimit.end}`);
     $dateSearch.addClass('active');
   } else {
     $dateSearch.find('.date_text').text(``);
@@ -1223,9 +1181,7 @@ $chatRoomWrap
     rMenu.pop(
       {
         e,
-        text: `${notify === 1 ? '关闭' : '开启'}: ${
-          des || username
-        } 的消息免打扰？`,
+        text: `${notify === 1 ? '关闭' : '开启'}: ${des || username} 的消息免打扰？`,
       },
       (type) => {
         if (type === 'confirm') {
@@ -1238,7 +1194,7 @@ $chatRoomWrap
             })
             .catch(() => {});
         }
-      }
+      },
     );
   })
   .on('click', '.date_search .date_icon', hdDateSearchChat)
@@ -1318,7 +1274,7 @@ function chatMsgMenu(e, cobj) {
                   loading.end();
                 });
             }
-          }
+          },
         );
       } else if (id === '1') {
         copyText(z);
@@ -1342,10 +1298,7 @@ function chatMsgMenu(e, cobj) {
             loading.end();
             if (result.code === 1) {
               close();
-              downloadFile(
-                [{ fileUrl: getFilePath(`/upload/${tt}/${z}`), filename: z }],
-                'image'
-              );
+              downloadFile([{ fileUrl: getFilePath(`/upload/${tt}/${z}`), filename: z }], 'image');
               return;
             }
             _msg.error(`${flag}已过期`);
@@ -1366,7 +1319,7 @@ function chatMsgMenu(e, cobj) {
         openInIframe('/edit#new', '新笔记');
       }
     },
-    cobj.content
+    cobj.content,
   );
 }
 // 播放语音
@@ -1374,9 +1327,7 @@ let playVoiceFlag = '';
 function playVoice(a, _this, id) {
   const pflag = playVoiceFlag;
   $chatAudio[0].pause();
-  $chatListBox
-    .find('.c_voice_msg_box i')
-    .attr('class', 'iconfont icon-zzanting');
+  $chatListBox.find('.c_voice_msg_box i').attr('class', 'iconfont icon-zzanting');
   if (pflag === id) {
     playVoiceFlag = '';
     return;
@@ -1389,16 +1340,12 @@ function playVoice(a, _this, id) {
 $chatAudio
   .on('ended', function () {
     playVoiceFlag = '';
-    $chatListBox
-      .find('.c_voice_msg_box i')
-      .attr('class', 'iconfont icon-zzanting');
+    $chatListBox.find('.c_voice_msg_box i').attr('class', 'iconfont icon-zzanting');
   })
   .on('error', function () {
     _msg.error('语音已过期');
     playVoiceFlag = '';
-    $chatListBox
-      .find('.c_voice_msg_box i')
-      .attr('class', 'iconfont icon-zzanting');
+    $chatListBox.find('.c_voice_msg_box i').attr('class', 'iconfont icon-zzanting');
   });
 // 发送文本消息
 function sendTextMsg() {
@@ -1442,43 +1389,40 @@ const saveTemChatMsg = debounce(async (val) => {
   await cacheFile.setData('temChatMsg', temChatMsg);
 }, 1000);
 // 消息编辑框
-const chatMsgInp = wrapInput(
-  $chatFootBox.find('.c_text_msg .c_text_content')[0],
-  {
-    update(val) {
-      if (val.length > _d.fieldLength.chatContent) {
-        val = val.slice(0, _d.fieldLength.chatContent);
-      }
-      $chatFootBox.find('.c_text_msg .fill_height').text(val);
-      saveTemChatMsg(val);
-      switchShakeBtn();
-      if (val.trim() === '') {
-        $chatFootBox
-          .find('.c_sent_msg_btn')
-          .attr('x', 1)
-          .children('i')
-          .attr('class', 'iconfont icon-tianjia');
-      } else {
-        $chatFootBox
-          .find('.c_sent_msg_btn')
-          .attr('x', 2)
-          .children('i')
-          .attr('class', 'iconfont icon-huaban');
-      }
-      if (val === '') {
-        $chatFootBox.find('.clean').removeClass('show');
-      } else {
-        $chatFootBox.find('.clean').addClass('show');
-      }
-    },
-    focus(e) {
-      $(e.target).addClass('focus');
-    },
-    blur(e) {
-      $(e.target).removeClass('focus');
-    },
-  }
-);
+const chatMsgInp = wrapInput($chatFootBox.find('.c_text_msg .c_text_content')[0], {
+  update(val) {
+    if (val.length > _d.fieldLength.chatContent) {
+      val = val.slice(0, _d.fieldLength.chatContent);
+    }
+    $chatFootBox.find('.c_text_msg .fill_height').text(val);
+    saveTemChatMsg(val);
+    switchShakeBtn();
+    if (val.trim() === '') {
+      $chatFootBox
+        .find('.c_sent_msg_btn')
+        .attr('x', 1)
+        .children('i')
+        .attr('class', 'iconfont icon-tianjia');
+    } else {
+      $chatFootBox
+        .find('.c_sent_msg_btn')
+        .attr('x', 2)
+        .children('i')
+        .attr('class', 'iconfont icon-huaban');
+    }
+    if (val === '') {
+      $chatFootBox.find('.clean').removeClass('show');
+    } else {
+      $chatFootBox.find('.clean').addClass('show');
+    }
+  },
+  focus(e) {
+    $(e.target).addClass('focus');
+  },
+  blur(e) {
+    $(e.target).removeClass('focus');
+  },
+});
 $chatFootBox
   .on('click', '.c_sent_msg_btn', async function () {
     if ($(this).attr('x') === '1') {
@@ -1504,7 +1448,7 @@ $chatFootBox
           }
         })
         .catch(() => {});
-    }, 1000)
+    }, 1000),
   )
   .on('click', '.c_change_btn', function () {
     const $this = $(this);
@@ -1590,13 +1534,9 @@ async function sendfile(files, chatAcc) {
     }
     if (size > _d.fieldLength.maxFileSize * 1024 * 1024 * 1024) {
       pro.fail('发送失败');
-      _msg.error(
-        `发送文件限制0-${_d.fieldLength.maxFileSize}GB：${name}`,
-        null,
-        {
-          reside: true,
-        }
-      );
+      _msg.error(`发送文件限制0-${_d.fieldLength.maxFileSize}GB：${name}`, null, {
+        reside: true,
+      });
       return;
     }
     const type = isImgFile(name) ? 'image' : 'file';
@@ -1635,7 +1575,7 @@ async function sendfile(files, chatAcc) {
           },
           file,
           false,
-          signal
+          signal,
         );
         index++;
         compale(index);
@@ -1693,7 +1633,7 @@ function upVoice(blob, duration) {
       function (percent) {
         pro.update(percent);
       },
-      signal
+      signal,
     )
     .then((buf) => {
       const { HASH } = buf;
@@ -1707,7 +1647,7 @@ function upVoice(blob, duration) {
         (percent) => {
           pro.update(percent);
         },
-        signal
+        signal,
       )
         .then((res) => {
           if (res.code === 1) {
@@ -1781,9 +1721,7 @@ $userListWrap.on('click', function (e) {
   }
 });
 // 标题过长滚动
-const chatTitleScroll = new ContentScroll(
-  $chatHeadBtns.find('.chat_title .text_box')[0]
-);
+const chatTitleScroll = new ContentScroll($chatHeadBtns.find('.chat_title .text_box')[0]);
 let onlineTimer = null;
 let curChatUserInfo = {};
 $onlineStatus
@@ -1863,9 +1801,7 @@ function switchNdnMode(acc, notify) {
 // 设置消息标题
 function setChatTitle(acc) {
   chatTitleScroll.init('');
-  if (
-    [setUserInfo().account, _d.chatRoomAccount, _d.notifyAccount].includes(acc)
-  ) {
+  if ([setUserInfo().account, _d.chatRoomAccount, _d.notifyAccount].includes(acc)) {
     $onlineStatus.css('display', 'none');
     updateOnlineStatus.clear();
     reqChatGetDes({ account: acc })

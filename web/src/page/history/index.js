@@ -144,7 +144,7 @@ function renderList(y) {
                 small: getScreenSize().w <= _d.screen,
               });
             },
-          }
+          },
         );
         stopSelect();
         $contentWrap.html(html).addClass('open');
@@ -180,10 +180,7 @@ function updateSearchConfig() {
     .then((res) => {
       if (res.code === 1) {
         if (Array.isArray(res.data.searchEngineData)) {
-          _d.searchEngineData = [
-            _d.defaultSearchEngineData,
-            ...res.data.searchEngineData,
-          ];
+          _d.searchEngineData = [_d.defaultSearchEngineData, ...res.data.searchEngineData];
         }
         if (res.data.searchengineid) {
           localData.set('searchengine', res.data.searchengineid);
@@ -257,9 +254,7 @@ function checkedItem(el) {
 }
 function updateSelectInfo() {
   const $itemBox = $contentWrap.find('.item_box'),
-    $checkArr = $itemBox.filter(
-      (_, item) => $(item).find('.check_state').attr('check') === 'y'
-    );
+    $checkArr = $itemBox.filter((_, item) => $(item).find('.check_state').attr('check') === 'y');
   _msg.botMsg(`选中：${$checkArr.length}项`);
   if ($checkArr.length === $itemBox.length) {
     $footer.find('span').attr({
@@ -386,7 +381,7 @@ function addHistory(e) {
           loading.end();
         });
     },
-    '添加搜索历史'
+    '添加搜索历史',
   );
 }
 $headWrap
@@ -408,9 +403,7 @@ $headWrap
 $footer
   .on('click', '.f_delete', function () {
     const $itemBox = $contentWrap.find('.item_box'),
-      $checkArr = $itemBox.filter(
-        (_, item) => $(item).find('.check_state').attr('check') === 'y'
-      );
+      $checkArr = $itemBox.filter((_, item) => $(item).find('.check_state').attr('check') === 'y');
     if ($checkArr.length === 0) return;
     const arr = [];
     $checkArr.each((_, v) => {
@@ -425,10 +418,7 @@ function switchCheckAll() {
   let che = $checkBtn.attr('check');
   che === 'y' ? (che = 'n') : (che = 'y');
   $checkBtn.attr({
-    class:
-      che === 'y'
-        ? 'iconfont icon-xuanzeyixuanze'
-        : 'iconfont icon-xuanzeweixuanze',
+    class: che === 'y' ? 'iconfont icon-xuanzeyixuanze' : 'iconfont icon-xuanzeweixuanze',
     check: che,
   });
   const $itemBox = $contentWrap.find('.item_box');
@@ -447,7 +437,7 @@ scrollState(
     } else {
       $headWrap.addClass('open');
     }
-  }, 1000)
+  }, 1000),
 );
 document.addEventListener('keydown', function (e) {
   const key = e.key,

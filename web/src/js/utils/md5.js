@@ -7,10 +7,7 @@ async function sampleHash(file) {
     const fileSize = file.size;
 
     const maxSampleCount = 100; // 最大取样点数
-    const sampleCount = Math.min(
-      Math.max(Math.floor(fileSize / 1024), 4),
-      maxSampleCount
-    );
+    const sampleCount = Math.min(Math.max(Math.floor(fileSize / 1024), 4), maxSampleCount);
     const maxOffset = fileSize - 256; // 防止读取超出文件范围
 
     let seed = fileSize;

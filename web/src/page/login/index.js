@@ -248,7 +248,7 @@ function resetPassword() {
             },
             '输入邮箱验证码，重置密码',
             0,
-            1
+            1,
           );
         }
       }
@@ -435,7 +435,7 @@ function hdLogin(obj) {
             },
             '两步验证',
             1,
-            1
+            1,
           );
         } else if (needCaptcha) {
           isCaptcha = true;

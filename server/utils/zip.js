@@ -40,7 +40,7 @@ async function zip(froms, to, { signal, progress } = {}) {
       },
     }),
     output,
-    { signal }
+    { signal },
   );
 
   return archive.pointer();
@@ -73,7 +73,7 @@ async function unzip(from, to, { signal, progress } = {}) {
           },
         }),
         await _f.createWriteStream(outputPath, { flags: 'w' }),
-        { signal }
+        { signal },
       );
       progressInfo.count += 1;
       progress && progress(progressInfo);

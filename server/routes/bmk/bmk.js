@@ -111,10 +111,7 @@ export async function bookmarkMoveLocation(account, groupId, fromId, toId) {
 
 // 分组是否存在
 export async function bmkGroupExist(account, groupId) {
-  return db('bmk_group')
-    .select('id')
-    .where({ account, state: 1, id: groupId })
-    .findOne();
+  return db('bmk_group').select('id').where({ account, state: 1, id: groupId }).findOne();
 }
 
 // 清理缓存siteInfo

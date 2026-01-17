@@ -32,11 +32,7 @@ import {
   showWillPlaySongInfo,
   toggleLrcMenuWrapBtnsState,
 } from './lrc';
-import {
-  highlightPlayingSong,
-  showMusicPlayerBox,
-  updateSongInfo,
-} from './index';
+import { highlightPlayingSong, showMusicPlayerBox, updateSongInfo } from './index';
 import { reqPlayerEditLrc, reqPlayerReadLrc } from '../../../api/player';
 import { playingListHighlight } from './playlist';
 import { updateLastPlay } from '../timer';
@@ -165,10 +161,7 @@ $miniPlayer
   .on('click', '.top', switchMiniPlayerTopState)
   .on('mouseenter', function () {
     if (!setPlayingSongInfo().id) return;
-    $(this).attr(
-      'title',
-      `${setPlayingSongInfo().artist} - ${setPlayingSongInfo().title}`
-    );
+    $(this).attr('title', `${setPlayingSongInfo().artist} - ${setPlayingSongInfo().title}`);
   })
   .on('click', '.to_max', function () {
     showMusicPlayerBox();
@@ -208,17 +201,17 @@ export function miniLrcUpdateLrc(list, activeLrcIndex) {
     nextObj = list[activeLrcIndex + 1] || {};
   let activep = '',
     activep1 = '';
-  activep = _tpl(
-    `<p>{{p}}</p><p v-if="showfy" class='fy' style="font-size: 0.6em">{{fy}}</p>`,
-    { ...curObj, showfy }
-  );
+  activep = _tpl(`<p>{{p}}</p><p v-if="showfy" class='fy' style="font-size: 0.6em">{{fy}}</p>`, {
+    ...curObj,
+    showfy,
+  });
   if (activeLrcIndex + 1 === list.length) {
     activep1 = '';
   } else {
-    activep1 = _tpl(
-      `<p>{{p}}</p><p v-if="showfy" class='fy' style="font-size: 0.6em">{{fy}}</p>`,
-      { ...nextObj, showfy }
-    );
+    activep1 = _tpl(`<p>{{p}}</p><p v-if="showfy" class='fy' style="font-size: 0.6em">{{fy}}</p>`, {
+      ...nextObj,
+      showfy,
+    });
   }
   const $lb = $miniLrcWrap.find('.lrcbot');
   if ($lb.attr('x') === '0') {
@@ -257,7 +250,7 @@ export function closeEditLrcBox() {
     (target) => {
       target.style.display = 'none';
       $editLrcWrap.find('textarea').val('');
-    }
+    },
   );
   editLrcHeadContentScroll.close();
 }
@@ -292,9 +285,7 @@ $editLrcWrap
   })
   .on('click', '.save', saveLrc)
   .on('click', '.top', switchEditLrcTopState);
-const editLrcHeadContentScroll = new ContentScroll(
-  $editLrcWrap.find('.song_info_text p')[0]
-);
+const editLrcHeadContentScroll = new ContentScroll($editLrcWrap.find('.song_info_text p')[0]);
 // 显示编辑歌词
 let editLrcOnce = false;
 export function showEditLrc(sobj) {
@@ -361,17 +352,13 @@ export function closeMvBox() {
     (target) => {
       target.style.display = 'none';
       popWindow.remove('mv');
-    }
+    },
   );
   musicMvContentScroll.close();
 }
-$musicMvWrap
-  .on('click', '.m_close', closeMvBox)
-  .on('click', '.top', switchMvTopState);
+$musicMvWrap.on('click', '.m_close', closeMvBox).on('click', '.top', switchMvTopState);
 // mv标题滚动
-const musicMvContentScroll = new ContentScroll(
-  $musicMvWrap.find('.m_top_space p')[0]
-);
+const musicMvContentScroll = new ContentScroll($musicMvWrap.find('.m_top_space p')[0]);
 // MV播放函数
 let mvBoxOnce = false;
 export async function playMv(obj) {
@@ -401,9 +388,7 @@ export async function playMv(obj) {
       direction: 'reverse',
     });
   }
-  musicMvContentScroll.init(
-    `${setPlayingSongInfo().artist} - ${setPlayingSongInfo().title}`
-  );
+  musicMvContentScroll.init(`${setPlayingSongInfo().artist} - ${setPlayingSongInfo().title}`);
   setZidx(mvBox, 'mv', closeMvBox, mvIsTop);
   highlightPlayingSong(false);
   playingListHighlight(false);
@@ -595,5 +580,5 @@ window.addEventListener(
         miniPlayerIsShow = false;
       }
     }
-  }, 1000)
+  }, 1000),
 );

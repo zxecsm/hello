@@ -91,7 +91,7 @@ route.get(
     'query',
     V.object({
       u: V.string().trim().min(2).max(fieldLength.url),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -103,9 +103,7 @@ route.get(
       }
 
       let protocol = 'https:'; // 默认https
-      const url = `${
-        urlStr.startsWith('http') ? '' : `${protocol}//`
-      }${urlStr}`;
+      const url = `${urlStr.startsWith('http') ? '' : `${protocol}//`}${urlStr}`;
 
       if (!isurl(url)) {
         paramErr(res, req, 'url 格式错误', { url });
@@ -145,17 +143,13 @@ route.get(
               timeout: 5000,
             });
           }
-          if (
-            !htmlResp?.headers ||
-            !htmlResp.headers['content-type']?.includes('text/html')
-          ) {
+          if (!htmlResp?.headers || !htmlResp.headers['content-type']?.includes('text/html')) {
             throw new Error('只允许获取HTML文件');
           }
 
           const head = extractFullHead(htmlResp.data);
 
-          const $ =
-            _f.getTextSize(head) > 300 * 1024 ? null : cheerio.load(head);
+          const $ = _f.getTextSize(head) > 300 * 1024 ? null : cheerio.load(head);
 
           await downFile(extractIconUrl($, host, protocol), iconPath);
         } catch (err) {
@@ -165,7 +159,7 @@ route.get(
               tplReplace(_d.faviconSpareApi, {
                 host,
               }),
-              iconPath
+              iconPath,
             );
 
             await uLog(req, `调用备用接口获取图标(${urlStr})`);
@@ -209,7 +203,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 export default route;

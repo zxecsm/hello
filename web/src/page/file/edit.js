@@ -10,11 +10,7 @@ import {
   percentToValue,
 } from '../../js/utils/utils';
 import _msg from '../../js/plugins/message';
-import {
-  reqFileGetHistoryState,
-  reqFileHistoryState,
-  reqFileSaveFile,
-} from '../../api/file';
+import { reqFileGetHistoryState, reqFileHistoryState, reqFileSaveFile } from '../../api/file';
 import bus from '../../js/utils/bus';
 import rMenu from '../../js/plugins/rightMenu';
 import _path from '../../js/utils/path';
@@ -124,9 +120,7 @@ function hideContainer() {
 function showContainer() {
   $container.css('visibility', 'visible');
 }
-const editTitleContentScroll = new ContentScroll(
-  $editFile.find('.head_btn .text .scroll_text')[0]
-);
+const editTitleContentScroll = new ContentScroll($editFile.find('.head_btn .text .scroll_text')[0]);
 // 设置
 async function settingMenu(e) {
   let fileHistoryState = 0;
@@ -152,9 +146,7 @@ async function settingMenu(e) {
       id: 'history',
       text: '保存文件历史',
       beforeIcon: 'iconfont icon-history',
-      afterIcon:
-        'iconfont ' +
-        (fileHistoryState ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+      afterIcon: 'iconfont ' + (fileHistoryState ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
       param: { value: fileHistoryState },
     });
   }
@@ -198,7 +190,7 @@ async function settingMenu(e) {
               resetMenu(fn());
             }
           },
-          '选择语言'
+          '选择语言',
         );
       } else if (id === 'history') {
         loading.start();
@@ -223,7 +215,7 @@ async function settingMenu(e) {
           });
       }
     },
-    '设置'
+    '设置',
   );
 }
 $editFile
@@ -253,7 +245,7 @@ $editFile
           if (type === 'confirm') {
             hdClose();
           }
-        }
+        },
       );
     } else {
       hdClose();

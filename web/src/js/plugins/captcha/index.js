@@ -44,10 +44,7 @@ class SlideCaptcha {
     /* 滑块区 */
     const sliderWrap = el('div', 'captcha-slider-wrap');
     const sliderMask = el('div', 'captcha-slider-mask');
-    const slider = el(
-      'div',
-      'captcha-slider iconfont icon-shuangxianyoujiantou'
-    );
+    const slider = el('div', 'captcha-slider iconfont icon-shuangxianyoujiantou');
     slider.setAttribute('cursor', 'y');
     const text = el('span', 'captcha-text');
     text.innerText = '右滑补全拼图';
@@ -187,17 +184,13 @@ class SlideCaptcha {
     this.slider.style.left = `${moveX}px`;
     this.sliderMask.style.width = `${moveX}px`;
 
-    const pieceX =
-      ((this.cw - this.piece.offsetWidth) / (this.cw - sliderW)) * moveX;
+    const pieceX = ((this.cw - this.piece.offsetWidth) / (this.cw - sliderW)) * moveX;
     this.piece.style.left = `${pieceX}px`;
 
     this.text.style.display = 'none';
 
     const now = Date.now();
-    if (
-      this.track.length === 0 ||
-      now - this.track[this.track.length - 1].t > 60
-    ) {
+    if (this.track.length === 0 || now - this.track[this.track.length - 1].t > 60) {
       const y = point.clientY - this.content.getBoundingClientRect().top;
       this.track.push({
         x: Math.round(pieceX * this.displayToRealScale),

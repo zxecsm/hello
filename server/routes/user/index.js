@@ -74,7 +74,7 @@ route.post(
     'body',
     V.object({
       err: V.string().min(1),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -86,7 +86,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 获取自定义code
@@ -146,13 +146,8 @@ route.post(
     V.object({
       username: V.string().trim().min(1).max(fieldLength.username),
       password: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      captchaId: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.id)
-        .alphanumeric(),
-    })
+      captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+    }),
   ),
   async (req, res) => {
     try {
@@ -171,10 +166,7 @@ route.post(
         return;
       }
 
-      const userInfo = await db('user')
-        .select('account')
-        .where({ username })
-        .findOne();
+      const userInfo = await db('user').select('account').where({ username }).findOne();
 
       if (userInfo) {
         _err(res, '用户名无法使用')(req, username, 1);
@@ -206,18 +198,14 @@ route.post(
       await heperMsgAndForward(
         req,
         appConfig.adminAccount,
-        `${username}(${account})，在 [${os}(${ip})] 注册账号成功`
+        `${username}(${account})，在 [${os}(${ip})] 注册账号成功`,
       );
 
-      _success(res, '注册账号成功', { account, username })(
-        req,
-        `${username}-${account}`,
-        1
-      );
+      _success(res, '注册账号成功', { account, username })(req, `${username}-${account}`, 1);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 批准登录请求
@@ -228,7 +216,7 @@ route.post(
     V.object({
       code: V.string().trim().min(6).max(6).alphanumeric(),
       username: V.string().trim().min(1).max(fieldLength.username),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -272,14 +260,14 @@ route.post(
             code,
           },
         },
-        'all'
+        'all',
       );
 
       _success(res, '发送登录请求成功')(req, `${username}-${account}`, 1);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 免密登录
@@ -290,7 +278,7 @@ route.post(
     V.object({
       code: V.string().trim().min(6).max(6).alphanumeric(),
       username: V.string().trim().min(1).max(fieldLength.username),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -312,11 +300,7 @@ route.post(
       const { remote_login } = userinfo;
 
       if (remote_login === 0) {
-        _err(res, '用户未开启免密登录')(
-          req,
-          `${username}-${userinfo.account}`,
-          1
-        );
+        _err(res, '用户未开启免密登录')(req, `${username}-${userinfo.account}`, 1);
         return;
       }
 
@@ -342,7 +326,7 @@ route.post(
       await heperMsgAndForward(
         req,
         account,
-        `您的账号通过免密验证，在 [${os}(${ip})] 登录成功。如非本人操作，请及时修改密码（密码修改成功，全平台清空登录态）`
+        `您的账号通过免密验证，在 [${os}(${ip})] 登录成功。如非本人操作，请及时修改密码（密码修改成功，全平台清空登录态）`,
       );
 
       _success(res, '登录成功', {
@@ -352,7 +336,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 获取验证码
@@ -364,7 +348,7 @@ route.get(
     V.object({
       flag: V.string().trim().min(1).max(fieldLength.id),
       theme: V.string().trim().default('light').enum(['light', 'dark']),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -379,7 +363,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 验证验证码
@@ -394,9 +378,9 @@ route.post(
           x: V.number().toNumber().min(0),
           y: V.number().toNumber().min(0),
           t: V.number().toNumber().min(0),
-        })
+        }),
       ),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -423,7 +407,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 登录
@@ -435,13 +419,8 @@ route.post(
     V.object({
       username: V.string().trim().min(1).max(fieldLength.username),
       password: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      captchaId: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.id)
-        .alphanumeric(),
-    })
+      captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+    }),
   ),
   async (req, res) => {
     try {
@@ -474,10 +453,7 @@ route.post(
       const { verify, account } = userinfo;
 
       // 验证密码，如果未设置密码或密码正确
-      if (
-        !userinfo.password ||
-        (await _crypto.verifyPassword(password, userinfo.password))
-      ) {
+      if (!userinfo.password || (await _crypto.verifyPassword(password, userinfo.password))) {
         if (verify) {
           // 如果开启两部验证，则继续验证身份
           _success(res, '账号密码验证成功，请完成两步验证', {
@@ -495,28 +471,20 @@ route.post(
           await heperMsgAndForward(
             req,
             account,
-            `您的账号在 [${os}(${ip})] 登录成功。如非本人操作，请及时修改密码（密码修改成功，全平台清空登录态）`
+            `您的账号在 [${os}(${ip})] 登录成功。如非本人操作，请及时修改密码（密码修改成功，全平台清空登录态）`,
           );
 
-          _success(res, '登录成功', { account, username })(
-            req,
-            `${username}-${account}`,
-            1
-          );
+          _success(res, '登录成功', { account, username })(req, `${username}-${account}`, 1);
         }
       } else {
         loginVerifyLimit.add(username);
 
-        _err(res, '用户名或密码错误，请重新输入')(
-          req,
-          `${username}-${account}`,
-          1
-        );
+        _err(res, '用户名或密码错误，请重新输入')(req, `${username}-${account}`, 1);
       }
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 两步验证
@@ -529,13 +497,8 @@ route.post(
       token: V.string().trim().min(6).max(6).alphanumeric(),
       account: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       password: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      captchaId: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.id)
-        .alphanumeric(),
-    })
+      captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+    }),
   ),
   async (req, res) => {
     try {
@@ -576,14 +539,10 @@ route.post(
         await heperMsgAndForward(
           req,
           account,
-          `您的账号在 [${os}(${ip})] 登录成功。如非本人操作，请及时修改密码（密码修改成功，全平台清空登录态）`
+          `您的账号在 [${os}(${ip})] 登录成功。如非本人操作，请及时修改密码（密码修改成功，全平台清空登录态）`,
         );
 
-        _success(res, '登录成功', { account, username })(
-          req,
-          `${username}-${account}`,
-          1
-        );
+        _success(res, '登录成功', { account, username })(req, `${username}-${account}`, 1);
       } else {
         towfaVerify.add(account);
         _err(res, '验证码错误，请重新输入')(req, `${username}-${account}`, 1);
@@ -591,7 +550,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 发送邮件验证码
@@ -601,13 +560,8 @@ route.get(
     'query',
     V.object({
       username: V.string().trim().min(1).max(fieldLength.username),
-      captchaId: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.id)
-        .alphanumeric(),
-    })
+      captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+    }),
   ),
   async (req, res) => {
     try {
@@ -649,11 +603,7 @@ route.get(
 
       if (mailer.get(email)) {
         // 如果有缓存
-        _success(res, '验证码已发送', { account, email })(
-          req,
-          `${username}-${account}`,
-          1
-        );
+        _success(res, '验证码已发送', { account, email })(req, `${username}-${account}`, 1);
 
         return;
       }
@@ -661,15 +611,11 @@ route.get(
       const code = Math.random().toFixed(6).slice(2);
 
       await mailer.sendCode(email, code);
-      _success(res, '验证码发送成功', { account, email })(
-        req,
-        `${username}-${account}`,
-        1
-      );
+      _success(res, '验证码发送成功', { account, email })(req, `${username}-${account}`, 1);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 重置密码
@@ -682,13 +628,8 @@ route.post(
       email: V.string().trim().min(1).max(fieldLength.email).email(),
       code: V.string().trim().min(6).max(6).alphanumeric(),
       account: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      captchaId: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.id)
-        .alphanumeric(),
-    })
+      captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+    }),
   ),
   async (req, res) => {
     try {
@@ -749,7 +690,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 验证登录态
@@ -768,7 +709,7 @@ route.get(
     'query',
     V.object({
       p: V.string().notEmpty().min(1).max(fieldLength.url),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -779,14 +720,14 @@ route.get(
           type: 'temAccessFile',
           data: { account: req[kHello].userinfo.account, p },
         },
-        fieldLength.shareTokenExp
+        fieldLength.shareTokenExp,
       );
 
       _success(res, '获取fileToken成功', token)(req, token, 1);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 获取字体列表
@@ -805,7 +746,7 @@ route.post(
     'body',
     V.object({
       email: V.string().trim().min(1).max(fieldLength.email).email(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -821,10 +762,7 @@ route.post(
         return;
       }
 
-      const userinfo = await db('user')
-        .select('account')
-        .where({ email })
-        .findOne();
+      const userinfo = await db('user').select('account').where({ email }).findOne();
 
       if (userinfo) {
         _err(res, '邮箱已绑定用户')(req, email, 1);
@@ -839,7 +777,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 绑定邮箱
@@ -848,22 +786,10 @@ route.post(
   validate(
     'body',
     V.object({
-      email: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .min(1)
-        .max(fieldLength.email)
-        .email(),
-      code: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .min(6)
-        .max(6)
-        .alphanumeric(),
+      email: V.string().trim().default('').allowEmpty().min(1).max(fieldLength.email).email(),
+      code: V.string().trim().default('').allowEmpty().min(6).max(6).alphanumeric(),
       password: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -890,10 +816,7 @@ route.post(
         return;
       }
 
-      const userinfo = await db('user')
-        .select('account')
-        .where({ email })
-        .findOne();
+      const userinfo = await db('user').select('account').where({ email }).findOne();
 
       if (userinfo) {
         _err(res, '邮箱已绑定用户')(req, email, 1);
@@ -914,7 +837,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 获取临时两部验证token
@@ -934,15 +857,9 @@ route.post(
   validate(
     'body',
     V.object({
-      token: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .min(6)
-        .max(6)
-        .alphanumeric(),
+      token: V.string().trim().default('').allowEmpty().min(6).max(6).alphanumeric(),
       password: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -980,7 +897,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // tips标识
@@ -995,10 +912,7 @@ route.get('/tips', async (req, res) => {
 // 批准登录
 route.post(
   '/allow-code-login',
-  validate(
-    'body',
-    V.object({ code: V.string().trim().min(6).max(6).alphanumeric() })
-  ),
+  validate('body', V.object({ code: V.string().trim().min(6).max(6).alphanumeric() })),
   async (req, res) => {
     try {
       const { code } = req[kValidate];
@@ -1039,7 +953,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 修改密码
@@ -1050,7 +964,7 @@ route.post(
     V.object({
       oldpassword: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       newpassword: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1073,7 +987,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 退出登录
@@ -1105,16 +1019,13 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 修改用户名
 route.post(
   '/changename',
-  validate(
-    'body',
-    V.object({ username: V.string().trim().min(1).max(fieldLength.username) })
-  ),
+  validate('body', V.object({ username: V.string().trim().min(1).max(fieldLength.username) })),
   async (req, res) => {
     try {
       const { username } = req[kValidate];
@@ -1147,7 +1058,7 @@ route.post(
       _err(res)(req, error);
       return;
     }
-  }
+  },
 );
 
 // 账号状态
@@ -1157,7 +1068,7 @@ route.post(
     'body',
     V.object({
       password: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1182,7 +1093,7 @@ route.post(
         await heperMsgAndForward(
           req,
           appConfig.adminAccount,
-          `${username}(${account})，在 [${os}(${ip})] 注销账号成功`
+          `${username}(${account})，在 [${os}(${ip})] 注销账号成功`,
         );
 
         _success(res, '注销账号成功')(req);
@@ -1190,7 +1101,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 用户信息
@@ -1261,16 +1172,9 @@ route.post(
         .max(fieldLength.filename)
         .custom((v) => isImgFile(v), '必须为受支持的图片格式'),
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      type: V.string()
-        .trim()
-        .enum(['userlogo', 'bookmark', 'engine', 'translator']),
-      id: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.id)
-        .alphanumeric(),
-    })
+      type: V.string().trim().enum(['userlogo', 'bookmark', 'engine', 'translator']),
+      id: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+    }),
   ),
   async (req, res) => {
     try {
@@ -1292,13 +1196,10 @@ route.post(
         path,
         `${HASH}.${_path.extname(name)[2]}`,
         fieldLength.maxLogoSize,
-        HASH
+        HASH,
       );
 
-      const logo = _path.normalize(
-        timePath,
-        `${HASH}.${_path.extname(name)[2]}`
-      );
+      const logo = _path.normalize(timePath, `${HASH}.${_path.extname(name)[2]}`);
 
       if (type === 'bookmark') {
         await db('bmk')
@@ -1348,7 +1249,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 每日更换壁纸
@@ -1363,9 +1264,7 @@ route.get('/daily-change-bg', async (req, res) => {
     } else {
       tem = 1;
     }
-    await db('user')
-      .where({ account, state: 1 })
-      .update({ daily_change_bg: tem });
+    await db('user').where({ account, state: 1 }).update({ daily_change_bg: tem });
 
     syncUpdateData(req, 'userinfo');
 
@@ -1443,7 +1342,7 @@ route.get(
     V.object({
       flag: V.string().trim().default('').allowEmpty().max(10).alphanumeric(),
       page: V.string().trim().default('').allowEmpty().max(20),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1455,7 +1354,7 @@ route.get(
         temid = await V.parse(
           temid,
           V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-          'temid'
+          'temid',
         );
       } catch (error) {
         paramErr(res, req, error, { temid });
@@ -1465,9 +1364,7 @@ route.get(
       let { flag, page } = req[kValidate]; //标识和设备ID
 
       if (page === 'home') {
-        await db('user')
-          .where({ account, state: 1 })
-          .update({ update_at: Date.now() });
+        await db('user').where({ account, state: 1 }).update({ update_at: Date.now() });
         // 主页才通知在线
         onlineMsg(req);
       }
@@ -1514,7 +1411,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 接收指令
@@ -1536,7 +1433,7 @@ route.post(
           'ssh',
         ]),
       data: V.object(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1550,7 +1447,7 @@ route.post(
         id = await V.parse(
           id,
           V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-          'temid'
+          'temid',
         );
       } catch (error) {
         paramErr(res, req, error, { temid: id });
@@ -1567,10 +1464,10 @@ route.post(
                 .allowEmpty()
                 .custom(
                   (v) => _f.getTextSize(v) <= fieldLength.customCodeSize,
-                  `text 不能超过: ${fieldLength.customCodeSize} 字节`
+                  `text 不能超过: ${fieldLength.customCodeSize} 字节`,
                 ),
             }),
-            'data'
+            'data',
           );
         } catch (error) {
           paramErr(res, req, error, 'body');
@@ -1589,7 +1486,7 @@ route.post(
                 type: 'ssh',
                 data: `SSH Error: ${error.message}`,
               },
-              'self'
+              'self',
             );
           }
         } else {
@@ -1600,7 +1497,7 @@ route.post(
               type: 'ssh',
               data: 'SSH connection has been disconnected. Please reconnect.',
             },
-            'self'
+            'self',
           );
         }
 
@@ -1634,14 +1531,9 @@ route.post(
                   'searchConfig',
                   'quickCommand',
                 ]),
-              id: V.string()
-                .trim()
-                .default('')
-                .allowEmpty()
-                .max(fieldLength.id)
-                .alphanumeric(),
+              id: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
             }),
-            'data'
+            'data',
           );
         } catch (error) {
           paramErr(res, req, error, 'body');
@@ -1656,11 +1548,7 @@ route.post(
       // 远程播放歌曲
       else if (type === 'play') {
         try {
-          data.state = await V.parse(
-            data.state,
-            V.number().toInt().enum([1, 0]),
-            'data.state'
-          );
+          data.state = await V.parse(data.state, V.number().toInt().enum([1, 0]), 'data.state');
         } catch (error) {
           paramErr(res, req, error, 'body');
           return;
@@ -1687,7 +1575,7 @@ route.post(
           data.state = await V.parse(
             data.state,
             V.string().trim().enum(['random', 'loop', 'order']),
-            'data.state'
+            'data.state',
           );
         } catch (error) {
           paramErr(res, req, error, 'body');
@@ -1703,11 +1591,7 @@ route.post(
       // 控制音量
       else if (type === 'vol') {
         try {
-          data.value = await V.parse(
-            data.value,
-            V.number().toNumber().min(0).max(1),
-            'data.value'
-          );
+          data.value = await V.parse(data.value, V.number().toNumber().min(0).max(1), 'data.value');
         } catch (error) {
           paramErr(res, req, error, 'body');
           return;
@@ -1722,11 +1606,7 @@ route.post(
       // 控制播放进度
       else if (type === 'progress') {
         try {
-          data.value = await V.parse(
-            data.value,
-            V.number().toNumber().min(0).max(1),
-            'data.value'
-          );
+          data.value = await V.parse(data.value, V.number().toNumber().min(0).max(1), 'data.value');
         } catch (error) {
           paramErr(res, req, error, 'body');
           return;
@@ -1744,12 +1624,12 @@ route.post(
           data.to = await V.parse(
             data.to,
             V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-            'data.to'
+            'data.to',
           );
           data.flag = await V.parse(
             data.flag,
             V.string().trim().enum(['addmsg', 'del', 'clear']),
-            'data.flag'
+            'data.flag',
           );
         } catch (error) {
           paramErr(res, req, error, 'body');
@@ -1760,15 +1640,11 @@ route.post(
         // 如果是删除验证消息id
         if (data.flag === 'del') {
           try {
-            data.msgData = await V.parse(
-              data.msgData,
-              V.object(),
-              'data.msgData'
-            );
+            data.msgData = await V.parse(data.msgData, V.object(), 'data.msgData');
             data.msgData.msgId = await V.parse(
               data.msgData.msgId,
               V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-              'data.msgData.msgId'
+              'data.msgData.msgId',
             );
           } catch (error) {
             paramErr(res, req, error, 'body');
@@ -1786,7 +1662,7 @@ route.post(
           data.type = await V.parse(
             data.type,
             V.string().trim().default('').allowEmpty().enum(['copy', 'cut']),
-            'data.type'
+            'data.type',
           );
         } catch (error) {
           paramErr(res, req, error, 'body');
@@ -1802,11 +1678,11 @@ route.post(
                   name: V.string().min(1).notEmpty().max(fieldLength.filename),
                   path: V.string().min(1).notEmpty().max(fieldLength.url),
                   type: V.string().trim().enum(['dir', 'file']),
-                })
+                }),
               )
                 .min(1)
                 .max(fieldLength.maxPagesize),
-              'data.data'
+              'data.data',
             );
           } catch (error) {
             paramErr(res, req, error, 'body');
@@ -1823,7 +1699,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除分享
@@ -1835,7 +1711,7 @@ route.post(
       ids: V.array(V.string().min(1).max(fieldLength.id).alphanumeric())
         .min(1)
         .max(fieldLength.maxPagesize),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -1853,7 +1729,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 获取分享列表
@@ -1863,12 +1739,8 @@ route.get(
     'query',
     V.object({
       pageNo: V.number().toInt().default(1).min(1),
-      pageSize: V.number()
-        .toInt()
-        .default(20)
-        .min(1)
-        .max(fieldLength.maxPagesize),
-    })
+      pageSize: V.number().toInt().default(20).min(1).max(fieldLength.maxPagesize),
+    }),
   ),
   async (req, res) => {
     try {
@@ -1903,7 +1775,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 编辑分享
@@ -1915,20 +1787,15 @@ route.post(
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       title: V.string().trim().min(1).max(fieldLength.title),
       expireTime: V.number().toInt().max(fieldLength.expTime),
-      pass: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.sharePass),
-    })
+      pass: V.string().trim().default('').allowEmpty().max(fieldLength.sharePass),
+    }),
   ),
   async (req, res) => {
     try {
       const { id, title, expireTime, pass } = req[kValidate];
 
       const obj = {
-        exp_time:
-          expireTime === 0 ? 0 : Date.now() + expireTime * 24 * 60 * 60 * 1000,
+        exp_time: expireTime === 0 ? 0 : Date.now() + expireTime * 24 * 60 * 60 * 1000,
         title,
         pass,
       };
@@ -1943,7 +1810,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 回收站列表
@@ -1952,21 +1819,11 @@ route.get(
   validate(
     'query',
     V.object({
-      type: V.string()
-        .trim()
-        .enum(['note', 'bmk', 'bmk_group', 'history', 'ssh']),
-      word: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.searchWord),
+      type: V.string().trim().enum(['note', 'bmk', 'bmk_group', 'history', 'ssh']),
+      word: V.string().trim().default('').allowEmpty().max(fieldLength.searchWord),
       pageNo: V.number().toInt().default(1).min(1),
-      pageSize: V.number()
-        .toInt()
-        .default(20)
-        .min(1)
-        .max(fieldLength.maxPagesize),
-    })
+      pageSize: V.number().toInt().default(20).min(1).max(fieldLength.maxPagesize),
+    }),
   ),
   async (req, res) => {
     try {
@@ -1976,8 +1833,7 @@ route.get(
       let fields = '';
 
       if (type === 'bmk') {
-        fields =
-          'b.id,b.title,b.link,b.des,b.group_id,g.title AS group_title,b.logo';
+        fields = 'b.id,b.title,b.link,b.des,b.group_id,g.title AS group_title,b.logo';
         fieldArr = ['b.title', 'b.link', 'b.des'];
       } else if (type === 'history') {
         fields = 'id,content';
@@ -1986,8 +1842,7 @@ route.get(
         fields = 'id,title';
         fieldArr = ['title'];
       } else if (type === 'note') {
-        fields =
-          'title,create_at,update_at,id,content,visit_count,top,category';
+        fields = 'title,create_at,update_at,id,content,visit_count,top,category';
         fieldArr = ['title', 'content'];
       } else if (type === 'ssh') {
         fields = 'id,title,port,host,username,category,top,auth_type';
@@ -2004,7 +1859,7 @@ route.get(
             {
               'b.group_id': { value: 'g.id', raw: true },
             },
-            { type: 'LEFT' }
+            { type: 'LEFT' },
           )
           .where({ 'b.account': account, 'b.state': 0 });
       } else {
@@ -2048,16 +1903,7 @@ route.get(
             .find();
 
           data = data.map((item) => {
-            let {
-              title,
-              content,
-              id,
-              create_at,
-              update_at,
-              visit_count,
-              top,
-              category,
-            } = item;
+            let { title, content, id, create_at, update_at, visit_count, top, category } = item;
             let con = [];
             let images = [];
 
@@ -2071,8 +1917,7 @@ route.get(
                 const wc = getWordContent(splitWord, content);
 
                 const idx = wc.findIndex(
-                  (item) =>
-                    item.value.toLowerCase() === splitWord[0].toLowerCase()
+                  (item) => item.value.toLowerCase() === splitWord[0].toLowerCase(),
                 );
 
                 let start = 0,
@@ -2106,9 +1951,7 @@ route.get(
             }
 
             const cArr = category.split('-').filter(Boolean);
-            const categoryArr = noteCategory.filter((item) =>
-              cArr.includes(item.id)
-            );
+            const categoryArr = noteCategory.filter((item) => cArr.includes(item.id));
 
             return {
               id,
@@ -2130,15 +1973,10 @@ route.get(
             }
           });
         } else if (type === 'ssh') {
-          const sshCategory = await db('ssh_category')
-            .select('id,title')
-            .where({ account })
-            .find();
+          const sshCategory = await db('ssh_category').select('id,title').where({ account }).find();
           data = data.map((item) => {
             const cArr = item.category.split('-').filter(Boolean);
-            const categoryArr = sshCategory.filter((item) =>
-              cArr.includes(item.id)
-            );
+            const categoryArr = sshCategory.filter((item) => cArr.includes(item.id));
 
             return {
               ...item,
@@ -2156,7 +1994,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除回收站
@@ -2165,13 +2003,11 @@ route.post(
   validate(
     'body',
     V.object({
-      type: V.string()
-        .trim()
-        .enum(['bmk_group', 'bmk', 'note', 'history', 'ssh']),
+      type: V.string().trim().enum(['bmk_group', 'bmk', 'note', 'history', 'ssh']),
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
         .min(1)
         .max(fieldLength.maxPagesize),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -2217,7 +2053,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 恢复回收站内容
@@ -2226,13 +2062,11 @@ route.post(
   validate(
     'body',
     V.object({
-      type: V.string()
-        .trim()
-        .enum(['bmk_group', 'bmk', 'note', 'history', 'ssh']),
+      type: V.string().trim().enum(['bmk_group', 'bmk', 'note', 'history', 'ssh']),
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
         .min(1)
         .max(fieldLength.maxPagesize),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -2256,7 +2090,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 export default route;

@@ -37,20 +37,16 @@ route.get(
     V.object({
       v: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       download: V.number().toInt().default(0).enum([0, 1]),
-    })
+    }),
   ),
   async (req, res) => {
     try {
       const { v: id, download } = req[kValidate];
 
       const note = await db('note AS n')
-        .join(
-          'user AS u',
-          { 'n.account': { value: 'u.account', raw: true } },
-          { type: 'LEFT' }
-        )
+        .join('user AS u', { 'n.account': { value: 'u.account', raw: true } }, { type: 'LEFT' })
         .select(
-          'u.account,u.username,u.logo,u.email,n.create_at,n.update_at,n.title,n.state,n.share,n.content,n.visit_count,n.category'
+          'u.account,u.username,u.logo,u.email,n.create_at,n.update_at,n.title,n.state,n.share,n.content,n.visit_count,n.category',
         )
         .where({ 'n.id': id })
         .findOne();
@@ -110,7 +106,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 搜索笔记
@@ -119,29 +115,14 @@ route.post(
   validate(
     'body',
     V.object({
-      account: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.id)
-        .alphanumeric(),
-      word: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.searchWord),
+      account: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+      word: V.string().trim().default('').allowEmpty().max(fieldLength.searchWord),
       pageNo: V.number().toInt().default(1).min(1),
-      pageSize: V.number()
-        .toInt()
-        .default(20)
-        .min(1)
-        .max(fieldLength.maxPagesize),
-      category: V.array(
-        V.string().trim().min(1).max(fieldLength.id).alphanumeric()
-      )
+      pageSize: V.number().toInt().default(20).min(1).max(fieldLength.maxPagesize),
+      category: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
         .default([])
         .max(10),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -177,7 +158,7 @@ route.post(
           // 分类
           const categorySql = searchSql(
             category,
-            category.map(() => 'category')
+            category.map(() => 'category'),
           );
 
           if (isOwn) {
@@ -191,18 +172,18 @@ route.post(
                       params: [...params, ...categorySql.params],
                     };
                   },
-                }
+                },
               );
             } else {
               notedb.search(
                 category,
-                category.map(() => 'category')
+                category.map(() => 'category'),
               );
             }
           } else {
             notedb.search(
               category,
-              category.map(() => 'category')
+              category.map(() => 'category'),
             );
           }
         } else {
@@ -234,9 +215,7 @@ route.post(
         const offset = (result.pageNo - 1) * pageSize;
 
         list = await notedb
-          .select(
-            'title,create_at,update_at,id,share,content,visit_count,top,category'
-          )
+          .select('title,create_at,update_at,id,share,content,visit_count,top,category')
           .page(pageSize, offset)
           .find();
 
@@ -246,17 +225,8 @@ route.post(
           .find();
 
         list = list.map((item) => {
-          let {
-            title,
-            content,
-            id,
-            create_at,
-            update_at,
-            share,
-            visit_count,
-            top,
-            category,
-          } = item;
+          let { title, content, id, create_at, update_at, share, visit_count, top, category } =
+            item;
 
           let con = [];
           let images = [];
@@ -271,8 +241,7 @@ route.post(
               const wc = getWordContent(splitWord, content);
 
               const idx = wc.findIndex(
-                (item) =>
-                  item.value.toLowerCase() === splitWord[0].toLowerCase()
+                (item) => item.value.toLowerCase() === splitWord[0].toLowerCase(),
               );
 
               let start = 0,
@@ -306,9 +275,7 @@ route.post(
           }
 
           const cArr = category.split('-').filter(Boolean);
-          const categoryArr = noteCategory.filter((item) =>
-            cArr.includes(item.id)
-          );
+          const categoryArr = noteCategory.filter((item) => cArr.includes(item.id));
 
           return {
             id,
@@ -334,7 +301,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 获取分类
@@ -343,13 +310,8 @@ route.get(
   validate(
     'query',
     V.object({
-      account: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(fieldLength.id)
-        .alphanumeric(),
-    })
+      account: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+    }),
   ),
   async (req, res) => {
     try {
@@ -367,7 +329,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 验证登录态
@@ -386,7 +348,7 @@ route.post(
     'body',
     V.object({
       state: V.number().toInt().default(0).enum([0, 1]),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -394,15 +356,13 @@ route.post(
 
       const { account } = req[kHello].userinfo;
 
-      await db('user')
-        .where({ account, state: 1 })
-        .update({ note_history: state });
+      await db('user').where({ account, state: 1 }).update({ note_history: state });
 
       _success(res, `${state === 0 ? '关闭' : '开启'}笔记历史记录成功`)(req);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 route.get('/history-state', async (req, res) => {
   try {
@@ -423,7 +383,7 @@ route.post(
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
         .min(1)
         .max(fieldLength.maxPagesize),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -437,15 +397,11 @@ route.post(
 
       syncUpdateData(req, 'note');
 
-      _success(res, `${share === 0 ? '锁定' : '公开'}笔记成功`)(
-        req,
-        ids.length,
-        1
-      );
+      _success(res, `${share === 0 ? '锁定' : '公开'}笔记成功`)(req, ids.length, 1);
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除笔记
@@ -457,15 +413,13 @@ route.post(
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
         .min(1)
         .max(fieldLength.maxPagesize),
-    })
+    }),
   ),
   async (req, res) => {
     try {
       let { ids } = req[kValidate];
 
-      ids = ids.filter(
-        (item) => ![appConfig.aboutid, appConfig.tipsid].includes(item)
-      ); // 过滤关于和tips
+      ids = ids.filter((item) => ![appConfig.aboutid, appConfig.tipsid].includes(item)); // 过滤关于和tips
 
       const { account } = req[kHello].userinfo;
 
@@ -481,7 +435,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 上传笔记
@@ -496,9 +450,9 @@ route.post(
         .allowEmpty()
         .custom(
           (v) => _f.getTextSize(v) <= fieldLength.noteSize,
-          `笔记内容不能超过: ${fieldLength.noteSize} 字节`
+          `笔记内容不能超过: ${fieldLength.noteSize} 字节`,
         ),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -520,7 +474,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 编辑笔记
@@ -536,9 +490,9 @@ route.post(
         .allowEmpty()
         .custom(
           (v) => _f.getTextSize(v) <= fieldLength.noteSize,
-          `笔记内容不能超过: ${fieldLength.noteSize} 字节`
+          `笔记内容不能超过: ${fieldLength.noteSize} 字节`,
         ),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -548,10 +502,7 @@ route.post(
 
       const { account, note_history } = req[kHello].userinfo;
 
-      const note = await db('note')
-        .select('content')
-        .where({ id, account })
-        .findOne();
+      const note = await db('note').select('content').where({ id, account }).findOne();
 
       if (note) {
         // 保存笔记历史版本
@@ -590,7 +541,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 编辑笔记信息
@@ -608,7 +559,7 @@ route.post(
         .trim()
         .custom((v) => isValidDate(v), '必须 YYYY-MM-DD 格式'),
       visit_count: V.number().toInt().min(0),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -639,7 +590,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 置顶权重
@@ -650,7 +601,7 @@ route.post(
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       top: V.number().toInt().min(0).max(fieldLength.top),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -666,7 +617,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 编辑笔记分类
@@ -676,12 +627,10 @@ route.post(
     'body',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      category: V.array(
-        V.string().trim().min(1).max(fieldLength.id).alphanumeric()
-      )
+      category: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
         .default([])
         .max(10),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -698,7 +647,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 编辑分类
@@ -709,7 +658,7 @@ route.post(
     V.object({
       title: V.string().trim().min(1).max(fieldLength.noteCategoryTitle),
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -725,7 +674,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 添加分类
@@ -735,7 +684,7 @@ route.post(
     'body',
     V.object({
       title: V.string().trim().min(1).max(fieldLength.noteCategoryTitle),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -762,7 +711,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 删除分类
@@ -772,7 +721,7 @@ route.get(
     'query',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -788,7 +737,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 export default route;

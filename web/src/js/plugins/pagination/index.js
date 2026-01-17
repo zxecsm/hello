@@ -1,11 +1,5 @@
 import './index.less';
-import {
-  _getTarget,
-  _mySlide,
-  _setTimeout,
-  creatSelect,
-  inputPageNo,
-} from '../../utils/utils';
+import { _getTarget, _mySlide, _setTimeout, creatSelect, inputPageNo } from '../../utils/utils';
 import { _tpl } from '../../utils/template';
 /*
  *pageNo:当前页
@@ -67,8 +61,8 @@ class Pagination {
     this.opt.pageNo < 1
       ? (this.opt.pageNo = this.opt.totalPage)
       : this.opt.pageNo > this.opt.totalPage
-      ? (this.opt.pageNo = 1)
-      : null;
+        ? (this.opt.pageNo = 1)
+        : null;
     this.opt.change && this.opt.change(this.opt.pageNo);
   }
   hdClick(e) {
@@ -96,14 +90,10 @@ class Pagination {
           this.hdChange();
         });
       } else if (flag === 'select') {
-        creatSelect(
-          e,
-          { active: this.opt.pageSize, data: this.opt.select },
-          ({ value, close }) => {
-            this.opt.changeSize && this.opt.changeSize(value);
-            close();
-          }
-        );
+        creatSelect(e, { active: this.opt.pageSize, data: this.opt.select }, ({ value, close }) => {
+          this.opt.changeSize && this.opt.changeSize(value);
+          close();
+        });
       } else {
         this.opt.pageNo = +flag;
         this.hdChange();
@@ -119,8 +109,8 @@ class Pagination {
     this.opt.pageNo <= 0
       ? (this.opt.pageNo = this.opt.totalPage)
       : this.opt.pageNo >= this.opt.totalPage
-      ? (this.opt.pageNo = this.opt.totalPage)
-      : null;
+        ? (this.opt.pageNo = this.opt.totalPage)
+        : null;
     if (this.opt.total === 0) {
       return '';
     }
@@ -138,7 +128,7 @@ class Pagination {
         `,
         {
           ...this.opt,
-        }
+        },
       );
     }
     let startPage = this.opt.pageNo - parseInt(this.opt.continuous / 2),
@@ -180,7 +170,7 @@ class Pagination {
         <button v-if="toTop" data-type="paging" cursor="y" data-flag="top" class="iconfont icon-shang"></button>
       </div>
       `,
-      { ...this.opt, startPage, continuousArr, endPage }
+      { ...this.opt, startPage, continuousArr, endPage },
     );
   }
 }

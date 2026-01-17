@@ -1,11 +1,5 @@
 import $ from 'jquery';
-import {
-  _mySlide,
-  _position,
-  debounce,
-  pageScrollTop,
-  getScreenSize,
-} from '../../js/utils/utils';
+import { _mySlide, _position, debounce, pageScrollTop, getScreenSize } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import { _tpl } from '../../js/utils/template';
 import { contentWrapCenterState, getContentW } from '.';
@@ -71,7 +65,7 @@ export function createNoteDir($box) {
           level,
           id,
           item,
-        }
+        },
       )[0];
       const oUl = _tpl.getDom(`<ul data-show="n"></ul>`)[0];
       fra.appendChild(oLi);
@@ -115,9 +109,7 @@ export function createNoteDir($box) {
   function hdNoteDirPosition() {
     if (!$noteDirWrap.hasClass('open')) return;
     $allLi.removeClass('active');
-    let $positionTargetH = $allH
-      .filter((_, item) => _position(item, true).top >= 0)
-      .eq(0);
+    let $positionTargetH = $allH.filter((_, item) => _position(item, true).top >= 0).eq(0);
     $positionTargetH.length > 0 ? null : ($positionTargetH = $allH.last());
     if ($positionTargetH.length > 0) {
       const $targetLi = $listBox.find(`[data-id=${$positionTargetH[0].id}]`);
@@ -135,11 +127,9 @@ export function createNoteDir($box) {
         $listBox.stop().animate(
           {
             scrollTop:
-              $listBox.scrollTop() +
-              _position($targetLi[0], true).top -
-              $noteDirWrap.height() / 4,
+              $listBox.scrollTop() + _position($targetLi[0], true).top - $noteDirWrap.height() / 4,
           },
-          _d.speed
+          _d.speed,
         );
       }
     }
@@ -161,7 +151,7 @@ export function createNoteDir($box) {
           showNoteDir();
         }
       }
-    }, 200)
+    }, 200),
   );
   return hdNoteDirPosition;
 }

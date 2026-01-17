@@ -3,13 +3,7 @@ import _d from '../../js/common/config';
 import localData from '../../js/common/localData';
 import _msg from '../../js/plugins/message';
 import rMenu from '../../js/plugins/rightMenu';
-import {
-  _setTimeout,
-  debounce,
-  isIframe,
-  isLogin,
-  myOpen,
-} from '../../js/utils/utils';
+import { _setTimeout, debounce, isIframe, isLogin, myOpen } from '../../js/utils/utils';
 
 let allowLoginPop = null,
   isLoding = false;
@@ -19,7 +13,7 @@ export function handleAllowLoginMsg(data) {
 
   const msg = `设备：${os}\nIP：${ip}\n位置：${addr}\n验证码：${code.slice(
     0,
-    3
+    3,
   )} ${code.slice(3)}\n\n请求允许登录。`;
 
   if (allowLoginPop) {
@@ -63,7 +57,7 @@ export function handleAllowLoginMsg(data) {
             closeLogin();
           });
       }
-    }
+    },
   );
 }
 const closeShake = debounce((target) => {
@@ -118,7 +112,7 @@ export function otherWindowMsg(msg) {
           myOpen(`${_d.originURL}?c=${from.account}`);
         }
       },
-      1
+      1,
     );
   } else if (type === 'errMsg') {
     _msg.error(data.text, null, { reside: true });

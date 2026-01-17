@@ -1,6 +1,6 @@
 export default function wave(idx = 1) {
   const _0x1f03ad = document['createElement']('style');
-  _0x1f03ad['setAttribute']('type', 'text/css'),
+  (_0x1f03ad['setAttribute']('type', 'text/css'),
     (_0x1f03ad['innerHTML'] = `
       .vh-bolang {
         pointer-events: none;
@@ -46,7 +46,7 @@ export default function wave(idx = 1) {
           transform:translate(85px,0)
         }
       }`),
-    document['querySelector']('head')['appendChild'](_0x1f03ad);
+    document['querySelector']('head')['appendChild'](_0x1f03ad));
   const fillColor = 'rgb(153 205 239 / 10%)';
   const _0x29074d = `<svg class="vh-bolang" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none">
         <defs>
@@ -59,9 +59,7 @@ export default function wave(idx = 1) {
         </g>
       </svg>`,
     _0x319530 = new DOMParser(),
-    _0x4d9451 = _0x319530['parseFromString'](_0x29074d, 'image/svg+xml')[
-      'querySelector'
-    ]('svg');
+    _0x4d9451 = _0x319530['parseFromString'](_0x29074d, 'image/svg+xml')['querySelector']('svg');
   document['body']['appendChild'](_0x4d9451);
 
   function createBubble() {
@@ -88,9 +86,12 @@ export default function wave(idx = 1) {
     document.body.appendChild(bubble);
 
     // 在动画结束后删除泡泡
-    setTimeout(() => {
-      bubble.remove();
-    }, parseFloat(bubble.style.animationDuration) * 1000);
+    setTimeout(
+      () => {
+        bubble.remove();
+      },
+      parseFloat(bubble.style.animationDuration) * 1000,
+    );
   }
   createBubble();
   // 定时生成泡泡

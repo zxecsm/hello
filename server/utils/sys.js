@@ -1,6 +1,7 @@
 import { exec } from 'child_process';
 import os from 'os';
 import util from 'util';
+import _f from './f.js';
 
 const execAsync = util.promisify(exec);
 
@@ -30,6 +31,59 @@ const getRawCpuUsage = (() => {
       cores: cpus.length,
       arch: os.arch(),
     };
+  };
+})();
+
+// 网速
+const getNetSpeed = (() => {
+  let last = { rx: 0, tx: 0, time: 0 };
+
+  return async () => {
+    const base = '/sys/class/net';
+    let speed = { rx: 0, tx: 0 };
+
+    try {
+      const ifaces = await _f.readdir(base);
+
+      let rx = 0;
+      let tx = 0;
+
+      for (const iface of ifaces) {
+        if (iface === 'lo') continue;
+
+        let type, state;
+        try {
+          type = (await _f.readFile(`${base}/${iface}/type`, null, '')).trim();
+          state = (await _f.readFile(`${base}/${iface}/operstate`, null, '')).trim();
+        } catch {
+          continue;
+        }
+
+        if (type !== '1' || state !== 'up') continue;
+
+        try {
+          rx += Number(await _f.readFile(`${base}/${iface}/statistics/rx_bytes`, null, 0));
+          tx += Number(await _f.readFile(`${base}/${iface}/statistics/tx_bytes`, null, 0));
+        } catch {}
+      }
+
+      const now = Date.now();
+
+      if (!last.time) {
+        last = { rx, tx, time: now };
+        return speed;
+      }
+
+      const interval = Math.max((now - last.time) / 1000, 0.001);
+      speed = {
+        rx: Math.max((rx - last.rx) / interval, 0),
+        tx: Math.max((tx - last.tx) / interval, 0),
+      };
+
+      last = { rx, tx, time: now };
+    } catch {}
+
+    return speed;
   };
 })();
 
@@ -92,12 +146,17 @@ let cpuCache = { value: 0, time: 0 };
 let memCache = { value: null, time: 0 };
 let diskCache = { value: null, time: 0 };
 let swapCache = { value: null, time: 0 };
+let netCache = { value: null, time: 0 };
 
 export async function getSystemUsage(path = '/') {
   const now = Date.now();
 
   if (now - cpuCache.time > 1000) {
     cpuCache = { value: getRawCpuUsage(), time: now };
+  }
+
+  if (now - netCache.time > 1000) {
+    netCache = { value: await getNetSpeed(), time: now };
   }
 
   if (now - memCache.time > 2000) {
@@ -117,5 +176,6 @@ export async function getSystemUsage(path = '/') {
     mem: memCache.value,
     swap: swapCache.value,
     disk: diskCache.value,
+    net: netCache.value,
   };
 }

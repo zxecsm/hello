@@ -8,8 +8,7 @@ tipBox.className = 'tool_tip';
 document.body.appendChild(tipBox);
 const space = 20;
 function move(e) {
-  if (!localData.get('toolTip') || tipBox.style.opacity === '0' || isMobile())
-    return;
+  if (!localData.get('toolTip') || tipBox.style.opacity === '0' || isMobile()) return;
   const { w, h } = getScreenSize();
   const tw = tipBox.offsetWidth,
     th = tipBox.offsetHeight;

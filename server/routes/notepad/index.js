@@ -21,7 +21,7 @@ route.get(
     'query',
     V.object({
       k: V.string().trim().min(1).max(fieldLength.filename).alphanumeric(),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -35,7 +35,7 @@ route.get(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 // 保存便条
@@ -50,9 +50,9 @@ route.post(
         .allowEmpty()
         .custom(
           (data) => _f.getTextSize(data) <= fieldLength.noteSize,
-          `文本内容不能超过: ${fieldLength.noteSize} 字节`
+          `文本内容不能超过: ${fieldLength.noteSize} 字节`,
         ),
-    })
+    }),
   ),
   async (req, res) => {
     try {
@@ -75,7 +75,7 @@ route.post(
     } catch (error) {
       _err(res)(req, error);
     }
-  }
+  },
 );
 
 export default route;

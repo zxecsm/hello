@@ -35,17 +35,9 @@ import '../../js/common/common';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
 import realtime from '../../js/plugins/realtime';
-import {
-  reqUserDeleteTrash,
-  reqUserRecoverTrash,
-  reqUserTrashList,
-} from '../../api/user';
+import { reqUserDeleteTrash, reqUserRecoverTrash, reqUserTrashList } from '../../api/user';
 import rMenu from '../../js/plugins/rightMenu';
-import {
-  showBmkInfo,
-  showNoteInfo,
-  showSSHInfo,
-} from '../../js/utils/showinfo';
+import { showBmkInfo, showNoteInfo, showSSHInfo } from '../../js/utils/showinfo';
 import { reqSearchConfig } from '../../api/search';
 import { _tpl } from '../../js/utils/template';
 import { BoxSelector } from '../../js/utils/boxSelector';
@@ -122,10 +114,7 @@ function getListItem(id) {
 const trashBoxSelector = new BoxSelector(document, {
   selectables: '.item_box',
   onSelectStart({ e }) {
-    if (
-      _getTarget($contentWrap[0], e, '.item_box') ||
-      _getTarget($contentWrap[0], e, '.item_info')
-    )
+    if (_getTarget($contentWrap[0], e, '.item_box') || _getTarget($contentWrap[0], e, '.item_info'))
       return true;
   },
   onSelectEnd() {
@@ -199,7 +188,7 @@ function hdHighlight(con) {
     `,
     {
       con,
-    }
+    },
   );
 }
 const imgLazy = new LazyLoad();
@@ -310,7 +299,7 @@ function renderList(y) {
                 small: getScreenSize().w <= _d.screen,
               });
             },
-          }
+          },
         );
         stopSelect();
         $contentWrap.html(html).addClass('open');
@@ -339,15 +328,13 @@ function renderList(y) {
                 .catch(() => {
                   item.style.display = 'none';
                 });
-            }
+            },
           );
         } else if (HASH === 'bmk') {
           bmLogoLazy.bind(
             [...$contentWrap[0].querySelectorAll('.logo')].filter((item) => {
               const $item = $(item);
-              let { logo, link } = getListItem(
-                $item.parent().prev().attr('data-id')
-              );
+              let { logo, link } = getListItem($item.parent().prev().attr('data-id'));
 
               if (logo) {
                 logo = getFilePath(logo);
@@ -362,9 +349,7 @@ function renderList(y) {
             }),
             (item) => {
               const $item = $(item);
-              let { logo, link } = getListItem(
-                $item.parent().prev().attr('data-id')
-              );
+              let { logo, link } = getListItem($item.parent().prev().attr('data-id'));
 
               if (logo) {
                 logo = getFilePath(logo);
@@ -373,16 +358,12 @@ function renderList(y) {
               }
               imgjz(logo)
                 .then((cache) => {
-                  $item
-                    .css('background-image', `url(${cache})`)
-                    .addClass('load');
+                  $item.css('background-image', `url(${cache})`).addClass('load');
                 })
                 .catch(() => {
-                  $item
-                    .css('background-image', `url(${defaultIcon})`)
-                    .addClass('load');
+                  $item.css('background-image', `url(${defaultIcon})`).addClass('load');
                 });
-            }
+            },
           );
         }
       }
@@ -490,7 +471,7 @@ $headWrap
           renderList(true);
         }
       },
-      '选择列表类型'
+      '选择列表类型',
     );
   })
   .on('click', '.inp_box .clean_btn', function () {
@@ -504,30 +485,27 @@ $headWrap
   });
 function hdRecover(e, ids, t, cb, isCheck, loading = { start() {}, end() {} }) {
   const text = getTypeText(t);
-  rMenu.pop(
-    { e, text: `确认恢复：${isCheck ? '选中的' : ''}${text}？` },
-    (type) => {
-      if (type === 'confirm') {
-        loading.start();
-        reqUserRecoverTrash({
-          ids,
-          type: t,
+  rMenu.pop({ e, text: `确认恢复：${isCheck ? '选中的' : ''}${text}？` }, (type) => {
+    if (type === 'confirm') {
+      loading.start();
+      reqUserRecoverTrash({
+        ids,
+        type: t,
+      })
+        .then((result) => {
+          loading.end();
+          if (result.code === 1) {
+            _msg.success(result.codeText);
+            renderList();
+            cb && cb();
+            return;
+          }
         })
-          .then((result) => {
-            loading.end();
-            if (result.code === 1) {
-              _msg.success(result.codeText);
-              renderList();
-              cb && cb();
-              return;
-            }
-          })
-          .catch(() => {
-            loading.end();
-          });
-      }
+        .catch(() => {
+          loading.end();
+        });
     }
-  );
+  });
 }
 function hdDel(e, ids, t, cb, isCheck, loading = { start() {}, end() {} }) {
   const text = getTypeText(t);
@@ -557,7 +535,7 @@ function hdDel(e, ids, t, cb, isCheck, loading = { start() {}, end() {} }) {
             loading.end();
           });
       }
-    }
+    },
   );
 }
 function updateSearchConfig() {
@@ -565,10 +543,7 @@ function updateSearchConfig() {
     .then((res) => {
       if (res.code === 1) {
         if (Array.isArray(res.data.searchEngineData)) {
-          _d.searchEngineData = [
-            _d.defaultSearchEngineData,
-            ...res.data.searchEngineData,
-          ];
+          _d.searchEngineData = [_d.defaultSearchEngineData, ...res.data.searchEngineData];
         }
         if (res.data.searchengineid) {
           localData.set('searchengine', res.data.searchengineid);
@@ -598,7 +573,7 @@ $contentWrap
           text: '笔记内容',
           beforeIcon: 'iconfont icon-bianji',
         },
-        { id: '4', text: '历史版本', beforeIcon: 'iconfont icon-history' }
+        { id: '4', text: '历史版本', beforeIcon: 'iconfont icon-history' },
       );
     }
     data = [
@@ -623,7 +598,7 @@ $contentWrap
               close();
             },
             false,
-            loading
+            loading,
           );
         } else if (flag === '3') {
           hdDel(
@@ -634,7 +609,7 @@ $contentWrap
               close();
             },
             false,
-            loading
+            loading,
           );
         } else if (flag === '1') {
           close();
@@ -646,7 +621,7 @@ $contentWrap
           _myOpen(`/file#${_d.noteHistoryDir}/${obj.id}`, '文件管理');
         }
       },
-      obj.title || obj.content
+      obj.title || obj.content,
     );
   })
   .on('contextmenu', '.item_box', function (e) {
@@ -668,9 +643,7 @@ $contentWrap
       })}\n更新：${formatDate({
         template: '{0}-{1}-{2}',
         timestamp: update_at,
-      })}\n分类：${arr.join('-') || '--'}\n阅读：${formatNum(
-        visit_count
-      )}\n权重：${top}`;
+      })}\n分类：${arr.join('-') || '--'}\n阅读：${formatNum(visit_count)}\n权重：${top}`;
       toolTip.setTip(str).show();
     } else if (type === 'ssh') {
       const { title, port, host, username, top, auth_type, categoryArr } = obj;
@@ -710,10 +683,7 @@ $contentWrap
       if (isurl(obj.content)) {
         myOpen(obj.content, '_blank');
       } else {
-        const url = getSearchEngine().link.replace(
-          /\{\{(.*?)\}\}/g,
-          obj.content
-        );
+        const url = getSearchEngine().link.replace(/\{\{(.*?)\}\}/g, obj.content);
         myOpen(url, '_blank');
       }
     } else if (type === 'note') {
@@ -759,9 +729,7 @@ function checkedItem(el) {
 }
 function updateSelectInfo() {
   const $itemBox = $contentWrap.find('.item_box'),
-    $checkArr = $itemBox.filter(
-      (_, item) => $(item).find('.check_state').attr('check') === 'y'
-    );
+    $checkArr = $itemBox.filter((_, item) => $(item).find('.check_state').attr('check') === 'y');
   _msg.botMsg(`选中：${$checkArr.length}项`);
   if ($checkArr.length === $itemBox.length) {
     $footer.find('span').attr({
@@ -785,9 +753,7 @@ function hdCheckItemBtn() {
 // 获取选中项
 function getCheckItems() {
   const $itemBox = $contentWrap.find('.item_box'),
-    $checkArr = $itemBox.filter(
-      (_, item) => $(item).find('.check_state').attr('check') === 'y'
-    );
+    $checkArr = $itemBox.filter((_, item) => $(item).find('.check_state').attr('check') === 'y');
   const arr = [];
   $checkArr.each((i, v) => {
     arr.push(v.getAttribute('data-id'));
@@ -812,10 +778,7 @@ function switchCheckAll() {
   let che = $checkBtn.attr('check');
   che === 'y' ? (che = 'n') : (che = 'y');
   $checkBtn.attr({
-    class:
-      che === 'y'
-        ? 'iconfont icon-xuanzeyixuanze'
-        : 'iconfont icon-xuanzeweixuanze',
+    class: che === 'y' ? 'iconfont icon-xuanzeyixuanze' : 'iconfont icon-xuanzeweixuanze',
     check: che,
   });
   let $itemBox = $contentWrap.find('.item_box');
@@ -833,7 +796,7 @@ scrollState(
     } else {
       $headWrap.addClass('open');
     }
-  }, 1000)
+  }, 1000),
 );
 document.addEventListener('keydown', function (e) {
   const key = e.key,

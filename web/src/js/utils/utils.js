@@ -204,9 +204,7 @@ export function isurl(url) {
   try {
     const newUrl = new URL(url);
     // 检查协议是否为 http 或 https
-    return newUrl.protocol === 'http:' || newUrl.protocol === 'https:'
-      ? newUrl
-      : false;
+    return newUrl.protocol === 'http:' || newUrl.protocol === 'https:' ? newUrl : false;
   } catch {
     return false; // 捕获错误并返回 false
   }
@@ -214,9 +212,7 @@ export function isurl(url) {
 export function isSafeURL(url) {
   try {
     const u = new URL(url);
-    return (
-      ['http:', 'https:', 'ftp:'].includes(u.protocol) && !/[\n\r\t]/.test(url)
-    );
+    return ['http:', 'https:', 'ftp:'].includes(u.protocol) && !/[\n\r\t]/.test(url);
   } catch {
     return false;
   }
@@ -274,7 +270,7 @@ export function hdTextMsg(str) {
       <template v-else>{{value}}</template>
     </template>
     `,
-    { s, isSafeURL }
+    { s, isSafeURL },
   );
 }
 export function mailTo(email) {
@@ -327,7 +323,7 @@ export function getPaging(list, pageNo, pageSize) {
 export function isChinese(str) {
   if (
     /^[\u4E00-\u9FCC\u3400-\u4DB5\uFA0E\uFA0F\uFA11\uFA13\uFA14\uFA1F\uFA21\uFA23\uFA24\uFA27-\uFA29]|[\ud840-\ud868][\udc00-\udfff]|\ud869[\udc00-\uded6\udf00-\udfff]|[\ud86a-\ud86c][\udc00-\udfff]|\ud86d[\udc00-\udf34\udf40-\udfff]|\ud86e[\udc00-\udc1d]+/.test(
-      str
+      str,
     )
   ) {
     return true;
@@ -498,13 +494,7 @@ const reqObj = {
 };
 // 请求
 export function _postAjax(url, data = {}, opt = {}, callback) {
-  const {
-    load = true,
-    timeout = 0,
-    stopErrorMsg = false,
-    parallel = false,
-    signal = false,
-  } = opt;
+  const { load = true, timeout = 0, stopErrorMsg = false, parallel = false, signal = false } = opt;
   if (load) {
     _loadingBar.start();
   }
@@ -581,12 +571,7 @@ export function _postAjax(url, data = {}, opt = {}, callback) {
   });
 }
 export function _getAjax(url, data = {}, opt = {}) {
-  const {
-    load = true,
-    timeout = 0,
-    stopErrorMsg = false,
-    parallel = false,
-  } = opt;
+  const { load = true, timeout = 0, stopErrorMsg = false, parallel = false } = opt;
   if (load) {
     _loadingBar.start();
   }
@@ -778,10 +763,7 @@ export function toLogin() {
   myOpen('/login');
 }
 // 格式时间日期
-export function formatDate({
-  template = '{0}-{1}-{2} {3}:{4}:{5}',
-  timestamp = Date.now(),
-} = {}) {
+export function formatDate({ template = '{0}-{1}-{2} {3}:{4}:{5}', timestamp = Date.now() } = {}) {
   const date = new Date(+timestamp);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -816,7 +798,7 @@ export function selectText(el) {
 // 一键复制
 export async function copyText(
   content,
-  { success = '复制成功', error = '复制失败', stopMsg = false } = {}
+  { success = '复制成功', error = '复制失败', stopMsg = false } = {},
 ) {
   try {
     // 使用 Clipboard API
@@ -1043,7 +1025,7 @@ export class LazyLoad {
       debounce(() => {
         this.load(els, cb);
       }, 100),
-      this.options
+      this.options,
     );
 
     this.observeElements(this.visibilityObs, els);
@@ -1235,12 +1217,7 @@ export async function downloadFile(tasks, type) {
 // 设置滚动
 export function pageScrollTop(top) {
   if (top === undefined) {
-    return (
-      window.pageYOffset ||
-      document.documentElement.scrollTop ||
-      document.body.scrollTop ||
-      0
-    );
+    return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
   }
   // 通用设置滚动位置，适用于所有浏览器
   window.scrollTo({
@@ -1375,9 +1352,12 @@ export class ContentScroll {
         this.el.style.transition = `transform ${duration}s linear`;
         this.el.style.transform = `translateX(${-(cW + interSpace)}px)`;
       }
-      this.timer = setTimeout(() => {
-        this.start.call(this);
-      }, duration * 1000 + 2000);
+      this.timer = setTimeout(
+        () => {
+          this.start.call(this);
+        },
+        duration * 1000 + 2000,
+      );
     }, 2000);
   }
   close() {
@@ -1442,9 +1422,7 @@ export function readableTime(time) {
     return `${prefix || ''}${parseInt(time / minute)}分钟`;
   } else if (time < day) {
     const m = parseInt((time % hour) / minute);
-    return `${prefix || ''}${parseInt(time / hour)}小时${
-      m > 0 ? `${m}分钟` : ''
-    }`;
+    return `${prefix || ''}${parseInt(time / hour)}小时${m > 0 ? `${m}分钟` : ''}`;
   } else {
     const h = parseInt((time % day) / hour);
     return `${prefix || ''}${parseInt(time / day)}天${h > 0 ? `${h}小时` : ''}`;
@@ -1693,9 +1671,7 @@ export function pxToRem(px, baseFontSize) {
 
   if (!htmlFontSize && typeof window !== 'undefined') {
     try {
-      htmlFontSize = parseFloat(
-        getComputedStyle(document.documentElement).fontSize
-      );
+      htmlFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
     } catch {}
   }
 
@@ -1935,19 +1911,16 @@ export function _animate(
     delay = 0,
     iterations = 1,
   } = {},
-  callback
+  callback,
 ) {
-  const animation = target.animate(
-    keyframes.length > 0 ? keyframes : [from, to],
-    {
-      duration,
-      easing,
-      direction,
-      fill,
-      delay,
-      iterations,
-    }
-  );
+  const animation = target.animate(keyframes.length > 0 ? keyframes : [from, to], {
+    duration,
+    easing,
+    direction,
+    fill,
+    delay,
+    iterations,
+  });
 
   animation.onfinish = () => {
     animation.cancel();
@@ -1987,7 +1960,7 @@ export async function showQcode(e, text, title = '展示二维码') {
       {
         url,
         text,
-      }
+      },
     );
     rMenu.rightMenu(
       e,
@@ -1998,7 +1971,7 @@ export async function showQcode(e, text, title = '展示二维码') {
           copyText(item.textContent);
         }
       },
-      title
+      title,
     );
   } catch (error) {
     _msg.error('生成失败');
@@ -2007,10 +1980,7 @@ export async function showQcode(e, text, title = '展示二维码') {
 }
 // 最小值索引
 export function getMinIndex(arr) {
-  return arr.reduce(
-    (minIndex, current, index) => (current <= arr[minIndex] ? index : minIndex),
-    0
-  );
+  return arr.reduce((minIndex, current, index) => (current <= arr[minIndex] ? index : minIndex), 0);
 }
 // 加载图
 const oImg = (function () {
@@ -2025,10 +1995,7 @@ export function loadingImg(el) {
 }
 // 转义正则符号
 export function encodeStr(keyword) {
-  return keyword.replace(
-    /[\[\(\$\^\.\]\*\\\?\+\{\}\\|\)]/gi,
-    (key) => `\\${key}`
-  );
+  return keyword.replace(/[\[\(\$\^\.\]\*\\\?\+\{\}\\|\)]/gi, (key) => `\\${key}`);
 }
 // 搜索词所在索引
 export function getWordIdx(splitWord, content) {
@@ -2107,11 +2074,7 @@ export function getWordCount(splitWord, content) {
   }, 0);
 }
 // 高亮搜索
-export function hdTitleHighlight(
-  splitWord,
-  content,
-  color = 'var(--btn-danger-color)'
-) {
+export function hdTitleHighlight(splitWord, content, color = 'var(--btn-danger-color)') {
   const con = getWordContent(splitWord, content);
   return _tpl(
     `
@@ -2124,7 +2087,7 @@ export function hdTitleHighlight(
       </template>
     </template>
     `,
-    { con, color, content, splitWord }
+    { con, color, content, splitWord },
   );
 }
 // 分词
@@ -2164,9 +2127,7 @@ export function unique(arr, keys) {
         item = item[k];
       });
     }
-    return obj.hasOwnProperty(typeof item + item)
-      ? false
-      : (obj[typeof item + item] = true);
+    return obj.hasOwnProperty(typeof item + item) ? false : (obj[typeof item + item] = true);
   });
 }
 export function isIframe() {
@@ -2254,10 +2215,7 @@ export function parseBookmark(node) {
           child = {
             title: oA.textContent?.trim() || '未命名书签',
             link: oA.getAttribute('href') || 'https://github.com',
-            des:
-              oA.getAttribute('description') ||
-              oA.getAttribute('DESCRIPTION') ||
-              '',
+            des: oA.getAttribute('description') || oA.getAttribute('DESCRIPTION') || '',
           };
         }
         if (Object.keys(child).length > 0) {
@@ -2354,18 +2312,12 @@ export function inputPageNo(e, opt, callback) {
       if (isNaN(val)) return;
       close();
       callback && callback(Math.abs(val));
-    }
+    },
   );
 }
 // 分享
 export function createShare(e, opt, cb) {
-  const {
-    subText = '提交',
-    title = '',
-    name = '',
-    expireTime = 0,
-    pass = '',
-  } = opt;
+  const { subText = '提交', title = '', name = '', expireTime = 0, pass = '' } = opt;
   rMenu.inpMenu(
     e,
     {
@@ -2386,8 +2338,7 @@ export function createShare(e, opt, cb) {
           beforeText: '过期时间（天）：',
           verify(val) {
             return (
-              rMenu.validInteger(val) ||
-              rMenu.validNumber(val, undefined, _d.fieldLength.expTime)
+              rMenu.validInteger(val) || rMenu.validNumber(val, undefined, _d.fieldLength.expTime)
             );
           },
         },
@@ -2405,7 +2356,7 @@ export function createShare(e, opt, cb) {
     function ({ close, inp, loading }) {
       cb && cb({ close, inp, loading });
     },
-    title
+    title,
   );
 }
 // 过期
@@ -2445,15 +2396,13 @@ export function enterPassCode(cb, defaultValue = '') {
     },
     0,
     1,
-    1
+    1,
   );
 }
 // 生成文件路径
 export function getFilePath(p, query = {}, prefix = false) {
   const queryStr = qs.stringify(query);
-  const path = `${_d.getFileURL}${_path.normalize('/' + p)}${
-    queryStr ? '?' + queryStr : ''
-  }`;
+  const path = `${_d.getFileURL}${_path.normalize('/' + p)}${queryStr ? '?' + queryStr : ''}`;
   if (prefix) return `${_d.originURL}${path}`;
   return path;
 }
@@ -2568,7 +2517,7 @@ export function userLogoMenu(e, account, username, email) {
         mailTo(email);
       }
     },
-    `来自于：${username}`
+    `来自于：${username}`,
   );
 }
 // 笔记字数、阅读时长计算
@@ -2577,7 +2526,7 @@ export function noteReadInfo(str) {
     .replace(/[a-zA-Z]+/g, 'h') // 把连续出现的字母计算为一个字
     .replace(
       /[`·~!！@#$￥%^……&*()（）\-_——\+=\[\]【】\\\、|;；:：'‘’"“”,，.。<>《》\/?？\s\n\r]/g,
-      ''
+      '',
     ); // 删除所有标点符号和空格换行
   const word = str.length;
   const time = Math.round(word / 400);
@@ -2601,10 +2550,7 @@ export function createStateSwitch(cb, state = false) {
   return fn;
 }
 export function isDarkMode() {
-  return (
-    window.matchMedia &&
-    window.matchMedia('(prefers-color-scheme: dark)').matches
-  );
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 export function isDark() {
   const dark = localData.get('dark');
@@ -2754,12 +2700,7 @@ export function deepEqual(obj1, obj2) {
   if (obj1 === obj2) return true;
 
   // 如果不是对象或数组类型，直接比较值
-  if (
-    typeof obj1 !== 'object' ||
-    typeof obj2 !== 'object' ||
-    obj1 == null ||
-    obj2 == null
-  ) {
+  if (typeof obj1 !== 'object' || typeof obj2 !== 'object' || obj1 == null || obj2 == null) {
     return obj1 === obj2;
   }
 

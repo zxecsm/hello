@@ -115,7 +115,7 @@ class CreateIframe {
       `,
       {
         url: this.url,
-      }
+      },
     );
     _tpl.html(this.box, html);
     this.scrollText = this.box.querySelector('.scroll_text');
@@ -132,9 +132,7 @@ class CreateIframe {
     toSetSize(this.box, iframeSize.w, iframeSize.h);
     const windows = popWindow.getList();
     const lastIframe = windows.findLast(
-      (item) =>
-        item.id.endsWith('_iframe') &&
-        item.target.style.visibility === 'visible'
+      (item) => item.id.endsWith('_iframe') && item.target.style.visibility === 'visible',
     );
     if (!lastIframe) {
       toCenter(this.box);
@@ -290,15 +288,11 @@ class CreateIframe {
     } catch {}
     this.dragClose();
     this.resizeClose();
-    _animate(
-      this.box,
-      { to: { transform: 'translateY(100%) scale(0)', opacity: 0 } },
-      () => {
-        popWindow.remove(this.id);
-        this.iframe.remove();
-        this.box.remove();
-      }
-    );
+    _animate(this.box, { to: { transform: 'translateY(100%) scale(0)', opacity: 0 } }, () => {
+      popWindow.remove(this.id);
+      this.iframe.remove();
+      this.box.remove();
+    });
   }
   getUrl() {
     try {
@@ -348,7 +342,7 @@ class CreateIframe {
         popWindow.remove(this.id);
         this.tagBox.classList.add('hide');
         this.scrollT.close();
-      }
+      },
     );
   }
 }
@@ -373,9 +367,7 @@ function addHideBox(iframeBox) {
   const logo = document.createElement('span');
   const isOuterLink = iframeBox.url.startsWith('http');
 
-  logo.className = `logo ${
-    isOuterLink ? '' : getTagFont(_path.basename(iframeBox.url)[0])
-  }`;
+  logo.className = `logo ${isOuterLink ? '' : getTagFont(_path.basename(iframeBox.url)[0])}`;
   if (isOuterLink) {
     const u = getFaviconPath(iframeBox.url);
     imgjz(u)
@@ -463,7 +455,7 @@ function handleHideBox(e, _this) {
         id: '3',
         text: '关闭其他窗口',
         beforeIcon: 'iconfont icon-shibai',
-      }
+      },
     );
   }
   rMenu.selectMenu(
@@ -479,7 +471,7 @@ function handleHideBox(e, _this) {
         closeAllIframe(ifram);
       }
     },
-    _this.textContent
+    _this.textContent,
   );
 }
 export function closeAllIframe(ignoreIframe) {

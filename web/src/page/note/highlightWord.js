@@ -21,9 +21,7 @@ class HighlightWord {
         // 如果当前为文本节点，并且下一个兄弟也是文本节点，合并为一个文本节点
         const next = child.nextSibling;
         if (next && next.nodeType === 3) {
-          const newText = document.createTextNode(
-            child.nodeValue + next.nodeValue
-          );
+          const newText = document.createTextNode(child.nodeValue + next.nodeValue);
           node.insertBefore(newText, child);
           node.removeChild(child);
           node.removeChild(next);
@@ -52,11 +50,7 @@ class HighlightWord {
         oText.parentNode.replaceChild(oSpan, oText);
         flag = 1;
       }
-    } else if (
-      node.nodeType === 1 &&
-      node.childNodes &&
-      !/(script|style)/i.test(node.tagName)
-    ) {
+    } else if (node.nodeType === 1 && node.childNodes && !/(script|style)/i.test(node.tagName)) {
       for (let i = 0; i < node.childNodes.length; i++) {
         i += this.hdHighlight(node.childNodes[i], word);
       }

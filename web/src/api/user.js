@@ -105,11 +105,7 @@ export function reqUserError(err) {
   if (errList.has(err)) return;
   errList.add(err);
   err = `[Panel error] ` + err;
-  return _postAjax(
-    '/user/error',
-    { err },
-    { load: 0, parallel: true, stopErrorMsg: 1 }
-  );
+  return _postAjax('/user/error', { err }, { load: 0, parallel: true, stopErrorMsg: 1 });
 }
 // tips
 export function reqUserTips() {

@@ -12,7 +12,7 @@ function normalize(...paths) {
         if (index > 0) pre += '/';
         pre += normalize(cur);
         return pre;
-      }, '')
+      }, ''),
     );
   }
 
@@ -104,16 +104,11 @@ function isPathWithin(parentP, childP, allowEqual = false) {
 function extname(path) {
   path = toUnixPath(path);
   const idx = path.lastIndexOf('.');
-  return idx === -1
-    ? [path, '', '']
-    : [path.slice(0, idx), '.', path.slice(idx + 1)];
+  return idx === -1 ? [path, '', ''] : [path.slice(0, idx), '.', path.slice(idx + 1)];
 }
 
 // 获取随机后缀文件名
-function randomFilenameSuffix(
-  filename,
-  r = Math.random().toString().slice(-6)
-) {
+function randomFilenameSuffix(filename, r = Math.random().toString().slice(-6)) {
   r = '_' + r;
   const [a, b, c] = extname(filename);
 
@@ -128,7 +123,7 @@ function sanitizeFilename(name, rep = '_', maxLen = 255) {
     name
       .trim()
       .replace(/[<>:"/\\|?*\x00-\x1F]/g, rep)
-      .replace(/[ .]+$/g, '') || 'unnamed'
+      .replace(/[ .]+$/g, '') || 'unnamed',
   );
 
   const fullExt = dot + ext;

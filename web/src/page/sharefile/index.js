@@ -40,11 +40,7 @@ import curmb from '../file/crumb/index';
 import { openFile, setReadOnly } from '../file/edit';
 import bus from '../../js/utils/bus';
 import loadfailImg from '../../images/img/loadfail.png';
-import {
-  reqFileGetShare,
-  reqFileReadDir,
-  reqFileReadFile,
-} from '../../api/file';
+import { reqFileGetShare, reqFileReadDir, reqFileReadFile } from '../../api/file';
 import toolTip from '../../js/plugins/tooltip';
 import { showFileInfo } from '../../js/utils/showinfo';
 import rMenu from '../../js/plugins/rightMenu';
@@ -99,18 +95,8 @@ enterPassCode(({ close, val, loading, submit }) => {
   reqFileGetShare({ id: shareId, pass: passCode, captchaId })
     .then((res) => {
       if (res.code === 1) {
-        const {
-          username,
-          logo,
-          account,
-          data,
-          exp_time,
-          title,
-          email,
-          token,
-          needCaptcha,
-          id,
-        } = res.data;
+        const { username, logo, account, data, exp_time, title, email, token, needCaptcha, id } =
+          res.data;
         if (needCaptcha) {
           isCaptcha = true;
           captcha(id, {
@@ -131,19 +117,13 @@ enterPassCode(({ close, val, loading, submit }) => {
           if (logo) {
             imgjz(getFilePath(`/logo/${account}/${logo}`))
               .then((cache) => {
-                $shareInfo
-                  .find('.logo')
-                  .css('background-image', `url(${cache})`);
+                $shareInfo.find('.logo').css('background-image', `url(${cache})`);
               })
               .catch(() => {
-                $shareInfo
-                  .find('.logo')
-                  .css('background-image', `url(${getTextImg(username)})`);
+                $shareInfo.find('.logo').css('background-image', `url(${getTextImg(username)})`);
               });
           } else {
-            $shareInfo
-              .find('.logo')
-              .css('background-image', `url(${getTextImg(username)})`);
+            $shareInfo.find('.logo').css('background-image', `url(${getTextImg(username)})`);
           }
 
           $shareInfo.find('.from').text(username);
@@ -154,7 +134,7 @@ enterPassCode(({ close, val, loading, submit }) => {
               : formatDate({
                   template: '{0}-{1}-{2} {3}:{4}',
                   timestamp: exp_time,
-                })
+                }),
           );
           if (data.type === 'file') {
             $contentWrap.remove();
@@ -170,8 +150,8 @@ enterPassCode(({ close, val, loading, submit }) => {
                         {{a}}<span class="suffix">{{b?'.'+b:''}}</span>
                         </template>
                         `,
-                { a, b }
-              )
+                { a, b },
+              ),
             );
             $fileBox.find('.download').text(`下载 (${formatBytes(data.size)})`);
             if (isImgFile(data.name)) {
@@ -190,10 +170,7 @@ enterPassCode(({ close, val, loading, submit }) => {
             } else {
               $fileBox
                 .find('.logo')
-                .attr(
-                  'class',
-                  `logo iconfont ${fileLogoType(data.name, data.size)}`
-                );
+                .attr('class', `logo iconfont ${fileLogoType(data.name, data.size)}`);
             }
             $shareInfo.addClass('open');
             $fileBox.addClass('open');
@@ -217,9 +194,7 @@ function changeHiddenFileModel() {
     .find('.h_hidden_file_btn')
     .attr(
       'class',
-      `h_btn h_hidden_file_btn iconfont ${
-        hiddenFile ? 'icon-kejian' : 'icon-bukejian'
-      }`
+      `h_btn h_hidden_file_btn iconfont ${hiddenFile ? 'icon-kejian' : 'icon-bukejian'}`,
     );
 }
 changeHiddenFileModel();
@@ -229,13 +204,9 @@ function changeListShowModel() {
     .find('.h_showmodel_btn')
     .attr(
       'class',
-      `h_btn h_showmodel_btn iconfont ${
-        fileShowGrid ? 'icon-liebiao1' : 'icon-liebiao'
-      }`
+      `h_btn h_showmodel_btn iconfont ${fileShowGrid ? 'icon-liebiao1' : 'icon-liebiao'}`,
     );
-  $contentWrap
-    .find('.container')
-    .attr('class', `container ${fileShowGrid ? 'grid' : ''}`);
+  $contentWrap.find('.container').attr('class', `container ${fileShowGrid ? 'grid' : ''}`);
 }
 changeListShowModel();
 let pageNo = 1;
@@ -336,8 +307,7 @@ async function renderList(top) {
       formatBytes,
       logoColor(type, fileType) {
         if (type === 'dir') return type;
-        if (type === 'file' && (fileType === 'symlink' || fileType === 'file'))
-          return '';
+        if (type === 'file' && (fileType === 'symlink' || fileType === 'file')) return '';
         return 'other';
       },
       getLogo(name, type, size) {
@@ -361,7 +331,7 @@ async function renderList(top) {
         }
         return { a, b };
       },
-    }
+    },
   );
   if (fileListData.total > 0) {
     pageNo = fileListData.pageNo;
@@ -381,24 +351,22 @@ async function renderList(top) {
   $pagination.addClass('open');
   $curmbBox.addClass('open');
   $header.addClass('open');
-  const logos = [...$contentWrap[0].querySelectorAll('.logo.is_img')].filter(
-    (item) => {
-      const $item = $(item);
-      const { path, name } = getFileItem($item.parent().data('id'));
-      if (isImgFile(name)) {
-        const url = getFilePath(`/sharefile/${path}/${name}`, {
-          w: 256,
-          token: shareToken,
-        });
-        const cache = imgCache.get(url);
-        if (cache) {
-          $item.css('background-image', `url(${cache})`);
-        }
-        return !cache;
+  const logos = [...$contentWrap[0].querySelectorAll('.logo.is_img')].filter((item) => {
+    const $item = $(item);
+    const { path, name } = getFileItem($item.parent().data('id'));
+    if (isImgFile(name)) {
+      const url = getFilePath(`/sharefile/${path}/${name}`, {
+        w: 256,
+        token: shareToken,
+      });
+      const cache = imgCache.get(url);
+      if (cache) {
+        $item.css('background-image', `url(${cache})`);
       }
-      return false;
+      return !cache;
     }
-  );
+    return false;
+  });
   lazyImg.bind(logos, async (item) => {
     const $item = $(item);
     const { path, name } = getFileItem($item.parent().data('id'));
@@ -506,7 +474,7 @@ async function readFileAndDir(obj, e) {
           const fPath = getFilePath(`/sharefile/${p}`, { token: shareToken });
           if (isImgFile(p)) {
             const list = fileListData.data.filter(
-              (item) => item.type === 'file' && isImgFile(item.name)
+              (item) => item.type === 'file' && isImgFile(item.name),
             );
             const arr = list.map((item) => {
               const p = `${item.path}/${item.name}`;
@@ -522,7 +490,7 @@ async function readFileAndDir(obj, e) {
             imgPreview(
               arr,
               list.findIndex((item) => item.id === obj.id),
-              { x: e.clientX, y: e.clientY }
+              { x: e.clientX, y: e.clientY },
             );
           } else if (isVideoFile(p)) {
             _myOpen(`/videoplay#${encodeURIComponent(fPath)}`, obj.name);
@@ -555,23 +523,22 @@ async function readFile(e) {
         if (res.data.type === 'text') {
           openFile(res.data.data, shareObj.name);
         } else if (res.data.type === 'other') {
-          const fPath = getFilePath(
-            `/sharefile/${shareObj.path}/${shareObj.name}`,
-            { token: shareToken }
-          );
+          const fPath = getFilePath(`/sharefile/${shareObj.path}/${shareObj.name}`, {
+            token: shareToken,
+          });
           if (isImgFile(shareObj.name)) {
             imgPreview(
               [
                 {
                   u1: fPath,
-                  u2: getFilePath(
-                    `/sharefile/${shareObj.path}/${shareObj.name}`,
-                    { w: 256, token: shareToken }
-                  ),
+                  u2: getFilePath(`/sharefile/${shareObj.path}/${shareObj.name}`, {
+                    w: 256,
+                    token: shareToken,
+                  }),
                 },
               ],
               0,
-              { x: e.clientX, y: e.clientY }
+              { x: e.clientX, y: e.clientY },
             );
           } else if (isVideoFile(shareObj.name)) {
             _myOpen(`/videoplay#${encodeURIComponent(fPath)}`, shareObj.name);
@@ -628,9 +595,7 @@ $contentWrap
     const str = `名称：${name}\n类型：${type === 'dir' ? '文件夹' : '文件'}${
       type === 'file' && fileType !== 'file' ? `(${fileTypeName})` : ''
     }\n路径：${path}${
-      type === 'file' && fileType === 'symlink'
-        ? ` => ${linkTarget}(${linkTargetTypeName})`
-        : ''
+      type === 'file' && fileType === 'symlink' ? ` => ${linkTarget}(${linkTargetTypeName})` : ''
     }${
       mode ? `\n权限：${mode}\n用户ID：${uid}\n用户组ID：${gid}` : ''
     }\n大小：${size ? formatBytes(size) : '--'}\n更新时间：${formatDate({
@@ -665,7 +630,7 @@ function rightList(e, obj) {
         id: 'copy',
         text: '复制链接',
         beforeIcon: 'iconfont icon-link1',
-      }
+      },
     );
   }
   data.push({
@@ -685,8 +650,8 @@ function rightList(e, obj) {
             {
               token: shareToken,
             },
-            1
-          )
+            1,
+          ),
         );
       } else if (id === 'download') {
         close();
@@ -702,7 +667,7 @@ function rightList(e, obj) {
         showFileInfo(e, obj);
       }
     },
-    obj.name
+    obj.name,
   );
 }
 $shareInfo.on('click', '.logo', function (e) {
@@ -768,7 +733,7 @@ function hdFileSort(e) {
         localData.set('fileSort', fileSort);
       }
     },
-    '选择列表排序方式'
+    '选择列表排序方式',
   );
 }
 $header
@@ -812,7 +777,7 @@ $header
           curmb.toGo(param.path, { pageNo: 1, top: 0 });
         }
       },
-      '历史目录'
+      '历史目录',
     );
   })
   .on('click', '.h_sort_btn', hdFileSort);

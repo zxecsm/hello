@@ -22,12 +22,7 @@ import pagination from '../../../js/plugins/pagination';
 import { UpProgress } from '../../../js/plugins/UpProgress';
 import _msg from '../../../js/plugins/message';
 import realtime from '../../../js/plugins/realtime';
-import {
-  reqBgDelete,
-  reqBgList,
-  reqBgRepeat,
-  reqBgUp,
-} from '../../../api/bg.js';
+import { reqBgDelete, reqBgList, reqBgRepeat, reqBgUp } from '../../../api/bg.js';
 import { hideRightMenu } from '../rightSetting/index.js';
 import { setBg } from '../index.js';
 import { popWindow, setZidx } from '../popWindow.js';
@@ -84,7 +79,7 @@ async function hdUpBg(files) {
         (percent) => {
           pro.update(percent);
         },
-        signal
+        signal,
       );
       if (result.code === 1) {
         pro.close();
@@ -160,7 +155,7 @@ export function delBg(e, ids, cb, isCheck, loading = { start() {}, end() {} }) {
             loading.end();
           });
       }
-    }
+    },
   );
 }
 // 菜单
@@ -188,7 +183,7 @@ function bgItemMenu(e, obj, el) {
         id: '4',
         text: '删除',
         beforeIcon: 'iconfont icon-shanchu',
-      }
+      },
     );
   }
   rMenu.selectMenu(
@@ -207,7 +202,7 @@ function bgItemMenu(e, obj, el) {
               close();
             },
             false,
-            loading
+            loading,
           );
         }
       } else if (id === '2') {
@@ -219,7 +214,7 @@ function bgItemMenu(e, obj, el) {
               filename: obj.id,
             },
           ],
-          'image'
+          'image',
         );
       } else if (id === '3') {
         close();
@@ -227,7 +222,7 @@ function bgItemMenu(e, obj, el) {
         checkedBg(el);
       }
     },
-    '壁纸选项'
+    '壁纸选项',
   );
 }
 // 获取壁纸
@@ -346,30 +341,28 @@ export function renderBgList(y) {
                 small: getScreenSize().w <= _d.screen,
               });
             },
-          }
+          },
         );
         stopSelect();
         $bgList.html(html);
         if (y) {
           $bgList.scrollTop(0);
         }
-        const bgImgs = [...$bgList[0].querySelectorAll('.bg_img')].filter(
-          (item) => {
-            const $img = $(item);
-            const url = getFilePath(`/bg/${$img.parent().data('id')}`, {
-              w: type === 'bg' ? 512 : 256,
-            });
-            const cache = cacheFile.hasUrl(url, 'image');
-            if (cache) {
-              $img
-                .css({
-                  'background-image': `url(${cache})`,
-                })
-                .addClass('load');
-            }
-            return !cache;
+        const bgImgs = [...$bgList[0].querySelectorAll('.bg_img')].filter((item) => {
+          const $img = $(item);
+          const url = getFilePath(`/bg/${$img.parent().data('id')}`, {
+            w: type === 'bg' ? 512 : 256,
+          });
+          const cache = cacheFile.hasUrl(url, 'image');
+          if (cache) {
+            $img
+              .css({
+                'background-image': `url(${cache})`,
+              })
+              .addClass('load');
           }
-        );
+          return !cache;
+        });
         bglazyImg.bind(bgImgs, async (item) => {
           const $img = $(item);
           const url = getFilePath(`/bg/${$img.parent().data('id')}`, {
@@ -466,9 +459,7 @@ function checkedBg(el) {
 }
 function updateSelectInfo() {
   const $bgItems = $bgList.find('.bg_item'),
-    $checkList = $bgItems.filter(
-      (_, item) => $(item).find('.check_level').attr('check') === 'y'
-    );
+    $checkList = $bgItems.filter((_, item) => $(item).find('.check_level').attr('check') === 'y');
   _msg.botMsg(`选中：${$checkList.length}项`);
   if ($checkList.length === $bgItems.length) {
     $bgFooter.find('span').attr({
@@ -485,9 +476,7 @@ function updateSelectInfo() {
 // 删除选中
 function deleteCheckBg(e) {
   const $bgItems = $bgList.find('.bg_item'),
-    $checkArr = $bgItems.filter(
-      (_, item) => $(item).find('.check_level').attr('check') === 'y'
-    );
+    $checkArr = $bgItems.filter((_, item) => $(item).find('.check_level').attr('check') === 'y');
   if ($checkArr.length === 0) return;
   const arr = [];
   $checkArr.each((_, v) => {
@@ -502,10 +491,7 @@ $bgFooter
     let che = $(this).attr('check');
     che === 'y' ? (che = 'n') : (che = 'y');
     $bgFooter.find('span').attr({
-      class:
-        che === 'y'
-          ? 'iconfont icon-xuanzeyixuanze'
-          : 'iconfont icon-xuanzeweixuanze',
+      class: che === 'y' ? 'iconfont icon-xuanzeyixuanze' : 'iconfont icon-xuanzeweixuanze',
       check: che,
     });
     const $bgItems = $bgList.find('.bg_item');
@@ -533,7 +519,7 @@ window.addEventListener(
       curScreenWidth = screenWidth;
       renderBgList(true);
     }
-  }, 500)
+  }, 500),
 );
 // 壁纸
 _mySlide({

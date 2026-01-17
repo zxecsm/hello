@@ -20,7 +20,7 @@ async function sampleHash(filePath) {
     const minSampleCount = 4; // 最小取样点数
     const sampleCount = Math.min(
       Math.max(Math.floor(fileSize / 1024), minSampleCount),
-      maxSampleCount
+      maxSampleCount,
     );
     const maxOffset = fileSize - chunkSize; // 防止读取超出文件范围
 
@@ -78,7 +78,7 @@ async function getFileMD5Hash(filePath, signal) {
         callback();
       },
     }),
-    { signal }
+    { signal },
   );
 
   return hash.digest('hex');
@@ -126,25 +126,18 @@ function verifyPassword(inputPassword, hashWithSalt) {
     const digest = 'sha512'; // 哈希算法
 
     // 密码进行加密
-    pbkdf2(
-      inputPassword,
-      storedSalt,
-      iterations,
-      keyLength,
-      digest,
-      (err, derivedKey) => {
-        if (err) {
-          return reject(err); // 错误处理
-        }
-
-        // 比较加密后的结果与存储的密码哈希值
-        if (derivedKey.toString('hex') === storedHashedPassword) {
-          resolve(true); // 密码匹配
-        } else {
-          resolve(false); // 密码不匹配
-        }
+    pbkdf2(inputPassword, storedSalt, iterations, keyLength, digest, (err, derivedKey) => {
+      if (err) {
+        return reject(err); // 错误处理
       }
-    );
+
+      // 比较加密后的结果与存储的密码哈希值
+      if (derivedKey.toString('hex') === storedHashedPassword) {
+        resolve(true); // 密码匹配
+      } else {
+        resolve(false); // 密码不匹配
+      }
+    });
   });
 }
 

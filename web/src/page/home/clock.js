@@ -47,8 +47,7 @@ class ScrollText {
   }
 
   run(curContent, nextContent) {
-    if (this.curContent === curContent && this.nextContent === nextContent)
-      return;
+    if (this.curContent === curContent && this.nextContent === nextContent) return;
 
     if (this.timer) {
       clearTimeout(this.timer);
@@ -57,8 +56,7 @@ class ScrollText {
     this.curContent = this.cur.textContent = curContent;
     this.nextContent = this.next.textContent = nextContent;
 
-    this.cur.style.transition = this.next.style.transition =
-      'transform 0.5s ease-in-out';
+    this.cur.style.transition = this.next.style.transition = 'transform 0.5s ease-in-out';
     this.cur.style.transform = 'translateY(-100%)';
     this.next.style.transform = 'translateY(0)';
 
@@ -111,18 +109,12 @@ function clockRun(sec, min, hour) {
     },
     {
       target: domMin,
-      keyframes: [
-        { transform: `rotate(${min}deg)` },
-        { transform: `rotate(${min + 360}deg)` },
-      ],
+      keyframes: [{ transform: `rotate(${min}deg)` }, { transform: `rotate(${min + 360}deg)` }],
       options: { duration: 3600 * 1000, iterations: Infinity },
     },
     {
       target: domSec,
-      keyframes: [
-        { transform: `rotate(${sec}deg)` },
-        { transform: `rotate(${sec + 360}deg)` },
-      ],
+      keyframes: [{ transform: `rotate(${sec}deg)` }, { transform: `rotate(${sec + 360}deg)` }],
       options: { duration: 60 * 1000, iterations: Infinity },
     },
   ].forEach(({ keyframes, options, target }) => {
@@ -135,9 +127,7 @@ function drawLines(className, total, translateX) {
   let strHtml = '';
   for (let i = 0; i < total; i++) {
     if (className === '.line-min' && i % 5 === 0) continue;
-    strHtml += `<li style="transform:rotate(${
-      i * gap
-    }deg) translate(${translateX}px,-50%);"></li>`;
+    strHtml += `<li style="transform:rotate(${i * gap}deg) translate(${translateX}px,-50%);"></li>`;
   }
   const wrap = document.querySelector(className);
   wrap.innerHTML = strHtml;

@@ -84,10 +84,7 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
     }
     close.style.display = rotateBtn.style.display = 'block';
     if (arr.length > 1) {
-      pre.style.display =
-        next.style.display =
-        countInfo.style.display =
-          'block';
+      pre.style.display = next.style.display = countInfo.style.display = 'block';
     }
     timer = setTimeout(() => {
       clearTimeout(timer);
@@ -134,7 +131,7 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
       image.naturalWidth,
       image.naturalHeight,
       window.innerWidth,
-      window.innerHeight
+      window.innerHeight,
     );
     image.style.width = result.width + 'px';
     image.style.height = result.height + 'px';
@@ -180,8 +177,7 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
       image.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale}) rotate(${rotate}deg)`;
     } else if (touches.length === 2) {
       // 计算相对于上一次移动距离比例 ratio > 1放大，ratio < 1缩小
-      let ratio =
-        getDistance(point1, point2) / getDistance(lastPoint1, lastPoint2);
+      let ratio = getDistance(point1, point2) / getDistance(lastPoint1, lastPoint2);
       // 缩放比例
       const _scale = scale * ratio;
       if (_scale > maxScale) {
@@ -273,7 +269,7 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
       },
       () => {
         box.remove();
-      }
+      },
     );
     _loadingBar.end();
   }
@@ -384,13 +380,7 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
    * @param {number} maxHeight
    * @returns
    */
-  function getImgSize(
-    naturalWidth,
-    naturalHeight,
-    maxWidth,
-    maxHeight,
-    minRatio = 0.25
-  ) {
+  function getImgSize(naturalWidth, naturalHeight, maxWidth, maxHeight, minRatio = 0.25) {
     const imgRatio = naturalWidth / naturalHeight;
     const maxRatio = maxWidth / maxHeight;
     let width, height;

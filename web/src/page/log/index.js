@@ -107,7 +107,7 @@ function getLogList(e) {
               getLogData(name);
             }
           },
-          '日志列表'
+          '日志列表',
         );
       }
     })
@@ -213,11 +213,7 @@ const spgnt = pagination($stat[0], {
 });
 function renderStat() {
   const pageTotal = Math.ceil(statList.length / sPageSize);
-  statPageNo < 1
-    ? (statPageNo = pageTotal)
-    : statPageNo > pageTotal
-    ? (statPageNo = 1)
-    : null;
+  statPageNo < 1 ? (statPageNo = pageTotal) : statPageNo > pageTotal ? (statPageNo = 1) : null;
   const html = _tpl(
     `
     <template v-if="arr.length > 0">
@@ -229,10 +225,7 @@ function renderStat() {
     `,
     {
       arr: statList,
-      list: statList.slice(
-        (statPageNo - 1) * sPageSize,
-        statPageNo * sPageSize
-      ),
+      list: statList.slice((statPageNo - 1) * sPageSize, statPageNo * sPageSize),
       getPaging() {
         return spgnt.getHTML({
           pageNo: statPageNo,
@@ -241,7 +234,7 @@ function renderStat() {
           small: getScreenSize().w <= _d.screen,
         });
       },
-    }
+    },
   );
   $stat.html(html);
   $stat.scrollTop(0);
@@ -276,11 +269,7 @@ async function hdRender() {
     arr = logList.filter((item) => getWordCount([word], item) > 0);
   }
   const pageTotal = Math.ceil(arr.length / lPageSize);
-  logPageNo < 1
-    ? (logPageNo = pageTotal)
-    : logPageNo > pageTotal
-    ? (logPageNo = 1)
-    : null;
+  logPageNo < 1 ? (logPageNo = pageTotal) : logPageNo > pageTotal ? (logPageNo = 1) : null;
   const html = _tpl(
     `
       <p v-if="arr.length === 0" style='text-align: center;'>{{_d.emptyList}}</p>
@@ -294,7 +283,7 @@ async function hdRender() {
       arr,
       list: arr.slice((logPageNo - 1) * lPageSize, logPageNo * lPageSize),
       hdTitleHighlight,
-    }
+    },
   );
   pgnt.render({
     pageNo: logPageNo,
@@ -332,6 +321,6 @@ function dellog(e, name) {
           })
           .catch(() => {});
       }
-    }
+    },
   );
 }

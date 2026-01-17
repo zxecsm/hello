@@ -26,8 +26,7 @@ const GLOBAL_META = {
   // 移动端视口优化
   viewport: {
     name: 'viewport',
-    content:
-      'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no',
+    content: 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no',
   },
   // 浏览器兼容
   'http-equiv:X-UA-Compatible': {
@@ -81,27 +80,20 @@ class AutoTitlePlugin {
   apply(compiler) {
     compiler.hooks.compilation.tap('AutoTitlePlugin', (compilation) => {
       // 监听 HtmlWebpackPlugin 的 beforeEmit 钩子
-      HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tapAsync(
-        'AutoTitlePlugin',
-        (data, cb) => {
-          // 从当前页面的插件配置对象（plugin.options）中获取 title
-          const title = data.plugin.options.title || '默认标题';
+      HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tapAsync('AutoTitlePlugin', (data, cb) => {
+        // 从当前页面的插件配置对象（plugin.options）中获取 title
+        const title = data.plugin.options.title || '默认标题';
 
-          // 强行插入到 <head> 之后
-          data.html = data.html.replace(
-            /<head>/i,
-            `<head><title>${title}</title>`
-          );
+        // 强行插入到 <head> 之后
+        data.html = data.html.replace(/<head>/i, `<head><title>${title}</title>`);
 
-          cb(null, data);
-        }
-      );
+        cb(null, data);
+      });
     });
   }
 }
 const includePage = [];
-const pageFiles =
-  includePage.length > 0 ? includePage : fs.readdirSync('./src/page');
+const pageFiles = includePage.length > 0 ? includePage : fs.readdirSync('./src/page');
 function getEntry() {
   const entry = {};
   pageFiles.forEach((item) => {

@@ -141,8 +141,7 @@ const localData = {
   },
   get(key) {
     const storageKey = wrapKey(key);
-    if (this.localCache.has(storageKey))
-      return this.localCache.get(storageKey).data;
+    if (this.localCache.has(storageKey)) return this.localCache.get(storageKey).data;
     try {
       const raw = localStorage.getItem(storageKey);
       if (raw !== null) {
@@ -152,9 +151,7 @@ const localData = {
       }
     } catch {}
 
-    return Object.prototype.hasOwnProperty.call(defaultData, key)
-      ? defaultData[key]
-      : null;
+    return Object.prototype.hasOwnProperty.call(defaultData, key) ? defaultData[key] : null;
   },
   set(key, data, delay = 0) {
     const storageKey = wrapKey(key);
@@ -208,8 +205,7 @@ const localData = {
     debounceTimers: new Map(),
     get(key) {
       const storageKey = wrapKey(key);
-      if (this.localCache.has(storageKey))
-        return this.localCache.get(storageKey).data;
+      if (this.localCache.has(storageKey)) return this.localCache.get(storageKey).data;
       try {
         const raw = sessionStorage.getItem(storageKey);
         if (raw !== null) {

@@ -1,12 +1,6 @@
 import appConfig from '../../data/config.js';
 
-import {
-  _err,
-  _nologin,
-  isImgFile,
-  paramErr,
-  errLog,
-} from '../../utils/utils.js';
+import { _err, _nologin, isImgFile, paramErr, errLog } from '../../utils/utils.js';
 
 import { db } from '../../utils/sqlite.js';
 
@@ -23,12 +17,7 @@ import { sym } from '../../utils/symbols.js';
 const kHello = sym('hello');
 const kValidate = sym('validate');
 
-export default async function getFile(
-  req,
-  res,
-  originalPath,
-  verifyLogin = true
-) {
+export default async function getFile(req, res, originalPath, verifyLogin = true) {
   try {
     const params = { ...req.query, p: originalPath };
     try {
@@ -36,13 +25,9 @@ export default async function getFile(
         params,
         V.object({
           w: V.number().toInt().default(0).min(0),
-          token: V.string()
-            .trim()
-            .default('')
-            .allowEmpty()
-            .max(fieldLength.url),
+          token: V.string().trim().default('').allowEmpty().max(fieldLength.url),
           p: V.string().notEmpty().min(1).max(fieldLength.url),
-        })
+        }),
       );
     } catch (error) {
       paramErr(res, req, error, params);
@@ -123,11 +108,7 @@ export default async function getFile(
 }
 async function getPicPath(req, res, id) {
   try {
-    id = await V.parse(
-      id,
-      V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      'pic id'
-    );
+    id = await V.parse(id, V.string().trim().min(1).max(fieldLength.id).alphanumeric(), 'pic id');
   } catch (error) {
     paramErr(res, req, error, { id });
     return null;
@@ -141,11 +122,7 @@ async function getPicPath(req, res, id) {
 
 async function getBgPath(req, res, id) {
   try {
-    id = await V.parse(
-      id,
-      V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      'bg id'
-    );
+    id = await V.parse(id, V.string().trim().min(1).max(fieldLength.id).alphanumeric(), 'bg id');
   } catch (error) {
     paramErr(res, req, error, { id });
     return null;
@@ -163,7 +140,7 @@ async function getLogoPath(req, res, pArr) {
     acc = await V.parse(
       acc,
       V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      'logo account'
+      'logo account',
     );
   } catch (error) {
     paramErr(res, req, error, { account: acc });
@@ -174,31 +151,19 @@ async function getLogoPath(req, res, pArr) {
 
 async function getUploadPath(req, res, id, account, dir) {
   try {
-    id = await V.parse(
-      id,
-      V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      'chat id'
-    );
+    id = await V.parse(id, V.string().trim().min(1).max(fieldLength.id).alphanumeric(), 'chat id');
   } catch (error) {
     paramErr(res, req, error, { id });
     return null;
   }
 
   const msg = await db('chat AS c')
-    .join(
-      'upload AS u',
-      { 'c.hash': { value: 'u.id', raw: true } },
-      { type: 'LEFT' }
-    )
+    .join('upload AS u', { 'c.hash': { value: 'u.id', raw: true } }, { type: 'LEFT' })
     .select('c.flag,u.url')
     .where({ 'c.id': id })
     .findOne();
 
-  if (
-    msg &&
-    msg.url &&
-    (msg.flag === appConfig.chatRoomAccount || msg.flag.includes(account))
-  ) {
+  if (msg && msg.url && (msg.flag === appConfig.chatRoomAccount || msg.flag.includes(account))) {
     // 消息文件存在，并且是群和自己发送或收到的消息
     return appConfig.uploadDir(msg.url);
   } else {
@@ -263,7 +228,7 @@ async function getPubPath(req, res, pArr) {
     acc = await V.parse(
       acc,
       V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      'pub account'
+      'pub account',
     );
   } catch (error) {
     paramErr(res, req, error, { account: acc });
@@ -275,16 +240,8 @@ async function getPubPath(req, res, pArr) {
 async function getMusicPath(req, res, pArr) {
   let [type, id] = pArr;
   try {
-    id = await V.parse(
-      id,
-      V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      'song id'
-    );
-    type = await V.parse(
-      type,
-      V.string().trim().enum(['pic', 'url', 'mv']),
-      'song type'
-    );
+    id = await V.parse(id, V.string().trim().min(1).max(fieldLength.id).alphanumeric(), 'song id');
+    type = await V.parse(type, V.string().trim().enum(['pic', 'url', 'mv']), 'song type');
   } catch (error) {
     paramErr(res, req, error, { id, type });
     return null;
@@ -306,15 +263,7 @@ async function getThumbPath(req, w, dir, path, stat) {
       !_path.isPathWithin(appConfig.thumbDir(), path, 1) &&
       stat.isFile() &&
       isImgFile(path) &&
-      [
-        'pic',
-        'music',
-        'bg',
-        'upload',
-        'file',
-        'sharefile',
-        'sharemusic',
-      ].includes(dir)
+      ['pic', 'music', 'bg', 'upload', 'file', 'sharefile', 'sharemusic'].includes(dir)
     ) {
       if (dir === 'sharefile') {
         dir = 'file';
@@ -327,15 +276,10 @@ async function getThumbPath(req, w, dir, path, stat) {
 
       let thumbP = '';
       if (dir === 'file') {
-        thumbP = appConfig.thumbDir(
-          dir,
-          `${_path.basename(path)[1]}_${w}_${size}.webp`
-        );
+        thumbP = appConfig.thumbDir(dir, `${_path.basename(path)[1]}_${w}_${size}.webp`);
       } else {
         thumbP = appConfig.thumbDir(
-          `${
-            _path.extname(path.slice(appConfig.appFilesDir().length))[0]
-          }_${w}.webp`
+          `${_path.extname(path.slice(appConfig.appFilesDir().length))[0]}_${w}.webp`,
         );
       }
 

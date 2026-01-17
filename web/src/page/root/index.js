@@ -93,7 +93,7 @@ function renderUserList(pageNo, total, top) {
       isRoot,
       userList,
       formatDate,
-    }
+    },
   );
   pgnt.render({
     pageNo,
@@ -137,9 +137,7 @@ function getUserList(top) {
           .find('.register_state span')
           .attr(
             'class',
-            `iconfont iconfont ${
-              registerState ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'
-            }`
+            `iconfont iconfont ${registerState ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'}`,
           );
         renderUserList(pageNo, total, top);
         $headBtns.addClass('open');
@@ -194,7 +192,7 @@ function deleteAccount(e, obj) {
             }
           });
       }
-    }
+    },
   );
 }
 $list
@@ -238,7 +236,7 @@ function timeoutMsg(text = '操作后台处理中，可在日志中查看处理�
       if (type === 'click') {
         _myOpen(`/log`, '日志');
       }
-    }
+    },
   );
 }
 // 清理歌曲文件
@@ -266,7 +264,7 @@ function cleanMusicFile(e, loading = { start() {}, end() {} }) {
             }
           });
       }
-    }
+    },
   );
 }
 // 清理壁纸文件
@@ -294,7 +292,7 @@ function cleanBgFile(e, loading = { start() {}, end() {} }) {
             }
           });
       }
-    }
+    },
   );
 }
 // 清理图床文件
@@ -322,7 +320,7 @@ function cleanPicFile(e, loading = { start() {}, end() {} }) {
             }
           });
       }
-    }
+    },
   );
 }
 // 清理缩略图
@@ -383,11 +381,11 @@ function cleanThumbFile(e) {
                   }
                 });
             }
-          }
+          },
         );
       }
     },
-    '选择要清空缩略图的类型'
+    '选择要清空缩略图的类型',
   );
 }
 // 切换注册状态
@@ -399,9 +397,7 @@ function changeRegisterState() {
           .find('.register_state span')
           .attr(
             'class',
-            `iconfont iconfont ${
-              res.data ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'
-            }`
+            `iconfont iconfont ${res.data ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'}`,
           );
         _msg.success(res.data ? '开放注册成功' : '已关闭注册');
       }
@@ -448,7 +444,7 @@ function changeTrashState(e) {
           });
       }
     },
-    '站点文件回收站（删除的壁纸音乐..）'
+    '站点文件回收站（删除的壁纸音乐..）',
   );
 }
 // 更新token Key
@@ -483,14 +479,7 @@ function cleanDatabase(e) {
 }
 // 配置邮箱
 function setEmail(e) {
-  const {
-    user = '',
-    pass = '',
-    host = 'smtp.qq.com',
-    secure,
-    port = '465',
-    state,
-  } = dataObj.email;
+  const { user = '', pass = '', host = 'smtp.qq.com', secure, port = '465', state } = dataObj.email;
   rMenu.inpMenu(
     e,
     {
@@ -531,9 +520,7 @@ function setEmail(e) {
           inputType: 'number',
           verify(val, items) {
             if (items.state.value === 'y') {
-              return (
-                rMenu.validInteger(val) || rMenu.validNumber(val, 1, 65535)
-              );
+              return rMenu.validInteger(val) || rMenu.validNumber(val, 1, 65535);
             }
           },
         },
@@ -542,10 +529,7 @@ function setEmail(e) {
           beforeText: '发件人邮箱：',
           verify(val, items) {
             if (items.state.value === 'y') {
-              return (
-                rMenu.validString(val, 1, _d.fieldLength.email) ||
-                rMenu.validEmail(val)
-              );
+              return rMenu.validString(val, 1, _d.fieldLength.email) || rMenu.validEmail(val);
             }
           },
         },
@@ -583,7 +567,7 @@ function setEmail(e) {
           loading.end();
         });
     },
-    '配置邮箱验证'
+    '配置邮箱验证',
   );
 }
 // 自定义代码
@@ -644,7 +628,7 @@ function customHtmlCode(e) {
           loading.end();
         });
     },
-    '自定义代码'
+    '自定义代码',
   );
 }
 // 测试邮箱验证
@@ -658,10 +642,7 @@ function testEmail(e) {
           beforeText: '收件人邮箱：',
           value: localData.get('testEmail') || '',
           verify(val) {
-            return (
-              rMenu.validString(val, 1, _d.fieldLength.email) ||
-              rMenu.validEmail(val)
-            );
+            return rMenu.validString(val, 1, _d.fieldLength.email) || rMenu.validEmail(val);
           },
         },
       },
@@ -680,7 +661,7 @@ function testEmail(e) {
           loading.end();
         });
     },
-    '发送测试邮件'
+    '发送测试邮件',
   );
 }
 // 测试两步验证
@@ -696,9 +677,7 @@ function testTFA(e) {
           value: localData.get('testCode') || '',
           verify(val) {
             return (
-              rMenu.validInteger(val) ||
-              rMenu.validNumber(val, 0) ||
-              rMenu.validString(val, 6, 6)
+              rMenu.validInteger(val) || rMenu.validNumber(val, 0) || rMenu.validString(val, 6, 6)
             );
           },
         },
@@ -718,7 +697,7 @@ function testTFA(e) {
           loading.end();
         });
     },
-    '测试两步验证'
+    '测试两步验证',
   );
 }
 // 测试验证
@@ -741,7 +720,7 @@ function handleTest(e) {
         testTFA(e);
       }
     },
-    '测试'
+    '测试',
   );
 }
 // 清理文件
@@ -782,7 +761,7 @@ function handleClearFile(e) {
         cleanMusicFile(e, loading);
       }
     },
-    '清理文件'
+    '清理文件',
   );
 }
 
@@ -790,10 +769,7 @@ function handleClearFile(e) {
 function handleFileCacheExp(e) {
   const { uploadSaveDay, faviconCache, siteInfoCache } = dataObj.cacheExp;
   function verify(val) {
-    return (
-      rMenu.validInteger(val) ||
-      rMenu.validNumber(val, 0, _d.fieldLength.expTime)
-    );
+    return rMenu.validInteger(val) || rMenu.validNumber(val, 0, _d.fieldLength.expTime);
   }
   const placeholder = '0: 无限制';
   const inputType = 'number';
@@ -844,7 +820,7 @@ function handleFileCacheExp(e) {
           }
         });
     },
-    '设置文件缓存时间（天）'
+    '设置文件缓存时间（天）',
   );
 }
 
@@ -873,11 +849,10 @@ function handlePubApi(e) {
         rMenu.rightInfo(
           e,
           `壁纸：\n  大屏：${pre}/bg/r/d\n  小屏：${pre}/bg/r/m\n\n获取网站图标：${originURL}${_d.faviconURL}?u=${originURL}\n\n获取网站信息：${pre}/site-info?u=${originURL}\n\n回显接口：${pre}/echo`,
-          '接口信息'
+          '接口信息',
         );
       } else if (id === 'state') {
-        const { randomBgApi, siteInfoApi, faviconApi, echoApi } =
-          dataObj.pubApi;
+        const { randomBgApi, siteInfoApi, faviconApi, echoApi } = dataObj.pubApi;
         const type = 'select';
         rMenu.inpMenu(
           e,
@@ -946,7 +921,7 @@ function handlePubApi(e) {
                 loading.end();
               });
           },
-          '更改接口状态'
+          '更改接口状态',
         );
       } else if (id === 'faviconSpareApi') {
         rMenu.inpMenu(
@@ -961,10 +936,7 @@ function handlePubApi(e) {
                 placeholder: 'https://www.xxx.com?url={{host}}',
                 verify(val) {
                   if (val !== '') {
-                    return (
-                      rMenu.validString(val, 1, _d.fieldLength.url) ||
-                      rMenu.validUrl(val)
-                    );
+                    return rMenu.validString(val, 1, _d.fieldLength.url) || rMenu.validUrl(val);
                   }
                 },
               },
@@ -987,11 +959,11 @@ function handlePubApi(e) {
                 loading.end();
               });
           },
-          '设置图标备用api接口'
+          '设置图标备用api接口',
         );
       }
     },
-    '公开接口配置'
+    '公开接口配置',
   );
 }
 $headBtns
@@ -1055,6 +1027,6 @@ $('.create_account').on('click', (e) => {
           loading.end();
         });
     },
-    '创建帐号'
+    '创建帐号',
   );
 });
