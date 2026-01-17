@@ -90,7 +90,7 @@ route.get(
   validate(
     'query',
     V.object({
-      u: V.string().trim().min(1).max(fieldLength.url),
+      u: V.string().trim().min(2).max(fieldLength.url),
     })
   ),
   async (req, res) => {

@@ -88,7 +88,7 @@ class CreateTask {
     } finally {
       _setTimeout(() => {
         this.updateProgress();
-      }, 1000);
+      }, 2000);
     }
   }
   cancel() {

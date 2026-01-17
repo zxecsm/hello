@@ -16,6 +16,13 @@ const taskState = {
   delete(key) {
     this.tasks.delete(key);
   },
+  done(key) {
+    const task = this.tasks.get(key);
+    if (task) {
+      task.state = 'done';
+      task.time = new Date();
+    }
+  },
   get(key) {
     return this.tasks.get(key) || null;
   },
@@ -25,5 +32,15 @@ const taskState = {
     );
   },
 };
+
+// 清理已完成任务
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, task] of taskState.tasks) {
+    if (task.state === 'done' && now - task.time > 1000 * 30) {
+      taskState.delete(key);
+    }
+  }
+}, 1000 * 60);
 
 export default taskState;

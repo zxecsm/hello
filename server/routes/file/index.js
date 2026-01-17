@@ -373,7 +373,7 @@ route.post(
           }
         }
 
-        taskState.delete(taskKey);
+        taskState.done(taskKey);
 
         // 未超时直接返回结果
         if (timer) {
@@ -633,7 +633,7 @@ route.get(
           },
         });
 
-        taskState.delete(taskKey);
+        taskState.done(taskKey);
         await uLog(req, `读取文件夹大小成功(${p}-${_f.formatBytes(size)})`);
         if (!signal.aborted) {
           fileSize.add(p, size);
@@ -963,7 +963,7 @@ route.post(
           );
         });
 
-        taskState.delete(taskKey);
+        taskState.done(taskKey);
         syncUpdateData(req, 'file');
       } catch (error) {
         taskState.delete(taskKey);
@@ -1098,7 +1098,7 @@ route.post(
           );
         });
 
-        taskState.delete(taskKey);
+        taskState.done(taskKey);
         syncUpdateData(req, 'file');
       } catch (error) {
         taskState.delete(taskKey);
@@ -1175,7 +1175,7 @@ route.post(
 
         await uLog(req, `压缩${flag}(${f}=>${t})`);
 
-        taskState.delete(taskKey);
+        taskState.done(taskKey);
         syncUpdateData(req, 'file');
       } catch (error) {
         taskState.delete(taskKey);
@@ -1254,7 +1254,7 @@ route.post(
 
         await uLog(req, `解压文件(${f}=>${t})`);
 
-        taskState.delete(taskKey);
+        taskState.done(taskKey);
         syncUpdateData(req, 'file');
       } catch (error) {
         taskState.delete(taskKey);
@@ -1360,7 +1360,7 @@ route.post(
           );
         });
 
-        taskState.delete(taskKey);
+        taskState.done(taskKey);
         syncUpdateData(req, 'file');
       } catch (error) {
         taskState.delete(taskKey);
@@ -1416,7 +1416,7 @@ route.get('/clear-trash', async (req, res) => {
       }
 
       await uLog(req, `清空回收站成功`);
-      taskState.delete(taskKey);
+      taskState.done(taskKey);
       syncUpdateData(req, 'file');
     } catch (error) {
       taskState.delete(taskKey);
@@ -1587,7 +1587,7 @@ route.post(
           await uLog(req, `${r ? '递归' : ''}设置权限为${mode}(${p})`);
         });
 
-        taskState.delete(taskKey);
+        taskState.done(taskKey);
         syncUpdateData(req, 'file');
       } catch (error) {
         taskState.delete(taskKey);
@@ -1665,7 +1665,7 @@ route.post(
           );
         });
 
-        taskState.delete(taskKey);
+        taskState.done(taskKey);
         syncUpdateData(req, 'file');
       } catch (error) {
         taskState.delete(taskKey);
@@ -1973,7 +1973,7 @@ route.post(
         }
 
         await _f.rename(temPath, outputFilePath);
-        taskState.delete(taskKey);
+        taskState.done(taskKey);
         uLog(req, `离线下载文件: ${url}=>${outputFilePath}`);
         syncUpdateData(req, 'file');
       } catch (error) {
@@ -2065,7 +2065,7 @@ route.post(
           }
         );
 
-        taskState.delete(taskKey);
+        taskState.done(taskKey);
         uLog(req, `扫描添加${typeName}成功: ${targetPath}(${count})`);
         syncUpdateData(req, type);
       } catch (error) {

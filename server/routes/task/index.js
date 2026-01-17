@@ -72,6 +72,9 @@ route.post(
       }
 
       const task = taskState.get(key);
+      if (task && task.state === 'done') {
+        taskState.delete(key);
+      }
 
       _success(res, 'ok', { text: task ? task.text : '' });
     } catch (error) {
