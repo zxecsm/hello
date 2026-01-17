@@ -40,7 +40,7 @@ const getNetSpeed = (() => {
 
   return async () => {
     try {
-      const content = (await _f.readFile('/proc/net/dev', null, '')).toString();
+      const content = (await _f.readFile('/host_net_dev', null, '')).toString();
 
       let totalRx = 0;
       let totalTx = 0;
