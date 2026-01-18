@@ -25,7 +25,7 @@ async function sampleHash(filePath) {
     const maxOffset = fileSize - chunkSize; // 防止读取超出文件范围
 
     let seed = fileSize;
-    const rng = (seed) => {
+    const rng = () => {
       seed = (seed * 9301 + 49297) % 233280; // 线性同余生成器
       return seed / 233280; // 归一化到 [0, 1)
     };
@@ -46,10 +46,7 @@ async function sampleHash(filePath) {
 
     // 2. 读取随机位置的样本
     for (let i = 0; i < sampleCount; i++) {
-      const randomValue = rng(seed); // 获取伪随机数
-      seed = (seed * 9301 + 49297) % 233280; // 更新种子
-
-      const offset = Math.min(Math.floor(randomValue * maxOffset), maxOffset);
+      const offset = Math.min(Math.floor(rng() * maxOffset), maxOffset);
       await readSample(offset); // 读取随机位置的样本
     }
 

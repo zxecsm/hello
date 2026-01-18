@@ -5,22 +5,35 @@ import _path from './path.js';
 async function sampleHash(file) {
   try {
     const fileSize = file.size;
+    const chunkSize = 256;
+
+    if (fileSize <= chunkSize) {
+      const buf = await getFileReader(file);
+      const spark = new sparkMd5.ArrayBuffer();
+      spark.append(buf);
+      return spark.end();
+    }
 
     const maxSampleCount = 100; // 最大取样点数
-    const sampleCount = Math.min(Math.max(Math.floor(fileSize / 1024), 4), maxSampleCount);
-    const maxOffset = fileSize - 256; // 防止读取超出文件范围
+    const minSampleCount = 4; // 最小取样点数
+    const sampleCount = Math.min(
+      Math.max(Math.floor(fileSize / 1024), minSampleCount),
+      maxSampleCount,
+    );
+    const maxOffset = fileSize - chunkSize; // 防止读取超出文件范围
 
     let seed = fileSize;
-    const rng = (seed) => {
+    const rng = () => {
       seed = (seed * 9301 + 49297) % 233280; // 线性同余生成器
       return seed / 233280; // 归一化到 [0, 1)
     };
 
     const spark = new sparkMd5.ArrayBuffer();
 
-    // 读取文件指定位置的样本
+    // 读取指定位置的样本
     const readSample = async (offset) => {
-      spark.append(await getFileReader(file.slice(offset, offset + 256)));
+      const slice = file.slice(offset, offset + chunkSize);
+      spark.append(await getFileReader(slice));
     };
 
     // 1. 读取文件头部的样本
@@ -28,10 +41,7 @@ async function sampleHash(file) {
 
     // 2. 读取随机位置的样本
     for (let i = 0; i < sampleCount; i++) {
-      const randomValue = rng(seed); // 获取伪随机数
-      seed = (seed * 9301 + 49297) % 233280; // 更新种子
-
-      const offset = Math.min(Math.floor(randomValue * maxOffset), maxOffset);
+      const offset = Math.min(Math.floor(rng() * maxOffset), maxOffset);
       await readSample(offset); // 读取随机位置的样本
     }
 
