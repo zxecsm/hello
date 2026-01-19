@@ -19,7 +19,7 @@ const taskState = {
   done(key) {
     const task = this.tasks.get(key);
     if (task) {
-      task.state = 'done';
+      task.state = 1;
       task.time = new Date();
     }
   },
@@ -35,7 +35,7 @@ const taskState = {
 setInterval(() => {
   const now = Date.now();
   for (const [key, task] of taskState.tasks) {
-    if (task.state === 'done' && now - task.time > 1000 * 30) {
+    if (task.state === 1 && now - task.time > 1000 * 30) {
       taskState.delete(key);
     }
   }

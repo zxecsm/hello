@@ -494,6 +494,12 @@ body {
       padding: 0.5rem;
       border: 1px solid var(--color9);
 
+      &.done {
+        border-color: var(--message-success-color);
+        .progress {
+          color: var(--message-success-color);
+        }
+      }
       .progress {
         flex: auto;
         line-height: 1.5;

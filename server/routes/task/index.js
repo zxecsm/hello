@@ -66,11 +66,11 @@ route.post(
       }
 
       const task = taskState.get(key);
-      if (task && task.state === 'done') {
+      if (task && task.state === 1) {
         taskState.delete(key);
       }
 
-      _success(res, 'ok', { text: task ? task.text : '' });
+      _success(res, 'ok', { text: task ? task.text : '', state: task ? task.state : '' });
     } catch (error) {
       _err(res)(req, error);
     }

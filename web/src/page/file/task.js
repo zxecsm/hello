@@ -79,8 +79,9 @@ class CreateTask {
       if (res.code === 1) {
         if (res.data.text) {
           this.progress.textContent = res.data.text;
-        } else {
-          if (!this.key) return;
+        }
+        if (res.data.state === 1) {
+          this.task.classList.add('done');
           this.cancel();
         }
       }
@@ -88,17 +89,19 @@ class CreateTask {
     } finally {
       _setTimeout(() => {
         this.updateProgress();
-      }, 2000);
+      }, 1000);
     }
   }
-  cancel() {
+  cancel(delay = 2000) {
     taskList = taskList.filter((item) => item.key !== this.key);
     this.key = '';
-    this.task.remove();
     this.cb && this.cb();
-    if (taskList.length === 0) {
-      hideTask();
-    }
+    _setTimeout(() => {
+      this.task.remove();
+      if ($list.children().length === 0) {
+        hideTask();
+      }
+    }, delay);
   }
 }
 export function addTask(key, cb, token = '') {
@@ -114,7 +117,7 @@ $taskBox.on('click', '.cancel_task', async (e) => {
     const res = await reqTaskCancel({ key, token: item.task.token });
 
     if (res.code === 1) {
-      item.task.cancel();
+      item.task.cancel(0);
     }
   } catch {}
 });
