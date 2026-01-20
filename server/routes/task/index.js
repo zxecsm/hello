@@ -190,7 +190,7 @@ route.post(
         account = temid;
       }
 
-      _success(res, 'ok', taskState.getTaskList(account));
+      _success(res, 'ok', taskState.getTaskKeys(account));
     } catch (error) {
       _err(res)(req, error);
     }

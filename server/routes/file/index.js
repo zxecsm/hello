@@ -312,12 +312,11 @@ route.post(
           }
         }
 
-        taskState.done(taskKey);
-
         // 未超时直接返回结果
         if (timer) {
           clearTimeout(timer);
           timer = null;
+          taskState.delete(taskKey);
 
           _success(
             res,
@@ -329,6 +328,7 @@ route.post(
             ),
           );
         } else {
+          taskState.done(taskKey);
           // 超时缓存结果
           fileList.add(acc, `${p}_${word}`, arr);
         }
