@@ -217,6 +217,7 @@ async function renderList() {
     const res = await reqSSHQuickList();
     if (res.code === 1) {
       curQuickGroupList = res.data;
+      curQuickGroupId = getCurQuickGroup(curQuickGroupId)?.id || 'default';
       renderQuickGroup();
       renderCommand();
       $app.addClass('open');
