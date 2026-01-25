@@ -794,7 +794,7 @@ function rightList(e, obj, el) {
     if (obj.type === 'dir') {
       data.push({
         id: 'addto',
-        text: '扫面文件到',
+        text: '扫描文件到',
         beforeIcon: 'iconfont icon-shijianchaxun-yimidida-',
       });
     }
