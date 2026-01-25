@@ -37,8 +37,11 @@ async function sampleHash(filePath) {
     // 读取指定位置的样本
     const readSample = async (offset) => {
       const buffer = Buffer.alloc(chunkSize);
-      await fd.read(buffer, 0, chunkSize, offset);
-      hash.update(buffer);
+      const { bytesRead } = await fd.read(buffer, 0, chunkSize, offset);
+
+      if (bytesRead > 0) {
+        hash.update(buffer.subarray(0, bytesRead));
+      }
     };
 
     // 1. 读取文件头部的样本
