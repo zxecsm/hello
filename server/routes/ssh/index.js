@@ -488,8 +488,7 @@ route.post(
         _err(res, '获取配置信息失败')(req, id, 1);
         return;
       }
-      const dPath = _path.normalize('/', defaultPath);
-      createTerminal(account, temid, config, dPath && dPath !== '/' ? dPath : '');
+      createTerminal(account, temid, config, defaultPath ? _path.normalize('/', defaultPath) : '');
       _success(res, '请求连接SSH成功', {
         title: config.title,
         username: config.username,
