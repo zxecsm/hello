@@ -140,8 +140,8 @@ const homeBmMouseElementTracker = new MouseElementTracker($homeBmWrap[0], {
           dragMoveBookmark('home', fromId, toId);
         }
       }
-      mouseHomeBmFromDom = null;
     }
+    mouseHomeBmFromDom = null;
   },
 });
 // 书签列表

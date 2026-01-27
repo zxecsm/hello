@@ -86,19 +86,35 @@ const bmMouseElementTracker = new MouseElementTracker($aside.find('.list')[0], {
   },
   onEnd({ dropElement }) {
     if (!isSelecting() && mouseBmFromDom) {
-      const to = dropElement
-        ? _getTarget($aside[0], { target: dropElement }, '.list .bm_item')
-        : null;
-      if (to) {
-        const pid = $(to).parent().prev().attr('data-id');
-        const toId = to.dataset.id;
-        const fromId = mouseBmFromDom.dataset.id;
-        if (fromId !== toId) {
-          dragMoveBookmark(pid, fromId, toId);
+      if (dropElement) {
+        const to =
+          _getTarget($aside[0], { target: dropElement }, '.list .bm_item') ||
+          _getTarget($aside[0], { target: dropElement }, '.list .list_title');
+        if (to) {
+          const pid = $(mouseBmFromDom).parent().prev().attr('data-id');
+          const fromId = mouseBmFromDom.dataset.id;
+          const toId = to.dataset.id;
+          if (to.className.includes('bm_item')) {
+            if (fromId !== toId) {
+              dragMoveBookmark(pid, fromId, toId);
+            }
+          } else {
+            if (pid !== toId) {
+              reqBmkToGroup({ ids: [fromId], groupId: toId })
+                .then((result) => {
+                  if (result.code === 1) {
+                    _msg.success(result.codeText);
+                    getBookMarkList();
+                    getHomeBmList();
+                  }
+                })
+                .catch(() => {});
+            }
+          }
         }
       }
-      mouseBmFromDom = null;
     }
+    mouseBmFromDom = null;
   },
 });
 
@@ -151,8 +167,8 @@ const bmListMouseElementTracker = new MouseElementTracker($aside.find('.list')[0
           bmListMove(fromId, toId);
         }
       }
-      mouseBmListFromDom = null;
     }
+    mouseBmListFromDom = null;
   },
 });
 

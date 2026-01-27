@@ -758,8 +758,8 @@ const songListMouseElementTracker = new MouseElementTracker($songListWrap[0], {
             .catch(() => {});
         }
       }
-      mouseSongListFromDom = null;
     }
+    mouseSongListFromDom = null;
   },
 });
 let playId = '';
@@ -2278,8 +2278,8 @@ const songsMouseElementTracker = new MouseElementTracker(
               .catch(() => {});
           }
         }
-        mouseSongsFromDom = null;
       }
+      mouseSongsFromDom = null;
     },
   },
 );

@@ -430,8 +430,8 @@ const mouseElementTracker = new MouseElementTracker(document, {
           );
         }
       }
-      mouseFromDom = null;
     }
+    mouseFromDom = null;
   },
 });
 // 分页
@@ -652,6 +652,12 @@ $contentWrap
     }
   });
 function hdContextMenu(e) {
+  const obj = {
+    type: 'dir',
+    path: _path.dirname(curFileDirPath),
+    name: _path.basename(curFileDirPath)[0],
+    size: 0,
+  };
   const data = [
     { id: 'select', text: '多选', beforeIcon: 'iconfont icon-duoxuan' },
     {
@@ -664,13 +670,39 @@ function hdContextMenu(e) {
       text: '上传',
       beforeIcon: 'iconfont icon-upload',
     },
+    {
+      id: 'newPage',
+      text: '新窗口打开',
+      beforeIcon: 'iconfont icon-minimize',
+    },
   ];
+  if (curFileDirPath !== '/') {
+    data.push(
+      {
+        id: 'copyPath',
+        text: '复制路径',
+        beforeIcon: 'iconfont icon-fuzhi',
+      },
+      {
+        id: 'share',
+        text: '分享',
+        beforeIcon: 'iconfont icon-fenxiang_2',
+      },
+    );
+  }
   if (isRoot()) {
     data.push({
       id: 'ssh',
       text: '在终端打开',
       beforeIcon: 'iconfont icon-terminal1',
     });
+    if (curFileDirPath !== '/') {
+      data.push({
+        id: 'addto',
+        text: '扫描文件到',
+        beforeIcon: 'iconfont icon-shijianchaxun-yimidida-',
+      });
+    }
   }
   rMenu.selectMenu(e, data, async ({ e, close, id }) => {
     if (id === 'select') {
@@ -688,6 +720,17 @@ function hdContextMenu(e) {
         e.stopPropagation();
         _myOpen(`/ssh?p=${decodeURIComponent(_path.normalize('/', curFileDirPath))}#local`, '终端');
       }
+    } else if (id === 'newPage') {
+      close();
+      e.stopPropagation();
+      _myOpen(`/file#${_path.normalize('/', curFileDirPath)}`, '文件管理');
+    } else if (id === 'copyPath') {
+      copyText(_path.normalize('/', curFileDirPath));
+      close();
+    } else if (id === 'share') {
+      hdShare(e, obj);
+    } else if (id === 'addto') {
+      addTo(e, obj);
     }
   });
 }

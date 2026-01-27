@@ -348,8 +348,8 @@ const groupMouseElementTracker = new MouseElementTracker($quickGroup[0], {
           moveGroup(fromId, toId);
         }
       }
-      mouseGroupFromDom = null;
     }
+    mouseGroupFromDom = null;
   },
 });
 function moveGroup(fromId, toId) {
@@ -654,8 +654,8 @@ const quickMouseElementTracker = new MouseElementTracker($footer[0], {
           }
         }
       }
-      mouseQuickFromDom = null;
     }
+    mouseQuickFromDom = null;
   },
 });
 function moveQuickCommand(fromId, toId) {
