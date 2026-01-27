@@ -1,4 +1,4 @@
-FROM node:22-alpine
+FROM node:24-alpine
 
 WORKDIR /app
 
@@ -6,10 +6,10 @@ ENV NODE_ENV=production
 
 COPY package*.json ./
 
-RUN npm ci --only=production
+RUN npm ci --omit=dev && npm cache clean --force
 
 COPY . .
 
 EXPOSE 55555
 
-CMD ["npm", "run", "start"]
+CMD ["node", "app"]
