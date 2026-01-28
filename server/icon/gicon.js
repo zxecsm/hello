@@ -17,8 +17,8 @@ async function generateIcons() {
     await sharp(svg).resize(size, size).png().toFile(`${expandedPath}/icons/icon-${size}.png`);
   }
 
-  await sharp(svg).resize(16, 16).png().toFile(`${basePath}/images/img/icon.png`);
-  await sharp(svg1).resize(16, 16).png().toFile(`${basePath}/images/img/icon1.png`);
+  fs.writeFileSync(`${basePath}/images/img/icon.svg`, svg);
+  fs.writeFileSync(`${basePath}/images/img/icon1.svg`, svg1);
   await sharp(svg).resize(256, 256).toFile(`${basePath}/favicon.ico`);
 }
 

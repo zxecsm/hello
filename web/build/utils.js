@@ -124,7 +124,7 @@ function getPlugins(isDev) {
           }`,
         },
       },
-      favicon: './src/images/img/icon.png',
+      favicon: './src/images/img/icon.svg',
       inject: 'head',
     };
     if (isDev) {

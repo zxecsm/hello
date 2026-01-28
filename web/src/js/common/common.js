@@ -17,8 +17,8 @@ import {
 import _d from './config';
 import _msg from '../plugins/message';
 import { _loadingBar } from '../plugins/loadingBar';
-import icon1logo from '../../images/img/icon1.png';
-import iconlogo from '../../images/img/icon.png';
+import icon1logo from '../../images/img/icon1.svg';
+import iconlogo from '../../images/img/icon.svg';
 import imgHechang from '../../images/img/hechang.png';
 import loadingPage from '../plugins/loading';
 import { reqUserCustomCode, reqUserError } from '../../api/user';
