@@ -83,9 +83,12 @@ class AutoTitlePlugin {
       HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tapAsync('AutoTitlePlugin', (data, cb) => {
         // 从当前页面的插件配置对象（plugin.options）中获取 title
         const title = data.plugin.options.title || '默认标题';
-
+        const pageName = data.plugin.options.chunks[0];
         // 强行插入到 <head> 之后
-        data.html = data.html.replace(/<head>/i, `<head><title>${title}</title>`);
+        data.html = data.html.replace(
+          /<head>/i,
+          `<head><title>${title}</title>${pageName === 'home' ? '<link rel="manifest" href="/manifest.json">' : ''}`,
+        );
 
         cb(null, data);
       });
@@ -153,6 +156,10 @@ function getPlugins(isDev) {
           },
           {
             from: resolve(__dirname, '..', 'src/manifest.json'),
+            to: resolve(__dirname, '../../server/static'),
+          },
+          {
+            from: resolve(__dirname, '..', 'src/sw.js'),
             to: resolve(__dirname, '../../server/static'),
           },
           {

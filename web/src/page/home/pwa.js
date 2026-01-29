@@ -1,9 +1,5 @@
 import localData from '../../js/common/localData';
 import rMenu from '../../js/plugins/rightMenu';
-const link = document.createElement('link');
-link.setAttribute('rel', 'manifest');
-link.href = 'manifest.json';
-document.head.appendChild(link);
 
 window.addEventListener('beforeinstallprompt', (e) => {
   if (window.matchMedia('(display-mode: standalone)').matches) {
@@ -31,3 +27,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
     return e.preventDefault();
   }
 });
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
