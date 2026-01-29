@@ -67,7 +67,7 @@ function getTagFont(type) {
   } else if (type === 'ssh') {
     font += `icon-terminal`;
   } else {
-    font += `icon-shoucang`;
+    font += `icon-cat_full_foot`;
   }
   return font;
 }

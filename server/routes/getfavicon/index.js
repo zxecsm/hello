@@ -172,8 +172,8 @@ route.get(
           try {
             const buf = await convertImageFormat(iconPath, {
               format: 'png',
-              width: 100,
-              height: 100,
+              width: 200,
+              height: 200,
               fit: 'cover',
             });
 

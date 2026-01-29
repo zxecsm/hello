@@ -80,7 +80,7 @@ function renderShareList(total, pageNo, top) {
       _d,
       sList,
       getUrlAndLogo(type, id) {
-        let logo = 'icon-shoucang',
+        let logo = 'icon-cat_full_foot',
           url = _d.originURL;
         if (type === 'music') {
           logo = `icon-yinle1`;

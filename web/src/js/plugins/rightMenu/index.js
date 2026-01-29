@@ -627,7 +627,7 @@ function render(data) {
       afterIcon = '',
       afterText = '',
       beforeText = '',
-      beforeIcon = beforeText ? '' : 'icon iconfont icon-shoucang',
+      beforeIcon = beforeText ? '' : 'icon iconfont icon-cat_full_foot',
       active = false,
       pointer = true,
     } = item;
