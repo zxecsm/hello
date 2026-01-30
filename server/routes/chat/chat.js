@@ -21,7 +21,7 @@ import { getUserInfo } from '../user/user.js';
 import { _d } from '../../data/data.js';
 import appConfig from '../../data/config.js';
 import _f from '../../utils/f.js';
-import { _delDir, cleanEmptyDirectories } from '../file/file.js';
+import { _delDir } from '../file/file.js';
 import _path from '../../utils/path.js';
 import nanoid from '../../utils/nanoid.js';
 import { sym } from '../../utils/symbols.js';
@@ -558,7 +558,7 @@ export async function cleanUpload(req = false) {
       });
     }
 
-    await cleanEmptyDirectories(uploadDir);
+    await _f.removeEmptyDirs(uploadDir);
 
     if (count) {
       const text = `清理到期聊天室文件：${count}`;

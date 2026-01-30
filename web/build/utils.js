@@ -138,6 +138,7 @@ function getPlugins(isDev) {
   plugins.push(new AutoTitlePlugin());
   if (!isDev) {
     plugins = [
+      new CleanWebpackPlugin(),
       ...plugins,
       // 抽取css
       new MiniCssExtractPlugin({
@@ -159,33 +160,16 @@ function getPlugins(isDev) {
             to: resolve(__dirname, '../../server/static'),
           },
           {
-            from: resolve(__dirname, '..', 'src/sw.js'),
-            to: resolve(__dirname, '../../server/static'),
-          },
-          {
             from: resolve(__dirname, '..', 'src/icons'),
             to: resolve(__dirname, '../../server/static/icons'),
           },
         ],
       }),
       new GenerateSW({
+        swDest: 'sw.js',
         clientsClaim: true,
         skipWaiting: true,
-        runtimeCaching: [
-          {
-            urlPattern: /\.(?:html|css|js|png|jpg|jpeg|svg|woff2?)$/,
-            handler: 'CacheFirst', // 使用缓存优先策略
-            options: {
-              cacheName: 'static-resources',
-              expiration: {
-                maxEntries: 50, // 最大缓存条目
-                maxAgeSeconds: 30 * 24 * 60 * 60, // 缓存30天
-              },
-            },
-          },
-        ],
       }),
-      new CleanWebpackPlugin(),
     ];
   } else {
     plugins.push(new webpack.HotModuleReplacementPlugin());

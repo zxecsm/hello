@@ -47,37 +47,6 @@ export async function _delDir(path) {
   }
 }
 
-// 清理空目录
-export async function cleanEmptyDirectories(rootDir) {
-  if ((await _f.getType(rootDir)) !== 'dir') return;
-
-  const allDirs = new Set();
-  const stack = [rootDir];
-
-  while (stack.length > 0) {
-    const currentDir = stack.pop();
-
-    const files = await _f.fsp.readdir(currentDir);
-    for (const file of files) {
-      const fullPath = _path.normalize(currentDir, file);
-      if ((await _f.getType(fullPath)) === 'dir') {
-        stack.push(fullPath);
-        allDirs.add(fullPath);
-      }
-    }
-  }
-
-  const sortedDirs = Array.from(allDirs).sort((a, b) => {
-    return b.split('/').length - a.split('/').length;
-  });
-
-  for (const dir of sortedDirs) {
-    if ((await _f.fsp.readdir(dir).length) === 0) {
-      await _delDir(dir);
-    }
-  }
-}
-
 // 获取所有文件
 export async function getAllFile(path) {
   try {

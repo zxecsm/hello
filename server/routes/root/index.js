@@ -26,7 +26,7 @@ import { becomeFriends, cleanUpload, heperMsgAndForward } from '../chat/chat.js'
 
 import { fieldLength } from '../config.js';
 
-import { _delDir, cleanEmptyDirectories, getAllFile, readMenu } from '../file/file.js';
+import { _delDir, getAllFile, readMenu } from '../file/file.js';
 
 import { deleteUser } from '../user/user.js';
 import _path from '../../utils/path.js';
@@ -249,7 +249,7 @@ route.get('/clean-music-file', async (req, res) => {
         }
       });
 
-      await cleanEmptyDirectories(musicDir);
+      await _f.removeEmptyDirs(musicDir);
     }
     _success(res, '清理歌曲文件成功')(req);
   } catch (error) {
@@ -274,7 +274,7 @@ route.get('/clean-bg-file', async (req, res) => {
         }
       });
 
-      await cleanEmptyDirectories(bgDir);
+      await _f.removeEmptyDirs(bgDir);
     }
     _success(res, '清理壁纸文件成功')(req);
   } catch (error) {
@@ -299,7 +299,7 @@ route.get('/clean-pic-file', async (req, res) => {
         }
       });
 
-      await cleanEmptyDirectories(picDir);
+      await _f.removeEmptyDirs(picDir);
     }
     _success(res, '清理图床文件成功')(req);
   } catch (error) {

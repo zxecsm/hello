@@ -39,7 +39,6 @@ import {
   readHistoryDirs,
   writeHistoryDirs,
   writeFavorites,
-  getAllFile,
   fileToMusic,
   fileToBg,
 } from './file.js';
@@ -1890,38 +1889,41 @@ route.post(
       try {
         let skip = 0;
         let count = 0;
-        let size = 0;
+        let totalSize = 0;
 
-        await concurrencyTasks(await getAllFile(targetPath), 5, async (task) => {
-          if (signal.aborted) return;
+        await _f.walk(
+          targetPath,
+          async ({ type: ftype, path: p, stat }) => {
+            if (ftype !== 'dir') {
+              try {
+                const size = stat.size;
+                if (
+                  (type === 'music' &&
+                    isMusicFile(p) &&
+                    size < fieldLength.maxSongSize * 1024 * 1024 &&
+                    (await fileToMusic(p))) ||
+                  (type === 'bg' &&
+                    isImgFile(p) &&
+                    size < fieldLength.maxBgSize * 1024 * 1024 &&
+                    (await fileToBg(p)))
+                ) {
+                  totalSize += size;
+                  count++;
+                } else {
+                  skip++;
+                }
+              } catch (error) {
+                await errLog(req, `扫描添加${typeName}失败：${p}(${error})`);
+              }
 
-          const p = _path.normalize(task.path, task.name);
-
-          try {
-            if (
-              (type === 'music' &&
-                isMusicFile(p) &&
-                task.size < fieldLength.maxSongSize * 1024 * 1024 &&
-                (await fileToMusic(p))) ||
-              (type === 'bg' &&
-                isImgFile(p) &&
-                task.size < fieldLength.maxBgSize * 1024 * 1024 &&
-                (await fileToBg(p)))
-            ) {
-              size += task.size;
-              count++;
-            } else {
-              skip++;
+              taskState.update(
+                taskKey,
+                `添加${typeName}...${count} (${_f.formatBytes(totalSize)}) 跳过 ${skip}`,
+              );
             }
-          } catch (error) {
-            await errLog(req, `扫描添加${typeName}失败：${p}(${error})`);
-          }
-
-          taskState.update(
-            taskKey,
-            `添加${typeName}...${count} (${_f.formatBytes(size)}) 跳过 ${skip}`,
-          );
-        });
+          },
+          { signal, concurrency: 10 },
+        );
 
         taskState.done(taskKey);
         uLog(req, `扫描添加${typeName}成功: ${targetPath}(${count})`);
