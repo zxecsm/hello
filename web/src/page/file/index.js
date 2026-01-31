@@ -114,33 +114,10 @@ function changeHiddenFileModel() {
 if (isIframe()) {
   $promptText.css('bottom', '1rem');
 }
-const dangerDir = [
-  '/boot',
-  '/etc',
-  '/bin',
-  '/sbin',
-  '/usr/bin',
-  '/usr/sbin',
-  '/usr/lib',
-  '/usr/lib64',
-  '/lib',
-  '/lib64',
-  '/dev',
-  '/proc',
-  '/sys',
-  '/var/lib',
-  '/var/run',
-];
 function updatePromptText(path) {
   let color = '';
   let text = '';
-  if (isRoot() && path === '/') {
-    color = 'var(--message-error-color)';
-    text = '系统根目录，请谨慎操作';
-  } else if (isRoot() && dangerDir.some((p) => _path.isPathWithin(p, path, 1))) {
-    color = 'var(--message-error-color)';
-    text = '系统文件目录，请谨慎操作';
-  } else if (_path.basename(path)[0] === _d.fileHistoryDirName) {
+  if (_path.basename(path)[0] === _d.fileHistoryDirName) {
     color = 'var(--message-success-color)';
     text = '文件历史记录目录';
   } else if (_path.isPathWithin(_d.noteHistoryDir, path, 1)) {
