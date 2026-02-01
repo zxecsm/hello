@@ -1098,12 +1098,15 @@ body {
           text-align: center;
 
           &:hover {
-            color: var(--btn-danger-color);
             transform: scale(1.1);
           }
         }
         .c_close_btn {
           font-size: 1.8rem;
+        }
+
+        .c_close_btn,
+        .clear_msg_btn {
           &:hover {
             color: var(--btn-danger-color);
           }
@@ -3987,11 +3990,14 @@ body {
               font-size: 2rem;
 
               &:hover {
-                color: var(--btn-danger-color);
                 transform: scale(1.1);
               }
             }
-
+            .clear_playing_list {
+              &:hover {
+                color: var(--btn-danger-color);
+              }
+            }
             .share_playing_list {
               font-size: 1.8rem;
             }
