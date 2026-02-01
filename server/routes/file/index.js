@@ -258,7 +258,7 @@ route.post(
         let arr = [];
         let count = 0;
 
-        if ((await _f.getType(p)) === 'dir') {
+        if (await _f.getType(p)) {
           const stack = [p];
 
           while (stack.length > 0 && !signal.aborted) {
