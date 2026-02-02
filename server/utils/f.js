@@ -42,7 +42,7 @@ async function cp(from, to, { signal, progress, renameMode = false } = {}) {
   await walk(
     from,
     async ({ type, path: f }) => {
-      const t = _path.normalize(to, f.replace(from, ''));
+      const t = f === from ? to : _path.normalize(to, f.replace(from, ''));
       if (type === 'dir') {
         await mkdir(t);
       } else if (type === 'symlink') {
