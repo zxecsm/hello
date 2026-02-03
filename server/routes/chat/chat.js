@@ -508,18 +508,23 @@ export function parseForwardMsgLink(str) {
 }
 
 // 获取成员列表
-export function getChatUserList(account, pageSize, offset) {
-  return db('user AS u')
+export function getChatUserList(account, pageSize, offset, word = '') {
+  const uDB = db('user AS u')
     .select('f.des,f.read,f.msg,u.update_at,u.username,u.account,u.logo,u.email,u.hide')
     .join(
       'friends AS f',
       { 'u.account': { value: 'f.friend', raw: true }, 'f.account': account },
       { type: 'LEFT' },
     )
-    .where({ 'u.state': 1 })
+    .where({
+      'u.state': 1,
+    })
     .orderBy('f.update_at', 'DESC')
-    .page(pageSize, offset)
-    .find();
+    .page(pageSize, offset);
+  if (word) {
+    uDB.where({ $or: [{ 'u.username': word }, { 'u.account': word }, { 'u.email': word }] });
+  }
+  return uDB.find();
 }
 
 // 清理到期聊天文件

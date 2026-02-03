@@ -83,6 +83,10 @@ const $document = $(document),
   $userListWrap = $chatRoomWrap.find('.user_list_wrap'),
   $userListBox = $chatRoomWrap.find('.user_list_box'),
   $chatHeadBtns = $chatRoomWrap.find('.c_head_btns'),
+  $searchMsgInp = $chatHeadBtns.find('.search_msg_inp'),
+  $searchBtn = $chatHeadBtns.find('.search_btn'),
+  $searchUserInp = $chatHeadBtns.find('.search_user_inp'),
+  $searchUserBtn = $chatHeadBtns.find('.search_user_btn'),
   $onlineStatus = $chatHeadBtns.find('.online_status'),
   $chatListBox = $chatRoomWrap.find('.chat_list_box'),
   $chatFootBox = $chatRoomWrap.find('.chat_foot_box'),
@@ -119,24 +123,25 @@ export function chatRoomWrapIsHide() {
   return $chatRoomWrap.is(':hidden');
 }
 // 搜索消息框
-const chatSearchInput = wrapInput($chatHeadBtns.find('.search_msg_inp input')[0], {
+const chatSearchInput = wrapInput($searchMsgInp.find('input')[0], {
   update(val) {
     if (val === '') {
-      $chatHeadBtns.find('.search_msg_inp .clean_btn').css('display', 'none');
+      $searchMsgInp.find('.clean_btn').css('display', 'none');
     } else {
-      $chatHeadBtns.find('.search_msg_inp .clean_btn').css('display', 'block');
+      $searchMsgInp.find('.clean_btn').css('display', 'block');
     }
   },
-  focus(e) {
-    $(e.target).parent().addClass('focus');
-    $chatHeadBtns.find('.search_btn').css('display', 'none');
+  focus() {
+    $searchMsgInp.addClass('focus');
+    $searchBtn.css('display', 'none');
   },
-  blur(e) {
-    const $inpBox = $(e.target).parent();
-    $inpBox.removeClass('focus');
+  blur() {
+    $searchMsgInp.removeClass('focus');
     if (chatSearchInput.getValue().trim() === '') {
-      $inpBox.fadeOut(300, () => {
-        $chatHeadBtns.find('.search_btn').slideDown(300);
+      $searchMsgInp.fadeOut(300, () => {
+        if ($userListWrap.is(':hidden')) {
+          $searchBtn.slideDown(300);
+        }
       });
       chatSearchInput.setValue('');
     }
@@ -144,6 +149,37 @@ const chatSearchInput = wrapInput($chatHeadBtns.find('.search_msg_inp input')[0]
   keyup(e) {
     if (e.key === 'Enter') {
       openFriend(curChatAccount);
+    }
+  },
+});
+// 搜索用户框
+const chatSearchUserInput = wrapInput($searchUserInp.find('input')[0], {
+  update(val) {
+    if (val === '') {
+      $searchUserInp.find('.clean_btn').css('display', 'none');
+    } else {
+      $searchUserInp.find('.clean_btn').css('display', 'block');
+    }
+  },
+  focus() {
+    $searchUserInp.addClass('focus');
+    $searchUserBtn.css('display', 'none');
+  },
+  blur() {
+    $searchUserInp.removeClass('focus');
+    if (chatSearchUserInput.getValue().trim() === '') {
+      $searchUserInp.fadeOut(300, () => {
+        if (!$userListWrap.is(':hidden')) {
+          $searchUserBtn.slideDown(300);
+        }
+      });
+      chatSearchUserInput.setValue('');
+    }
+  },
+  keyup(e) {
+    if (e.key === 'Enter') {
+      userPageNo = 1;
+      getUserList(true);
     }
   },
 });
@@ -158,10 +194,15 @@ function getUserItem(account) {
 const cUserListLoad = new LazyLoad();
 // 获取用户列表
 function getUserList(top) {
+  const word = chatSearchUserInput.getValue().trim();
+  if (word.length > _d.fieldLength.searchWord) {
+    _msg.error('搜索内容过长');
+    return;
+  }
   if ($userListBox.children().length === 0) {
     loadingImg($userListBox[0]);
   }
-  reqChatUserList({ pageNo: userPageNo, pageSize: userPageSize })
+  reqChatUserList({ pageNo: userPageNo, pageSize: userPageSize, word })
     .then((result) => {
       if (result.code === 1) {
         const { data, pageNo, totalPage, total } = result.data;
@@ -368,8 +409,12 @@ $chatHeadBtns
   .on('click', '.clear_msg_btn', clearMsg)
   .on('click', '.top', switchChatTop)
   .on('click', '.search_btn', () => {
-    chatSearchInput.target.parentNode.style.display = 'flex';
+    $searchMsgInp.css('display', 'flex');
     chatSearchInput.focus();
+  })
+  .on('click', '.search_user_btn', () => {
+    $searchUserInp.css('display', 'flex');
+    chatSearchUserInput.focus();
   })
   .on(
     'click',
@@ -386,8 +431,17 @@ $chatHeadBtns
     chatSearchInput.setValue('').focus();
     openFriend(curChatAccount);
   })
+  .on('click', '.search_user_inp .clean_btn', function () {
+    chatSearchUserInput.setValue('').focus();
+    userPageNo = 1;
+    getUserList(true);
+  })
   .on('click', '.search_msg_inp .inp_search_btn', function () {
     openFriend(curChatAccount);
+  })
+  .on('click', '.search_user_inp .inp_search_btn', function () {
+    userPageNo = 1;
+    getUserList(true);
   })
   .on(
     'click',
@@ -1018,7 +1072,7 @@ function scrollTopMsg() {
     if (idx < 0) return;
     if (idx === 0) {
       const word = chatSearchInput.getValue().trim();
-      if (word.length > 100) {
+      if (word.length > _d.fieldLength.searchWord) {
         _msg.error('搜索内容过长');
         return;
       }
@@ -1711,9 +1765,26 @@ function hideUserList() {
   $userListWrap.css('display', 'none');
   $userListBox.html('');
   isForward = false;
+  $searchUserBtn.css('display', 'none');
+  chatSearchUserInput.setValue('');
+  $searchUserInp.css('display', 'none');
+  if (chatSearchInput.getValue().trim() === '') {
+    if ($searchMsgInp.is(':hidden')) {
+      $searchBtn.css('display', 'block');
+    }
+    chatSearchInput.setValue('');
+  } else {
+    $searchMsgInp.css('display', 'flex');
+    $searchBtn.css('display', 'none');
+  }
 }
 function showUserList() {
   $userListWrap.css('display', 'block');
+  $searchBtn.css('display', 'none');
+  $searchMsgInp.css('display', 'none');
+  $searchUserBtn.css('display', 'block');
+  chatSearchUserInput.setValue('');
+  $searchUserInp.css('display', 'none');
 }
 $userListWrap.on('click', function (e) {
   if (e.target === this) {
@@ -1846,7 +1917,7 @@ async function openFriend(acc, noHideUserList, cb) {
     hideUserList();
   }
   const val = chatSearchInput.getValue().trim();
-  if (val.length > 100) {
+  if (val.length > _d.fieldLength.searchWord) {
     _msg.error('搜索内容过长');
     return;
   }

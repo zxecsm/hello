@@ -197,7 +197,7 @@ function renderList(y) {
   let pagenum = trashPageNo,
     a = wInput.getValue().trim(),
     slogo = 'icon-liebiao1';
-  if (a.length > 100) {
+  if (a.length > _d.fieldLength.searchWord) {
     _msg.error('搜索内容过长');
     return;
   }

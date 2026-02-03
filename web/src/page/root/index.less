@@ -25,7 +25,51 @@ html {
         font-size: 1.8rem;
       }
     }
+    .user_btns {
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+      .create_account {
+        flex: none;
+      }
+      .inp_box {
+        display: flex;
+        width: 0;
+        align-items: center;
+        max-width: 40rem;
+        flex: auto;
+        border: 1px solid var(--color9);
+        height: 4rem;
+        line-height: 4rem;
+        border-radius: 0.4rem;
 
+        &.focus {
+          border: 1px solid var(--text-hover-color);
+        }
+
+        input {
+          flex: auto;
+          width: 0;
+          border: none;
+          outline: none;
+          font-size: 1.6rem;
+          background-color: transparent;
+        }
+
+        i {
+          display: none;
+          flex: none;
+        }
+        .clean_btn {
+          &:hover {
+            color: var(--btn-danger-color);
+          }
+        }
+        .search_btn {
+          display: block;
+        }
+      }
+    }
     table {
       width: 100%;
       border-collapse: collapse;

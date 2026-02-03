@@ -59,6 +59,7 @@ const fieldLength = {
   sharePass: 20, // 分享提取码
   url: 2000, // 网址路径
   des: 500, // 备注
+  searchWord: 100, // 搜索关键词
   filename: 255, // 文件名
   searchHistory: 200, // 搜索历史文本
   chatDes: 20, // 用户备注

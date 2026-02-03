@@ -230,7 +230,7 @@ function stopSelect() {
 export function renderList(y) {
   let pagenum = sshPageNo,
     word = wInput.getValue().trim();
-  if (word.length > 100) {
+  if (word.length > _d.fieldLength.searchWord) {
     _msg.error('搜索内容过长');
     return;
   }

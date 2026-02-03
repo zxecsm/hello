@@ -68,7 +68,7 @@ let searchMusicPageNo = 1;
 export function getSearchSongs(top, pageNo = searchMusicPageNo) {
   const word = setSearchMusicInputValue();
   if (word !== '') {
-    if (word.length > 100) {
+    if (word.length > _d.fieldLength.searchWord) {
       _msg.error('搜索内容过长');
       return;
     }

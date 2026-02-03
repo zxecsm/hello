@@ -100,25 +100,24 @@ route.get(
     V.object({
       pageNo: V.number().toInt().min(1).default(1),
       pageSize: V.number().toInt().min(1).max(fieldLength.userPageSize).default(10),
+      word: V.string().trim().default('').allowEmpty().max(fieldLength.searchWord),
     }),
   ),
   async (req, res) => {
     try {
-      const { pageNo, pageSize } = req[kValidate];
-
-      const total = await db('user')
-        .where({ account: { '!=': appConfig.notifyAccount } })
-        .count();
+      const { pageNo, pageSize, word } = req[kValidate];
+      const userDB = db('user').where({ account: { '!=': appConfig.notifyAccount } });
+      if (word) {
+        userDB.where({ $or: [{ username: word }, { account: word }, { email: word }] });
+      }
+      const total = await userDB.clone().count();
 
       const result = createPagingData(Array(total), pageSize, pageNo);
 
       const offset = (result.pageNo - 1) * pageSize;
 
-      let list = await db('user')
+      let list = await userDB
         .select('account,username,update_at,email,state,hide')
-        .where({
-          account: { '!=': appConfig.notifyAccount },
-        })
         .orderBy('update_at', 'desc')
         .page(pageSize, offset)
         .find();

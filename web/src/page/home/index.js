@@ -709,7 +709,7 @@ function hdChatType(resData, notify) {
       if (isCurChatRoom(chatAccount, from.account, to)) {
         const flag = chatMsgData.last()?.id || '';
         const word = $chatHeadBtns.find('.search_msg_inp input').val().trim();
-        if (word.length > 100) {
+        if (word.length > _d.fieldLength.searchWord) {
           _msg.error('搜索内容过长');
           return;
         }

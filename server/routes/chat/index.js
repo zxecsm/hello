@@ -649,21 +649,26 @@ route.get(
     V.object({
       pageNo: V.number().toInt().default(1).min(1),
       pageSize: V.number().toInt().default(10).min(1).max(fieldLength.userPageSize),
+      word: V.string().trim().default('').allowEmpty().max(fieldLength.searchWord),
     }),
   ),
   async (req, res) => {
     try {
-      const { pageNo, pageSize } = req[kValidate];
+      const { pageNo, pageSize, word } = req[kValidate];
 
       const { account } = req[kHello].userinfo;
 
-      const total = await db('user').where({ state: 1 }).count();
+      const userDB = db('user').where({ state: 1 });
+      if (word) {
+        userDB.where({ $or: [{ username: word }, { account: word }, { email: word }] });
+      }
+      const total = await userDB.count();
 
       const result = createPagingData(Array(total), pageSize, pageNo);
 
       const offset = (result.pageNo - 1) * pageSize;
 
-      const users = await getChatUserList(account, pageSize, offset);
+      const users = await getChatUserList(account, pageSize, offset, word);
 
       const n = Date.now();
       const cons = _connect.getConnects();

@@ -14,6 +14,7 @@ import {
   addCustomCode,
   _myOpen,
   getTextSize,
+  wrapInput,
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
@@ -52,6 +53,7 @@ import localData from '../../js/common/localData.js';
 const $contentWrap = $('.content_wrap'),
   $paginationBox = $('.pagination_box'),
   $headBtns = $contentWrap.find('.head_btns'),
+  $userBtns = $contentWrap.find('.user_btns'),
   $tableBox = $contentWrap.find('.table_box'),
   $list = $tableBox.find('tbody');
 let dataObj = {};
@@ -60,6 +62,28 @@ let userList = [];
 let uPageSize = localData.get('userListPageSize');
 const closeIcon = 'iconfont icon-kaiguan-guan',
   openIcon = 'iconfont icon-kaiguan-kai1';
+// 搜索
+const wInput = wrapInput($userBtns.find('.inp_box input')[0], {
+  update(val) {
+    if (val === '') {
+      $userBtns.find('.inp_box .clean_btn').css('display', 'none');
+    } else {
+      $userBtns.find('.inp_box .clean_btn').css('display', 'block');
+    }
+  },
+  focus(e) {
+    $(e.target).parent().addClass('focus');
+  },
+  blur(e) {
+    $(e.target).parent().removeClass('focus');
+  },
+  keyup(e) {
+    if (e.key === 'Enter') {
+      pageNo = 1;
+      getUserList(1);
+    }
+  },
+});
 if (isRoot()) {
   getUserList(1);
 } else {
@@ -127,7 +151,12 @@ const pgnt = pagination($paginationBox[0], {
 });
 // 获取用户列表
 function getUserList(top) {
-  reqRootUserList({ pageNo, pageSize: uPageSize })
+  const word = wInput.getValue().trim();
+  if (word.length > _d.fieldLength.searchWord) {
+    _msg.error('搜索内容过长');
+    return;
+  }
+  reqRootUserList({ pageNo, pageSize: uPageSize, word })
     .then((result) => {
       if (result.code === 1) {
         const { registerState, data, total } = (dataObj = result.data);
@@ -982,51 +1011,61 @@ $headBtns
   .on('click', '.clean_database', cleanDatabase);
 
 // 创建帐号
-$('.create_account').on('click', (e) => {
-  rMenu.inpMenu(
-    e,
-    {
-      subText: '提交',
-      items: {
-        username: {
-          beforeText: '用户名：',
-          value: '',
-          verify(val) {
-            return rMenu.validString(val, 1, _d.fieldLength.username);
+$userBtns
+  .on('click', '.create_account', (e) => {
+    rMenu.inpMenu(
+      e,
+      {
+        subText: '提交',
+        items: {
+          username: {
+            beforeText: '用户名：',
+            value: '',
+            verify(val) {
+              return rMenu.validString(val, 1, _d.fieldLength.username);
+            },
+          },
+          password: {
+            beforeText: '密码：',
+            inputType: 'password',
+            value: '',
+          },
+          repassword: {
+            beforeText: '确认密码：',
+            inputType: 'password',
+            value: '',
           },
         },
-        password: {
-          beforeText: '密码：',
-          inputType: 'password',
-          value: '',
-        },
-        repassword: {
-          beforeText: '确认密码：',
-          inputType: 'password',
-          value: '',
-        },
       },
-    },
-    ({ inp, close, loading }) => {
-      const { username, password, repassword } = inp;
-      if (password !== repassword) {
-        _msg.error('密码不一致');
-        return;
-      }
-      loading.start();
-      reqRootCreateAccount({ username, password: md5.getStringHash(password) })
-        .then((res) => {
-          if (res.code === 1) {
+      ({ inp, close, loading }) => {
+        const { username, password, repassword } = inp;
+        if (password !== repassword) {
+          _msg.error('密码不一致');
+          return;
+        }
+        loading.start();
+        reqRootCreateAccount({ username, password: md5.getStringHash(password) })
+          .then((res) => {
+            if (res.code === 1) {
+              loading.end();
+              close();
+              _msg.success(res.codeText);
+              getUserList();
+            }
+          })
+          .catch(() => {
             loading.end();
-            close();
-            _msg.success(res.codeText);
-            getUserList();
-          }
-        })
-        .catch(() => {
-          loading.end();
-        });
-    },
-    '创建帐号',
-  );
-});
+          });
+      },
+      '创建帐号',
+    );
+  })
+  .on('click', '.inp_box .clean_btn', function () {
+    wInput.setValue('').focus();
+    pageNo = 1;
+    getUserList(1);
+  })
+  .on('click', '.inp_box .search_btn', function () {
+    pageNo = 1;
+    getUserList(1);
+  });
