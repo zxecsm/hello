@@ -28,8 +28,8 @@ body {
   }
   &.full_height {
     .ssh_box {
-      height: 100%;
-      max-height: 100%;
+      height: 100% !important;
+      max-height: 100% !important;
     }
     .footer {
       display: none;
@@ -40,6 +40,9 @@ body {
   }
   .ssh_box {
     position: relative;
+    flex: auto;
+    height: 60%;
+    overflow: hidden;
     .log_text {
       display: none;
       position: absolute;
@@ -54,9 +57,6 @@ body {
       font-size: 1.4rem;
       line-height: 1.2;
     }
-    flex: auto;
-    height: 60%;
-    position: relative;
     .btns {
       display: flex;
       flex-flow: row nowrap;
@@ -97,6 +97,18 @@ body {
     height: 40%;
     display: flex;
     flex-flow: column;
+    position: relative;
+    .resize {
+      position: absolute;
+      top: -0.5rem;
+      left: 0;
+      width: 100%;
+      height: 1rem;
+      z-index: 99;
+      &:hover {
+        background-color: var(--text-hover-color);
+      }
+    }
     .shortcuts {
       border-bottom: 1px solid var(--color9);
       flex: none;

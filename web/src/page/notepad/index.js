@@ -414,7 +414,7 @@ $editBox[0].addEventListener('paste', function (e) {
     } else if (e.type === 'mousemove') {
       xx = e.clientX;
     }
-    let diff = xx - x;
+    const diff = xx - x;
     x = xx;
     editW += diff;
     previeW -= diff;
@@ -428,6 +428,14 @@ $editBox[0].addEventListener('paste', function (e) {
     }
   }
   function hdUp() {
+    const { w } = getScreenSize();
+    const previewPercent = parseInt(($previewBox[0].offsetWidth / w) * 100);
+    $previewBox.css({
+      width: previewPercent + '%',
+    });
+    $editBox.css({
+      width: 100 - previewPercent + '%',
+    });
     toggleUserSelect();
     this.removeEventListener('touchmove', hdMove);
     document.removeEventListener('mousemove', hdMove);
@@ -562,11 +570,11 @@ function settingEdit(e) {
     '设置',
   );
 }
+// 预览切换
+let previewFlag = false;
 if (getScreenSize().w <= _d.screen) {
   previewState();
 }
-// 预览切换
-let previewFlag = false;
 function previewState() {
   if (!previewFlag) {
     previewFlag = 'y';

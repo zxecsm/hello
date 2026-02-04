@@ -27,12 +27,14 @@ import {
   _getTarget,
   _setTimeout,
   debounce,
+  getScreenSize,
   getTextSize,
   isDarkMode,
   isIframe,
   myOpen,
   pageErr,
   queryURLParams,
+  toggleUserSelect,
 } from '../../js/utils/utils.js';
 import localData from '../../js/common/localData.js';
 import { _tpl } from '../../js/utils/template.js';
@@ -43,8 +45,9 @@ import { MouseElementTracker } from '../../js/utils/boxSelector.js';
 import toolTip from '../../js/plugins/tooltip/index.js';
 const $app = $('#app'),
   $sshBox = $app.find('.ssh_box'),
-  $logText = $app.find('.log_text'),
-  $footer = $('.footer'),
+  $logText = $sshBox.find('.log_text'),
+  $footer = $app.find('.footer'),
+  $resize = $footer.find('.resize'),
   $shortcuts = $footer.find('.shortcuts'),
   $quickGroup = $footer.find('.quick_group'),
   $quickCommands = $footer.find('.quick_commands');
@@ -811,3 +814,59 @@ document.addEventListener('click', function (e) {
   $logText.hide();
   $sshBox.find('.btns .log_btn').removeClass('icon-terminal').addClass('icon-fuzhi');
 });
+~(function () {
+  let sshH, footH, y;
+  function hdDown(e) {
+    toggleUserSelect(false);
+    sshH = $sshBox[0].offsetHeight;
+    footH = $footer[0].offsetHeight;
+    if (e.type === 'touchstart') {
+      y = e.touches[0].clientY;
+    } else if (e.type === 'mousedown') {
+      y = e.clientY;
+    }
+    this.addEventListener('touchmove', hdMove);
+    document.addEventListener('mousemove', hdMove);
+    this.addEventListener('touchend', hdUp);
+    document.addEventListener('mouseup', hdUp);
+  }
+  function hdMove(e) {
+    e.preventDefault();
+    let yy;
+    if (e.type === 'touchmove') {
+      yy = e.touches[0].clientY;
+    } else if (e.type === 'mousemove') {
+      yy = e.clientY;
+    }
+    const diff = yy - y;
+    y = yy;
+    footH -= diff;
+    sshH += diff;
+    if (footH > 100 && sshH > 100) {
+      $footer.css({
+        height: footH + 'px',
+      });
+      $sshBox.css({
+        height: sshH + 'px',
+      });
+    }
+  }
+  function hdUp() {
+    const { h } = getScreenSize();
+    const footPercent = parseInt(($footer[0].offsetHeight / h) * 100);
+    $footer.css({
+      height: footPercent + '%',
+    });
+    $sshBox.css({
+      height: 100 - footPercent + '%',
+    });
+    toggleUserSelect();
+    updateTermSize();
+    this.removeEventListener('touchmove', hdMove);
+    document.removeEventListener('mousemove', hdMove);
+    this.removeEventListener('touchend', hdUp);
+    document.removeEventListener('mouseup', hdUp);
+  }
+  $resize[0].addEventListener('mousedown', hdDown);
+  $resize[0].addEventListener('touchstart', hdDown);
+})();
