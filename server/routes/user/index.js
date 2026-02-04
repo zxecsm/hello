@@ -1460,12 +1460,16 @@ route.post(
           _vdata = await V.parse(
             data,
             V.object({
+              type: V.string().trim().enum(['cmd', 'size']),
               text: V.string()
+                .default('')
                 .allowEmpty()
                 .custom(
                   (v) => _f.getTextSize(v) <= fieldLength.customCodeSize,
                   `text 不能超过: ${fieldLength.customCodeSize} 字节`,
                 ),
+              cols: V.number().toNumber().default(0).min(0),
+              rows: V.number().toNumber().default(0).min(0),
             }),
             'data',
           );
@@ -1476,29 +1480,38 @@ route.post(
         const ssh = getSSH(id);
         if (ssh) {
           try {
-            // 执行命令
-            ssh.stream.write(_vdata.text);
+            if (_vdata.type === 'size') {
+              // 更新终端大小
+              ssh.stream.setWindow(_vdata.rows, _vdata.cols, 0, 0);
+            } else if (_vdata.type === 'cmd') {
+              // 执行命令
+              ssh.stream.write(_vdata.text);
+            }
           } catch (error) {
+            if (_vdata.type === 'cmd') {
+              _connect.send(
+                account,
+                id,
+                {
+                  type: 'ssh',
+                  data: `SSH Error: ${error.message}`,
+                },
+                'self',
+              );
+            }
+          }
+        } else {
+          if (_vdata.type === 'cmd') {
             _connect.send(
               account,
               id,
               {
                 type: 'ssh',
-                data: `SSH Error: ${error.message}`,
+                data: 'SSH connection has been disconnected. Please reconnect.',
               },
               'self',
             );
           }
-        } else {
-          _connect.send(
-            account,
-            id,
-            {
-              type: 'ssh',
-              data: 'SSH connection has been disconnected. Please reconnect.',
-            },
-            'self',
-          );
         }
 
         _success(res);

@@ -74,7 +74,7 @@ export function createTerminal(account, temid, config, defaultPath = '') {
   };
 
   sshClient.on('ready', () => {
-    sshClient.shell((err, stream) => {
+    sshClient.shell({ term: 'xterm-256color' }, (err, stream) => {
       if (err) {
         _connect.send(account, temid, { type: 'ssh', data: `SSH Error: ${err.message}` }, 'self');
         return cleanup();

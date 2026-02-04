@@ -1,6 +1,7 @@
 import $ from 'jquery';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
+import { WebLinksAddon } from 'xterm-addon-web-links';
 import 'xterm/css/xterm.css';
 import '../../css/common/reset.css';
 import '../../css/common/common.css';
@@ -25,6 +26,7 @@ import {
 import {
   _getTarget,
   _setTimeout,
+  debounce,
   getTextSize,
   isDarkMode,
   isIframe,
@@ -94,11 +96,21 @@ const term = new Terminal({
   scrollOnUserInput: true, // 输入时是否自动滚动到底部
   scrollback: 5000, // 回滚行数
 });
+// 加载插件
 const fitAddon = new FitAddon();
 term.loadAddon(fitAddon);
+const webLinks = new WebLinksAddon();
+term.loadAddon(webLinks);
+
 term.open(document.getElementById('terminal'));
-fitAddon.fit();
-window.addEventListener('resize', () => fitAddon.fit());
+// 更新终端大小
+const updateTermSize = debounce(() => {
+  fitAddon.fit();
+  realtime.send({ type: 'ssh', data: { type: 'size', cols: term.cols, rows: term.rows } });
+}, 500);
+window.addEventListener('resize', () => {
+  updateTermSize();
+});
 function getAllText(term) {
   const buffer = term.buffer.active;
   let result = '';
@@ -128,10 +140,15 @@ reqSSHConnect({ id: HASH, defaultPath: p })
     }
   })
   .catch(() => {});
+let sizeFlag = false;
 realtime.init().add((res) => {
   res.forEach((item) => {
     const { type, data } = item;
     if (type === 'ssh') {
+      if (!sizeFlag) {
+        sizeFlag = true;
+        updateTermSize();
+      }
       term.write(data);
     } else if (type === 'updatedata' && data.flag === 'quickCommand') {
       renderList();
@@ -144,7 +161,7 @@ term.onData((d) => handleTermInput(d));
 function sendSSH(text, enter = false) {
   if (!text) return;
   if (enter) text += '\r';
-  realtime.send({ type: 'ssh', data: { text } });
+  realtime.send({ type: 'ssh', data: { type: 'cmd', text } });
 }
 // 黑暗模式
 function changeTheme(dark) {
@@ -164,7 +181,7 @@ window.changeTheme = changeTheme;
 changeTheme(localData.get('dark'));
 function setSSHSize() {
   term.options.fontSize = localData.get('htmlFontSize') * 1.4;
-  fitAddon.fit();
+  updateTermSize();
 }
 setSSHSize();
 localData.onChange(({ key }) => {
@@ -760,7 +777,7 @@ $sshBox
       this.className = 'iconfont icon-xiala full_height';
     }
     isFullHeight = !isFullHeight;
-    fitAddon.fit();
+    updateTermSize();
   })
   .on('click', '.btns .full_width', function () {
     if (!isFullWidth) {
@@ -771,7 +788,7 @@ $sshBox
       this.className = 'iconfont icon-kuandukuoda full_width';
     }
     isFullWidth = !isFullWidth;
-    fitAddon.fit();
+    updateTermSize();
   })
   .on('click', '.btns .log_btn', function () {
     if ($logText.css('display') === 'none') {
