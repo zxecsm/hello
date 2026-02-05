@@ -41,6 +41,7 @@ const defaultData = {
   fontType: 'default', // 字体类型
   notePageSize: 20, // 笔记每页显示
   sshPageSize: 20, // SSH每页显示
+  sshInfo: { isFullHeight: false, isFullWidth: false, footerPercent: 40 }, // SSH信息
   editNoteFontSize: 0.22, // 编辑笔记输入框字体大小
   bmPageSize: 20, // 书签每页显示
   filesPageSize: 20, // 文件列表每页显示

@@ -31,6 +31,7 @@ import {
   getTextSize,
   isDarkMode,
   isIframe,
+  longPress,
   myOpen,
   pageErr,
   queryURLParams,
@@ -53,6 +54,7 @@ const $app = $('#app'),
   $quickCommands = $footer.find('.quick_commands');
 const urlParams = queryURLParams(myOpen());
 const { HASH, p = '' } = urlParams;
+const sshInfo = localData.get('sshInfo');
 if (!HASH) {
   pageErr();
 }
@@ -94,7 +96,7 @@ const term = new Terminal({
   allowProposedApi: true, // 是否允许使用实验性 API
   disableStdin: false, // 是否禁用输入
   fontSize: 14,
-  cursorBlink: true, // 光标是否闪烁
+  cursorBlink: false, // 光标是否闪烁
   cursorStyle: 'block', // block | bar | underline 光标样式
   scrollOnUserInput: true, // 输入时是否自动滚动到底部
   scrollback: 5000, // 回滚行数
@@ -718,9 +720,10 @@ function resetCtrlAlt() {
   altActive = false;
   $shortcuts.find('.alt').removeClass('active');
 }
+let scrollTimer = null;
 
-$shortcuts.on('click', '.esc,.tab,.up,.down,.left,.right', function () {
-  for (const cls of this.classList) {
+const handleAction = (element) => {
+  for (const cls of element.classList) {
     const key = classToKey[cls];
     if (!key) continue;
 
@@ -730,8 +733,29 @@ $shortcuts.on('click', '.esc,.tab,.up,.down,.left,.right', function () {
     break; // 找到第一个匹配的 class 就处理
   }
   term.focus();
-});
+};
 
+const stopAction = () => {
+  if (scrollTimer) {
+    clearInterval(scrollTimer);
+    scrollTimer = null;
+  }
+};
+const continuousKeys = ['.up', '.down', '.left', '.right'];
+$shortcuts
+  .on('click', `.esc,.tab,${continuousKeys.join(',')}`, function () {
+    handleAction(this);
+  })
+  .on('touchend touchcancel', continuousKeys.join(','), function () {
+    stopAction();
+  });
+continuousKeys.forEach((key) => {
+  longPress($shortcuts[0], key, function () {
+    scrollTimer = setInterval(() => {
+      handleAction(this);
+    }, 50);
+  });
+});
 $shortcuts.on('click', '.ctrl', function () {
   ctrlActive = !ctrlActive;
   altActive = false;
@@ -767,30 +791,39 @@ function handleTermInput(text) {
 
   sendSSH(out);
 }
-
-let isFullHeight = false;
-let isFullWidth = false;
+function updateFullHeightState(state) {
+  const fullHeight = $sshBox.find('.btns .full_height')[0];
+  if (state) {
+    $app.addClass('full_height');
+    fullHeight.className = 'iconfont icon-shang full_height';
+  } else {
+    $app.removeClass('full_height');
+    fullHeight.className = 'iconfont icon-xiala full_height';
+  }
+}
+updateFullHeightState(sshInfo.isFullHeight);
+function updateFullWidthState(state) {
+  const fullWidth = $sshBox.find('.btns .full_width')[0];
+  if (state) {
+    $app.addClass('full_width');
+    fullWidth.className = 'iconfont icon-zuoyoushousuo full_width';
+  } else {
+    $app.removeClass('full_width');
+    fullWidth.className = 'iconfont icon-kuandukuoda full_width';
+  }
+}
+updateFullWidthState(sshInfo.isFullWidth);
 $sshBox
   .on('click', '.btns .full_height', function () {
-    if (!isFullHeight) {
-      $app.addClass('full_height');
-      this.className = 'iconfont icon-shang full_height';
-    } else {
-      $app.removeClass('full_height');
-      this.className = 'iconfont icon-xiala full_height';
-    }
-    isFullHeight = !isFullHeight;
+    sshInfo.isFullHeight = !sshInfo.isFullHeight;
+    localData.set('sshInfo', sshInfo);
+    updateFullHeightState(sshInfo.isFullHeight);
     updateTermSize();
   })
   .on('click', '.btns .full_width', function () {
-    if (!isFullWidth) {
-      $app.addClass('full_width');
-      this.className = 'iconfont icon-zuoyoushousuo full_width';
-    } else {
-      $app.removeClass('full_width');
-      this.className = 'iconfont icon-kuandukuoda full_width';
-    }
-    isFullWidth = !isFullWidth;
+    sshInfo.isFullWidth = !sshInfo.isFullWidth;
+    localData.set('sshInfo', sshInfo);
+    updateFullWidthState(sshInfo.isFullWidth);
     updateTermSize();
   })
   .on('click', '.btns .log_btn', function () {
@@ -815,6 +848,15 @@ document.addEventListener('click', function (e) {
   $sshBox.find('.btns .log_btn').removeClass('icon-terminal').addClass('icon-fuzhi');
 });
 ~(function () {
+  function updateHeigth(footerPercent) {
+    $footer.css({
+      height: footerPercent + '%',
+    });
+    $sshBox.css({
+      height: 100 - footerPercent + '%',
+    });
+  }
+  updateHeigth(sshInfo.footerPercent);
   let sshH, footH, y;
   function hdDown(e) {
     toggleUserSelect(false);
@@ -853,13 +895,9 @@ document.addEventListener('click', function (e) {
   }
   function hdUp() {
     const { h } = getScreenSize();
-    const footPercent = parseInt(($footer[0].offsetHeight / h) * 100);
-    $footer.css({
-      height: footPercent + '%',
-    });
-    $sshBox.css({
-      height: 100 - footPercent + '%',
-    });
+    sshInfo.footerPercent = parseInt(($footer[0].offsetHeight / h) * 100);
+    localData.set('sshInfo', sshInfo);
+    updateHeigth(sshInfo.footerPercent);
     toggleUserSelect();
     updateTermSize();
     this.removeEventListener('touchmove', hdMove);

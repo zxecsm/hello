@@ -286,10 +286,21 @@ export function isios() {
 }
 // 移动端
 export function isMobile() {
-  const userAgent = navigator.userAgent;
-  const mobileRegex =
-    /Mobi|Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Windows Phone|Kindle|Silk|Tablet|PlayBook|Vita|Nexus|Pixel/i;
-  return mobileRegex.test(userAgent);
+  // 1. 检查现代 API (Chromium 系)
+  if (navigator.userAgentData?.mobile) return true;
+
+  // 2. 检查触摸交互特征 (兼容性极佳)
+  if (window.matchMedia('(pointer: coarse)').matches) return true;
+
+  // 3. 检查 UA 字符串 (针对 iOS Safari/Firefox 等)
+  const ua = navigator.userAgent;
+  if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) return true;
+
+  // 4. 特殊情况：iPadOS 默认请求桌面版网页
+  // 此时 UA 里没有 "iPad"，需要通过多点触控点数判断
+  if (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) return true;
+
+  return false;
 }
 // 数组按属性中英文排序
 export function arrSortMinToMax(arr, property) {

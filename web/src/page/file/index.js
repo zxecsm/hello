@@ -246,6 +246,7 @@ $search
   .on('click', '.check_box', () => {
     subDir = !subDir;
     changeSubDirState();
+    wInput.focus();
     localData.set('searchFileSubDir', subDir);
   });
 // 显示搜索
