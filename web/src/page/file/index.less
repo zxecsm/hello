@@ -500,6 +500,12 @@ body {
           color: var(--message-success-color);
         }
       }
+      &.failed {
+        border-color: var(--message-error-color);
+        .progress {
+          color: var(--message-error-color);
+        }
+      }
       .progress {
         flex: auto;
         line-height: 1.5;

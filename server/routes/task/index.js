@@ -70,7 +70,7 @@ route.post(
         taskState.delete(key);
       }
 
-      _success(res, 'ok', { text: task ? task.text : '', state: task ? task.state : '' });
+      _success(res, 'ok', { text: task ? task.text : '', state: task ? task.state : -1 });
     } catch (error) {
       _err(res)(req, error);
     }

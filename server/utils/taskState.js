@@ -4,7 +4,7 @@ const taskState = {
   tasks: new Map(),
   add(account, text, controller) {
     const key = `${account}_${nanoid()}`;
-    this.tasks.set(key, { text, controller });
+    this.tasks.set(key, { text, controller, state: 0 });
     return key;
   },
   update(key, text) {
@@ -29,7 +29,7 @@ const taskState = {
   getTaskKeys(account) {
     const keys = [];
     for (const [key, task] of this.tasks) {
-      if (task.state !== 1 && key.startsWith(`${account}_`)) {
+      if (task.state === 0 && key.startsWith(`${account}_`)) {
         keys.push(key);
       }
     }

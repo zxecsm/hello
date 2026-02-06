@@ -27,6 +27,7 @@ import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';
 import _path from '../../js/utils/path';
 import localData from '../../js/common/localData';
+import toolTip from '../../js/plugins/tooltip';
 let iframeSize = localData.get('iframeSize');
 const $minimizeBox = $('.minimize_box');
 // 标签logo
@@ -355,7 +356,6 @@ function openInIframe(url, name) {
 function addHideBox(iframeBox) {
   const box = document.createElement('div');
   box.className = 'iframe_tag';
-  box.setAttribute('title', iframeBox.url);
   box.setAttribute('cursor', '');
   box.setAttribute('iframeId', iframeBox.id);
 
@@ -427,6 +427,14 @@ $minimizeBox
     if (isMobile()) return;
     const _this = this;
     handleHideBox(e, _this);
+  })
+  .on('mouseenter', '.title', function () {
+    const _this = this.parentNode;
+    const ifram = openInIframe.iframes.get(_this.getAttribute('iframeId'));
+    toolTip.setTip(`${ifram.name} - ${ifram.url}`).show();
+  })
+  .on('mouseleave', '.title', function () {
+    toolTip.hide();
   });
 longPress($minimizeBox[0], '.iframe_tag', function (e) {
   const _this = this,

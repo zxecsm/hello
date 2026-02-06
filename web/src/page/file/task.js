@@ -77,11 +77,15 @@ class CreateTask {
       const res = await reqTaskInfo({ key: this.key, token: this.token });
 
       if (res.code === 1) {
-        if (res.data.text) {
-          this.progress.textContent = res.data.text;
+        const { state, text } = res.data;
+        if (text) {
+          this.progress.textContent = text;
         }
-        if (res.data.state === 1) {
+        if (state === 1) {
           this.task.classList.add('done');
+          this.cancel();
+        } else if (state === -1) {
+          this.task.classList.add('failed');
           this.cancel();
         }
       }
