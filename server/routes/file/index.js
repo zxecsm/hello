@@ -1922,7 +1922,7 @@ route.post(
               );
             }
           },
-          { signal, concurrency: 10 },
+          { signal, concurrency: 5 },
         );
 
         taskState.done(taskKey);

@@ -73,7 +73,7 @@ async function cp(from, to, { signal, progress, renameMode = false } = {}) {
         progress?.({ count: 1 });
       }
     },
-    { signal, concurrency: 10 },
+    { signal, concurrency: 5 },
   );
 
   if (renameMode) await del(from, { signal });
@@ -143,7 +143,7 @@ async function chmod(path, mode, { signal, progress, recursive = false } = {}) {
       await fsp.chmod(path, mode);
       progress?.({ count: 1 });
     },
-    { signal, concurrency: 10 },
+    { signal, concurrency: 5 },
   );
 }
 
@@ -163,7 +163,7 @@ async function chown(path, uid, gid, { signal, progress, recursive = false } = {
       await fsp.lchown(path, uid, gid);
       progress?.({ count: 1 });
     },
-    { signal, concurrency: 10 },
+    { signal, concurrency: 5 },
   );
 }
 
@@ -213,7 +213,7 @@ async function del(path, { signal, progress } = {}) {
           progress?.({ count: 1, size: stat.size });
         }
       },
-      { signal, concurrency: 10 },
+      { signal, concurrency: 5 },
     );
   }
 
@@ -307,7 +307,7 @@ async function readDirSize(path, { signal, progress } = {}) {
         progress?.({ count: 1, size: stat.size });
       }
     },
-    { signal, concurrency: 10 },
+    { signal, concurrency: 5 },
   );
 }
 
