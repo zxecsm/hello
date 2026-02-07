@@ -169,11 +169,7 @@ const toolBox = (() => {
     <div cursor="y" class="zoom_out iconfont icon-fangdasuoxiao_Y"></div>
   </div>
   `;
-  if (window._pageName === 'home') {
-    document.querySelector('#main').appendChild(toolBox);
-  } else {
-    document.body.appendChild(toolBox);
-  }
+  document.body.appendChild(toolBox);
   if (window._pageName === 'addbmk') {
     toolBox.style.zIndex = _d.levelObj.rightBox + 1;
   }
