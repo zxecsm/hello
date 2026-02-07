@@ -498,8 +498,9 @@ function pasteImg(e) {
     }
   }
   function hdUp() {
-    const { w } = getScreenSize();
-    const previewPercent = parseInt(($previewBox[0].offsetWidth / w) * 100);
+    const eW = $editBox[0].offsetWidth;
+    const pW = $previewBox[0].offsetWidth;
+    const previewPercent = (pW / (eW + pW)) * 100;
     $previewBox.css({
       width: previewPercent + '%',
     });

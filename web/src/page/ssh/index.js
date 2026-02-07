@@ -894,8 +894,9 @@ document.addEventListener('click', function (e) {
     }
   }
   function hdUp() {
-    const { h } = getScreenSize();
-    sshInfo.footerPercent = parseInt(($footer[0].offsetHeight / h) * 100);
+    const sH = $sshBox[0].offsetHeight;
+    const fH = $footer[0].offsetHeight;
+    sshInfo.footerPercent = (fH / (sH + fH)) * 100;
     localData.set('sshInfo', sshInfo);
     updateHeigth(sshInfo.footerPercent);
     toggleUserSelect();
