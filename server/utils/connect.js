@@ -25,13 +25,11 @@ function add(account, cb, client) {
 
   if (client?.temid) {
     const clientInfo = connect.onlines.find((item) => item.temid === client.temid);
+    client.time = now;
     if (clientInfo) {
       Object.assign(clientInfo, client);
     } else {
-      connect.onlines.push({
-        ...client,
-        time: now,
-      });
+      connect.onlines.push(client);
     }
 
     // 清理超过 30 秒未活跃的在线设备
