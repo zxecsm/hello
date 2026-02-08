@@ -923,8 +923,8 @@ function getSearchEngineList() {
   return _tpl(
     `
     <div v-for="{id,title,logo,color,link},i in _d.searchEngineData" cursor="y" :data-id="id" class="item {{getSearchEngine().id === id ? 'active' : ''}}">
-      <img v-if="i == 0" :src="logo" style="width: 4rem;height: 4rem;border-radius: 0.4rem;"/>
-      <img v-else style="width: 4rem;height: 4rem;border-radius: 0.4rem;" :data-src="getLogoPath(link,logo)"/>
+      <img v-if="i == 0" :src="logo" style="width: 4rem;height: 4rem;border-radius: var(--border-radius1);"/>
+      <img v-else style="width: 4rem;height: 4rem;border-radius: var(--border-radius1);" :data-src="getLogoPath(link,logo)"/>
       <span class="search_name" style="margin-left:1rem;flex:auto;">{{title}}</span>
       <i class="iconfont icon-color" style="color:{{color}}"></i>
     </div>
@@ -1203,8 +1203,8 @@ function getTranslatorList() {
   return _tpl(
     `
     <div v-for="{id,title,logo,link},i in _d.translatorData" cursor="y" :data-id="id" class="item {{getTranslator().id === id ? 'active' : ''}}">
-      <img v-if="i == 0" :src="logo" style="width: 4rem;height: 4rem;border-radius: 0.4rem;"/>
-      <img v-else style="width: 4rem;height: 4rem;border-radius: 0.4rem;" :data-src="getLogoPath(link,logo)"/>
+      <img v-if="i == 0" :src="logo" style="width: 4rem;height: 4rem;border-radius: var(--border-radius1);"/>
+      <img v-else style="width: 4rem;height: 4rem;border-radius: var(--border-radius1);" :data-src="getLogoPath(link,logo)"/>
       <span class="translator_name" style="margin-left:1rem;flex:auto;">{{title}}</span>
     </div>
     <div class="item add" cursor="true"><i class="icon iconfont icon-tianjia"></i><span class="text">添加翻译接口</span></div>

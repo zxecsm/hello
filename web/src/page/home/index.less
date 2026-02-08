@@ -234,7 +234,7 @@ body {
         width: 23.75%;
         margin: 0 0 1rem 1%;
         height: 20rem;
-        border-radius: 0.5rem;
+        border-radius: var(--border-radius1-5);
         overflow: hidden;
 
         &:hover {
@@ -311,7 +311,7 @@ body {
     justify-content: center;
     overflow-y: auto;
     max-height: 30rem;
-    border-radius: 0 0 0.5rem 0.5rem;
+    border-radius: var(--border-radius1-5);
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -328,7 +328,7 @@ body {
       float: left;
       margin: 0.5rem;
       max-width: 20rem;
-      border-radius: 0.5rem;
+      border-radius: var(--border-radius1);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -558,7 +558,7 @@ body {
       transform-origin: top right;
       transform: translateX(100%);
       top: 6rem;
-      border-radius: 0.6rem;
+      border-radius: var(--border-radius1-5);
       transition:
         transform var(--speed-duration) var(--speed-timing),
         opacity var(--speed-duration) var(--speed-timing);
@@ -608,7 +608,7 @@ body {
           line-height: 2rem;
           padding: 1rem;
           margin-bottom: 0.3rem;
-          border-radius: 0.5rem;
+          border-radius: var(--border-radius1);
           background-color: var(--bg-color-o1);
 
           &:hover {
@@ -647,7 +647,7 @@ body {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
-    border-radius: 0.5rem;
+    border-radius: var(--border-radius2);
     box-shadow: 0 0 0.5rem var(--color5);
 
     .u_close_btn {
@@ -758,7 +758,7 @@ body {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
-    border-radius: 0.5rem;
+    border-radius: var(--border-radius2);
     box-shadow: 0 0 0.5rem var(--color5);
 
     .c_close_btn {
@@ -864,7 +864,7 @@ body {
     display: none;
     position: fixed;
     overflow: hidden;
-    border-radius: 0.5rem;
+    border-radius: var(--border-radius2);
     padding: 0.2rem;
     background-color: var(--color9);
     box-shadow: 0 0 0.5rem var(--color5);
@@ -884,7 +884,7 @@ body {
         display: flex;
         align-items: center;
         padding: 0.4rem;
-        border-radius: 0.6rem;
+        border-radius: var(--border-radius1);
         &:hover {
           opacity: 1;
         }
@@ -946,7 +946,7 @@ body {
           height: 70%;
           max-width: var(--max-width);
           overflow-y: auto;
-          border-radius: 0 0 0.5rem 0.5rem;
+          border-radius: 0 0 var(--border-radius1) var(--border-radius1);
           background-color: var(--color9);
           .user_list_paging {
             span:hover {
@@ -1003,7 +1003,7 @@ body {
               line-height: 4rem;
               text-align: center;
               overflow: hidden;
-              border-radius: 0.5rem;
+              border-radius: var(--border-radius1);
               background-repeat: no-repeat;
               background-size: cover;
               background-position: center;
@@ -1132,7 +1132,7 @@ body {
           background-color: var(--bg-color-o2);
           height: 3rem;
           line-height: 3rem;
-          border-radius: 0.2rem;
+          border-radius: var(--border-radius1);
 
           &.focus {
             background-color: var(--color10);
@@ -1321,7 +1321,7 @@ body {
               .c_left_logo .c_logo {
                 width: 4rem;
                 height: 4rem;
-                border-radius: 0.6rem;
+                border-radius: var(--border-radius1);
                 background-repeat: no-repeat;
                 background-size: cover;
                 background-position: center;
@@ -1401,7 +1401,7 @@ body {
                   width: 100%;
                   max-width: 20rem;
                   height: 20rem;
-                  border-radius: 0.6rem;
+                  border-radius: var(--border-radius2);
                   overflow: hidden;
 
                   .c_img {
@@ -1473,7 +1473,7 @@ body {
                 .c_file_msg_box,
                 .c_voice_msg_box,
                 .c_text_msg_box {
-                  border-radius: 0 0.6rem 0.6rem 0.6rem;
+                  border-radius: 0 var(--border-radius2) var(--border-radius2) var(--border-radius2);
                 }
                 .c_triangle {
                   left: -0.5rem;
@@ -1498,7 +1498,7 @@ body {
                 .c_file_msg_box,
                 .c_voice_msg_box,
                 .c_text_msg_box {
-                  border-radius: 0.6rem 0 0.6rem 0.6rem;
+                  border-radius: var(--border-radius2) 0 var(--border-radius2) var(--border-radius2);
                 }
                 .c_voice_msg_box,
                 .c_text_msg_box {
@@ -1585,7 +1585,7 @@ body {
                 }
               }
               .c_text_content {
-                border-radius: 0.2rem;
+                border-radius: var(--border-radius1);
                 background-color: var(--bg-color-o2);
                 position: absolute;
                 width: 100%;
@@ -1624,6 +1624,7 @@ body {
               background-color: var(--color10);
               text-align: center;
               line-height: 4rem;
+              border-radius: var(--border-radius1);
 
               &.gren {
                 background-color: rgb(37, 201, 124);
@@ -1723,6 +1724,7 @@ body {
           margin-top: 1rem;
           font-size: 2rem;
           height: 5rem;
+          border-radius: var(--border-radius1);
 
           &:hover {
             background-color: var(--bg-color-o2);
@@ -1736,6 +1738,7 @@ body {
           .check_bmlist {
             display: none;
             position: absolute;
+            border-radius: var(--border-radius1);
             top: 0;
             left: 0;
             width: 100%;
@@ -1778,7 +1781,7 @@ body {
             font-size: 1.6rem;
             height: 12rem;
             margin: 0.5rem 0 0.5rem 2%;
-            border-radius: 0.5rem;
+            border-radius: var(--border-radius1);
             border: 1px solid var(--color9);
             background-color: var(--bg-color-o1);
             overflow: hidden;
@@ -1791,7 +1794,7 @@ body {
 
             .check_bm {
               display: none;
-              border-radius: 0.5rem;
+              border-radius: var(--border-radius1);
               position: absolute;
               width: 100%;
               height: 100%;
@@ -1811,7 +1814,7 @@ body {
               top: 0.5rem;
               left: 0;
               margin-left: 0.5rem;
-              border-radius: 0.5rem;
+              border-radius: var(--border-radius1);
               width: 4rem;
               height: 4rem;
               background-repeat: no-repeat;
@@ -1955,7 +1958,7 @@ body {
       top: 30%;
       transform: translate(-50%, -30%);
       background-color: var(--bg-color-o2);
-      border-radius: 1rem;
+      border-radius: var(--border-radius3);
       box-shadow: 0 0 0.5rem var(--color5);
       padding: 1rem 0;
       display: flex;
@@ -1968,7 +1971,7 @@ body {
         -webkit-backdrop-filter: blur(8px);
         width: 100%;
         height: 100%;
-        border-radius: 10rem;
+        border-radius: var(--border-radius3);
         z-index: -1;
       }
       @media (max-width: 800px) {
@@ -2088,7 +2091,7 @@ body {
           margin: 0 auto;
           width: 70%;
           background-color: var(--bg-color-o1);
-          border-radius: 0.4rem 0rem 0.4rem 0.4rem;
+          border-radius: var(--border-radius1) 0rem var(--border-radius1) var(--border-radius1);
           z-index: 6;
           &.active {
             background-color: var(--color10);
@@ -2102,7 +2105,7 @@ body {
             height: 5rem;
             line-height: 5rem;
             display: flex;
-            border-radius: 0.4rem;
+            border-radius: var(--border-radius1);
             overflow: hidden;
             flex-flow: row;
             .logo {
@@ -2121,7 +2124,7 @@ body {
               img {
                 width: 4rem;
                 height: 4rem;
-                border-radius: 0.4rem;
+                border-radius: var(--border-radius1);
               }
             }
             .inp_box {
@@ -2171,7 +2174,7 @@ body {
             max-height: 40rem;
             overflow-y: auto;
             font-size: 1.8rem;
-            border-radius: 0 0 0.4rem 0.4rem;
+            border-radius: 0 0 var(--border-radius1) var(--border-radius1);
             ol,
             li,
             ul {
@@ -2282,6 +2285,7 @@ body {
               transform: translateX(-50%);
               text-align: left;
               z-index: 5;
+              border-radius: var(--border-radius1);
             }
 
             .home_bm_logo {
@@ -2290,7 +2294,7 @@ body {
               margin: 0 auto;
               width: 50%;
               padding-top: 50%;
-              border-radius: 0.8rem;
+              border-radius: var(--border-radius1);
               overflow: hidden;
               background-color: var(--bg-color-o1);
               opacity: 0.8;
@@ -2376,7 +2380,7 @@ body {
     background-size: cover;
     background-position: center;
     box-shadow: 0 0 0.5rem var(--color5);
-    border-radius: 0.5rem;
+    border-radius: var(--border-radius1-5);
     background-color: var(--color7);
     .mask {
       position: absolute;
@@ -2387,7 +2391,7 @@ body {
       background-color: #00000080;
       opacity: 0;
       pointer-events: none;
-      border-radius: 0.5rem;
+      border-radius: var(--border-radius1-5);
       transition: opacity 0.5s ease-in-out;
     }
     @media (min-width: 801px) {
@@ -2486,7 +2490,6 @@ body {
         font-size: 3rem;
 
         &:hover {
-          font-size: 4rem;
           color: var(--text-hover-color);
         }
       }
@@ -2525,6 +2528,7 @@ body {
     top: 10rem;
     left: 5rem;
     border: 1px dotted transparent;
+    border-radius: var(--border-radius1);
 
     &:hover {
       border: 1px dotted #646464;
@@ -2619,7 +2623,7 @@ body {
     position: fixed;
     overflow: hidden;
     background-color: var(--color9);
-    border-radius: 0.5rem;
+    border-radius: var(--border-radius2);
     box-shadow: 0 0 0.5rem var(--color5);
     padding: 0.2rem;
 
@@ -2652,7 +2656,7 @@ body {
         background-position: center;
         background-color: var(--color9);
         z-index: -1;
-        border-radius: 0 0 0.5rem 0.5rem;
+        border-radius: 0 0 var(--border-radius2) var(--border-radius2);
         opacity: 0.2;
         transition: opacity 5s ease-in-out;
         &::after {
@@ -2749,7 +2753,7 @@ body {
           background-color: var(--bg-color-o2);
           height: 3rem;
           line-height: 3rem;
-          border-radius: 0.2rem;
+          border-radius: var(--border-radius1);
           align-items: center;
 
           &.focus {
@@ -2833,7 +2837,7 @@ body {
 
               &:hover {
                 background-color: var(--color10);
-                border-radius: 0.5rem;
+                border-radius: var(--border-radius1);
                 box-shadow: 0.3rem 0.2rem 0.5rem var(--color5);
               }
 
@@ -2859,7 +2863,7 @@ body {
                 transition:
                   top 0.1s,
                   box-shadow 0.1s;
-                border-radius: 0.5rem;
+                border-radius: var(--border-radius1);
                 box-shadow: 0.3rem 0.3rem 0.5rem var(--color5);
 
                 .logo {
@@ -2872,7 +2876,7 @@ body {
                   background-position: center;
                   width: 100%;
                   height: 100%;
-                  border-radius: 0.5rem;
+                  border-radius: var(--border-radius1);
                   &.load {
                     background-color: transparent;
                     background-size: cover;
@@ -2956,7 +2960,7 @@ body {
                 background-color: var(--bg-color-o3);
                 padding: 0.5rem;
                 margin-bottom: 0.8rem;
-                border-radius: 0.5rem;
+                border-radius: var(--border-radius1);
                 text-align: center;
 
                 &:hover {
@@ -2986,7 +2990,7 @@ body {
                   background-position: center;
                   width: 10rem;
                   height: 100%;
-                  border-radius: 0.5rem;
+                  border-radius: var(--border-radius1);
                   &.load {
                     background-color: transparent;
                     background-size: cover;
@@ -3120,6 +3124,7 @@ body {
               &:hover {
                 color: var(--text-hover-color);
                 background-color: var(--bg-color-o1);
+                border-radius: var(--border-radius1);
                 .song_logo_box {
                   transform: scale(1.1);
                 }
@@ -3127,7 +3132,7 @@ body {
 
               &.active {
                 color: var(--text-hover-color);
-                border-radius: 0.5rem;
+                border-radius: var(--border-radius1);
                 background-color: var(--bg-color-o2);
               }
               .downloaded {
@@ -3146,7 +3151,7 @@ body {
                 position: absolute;
                 top: 0;
                 left: 0;
-                border-radius: 0.5rem;
+                border-radius: var(--border-radius1);
                 width: 100%;
                 height: 100%;
                 z-index: 5;
@@ -3191,7 +3196,7 @@ body {
                 height: 5rem;
                 margin: 0.5rem;
                 overflow: hidden;
-                border-radius: 0.5rem;
+                border-radius: var(--border-radius1);
 
                 .logo {
                   background-image: url('../../images/img/loading.svg');
@@ -3281,7 +3286,7 @@ body {
             bottom: 10rem;
             right: 1.5rem;
             z-index: 9;
-            border-radius: 1rem;
+            border-radius: var(--border-radius1);
             box-shadow: 0 0 0.5rem var(--color5);
             background-color: var(--bg-color-o3);
             opacity: 0.9;
@@ -3760,7 +3765,7 @@ body {
               flex-direction: row;
               margin: 0 auto;
               justify-content: space-around;
-              border-radius: 0 0 0.5rem 0.5rem;
+              border-radius: 0 0 var(--border-radius1) var(--border-radius1);
 
               .play_btn,
               .playing_list_btn,
@@ -3814,7 +3819,7 @@ body {
           height: 80%;
           margin: 0 auto;
           max-width: var(--max-width);
-          border-radius: 0 0 0.5rem 0.5rem;
+          border-radius: 0 0 var(--border-radius1) var(--border-radius1);
           background-color: var(--color8);
           ol,
           li,
@@ -3824,7 +3829,7 @@ body {
           ul {
             text-align: left;
             height: 100%;
-            border-radius: 0 0 0.5rem 0.5rem;
+            border-radius: 0 0 var(--border-radius1) var(--border-radius1);
             overflow-y: auto;
             overflow-x: hidden;
             padding-bottom: 4rem;
@@ -3968,7 +3973,7 @@ body {
           height: 70%;
           max-width: var(--max-width);
           overflow: hidden;
-          border-radius: 0.5rem 0.5rem 0 0;
+          border-radius: var(--border-radius1) var(--border-radius1) 0 0;
           padding: 0 0.2rem;
           background-color: var(--color8);
 
@@ -4025,6 +4030,7 @@ body {
               &:hover {
                 background-color: var(--bg-color-o1);
                 color: var(--text-hover-color);
+                border-radius: var(--border-radius1);
                 .logo_wrap {
                   transform: scale(1.1);
                 }
@@ -4032,7 +4038,7 @@ body {
 
               &.active {
                 color: var(--text-hover-color);
-                border-radius: 0.5rem;
+                border-radius: var(--border-radius1);
                 background-color: var(--bg-color-o2);
               }
               .check_state {
@@ -4040,7 +4046,7 @@ body {
                 position: absolute;
                 top: 0;
                 left: 0;
-                border-radius: 0.5rem;
+                border-radius: var(--border-radius1);
                 width: 100%;
                 height: 100%;
                 z-index: 5;
@@ -4222,7 +4228,7 @@ body {
     display: none;
     flex-flow: column;
     position: fixed;
-    border-radius: 0.4rem;
+    border-radius: var(--border-radius2);
     background-color: var(--color9);
     box-shadow: 0 0 0.5rem var(--color5);
     padding: 0.2rem;
@@ -4292,6 +4298,7 @@ body {
       font-size: 1.8rem;
       overflow-y: auto;
       background-color: var(--color10);
+      border-radius: 0 0 var(--border-radius2) var(--border-radius2);
     }
   }
 
@@ -4302,7 +4309,7 @@ body {
     flex-flow: column;
     position: fixed;
     background-color: var(--color9);
-    border-radius: 0.5rem;
+    border-radius: var(--border-radius2);
     overflow: hidden;
     box-shadow: 0 0 0.5rem var(--color5);
     padding: 0.2rem;
@@ -4375,7 +4382,7 @@ body {
     display: none;
     flex-flow: column;
     position: fixed;
-    border-radius: 0.5rem;
+    border-radius: var(--border-radius2);
     overflow: hidden;
     background-color: var(--color9);
     box-shadow: 0 0 0.5rem var(--color5);
@@ -4459,6 +4466,7 @@ body {
           }
 
           &:hover {
+            border-radius: var(--border-radius1);
             background-color: var(--color9);
           }
 
@@ -4510,7 +4518,7 @@ body {
     display: none;
     flex-flow: column;
     position: fixed;
-    border-radius: 0.5rem;
+    border-radius: var(--border-radius2);
     overflow: hidden;
     background-color: var(--color9);
     box-shadow: 0 0 0.5rem var(--color5);
@@ -4632,7 +4640,7 @@ body {
             background-color: var(--color9);
             height: 2rem;
             line-height: 2rem;
-            border-radius: 4px;
+            border-radius: var(--border-radius0-5);
             overflow: hidden;
             width: 95%;
             margin: 1rem 0;
@@ -4665,7 +4673,7 @@ body {
     display: none;
     flex-flow: column;
     position: fixed;
-    border-radius: 0.5rem;
+    border-radius: var(--border-radius2);
     overflow: hidden;
     background-color: var(--color9);
     box-shadow: 0 0 0.5rem var(--color5);

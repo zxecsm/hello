@@ -195,7 +195,7 @@ const botMsg = (function () {
       overflow: hidden;
       font-weight: bold;
       padding: 1rem;
-      border-radius: 1rem;
+      border-radius: var(--border-radius1-5);
       color: var(--color1);
       box-shadow: 0 0 .5rem var(--color5);
       background-color: var(--bg-color-o3);`;

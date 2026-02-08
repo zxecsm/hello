@@ -160,7 +160,7 @@ export function showRightMenu() {
         `
       <template>
       待办事项
-      <em v-if="num>0" style="display: inline-block;background-color: #ffffffd4;width: 2rem;line-height: 2rem;text-align: center;border-radius: 0.4rem;color: #f56c6c;margin-left: 1rem;
+      <em v-if="num>0" style="display: inline-block;background-color: #ffffffd4;width: 2rem;line-height: 2rem;text-align: center;border-radius: var(--border-radius0-5);color: #f56c6c;margin-left: 1rem;
     ">{{num}}</em>
       </template>
       `,
@@ -172,7 +172,7 @@ export function showRightMenu() {
       `
     <template>
     倒计时
-    <em v-if="expireCount>0" style="display: inline-block;background-color: #ffffffd4;width: 2rem;line-height: 2rem;text-align: center;border-radius: 0.4rem;color: #f56c6c;margin-left: 1rem;
+    <em v-if="expireCount>0" style="display: inline-block;background-color: #ffffffd4;width: 2rem;line-height: 2rem;text-align: center;border-radius: var(--border-radius0-5);color: #f56c6c;margin-left: 1rem;
   ">{{expireCount}}</em>
     </template>
     `,

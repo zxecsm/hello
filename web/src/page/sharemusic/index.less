@@ -23,7 +23,7 @@ html {
     background-color: var(--color10);
     box-shadow: 0 0 0.5rem var(--color5);
     overflow: hidden;
-    border-radius: 1rem;
+    border-radius: var(--border-radius3);
     z-index: 11;
     transform: translate(0);
     @media (max-width: 800px) {
@@ -338,7 +338,6 @@ html {
           flex-direction: row;
           margin: 0 auto;
           justify-content: space-around;
-          border-radius: 0 0 0.5rem 0.5rem;
 
           .play_btn,
           .playing_list_btn,
@@ -393,7 +392,7 @@ html {
         width: 100%;
         height: 70%;
         overflow: hidden;
-        border-radius: 0.5rem 0.5rem 0 0;
+        border-radius: var(--border-radius1) var(--border-radius1) 0 0;
         padding: 0 0.2rem;
         background-color: var(--color9);
 
@@ -453,7 +452,7 @@ html {
 
             &.active {
               color: var(--text-hover-color);
-              border-radius: 0.5rem;
+              border-radius: var(--border-radius1);
               background-color: var(--bg-color-o2);
             }
 
@@ -570,7 +569,7 @@ html {
     position: fixed;
     box-shadow: 0 0 0.5rem var(--color5);
     background-color: var(--color9);
-    border-radius: 0.5rem;
+    border-radius: var(--border-radius2);
     overflow: hidden;
     padding: 0.2rem;
     z-index: 99;

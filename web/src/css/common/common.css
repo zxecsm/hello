@@ -13,6 +13,12 @@
   --speed-timing: ease-in-out;
   --max-width: 120rem;
   --code-font-family: Consolas, 'Menlo', 'Monaco', 'Courier New', monospace;
+  --border-radius0-5: 0.5rem;
+  --border-radius1: 1rem;
+  --border-radius1-5: 1.5rem;
+  --border-radius2: 2rem;
+  --border-radius2-5: 2.5rem;
+  --border-radius3: 3rem;
 }
 
 html {
@@ -140,7 +146,7 @@ html.dark {
 
 ::-webkit-scrollbar-thumb {
   background-color: var(--color7); /* 滚动条滑块颜色 */
-  border-radius: 0.8rem;
+  border-radius: var(--border-radius1);
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -260,7 +266,7 @@ textarea:-ms-input-placeholder {
   padding: 1rem;
   outline: none;
   border: 1px solid;
-  border-radius: 0.4rem;
+  border-radius: var(--border-radius1);
   cursor: inherit;
 }
 
@@ -309,6 +315,9 @@ textarea:-ms-input-placeholder {
   -ms-user-select: none;
   user-select: none;
   /* -webkit-touch-callout: none; iOS Safari */
+}
+.inp_box {
+  border-radius: var(--border-radius1);
 }
 .inp_box i {
   font-size: 1.1em;

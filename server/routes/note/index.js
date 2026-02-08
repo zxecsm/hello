@@ -423,13 +423,15 @@ route.post(
 
       const { account } = req[kHello].userinfo;
 
-      await db('note')
-        .where({ id: { in: ids }, account, state: 1 })
-        .update({ state: 0 });
+      if (ids.length > 0) {
+        await db('note')
+          .where({ id: { in: ids }, account, state: 1 })
+          .update({ state: 0 });
 
-      syncUpdateData(req, 'note');
+        syncUpdateData(req, 'note');
 
-      syncUpdateData(req, 'trash');
+        syncUpdateData(req, 'trash');
+      }
 
       _success(res, '删除笔记成功')(req, ids.length, 1);
     } catch (error) {
