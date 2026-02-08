@@ -18,6 +18,7 @@ import {
   validate,
   isMusicFile,
   isImgFile,
+  paramErr,
 } from '../../utils/utils.js';
 
 import appConfig from '../../data/config.js';
@@ -168,7 +169,13 @@ route.post(
       const { path, pageNo, pageSize, sortType, isDesc, subDir, update, word, token, hidden } =
         req[kValidate];
 
-      const temid = req[kHello].temid;
+      let temid = req[kHello].temid;
+      try {
+        temid = await V.parse(temid, V.string().trim().min(1), 'temid');
+      } catch (error) {
+        paramErr(res, req, error, { temid });
+        return;
+      }
 
       const { account } = req[kHello].userinfo;
 
@@ -179,7 +186,7 @@ route.post(
 
       let p = '';
       let rootP = '';
-      const acc = token ? temid : account;
+      let accFlag = '';
 
       if (token) {
         const share = await validShareState(token, 'file');
@@ -189,7 +196,7 @@ route.post(
           return;
         }
 
-        const { data, account } = share.data;
+        const { data, account, id: shareID } = share.data;
 
         const { name } = data;
 
@@ -197,9 +204,11 @@ route.post(
         rootP = appConfig.userRootDir(account, data.path, name);
 
         p = _path.normalize(rootP, path);
+        accFlag = shareID + account || temid;
       } else {
         p = appConfig.userRootDir(account, path);
         rootP = appConfig.userRootDir(account);
+        accFlag = account;
       }
 
       let favorites = null;
@@ -225,9 +234,9 @@ route.post(
       const controller = new AbortController();
       const signal = controller.signal;
       const hdType = word ? '搜索文件' : '读取文件列表';
-      const taskKey = taskState.add(acc, `${hdType}...`, controller);
+      const taskKey = taskState.add(accFlag, `${hdType}...`, controller);
 
-      const cacheList = fileList.get(acc, `${p}_${word}`);
+      const cacheList = fileList.get(accFlag, `${p}_${word}`);
 
       // 有缓存则返回缓存
       if (update === 0 && cacheList) {
@@ -329,7 +338,7 @@ route.post(
         } else {
           taskState.done(taskKey);
           // 超时缓存结果
-          fileList.add(acc, `${p}_${word}`, arr);
+          fileList.add(accFlag, `${p}_${word}`, arr);
         }
       } catch (error) {
         taskState.delete(taskKey);
@@ -1633,8 +1642,7 @@ route.post(
         clearTimeout(timer);
         timer = null;
       } else {
-        req[kHello].temid = nanoid();
-        syncUpdateData(req, 'file');
+        syncUpdateData(req, 'file', '', 'all');
       }
 
       fileList.clear(account);

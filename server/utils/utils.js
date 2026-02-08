@@ -672,7 +672,7 @@ export function isValidShare(t) {
 }
 
 // 同步更新数据
-export function syncUpdateData(req, flag, id = '') {
+export function syncUpdateData(req, flag, id = '', type = 'other') {
   _connect.send(
     req[kHello].userinfo.account,
     req[kHello].temid,
@@ -683,7 +683,7 @@ export function syncUpdateData(req, flag, id = '') {
         id,
       },
     },
-    'other',
+    type,
   );
 }
 

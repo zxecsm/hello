@@ -27,7 +27,6 @@ import {
   _getTarget,
   _setTimeout,
   debounce,
-  getScreenSize,
   getTextSize,
   isDarkMode,
   isIframe,

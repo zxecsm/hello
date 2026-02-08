@@ -1351,11 +1351,7 @@ route.get(
       let { temid, ip, os } = req[kHello];
 
       try {
-        temid = await V.parse(
-          temid,
-          V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-          'temid',
-        );
+        temid = await V.parse(temid, V.string().trim().min(1), 'temid');
       } catch (error) {
         paramErr(res, req, error, { temid });
         return;
@@ -1439,18 +1435,14 @@ route.post(
     try {
       const { account } = req[kHello].userinfo;
 
-      let id = req[kHello].temid;
+      let temid = req[kHello].temid;
 
       const { type, data } = req[kValidate]; //指令内容和登录设备ID
 
       try {
-        id = await V.parse(
-          id,
-          V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-          'temid',
-        );
+        temid = await V.parse(temid, V.string().trim().min(1), 'temid');
       } catch (error) {
-        paramErr(res, req, error, { temid: id });
+        paramErr(res, req, error, { temid });
         return;
       }
 
@@ -1477,7 +1469,7 @@ route.post(
           paramErr(res, req, error, 'body');
           return;
         }
-        const ssh = getSSH(id);
+        const ssh = getSSH(temid);
         if (ssh) {
           try {
             if (_vdata.type === 'size') {
@@ -1491,7 +1483,7 @@ route.post(
             if (_vdata.type === 'cmd') {
               _connect.send(
                 account,
-                id,
+                temid,
                 {
                   type: 'ssh',
                   data: `SSH Error: ${error.message}`,
@@ -1504,7 +1496,7 @@ route.post(
           if (_vdata.type === 'cmd') {
             _connect.send(
               account,
-              id,
+              temid,
               {
                 type: 'ssh',
                 data: 'SSH connection has been disconnected. Please reconnect.',
@@ -1578,7 +1570,7 @@ route.post(
 
         data.to = account;
 
-        _connect.send(data.to, id, { type, data }, 'other');
+        _connect.send(data.to, temid, { type, data }, 'other');
 
         _success(res);
       }
@@ -1597,7 +1589,7 @@ route.post(
 
         data.to = account;
 
-        _connect.send(data.to, id, { type, data }, 'other');
+        _connect.send(data.to, temid, { type, data }, 'other');
 
         _success(res);
       }
@@ -1612,7 +1604,7 @@ route.post(
 
         data.to = account;
 
-        _connect.send(data.to, id, { type, data }, 'other');
+        _connect.send(data.to, temid, { type, data }, 'other');
 
         _success(res);
       }
@@ -1627,7 +1619,7 @@ route.post(
 
         data.to = account;
 
-        _connect.send(data.to, id, { type, data }, 'other');
+        _connect.send(data.to, temid, { type, data }, 'other');
 
         _success(res);
       }
@@ -1702,10 +1694,10 @@ route.post(
             return;
           }
 
-          _connect.send(account, id, { type, data }, 'other');
+          _connect.send(account, temid, { type, data }, 'other');
           _success(res);
         } else {
-          _connect.send(account, id, { type, data: {} }, 'other');
+          _connect.send(account, temid, { type, data: {} }, 'other');
           _success(res);
         }
       }

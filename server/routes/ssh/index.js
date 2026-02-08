@@ -5,6 +5,7 @@ import {
   _success,
   createPagingData,
   getSplitWord,
+  paramErr,
   syncUpdateData,
   validate,
 } from '../../utils/utils.js';
@@ -474,10 +475,17 @@ route.post(
     try {
       const { id, defaultPath } = req[kValidate];
 
-      const {
+      let {
         userinfo: { account },
         temid,
       } = req[kHello];
+
+      try {
+        temid = await V.parse(temid, V.string().trim().min(1), 'temid');
+      } catch (error) {
+        paramErr(res, req, error, { temid });
+        return;
+      }
 
       const config = await db('ssh')
         .select('title,port,username,password,host,private_key,passphrase,auth_type')

@@ -92,7 +92,7 @@ export async function validShareState(shareToken, t) {
   }
 
   const share = await db('share')
-    .select('exp_time,data,account')
+    .select('id,exp_time,data,account')
     .where({ id, type: { in: types } })
     .findOne();
 

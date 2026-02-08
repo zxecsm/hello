@@ -156,6 +156,7 @@ app.use(
 app.use(async (req, res, next) => {
   try {
     const {
+      temid,
       jwtData,
       userinfo: { account },
     } = req[kHello];
@@ -173,6 +174,10 @@ app.use(async (req, res, next) => {
 
       //  对比token生成的时间
       if (user && (user.exp_token_time || 0) < iat) {
+        if (temid) {
+          // 客户端ID绑定账号
+          req[kHello].temid = user.account + temid;
+        }
         req[kHello].userinfo = user; // 验证身份成功，保存用户信息
         req[kHello].isRoot = user.account === appConfig.adminAccount;
 

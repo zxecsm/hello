@@ -34,11 +34,7 @@ route.post(
       } = req[kHello];
 
       try {
-        temid = await V.parse(
-          temid,
-          V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-          'temid',
-        );
+        temid = await V.parse(temid, V.string().trim().min(1), 'temid');
       } catch (error) {
         paramErr(res, req, error, { temid });
         return;
@@ -49,6 +45,8 @@ route.post(
         return;
       }
 
+      let accFlag = '';
+
       if (token) {
         const share = await validShareState(token, 'file');
 
@@ -57,11 +55,13 @@ route.post(
           return;
         }
 
-        account = temid;
+        accFlag = share.data.id + account || temid;
+      } else {
+        accFlag = account;
       }
 
-      if (!key.startsWith(`${account}_`)) {
-        paramErr(res, req, `key 必须 ${account}_ 开头`, 'body');
+      if (!key.startsWith(`${accFlag}_`)) {
+        paramErr(res, req, `key 必须 ${accFlag}_ 开头`, 'body');
         return;
       }
 
@@ -101,11 +101,7 @@ route.post(
       } = req[kHello];
 
       try {
-        temid = await V.parse(
-          temid,
-          V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-          'temid',
-        );
+        temid = await V.parse(temid, V.string().trim().min(1), 'temid');
       } catch (error) {
         paramErr(res, req, error, { temid });
         return;
@@ -116,6 +112,8 @@ route.post(
         return;
       }
 
+      let accFlag = '';
+
       if (token) {
         const share = await validShareState(token, 'file');
 
@@ -123,12 +121,13 @@ route.post(
           _err(res, share.text)(req);
           return;
         }
-
-        account = temid;
+        accFlag = share.data.id + account || temid;
+      } else {
+        accFlag = account;
       }
 
-      if (!key.startsWith(`${account}_`)) {
-        paramErr(res, req, `key 必须 ${account}_ 开头`, 'body');
+      if (!key.startsWith(`${accFlag}_`)) {
+        paramErr(res, req, `key 必须 ${accFlag}_ 开头`, 'body');
         return;
       }
 
@@ -145,56 +144,22 @@ route.post(
   },
 );
 
+// 验证登录态
+route.use((req, res, next) => {
+  if (req[kHello].userinfo.account) {
+    next();
+  } else {
+    _nologin(res);
+  }
+});
+
 // 获取任务列表
-route.post(
-  '/list',
-  validate(
-    'body',
-    V.object({
-      token: V.string().trim().default('').allowEmpty().max(fieldLength.url),
-    }),
-  ),
-  async (req, res) => {
-    try {
-      const { token } = req[kValidate];
-
-      let {
-        temid,
-        userinfo: { account },
-      } = req[kHello];
-
-      try {
-        temid = await V.parse(
-          temid,
-          V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-          'temid',
-        );
-      } catch (error) {
-        paramErr(res, req, error, { temid });
-        return;
-      }
-
-      if (!token && !account) {
-        _nologin(res);
-        return;
-      }
-
-      if (token) {
-        const share = await validShareState(token, 'file');
-
-        if (share.state === 0) {
-          _err(res, share.text)(req);
-          return;
-        }
-
-        account = temid;
-      }
-
-      _success(res, 'ok', taskState.getTaskKeys(account));
-    } catch (error) {
-      _err(res)(req, error);
-    }
-  },
-);
+route.post('/list', async (req, res) => {
+  try {
+    _success(res, 'ok', taskState.getTaskKeys(req[kHello].userinfo.account));
+  } catch (error) {
+    _err(res)(req, error);
+  }
+});
 
 export default route;
