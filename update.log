@@ -1,0 +1,22 @@
+nohup: ignoring input
+ Image ghcr.io/zxecsm/hello:latest Pulling 
+ 7aee280e731e Pulling fs layer 
+ f4dfcf9dff0c Download complete 
+ 7aee280e731e Downloading [====>                                              ]   1.27MB/14.42MB
+ 7aee280e731e Downloading [==========>                                        ]  3.146MB/14.42MB
+ 7aee280e731e Downloading [==========>                                        ]  3.146MB/14.42MB
+ 7aee280e731e Downloading [==========>                                        ]  3.146MB/14.42MB
+ 7aee280e731e Downloading [=====================>                             ]  6.291MB/14.42MB
+ 7aee280e731e Downloading [=======================================>           ]  11.53MB/14.42MB
+ 7aee280e731e Download complete 
+ 7aee280e731e Extracting 1 s
+ 7aee280e731e Extracting 1 s
+ 7aee280e731e Extracting 1 s
+ 7aee280e731e Extracting 1 s
+ 7aee280e731e Extracting 1 s
+ 7aee280e731e Pull complete 
+ Image ghcr.io/zxecsm/hello:latest Pulled 
+ Container hello Recreate 
+ Container hello Recreated 
+ Container hello Starting 
+ Container hello Started 
