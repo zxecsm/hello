@@ -1581,9 +1581,9 @@ export function toCenter(el, obj) {
 export function switchBorderRadius(target) {
   const { top, left } = _position(target, true);
   if (isFullScreen(target) && top === 0 && left === 0) {
-    target.style.borderRadius = 0;
+    target.classList.add('fullscreen');
   } else {
-    target.style.borderRadius = '';
+    target.classList.remove('fullscreen');
   }
 }
 // 窗口尺寸

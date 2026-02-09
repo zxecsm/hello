@@ -353,3 +353,7 @@ a:hover {
 .drag_opacity {
   opacity: 0.8 !important;
 }
+.fullscreen {
+  border-radius: 0 !important;
+  padding: 0 !important;
+}

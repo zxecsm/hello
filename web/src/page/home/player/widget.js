@@ -295,7 +295,7 @@ export function showEditLrc(sobj) {
   const editBox = $editLrcWrap[0];
   setZidx(editBox, 'editlrc', closeEditLrcBox, editLrcIsTop);
   const isHide = $editLrcWrap.is(':hidden');
-  $editLrcWrap.css('display', 'flex');
+  $editLrcWrap.css('display', 'block');
   editLrcHeadContentScroll.init(`${sobj.artist} - ${sobj.title}`);
   $editLrcWrap.find('textarea').val('');
   editLrcSongInfo = deepClone(sobj);
@@ -369,7 +369,7 @@ export async function playMv(obj) {
   const mvBox = $musicMvWrap[0];
   const isHide = musicMvIsHide();
   playVideo();
-  $musicMvWrap.css('display', 'flex');
+  $musicMvWrap.css('display', 'block');
   if (!mvBoxOnce) {
     mvBoxOnce = true;
     const { x, y, w, h } = mvSize;

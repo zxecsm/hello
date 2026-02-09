@@ -190,7 +190,7 @@ export function showTodoBox() {
   const tBox = $todoBox[0];
   hideRightMenu();
   const isHide = $todoBox.is(':hidden');
-  $todoBox.css('display', 'flex');
+  $todoBox.css('display', 'block');
   setZidx(tBox, 'todo', closeTodoBox, todoIsTop);
   if (isHide) getTodoList(true);
   if (!showTodoOnce) {

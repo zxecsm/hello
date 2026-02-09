@@ -99,19 +99,21 @@ class CreateIframe {
     this.box.className = 'iframe_warp no_select';
     const html = _tpl(
       `
-      <div class="i_head_btns window_head">
-        <div cursor="y" class="i_close_btn iconfont icon-close-bold"></div>
-        <div cursor="y" class="i_to_max_btn iconfont icon-xuanzeweixuanze"></div>
-        <div cursor="y" class="i_hide_btn iconfont icon-minus-bold"></div>
-        <div cursor="y" class="i_top iconfont icon-zhiding"></div>
-        <div class="i_title_text"><p class="scroll_text"></p></div>
-        <div cursor="y" title="刷新" class="i_refresh_btn iconfont icon-suijibofang"></div>
-        <div cursor="y" title="新标签打开" class="i_new_page_open_btn iconfont icon-link1"></div>
-      </div>
-      <div class="con">
-      <div class="iframe_mask"></div>
-      <div class="iframe_load"></div>
-      <iframe :src="url" scrolling="yes" frameborder="0"></iframe>
+      <div class="content_wrap">
+        <div class="i_head_btns window_head">
+          <div cursor="y" class="i_close_btn iconfont icon-close-bold"></div>
+          <div cursor="y" class="i_to_max_btn iconfont icon-xuanzeweixuanze"></div>
+          <div cursor="y" class="i_hide_btn iconfont icon-minus-bold"></div>
+          <div cursor="y" class="i_top iconfont icon-zhiding"></div>
+          <div class="i_title_text"><p class="scroll_text"></p></div>
+          <div cursor="y" title="刷新" class="i_refresh_btn iconfont icon-suijibofang"></div>
+          <div cursor="y" title="新标签打开" class="i_new_page_open_btn iconfont icon-link1"></div>
+        </div>
+        <div class="con">
+        <div class="iframe_mask"></div>
+        <div class="iframe_load"></div>
+        <iframe :src="url" scrolling="yes" frameborder="0"></iframe>
+        </div>
       </div>
       `,
       {
@@ -128,7 +130,7 @@ class CreateIframe {
     this.iframe.addEventListener('load', this.onIframeLoad);
     this.iframe.addEventListener('error', this.onIframeLoad);
     document.querySelector('#main').append(this.box);
-    this.box.style.display = 'flex';
+    this.box.style.display = 'block';
     this.box.style.visibility = 'visible';
     toSetSize(this.box, iframeSize.w, iframeSize.h);
     const windows = popWindow.getList();

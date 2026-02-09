@@ -225,7 +225,7 @@ export function showCountBox() {
   const cBox = $countBox[0];
   hideRightMenu();
   const isHide = $countBox.is(':hidden');
-  cBox.style.display = 'flex';
+  cBox.style.display = 'block';
   setZidx(cBox, 'count', closeCountBox, countDownIsTop);
   if (isHide) getCountList(true);
   if (!showCountBoxFlag) {

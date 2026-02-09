@@ -414,7 +414,7 @@ let mvOnce = false;
 function playMv(obj) {
   const mvBox = $musicMvWrap[0];
   const isHide = $musicMvWrap.is(':hidden');
-  $musicMvWrap.css('display', 'flex');
+  $musicMvWrap.css('display', 'block');
   playingSongInfo = initSongInfo(obj);
   localData.session.set('playingSongInfo', playingSongInfo);
   updateSongInfo();

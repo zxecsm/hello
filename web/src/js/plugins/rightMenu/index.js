@@ -68,6 +68,8 @@ class RightM {
     this.rightMask.style.zIndex = _d.levelObj.rightBox;
     this.rightBox = document.createElement('div');
     this.rightBox.className = 'right_box max';
+    this.contentWrap = document.createElement('div');
+    this.contentWrap.className = 'content_wrap';
     this.head = document.createElement('div');
     this.head.className = 'head window_head';
     if (!this.opt.hideCloseBtn) {
@@ -98,9 +100,10 @@ class RightM {
     this.content.className = 'content';
     this.loading = document.createElement('div');
     this.loading.className = 'loading';
-    this.rightBox.appendChild(this.head);
-    this.rightBox.appendChild(this.loading);
-    this.rightBox.appendChild(this.content);
+    this.contentWrap.appendChild(this.head);
+    this.contentWrap.appendChild(this.loading);
+    this.contentWrap.appendChild(this.content);
+    this.rightBox.appendChild(this.contentWrap);
     this.rightMask.appendChild(this.rightBox);
     document.body.appendChild(this.rightMask);
     if (!this.opt.searchCallback) {
