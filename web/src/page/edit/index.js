@@ -723,7 +723,7 @@ $headBtns
       toLogin();
       return;
     }
-    _myOpen(`/file#${_d.noteHistoryDir}/${HASH}`, '文件管理');
+    _myOpen(`/file#${_d.noteHistoryDir}/${HASH}`, '文件管理', 'file');
   })
   .on('click', '.table_btn', () => insertBlock(editor, 'table'))
   .on('click', '.code_btn', () => insertBlock(editor, 'code'))

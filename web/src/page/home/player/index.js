@@ -262,7 +262,7 @@ export function shareSongList(e, arr, cb) {
         if (result.code === 1) {
           close(1);
           cb && cb();
-          openInIframe(`/sharelist`, '分享管理');
+          openInIframe(`/sharelist`, '分享管理', 'share');
         }
       })
       .catch(() => {

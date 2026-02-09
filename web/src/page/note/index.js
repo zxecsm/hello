@@ -89,7 +89,7 @@ function showSearchBox() {
 $setBtnsWrap
   .on('click', '.edit_note_btn', function (e) {
     e.stopPropagation();
-    _myOpen(`/edit#${encodeURIComponent(urlparmes.v)}`, titleName);
+    _myOpen(`/edit#${encodeURIComponent(urlparmes.v)}`, titleName, 'edit');
   })
   .on('click', '.to_top_btn', function () {
     pageScrollTop(0);
@@ -329,7 +329,7 @@ $noteInfo.on('click', '.category', function () {
   const { account, username } = userInfoObj;
   const url = `/notes?acc=${encodeURIComponent(account)}#${id}`;
   if (isIframe()) {
-    _myOpen(url, username + '的笔记本');
+    _myOpen(url, username + '的笔记本', 'notebook');
   } else {
     myOpen(url);
   }

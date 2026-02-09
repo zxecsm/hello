@@ -263,7 +263,7 @@ function timeoutMsg(text = '操作后台处理中，可在日志中查看处理�
     },
     (type) => {
       if (type === 'click') {
-        _myOpen(`/log`, '日志');
+        _myOpen(`/log`, '日志', 'log');
       }
     },
   );
@@ -454,7 +454,7 @@ function changeTrashState(e) {
     ({ id, resetMenu, close, loading }) => {
       const curItem = data.find((item) => item.id === id);
       if (id === 'toTrash') {
-        _myOpen(`/file#${_d.trashDir}`, '文件管理');
+        _myOpen(`/file#${_d.trashDir}`, '文件管理', 'file');
         close();
       } else if (id === 'state') {
         loading.start();

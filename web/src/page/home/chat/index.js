@@ -898,7 +898,7 @@ function userMenu(e, msgObj, isUserList) {
         openFriend(_from);
       } else if (id === '3') {
         let url = `/notes?acc=${_from}`;
-        openInIframe(url, (des || username) + '的笔记本');
+        openInIframe(url, (des || username) + '的笔记本', 'notebook');
         close();
       } else if (id === '1') {
         const data = [
@@ -976,7 +976,7 @@ function userMenu(e, msgObj, isUserList) {
         );
       } else if (id === '4') {
         close();
-        openInIframe(`/bmk?acc=${_from}`, (des || username) + '的书签夹');
+        openInIframe(`/bmk?acc=${_from}`, (des || username) + '的书签夹', 'bookmark');
       } else if (id === '5') {
         imgPreview([{ u1: getFilePath(`/logo/${_from}/${logo}`) }], 0, {
           x: e.clientX,
@@ -1011,9 +1011,10 @@ function openChatFile(target) {
             openInIframe(
               `/videoplay#${encodeURIComponent(getFilePath(`/upload/${msgId}/${content}`))}`,
               content,
+              'video',
             );
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(content)) {
-            openInIframe(getFilePath(`/upload/${msgId}/${content}`), content);
+            openInIframe(getFilePath(`/upload/${msgId}/${content}`), content, 'music');
           } else {
             downloadFile(
               [
@@ -1370,7 +1371,7 @@ function chatMsgMenu(e, cobj) {
       } else if (id === '6') {
         close();
         await cacheFile.setData('newNote', z);
-        openInIframe('/edit#new', '新笔记');
+        openInIframe('/edit#new', '新笔记', 'edit');
       }
     },
     cobj.content,

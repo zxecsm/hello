@@ -531,10 +531,10 @@ async function readFileAndDir(obj, e) {
             );
           } else if (isVideoFile(p)) {
             // 视频
-            _myOpen(`/videoplay#${encodeURIComponent(fPath)}`, obj.name);
+            _myOpen(`/videoplay#${encodeURIComponent(fPath)}`, obj.name, 'video');
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(p)) {
             // 音频
-            _myOpen(fPath, obj.name);
+            _myOpen(fPath, obj.name, 'music');
           } else {
             // 其他下载
             downloadFile([{ fileUrl: fPath + `#${size}`, filename: name }], 'image');
@@ -696,12 +696,16 @@ function hdContextMenu(e) {
       if (isRoot()) {
         close();
         e.stopPropagation();
-        _myOpen(`/ssh?p=${decodeURIComponent(_path.normalize('/', curFileDirPath))}#local`, '终端');
+        _myOpen(
+          `/ssh?p=${decodeURIComponent(_path.normalize('/', curFileDirPath))}#local`,
+          '终端',
+          'ssh',
+        );
       }
     } else if (id === 'newPage') {
       close();
       e.stopPropagation();
-      _myOpen(`/file#${_path.normalize('/', curFileDirPath)}`, '文件管理');
+      _myOpen(`/file#${_path.normalize('/', curFileDirPath)}`, '文件管理', 'file');
     } else if (id === 'copyPath') {
       copyText(_path.normalize('/', curFileDirPath));
       close();
@@ -849,6 +853,7 @@ function rightList(e, obj, el) {
           _myOpen(
             `/ssh?p=${decodeURIComponent(_path.normalize('/', obj.path, obj.name))}#local`,
             '终端',
+            'ssh',
           );
         }
       } else if (id === 'addto') {
@@ -976,7 +981,7 @@ function rightList(e, obj, el) {
       } else if (id === 'newPage') {
         close();
         e.stopPropagation();
-        _myOpen(`/file#${_path.normalize('/', obj.path, obj.name)}`, '文件管理');
+        _myOpen(`/file#${_path.normalize('/', obj.path, obj.name)}`, '文件管理', 'file');
       }
     },
     obj.name,
@@ -1157,7 +1162,7 @@ function hdShare(e, obj) {
           loading.end();
           if (result.code === 1) {
             close(1);
-            _myOpen(`/sharelist`, '分享管理');
+            _myOpen(`/sharelist`, '分享管理', 'share');
           }
         })
         .catch(() => {

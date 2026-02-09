@@ -1071,11 +1071,11 @@ export class LazyLoad {
   }
 }
 // 跳转
-export function _myOpen(url, name) {
+export function _myOpen(url, name, logo = '') {
   // 在iframe中显示
   if (isIframe()) {
     try {
-      parent.window.openInIframe(url, name || url);
+      parent.window.openInIframe(url, name || url, logo);
       return;
     } catch {}
   }
@@ -2492,7 +2492,7 @@ export function userLogoMenu(e, account, username, email) {
       if (id === '2') {
         url = `/notes?acc=${encodeURIComponent(account)}`;
         if (isIframe()) {
-          _myOpen(url, username + '的笔记本');
+          _myOpen(url, username + '的笔记本', 'notebook');
         } else {
           myOpen(url);
         }
@@ -2506,7 +2506,7 @@ export function userLogoMenu(e, account, username, email) {
       } else if (id === '3') {
         url = `/bmk?acc=${encodeURIComponent(account)}`;
         if (isIframe()) {
-          _myOpen(url, username + '的书签夹');
+          _myOpen(url, username + '的书签夹', 'bookmark');
         } else {
           myOpen(url);
         }

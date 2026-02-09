@@ -655,7 +655,7 @@ function hdClickSearchItem() {
   } else if (type === 'note') {
     const u = `/note?v=${id}`;
     if (isSearchOpenPop()) {
-      openInIframe(u, text);
+      openInIframe(u, text, 'note');
     } else {
       myOpen(u, '_blank');
     }

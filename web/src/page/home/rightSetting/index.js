@@ -782,7 +782,7 @@ function setPageFont(e, loading = { start() {}, end() {} }) {
           data,
           async ({ id, resetMenu, param, loading, close }) => {
             if (id === '0') {
-              openInIframe(`/file/#${_d.fontDir}`, '文件管理');
+              openInIframe(`/file/#${_d.fontDir}`, '文件管理', 'file');
               close(true);
               return;
             }
@@ -1070,7 +1070,7 @@ export function settingMenu(e, isMain) {
         closeAllwindow(1);
       } else if (id === '7') {
         close();
-        openInIframe('/edit#new', '新笔记');
+        openInIframe('/edit#new', '新笔记', 'edit');
       } else if (id === '6') {
         const cacheState = cacheFile.setCacheState();
         const data = [
@@ -1303,12 +1303,12 @@ function hdAdmin(e) {
 export function showRootPage() {
   if (!isRoot()) return;
   hideRightMenu();
-  openInIframe(`/root`, '用户管理');
+  openInIframe(`/root`, '用户管理', 'account');
 }
 export function showLogPage() {
   if (!isRoot()) return;
   hideRightMenu();
-  openInIframe(`/log`, '日志');
+  openInIframe(`/log`, '日志', 'log');
 }
 // 生成二维码
 function createQrCode(e) {
@@ -1412,7 +1412,7 @@ function hdTools(e) {
       } else if (id === '9') {
         close();
         hideRightMenu();
-        openInIframe(`/file/#${_d.pubDir}`, '文件管理');
+        openInIframe(`/file/#${_d.pubDir}`, '文件管理', 'file');
       } else if (id === '10') {
         close();
         showSSHList();
@@ -1865,35 +1865,35 @@ longPress($rightBox[0], '.tips', function (e) {
 });
 export function showTrash() {
   hideRightMenu();
-  openInIframe('/trash', '回收站');
+  openInIframe('/trash', '回收站', 'trash');
 }
 export function showNote() {
   hideRightMenu();
-  openInIframe(`/notes?acc=${encodeURIComponent(localData.get('account'))}`, '笔记本');
+  openInIframe(`/notes?acc=${encodeURIComponent(localData.get('account'))}`, '笔记本', 'notebook');
 }
 export function showHistory() {
   hideRightMenu();
-  openInIframe('/history', '搜索历史');
+  openInIframe('/history', '搜索历史', 'history');
 }
 export function showSSHList() {
   hideRightMenu();
-  openInIframe('/sshlist', '终端管理');
+  openInIframe('/sshlist', '终端管理', 'sshlist');
 }
 export function showBmk() {
   hideRightMenu();
-  openInIframe(`/bmk?acc=${encodeURIComponent(localData.get('account'))}`, '书签夹');
+  openInIframe(`/bmk?acc=${encodeURIComponent(localData.get('account'))}`, '书签夹', 'bookmark');
 }
 export function showFileManage() {
   hideRightMenu();
-  openInIframe(`/file`, '文件管理');
+  openInIframe(`/file`, '文件管理', 'file');
 }
 export function showNotepad() {
   hideRightMenu();
-  openInIframe(`/notepad`, '便条');
+  openInIframe(`/notepad`, '便条', 'note');
 }
 export function showPicture() {
   hideRightMenu();
-  openInIframe(`/pic`, '图床');
+  openInIframe(`/pic`, '图床', 'picture');
 }
 function getPercentColor(percent) {
   if (percent <= 60) {
@@ -1970,13 +1970,13 @@ $rightBox
   .on('click', '.user_name', showUserInfo)
   .on('click', '.r_about', function () {
     hideRightMenu();
-    openInIframe('/note?v=about', '关于');
+    openInIframe('/note?v=about', '关于', 'note');
   })
   .on('click', '.tips', function () {
     hideRightMenu();
     localData.set('tipsFlag', tipsFlag);
     changeLogoAlertStatus();
-    openInIframe('/note?v=tips', 'Tips');
+    openInIframe('/note?v=tips', 'Tips', 'note');
   })
   .on('contextmenu', '.tips', function (e) {
     if (!isRoot()) return;
@@ -1988,7 +1988,7 @@ $rightBox
   .on('click', '.r_setting', settingMenu)
   .on('click', '.show_share_list', function () {
     hideRightMenu();
-    openInIframe(`/sharelist`, '分享管理');
+    openInIframe(`/sharelist`, '分享管理', 'share');
   })
   .on('click', '.show_music_player', () => {
     showMusicPlayerBox();

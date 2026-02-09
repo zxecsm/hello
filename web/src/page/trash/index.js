@@ -460,7 +460,7 @@ $headWrap
         if (id) {
           close();
           if (param.value === 'file') {
-            _myOpen(`/file#${_d.trashDir}`, '文件管理');
+            _myOpen(`/file#${_d.trashDir}`, '文件管理', 'file');
             return;
           }
           if (HASH !== param.value) {
@@ -614,11 +614,11 @@ $contentWrap
         } else if (flag === '1') {
           close();
           e.stopPropagation();
-          _myOpen(`/edit#${encodeURIComponent(id)}`, obj.title);
+          _myOpen(`/edit#${encodeURIComponent(id)}`, obj.title, 'edit');
         } else if (flag === '4') {
           close();
           e.stopPropagation();
-          _myOpen(`/file#${_d.noteHistoryDir}/${obj.id}`, '文件管理');
+          _myOpen(`/file#${_d.noteHistoryDir}/${obj.id}`, '文件管理', 'file');
         }
       },
       obj.title || obj.content,
@@ -688,10 +688,10 @@ $contentWrap
       }
     } else if (type === 'note') {
       e.stopPropagation();
-      _myOpen(`/note?v=${encodeURIComponent(obj.id)}`, obj.title);
+      _myOpen(`/note?v=${encodeURIComponent(obj.id)}`, obj.title, 'note');
     } else if (type === 'ssh') {
       e.stopPropagation();
-      _myOpen(`/ssh#${obj.id}`, obj.title);
+      _myOpen(`/ssh#${obj.id}`, obj.title, 'ssh');
     }
   })
   .on('click', 'img', function (e) {

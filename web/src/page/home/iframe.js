@@ -25,7 +25,6 @@ import { popWindow, setPos, setZidx } from './popWindow';
 import defaultIcon from '../../images/img/default-icon.png';
 import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';
-import _path from '../../js/utils/path';
 import localData from '../../js/common/localData';
 import toolTip from '../../js/plugins/tooltip';
 let iframeSize = localData.get('iframeSize');
@@ -33,36 +32,32 @@ const $minimizeBox = $('.minimize_box');
 // 标签logo
 function getTagFont(type) {
   let font = 'iconfont ';
-  if (type === 'notes') {
+  if (type === 'notebook') {
     font += `icon-mingcheng-jiluben`;
   } else if (type === 'note') {
     font += `icon-jilu`;
   } else if (type === 'history') {
     font += `icon-history`;
-  } else if (type === 'bmk') {
+  } else if (type === 'bookmark') {
     font += `icon-shuqian`;
   } else if (type === 'edit') {
     font += `icon-bianji`;
   } else if (type === 'log') {
     font += `icon-rizhi`;
-  } else if (type === 'pic') {
+  } else if (type === 'picture') {
     font += `icon-tupian`;
   } else if (type === 'trash') {
     font += `icon-huishouzhan`;
-  } else if (type === 'root') {
+  } else if (type === 'account') {
     font += `icon-zhanghao`;
-  } else if (type === 'sharebm') {
+  } else if (type === 'share') {
     font += `icon-fenxiang_2`;
-  } else if (type === 'sharelist') {
-    font += `icon-fenxiang_2`;
-  } else if (type === 'sharemusic') {
+  } else if (type === 'music') {
     font += `icon-yinle1`;
-  } else if (type === 'videoplay') {
+  } else if (type === 'video') {
     font += `icon-shipin1`;
-  } else if (type === 'file' || type === 'sharefile') {
+  } else if (type === 'file') {
     font += `icon-gl-folder`;
-  } else if (type === 'notepad') {
-    font += `icon-jilu`;
   } else if (type === 'sshlist') {
     font += `icon-terminal1`;
   } else if (type === 'ssh') {
@@ -87,9 +82,10 @@ openInIframe.iframes = {
 };
 window.openInIframe = openInIframe;
 class CreateIframe {
-  constructor(url, name) {
+  constructor(url, name, logo = '') {
     this.url = url;
     this.name = name || url;
+    this.logo = logo;
     this.id = nanoid() + '_iframe';
     this.isTop = false;
     this.init();
@@ -349,8 +345,8 @@ class CreateIframe {
     );
   }
 }
-function openInIframe(url, name) {
-  const ifra = new CreateIframe(url, name);
+function openInIframe(url, name, logo = '') {
+  const ifra = new CreateIframe(url, name, logo);
   openInIframe.iframes.add(ifra.id, ifra);
   return ifra;
 }
@@ -369,7 +365,7 @@ function addHideBox(iframeBox) {
   const logo = document.createElement('span');
   const isOuterLink = iframeBox.url.startsWith('http');
 
-  logo.className = `logo ${isOuterLink ? '' : getTagFont(_path.basename(iframeBox.url)[0])}`;
+  logo.className = `logo ${isOuterLink ? '' : getTagFont(iframeBox.logo)}`;
   if (isOuterLink) {
     const u = getFaviconPath(iframeBox.url);
     imgjz(u)

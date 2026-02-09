@@ -638,7 +638,7 @@ function keyboard(e) {
     }
     // 新建笔记
     else if (key === 'e') {
-      openInIframe('/edit#new', '新笔记');
+      openInIframe('/edit#new', '新笔记', 'edit');
     }
     // 打开图床
     else if (key === 'p') {

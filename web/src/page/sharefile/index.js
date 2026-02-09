@@ -494,9 +494,9 @@ async function readFileAndDir(obj, e) {
               { x: e.clientX, y: e.clientY },
             );
           } else if (isVideoFile(p)) {
-            _myOpen(`/videoplay#${encodeURIComponent(fPath)}`, obj.name);
+            _myOpen(`/videoplay#${encodeURIComponent(fPath)}`, obj.name, 'video');
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(p)) {
-            _myOpen(fPath, obj.name);
+            _myOpen(fPath, obj.name, 'music');
           } else {
             downloadFile([{ fileUrl: fPath, filename: name }]);
           }
@@ -542,9 +542,9 @@ async function readFile(e) {
               { x: e.clientX, y: e.clientY },
             );
           } else if (isVideoFile(shareObj.name)) {
-            _myOpen(`/videoplay#${encodeURIComponent(fPath)}`, shareObj.name);
+            _myOpen(`/videoplay#${encodeURIComponent(fPath)}`, shareObj.name, 'video');
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(shareObj.name)) {
-            _myOpen(fPath, shareObj.name);
+            _myOpen(fPath, shareObj.name, 'music');
           } else {
             downloadFile([{ fileUrl: fPath, filename: shareObj.name }]);
           }

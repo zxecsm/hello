@@ -585,7 +585,7 @@ $contentWrap
   .on('click', '.item_title', function (e) {
     e.stopPropagation();
     const { title, id } = getSSHInfo($(this).parent().attr('data-id'));
-    _myOpen(`/ssh#${id}`, title);
+    _myOpen(`/ssh#${id}`, title, 'ssh');
   })
   .on('click', '.item_info .category', function () {
     tabsObj.list = categoryToArr(this.dataset.id);
