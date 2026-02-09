@@ -243,7 +243,7 @@ export class BoxSelector {
       left: '-100px',
       pointerEvents: 'none',
       zIndex: 9999,
-      border: '1px dashed var(--icon-color)',
+      border: '0.1rem dashed var(--icon-color)',
       backgroundColor: 'var(--bg-color-o3)',
       ...this.options.style,
     });
@@ -522,7 +522,7 @@ export class MouseElementTracker {
       position: 'fixed',
       pointerEvents: 'none',
       zIndex: 9999999,
-      border: '1px solid var(--text-hover-color)',
+      border: '0.1rem solid var(--text-hover-color)',
       transition: 'padding 0.3s ease-in-out',
       padding: '10rem',
       borderRadius: '.5rem',

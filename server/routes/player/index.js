@@ -494,7 +494,7 @@ route.get(
 
               if (playId) {
                 // 定位到正则播放歌曲所在页
-                const row = await songDB.clone().where({ id: playId }).findOne();
+                const row = await songDB.clone().select('serial').where({ id: playId }).findOne();
                 if (row) {
                   let count = 0;
                   if (sort === 'default') {

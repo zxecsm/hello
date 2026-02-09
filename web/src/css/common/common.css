@@ -265,7 +265,7 @@ textarea:-ms-input-placeholder {
   line-height: 1;
   padding: 1rem;
   outline: none;
-  border: 1px solid;
+  border: 0.1rem solid;
   border-radius: var(--border-radius1);
   cursor: inherit;
 }

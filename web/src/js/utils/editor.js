@@ -62,7 +62,7 @@ function createEditor(el) {
   style.innerHTML = `
   .ace_editor .ace_marker-layer .ace_active-line {
     background: transparent;
-    border: 1px solid var(--color8);
+    border: 0.1rem solid var(--color8);
     border-left: none;
     border-right: none;
     box-sizing: border-box;
