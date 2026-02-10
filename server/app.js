@@ -396,7 +396,7 @@ app.get(
         return _err(res, '接口未开放')(req, ip, 1);
       }
 
-      _success(res, 'ok', getCity(ip));
+      _success(res, '获取ip地理位置成功', getCity(ip))(req, ip, 1);
     } catch (error) {
       _err(res)(req, error);
     }
