@@ -65,6 +65,7 @@ import cheerio from './routes/bmk/cheerio.js';
 import { db } from './utils/sqlite.js';
 import V from './utils/validRules.js';
 import { sym } from './utils/symbols.js';
+import getCity from './utils/getCity.js';
 
 const __dirname = getDirname(import.meta);
 const kHello = sym('hello');
@@ -368,6 +369,34 @@ app.get(
         await errLog(req, `${error}(${u})`);
         _success(res, 'ok', obj);
       }
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  },
+);
+
+// ip地理位置
+app.get(
+  '/api/ip-location',
+  validate(
+    'query',
+    V.object({
+      ip: V.string()
+        .trim()
+        .min(1)
+        .custom((v) => getClientIp.isIp(v), 'ip 格式错误'),
+    }),
+  ),
+  async (req, res) => {
+    try {
+      const { ip } = req[kValidate];
+
+      // 检查接口是否开启
+      if (!_d.pubApi.ipLocationApi) {
+        return _err(res, '接口未开放')(req, ip, 1);
+      }
+
+      _success(res, 'ok', getCity(ip));
     } catch (error) {
       _err(res)(req, error);
     }

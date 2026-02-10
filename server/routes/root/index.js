@@ -437,17 +437,19 @@ route.post(
       siteInfoApi: V.number().toInt().enum([0, 1]),
       faviconApi: V.number().toInt().enum([0, 1]),
       echoApi: V.number().toInt().enum([0, 1]),
+      ipLocationApi: V.number().toInt().enum([0, 1]),
     }),
   ),
   async (req, res) => {
     try {
-      const { randomBgApi, siteInfoApi, faviconApi, echoApi } = req[kValidate];
+      const { randomBgApi, siteInfoApi, faviconApi, echoApi, ipLocationApi } = req[kValidate];
 
       _d.pubApi = {
         randomBgApi: !!randomBgApi,
         siteInfoApi: !!siteInfoApi,
         faviconApi: !!faviconApi,
         echoApi: !!echoApi,
+        ipLocationApi: !!ipLocationApi,
       };
 
       _success(res, `修改接口状态成功`, _d.pubApi)(req);

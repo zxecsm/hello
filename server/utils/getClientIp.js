@@ -26,4 +26,6 @@ const getClientIp = (req) => {
   return '0.0.0.0';
 };
 
+getClientIp.isIp = isValid;
+
 export default getClientIp;

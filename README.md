@@ -53,6 +53,12 @@ http://localhost:55555/api/site-info?u=[https://]google.com
 http://localhost:55555/api/echo?msg=hello
 ```
 
+IP地理位置
+
+```
+http://localhost:55555/api/ip-location?ip=223.5.5.5
+```
+
 添加书签窗口（用于扩展和油猴脚本添加书签）
 
 ```

@@ -877,11 +877,11 @@ function handlePubApi(e) {
         const pre = originURL + _d.apiPath;
         rMenu.rightInfo(
           e,
-          `壁纸：\n  大屏：${pre}/bg/r/d\n  小屏：${pre}/bg/r/m\n\n获取网站图标：${originURL}${_d.faviconURL}?u=${originURL}\n\n获取网站信息：${pre}/site-info?u=${originURL}\n\n回显接口：${pre}/echo`,
+          `壁纸：\n  大屏：${pre}/bg/r/d\n  小屏：${pre}/bg/r/m\n\n获取网站图标：${originURL}${_d.faviconURL}?u=${originURL}\n\n获取网站信息：${pre}/site-info?u=${originURL}\n\nIP地理位置：${pre}/ip-location?ip=223.5.5.5\n\n回显接口：${pre}/echo`,
           '接口信息',
         );
       } else if (id === 'state') {
-        const { randomBgApi, siteInfoApi, faviconApi, echoApi } = dataObj.pubApi;
+        const { randomBgApi, siteInfoApi, faviconApi, echoApi, ipLocationApi } = dataObj.pubApi;
         const type = 'select';
         rMenu.inpMenu(
           e,
@@ -924,17 +924,27 @@ function handlePubApi(e) {
                   { value: 'n', text: '关闭' },
                 ],
               },
+              ipLocationApi: {
+                beforeText: 'IP地理位置接口：',
+                type,
+                value: ipLocationApi ? 'y' : 'n',
+                selectItem: [
+                  { value: 'y', text: '开启' },
+                  { value: 'n', text: '关闭' },
+                ],
+              },
             },
           },
           function ({ inp, close, loading, isDiff }) {
             if (!isDiff()) return;
-            const { randomBgApi, siteInfoApi, faviconApi, echoApi } = inp;
+            const { randomBgApi, siteInfoApi, faviconApi, echoApi, ipLocationApi } = inp;
 
             const obj = {
               randomBgApi: randomBgApi === 'y' ? 1 : 0,
               siteInfoApi: siteInfoApi === 'y' ? 1 : 0,
               faviconApi: faviconApi === 'y' ? 1 : 0,
               echoApi: echoApi === 'y' ? 1 : 0,
+              ipLocationApi: ipLocationApi === 'y' ? 1 : 0,
             };
             loading.start();
             reqRootPubApiState(obj)
