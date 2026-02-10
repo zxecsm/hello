@@ -402,159 +402,165 @@ html {
           }
         }
 
-        .p_head {
-          width: 100%;
-          height: 4rem;
-          padding: 0.5rem 0;
-
-          .left {
-            float: left;
-            line-height: 3rem;
-            margin-left: 0.5rem;
-          }
-
-          .save_playing_list {
-            float: right;
-            width: 4rem;
-            line-height: 3rem;
-            font-size: 2rem;
-            text-align: center;
-
-            &:hover {
-              color: var(--text-hover-color);
-              transform: scale(1.1);
-            }
-          }
-        }
-
-        .p_foot {
+        .p_music_list_content_wrap {
           width: 100%;
           height: 100%;
-          padding-bottom: 4rem;
-          overflow-y: auto;
-          overflow-x: hidden;
-          position: relative;
+          display: flex;
+          flex-flow: column;
+          .p_head {
+            flex: none;
+            width: 100%;
+            height: 4rem;
+            padding: 0.5rem 0;
 
-          .song_item {
-            height: 6rem;
-            display: flex;
-            &:not(:first-of-type) {
-              border-top: 0.1rem solid var(--color8);
+            .left {
+              float: left;
+              line-height: 3rem;
+              margin-left: 0.5rem;
             }
 
-            &:hover {
-              background-color: var(--bg-color-o1);
-              color: var(--text-hover-color);
-              .logo_wrap {
-                transform: scale(1.1);
-              }
-            }
-
-            &.active {
-              color: var(--text-hover-color);
-              border-radius: var(--border-radius1);
-              background-color: var(--bg-color-o2);
-            }
-
-            .play_mv,
-            .del {
-              flex: none;
-              text-align: center;
-              line-height: 6rem;
+            .save_playing_list {
+              float: right;
               width: 4rem;
+              line-height: 3rem;
               font-size: 2rem;
-            }
-
-            .logo_wrap {
-              position: relative;
-              flex: none;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              width: 6rem;
-              height: 6rem;
-              overflow: hidden;
-
-              .logo {
-                width: 80%;
-                height: 80%;
-                border-radius: 50%;
-                background-image: url('../../images/img/loading.svg');
-                background-repeat: no-repeat;
-                background-position: center;
-                background-size: 50%;
-                overflow: hidden;
-                position: relative;
-                &.load {
-                  background-color: transparent;
-                  background-size: cover;
-                }
-
-                .play_gif {
-                  width: 100%;
-                  height: 100%;
-                  background-image: url(../../images/img/wave.gif);
-                  background-repeat: no-repeat;
-                  background-position: center;
-                  background-size: 1.4rem;
-                  background-color: #00000060;
-                  pointer-events: none;
-                  top: 0;
-                  display: none;
-                  left: 0;
-                  position: absolute;
-
-                  &.show {
-                    display: block;
-                  }
-                }
-              }
-            }
-
-            .play_mv,
-            .del {
-              color: var(--color4);
+              text-align: center;
 
               &:hover {
                 color: var(--text-hover-color);
                 transform: scale(1.1);
               }
             }
-            .del {
-              &:hover {
-                color: var(--btn-danger-color);
-              }
-            }
-            .song_info_wrap {
-              flex: auto;
-              width: 0;
-              padding: 0.5rem;
-
-              span {
-                line-height: 2.5rem;
-                display: block;
-                overflow: hidden;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                background-color: transparent;
-              }
-
-              .song_name {
-                font-size: 1.6rem;
-              }
-
-              .artist_name {
-                color: var(--color4);
-                font-size: 1.2rem;
-              }
-            }
           }
 
-          .playing_list_paging {
-            button {
-              background-color: transparent;
-              border: none;
-              color: var(--color2);
+          .p_foot {
+            flex: auto;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+
+            .song_item {
+              height: 6rem;
+              display: flex;
+              &:not(:first-of-type) {
+                border-top: 0.1rem solid var(--color8);
+              }
+
+              &:hover {
+                background-color: var(--bg-color-o1);
+                color: var(--text-hover-color);
+                .logo_wrap {
+                  transform: scale(1.1);
+                }
+              }
+
+              &.active {
+                color: var(--text-hover-color);
+                background-color: var(--bg-color-o2);
+              }
+
+              .play_mv,
+              .del {
+                flex: none;
+                text-align: center;
+                line-height: 6rem;
+                width: 4rem;
+                font-size: 2rem;
+              }
+
+              .logo_wrap {
+                position: relative;
+                flex: none;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 6rem;
+                height: 6rem;
+                overflow: hidden;
+
+                .logo {
+                  width: 80%;
+                  height: 80%;
+                  border-radius: 50%;
+                  background-image: url('../../images/img/loading.svg');
+                  background-repeat: no-repeat;
+                  background-position: center;
+                  background-size: 50%;
+                  overflow: hidden;
+                  position: relative;
+                  &.load {
+                    background-color: transparent;
+                    background-size: cover;
+                  }
+
+                  .play_gif {
+                    width: 100%;
+                    height: 100%;
+                    background-image: url(../../images/img/wave.gif);
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    background-size: 1.4rem;
+                    background-color: #00000060;
+                    pointer-events: none;
+                    top: 0;
+                    display: none;
+                    left: 0;
+                    position: absolute;
+
+                    &.show {
+                      display: block;
+                    }
+                  }
+                }
+              }
+
+              .play_mv,
+              .del {
+                color: var(--color4);
+
+                &:hover {
+                  color: var(--text-hover-color);
+                  transform: scale(1.1);
+                }
+              }
+              .del {
+                &:hover {
+                  color: var(--btn-danger-color);
+                }
+              }
+              .song_info_wrap {
+                flex: auto;
+                width: 0;
+                padding: 0.5rem;
+
+                span {
+                  line-height: 2.5rem;
+                  display: block;
+                  overflow: hidden;
+                  white-space: nowrap;
+                  text-overflow: ellipsis;
+                  background-color: transparent;
+                }
+
+                .song_name {
+                  font-size: 1.6rem;
+                }
+
+                .artist_name {
+                  color: var(--color4);
+                  font-size: 1.2rem;
+                }
+              }
+            }
+
+            .playing_list_paging {
+              button {
+                background-color: transparent;
+                border: none;
+                color: var(--color2);
+              }
             }
           }
         }

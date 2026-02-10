@@ -139,9 +139,6 @@ class RightM {
     this.dragClose = myDrag({
       trigger: this.title,
       target: this.rightBox,
-      down({ target }) {
-        target.style.transition = '0s';
-      },
       up({ target, x, y }) {
         const { h, w } = getScreenSize();
         if (y <= 0 || y >= h || x > w || 0 - x > target.offsetWidth) {
@@ -155,9 +152,6 @@ class RightM {
     this.resizeClose = myResize(
       {
         target: this.rightBox,
-        down: ({ target }) => {
-          target.style.transition = '0s';
-        },
         up: ({ target, x, y }) => {
           savePopLocationInfo(target, {
             x,
@@ -836,9 +830,6 @@ class Pop {
     this.dragClose = myDrag({
       trigger: this.box,
       border: true,
-      down({ target }) {
-        target.style.transition = '0s';
-      },
     });
     this.show();
     this.bindEvent();

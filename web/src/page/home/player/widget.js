@@ -15,7 +15,9 @@ import {
   myResize,
   myToMax,
   myToRest,
+  removeFullScreenStateStyle,
   savePopLocationInfo,
+  switchFullScreenStateStyle,
   toCenter,
   toSetSize,
 } from '../../../js/utils/utils';
@@ -442,8 +444,8 @@ myDrag({
   trigger: $musicMvWrap.find('.m_top_space')[0],
   target: $musicMvWrap[0],
   down({ target }) {
-    target.style.transition = '0s';
     showIframeMask();
+    removeFullScreenStateStyle(target);
   },
   dblclick({ target }) {
     if (isFullScreen(target)) {
@@ -469,8 +471,8 @@ myDrag({
 myResize({
   target: $musicMvWrap[0],
   down({ target }) {
-    target.style.transition = '0s';
     showIframeMask();
+    removeFullScreenStateStyle(target);
   },
   up({ target, x, y }) {
     hideIframeMask();
@@ -483,14 +485,15 @@ myResize({
     savePopLocationInfo(target, obj);
     mvSize = obj;
     localData.set('mvSize', mvSize);
+    switchFullScreenStateStyle(target);
   },
 });
 myDrag({
   trigger: $editLrcWrap.find('.song_info_text')[0],
   target: $editLrcWrap[0],
   down({ target }) {
-    target.style.transition = '0s';
     showIframeMask();
+    removeFullScreenStateStyle(target);
   },
   dblclick({ target }) {
     if (isFullScreen(target)) {
@@ -516,8 +519,8 @@ myDrag({
 myResize({
   target: $editLrcWrap[0],
   down({ target }) {
-    target.style.transition = '0s';
     showIframeMask();
+    removeFullScreenStateStyle(target);
   },
   up({ target, x, y }) {
     hideIframeMask();
@@ -530,6 +533,7 @@ myResize({
     savePopLocationInfo(target, obj);
     editLrcSize = obj;
     localData.set('editLrcSize', editLrcSize);
+    switchFullScreenStateStyle(target);
   },
 });
 // 层级

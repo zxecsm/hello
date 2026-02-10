@@ -647,7 +647,7 @@ export function showLrcBox() {
   lrcHeadContentScrollArtist.init(playingSongInfo.artist);
   _setTimeout(() => {
     lrcScroll(true);
-  }, 600);
+  }, _d.speed + 100);
   $lrcHead.find('.close').stop().fadeIn(_d.speed);
 }
 //进度条

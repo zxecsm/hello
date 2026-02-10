@@ -42,6 +42,8 @@ import {
   getCenterPointDistance,
   _animate,
   savePopLocationInfo,
+  switchFullScreenStateStyle,
+  removeFullScreenStateStyle,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -2028,8 +2030,8 @@ myDrag({
   trigger: $chatHeadBtns.find('.chat_title')[0],
   target: $chatRoomWrap[0],
   down({ target }) {
-    target.style.transition = '0s';
     showIframeMask();
+    removeFullScreenStateStyle(target);
   },
   dblclick({ target }) {
     if (isFullScreen(target)) {
@@ -2055,8 +2057,8 @@ myDrag({
 myResize({
   target: $chatRoomWrap[0],
   down({ target }) {
-    target.style.transition = '0s';
     showIframeMask();
+    removeFullScreenStateStyle(target);
   },
   up({ target, x, y }) {
     hideIframeMask();
@@ -2069,6 +2071,7 @@ myResize({
     savePopLocationInfo(target, obj);
     chatSize = obj;
     localData.set('chatSize', chatSize);
+    switchFullScreenStateStyle(target);
   },
 });
 // 手势

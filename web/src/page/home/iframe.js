@@ -4,20 +4,21 @@ import {
   ContentScroll,
   _animate,
   _getTarget,
-  _setTimeout,
   getCenterPointDistance,
   getFaviconPath,
   getScreenSize,
   imgjz,
-  isBigScreen,
   isFullScreen,
   isMobile,
   longPress,
   myDrag,
   myOpen,
   myResize,
+  myToMax,
+  myToRest,
+  removeFullScreenStateStyle,
   savePopLocationInfo,
-  switchBorderRadius,
+  switchFullScreenStateStyle,
   toCenter,
   toSetSize,
 } from '../../js/utils/utils';
@@ -146,8 +147,8 @@ class CreateIframe {
     this.resizeClose = myResize({
       target: this.box,
       down({ target }) {
-        target.style.transition = '0s';
         showIframeMask();
+        removeFullScreenStateStyle(target);
       },
       up({ target, x, y }) {
         hideIframeMask();
@@ -156,6 +157,7 @@ class CreateIframe {
         savePopLocationInfo(target, { x, y, w, h });
         iframeSize = { w, h };
         localData.set('iframeSize', iframeSize);
+        switchFullScreenStateStyle(target);
       },
     });
     // 拖动窗口
@@ -163,24 +165,24 @@ class CreateIframe {
       trigger: this.box.querySelector('.i_title_text'),
       target: this.box,
       down({ target }) {
-        target.style.transition = '0s';
         showIframeMask();
+        removeFullScreenStateStyle(target);
       },
       dblclick: () => {
         if (isFullScreen(this.box)) {
-          this.toRest();
+          myToRest(this.box);
         } else {
-          this.toMax();
+          myToMax(this.box);
         }
       },
       up: ({ target, x, y, pointerX }) => {
         hideIframeMask();
         const { h, w } = getScreenSize();
         if (y <= 0 || y >= h || x > w || 0 - x > target.offsetWidth) {
-          this.toMax();
+          myToMax(target);
         } else {
           savePopLocationInfo(target, { x, y });
-          this.toRest(pointerX);
+          myToRest(target, pointerX);
         }
       },
     });
@@ -207,51 +209,6 @@ class CreateIframe {
   // 处理层级
   hdZindex() {
     setZidx(this.box, this.id, this.hdHide.bind(this), this.isTop, this.tagBox);
-  }
-  // 全屏
-  toMax() {
-    const { w, h } = getScreenSize();
-    this.box.style.transition =
-      'top var(--speed-duration) var(--speed-timing), left var(--speed-duration) var(--speed-timing), width var(--speed-duration) var(--speed-timing), height var(--speed-duration) var(--speed-timing)';
-    this.box.style.top = 0 + 'px';
-    this.box.style.left = 0 + 'px';
-    this.box.style.width = w + 'px';
-    this.box.style.height = h + 'px';
-    if (!isBigScreen()) {
-      savePopLocationInfo(this.box, { x: 0, y: 0, w, h });
-    }
-    _setTimeout(() => {
-      switchBorderRadius(this.box);
-    }, 600);
-  }
-  // 退出全屏
-  toRest(pointerX, isToMin = true) {
-    const screen = getScreenSize();
-    let { x = 0, y = 0, w = 0, h = 0 } = this.box.dataset;
-    this.box.style.transition =
-      'top var(--speed-duration) var(--speed-timing), left var(--speed-duration) var(--speed-timing), width var(--speed-duration) var(--speed-timing), height var(--speed-duration) var(--speed-timing)';
-    if (pointerX && isToMin) {
-      const bw = this.box.offsetWidth;
-      if (bw != w) {
-        const percent = (pointerX - x) / bw;
-        x = pointerX - w * percent;
-        savePopLocationInfo(this.box, { x });
-      }
-    }
-    // 超出屏幕则居中
-    if (x > screen.w || y > screen.h || 0 - x > w || y < 0) {
-      toCenter(this.box);
-      return;
-    }
-    if (isToMin) {
-      this.box.style.top = y + 'px';
-      this.box.style.left = x + 'px';
-      this.box.style.width = w + 'px';
-      this.box.style.height = h + 'px';
-    }
-    _setTimeout(() => {
-      switchBorderRadius(this.box);
-    }, 600);
   }
   bandEvent() {
     this.hdClick = this.hdClick.bind(this);
@@ -306,9 +263,9 @@ class CreateIframe {
       this.close();
     } else if (_getTarget(this.box, e, '.i_to_max_btn')) {
       if (isFullScreen(this.box)) {
-        this.toRest();
+        myToRest(this.box);
       } else {
-        this.toMax();
+        myToMax(this.box);
       }
     } else if (_getTarget(this.box, e, '.i_refresh_btn')) {
       this.iframeLoad.style.opacity = 1;
@@ -403,7 +360,7 @@ function switchIframeBox() {
       });
     }
     ifram.scrollT.init(ifram.name);
-    ifram.toRest(false, false);
+    myToRest(iframeBox, false, false);
     _this.classList.remove('hide');
     return;
   }

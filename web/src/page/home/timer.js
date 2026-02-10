@@ -26,10 +26,10 @@ let lastPlayCount = 0; // 同步播放进度计数
       timestamp: +Date.now(),
     }).split('-');
     if (
-      (minute === 59 && second >= 30) ||
-      (minute === 29 && second >= 30) ||
-      (minute === 0 && second === 0) ||
-      (minute === 30 && second === 0)
+      (+minute === 59 && +second >= 30) ||
+      (+minute === 29 && +second >= 30) ||
+      (+minute === 0 && +second === 0) ||
+      (+minute === 30 && +second === 0)
     ) {
       _msg.botMsg(`整点报时：${hour}:${minute}:${second}`, 1);
     }

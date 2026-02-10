@@ -17,6 +17,8 @@ import {
   getCenterPointDistance,
   _animate,
   savePopLocationInfo,
+  switchFullScreenStateStyle,
+  removeFullScreenStateStyle,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
@@ -456,8 +458,8 @@ myDrag({
   trigger: $theadBtns.find('.t_space')[0],
   target: $todoBox[0],
   down({ target }) {
-    target.style.transition = '0s';
     showIframeMask();
+    removeFullScreenStateStyle(target);
   },
   dblclick({ target }) {
     if (isFullScreen(target)) {
@@ -484,8 +486,8 @@ myDrag({
 myResize({
   target: $todoBox[0],
   down({ target }) {
-    target.style.transition = '0s';
     showIframeMask();
+    removeFullScreenStateStyle(target);
   },
   up({ target, x, y }) {
     hideIframeMask();
@@ -498,11 +500,12 @@ myResize({
     savePopLocationInfo(target, obj);
     todoSize = obj;
     localData.set('todoSize', todoSize);
+    switchFullScreenStateStyle(target);
   },
 });
 // 手势关闭
 _mySlide({
-  el: $todoList[0],
+  el: $todoListWrap[0],
   right(e) {
     if (_getTarget(this, e, '.todo_list .todo_paging_box')) return;
     closeTodoBox();

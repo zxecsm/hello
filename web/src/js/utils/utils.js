@@ -1575,16 +1575,22 @@ export function toCenter(el, obj) {
   savePopLocationInfo(el, { x, y });
 
   _setTimeout(() => {
-    switchBorderRadius(el);
-  }, 600);
+    switchFullScreenStateStyle(el);
+  }, _d.speed + 100);
 }
-export function switchBorderRadius(target) {
+export function switchFullScreenStateStyle(target) {
   const { top, left } = _position(target, true);
   if (isFullScreen(target) && top === 0 && left === 0) {
-    target.classList.add('fullscreen');
+    addFullScreenStateStyle(target);
   } else {
-    target.classList.remove('fullscreen');
+    removeFullScreenStateStyle(target);
   }
+}
+export function addFullScreenStateStyle(target) {
+  target.classList.add('fullscreen');
+}
+export function removeFullScreenStateStyle(target) {
+  target.classList.remove('fullscreen');
 }
 // 窗口尺寸
 export function getScreenSize() {
@@ -1598,19 +1604,20 @@ export function toSetSize(target, maxW = 800, maxH = 800) {
   // maxW = randomNum(maxW - 100, maxW + 100);
   // maxH = randomNum(maxH - 100, maxH + 100);
   const { w: ww, h: wh } = getScreenSize();
-  let w, h;
-  if (ww <= _d.screen) {
-    h = wh;
-    w = ww;
-  } else {
+  if (ww > _d.screen) {
     const diffH = Math.abs(wh - maxH),
       diffW = Math.abs(ww - maxW);
-    h = wh > maxH ? (diffH > 60 ? maxH : wh - 60) : wh - 60;
-    w = ww > maxW ? (diffW > 60 ? maxW : ww - 60) : ww - 60;
+    const h = wh > maxH ? (diffH > 60 ? maxH : wh - 60) : wh - 60;
+    const w = ww > maxW ? (diffW > 60 ? maxW : ww - 60) : ww - 60;
+    target.style.width = w + 'px';
+    target.style.height = h + 'px';
+    savePopLocationInfo(target, { w, h });
+  } else {
+    // 小屏幕直接全屏
+    target.style.width = 100 + '%';
+    target.style.height = 100 + '%';
+    savePopLocationInfo(target, { w: '', h: '' });
   }
-  target.style.width = w + 'px';
-  target.style.height = h + 'px';
-  savePopLocationInfo(target, { w, h });
 }
 export function savePopLocationInfo(target, info = {}) {
   const { x, y, w, h } = info;
@@ -1621,19 +1628,23 @@ export function savePopLocationInfo(target, info = {}) {
 }
 // 窗口全屏
 export function myToMax(target) {
-  const { w, h } = getScreenSize();
-  target.style.transition =
-    'left var(--speed-duration) var(--speed-timing), top var(--speed-duration) var(--speed-timing), width var(--speed-duration) var(--speed-timing), height var(--speed-duration) var(--speed-timing)';
-  target.style.top = 0 + 'px';
-  target.style.left = 0 + 'px';
-  target.style.width = w + 'px';
-  target.style.height = h + 'px';
+  _animate(
+    target,
+    {
+      to: { top: 0, left: 0, width: '100%', height: '100%' },
+    },
+    () => {
+      target.style.top = 0;
+      target.style.left = 0;
+      target.style.width = '100%';
+      target.style.height = '100%';
+      switchFullScreenStateStyle(target);
+    },
+  );
   if (!isBigScreen()) {
-    savePopLocationInfo(target, { w, h, x: 0, y: 0 });
+    // 小屏幕全屏也记录为上次位置
+    savePopLocationInfo(target, { x: 0, y: 0, h: '', w: '' });
   }
-  _setTimeout(() => {
-    switchBorderRadius(target);
-  }, 600);
 }
 // 全屏大小状态
 export function isFullScreen(target) {
@@ -1644,32 +1655,39 @@ export function isFullScreen(target) {
 }
 // 重置位置
 export function myToRest(target, pointerX, isToMin = true) {
-  let { x = 0, y = 0, w = 0, h = 0 } = target.dataset;
   const screen = getScreenSize();
-  target.style.transition =
-    'left var(--speed-duration) var(--speed-timing), top var(--speed-duration) var(--speed-timing), width var(--speed-duration) var(--speed-timing), height var(--speed-duration) var(--speed-timing)';
+  let { x = 0, y = 0, w = 0, h = 0 } = target.dataset;
+  w = w === '' ? target.offsetWidth : w;
+  h = h === '' ? target.offsetHeight : h;
+
   if (pointerX && isToMin) {
-    const tw = target.offsetWidth;
-    if (w != tw) {
-      const pes = (pointerX - x) / tw;
-      x = pointerX - w * pes;
+    const bw = target.offsetWidth;
+    if (bw != w) {
+      const percent = (pointerX - x) / bw;
+      x = pointerX - w * percent;
       savePopLocationInfo(target, { x });
     }
   }
-  // 超出屏幕居中
+  // 超出屏幕则居中
   if (x > screen.w || y > screen.h || 0 - x > w || y < 0) {
     toCenter(target);
     return;
   }
   if (isToMin) {
-    target.style.top = y + 'px';
-    target.style.left = x + 'px';
-    target.style.width = w + 'px';
-    target.style.height = h + 'px';
+    _animate(
+      target,
+      {
+        to: { top: y + 'px', left: x + 'px', width: w + 'px', height: h + 'px' },
+      },
+      () => {
+        target.style.top = y + 'px';
+        target.style.left = x + 'px';
+        target.style.width = w + 'px';
+        target.style.height = h + 'px';
+        switchFullScreenStateStyle(target);
+      },
+    );
   }
-  _setTimeout(() => {
-    switchBorderRadius(target);
-  }, 600);
 }
 export function pxToRem(px, baseFontSize) {
   const pxValue = typeof px === 'string' ? parseFloat(px) : px;

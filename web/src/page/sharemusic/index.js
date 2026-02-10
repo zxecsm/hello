@@ -41,6 +41,8 @@ import {
   pageErr,
   _animate,
   savePopLocationInfo,
+  switchFullScreenStateStyle,
+  removeFullScreenStateStyle,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -812,7 +814,7 @@ function renderPlayList() {
       <div v-if="mv" class="play_mv iconfont icon-shipin2"></div>
       <div cursor="y" class="del iconfont icon-shibai"></div>
     </li>
-    <div v-html="getPaging()" style="padding:2rem 0;text-align:center;" class="playing_list_paging no_select"></div>
+    <div v-if="totalPage > 1" v-html="getPaging()" style="padding:2rem 0;text-align:center;" class="playing_list_paging no_select"></div>
     `,
     {
       arr,
@@ -973,7 +975,7 @@ myDrag({
   trigger: $musicMvWrap.find('.m_top_space')[0],
   target: $musicMvWrap[0],
   down({ target }) {
-    target.style.transition = '0s';
+    removeFullScreenStateStyle(target);
   },
   dblclick({ target }) {
     if (isFullScreen(target)) {
@@ -998,7 +1000,7 @@ myDrag({
 myResize({
   target: $musicMvWrap[0],
   down({ target }) {
-    target.style.transition = '0s';
+    removeFullScreenStateStyle(target);
   },
   up({ target, x, y }) {
     const obj = {
@@ -1010,6 +1012,7 @@ myResize({
     savePopLocationInfo(target, obj);
     mvSize = obj;
     localData.set('mvSize', mvSize);
+    switchFullScreenStateStyle(target);
   },
 });
 $lrcMenuWrap

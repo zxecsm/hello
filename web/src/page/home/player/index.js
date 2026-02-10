@@ -45,6 +45,8 @@ import {
   getCenterPointDistance,
   savePopLocationInfo,
   parseJson,
+  switchFullScreenStateStyle,
+  removeFullScreenStateStyle,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -391,7 +393,7 @@ function musicBackBtn() {
     $msuicContentBox.find('.list_items_wrap').removeClass('open');
     _setTimeout(() => {
       $songItemsBox.html('');
-    }, 800);
+    }, _d.speed + 100);
     $musicHeadWrap.find('.song_list_name').css('opacity', 0).text('');
   } else if (!musicPlayerIsHide()) {
     hideMusicPlayBox();
@@ -2556,8 +2558,8 @@ myDrag({
   trigger: $musicHeadWrap.find('.song_list_name')[0],
   target: $musicPlayerBox[0],
   down({ target }) {
-    target.style.transition = '0s';
     showIframeMask();
+    removeFullScreenStateStyle(target);
   },
   dblclick({ target }) {
     if (isFullScreen(target)) {
@@ -2583,8 +2585,8 @@ myDrag({
 myResize({
   target: $musicPlayerBox[0],
   down({ target }) {
-    target.style.transition = '0s';
     showIframeMask();
+    removeFullScreenStateStyle(target);
   },
   up({ target, x, y }) {
     hideIframeMask();
@@ -2597,6 +2599,7 @@ myResize({
     savePopLocationInfo(target, obj);
     musicPlayerSize = obj;
     localData.set('musicPlayerSize', musicPlayerSize);
+    switchFullScreenStateStyle(target);
   },
 });
 const allowSlide = {

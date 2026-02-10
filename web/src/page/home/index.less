@@ -3978,244 +3978,248 @@ body {
           border-radius: var(--border-radius1) var(--border-radius1) 0 0;
           padding: 0 0.2rem;
           background-color: var(--color8);
-
-          .p_head {
-            width: 100%;
-            height: 4rem;
-            padding: 0.5rem 0;
-            display: flex;
-            align-items: center;
-            .left {
-              flex: auto;
-              line-height: 4rem;
-              margin-left: 0.5rem;
-            }
-
-            .share_playing_list,
-            .check_btn,
-            .clear_playing_list {
-              flex: none;
-              line-height: 4rem;
-              text-align: center;
-              height: 4rem;
-              width: 4rem;
-              font-size: 2rem;
-
-              &:hover {
-                transform: scale(1.1);
-              }
-            }
-            .clear_playing_list {
-              &:hover {
-                color: var(--btn-danger-color);
-              }
-            }
-            .share_playing_list {
-              font-size: 1.8rem;
-            }
-          }
-
-          .p_foot {
-            position: relative;
+          .p_music_list_content_wrap {
             width: 100%;
             height: 100%;
-            padding-bottom: 10rem;
-            overflow-y: auto;
-            overflow-x: hidden;
+            display: flex;
+            flex-flow: column;
 
-            .song_item {
-              height: 6rem;
+            .p_head {
+              flex: none;
+              width: 100%;
+              height: 4rem;
+              padding: 0.5rem 0;
               display: flex;
-              margin: 0.6rem 0.2rem;
-              position: relative;
-
-              &:hover {
-                background-color: var(--bg-color-o1);
-                color: var(--text-hover-color);
-                border-radius: var(--border-radius1);
-                .logo_wrap {
-                  transform: scale(1.1);
-                }
+              align-items: center;
+              .left {
+                flex: auto;
+                line-height: 4rem;
+                margin-left: 0.5rem;
               }
 
-              &.active {
-                color: var(--text-hover-color);
-                border-radius: var(--border-radius1);
-                background-color: var(--bg-color-o2);
-              }
-              .check_state {
-                display: none;
-                position: absolute;
-                top: 0;
-                left: 0;
-                border-radius: var(--border-radius1);
-                width: 100%;
-                height: 100%;
-                z-index: 5;
-              }
-              .downloaded {
-                position: absolute;
-                top: 0;
-                left: 0;
-                pointer-events: none;
-                font-size: 1.6rem;
-                opacity: 0.8;
-                color: var(--message-success-color);
-                z-index: 6;
-              }
-              .play_mv,
-              .like_hear,
-              .del {
+              .share_playing_list,
+              .check_btn,
+              .clear_playing_list {
                 flex: none;
+                line-height: 4rem;
                 text-align: center;
-                line-height: 6rem;
+                height: 4rem;
                 width: 4rem;
                 font-size: 2rem;
+
                 &:hover {
                   transform: scale(1.1);
                 }
               }
-
-              .like_hear {
-                font-size: 1.8rem;
-                color: var(--color4);
-              }
-
-              .like_hear.active {
-                color: #fd4747;
-              }
-
-              .logo_wrap {
-                position: relative;
-                flex: none;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                width: 6rem;
-                height: 6rem;
-                overflow: hidden;
-
-                .logo {
-                  width: 80%;
-                  height: 80%;
-                  border-radius: 50%;
-                  background-image: url('../../images/img/loading.svg');
-                  background-repeat: no-repeat;
-                  background-position: center;
-                  background-size: 50%;
-                  overflow: hidden;
-                  position: relative;
-                  &.load {
-                    background-color: transparent;
-                    background-size: cover;
-                  }
-                  .play_gif {
-                    width: 100%;
-                    height: 100%;
-                    background-image: url(../../images/img/wave.gif);
-                    background-repeat: no-repeat;
-                    background-position: center;
-                    background-size: 1.4rem;
-                    background-color: #00000060;
-                    pointer-events: none;
-                    top: 0;
-                    display: none;
-                    left: 0;
-                    position: absolute;
-
-                    &.show {
-                      display: block;
-                    }
-                  }
-                }
-              }
-
-              .play_mv,
-              .del {
-                color: var(--color4);
-
-                &:hover {
-                  color: var(--text-hover-color);
-                }
-              }
-              .del {
+              .clear_playing_list {
                 &:hover {
                   color: var(--btn-danger-color);
                 }
               }
-              .song_info_wrap {
-                flex: auto;
-                width: 0;
-                padding: 0.5rem;
+              .share_playing_list {
+                font-size: 1.8rem;
+              }
+            }
 
-                span {
-                  line-height: 2.5rem;
-                  display: block;
-                  overflow: hidden;
-                  white-space: nowrap;
-                  text-overflow: ellipsis;
-                  background-color: transparent;
+            .p_foot {
+              position: relative;
+              width: 100%;
+              height: 100%;
+              overflow-y: auto;
+              overflow-x: hidden;
+              flex: auto;
+
+              .song_item {
+                height: 6rem;
+                display: flex;
+                margin: 0.6rem 0.2rem;
+                position: relative;
+
+                &:hover {
+                  background-color: var(--bg-color-o1);
+                  color: var(--text-hover-color);
+                  border-radius: var(--border-radius1);
+                  .logo_wrap {
+                    transform: scale(1.1);
+                  }
                 }
 
-                .song_name {
+                &.active {
+                  color: var(--text-hover-color);
+                  border-radius: var(--border-radius1);
+                  background-color: var(--bg-color-o2);
+                }
+                .check_state {
+                  display: none;
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  border-radius: var(--border-radius1);
+                  width: 100%;
+                  height: 100%;
+                  z-index: 5;
+                }
+                .downloaded {
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  pointer-events: none;
                   font-size: 1.6rem;
+                  opacity: 0.8;
+                  color: var(--message-success-color);
+                  z-index: 6;
+                }
+                .play_mv,
+                .like_hear,
+                .del {
+                  flex: none;
+                  text-align: center;
+                  line-height: 6rem;
+                  width: 4rem;
+                  font-size: 2rem;
+                  &:hover {
+                    transform: scale(1.1);
+                  }
                 }
 
-                .artist_name {
+                .like_hear {
+                  font-size: 1.8rem;
                   color: var(--color4);
-                  font-size: 1.2rem;
+                }
 
-                  i {
-                    &:hover {
-                      text-decoration: var(--text-hover-decoration);
-                      text-decoration-color: var(--color);
+                .like_hear.active {
+                  color: #fd4747;
+                }
+
+                .logo_wrap {
+                  position: relative;
+                  flex: none;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  width: 6rem;
+                  height: 6rem;
+                  overflow: hidden;
+
+                  .logo {
+                    width: 80%;
+                    height: 80%;
+                    border-radius: 50%;
+                    background-image: url('../../images/img/loading.svg');
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    background-size: 50%;
+                    overflow: hidden;
+                    position: relative;
+                    &.load {
+                      background-color: transparent;
+                      background-size: cover;
+                    }
+                    .play_gif {
+                      width: 100%;
+                      height: 100%;
+                      background-image: url(../../images/img/wave.gif);
+                      background-repeat: no-repeat;
+                      background-position: center;
+                      background-size: 1.4rem;
+                      background-color: #00000060;
+                      pointer-events: none;
+                      top: 0;
+                      display: none;
+                      left: 0;
+                      position: absolute;
+
+                      &.show {
+                        display: block;
+                      }
+                    }
+                  }
+                }
+
+                .play_mv,
+                .del {
+                  color: var(--color4);
+
+                  &:hover {
+                    color: var(--text-hover-color);
+                  }
+                }
+                .del {
+                  &:hover {
+                    color: var(--btn-danger-color);
+                  }
+                }
+                .song_info_wrap {
+                  flex: auto;
+                  width: 0;
+                  padding: 0.5rem;
+
+                  span {
+                    line-height: 2.5rem;
+                    display: block;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    background-color: transparent;
+                  }
+
+                  .song_name {
+                    font-size: 1.6rem;
+                  }
+
+                  .artist_name {
+                    color: var(--color4);
+                    font-size: 1.2rem;
+
+                    i {
+                      &:hover {
+                        text-decoration: var(--text-hover-decoration);
+                        text-decoration-color: var(--color);
+                      }
                     }
                   }
                 }
               }
-            }
 
-            .playing_list_paging {
-              button {
-                background-color: transparent;
-                border: none;
-                color: var(--color2);
-              }
-            }
-          }
-          .p_foot_menu {
-            display: none;
-            position: absolute;
-            left: 0;
-            flex: none;
-            width: 100%;
-            bottom: 0;
-            padding: 0.5rem 0;
-            background-color: var(--bg-color-o2);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            z-index: 5;
-            .flex_wrap {
-              width: 100%;
-              display: flex;
-              align-items: center;
-              flex-flow: row wrap;
-              div {
-                flex: none;
-                font-size: 2rem;
-                margin: 0.5rem 0.5rem 0.5rem 1rem;
-                text-align: center;
-                width: 2.5rem;
-                height: 2.5rem;
-                line-height: 2.5rem;
-                &:hover {
-                  transform: scale(1.1);
-                  color: var(--text-hover-color);
+              .playing_list_paging {
+                button {
+                  background-color: transparent;
+                  border: none;
+                  color: var(--color2);
                 }
               }
+            }
+            .p_foot_menu {
+              display: none;
+              flex: none;
+              width: 100%;
+              padding: 0.5rem 0;
+              background-color: var(--bg-color-o2);
+              backdrop-filter: blur(8px);
+              -webkit-backdrop-filter: blur(8px);
+              z-index: 5;
+              .flex_wrap {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                flex-flow: row wrap;
+                div {
+                  flex: none;
+                  font-size: 2rem;
+                  margin: 0.5rem 0.5rem 0.5rem 1rem;
+                  text-align: center;
+                  width: 2.5rem;
+                  height: 2.5rem;
+                  line-height: 2.5rem;
+                  &:hover {
+                    transform: scale(1.1);
+                    color: var(--text-hover-color);
+                  }
+                }
 
-              button {
-                flex: none;
+                button {
+                  flex: none;
+                }
               }
             }
           }

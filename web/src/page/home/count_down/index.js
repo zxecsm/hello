@@ -19,6 +19,8 @@ import {
   getCenterPointDistance,
   _animate,
   savePopLocationInfo,
+  switchFullScreenStateStyle,
+  removeFullScreenStateStyle,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
@@ -195,7 +197,7 @@ function renderCountList(total, toTop) {
         .find('.num')
         .text(`${percent}%`);
     });
-  }, 500);
+  }, _d.speed + 100);
 }
 // 分页
 const countPgnt = pagination($countList[0], {
@@ -625,8 +627,8 @@ myDrag({
   trigger: $cheadBtns.find('.c_space')[0],
   target: $countBox[0],
   down({ target }) {
-    target.style.transition = '0s';
     showIframeMask();
+    removeFullScreenStateStyle(target);
   },
   dblclick({ target }) {
     if (isFullScreen(target)) {
@@ -653,8 +655,8 @@ myDrag({
 myResize({
   target: $countBox[0],
   down({ target }) {
-    target.style.transition = '0s';
     showIframeMask();
+    removeFullScreenStateStyle(target);
   },
   up({ target, x, y }) {
     hideIframeMask();
@@ -667,11 +669,12 @@ myResize({
     savePopLocationInfo(target, obj);
     countDownSize = obj;
     localData.set('countDownSize', countDownSize);
+    switchFullScreenStateStyle(target);
   },
 });
 // 手势关闭
 _mySlide({
-  el: $countList[0],
+  el: $countListWrap[0],
   right(e) {
     if (_getTarget(this, e, '.count_list .count_paging_box')) return;
     closeCountBox();

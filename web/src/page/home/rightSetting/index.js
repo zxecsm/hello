@@ -2044,19 +2044,24 @@ function hdImportBm(arr) {
 }
 myDrag({
   trigger: $userInfoWrap[0],
-  down({ target }) {
-    target.style.transition = '0s';
+  down() {
     showIframeMask();
   },
   up({ target, x, y }) {
     hideIframeMask();
-    target.style.transition =
-      'top var(--speed-duration) var(--speed-timing), left var(--speed-duration) var(--speed-timing)';
     const { h, w } = getScreenSize();
     if (y <= 0 || y >= h || x > w || 0 - x > target.offsetWidth) {
       const { x, y } = target.dataset;
-      target.style.top = y + 'px';
-      target.style.left = x + 'px';
+      _animate(
+        target,
+        {
+          to: { top: y + 'px', left: x + 'px' },
+        },
+        () => {
+          target.style.top = y + 'px';
+          target.style.left = x + 'px';
+        },
+      );
     } else {
       savePopLocationInfo(target, { x, y });
       userInfoSize.x = x;
@@ -2067,19 +2072,24 @@ myDrag({
 });
 myDrag({
   trigger: $sysInfoWrap[0],
-  down({ target }) {
-    target.style.transition = '0s';
+  down() {
     showIframeMask();
   },
   up({ target, x, y }) {
     hideIframeMask();
-    target.style.transition =
-      'top var(--speed-duration) var(--speed-timing), left var(--speed-duration) var(--speed-timing)';
     const { h, w } = getScreenSize();
     if (y <= 0 || y >= h || x > w || 0 - x > target.offsetWidth) {
       const { x, y } = target.dataset;
-      target.style.top = y + 'px';
-      target.style.left = x + 'px';
+      _animate(
+        target,
+        {
+          to: { top: y + 'px', left: x + 'px' },
+        },
+        () => {
+          target.style.top = y + 'px';
+          target.style.left = x + 'px';
+        },
+      );
     } else {
       savePopLocationInfo(target, { x, y });
       sysInfoSize.x = x;

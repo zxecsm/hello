@@ -25,11 +25,13 @@ import {
 } from '../../api/ssh.js';
 import {
   _getTarget,
+  _myOpen,
   _setTimeout,
   debounce,
   getTextSize,
   isDarkMode,
   isIframe,
+  isMobile,
   longPress,
   myOpen,
   pageErr,
@@ -418,8 +420,38 @@ function addGroup(e) {
     '添加分组',
   );
 }
-
+function commandRightMenu(e) {
+  const data = [
+    {
+      id: 'add',
+      text: '添加命令',
+      beforeIcon: 'iconfont icon-tianjia',
+    },
+    {
+      id: 'manage',
+      text: '管理命令',
+      beforeIcon: 'iconfont icon-shezhi',
+    },
+  ];
+  rMenu.selectMenu(e, data, ({ e, close, id }) => {
+    if (id === 'add') {
+      addCommand(e);
+    } else if (id === 'manage') {
+      close();
+      _myOpen(`/file#${_d.sshConfigDir}`, '文件管理', 'file');
+    }
+  });
+}
+longPress($quickCommands[0], function (e) {
+  if (e.target !== $quickCommands[0]) return;
+  commandRightMenu(e.changedTouches[0]);
+});
 $quickCommands
+  .on('contextmenu', function (e) {
+    if (e.target !== $quickCommands[0] || isMobile()) return;
+    e.preventDefault();
+    commandRightMenu(e);
+  })
   .on('click', '.add', addCommand)
   .on('click', '.title', (e) => {
     const obj = getCommandInfo(curQuickGroupId, e.target.parentNode.dataset.id);

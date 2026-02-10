@@ -1482,6 +1482,12 @@ $header
             param: { path: item },
           };
         });
+        data.push({
+          id: 'manage',
+          beforeIcon: 'iconfont icon-shezhi',
+          text: '管理历史记录',
+          param: { path: _d.fileConfigDir },
+        });
         data.reverse();
         rMenu.selectMenu(
           e,
@@ -1515,7 +1521,12 @@ $header
             _msg.error('暂无收藏文件夹');
             return;
           }
-
+          data.unshift({
+            id: 'manage',
+            beforeIcon: 'iconfont icon-shezhi',
+            text: '管理收藏夹',
+            param: { path: _d.fileConfigDir },
+          });
           rMenu.selectMenu(
             e,
             data,
