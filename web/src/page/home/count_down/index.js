@@ -626,8 +626,10 @@ document.addEventListener('touchstart', (e) => {
 myDrag({
   trigger: $cheadBtns.find('.c_space')[0],
   target: $countBox[0],
-  down({ target }) {
+  down() {
     showIframeMask();
+  },
+  move({ target }) {
     removeFullScreenStateStyle(target);
   },
   dblclick({ target }) {
@@ -654,8 +656,10 @@ myDrag({
 // 调整大小
 myResize({
   target: $countBox[0],
-  down({ target }) {
+  down() {
     showIframeMask();
+  },
+  move({ target }) {
     removeFullScreenStateStyle(target);
   },
   up({ target, x, y }) {

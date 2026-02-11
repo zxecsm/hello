@@ -2557,8 +2557,10 @@ export const changePlayingAnimate = (function () {
 myDrag({
   trigger: $musicHeadWrap.find('.song_list_name')[0],
   target: $musicPlayerBox[0],
-  down({ target }) {
+  down() {
     showIframeMask();
+  },
+  move({ target }) {
     removeFullScreenStateStyle(target);
   },
   dblclick({ target }) {
@@ -2584,8 +2586,10 @@ myDrag({
 });
 myResize({
   target: $musicPlayerBox[0],
-  down({ target }) {
+  down() {
     showIframeMask();
+  },
+  move({ target }) {
     removeFullScreenStateStyle(target);
   },
   up({ target, x, y }) {

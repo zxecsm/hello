@@ -974,7 +974,7 @@ function playingListHighlight(a) {
 myDrag({
   trigger: $musicMvWrap.find('.m_top_space')[0],
   target: $musicMvWrap[0],
-  down({ target }) {
+  move({ target }) {
     removeFullScreenStateStyle(target);
   },
   dblclick({ target }) {
@@ -999,7 +999,7 @@ myDrag({
 });
 myResize({
   target: $musicMvWrap[0],
-  down({ target }) {
+  move({ target }) {
     removeFullScreenStateStyle(target);
   },
   up({ target, x, y }) {

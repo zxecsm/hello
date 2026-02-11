@@ -2029,8 +2029,10 @@ document.addEventListener('touchstart', (e) => {
 myDrag({
   trigger: $chatHeadBtns.find('.chat_title')[0],
   target: $chatRoomWrap[0],
-  down({ target }) {
+  down() {
     showIframeMask();
+  },
+  move({ target }) {
     removeFullScreenStateStyle(target);
   },
   dblclick({ target }) {
@@ -2056,8 +2058,10 @@ myDrag({
 });
 myResize({
   target: $chatRoomWrap[0],
-  down({ target }) {
+  down() {
     showIframeMask();
+  },
+  move({ target }) {
     removeFullScreenStateStyle(target);
   },
   up({ target, x, y }) {

@@ -457,8 +457,10 @@ document.addEventListener('touchstart', (e) => {
 myDrag({
   trigger: $theadBtns.find('.t_space')[0],
   target: $todoBox[0],
-  down({ target }) {
+  down() {
     showIframeMask();
+  },
+  move({ target }) {
     removeFullScreenStateStyle(target);
   },
   dblclick({ target }) {
@@ -485,8 +487,10 @@ myDrag({
 // 调整大小
 myResize({
   target: $todoBox[0],
-  down({ target }) {
+  down() {
     showIframeMask();
+  },
+  move({ target }) {
     removeFullScreenStateStyle(target);
   },
   up({ target, x, y }) {

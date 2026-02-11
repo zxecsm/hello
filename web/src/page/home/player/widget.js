@@ -443,8 +443,10 @@ myDrag({
 myDrag({
   trigger: $musicMvWrap.find('.m_top_space')[0],
   target: $musicMvWrap[0],
-  down({ target }) {
+  down() {
     showIframeMask();
+  },
+  move({ target }) {
     removeFullScreenStateStyle(target);
   },
   dblclick({ target }) {
@@ -470,8 +472,10 @@ myDrag({
 });
 myResize({
   target: $musicMvWrap[0],
-  down({ target }) {
+  down() {
     showIframeMask();
+  },
+  move({ target }) {
     removeFullScreenStateStyle(target);
   },
   up({ target, x, y }) {
@@ -491,8 +495,10 @@ myResize({
 myDrag({
   trigger: $editLrcWrap.find('.song_info_text')[0],
   target: $editLrcWrap[0],
-  down({ target }) {
+  down() {
     showIframeMask();
+  },
+  move({ target }) {
     removeFullScreenStateStyle(target);
   },
   dblclick({ target }) {
@@ -518,8 +524,10 @@ myDrag({
 });
 myResize({
   target: $editLrcWrap[0],
-  down({ target }) {
+  down() {
     showIframeMask();
+  },
+  move({ target }) {
     removeFullScreenStateStyle(target);
   },
   up({ target, x, y }) {

@@ -146,8 +146,10 @@ class CreateIframe {
     // 窗口缩放
     this.resizeClose = myResize({
       target: this.box,
-      down({ target }) {
+      down() {
         showIframeMask();
+      },
+      move({ target }) {
         removeFullScreenStateStyle(target);
       },
       up({ target, x, y }) {
@@ -164,8 +166,10 @@ class CreateIframe {
     this.dragClose = myDrag({
       trigger: this.box.querySelector('.i_title_text'),
       target: this.box,
-      down({ target }) {
+      down() {
         showIframeMask();
+      },
+      move({ target }) {
         removeFullScreenStateStyle(target);
       },
       dblclick: () => {
