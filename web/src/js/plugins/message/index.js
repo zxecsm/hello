@@ -1,6 +1,5 @@
 import _d from '../../common/config';
 import { _mySlide, debounce, playSound } from '../../utils/utils';
-import imgBlop from '../../../images/img/blop.mp3';
 import imgMsg from '../../../images/img/msg.mp3';
 import onlineMsg from '../../../images/img/online.mp3';
 import './index.less';
@@ -275,14 +274,7 @@ function error(message = '操作失败', callback, { duration = 6000, reside = f
   new Msg(opt, callback);
 }
 function warning(message, callback, { duration = 8000, reside = false } = {}) {
-  // 页面变为不可见时触发
-  if (document.visibilityState === 'hidden') {
-    _playSound(imgMsg);
-  }
-  // 页面变为可见时触发
-  if (document.visibilityState === 'visible') {
-    _playSound(imgBlop);
-  }
+  _playSound(imgMsg);
   const opt = {
     message,
     type: 'warning',
@@ -306,14 +298,7 @@ function info(message, callback, { duration = 3000, reside = false } = {}) {
 }
 function msg(opt, callback, sound) {
   if (sound) {
-    // 页面变为不可见时触发
-    if (document.visibilityState === 'hidden') {
-      _playSound(imgMsg);
-    }
-    // 页面变为可见时触发
-    if (document.visibilityState === 'visible') {
-      _playSound(imgBlop);
-    }
+    _playSound(imgMsg);
   }
   if (document.visibilityState === 'hidden') {
     addCache({ opt, callback });

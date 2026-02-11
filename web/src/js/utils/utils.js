@@ -1616,6 +1616,7 @@ export function toSetSize(target, maxW = 800, maxH = 800) {
     // 小屏幕直接全屏
     target.style.width = 100 + '%';
     target.style.height = 100 + '%';
+    addFullScreenStateStyle(target);
     savePopLocationInfo(target, { w: '', h: '' });
   }
 }

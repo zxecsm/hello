@@ -440,16 +440,16 @@ html {
             overflow-y: auto;
             overflow-x: hidden;
             position: relative;
+            padding: 0 0.5rem;
 
             .song_item {
               height: 6rem;
               display: flex;
-              &:not(:first-of-type) {
-                border-top: 0.1rem solid var(--color8);
-              }
+              margin: 0.5rem 0;
 
               &:hover {
                 background-color: var(--bg-color-o1);
+                border-radius: var(--border-radius1);
                 color: var(--text-hover-color);
                 .logo_wrap {
                   transform: scale(1.1);
@@ -457,6 +457,7 @@ html {
               }
 
               &.active {
+                border-radius: var(--border-radius1);
                 color: var(--text-hover-color);
                 background-color: var(--bg-color-o2);
               }
@@ -545,6 +546,7 @@ html {
                 }
 
                 .song_name {
+                  font-weight: 500;
                   font-size: 1.6rem;
                 }
 

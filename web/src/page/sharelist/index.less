@@ -19,6 +19,7 @@ body {
     border-right: 0.1rem solid var(--color9);
     display: flex;
     flex-flow: column;
+    padding: 0 0.5rem;
 
     @media (max-width: 1000px) {
       & {
@@ -89,11 +90,10 @@ body {
         display: flex;
         padding: 0.5rem;
         align-items: center;
-        &:not(:first-of-type) {
-          border-top: 0.1rem solid var(--color9);
-        }
+        margin: 0.2rem 0;
         &:hover {
           background-color: var(--color9);
+          border-radius: var(--border-radius1);
           .item_type_logo {
             transform: scale(1.1);
           }
