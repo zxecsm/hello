@@ -11,9 +11,7 @@ function closeSSH(sshObj, temid) {
   uLog(false, `断开SSH: ${temid}`);
   try {
     if (sshObj.stream) {
-      sshObj.stream.removeAllListeners('data');
-      sshObj.stream.removeAllListeners('close');
-      sshObj.stream.removeAllListeners('error');
+      sshObj.stream.removeAllListeners();
 
       // 先关闭，再强制销毁
       sshObj.stream.end?.();
