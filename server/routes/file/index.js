@@ -240,6 +240,7 @@ route.post(
 
       // 有缓存则返回缓存
       if (update === 0 && cacheList) {
+        fileList.resetExpireTime(accFlag, `${p}_${word}`);
         taskState.delete(taskKey);
 
         _success(

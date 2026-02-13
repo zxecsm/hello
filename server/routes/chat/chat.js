@@ -346,7 +346,7 @@ export async function onlineMsg(req, pass) {
 
   // 已经在线、隐身或跳过的不通知
   if ((!con.hasOwnProperty(account) && hide === 0) || pass) {
-    const accs = Object.keys(con);
+    const accs = Object.keys(con).filter((acc) => acc !== account);
 
     await batchTask(async (offset, limit) => {
       const list = accs.slice(offset, offset + limit);

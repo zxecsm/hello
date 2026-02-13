@@ -21,6 +21,9 @@ const fileList = {
       return k.startsWith(`${account}_`);
     });
   },
+  resetExpireTime(account, key) {
+    this.cache.resetExpireTime(`${account}_${key}`);
+  },
 };
 
 export default fileList;
