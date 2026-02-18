@@ -260,7 +260,7 @@ function renderImgList(y) {
           <template v-else>
             <div v-for="{id} in data" class="img_item" :data-id="id">
               <div check="n" class="check_level"></div>
-              <i cursor="y" class="menu_btn iconfont icon-shoucang"></i>
+              <i cursor="y" class="menu_btn iconfont icon-maohao"></i>
               <div class="img"></div>
             </div>
             <div v-html="getPaging()" class="pagingbox"></div>

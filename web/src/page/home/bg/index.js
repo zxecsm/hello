@@ -323,7 +323,7 @@ export function renderBgList(y) {
           <template v-else>
             <div v-for="{id} in data" class="bg_item" :data-id="id">
               <div check="n" class="check_level"></div>
-              <i cursor="y" class="menu_btn iconfont icon-shoucang"></i>
+              <i cursor="y" class="menu_btn iconfont icon-maohao"></i>
               <div class="bg_img"></div>
             </div>
             <div v-html="getPaging()" class="bg_paging_box"></div>
