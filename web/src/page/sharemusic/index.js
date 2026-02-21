@@ -15,7 +15,7 @@ import {
   copyText,
   myShuffle,
   _mySlide,
-  downloadFile,
+  downloadFiles,
   ContentScroll,
   myDrag,
   toCenter,
@@ -1131,7 +1131,7 @@ $lrcMenuWrap
         } else if (id === '10') {
           close();
           const fname = `${playingSongInfo.artist}-${playingSongInfo.title}`;
-          downloadFile([
+          downloadFiles([
             {
               fileUrl: playingSongInfo.uurl,
               filename: fname,

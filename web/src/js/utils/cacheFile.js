@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { CacheByExpire } from './cache';
 import md5 from './md5';
-import { _setTimeout, downloadBlob, getFiles, isTextFile } from './utils';
+import { _setTimeout, downloadFile, getFiles, isTextFile } from './utils';
 import _msg from '../plugins/message';
 import _d from '../common/config';
 import localData from '../common/localData';
@@ -291,7 +291,7 @@ const cacheFile = {
           type: 'blob',
         });
 
-        downloadBlob(content, pName);
+        downloadFile(content, pName);
       }
     } catch (error) {
       throw error;

@@ -1109,34 +1109,41 @@ export function fileLogoType(fname, size) {
   }
 }
 
-// 默认下载
-export function defaultDownFile(url, filename) {
+// 下载
+export function downloadFile(urlOrBlob, filename) {
+  let url;
+
+  // 如果是 Blob 或 File，则创建 Blob URL
+  if (urlOrBlob instanceof Blob) {
+    url = window.URL.createObjectURL(urlOrBlob);
+  } else {
+    // 否则认为是普通 URL 字符串
+    url = urlOrBlob;
+  }
+
   const a = document.createElement('a');
+  a.style.display = 'none';
   a.href = url;
   if (filename) {
-    a.download = filename; // 设置下载文件名
+    a.download = filename;
   }
+
   document.body.appendChild(a);
+
+  // 必须同步触发 click
   a.click();
-  document.body.removeChild(a);
+
+  // 延迟清理，避免 iOS 下载失败
+  setTimeout(() => {
+    if (urlOrBlob instanceof Blob) {
+      window.URL.revokeObjectURL(url);
+    }
+    a.remove();
+  }, 1500);
 }
 
-// 下载blob
-export function downloadBlob(blob, filename) {
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  if (filename) {
-    a.download = filename; // 设置下载文件名
-  }
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  window.URL.revokeObjectURL(url); // 释放 URL 对象
-}
-
-// 下载文件
-export async function downloadFile(tasks, type) {
+// 批量下载
+export async function downloadFiles(tasks, type) {
   if (tasks.length === 1) {
     let { fileUrl, filename } = tasks[0];
     filename = filename || _path.basename(fileUrl)[0] || 'unknown';
@@ -1146,7 +1153,7 @@ export async function downloadFile(tasks, type) {
         fileUrl = cache;
       }
     }
-    defaultDownFile(fileUrl, filename);
+    downloadFile(fileUrl, filename);
     return;
   } else if (tasks.length < 1) {
     return;
@@ -1204,7 +1211,7 @@ export async function downloadFile(tasks, type) {
       xhr.onload = function () {
         if (xhr.status === 200) {
           const blob = xhr.response;
-          downloadBlob(blob, filename);
+          downloadFile(blob, filename);
           unbindXHREvents();
           pro.close('下载完成');
         } else {
@@ -2295,7 +2302,7 @@ export async function upStr(accept = '') {
 // 下载配置
 export function downloadText(content, filename) {
   const blob = new Blob([content]);
-  downloadBlob(blob, filename);
+  downloadFile(blob, filename);
 }
 // 切换分页
 export function creatSelect(e, opt, callback) {

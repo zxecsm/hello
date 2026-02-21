@@ -6,7 +6,7 @@ import {
   imgjz,
   _mySlide,
   isImgFile,
-  downloadFile,
+  downloadFiles,
   getScreenSize,
   longPress,
   isMobile,
@@ -207,7 +207,7 @@ function bgItemMenu(e, obj, el) {
         }
       } else if (id === '2') {
         close();
-        downloadFile(
+        downloadFiles(
           [
             {
               fileUrl: getFilePath(`/bg/${obj.id}`),

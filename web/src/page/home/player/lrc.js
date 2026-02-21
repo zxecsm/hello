@@ -5,7 +5,7 @@ import {
   myShuffle,
   copyText,
   _position,
-  downloadFile,
+  downloadFiles,
   ContentScroll,
   getMinIndex,
   percentToValue,
@@ -904,7 +904,7 @@ $lrcMenuWrap
         } else if (id === '10') {
           close();
           const fname = `${playingSongInfo.artist}-${playingSongInfo.title}`;
-          downloadFile(
+          downloadFiles(
             [
               {
                 fileUrl: playingSongInfo.uurl,

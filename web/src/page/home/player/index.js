@@ -14,7 +14,7 @@ import {
   copyText,
   _position,
   isImgFile,
-  downloadFile,
+  downloadFiles,
   unique,
   isMusicFile,
   ContentScroll,
@@ -1297,7 +1297,7 @@ function songListMenu(e, sid) {
           _msg.error();
         }
       } else if (id === '3') {
-        downloadFile([
+        downloadFiles([
           {
             fileUrl: `/api/player/export?id=${sid}`,
             filename: `${name}.json`,
@@ -1768,7 +1768,7 @@ function songMenu(e, idx, sobj) {
       } else if (id === '7') {
         close();
         const fname = `${sobj.artist}-${sobj.title}`;
-        downloadFile(
+        downloadFiles(
           [
             {
               fileUrl: sobj.uurl,
@@ -1976,7 +1976,7 @@ $msuicContentBox
   .on('click', '.download_song_btn', function () {
     const arr = getCheckSongs();
     if (arr.length === 0) return;
-    downloadFile(
+    downloadFiles(
       arr.reduce((pre, cur) => {
         const fname = `${cur.artist}-${cur.title}`;
         pre.push({

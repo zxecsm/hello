@@ -15,7 +15,7 @@ import {
   formatBytes,
   isImgFile,
   fileLogoType,
-  downloadFile,
+  downloadFiles,
   sendNotification,
   ContentScroll,
   myDrag,
@@ -1002,7 +1002,7 @@ function openChatFile(target) {
       if (result.code === 1) {
         const { isText } = result.data;
         if (isText) {
-          downloadFile([
+          downloadFiles([
             {
               fileUrl: getFilePath(`/upload/${msgId}/${content}`),
               filename: content,
@@ -1018,7 +1018,7 @@ function openChatFile(target) {
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(content)) {
             openInIframe(getFilePath(`/upload/${msgId}/${content}`), content, 'music');
           } else {
-            downloadFile(
+            downloadFiles(
               [
                 {
                   fileUrl: getFilePath(`/upload/${msgId}/${content}`),
@@ -1355,7 +1355,7 @@ function chatMsgMenu(e, cobj) {
             loading.end();
             if (result.code === 1) {
               close();
-              downloadFile([{ fileUrl: getFilePath(`/upload/${tt}/${z}`), filename: z }], 'image');
+              downloadFiles([{ fileUrl: getFilePath(`/upload/${tt}/${z}`), filename: z }], 'image');
               return;
             }
             _msg.error(`${flag}已过期`);

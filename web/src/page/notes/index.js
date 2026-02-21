@@ -22,7 +22,7 @@ import {
   isLogin,
   isValidDate,
   formatNum,
-  downloadFile,
+  downloadFiles,
   getFileReader,
   getFiles,
   concurrencyTasks,
@@ -909,7 +909,7 @@ $footer
   .on('click', '.f_download', function () {
     const ids = getCheckItems();
     if (ids.length === 0) return;
-    downloadFile(
+    downloadFiles(
       ids.map((id) => ({
         fileUrl: `/api/note/read?v=${id}&download=1`,
         filename: getNoteInfo(id).title + '.md',

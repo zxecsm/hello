@@ -12,7 +12,7 @@ import {
   concurrencyTasks,
   copyText,
   createShare,
-  downloadFile,
+  downloadFiles,
   fileLogoType,
   formatDate,
   getFilePath,
@@ -537,7 +537,7 @@ async function readFileAndDir(obj, e) {
             _myOpen(fPath, obj.name, 'music');
           } else {
             // 其他下载
-            downloadFile([{ fileUrl: fPath + `#${size}`, filename: name }], 'image');
+            downloadFiles([{ fileUrl: fPath + `#${size}`, filename: name }], 'image');
           }
         }
       }
@@ -860,7 +860,7 @@ function rightList(e, obj, el) {
         addTo(e, obj);
       } else if (id === 'download') {
         close();
-        downloadFile(
+        downloadFiles(
           [
             {
               fileUrl: getFilePath(`/file/${obj.path}/${obj.name}`) + `#${obj.size}`,
@@ -2198,7 +2198,7 @@ $footer
     switchCheckAll(this);
   })
   .on('click', '.f_download', function () {
-    downloadFile(
+    downloadFiles(
       getCheckDatas().reduce((pre, cur) => {
         const { name, path, type, size } = cur;
         if (type === 'file') {

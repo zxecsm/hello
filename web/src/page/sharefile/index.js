@@ -10,7 +10,7 @@ import {
   _myOpen,
   formatBytes,
   copyText,
-  downloadFile,
+  downloadFiles,
   enterPassCode,
   fileLogoType,
   formatDate,
@@ -498,7 +498,7 @@ async function readFileAndDir(obj, e) {
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(p)) {
             _myOpen(fPath, obj.name, 'music');
           } else {
-            downloadFile([{ fileUrl: fPath, filename: name }]);
+            downloadFiles([{ fileUrl: fPath, filename: name }]);
           }
         }
       }
@@ -511,7 +511,7 @@ $fileBox
   .on('click', '.download', function () {
     const p = `/sharefile/${shareObj.path}/${shareObj.name}`;
     const fPath = getFilePath(p, { token: shareToken });
-    downloadFile([{ fileUrl: fPath, filename: shareObj.name }]);
+    downloadFiles([{ fileUrl: fPath, filename: shareObj.name }]);
   });
 // 读取文件
 async function readFile(e) {
@@ -546,7 +546,7 @@ async function readFile(e) {
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(shareObj.name)) {
             _myOpen(fPath, shareObj.name, 'music');
           } else {
-            downloadFile([{ fileUrl: fPath, filename: shareObj.name }]);
+            downloadFiles([{ fileUrl: fPath, filename: shareObj.name }]);
           }
         }
       }
@@ -656,7 +656,7 @@ function rightList(e, obj) {
         );
       } else if (id === 'download') {
         close();
-        downloadFile([
+        downloadFiles([
           {
             fileUrl: getFilePath(`/sharefile/${obj.path}/${obj.name}`, {
               token: shareToken,

@@ -3,7 +3,7 @@ import {
   throttle,
   _getTarget,
   copyText,
-  downloadFile,
+  downloadFiles,
   loadingImg,
   hdTitleHighlight,
   getFilePath,
@@ -236,7 +236,7 @@ function searchListSongSetting(e, sobj) {
       } else if (id === '7') {
         close();
         const fname = `${sobj.artist} - ${sobj.title}`;
-        downloadFile(
+        downloadFiles(
           [
             {
               fileUrl: sobj.uurl,

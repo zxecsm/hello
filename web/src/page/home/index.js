@@ -14,7 +14,7 @@ import {
   _getTarget,
   imgjz,
   _mySlide,
-  downloadFile,
+  downloadFiles,
   toLogin,
   longPress,
   isMobile,
@@ -508,7 +508,7 @@ function hdHomeBgBtn(e, bgId) {
         );
       } else if (id === '3') {
         close();
-        downloadFile(
+        downloadFiles(
           [
             {
               fileUrl: getFilePath(`/bg/${bgId}`),
