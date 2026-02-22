@@ -207,15 +207,12 @@ function bgItemMenu(e, obj, el) {
         }
       } else if (id === '2') {
         close();
-        downloadFiles(
-          [
-            {
-              fileUrl: getFilePath(`/bg/${obj.id}`),
-              filename: obj.id,
-            },
-          ],
-          'image',
-        );
+        downloadFiles([
+          {
+            fileUrl: getFilePath(`/bg/${obj.id}`),
+            filename: obj.id,
+          },
+        ]);
       } else if (id === '3') {
         close();
         startSelect();

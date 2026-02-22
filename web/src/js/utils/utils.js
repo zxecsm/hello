@@ -1143,16 +1143,10 @@ export function downloadFile(urlOrBlob, filename) {
 }
 
 // 批量下载
-export async function downloadFiles(tasks, type) {
+export async function downloadFiles(tasks) {
   if (tasks.length === 1) {
     let { fileUrl, filename } = tasks[0];
     filename = filename || _path.basename(fileUrl)[0] || 'unknown';
-    if (type) {
-      const cache = await cacheFile.read(fileUrl, type);
-      if (cache) {
-        fileUrl = cache;
-      }
-    }
     downloadFile(fileUrl, filename);
     return;
   } else if (tasks.length < 1) {
@@ -1170,12 +1164,6 @@ export async function downloadFiles(tasks, type) {
 
     let { fileUrl, filename } = task;
     filename = filename || _path.basename(fileUrl)[0] || 'unknown';
-    if (type) {
-      const cache = await cacheFile.read(fileUrl, type);
-      if (cache) {
-        fileUrl = cache;
-      }
-    }
     await new Promise((resolve) => {
       const xhr = new XMLHttpRequest();
       xhr.open('GET', fileUrl, true);

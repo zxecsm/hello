@@ -537,7 +537,7 @@ async function readFileAndDir(obj, e) {
             _myOpen(fPath, obj.name, 'music');
           } else {
             // 其他下载
-            downloadFiles([{ fileUrl: fPath + `#${size}`, filename: name }], 'image');
+            downloadFiles([{ fileUrl: fPath + `#${size}`, filename: name }]);
           }
         }
       }
@@ -860,15 +860,12 @@ function rightList(e, obj, el) {
         addTo(e, obj);
       } else if (id === 'download') {
         close();
-        downloadFiles(
-          [
-            {
-              fileUrl: getFilePath(`/file/${obj.path}/${obj.name}`) + `#${obj.size}`,
-              filename: obj.name,
-            },
-          ],
-          'image',
-        );
+        downloadFiles([
+          {
+            fileUrl: getFilePath(`/file/${obj.path}/${obj.name}`) + `#${obj.size}`,
+            filename: obj.name,
+          },
+        ]);
       } else if (id === 'copyLink') {
         if (_path.isPathWithin(_d.pubDir, obj.path, 1)) {
           const p = _path.normalize(
@@ -2209,7 +2206,6 @@ $footer
         }
         return pre;
       }, []),
-      'image',
     );
     closeCheck();
   })

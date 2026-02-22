@@ -1018,15 +1018,12 @@ function openChatFile(target) {
           } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(content)) {
             openInIframe(getFilePath(`/upload/${msgId}/${content}`), content, 'music');
           } else {
-            downloadFiles(
-              [
-                {
-                  fileUrl: getFilePath(`/upload/${msgId}/${content}`),
-                  filename: content,
-                },
-              ],
-              'image',
-            );
+            downloadFiles([
+              {
+                fileUrl: getFilePath(`/upload/${msgId}/${content}`),
+                filename: content,
+              },
+            ]);
           }
         }
         return;
@@ -1355,7 +1352,7 @@ function chatMsgMenu(e, cobj) {
             loading.end();
             if (result.code === 1) {
               close();
-              downloadFiles([{ fileUrl: getFilePath(`/upload/${tt}/${z}`), filename: z }], 'image');
+              downloadFiles([{ fileUrl: getFilePath(`/upload/${tt}/${z}`), filename: z }]);
               return;
             }
             _msg.error(`${flag}已过期`);

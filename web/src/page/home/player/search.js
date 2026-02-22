@@ -236,15 +236,12 @@ function searchListSongSetting(e, sobj) {
       } else if (id === '7') {
         close();
         const fname = `${sobj.artist} - ${sobj.title}`;
-        downloadFiles(
-          [
-            {
-              fileUrl: sobj.uurl,
-              filename: fname,
-            },
-          ],
-          'music',
-        );
+        downloadFiles([
+          {
+            fileUrl: sobj.uurl,
+            filename: fname,
+          },
+        ]);
       } else if (id === '6') {
         moveSongToList(e, 'all', [sobj.id]);
       } else if (id === '2') {

@@ -508,15 +508,12 @@ function hdHomeBgBtn(e, bgId) {
         );
       } else if (id === '3') {
         close();
-        downloadFiles(
-          [
-            {
-              fileUrl: getFilePath(`/bg/${bgId}`),
-              filename: bgId,
-            },
-          ],
-          'image',
-        );
+        downloadFiles([
+          {
+            fileUrl: getFilePath(`/bg/${bgId}`),
+            filename: bgId,
+          },
+        ]);
       }
     },
     '壁纸选项',

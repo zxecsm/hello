@@ -904,15 +904,12 @@ $lrcMenuWrap
         } else if (id === '10') {
           close();
           const fname = `${playingSongInfo.artist}-${playingSongInfo.title}`;
-          downloadFiles(
-            [
-              {
-                fileUrl: playingSongInfo.uurl,
-                filename: fname,
-              },
-            ],
-            'music',
-          );
+          downloadFiles([
+            {
+              fileUrl: playingSongInfo.uurl,
+              filename: fname,
+            },
+          ]);
         }
       },
       `${playingSongInfo.artist} - ${playingSongInfo.title}`,
