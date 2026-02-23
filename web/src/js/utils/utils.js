@@ -1574,8 +1574,7 @@ export function toCenter(el, obj) {
   }, _d.speed + 100);
 }
 export function switchFullScreenStateStyle(target) {
-  const { top, left } = _position(target, true);
-  if (isFullScreen(target) && top === 0 && left === 0) {
+  if (isFullScreen(target)) {
     addFullScreenStateStyle(target);
   } else {
     removeFullScreenStateStyle(target);
@@ -1589,10 +1588,10 @@ export function removeFullScreenStateStyle(target) {
 }
 // 窗口尺寸
 export function getScreenSize() {
-  return {
-    w: window.innerWidth,
-    h: window.innerHeight,
-  };
+  const viewport = window.visualViewport;
+  const w = viewport ? viewport.width : document.documentElement.clientWidth;
+  const h = viewport ? viewport.height : document.documentElement.clientHeight;
+  return { w, h };
 }
 // 窗口大小设置
 export function toSetSize(target, maxW = 800, maxH = 800) {
@@ -1643,11 +1642,18 @@ export function myToMax(target) {
   }
 }
 // 全屏大小状态
-export function isFullScreen(target) {
+export function isFullScreen(el, tolerance = 1) {
+  if (!el) return false;
+
+  const rect = el.getBoundingClientRect();
+
   const { w, h } = getScreenSize();
-  const fw = target.offsetWidth,
-    fh = target.offsetHeight;
-  return w === fw && h === fh;
+  return (
+    Math.abs(rect.width - w) <= tolerance &&
+    Math.abs(rect.height - h) <= tolerance &&
+    Math.abs(rect.top) <= tolerance &&
+    Math.abs(rect.left) <= tolerance
+  );
 }
 // 重置位置
 export function myToRest(target, pointerX, isToMin = true) {
