@@ -1544,7 +1544,7 @@ export function scrollState(target, cb) {
   };
 }
 // 窗口居中
-export function toCenter(el, obj) {
+export function toCenter(el, obj, tolerance = 1) {
   if (el.style.display === 'none' || el.style.visibility === 'hidden') return;
 
   const { w, h } = getScreenSize(),
@@ -1562,8 +1562,8 @@ export function toCenter(el, obj) {
     }
   }
 
-  x < 0 ? (x = 0) : null;
-  y < 0 ? (y = 0) : null;
+  x < tolerance ? (x = 0) : null;
+  y < tolerance ? (y = 0) : null;
 
   el.style.left = x + 'px';
   el.style.top = y + 'px';
