@@ -22,15 +22,6 @@ class Validator {
     return this;
   }
 
-  custom(fn, msg = '自定义规则验证失败') {
-    return this._addRule(fn, msg);
-  }
-
-  _addRule(fn, msg) {
-    this.rules.push({ fn, msg });
-    return this;
-  }
-
   async _applyTransforms(value) {
     for (const fn of this._transforms) {
       value = await fn(value);
@@ -43,6 +34,15 @@ class Validator {
       value = await fn(value);
     }
     return value;
+  }
+
+  _addRule(fn, msg) {
+    this.rules.push({ fn, msg });
+    return this;
+  }
+
+  custom(fn, msg = '自定义规则验证失败') {
+    return this._addRule(fn, msg);
   }
 
   enum(arr) {
@@ -95,91 +95,78 @@ class VString extends Validator {
     this.allowEmptyValue = false;
     this._addRule((v) => typeof v === 'string', '必须是字符串');
   }
-  _canBeEmpty(v) {
-    return this.allowEmptyValue && v === '';
-  }
-  allowEmpty() {
-    this.allowEmptyValue = true;
-    return this;
-  }
-  notEmpty() {
-    this.allowEmptyValue = false;
-    return this._addRule((v) => {
-      if (this._canBeEmpty(v)) return true;
-      return v.trim() !== '';
-    }, '不能为空字符');
-  }
-  min(n) {
-    return this._addRule((v) => {
-      if (this._canBeEmpty(v)) return true;
-      return v.length >= n;
-    }, `长度不能小于 ${n}`);
-  }
-  max(n) {
-    return this._addRule((v) => {
-      if (this._canBeEmpty(v)) return true;
-      return v.length <= n;
-    }, `长度不能大于 ${n}`);
-  }
-  email() {
-    return this.pattern(
-      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-      '不是合规的 email 地址',
-    );
-  }
+
   trim() {
     return this.preprocess((v) => {
       if (typeof v === 'string') return v.trim();
       return v;
     });
   }
-  alphanumeric() {
-    return this._addRule((v) => {
-      if (this._canBeEmpty(v)) return true;
-      return /^[a-zA-Z0-9_]+$/.test(v);
-    }, '必须是字母数字下划线组成');
+
+  _canBeEmpty(v) {
+    return this.allowEmptyValue && v === '';
   }
-  pattern(re, msg = '正则表达式不匹配') {
+
+  allowEmpty() {
+    this.allowEmptyValue = true;
+    return this;
+  }
+
+  _addStringRule(fn, msg) {
     return this._addRule((v) => {
       if (this._canBeEmpty(v)) return true;
-      return re.test(v);
+      return fn(v);
     }, msg);
   }
+
+  notEmpty() {
+    this.allowEmptyValue = false;
+    return this._addStringRule((v) => v.trim() !== '', '不能为空字符');
+  }
+
+  min(n) {
+    return this._addStringRule((v) => v.length >= n, `长度不能小于 ${n}`);
+  }
+
+  max(n) {
+    return this._addStringRule((v) => v.length <= n, `长度不能大于 ${n}`);
+  }
+
+  email() {
+    return this.pattern(
+      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+      '不是合规的 email 地址',
+    );
+  }
+
+  alphanumeric() {
+    return this._addStringRule((v) => /^[a-zA-Z0-9_]+$/.test(v), '必须是字母数字下划线组成');
+  }
+
+  pattern(re, msg = '正则表达式不匹配') {
+    return this._addStringRule((v) => re.test(v), msg);
+  }
+
   enum(arr) {
     const set = new Set(arr);
-    return this._addRule(
-      (v) => {
-        if (this._canBeEmpty(v)) return true;
-        return set.has(v);
-      },
-      `必须为其中之一: ${arr.join(', ')}`,
-    );
+    return this._addStringRule((v) => set.has(v), `必须为其中之一: ${arr.join(', ')}`);
   }
+
   notEnum(arr) {
     const set = new Set(arr);
-    return this._addRule(
-      (v) => {
-        if (this._canBeEmpty(v)) return true;
-        return !set.has(v);
-      },
-      `不能为其中之一: ${arr.join(', ')}`,
-    );
+    return this._addStringRule((v) => !set.has(v), `不能为其中之一: ${arr.join(', ')}`);
   }
+
   not(v) {
-    return this._addRule((val) => {
-      if (this._canBeEmpty(val)) return true;
-      return val !== v;
-    }, `不能为: ${v}`);
+    return this._addStringRule((val) => val !== v, `不能为: ${v}`);
   }
+
   equal(v) {
-    return this._addRule((val) => {
-      if (this._canBeEmpty(val)) return true;
-      return val === v;
-    }, `必须为： ${v}`);
+    return this._addStringRule((val) => val === v, `必须为： ${v}`);
   }
+
   url() {
-    return this._addRule((v) => {
-      if (this._canBeEmpty(v)) return true;
+    return this._addStringRule((v) => {
       try {
         new URL(v);
         return true;
@@ -188,9 +175,9 @@ class VString extends Validator {
       }
     }, '不是有效的 url');
   }
+
   httpUrl() {
-    return this._addRule((v) => {
-      if (this._canBeEmpty(v)) return true;
+    return this._addStringRule((v) => {
       try {
         const u = new URL(v);
         return u.protocol === 'http:' || u.protocol === 'https:';
@@ -199,6 +186,12 @@ class VString extends Validator {
       }
     }, '不是有效的 http url');
   }
+
+  custom(fn, msg = '自定义规则验证失败') {
+    return this._addStringRule((v) => {
+      return fn(v);
+    }, msg);
+  }
 }
 
 class VNumber extends Validator {
@@ -206,15 +199,7 @@ class VNumber extends Validator {
     super();
     this._addRule((v) => typeof v === 'number' && !isNaN(v), '必须是数值');
   }
-  min(n) {
-    return this._addRule((v) => v >= n, `>= ${n}`);
-  }
-  max(n) {
-    return this._addRule((v) => v <= n, `<= ${n}`);
-  }
-  int() {
-    return this._addRule((v) => Number.isInteger(v), '必须是整数');
-  }
+
   toInt() {
     return this.preprocess((v) => {
       if (v === undefined) return v;
@@ -223,6 +208,7 @@ class VNumber extends Validator {
       return isNaN(res) ? v : res;
     });
   }
+
   toNumber() {
     return this.preprocess((v) => {
       if (v === undefined) return v;
@@ -230,6 +216,18 @@ class VNumber extends Validator {
       const res = parseFloat(v);
       return isNaN(res) ? v : res;
     });
+  }
+
+  min(n) {
+    return this._addRule((v) => v >= n, `>= ${n}`);
+  }
+
+  max(n) {
+    return this._addRule((v) => v <= n, `<= ${n}`);
+  }
+
+  int() {
+    return this._addRule((v) => Number.isInteger(v), '必须是整数');
   }
 }
 
@@ -251,6 +249,7 @@ class VArray extends Validator {
   min(n) {
     return this._addRule((v) => v.length >= n, `length >= ${n}`);
   }
+
   max(n) {
     return this._addRule((v) => v.length <= n, `length <= ${n}`);
   }

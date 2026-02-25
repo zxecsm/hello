@@ -54,7 +54,7 @@ route.post(
         .preprocess((v) => (typeof v === 'string' ? _path.sanitizeFilename(v) : v))
         .min(1)
         .max(fieldLength.filename)
-        .custom((v) => isImgFile(v), '必须为受支持的图片格式'),
+        .custom(isImgFile, '必须为受支持的图片格式'),
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),

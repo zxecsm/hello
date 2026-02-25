@@ -554,12 +554,8 @@ route.post(
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       title: V.string().trim().min(1).max(fieldLength.title),
-      create_at: V.string()
-        .trim()
-        .custom((v) => isValidDate(v), '必须 YYYY-MM-DD 格式'),
-      update_at: V.string()
-        .trim()
-        .custom((v) => isValidDate(v), '必须 YYYY-MM-DD 格式'),
+      create_at: V.string().trim().custom(isValidDate, '必须 YYYY-MM-DD 格式'),
+      update_at: V.string().trim().custom(isValidDate, '必须 YYYY-MM-DD 格式'),
       visit_count: V.number().toInt().min(0),
     }),
   ),

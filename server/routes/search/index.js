@@ -55,11 +55,7 @@ route.post(
         .max(fieldLength.url)
         .httpUrl()
         .custom((v) => v.includes('{{}}'), '必须包含{{}}'),
-      color: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .custom((v) => (v ? isValidColor(v) : true), '必须 #XXXXXX 格式'),
+      color: V.string().trim().default('').allowEmpty().custom(isValidColor, '必须 #XXXXXX 格式'),
     }),
   ),
   async (req, res) => {
@@ -105,10 +101,7 @@ route.post(
         .max(fieldLength.url)
         .httpUrl()
         .custom((v) => v.includes('{{}}'), '必须包含{{}}'),
-      color: V.string()
-        .trim()
-        .default('')
-        .custom((v) => (v ? isValidColor(v) : true), '必须 #XXXXXX 格式'),
+      color: V.string().trim().default('').custom(isValidColor, '必须 #XXXXXX 格式'),
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),

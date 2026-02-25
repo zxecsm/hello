@@ -381,10 +381,7 @@ app.get(
   validate(
     'query',
     V.object({
-      ip: V.string()
-        .trim()
-        .min(1)
-        .custom((v) => getClientIp.isIp(v), 'ip 格式错误'),
+      ip: V.string().trim().min(1).custom(getClientIp.isIp, 'ip 格式错误'),
     }),
   ),
   async (req, res) => {

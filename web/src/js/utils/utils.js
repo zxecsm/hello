@@ -1111,14 +1111,24 @@ export function fileLogoType(fname, size) {
 
 // 下载
 export function downloadFile(urlOrBlob, filename) {
-  let url;
+  let url = '';
+  let needRevoke = false;
 
   // 如果是 Blob 或 File，则创建 Blob URL
   if (urlOrBlob instanceof Blob) {
     url = window.URL.createObjectURL(urlOrBlob);
+    needRevoke = true;
   } else {
-    // 否则认为是普通 URL 字符串
-    url = urlOrBlob;
+    const u = new URL(urlOrBlob, window.location.origin);
+
+    // 标记下载参数
+    u.searchParams.set('d', '1');
+
+    if (filename) {
+      u.searchParams.set('n', filename);
+    }
+
+    url = u.toString();
   }
 
   const a = document.createElement('a');
@@ -1128,17 +1138,17 @@ export function downloadFile(urlOrBlob, filename) {
     a.download = filename;
   }
 
-  document.body.appendChild(a);
+  (document.body || document.documentElement).appendChild(a);
 
   // 必须同步触发 click
   a.click();
 
   // 延迟清理，避免 iOS 下载失败
-  setTimeout(() => {
-    if (urlOrBlob instanceof Blob) {
-      window.URL.revokeObjectURL(url);
-    }
+  _setTimeout(() => {
     a.remove();
+    if (needRevoke) {
+      URL.revokeObjectURL(url);
+    }
   }, 1500);
 }
 

@@ -210,16 +210,8 @@ route.get(
       type: V.number().toInt().enum([0, 1, 2]),
       flag: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
       word: V.string().trim().default('').allowEmpty().max(fieldLength.searchWord),
-      start: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .custom((v) => (v ? isValidDate(v) : true), '必须 YYYY-MM-DD 格式'),
-      end: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .custom((v) => (v ? isValidDate(v) : true), '必须 YYYY-MM-DD 格式'),
+      start: V.string().trim().default('').allowEmpty().custom(isValidDate, '必须 YYYY-MM-DD 格式'),
+      end: V.string().trim().default('').allowEmpty().custom(isValidDate, '必须 YYYY-MM-DD 格式'),
     }),
   ),
   async (req, res) => {

@@ -1170,7 +1170,7 @@ route.post(
         .trim()
         .min(1)
         .max(fieldLength.filename)
-        .custom((v) => isImgFile(v), '必须为受支持的图片格式'),
+        .custom(isImgFile, '必须为受支持的图片格式'),
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       type: V.string().trim().enum(['userlogo', 'bookmark', 'engine', 'translator']),
       id: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),

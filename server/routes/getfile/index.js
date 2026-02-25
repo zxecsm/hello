@@ -27,6 +27,13 @@ export default async function getFile(req, res, originalPath, verifyLogin = true
           w: V.number().toInt().default(0).min(0),
           token: V.string().trim().default('').allowEmpty().max(fieldLength.url),
           p: V.string().notEmpty().min(1).max(fieldLength.url),
+          d: V.number().toInt().default(0).enum([0, 1]),
+          n: V.string()
+            .trim()
+            .default('')
+            .allowEmpty()
+            .max(fieldLength.filename)
+            .custom(_path.isFilename, '文件名不合法'),
         }),
       );
     } catch (error) {
@@ -34,7 +41,7 @@ export default async function getFile(req, res, originalPath, verifyLogin = true
       return;
     }
 
-    let { token, p, w } = req[kValidate];
+    let { token, p, w, d, n } = req[kValidate];
 
     let { account } = req[kHello].userinfo;
 
@@ -101,6 +108,21 @@ export default async function getFile(req, res, originalPath, verifyLogin = true
     const tObj = await getThumbPath(req, w, dir, path, stat);
 
     res.setHeader('X-File-Size', tObj.size);
+
+    if (d === 1) {
+      const [oFileName, , , suffix] = _path.basename(tObj.path);
+      const fileName = n
+        ? _path.extname(n)[2]
+          ? n
+          : n + (n.includes('.') ? '' : '.') + suffix
+        : oFileName;
+      res.setHeader(
+        'Content-Disposition',
+        "attachment; filename*=UTF-8''" + encodeURIComponent(fileName),
+      );
+      res.setHeader('Content-Type', 'application/octet-stream');
+    }
+
     res.sendFile(tObj.path, { dotfiles: 'allow' });
   } catch (error) {
     _err(res)(req, error);
