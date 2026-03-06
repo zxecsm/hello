@@ -11,29 +11,29 @@
   "license": "ISC",
   "dependencies": {
     "archiver": "^7.0.1",
-    "axios": "^1.13.2",
-    "cheerio": "^1.1.2",
+    "axios": "^1.13.6",
+    "cheerio": "^1.2.0",
     "cookie-parser": "^1.4.7",
-    "express": "^5.1.0",
+    "express": "^5.2.1",
     "formidable": "^3.5.4",
     "ip2region": "^2.3.0",
-    "jose": "^6.1.2",
-    "markdown-it": "^14.1.0",
-    "music-metadata": "^11.10.3",
+    "jose": "^6.2.0",
+    "markdown-it": "^14.1.1",
+    "music-metadata": "^11.12.1",
     "node-id3": "^0.2.9",
-    "nodemailer": "^7.0.11",
+    "nodemailer": "^8.0.1",
     "pinyin": "4.0.0",
     "sharp": "^0.34.5",
     "speakeasy": "^2.0.0",
     "sqlite3": "^5.1.7",
     "ssh2": "^1.17.0",
-    "ua-parser-js": "^2.0.6",
+    "ua-parser-js": "^2.0.9",
     "unzipper": "^0.12.3"
   },
   "description": "This is a favorite",
   "devDependencies": {
     "cross-env": "^10.1.0",
-    "nodemon": "^3.1.11"
+    "nodemon": "^3.1.14"
   },
   "type": "module"
 }
