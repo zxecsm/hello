@@ -11,7 +11,7 @@ class HashRouter {
   // 获取当前的 hash 路径
   getHash() {
     const hash = window.location.hash.slice(1);
-    return _path.normalize(decodeURIComponent(hash || '/'));
+    return _path.normalizeNoSlash(decodeURIComponent(hash || '/'));
   }
 
   // 更改 hash 路径
@@ -45,7 +45,7 @@ class HashRouter {
 
   // 推送新路径到历史记录栈
   push(path) {
-    path = _path.normalize(path); // 确保路径已归一化
+    path = _path.normalizeNoSlash(path); // 确保路径已归一化
     if (this.getRoute() === path) return;
 
     // 处理栈内记录的剪裁，保留当前索引之后的历史记录

@@ -2443,7 +2443,7 @@ export function enterPassCode(cb, defaultValue = '') {
 // 生成文件路径
 export function getFilePath(p, query = {}, prefix = false) {
   const queryStr = qs.stringify(query);
-  const path = `${_d.getFileURL}${_path.normalize('/' + p)}${queryStr ? '?' + queryStr : ''}`;
+  const path = `${_d.getFileURL}${_path.normalizeNoSlash('/' + p)}${queryStr ? '?' + queryStr : ''}`;
   if (prefix) return `${_d.originURL}${path}`;
   return path;
 }

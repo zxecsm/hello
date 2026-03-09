@@ -1557,7 +1557,7 @@ route.post(
         await receiveFiles(req, tDir, tName, fieldLength.maxSongSize, HASH);
 
         // 读取歌曲元数据
-        const songInfo = await getSongInfo(_path.normalize(tDir, tName));
+        const songInfo = await getSongInfo(_path.normalizeNoSlash(tDir, tName));
 
         let {
           album = '',
@@ -1573,11 +1573,11 @@ route.post(
         picFormat = _path.basename(picFormat)[0];
         if (picFormat && pic) {
           // 提取封面
-          await _f.writeFile(_path.normalize(tDir, `${songId}.${picFormat}`), pic);
-          pic = _path.normalize(timePath, songId, `${songId}.${picFormat}`);
+          await _f.writeFile(_path.normalizeNoSlash(tDir, `${songId}.${picFormat}`), pic);
+          pic = _path.normalizeNoSlash(timePath, songId, `${songId}.${picFormat}`);
         }
 
-        await _f.writeFile(_path.normalize(tDir, `${songId}.lrc`), lrc);
+        await _f.writeFile(_path.normalizeNoSlash(tDir, `${songId}.lrc`), lrc);
 
         await db('songs').insert({
           id: songId,
@@ -1591,8 +1591,8 @@ route.post(
           year,
           hash: HASH,
           pic,
-          url: _path.normalize(timePath, songId, tName),
-          lrc: _path.normalize(timePath, songId, `${songId}.lrc`),
+          url: _path.normalizeNoSlash(timePath, songId, tName),
+          lrc: _path.normalizeNoSlash(timePath, songId, `${songId}.lrc`),
         });
 
         _success(res, '上传歌曲成功')(req, `${songId}-${artist}-${title}`, 1);
@@ -1632,7 +1632,7 @@ route.post(
         // 如果上传封面文件和现有的封面文件名不同，删除现有的
         if (_path.basename(pic)[0] !== tName) {
           if (pic) {
-            await _delDir(_path.normalize(tDir, _path.basename(pic)[0]));
+            await _delDir(_path.normalizeNoSlash(tDir, _path.basename(pic)[0]));
           }
         }
 
@@ -1649,7 +1649,7 @@ route.post(
                   id: 3,
                   name: 'front cover',
                 },
-                imageBuffer: await _f.fsp.readFile(_path.normalize(tDir, tName)),
+                imageBuffer: await _f.fsp.readFile(_path.normalizeNoSlash(tDir, tName)),
               },
             },
             songUrl,
@@ -1705,7 +1705,7 @@ route.post(
         if (_path.basename(mv)[0] != tName) {
           // 上传和现有文件名不同上传现有的
           if (mv) {
-            await _delDir(_path.normalize(tDir, _path.basename(mv)[0]));
+            await _delDir(_path.normalizeNoSlash(tDir, _path.basename(mv)[0]));
           }
 
           await db('songs')

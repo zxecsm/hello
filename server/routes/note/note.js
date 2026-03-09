@@ -19,7 +19,7 @@ export async function saveNoteHistory(req, noteId, content) {
 
     const noteDir = appConfig.noteHistoryDir(account, noteId);
 
-    const notePath = _path.normalize(
+    const notePath = _path.normalizeNoSlash(
       noteDir,
       `${formatDate({ template: '{0}_{1}_{2}-{3}_{4}_{5}' })}.md`,
     );

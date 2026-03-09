@@ -53,7 +53,7 @@ export default async function getFile(req, res, originalPath, verifyLogin = true
       p = jwtData.data.data.p;
     }
 
-    const url = _path.normalize('/' + p);
+    const url = _path.normalizeNoSlash('/' + p);
 
     // 获取访问目录
     const pArr = url.split('/').filter(Boolean);
@@ -212,7 +212,7 @@ async function getShareFilePath(req, res, token, pArr, dir) {
     if (type === 'file') {
       return rootP;
     } else if (type === 'dir') {
-      return _path.normalize(rootP, pArr.join('/'));
+      return _path.normalizeNoSlash(rootP, pArr.join('/'));
     }
   }
   return '';

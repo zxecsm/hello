@@ -42,7 +42,7 @@ async function cp(from, to, { signal, progress, renameMode = false } = {}) {
   await walk(
     from,
     async ({ type, path: f }) => {
-      const t = f === from ? to : _path.normalize(to, f.replace(from, ''));
+      const t = f === from ? to : _path.normalizeNoSlash(to, f.replace(from, ''));
       if (type === 'dir') {
         await mkdir(t);
       } else if (type === 'symlink') {
@@ -363,7 +363,7 @@ async function removeEmptyDirs(root, { signal, progress } = {}) {
       for (const entry of entries) {
         if (entry.isDirectory()) {
           stack.push({
-            dir: _path.normalize(dir, entry.name),
+            dir: _path.normalizeNoSlash(dir, entry.name),
             visited: false,
           });
         }
@@ -395,7 +395,7 @@ async function walk(root, callback, { signal, concurrency = 1 } = {}) {
 
     if (type === 'dir') {
       for (const name of await fsp.readdir(currentPath)) {
-        stack.push(_path.normalize(currentPath, name));
+        stack.push(_path.normalizeNoSlash(currentPath, name));
       }
     }
 

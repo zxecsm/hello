@@ -279,10 +279,10 @@ route.post(
       await receiveFiles(req, tDir, tName, fieldLength.maxBgSize, HASH);
 
       // 获取壁纸尺寸进行分类
-      const { width, height } = await getImgInfo(_path.normalize(tDir, tName));
+      const { width, height } = await getImgInfo(_path.normalizeNoSlash(tDir, tName));
       const type = width < height ? 'bgxs' : 'bg';
 
-      const url = _path.normalize(timePath, tName);
+      const url = _path.normalizeNoSlash(timePath, tName);
 
       await db('bg').insert({
         create_at,

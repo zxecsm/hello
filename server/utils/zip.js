@@ -58,7 +58,7 @@ async function unzip(from, to, { signal, progress } = {}) {
   await concurrencyTasks(directory.files, 5, async (file) => {
     if (signal && signal.aborted) throw new Error('Aborted');
 
-    const outputPath = _path.normalize(to, file.path);
+    const outputPath = _path.normalizeNoSlash(to, file.path);
 
     if (file.type === 'Directory') {
       await _f.mkdir(outputPath);

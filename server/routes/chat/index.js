@@ -792,11 +792,11 @@ route.post(
       const fobj = {
         id: HASH,
         create_at: time,
-        url: _path.normalize(timePath, tName),
+        url: _path.normalizeNoSlash(timePath, tName),
         update_at: time,
       };
 
-      const { duration } = await getSongInfo(_path.normalize(tDir, tName));
+      const { duration } = await getSongInfo(_path.normalizeNoSlash(tDir, tName));
 
       const obj = {
         _to: to,
@@ -875,14 +875,14 @@ route.post(
       const tDir = appConfig.uploadDir(timePath);
       const tName = `${HASH}${suffix ? `.${suffix}` : ''}`;
 
-      const targetPath = _path.normalize(tDir, tName);
+      const targetPath = _path.normalizeNoSlash(tDir, tName);
 
       await mergefile(count, appConfig.temDir(`${account}_${HASH}`), targetPath, HASH);
 
       const fobj = {
         id: HASH,
         create_at: time,
-        url: _path.normalize(timePath, tName),
+        url: _path.normalizeNoSlash(timePath, tName),
         update_at: time,
       };
 

@@ -130,7 +130,7 @@ export async function cleanSiteInfo(req = false) {
 
       if (type === 'file') {
         if (time < threshold) {
-          await _delDir(_path.normalize(path, name));
+          await _delDir(_path.normalizeNoSlash(path, name));
           num++;
         }
       }
@@ -160,7 +160,7 @@ export async function cleanFavicon(req = false) {
 
       if (type === 'file') {
         if (time < threshold) {
-          await _delDir(_path.normalize(path, name));
+          await _delDir(_path.normalizeNoSlash(path, name));
           num++;
         }
       }

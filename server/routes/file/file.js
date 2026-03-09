@@ -34,7 +34,7 @@ export async function _delDir(path) {
 
     if (!targetName) return;
 
-    let targetPath = _path.normalize(trashDir, targetName);
+    let targetPath = _path.normalizeNoSlash(trashDir, targetName);
 
     if (await _f.exists(targetPath)) {
       // 已存在添加随机后缀
@@ -62,7 +62,7 @@ export async function getAllFile(path) {
         if (s.isDirectory()) {
           const list = await _f.fsp.readdir(currentPath);
           for (const name of list) {
-            stack.push(_path.normalize(currentPath, name));
+            stack.push(_path.normalizeNoSlash(currentPath, name));
           }
         } else {
           const name = _path.basename(currentPath)[0];
@@ -131,7 +131,7 @@ export async function readMenu(path) {
 
     await concurrencyTasks(list, 5, async (name) => {
       try {
-        const f = _path.normalize(path, name);
+        const f = _path.normalizeNoSlash(path, name);
 
         const s = await _f.lstat(f);
         const { mode, numericMode, uid, gid } = _f.getPermissions(s);
@@ -183,10 +183,10 @@ export async function getUniqueFilename(path) {
   const filename = _path.basename(path)[0] || 'unknown';
 
   let counter = 0;
-  let newPath = _path.normalize(dir, _path.randomFilenameSuffix(filename, ++counter));
+  let newPath = _path.normalizeNoSlash(dir, _path.randomFilenameSuffix(filename, ++counter));
 
   while (await _f.exists(newPath)) {
-    newPath = _path.normalize(dir, _path.randomFilenameSuffix(filename, ++counter));
+    newPath = _path.normalizeNoSlash(dir, _path.randomFilenameSuffix(filename, ++counter));
   }
 
   return newPath;
@@ -239,20 +239,20 @@ export async function fileToMusic(p) {
   const tDir = appConfig.musicDir(timePath, songId);
   const tName = `${songId}.${suffix}`;
 
-  await _f.cp(p, _path.normalize(tDir, tName));
+  await _f.cp(p, _path.normalizeNoSlash(tDir, tName));
   // 读取歌曲元数据
-  const songInfo = await getSongInfo(_path.normalize(tDir, tName));
+  const songInfo = await getSongInfo(_path.normalizeNoSlash(tDir, tName));
 
   let { album = '', year = '', title, duration, artist, pic = '', lrc = '', picFormat } = songInfo;
 
   picFormat = _path.basename(picFormat)[0];
   if (picFormat && pic) {
     // 提取封面
-    await _f.writeFile(_path.normalize(tDir, `${songId}.${picFormat}`), pic);
-    pic = _path.normalize(timePath, songId, `${songId}.${picFormat}`);
+    await _f.writeFile(_path.normalizeNoSlash(tDir, `${songId}.${picFormat}`), pic);
+    pic = _path.normalizeNoSlash(timePath, songId, `${songId}.${picFormat}`);
   }
 
-  await _f.writeFile(_path.normalize(tDir, `${songId}.lrc`), lrc);
+  await _f.writeFile(_path.normalizeNoSlash(tDir, `${songId}.lrc`), lrc);
 
   await db('songs').insert({
     id: songId,
@@ -266,8 +266,8 @@ export async function fileToMusic(p) {
     year,
     hash: HASH,
     pic,
-    url: _path.normalize(timePath, songId, tName),
-    lrc: _path.normalize(timePath, songId, `${songId}.lrc`),
+    url: _path.normalizeNoSlash(timePath, songId, tName),
+    lrc: _path.normalizeNoSlash(timePath, songId, `${songId}.lrc`),
   });
   return true;
 }
@@ -283,13 +283,13 @@ export async function fileToBg(p) {
   const tDir = appConfig.bgDir(timePath);
   const tName = `${HASH}.${suffix}`;
 
-  await _f.cp(p, _path.normalize(tDir, tName));
+  await _f.cp(p, _path.normalizeNoSlash(tDir, tName));
 
   // 获取壁纸尺寸进行分类
-  const { width, height } = await getImgInfo(_path.normalize(tDir, tName));
+  const { width, height } = await getImgInfo(_path.normalizeNoSlash(tDir, tName));
   const type = width < height ? 'bgxs' : 'bg';
 
-  const url = _path.normalize(timePath, tName);
+  const url = _path.normalizeNoSlash(timePath, tName);
 
   await db('bg').insert({
     create_at,

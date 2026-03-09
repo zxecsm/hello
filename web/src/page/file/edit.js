@@ -52,7 +52,7 @@ export function setReadOnly(val) {
 }
 // 编辑文件
 export function openFile(text, path) {
-  path = _path.normalize(path);
+  path = _path.normalizeNoSlash(path);
   hideContainer();
   filePath = path;
   $editFile.css('display', 'flex');

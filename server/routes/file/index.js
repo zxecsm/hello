@@ -130,7 +130,7 @@ route.post(
 // 读取目录
 function fileListSortAndCacheSize(list, rootP, sortType, isDesc, hidden) {
   list = list.reduce((pre, cur) => {
-    const fullPath = _path.normalize(rootP, cur.path, cur.name);
+    const fullPath = _path.normalizeNoSlash(rootP, cur.path, cur.name);
 
     // 隐藏隐藏文件
     if (hidden === 1 && cur.name.startsWith('.')) return pre;
@@ -203,7 +203,7 @@ route.post(
         // 用户根目录
         rootP = appConfig.userRootDir(account, data.path, name);
 
-        p = _path.normalize(rootP, path);
+        p = _path.normalizeNoSlash(rootP, path);
         accFlag = shareID + account || temid;
       } else {
         p = appConfig.userRootDir(account, path);
@@ -281,14 +281,14 @@ route.post(
               count++;
               taskState.update(taskKey, `${hdType}...${count}`);
 
-              const fullPath = _path.normalize(item.path, item.name);
+              const fullPath = _path.normalizeNoSlash(item.path, item.name);
 
               if (item.type === 'dir' && subDir === 1 && word) {
                 stack.push(fullPath);
               }
 
               // 去除路径前缀
-              const path = _path.normalize('/' + item.path.slice(rootP.length));
+              const path = _path.normalizeNoSlash('/' + item.path.slice(rootP.length));
 
               const obj = {
                 ...item,
@@ -300,11 +300,11 @@ route.post(
                 obj.fileType === 'symlink' &&
                 _path.isPathWithin(rootP, obj.linkTarget, 1)
               ) {
-                obj.linkTarget = _path.normalize('/' + item.linkTarget.slice(rootP.length));
+                obj.linkTarget = _path.normalizeNoSlash('/' + item.linkTarget.slice(rootP.length));
               }
 
               if (favorites && item.type === 'dir') {
-                obj.favorite = favorites.includes(_path.normalize(path, item.name)) ? 1 : 0;
+                obj.favorite = favorites.includes(_path.normalizeNoSlash(path, item.name)) ? 1 : 0;
               }
 
               if (!req[kHello].isRoot) {
@@ -402,7 +402,7 @@ route.post(
         if (type === 'file') {
           p = rootP;
         } else if (type === 'dir') {
-          p = _path.normalize(rootP, path);
+          p = _path.normalizeNoSlash(rootP, path);
         }
       } else {
         p = appConfig.userRootDir(account, path);
@@ -512,7 +512,7 @@ route.post(
     try {
       const { data, type } = req[kValidate];
 
-      const path = _path.normalize(data.path, data.name);
+      const path = _path.normalizeNoSlash(data.path, data.name);
 
       const { account } = req[kHello].userinfo;
       const list = (await readFavorites(account)).filter((item) => item !== path);
@@ -780,7 +780,7 @@ route.post(
               // 保存编辑历史版本
               const [, filename, , suffix] = _path.basename(fpath);
 
-              const historyDir = _path.normalize(
+              const historyDir = _path.normalizeNoSlash(
                 _path.dirname(fpath),
                 appConfig.textFileHistoryDirName,
               );
@@ -789,7 +789,7 @@ route.post(
                 template: `{0}{1}{2}-{3}{4}{5}`,
               })}${suffix ? `.${suffix}` : ''}`;
 
-              await _f.cp(fpath, _path.normalize(historyDir, newName));
+              await _f.cp(fpath, _path.normalizeNoSlash(historyDir, newName));
             }
           } catch (error) {
             await errLog(req, `保存文件历史版本失败(${fpath}-${error})`);
@@ -864,7 +864,7 @@ route.post(
 
           const f = appConfig.userRootDir(account, `${path}/${name}`);
 
-          let to = _path.normalize(p, name);
+          let to = _path.normalizeNoSlash(p, name);
 
           if (_path.isPathWithin(f, to) || !name) return;
 
@@ -992,7 +992,7 @@ route.post(
 
           const f = appConfig.userRootDir(account, `${path}/${name}`);
 
-          let t = _path.normalize(p, name);
+          let t = _path.normalizeNoSlash(p, name);
 
           if (_path.isPathWithin(f, t, true)) return;
 
@@ -1054,7 +1054,7 @@ route.post(
 
       data.path = p;
 
-      const f = _path.normalize(p, name);
+      const f = _path.normalizeNoSlash(p, name);
 
       if (!(await _f.exists(f))) {
         _err(res, `${flag}不存在`)(req, f, 1);
@@ -1063,7 +1063,7 @@ route.post(
 
       const fname = (_path.extname(name)[0] || name) + '.zip';
 
-      let t = _path.normalize(p, fname);
+      let t = _path.normalizeNoSlash(p, fname);
 
       if ((await _f.exists(t)) || t === appConfig.trashDir(account)) {
         t = await getUniqueFilename(t);
@@ -1127,7 +1127,7 @@ route.post(
       const { account } = req[kHello].userinfo;
 
       const p = appConfig.userRootDir(account, path);
-      const f = _path.normalize(p, name);
+      const f = _path.normalizeNoSlash(p, name);
 
       if ((await _f.getType(f)) !== 'file') {
         _err(res, '解压文件不存在')(req, f, 1);
@@ -1136,7 +1136,7 @@ route.post(
 
       const fname = _path.extname(name)[0] || name;
 
-      let t = _path.normalize(p, fname);
+      let t = _path.normalizeNoSlash(p, fname);
 
       const controller = new AbortController();
       const signal = controller.signal;
@@ -1235,7 +1235,7 @@ route.post(
               },
             });
           } else {
-            let targetPath = _path.normalize(trashDir, name);
+            let targetPath = _path.normalizeNoSlash(trashDir, name);
             if (await _f.exists(targetPath)) {
               targetPath = await getUniqueFilename(targetPath);
             }
@@ -1296,7 +1296,7 @@ route.get('/clear-trash', async (req, res) => {
         await concurrencyTasks(list, 5, async (item) => {
           if (signal.aborted) return;
 
-          const p = _path.normalize(trashDir, item);
+          const p = _path.normalizeNoSlash(trashDir, item);
 
           await _f.del(p, {
             signal,
@@ -1393,8 +1393,8 @@ route.post(
 
       const dir = appConfig.userRootDir(account, data.path);
 
-      const p = _path.normalize(dir, data.name),
-        t = _path.normalize(dir, name);
+      const p = _path.normalizeNoSlash(dir, data.name),
+        t = _path.normalizeNoSlash(dir, name);
 
       if (!(await _f.exists(p))) {
         _err(res, `${flag}不存在`)(req, p, 1);
@@ -1728,29 +1728,46 @@ route.post(
     try {
       const { path, type } = req[kValidate];
 
+      const normalizePath = _path.normalize(path);
+      if (normalizePath.endsWith('/')) {
+        return _success(res, 'ok', normalizePath);
+      }
+
       const p = appConfig.userRootDir(req[kHello].userinfo.account, path);
       const name = _path.basename(p)[0];
       const dir = _path.dirname(p);
-      let result = name;
-      if (name) {
-        const dirList = await _f.readdir(dir);
-        if (dirList.length > 0) {
-          let list = [];
-          if (type === 'all') {
-            list = dirList;
-          } else {
-            for (const item of dirList) {
-              if ((await _f.getType(_path.normalize(dir, item))) === type) {
-                list.push(item);
-              }
-            }
-          }
-          list.sort((a, b) => a.length - b.length);
-          result = list.find((item) => item.startsWith(name)) || name;
+
+      const dirList = await _f.readdir(dir);
+      if (!dirList || dirList.length === 0) {
+        return _success(res, 'ok', normalizePath);
+      }
+
+      let best = null;
+
+      for (const item of dirList) {
+        if (!item.startsWith(name)) continue;
+
+        if (type !== 'all') {
+          const t = await _f.getType(_path.normalizeNoSlash(dir, item));
+          if (t !== type) continue;
+        }
+
+        if (!best || item.length < best.length) {
+          best = item;
         }
       }
 
-      _success(res, 'ok', _path.normalize(_path.dirname(path), result));
+      const result = best || name;
+
+      const base = _path.dirname(path);
+      let resultPath = _path.normalizeNoSlash(base, result);
+
+      const resultType = await _f.getType(_path.normalizeNoSlash(dir, result));
+      if (resultType === 'dir') {
+        resultPath += '/';
+      }
+
+      _success(res, 'ok', resultPath);
     } catch (error) {
       _err(res)(req, error);
     }
@@ -1837,7 +1854,7 @@ route.post(
           { signal },
         );
 
-        let outputFilePath = _path.normalize(targetPath, filename);
+        let outputFilePath = _path.normalizeNoSlash(targetPath, filename);
 
         // 已存在添加后缀
         if ((await _f.exists(outputFilePath)) || outputFilePath === appConfig.trashDir(account)) {

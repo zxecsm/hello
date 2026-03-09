@@ -79,13 +79,13 @@ route.post(
 
       await receiveFiles(req, tDir, tName, fieldLength.maxPicSize, HASH);
 
-      await getImgInfo(_path.normalize(tDir, tName));
+      await getImgInfo(_path.normalizeNoSlash(tDir, tName));
 
       const obj = {
         id: nanoid(),
         create_at,
         hash: HASH,
-        url: _path.normalize(timePath, tName),
+        url: _path.normalizeNoSlash(timePath, tName),
         title,
       };
 

@@ -72,7 +72,7 @@ function bind(el, cb) {
 }
 
 function toGo(p, param = {}) {
-  p = _path.normalize(p);
+  p = _path.normalizeNoSlash(p);
   if (p !== hashRouter.getRoute()) {
     routerData.delete(p);
     hashRouter.push(p);
@@ -112,7 +112,7 @@ function hdClick(e) {
 }
 
 function hdInputBlur() {
-  const val = _path.normalize(this.value.trim()) || '/';
+  const val = _path.normalizeNoSlash(this.value.trim()) || '/';
   if (val === hashRouter.getRoute()) {
     renderCrumb(val);
   } else {
@@ -164,7 +164,7 @@ function getHash() {
 }
 
 function arrToPath(arr) {
-  return _path.normalize('/', arr.join('/'));
+  return _path.normalizeNoSlash('/', arr.join('/'));
 }
 
 function pathToArr(path) {

@@ -244,7 +244,7 @@ route.get('/clean-music-file', async (req, res) => {
 
         const url = `${path.slice(musicDir.length + 1)}/${_path.extname(name)[0]}`;
         if (!songs.some((item) => _path.extname(item.url)[0] === url)) {
-          await _delDir(_path.normalize(path, name));
+          await _delDir(_path.normalizeNoSlash(path, name));
         }
       });
 
@@ -267,9 +267,9 @@ route.get('/clean-bg-file', async (req, res) => {
 
       await concurrencyTasks(allBgFile, 5, async (item) => {
         const { path, name } = item;
-        const url = _path.normalize(path.slice(bgDir.length + 1), name);
+        const url = _path.normalizeNoSlash(path.slice(bgDir.length + 1), name);
         if (!bgs.some((item) => item.url === url)) {
-          await _delDir(_path.normalize(path, name));
+          await _delDir(_path.normalizeNoSlash(path, name));
         }
       });
 
@@ -292,9 +292,9 @@ route.get('/clean-pic-file', async (req, res) => {
 
       await concurrencyTasks(allPicFile, 5, async (item) => {
         const { path, name } = item;
-        const url = _path.normalize(path.slice(picDir.length + 1), name);
+        const url = _path.normalizeNoSlash(path.slice(picDir.length + 1), name);
         if (!pics.some((item) => item.url === url)) {
-          await _delDir(_path.normalize(path, name));
+          await _delDir(_path.normalizeNoSlash(path, name));
         }
       });
 
@@ -702,7 +702,7 @@ timedTask.add(async (flag) => {
       list.sort((a, b) => b.time - a.time);
       for (const item of list.slice(200)) {
         const { name, path } = item;
-        const p = _path.normalize(path, name);
+        const p = _path.normalizeNoSlash(path, name);
         await _delDir(p);
         count++;
       }

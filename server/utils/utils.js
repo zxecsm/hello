@@ -276,8 +276,8 @@ export async function receiveFiles(req, uploadDir, filename, maxFileSizeMB = 5, 
   }
 
   const uploadedFile = Array.isArray(files[fileKey]) ? files[fileKey][0] : files[fileKey];
-  const newPath = _path.normalize(uploadDir, uploadedFile.newFilename);
-  const originalPath = _path.normalize(uploadDir, filename);
+  const newPath = _path.normalizeNoSlash(uploadDir, uploadedFile.newFilename);
+  const originalPath = _path.normalizeNoSlash(uploadDir, filename);
 
   await _f.fsp.rename(newPath, originalPath);
   if (HASH && HASH !== (await _crypto.sampleHash(originalPath))) {
@@ -301,7 +301,7 @@ export async function mergefile(count, from, to, HASH) {
   const temFile = `${to}_${nanoid()}`;
 
   for (const filename of list) {
-    const filePath = _path.normalize(from, filename);
+    const filePath = _path.normalizeNoSlash(from, filename);
     const readStream = _f.fs.createReadStream(filePath);
 
     await _f.streamp.pipeline(

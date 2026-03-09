@@ -274,7 +274,7 @@ window.onerror = function (message, url, line, column) {
         return;
       }
       _loadingBar.start();
-      const fontUrl = _path.normalize(_d.fontURL, fontType);
+      const fontUrl = _path.normalizeNoSlash(_d.fontURL, fontType);
       const ff = new FontFace('changfont', `url(${fontUrl})`);
       // 添加到全局的 FontFaceSet 中
       document.fonts.add(ff);

@@ -125,7 +125,7 @@ timedTask.add(async (flag) => {
       const { name, path, time } = item;
 
       if (time < threshold) {
-        await _delDir(_path.normalize(path, name));
+        await _delDir(_path.normalizeNoSlash(path, name));
         num++;
       }
     });
@@ -1199,12 +1199,12 @@ route.post(
         HASH,
       );
 
-      const logo = _path.normalize(timePath, `${HASH}.${_path.extname(name)[2]}`);
+      const logo = _path.normalizeNoSlash(timePath, `${HASH}.${_path.extname(name)[2]}`);
 
       if (type === 'bookmark') {
         await db('bmk')
           .where({ account, id, state: 1 })
-          .update({ logo: _path.normalize('/logo', account, logo) });
+          .update({ logo: _path.normalizeNoSlash('/logo', account, logo) });
 
         syncUpdateData(req, 'bookmark');
 
@@ -2047,7 +2047,7 @@ route.post(
           const noteHistoryDir = appConfig.noteHistoryDir(account, id);
 
           if (await _f.exists(noteHistoryDir)) {
-            await _f.rename(noteHistoryDir, _path.normalize(trashDir, id));
+            await _f.rename(noteHistoryDir, _path.normalizeNoSlash(trashDir, id));
           }
         });
       }

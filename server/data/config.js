@@ -23,81 +23,81 @@ const appConfig = {
   tipsid: 'tips',
 
   appFilesDir(...arg) {
-    return _path.normalize(this.configDir(this.adminAccount, 'appFiles'), ...arg);
+    return _path.normalizeNoSlash(this.configDir(this.adminAccount, 'appFiles'), ...arg);
   },
   bgDir(...arg) {
-    return _path.normalize(this.appFilesDir('bg'), ...arg);
+    return _path.normalizeNoSlash(this.appFilesDir('bg'), ...arg);
   },
   customDir(...arg) {
-    return _path.normalize(this.appFilesDir('custom'), ...arg);
+    return _path.normalizeNoSlash(this.appFilesDir('custom'), ...arg);
   },
   dataDir(...arg) {
-    return _path.normalize(this.appFilesDir('data'), ...arg);
+    return _path.normalizeNoSlash(this.appFilesDir('data'), ...arg);
   },
   faviconDir(...arg) {
-    return _path.normalize(this.appFilesDir('favicon'), ...arg);
+    return _path.normalizeNoSlash(this.appFilesDir('favicon'), ...arg);
   },
   fontDir(...arg) {
-    return _path.normalize(this.appFilesDir('font'), ...arg);
+    return _path.normalizeNoSlash(this.appFilesDir('font'), ...arg);
   },
   logDir(...arg) {
-    return _path.normalize(this.appFilesDir('log'), ...arg);
+    return _path.normalizeNoSlash(this.appFilesDir('log'), ...arg);
   },
   musicDir(...arg) {
-    return _path.normalize(this.appFilesDir('music'), ...arg);
+    return _path.normalizeNoSlash(this.appFilesDir('music'), ...arg);
   },
   notepadDir(...arg) {
-    return _path.normalize(this.appFilesDir('notepad'), ...arg);
+    return _path.normalizeNoSlash(this.appFilesDir('notepad'), ...arg);
   },
   picDir(...arg) {
-    return _path.normalize(this.appFilesDir('pic'), ...arg);
+    return _path.normalizeNoSlash(this.appFilesDir('pic'), ...arg);
   },
   siteinfoDir(...arg) {
-    return _path.normalize(this.appFilesDir('siteinfo'), ...arg);
+    return _path.normalizeNoSlash(this.appFilesDir('siteinfo'), ...arg);
   },
   temDir(...arg) {
-    return _path.normalize(this.appFilesDir('tem'), ...arg);
+    return _path.normalizeNoSlash(this.appFilesDir('tem'), ...arg);
   },
   thumbDir(...arg) {
-    return _path.normalize(this.appFilesDir('thumb'), ...arg);
+    return _path.normalizeNoSlash(this.appFilesDir('thumb'), ...arg);
   },
   uploadDir(...arg) {
-    return _path.normalize(this.appFilesDir('upload'), ...arg);
+    return _path.normalizeNoSlash(this.appFilesDir('upload'), ...arg);
   },
   userFilesDir(...arg) {
-    return _path.normalize(this.appFilesDir('userFiles'), ...arg);
+    return _path.normalizeNoSlash(this.appFilesDir('userFiles'), ...arg);
   },
   databaseDir(...arg) {
-    return _path.normalize(this.dataDir('db'), ...arg);
+    return _path.normalizeNoSlash(this.dataDir('db'), ...arg);
   },
 
   userRootDir(account, ...arg) {
     const path = account === this.adminAccount ? appDataDir : this.userFilesDir(account);
-    return _path.normalize(path, ...arg);
+    return _path.normalizeNoSlash(path, ...arg);
   },
   trashDir(account, ...arg) {
-    return _path.normalize(this.userRootDir(account, this.trashDirName), ...arg);
+    return _path.normalizeNoSlash(this.userRootDir(account, this.trashDirName), ...arg);
   },
   configDir(account, ...arg) {
-    return _path.normalize(this.userRootDir(account, '.h_config'), ...arg);
+    return _path.normalizeNoSlash(this.userRootDir(account, '.h_config'), ...arg);
   },
   logoDir(account, ...arg) {
-    return _path.normalize(this.configDir(account, 'logo'), ...arg);
+    return _path.normalizeNoSlash(this.configDir(account, 'logo'), ...arg);
   },
   fileConfigDir(account, ...arg) {
-    return _path.normalize(this.configDir(account, 'file_config'), ...arg);
+    return _path.normalizeNoSlash(this.configDir(account, 'file_config'), ...arg);
   },
   sshConfigDir(account, ...arg) {
-    return _path.normalize(this.configDir(account, 'ssh_config'), ...arg);
+    return _path.normalizeNoSlash(this.configDir(account, 'ssh_config'), ...arg);
   },
   searchConfigDir(account, ...arg) {
-    return _path.normalize(this.configDir(account, 'search_config'), ...arg);
+    return _path.normalizeNoSlash(this.configDir(account, 'search_config'), ...arg);
   },
   noteHistoryDir(account, ...arg) {
-    return _path.normalize(this.configDir(account, 'note_history'), ...arg);
+    return _path.normalizeNoSlash(this.configDir(account, 'note_history'), ...arg);
   },
   pubDir(account, ...arg) {
-    return _path.normalize(this.configDir(account, 'pub'), ...arg);
+    return _path.normalizeNoSlash(this.configDir(account, 'pub'), ...arg);
   },
 };
 

@@ -4,6 +4,13 @@ function toUnixPath(path) {
   return path.replace(/\\/g, '/');
 }
 
+// 规范路径并去除尾部/
+function normalizeNoSlash(...paths) {
+  const result = normalize(...paths);
+  if (result === '/') return result;
+  return _path.trimEndSlash(result);
+}
+
 // 规范化路径
 function normalize(...paths) {
   if (paths.length > 1) {
@@ -141,6 +148,11 @@ function isFilename(name, maxLen = 255) {
   );
 }
 
+// 去尾 /
+function trimEndSlash(str = '') {
+  return String(str).replace(/\/+$/, '');
+}
+
 const _path = {
   toUnixPath,
   normalize,
@@ -152,6 +164,8 @@ const _path = {
   randomFilenameSuffix,
   sanitizeFilename,
   isFilename,
+  trimEndSlash,
+  normalizeNoSlash,
 };
 
 export default _path;

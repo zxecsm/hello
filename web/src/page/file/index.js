@@ -697,7 +697,7 @@ function hdContextMenu(e) {
         close();
         e.stopPropagation();
         _myOpen(
-          `/ssh?p=${decodeURIComponent(_path.normalize('/', curFileDirPath))}#local`,
+          `/ssh?p=${decodeURIComponent(_path.normalizeNoSlash('/', curFileDirPath))}#local`,
           '终端',
           'ssh',
         );
@@ -705,9 +705,9 @@ function hdContextMenu(e) {
     } else if (id === 'newPage') {
       close();
       e.stopPropagation();
-      _myOpen(`/file#${_path.normalize('/', curFileDirPath)}`, '文件管理', 'file');
+      _myOpen(`/file#${_path.normalizeNoSlash('/', curFileDirPath)}`, '文件管理', 'file');
     } else if (id === 'copyPath') {
-      copyText(_path.normalize('/', curFileDirPath));
+      copyText(_path.normalizeNoSlash('/', curFileDirPath));
       close();
     } else if (id === 'share') {
       hdShare(e, obj);
@@ -851,7 +851,7 @@ function rightList(e, obj, el) {
           close();
           e.stopPropagation();
           _myOpen(
-            `/ssh?p=${decodeURIComponent(_path.normalize('/', obj.path, obj.name))}#local`,
+            `/ssh?p=${decodeURIComponent(_path.normalizeNoSlash('/', obj.path, obj.name))}#local`,
             '终端',
             'ssh',
           );
@@ -868,7 +868,7 @@ function rightList(e, obj, el) {
         ]);
       } else if (id === 'copyLink') {
         if (_path.isPathWithin(_d.pubDir, obj.path, 1)) {
-          const p = _path.normalize(
+          const p = _path.normalizeNoSlash(
             '/pub',
             localData.get('account'),
             `${obj.path}/${obj.name}`.slice(_d.pubDir.length),
@@ -877,7 +877,7 @@ function rightList(e, obj, el) {
           return;
         }
         loading.start();
-        const p = _path.normalize('/file', obj.path, obj.name);
+        const p = _path.normalizeNoSlash('/file', obj.path, obj.name);
         reqUserFileToken({ p })
           .then((res) => {
             if (res.code === 1) {
@@ -973,12 +973,12 @@ function rightList(e, obj, el) {
       } else if (id === 'user') {
         editFileChown(e, [obj]);
       } else if (id === 'copyPath') {
-        copyText(_path.normalize('/', obj.path, obj.name));
+        copyText(_path.normalizeNoSlash('/', obj.path, obj.name));
         close();
       } else if (id === 'newPage') {
         close();
         e.stopPropagation();
-        _myOpen(`/file#${_path.normalize('/', obj.path, obj.name)}`, '文件管理', 'file');
+        _myOpen(`/file#${_path.normalizeNoSlash('/', obj.path, obj.name)}`, '文件管理', 'file');
       }
     },
     obj.name,
@@ -1001,7 +1001,7 @@ function addTo(e, obj) {
     ],
     ({ e, id, close }) => {
       if (id) {
-        const path = _path.normalize('/', obj.path, obj.name);
+        const path = _path.normalizeNoSlash('/', obj.path, obj.name);
         rMenu.pop(
           {
             e,
@@ -1270,7 +1270,7 @@ async function hdUp(files) {
     } else {
       path = `${path}/${name}`;
     }
-    path = _path.normalize(path);
+    path = _path.normalizeNoSlash(path);
     const pro = upPro.add(name);
     if (size === 0) {
       pro.fail();
@@ -1942,8 +1942,8 @@ async function hdCopy(e, data, cb) {
       if (
         !data.every((item) => {
           const { path, name } = item;
-          const f = _path.normalize(path, name);
-          const t = _path.normalize(curFileDirPath, name);
+          const f = _path.normalizeNoSlash(path, name);
+          const t = _path.normalizeNoSlash(curFileDirPath, name);
           return !_path.isPathWithin(f, t);
         })
       ) {
@@ -2006,8 +2006,8 @@ async function hdCut(e, data, cb, toPath = curFileDirPath, text = '确认粘贴�
       if (
         !data.every((item) => {
           const { path, name } = item;
-          const f = _path.normalize(path, name);
-          const t = _path.normalize(toPath, name);
+          const f = _path.normalizeNoSlash(path, name);
+          const t = _path.normalizeNoSlash(toPath, name);
           return f !== t && !_path.isPathWithin(f, t);
         })
       ) {
@@ -2254,7 +2254,7 @@ $footer
   });
 // 删除
 function hdDel(e, arr, cb, loading = { start() {}, end() {} }) {
-  if (arr.some((item) => _path.normalize(item.path, item.name) === _d.trashDir)) {
+  if (arr.some((item) => _path.normalizeNoSlash(item.path, item.name) === _d.trashDir)) {
     _msg.error(`不能删除回收站目录：${_d.trashDir}`);
     return;
   }
