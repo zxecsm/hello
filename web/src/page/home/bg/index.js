@@ -222,7 +222,14 @@ function bgItemMenu(e, obj, el) {
       beforeIcon: 'iconfont icon-duoxuan',
     },
   ];
-  if (isRoot() || isCollectState) {
+  if (isCollectState) {
+    data.push({
+      id: '5',
+      text: '移除',
+      beforeIcon: 'iconfont icon-shibai',
+    });
+  }
+  if (isRoot()) {
     data.push({
       id: '4',
       text: '删除',
@@ -237,20 +244,16 @@ function bgItemMenu(e, obj, el) {
         closeBgBox();
         setBg(obj, close);
       } else if (id === '4') {
-        if (isCollectState) {
-          delCollectBg([obj.id], close, loading);
-        } else {
-          if (isRoot()) {
-            delBg(
-              e,
-              [obj.id],
-              () => {
-                close();
-              },
-              false,
-              loading,
-            );
-          }
+        if (isRoot()) {
+          delBg(
+            e,
+            [obj.id],
+            () => {
+              close();
+            },
+            false,
+            loading,
+          );
         }
       } else if (id === '2') {
         close();
@@ -264,6 +267,8 @@ function bgItemMenu(e, obj, el) {
         close();
         startSelect();
         checkedBg(el);
+      } else if (id === '5') {
+        delCollectBg([obj.id], close, loading);
       }
     },
     '壁纸选项',
@@ -305,7 +310,8 @@ function startSelect() {
       check: 'n',
     });
   $bgFooter.find('.f_collect').css('display', isCollectState ? 'none' : 'block');
-  $bgFooter.find('.f_delete').css('display', isCollectState || isRoot() ? 'block' : 'none');
+  $bgFooter.find('.f_delete').css('display', isRoot() ? 'block' : 'none');
+  $bgFooter.find('.f_remove').css('display', isCollectState ? 'block' : 'none');
 }
 function stopSelect() {
   $bgList
@@ -543,12 +549,8 @@ function getCheckBgIds() {
 function deleteCheckBg(e) {
   const list = getCheckBgIds();
   if (list.length === 0) return;
-  if (isCollectState) {
-    delCollectBg(list);
-  } else {
-    if (isRoot()) {
-      delBg(e, list, false, 1);
-    }
+  if (isRoot()) {
+    delBg(e, list, false, 1);
   }
 }
 function collectCheckBg() {
@@ -558,6 +560,11 @@ function collectCheckBg() {
 }
 $bgFooter
   .on('click', '.f_delete', deleteCheckBg)
+  .on('click', '.f_remove', function () {
+    const list = getCheckBgIds();
+    if (list.length === 0) return;
+    delCollectBg(list);
+  })
   .on('click', '.f_collect', collectCheckBg)
   .on('click', '.f_close', stopSelect)
   .on('click', 'span', function () {
