@@ -190,7 +190,8 @@ body {
     }
 
     .upload_bg,
-    .b_close_btn {
+    .b_close_btn,
+    .collect_bg {
       width: 3rem;
       height: 3rem;
       line-height: 3rem;
@@ -219,6 +220,13 @@ body {
     .upload_bg {
       top: 1rem;
       left: 6rem;
+    }
+    .collect_bg {
+      top: 1rem;
+      left: 10rem;
+      &.active {
+        color: var(--hear-color);
+      }
     }
 
     .bg_list {
@@ -272,6 +280,26 @@ body {
           &:hover {
             transform: scale(1.1);
             color: var(--text-hover-color);
+          }
+        }
+
+        .collect_btn {
+          position: absolute;
+          top: 0;
+          left: 0;
+          font-size: 2rem;
+          width: 4rem;
+          height: 4rem;
+          line-height: 4rem;
+          text-align: center;
+          color: var(--icon-color);
+          z-index: 1;
+          &:hover {
+            transform: scale(1.1);
+            color: var(--text-hover-color);
+          }
+          &.active {
+            color: var(--hear-color);
           }
         }
 
@@ -3177,7 +3205,7 @@ body {
               }
 
               .like_hear.active {
-                color: #fd4747;
+                color: var(--hear-color);
               }
 
               .play_mv:hover,
@@ -3647,7 +3675,7 @@ body {
                 transform: scale(1.1);
               }
               &.active {
-                color: #fd4747;
+                color: var(--hear-color);
               }
             }
 
@@ -3888,7 +3916,7 @@ body {
               }
 
               .like_hear.active {
-                color: #fd4747;
+                color: var(--hear-color);
               }
 
               .play_mv:hover,
@@ -4094,7 +4122,7 @@ body {
                 }
 
                 .like_hear.active {
-                  color: #fd4747;
+                  color: var(--hear-color);
                 }
 
                 .logo_wrap {
@@ -4882,6 +4910,10 @@ html.head_btn_to_right {
     .upload_bg {
       left: auto !important;
       right: 6rem;
+    }
+    .collect_bg {
+      left: auto !important;
+      right: 10rem;
     }
     .b_close_btn {
       left: auto !important;

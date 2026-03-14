@@ -8,6 +8,7 @@
 :root {
   --text-hover-color: #409eff;
   --icon-color: #1389a7;
+  --hear-color: #fd4747;
   --text-hover-decoration: underline wavy;
   --speed-duration: 0.3s;
   --speed-timing: ease-in-out;

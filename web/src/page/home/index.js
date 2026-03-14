@@ -56,7 +56,7 @@ import {
   updateTipsFlag,
 } from './rightSetting/index.js';
 import { closeTodoBox, getTodoList, setTodoUndone, todoMsg } from './todo/index.js';
-import { closeBgBox, delBg, renderBgList, showBgBox } from './bg/index.js';
+import { closeBgBox, collectBg, delBg, renderBgList, showBgBox } from './bg/index.js';
 import { getBookMarkList, showAside, toggleAside } from './aside/index.js';
 import {
   getHomeBmList,
@@ -468,6 +468,11 @@ function hdHomeBgBtn(e, bgId) {
       beforeIcon: 'iconfont icon-kejian',
     },
     {
+      id: '4',
+      text: '收藏壁纸',
+      beforeIcon: 'iconfont icon-hear',
+    },
+    {
       id: '3',
       text: '下载壁纸',
       beforeIcon: 'iconfont icon-download',
@@ -514,6 +519,8 @@ function hdHomeBgBtn(e, bgId) {
             filename: bgId,
           },
         ]);
+      } else if (id === '4') {
+        collectBg([bgId], close, loading);
       }
     },
     '壁纸选项',

@@ -22,7 +22,7 @@ import pagination from '../../../js/plugins/pagination';
 import { UpProgress } from '../../../js/plugins/UpProgress';
 import _msg from '../../../js/plugins/message';
 import realtime from '../../../js/plugins/realtime';
-import { reqBgDelete, reqBgList, reqBgRepeat, reqBgUp } from '../../../api/bg.js';
+import { reqBgCollect, reqBgDelete, reqBgList, reqBgRepeat, reqBgUp } from '../../../api/bg.js';
 import { hideRightMenu } from '../rightSetting/index.js';
 import { setBg } from '../index.js';
 import { popWindow, setZidx } from '../popWindow.js';
@@ -37,6 +37,7 @@ const $allBgWrap = $('.all_bg_wrap'),
   $bgList = $allBgWrap.find('.bg_list'),
   $bgFooter = $allBgWrap.find('.bg_footer');
 let bgList = [];
+let isCollectState = false;
 // 上传壁纸
 async function hdUpBg(files) {
   const controller = new AbortController();
@@ -113,7 +114,17 @@ $allBgWrap
     if (files.length === 0) return;
     hdUpBg(files);
   })
-  .on('click', '.b_close_btn', closeBgBox);
+  .on('click', '.b_close_btn', closeBgBox)
+  .on('click', '.collect_bg', function () {
+    isCollectState = !isCollectState;
+    if (isCollectState) {
+      this.className = 'collect_bg iconfont icon-hear-full active';
+    } else {
+      this.className = 'collect_bg iconfont icon-hear';
+    }
+    bgpage = 1;
+    renderBgList(true);
+  });
 // 拖拽上传
 ~(function () {
   const allbg = $bgList[0];
@@ -141,7 +152,7 @@ export function delBg(e, ids, cb, isCheck, loading = { start() {}, end() {} }) {
     (type) => {
       if (type === 'confirm') {
         loading.start();
-        reqBgDelete(ids)
+        reqBgDelete({ ids, collect: 0 })
           .then((result) => {
             loading.end();
             if (result.code === 1) {
@@ -158,6 +169,40 @@ export function delBg(e, ids, cb, isCheck, loading = { start() {}, end() {} }) {
     },
   );
 }
+// 删除收藏壁纸
+function delCollectBg(ids, cb, loading = { start() {}, end() {} }) {
+  loading.start();
+  reqBgDelete({ ids, collect: 1 })
+    .then((result) => {
+      loading.end();
+      if (result.code === 1) {
+        cb && cb();
+        _msg.success(result.codeText);
+        renderBgList();
+        return;
+      }
+    })
+    .catch(() => {
+      loading.end();
+    });
+}
+// 收藏壁纸
+export function collectBg(ids, cb, loading = { start() {}, end() {} }) {
+  loading.start();
+  reqBgCollect(ids)
+    .then((result) => {
+      loading.end();
+      if (result.code === 1) {
+        cb && cb();
+        _msg.success(result.codeText);
+        renderBgList();
+        return;
+      }
+    })
+    .catch(() => {
+      loading.end();
+    });
+}
 // 菜单
 function bgItemMenu(e, obj, el) {
   const data = [
@@ -171,20 +216,18 @@ function bgItemMenu(e, obj, el) {
       text: '下载',
       beforeIcon: 'iconfont icon-download',
     },
+    {
+      id: '3',
+      text: '选中',
+      beforeIcon: 'iconfont icon-duoxuan',
+    },
   ];
-  if (isRoot()) {
-    data.push(
-      {
-        id: '3',
-        text: '选中',
-        beforeIcon: 'iconfont icon-duoxuan',
-      },
-      {
-        id: '4',
-        text: '删除',
-        beforeIcon: 'iconfont icon-shanchu',
-      },
-    );
+  if (isRoot() || isCollectState) {
+    data.push({
+      id: '4',
+      text: '删除',
+      beforeIcon: 'iconfont icon-shanchu',
+    });
   }
   rMenu.selectMenu(
     e,
@@ -194,16 +237,20 @@ function bgItemMenu(e, obj, el) {
         closeBgBox();
         setBg(obj, close);
       } else if (id === '4') {
-        if (isRoot()) {
-          delBg(
-            e,
-            [obj.id],
-            () => {
-              close();
-            },
-            false,
-            loading,
-          );
+        if (isCollectState) {
+          delCollectBg([obj.id], close, loading);
+        } else {
+          if (isRoot()) {
+            delBg(
+              e,
+              [obj.id],
+              () => {
+                close();
+              },
+              false,
+              loading,
+            );
+          }
         }
       } else if (id === '2') {
         close();
@@ -257,6 +304,8 @@ function startSelect() {
       class: 'iconfont icon-xuanzeweixuanze',
       check: 'n',
     });
+  $bgFooter.find('.f_collect').css('display', isCollectState ? 'none' : 'block');
+  $bgFooter.find('.f_delete').css('display', isCollectState || isRoot() ? 'block' : 'none');
 }
 function stopSelect() {
   $bgList
@@ -307,7 +356,7 @@ export function renderBgList(y) {
   }
   let type = isBigScreen() ? 'bg' : 'bgxs',
     showpage = localData.get('bgPageSize');
-  reqBgList({ type, pageNo: bgpage, pageSize: showpage })
+  reqBgList({ type, pageNo: bgpage, pageSize: showpage, collect: isCollectState ? 1 : 0 })
     .then((result) => {
       if (result.code === 1) {
         if (bgBoxIsHide()) return;
@@ -318,15 +367,17 @@ export function renderBgList(y) {
           `
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
-            <div v-for="{id} in data" class="bg_item" :data-id="id">
+            <div v-for="{id, isCollect} in data" class="bg_item" :data-id="id">
               <div check="n" class="check_level"></div>
               <i cursor="y" class="menu_btn iconfont icon-maohao"></i>
+              <i v-if="!isCollectState" cursor="y" class="collect_btn iconfont icon-{{isCollect ? 'hear-full active' : 'hear'}}"></i>
               <div class="bg_img"></div>
             </div>
             <div v-html="getPaging()" class="bg_paging_box"></div>
           </template>
           `,
           {
+            isCollectState,
             total,
             data,
             _d,
@@ -433,6 +484,14 @@ $bgList
     const obj = getBgItem($(this).parent().data('id'));
     bgItemMenu(e, obj, this.parentNode.querySelector('.check_level'));
   })
+  .on('click', '.collect_btn', function () {
+    const { id, isCollect } = getBgItem($(this).parent().data('id'));
+    if (isCollect) {
+      delCollectBg([id]);
+    } else {
+      collectBg([id]);
+    }
+  })
   .on('click', '.bg_img', hdPreview)
   .on('click', '.check_level', function () {
     checkedBg(this);
@@ -470,19 +529,36 @@ function updateSelectInfo() {
     });
   }
 }
-// 删除选中
-function deleteCheckBg(e) {
+function getCheckBgIds() {
   const $bgItems = $bgList.find('.bg_item'),
     $checkArr = $bgItems.filter((_, item) => $(item).find('.check_level').attr('check') === 'y');
-  if ($checkArr.length === 0) return;
+  if ($checkArr.length === 0) return [];
   const arr = [];
   $checkArr.each((_, v) => {
     arr.push(v.getAttribute('data-id'));
   });
-  delBg(e, arr, false, 1);
+  return arr;
+}
+// 删除选中
+function deleteCheckBg(e) {
+  const list = getCheckBgIds();
+  if (list.length === 0) return;
+  if (isCollectState) {
+    delCollectBg(list);
+  } else {
+    if (isRoot()) {
+      delBg(e, list, false, 1);
+    }
+  }
+}
+function collectCheckBg() {
+  const list = getCheckBgIds();
+  if (list.length === 0) return;
+  collectBg(list);
 }
 $bgFooter
   .on('click', '.f_delete', deleteCheckBg)
+  .on('click', '.f_collect', collectCheckBg)
   .on('click', '.f_close', stopSelect)
   .on('click', 'span', function () {
     let che = $(this).attr('check');

@@ -21,11 +21,12 @@ import {
   createPagingData,
   uLog,
   validate,
+  unique,
 } from '../../utils/utils.js';
 
 import { _delDir } from '../file/file.js';
 
-import { getRandomBg } from './bg.js';
+import { batchGetCollectBgList, getCollectBgList, getRandomBg, updateCollecBgtList } from './bg.js';
 
 import { getImgInfo } from '../../utils/img.js';
 import { fieldLength } from '../config.js';
@@ -163,6 +164,37 @@ route.post(
   },
 );
 
+// 收藏壁纸
+route.post(
+  '/collect',
+  validate(
+    'body',
+    V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
+      .min(1)
+      .max(fieldLength.bgPageSize),
+    'ids',
+  ),
+  async (req, res) => {
+    try {
+      const ids = req[kValidate];
+      const { account } = req[kHello].userinfo;
+
+      const list = unique([...(await getCollectBgList(account)), ...ids]).slice(
+        0,
+        fieldLength.collectBg,
+      );
+
+      await updateCollecBgtList(account, list);
+
+      syncUpdateData(req, 'bg');
+
+      _success(res, '收藏壁纸成功')(req, ids.length, 1);
+    } catch (error) {
+      _err(res)(req, error);
+    }
+  },
+);
+
 // 壁纸列表
 route.get(
   '/list',
@@ -170,13 +202,52 @@ route.get(
     'query',
     V.object({
       type: V.string().trim().enum(['bg', 'bgxs']),
+      collect: V.number().toInt().default(0).enum([0, 1]),
       pageNo: V.number().toInt().default(1).min(1),
       pageSize: V.number().toInt().default(40).min(1).max(fieldLength.bgPageSize),
     }),
   ),
   async (req, res) => {
     try {
-      const { type, pageNo, pageSize } = req[kValidate];
+      const { type, pageNo, pageSize, collect } = req[kValidate];
+
+      const { account } = req[kHello].userinfo;
+      const collectList = await getCollectBgList(account);
+
+      if (collect === 1) {
+        let data = [];
+        let result = null;
+        if (collectList.length > 0) {
+          const obj = await batchGetCollectBgList(collectList);
+          let isChange = false;
+          const list = [];
+          collectList.forEach((id) => {
+            const item = obj[id];
+            if (item) {
+              list.push(id);
+              if (item.type === type) {
+                data.push(item);
+              }
+            } else {
+              isChange = true;
+            }
+          });
+          if (isChange) {
+            await updateCollecBgtList(account, list);
+          }
+          result = createPagingData(Array(data.length), pageSize, pageNo);
+          const offset = (result.pageNo - 1) * pageSize;
+          data = data.reverse().slice(offset, offset + pageSize);
+        } else {
+          result = createPagingData(Array(0), pageSize, pageNo);
+        }
+
+        _success(res, 'ok', {
+          ...result,
+          data,
+        });
+        return;
+      }
 
       const bgdb = db('bg').where({ type });
 
@@ -189,6 +260,12 @@ route.get(
       let data = [];
       if (total > 0) {
         data = await bgdb.select('id,type').page(pageSize, offset).orderBy('serial', 'DESC').find();
+        data = data.map((item) => {
+          if (collectList.includes(item.id)) {
+            item.isCollect = true;
+          }
+          return item;
+        });
       }
 
       _success(res, 'ok', {
@@ -206,14 +283,29 @@ route.post(
   '/delete',
   validate(
     'body',
-    V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
-      .min(1)
-      .max(fieldLength.bgPageSize),
-    'ids',
+    V.object({
+      ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
+        .min(1)
+        .max(fieldLength.bgPageSize),
+      collect: V.number().toInt().default(0).enum([0, 1]),
+    }),
   ),
   async (req, res) => {
     try {
-      const ids = req[kValidate];
+      const { ids, collect } = req[kValidate];
+
+      if (collect === 1) {
+        const { account } = req[kHello].userinfo;
+
+        const list = (await getCollectBgList(account)).filter((item) => !ids.includes(item));
+
+        await updateCollecBgtList(account, list);
+
+        syncUpdateData(req, 'bg');
+
+        _success(res, '删除收藏壁纸成功')(req, ids.length, 1);
+        return;
+      }
 
       // 验证管理员
       if (!req[kHello].isRoot) {

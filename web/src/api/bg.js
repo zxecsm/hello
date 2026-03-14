@@ -20,6 +20,10 @@ export function reqBgRepeat(data) {
 export function reqBgDelete(data) {
   return _postAjax('/bg/delete', data);
 }
+// 收藏壁纸
+export function reqBgCollect(data) {
+  return _postAjax('/bg/collect', data);
+}
 // 获取列表
 export function reqBgList(data) {
   return _getAjax('/bg/list', data);

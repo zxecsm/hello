@@ -28,6 +28,16 @@ const dbSchema = {
       ],
       indexes: [],
     },
+    collect_bg: {
+      columns: [
+        { name: 'serial', type: 'INTEGER', primary: true, autoincrement: true },
+        { name: 'create_at', type: 'INTEGER', notNull: true },
+        { name: 'account', type: 'TEXT', unique: true, notNull: true },
+        { name: 'data', type: 'TEXT', notNull: true },
+        { name: 'state', type: 'INTEGER', notNull: true, default: 1 },
+      ],
+      indexes: [],
+    },
     bmk: {
       columns: [
         { name: 'serial', type: 'INTEGER', primary: true, autoincrement: true },
