@@ -525,7 +525,7 @@ export class MouseElementTracker {
       border: '0.1rem solid var(--text-hover-color)',
       transition: 'padding 0.3s ease-in-out',
       padding: '10rem',
-      borderRadius: '.5rem',
+      borderRadius: 'var(--border-radius1)',
       color: 'var(--icon-color)',
       backgroundColor: 'var(--color10)',
       fontWeight: 'bold',
