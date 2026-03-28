@@ -231,7 +231,7 @@ body {
         }
         .date {
           flex: none;
-          width: 15rem;
+          width: 8rem;
           text-align: center;
           font-size: 0.8em;
         }
@@ -257,8 +257,12 @@ body {
           }
         }
         @media (max-width: 800px) {
-          .date,
           .mode {
+            display: none;
+          }
+        }
+        @media (max-width: 300px) {
+          .date {
             display: none;
           }
         }
