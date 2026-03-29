@@ -1,11 +1,9 @@
 import $ from 'jquery';
 import imgGqImg from '../../../images/img/gqimg.png';
-import imgVoice from '../../../images/img/voice.mp3';
 import imgHelloLogo from '../../../images/img/hello-msg-logo.png';
 import {
   throttle,
   debounce,
-  playSound,
   getSelectText,
   _getTarget,
   imgjz,
@@ -1706,7 +1704,6 @@ function upVoice(blob, duration) {
         .then((res) => {
           if (res.code === 1) {
             pro.close('发送成功');
-            playSound(imgVoice);
           }
         })
         .catch(() => {
