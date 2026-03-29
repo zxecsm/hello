@@ -799,6 +799,16 @@ route.post(
 
       await _f.writeFile(fpath, text);
 
+      // 修改搜索引擎配置, 触发更新
+      if (appConfig.searchConfigDir(account, 'config.json') === fpath) {
+        syncUpdateData(req, 'searchConfig', '', 'all');
+      }
+
+      // 修改快捷命令配置, 触发更新
+      if (appConfig.sshConfigDir(account, 'quick.json') === fpath) {
+        syncUpdateData(req, 'quickCommand', '', 'all');
+      }
+
       syncUpdateData(req, 'file');
 
       fileList.clear(account);

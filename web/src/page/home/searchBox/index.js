@@ -922,6 +922,7 @@ $searchBoxMask.on('click', '.setting', searchSetting);
 function getSearchEngineList() {
   return _tpl(
     `
+    <div class="item setting" cursor="true"><i class="icon iconfont icon-shezhi"></i><span class="text">管理搜索引擎</span></div>
     <div v-for="{id,title,logo,color,link},i in _d.searchEngineData" cursor="y" :data-id="id" class="item {{getSearchEngine().id === id ? 'active' : ''}}">
       <img v-if="i == 0" :src="logo" style="width: 4rem;height: 4rem;border-radius: var(--border-radius1);"/>
       <img v-else style="width: 4rem;height: 4rem;border-radius: var(--border-radius1);" :data-src="getLogoPath(link,logo)"/>
@@ -1140,6 +1141,7 @@ function selectSearch(e) {
     function ({ close, e, box, loading, resetMenu }) {
       if (!box) return;
       const add = _getTarget(box, e, '.add');
+      const setting = _getTarget(box, e, '.setting');
       const img = _getTarget(box, e, '.item img');
       const searchName = _getTarget(box, e, '.item .search_name') || _getTarget(box, e, '.item i');
       if (img) {
@@ -1177,6 +1179,9 @@ function selectSearch(e) {
           },
           title,
         );
+      } else if (setting) {
+        openInIframe(`/file#${_d.searchConfigDir}`, '文件管理', 'file');
+        close(1);
       } else if (add) {
         addEngine(e, resetMenu);
       } else if (searchName) {
@@ -1202,6 +1207,7 @@ function selectSearch(e) {
 function getTranslatorList() {
   return _tpl(
     `
+    <div class="item setting" cursor="true"><i class="icon iconfont icon-shezhi"></i><span class="text">管理翻译接口</span></div>
     <div v-for="{id,title,logo,link},i in _d.translatorData" cursor="y" :data-id="id" class="item {{getTranslator().id === id ? 'active' : ''}}">
       <img v-if="i == 0" :src="logo" style="width: 4rem;height: 4rem;border-radius: var(--border-radius1);"/>
       <img v-else style="width: 4rem;height: 4rem;border-radius: var(--border-radius1);" :data-src="getLogoPath(link,logo)"/>
@@ -1402,6 +1408,7 @@ function selectTranslator(e) {
     function ({ close, e, box, loading, resetMenu }) {
       if (!box) return;
       const add = _getTarget(box, e, '.add');
+      const setting = _getTarget(box, e, '.setting');
       const img = _getTarget(box, e, 'img');
       const translatorName = _getTarget(box, e, '.translator_name');
       if (img) {
@@ -1439,6 +1446,9 @@ function selectTranslator(e) {
           },
           title,
         );
+      } else if (setting) {
+        openInIframe(`/file#${_d.searchConfigDir}`, '文件管理', 'file');
+        close(1);
       } else if (add) {
         addTranslator(e, resetMenu);
       } else if (translatorName) {
