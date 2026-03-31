@@ -305,7 +305,7 @@ export function renderList(y) {
                 <div cursor="y" check="n" class="check_state"></div>
                 <li class="item_type iconfont icon-jilu"></li>
                 <li v-html="hdTitleHighlight(splitWord,title)" cursor="y" class="item_title"></li>
-                <li v-if="top != 0 && !word && category.length === 0" class="top_btn iconfont icon-zhiding" style="color: var(--color5);"></li>
+                <li v-if="top != 0 && !word && category.length === 0" class="top_btn iconfont icon-zhiding"></li>
                 <li v-if="runState === 'own'" cursor="y" class="lock_state iconfont {{share === 0? 'icon-gl-unlock2 open': 'icon-gl-unlock4'}}"></li>
                 <li v-if="runState === 'own'" cursor="y" class="set_btn iconfont icon-maohao"></li>
               </ul>
@@ -634,6 +634,11 @@ function editNoteInfo(e, obj) {
   );
 }
 $contentWrap
+  .on('click', '.top_btn', function (e) {
+    const $this = $(this).parent();
+    const obj = getNoteInfo($this.attr('data-id'));
+    toTop(e, obj);
+  })
   .on('click', '.set_btn', function (e) {
     if (runState !== 'own') return;
     const $this = $(this).parent();

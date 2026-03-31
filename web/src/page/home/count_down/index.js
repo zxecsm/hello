@@ -603,6 +603,10 @@ $countList
     myOpen(link, '_blank');
   })
   .on('click', '.set_btn', countMenu)
+  .on('click', '.top_btn', function (e) {
+    const count = getCount($(this).parent().parent().attr('data-id'));
+    toTop(e, count);
+  })
   .on('click', '.pro', function (e) {
     const $this = $(this).parent();
     const id = $this.attr('data-id');

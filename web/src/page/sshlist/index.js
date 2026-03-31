@@ -265,7 +265,7 @@ export function renderList(y) {
                 <div cursor="y" check="n" class="check_state"></div>
                 <li class="item_type iconfont icon-terminal"></li>
                 <li v-html="hdTitleHighlight(splitWord,title)" cursor="y" class="item_title"></li>
-                <li v-if="top != 0 && !word && category.length === 0" class="top_btn iconfont icon-zhiding" style="color: var(--color5);"></li>
+                <li v-if="top != 0 && !word && category.length === 0" class="top_btn iconfont icon-zhiding"></li>
                 <li cursor="y" class="set_btn iconfont icon-maohao"></li>
               </ul>
               <div class="item_info">
@@ -555,6 +555,11 @@ function editSSHInfo(e, obj) {
   );
 }
 $contentWrap
+  .on('click', '.top_btn', function (e) {
+    const $this = $(this).parent();
+    const obj = getSSHInfo($this.attr('data-id'));
+    toTop(e, obj);
+  })
   .on('click', '.set_btn', function (e) {
     const $this = $(this).parent();
     const obj = getSSHInfo($this.attr('data-id'));
