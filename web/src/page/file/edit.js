@@ -3,6 +3,7 @@ import aceEditor from '../../js/utils/editor';
 import {
   ContentScroll,
   _myOpen,
+  copyText,
   debounce,
   getTextSize,
   isDarkMode,
@@ -257,6 +258,9 @@ $editFile
   })
   .on('click', '.redo', () => {
     editor.redo();
+  })
+  .on('click', '.text', () => {
+    copyText(filePath);
   });
 // 保存文件
 async function hdSave() {
