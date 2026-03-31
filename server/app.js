@@ -96,6 +96,12 @@ const informReqLimit = debounce(
   1,
 );
 
+app.use((_, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  next();
+});
+
 app.use(async (req, res, next) => {
   try {
     // 客户端临时ID格式
