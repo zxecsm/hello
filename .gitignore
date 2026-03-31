@@ -2,3 +2,4 @@ node_modules
 static
 .history
 dist
+app_data

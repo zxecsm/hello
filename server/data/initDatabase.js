@@ -1,8 +1,7 @@
+import { resolve } from 'path';
 import _f from '../utils/f.js';
 
 import { allSql, db, runSql } from '../utils/sqlite.js';
-
-import { resolve } from 'path';
 
 import { writelog, getDirname, devLog } from '../utils/utils.js';
 

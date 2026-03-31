@@ -1,8 +1,11 @@
 import os from 'os';
+import { resolve } from 'path';
 // Cookie
 import cookieParser from 'cookie-parser';
 
 import express from 'express';
+
+import axios from 'axios';
 
 // 获取访问设备信息
 import { UAParser } from 'ua-parser-js';
@@ -22,8 +25,6 @@ import {
   errLog,
   validate,
 } from './utils/utils.js';
-
-import { resolve } from 'path';
 
 import appConfig from './data/config.js';
 
@@ -60,7 +61,6 @@ import getFile from './routes/getfile/index.js';
 import { _d } from './data/data.js';
 import _crypto from './utils/crypto.js';
 import _f from './utils/f.js';
-import axios from 'axios';
 import cheerio from './routes/bmk/cheerio.js';
 import { db } from './utils/sqlite.js';
 import V from './utils/validRules.js';

@@ -1,10 +1,11 @@
-import os from 'os';
+import { resolve } from 'path';
 import _path from '../utils/path.js';
 import nanoid from '../utils/nanoid.js';
+import { getDirname } from '../utils/utils.js';
 
-const userHomeDir = _path.toUnixPath(os.homedir());
+const __dirname = getDirname(import.meta);
 
-const appDataDir = `${userHomeDir}/helloApp`;
+const appDataDir = _path.toUnixPath(resolve(__dirname, '../app_data'));
 
 const appConfig = {
   appFlag: nanoid(),

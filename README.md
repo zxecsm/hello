@@ -9,7 +9,7 @@ services:
       - TZ=Asia/Shanghai
     volumes:
       - /proc:/app/proc:ro
-      - /:/root/helloApp
+      - /:/app/app_data
     ports:
       - '55555:55555'
 ```
@@ -20,7 +20,7 @@ sudo docker run -d \
   --restart unless-stopped \
   -e TZ=Asia/Shanghai \
   -v /proc:/app/proc:ro \
-  -v /:/root/helloApp \
+  -v /:/app/app_data \
   -p 55555:55555 \
   ghcr.io/zxecsm/hello:latest
   # zxecsm/hello:latest

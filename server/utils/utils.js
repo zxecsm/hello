@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 // 歌曲信息解析
 import { parseFile } from 'music-metadata';
 // 接收上传文件
@@ -11,8 +13,6 @@ import _f from './f.js';
 
 import getCity from './getCity.js';
 
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 import _path from './path.js';
 import nanoid from './nanoid.js';
 import _crypto from './crypto.js';
