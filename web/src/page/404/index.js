@@ -64,14 +64,3 @@ for (let i = 0; i < numStars; i++) {
 
   stars.appendChild(star);
 }
-
-// 随机背景颜色
-const colors = [
-  'linear-gradient(135deg, #1a1a1a, #333)',
-  'linear-gradient(135deg, #2c3e50, #34495e)',
-  'linear-gradient(135deg, #232526, #414345)',
-  'linear-gradient(135deg, #0f2027, #203a43, #2c5364)',
-  'linear-gradient(135deg, #1e3c72, #2a5298)',
-];
-const randomColor = colors[randomNum(0, colors.length - 1)];
-stars.style.background = randomColor;

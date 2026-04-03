@@ -10,8 +10,9 @@ const levelObj = {
   captcha: 100, // 验证码（动）
 
   loading: 101, // 加载动画（静）
-  msg: 101, // 通知框（动）
-  clickLove: 102, // 点击（动）
+  toolBox: 102, // 工具（静）
+  msg: 102, // 通知框（动）
+  clickLove: 103, // 点击（动）
 };
 const originURL = window.location.origin;
 const apiPath = '/api';

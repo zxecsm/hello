@@ -451,9 +451,6 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       unBindInput();
     },
     afterRender() {
-      if (isMask) {
-        this.rightMask.style.backgroundColor = 'var(--color10)';
-      }
       unBindInput();
       inputs = this.content.querySelectorAll('input,textarea');
       [...inputs].forEach((item) => {

@@ -160,6 +160,7 @@ window.addEventListener('offline', function () {
 const toolBox = (() => {
   if (isIframe()) return null;
   const toolBox = document.createElement('div');
+  toolBox.style.zIndex = _d.levelObj.toolBox;
   toolBox.className = 'pub_tools';
   toolBox.innerHTML = `
   <div class="head"></div>
@@ -170,9 +171,6 @@ const toolBox = (() => {
   </div>
   `;
   document.body.appendChild(toolBox);
-  if (window._pageName === 'addbmk') {
-    toolBox.style.zIndex = _d.levelObj.rightBox + 1;
-  }
   toolBox.addEventListener('click', (e) => {
     if (_getTarget(toolBox, e, '.zoom_in')) {
       const size = localData.get('htmlFontSize') + 1;
@@ -320,23 +318,14 @@ changeHeadBtnSort(localData.get('headBtnToRight'));
 })();
 if (!isIframe()) {
   ScreenWakeLock.enable();
-  bear(999);
-  let idx = 1;
-  switch (window._pageName) {
-    case 'edit':
-    case 'notepad':
-      idx = 5;
-      break;
-    case 'file':
-      idx = 11;
-      break;
-    case 'notes':
-      idx = 6;
-      break;
-    default:
-      break;
+  if (window._pageName !== 'videoplay') {
+    bear(999);
+    if (window._pageName === 'home') {
+      wave(1);
+    } else {
+      wave(999);
+    }
   }
-  wave(idx);
   // eslint-disable-next-line no-console
   console.log(`
  __   __  ______  __     __       __ 

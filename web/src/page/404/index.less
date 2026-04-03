@@ -9,7 +9,12 @@ body {
   height: 100%;
   width: 100%;
 }
-
+html {
+  --stat-color: #d38909;
+}
+html.dark {
+  --stat-color: #ffffff;
+}
 .container {
   margin: auto;
   max-width: 95%;
@@ -18,20 +23,20 @@ body {
 }
 
 h1 {
-  color: #fff;
+  color: var(--color);
   font-size: 12.8rem;
   margin: 0;
-  text-shadow: 0.4rem 0.4rem 0.6rem rgba(0, 0, 0, 0.3);
+  text-shadow: 0.4rem 0.4rem 0.6rem var(--color6);
   font-weight: bold;
   letter-spacing: 1rem;
 }
 
 p {
-  color: #fff;
+  color: var(--color);
   font-size: 2.4rem;
   line-height: 1.5em;
   margin-top: 2rem;
-  text-shadow: 0.2rem 0.2rem 0.4rem rgba(0, 0, 0, 0.3);
+  text-shadow: 0.2rem 0.2rem 0.4rem var(--color6);
 }
 
 /* 背景动画 */
@@ -65,7 +70,7 @@ p {
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center center;
-  background: linear-gradient(135deg, #1a1a1a, #333);
+  background: linear-gradient(135deg, var(--color10), var(--color9));
   pointer-events: none;
   z-index: -1;
 }
@@ -73,7 +78,7 @@ p {
 .star {
   position: absolute;
   border-radius: 50%;
-  background-color: white;
+  background-color: var(--stat-color);
   animation: twinkle 2s infinite ease-in-out;
   opacity: 0.5;
 }
@@ -81,7 +86,7 @@ p {
 .button {
   margin-top: 3rem;
   padding: 1.5rem 3rem;
-  background-color: #fff;
+  background-color: var(--color10);
   color: #ff5e62;
   border: none;
   border-radius: var(--border-radius1);
@@ -91,5 +96,5 @@ p {
 }
 .button:hover {
   background-color: #ff9966;
-  color: #fff;
+  color: var(--color);
 }

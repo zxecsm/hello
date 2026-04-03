@@ -378,7 +378,7 @@ function hdLogin(obj) {
       if (result.code === 1) {
         const { account, verify, username, needCaptcha } = result.data;
         if (verify) {
-          document.body.innerHTML = ''; // 方便填充两步验证码
+          $box.remove(); // 方便填充两步验证码
           rMenu.inpMenu(
             false,
             {
