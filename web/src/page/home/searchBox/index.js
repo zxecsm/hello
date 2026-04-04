@@ -552,7 +552,7 @@ export async function updateSearchConfig(loading) {
 }
 // 切换搜索引擎
 async function switchSearchEngine() {
-  const { logo, color, link, id } = getSearchEngine();
+  const { logo, color, link, id, title } = getSearchEngine();
   if (id !== 'bing') {
     const icon = logo
       ? getFilePath(`/logo/${setUserInfo().account}/${logo}`)
@@ -569,6 +569,7 @@ async function switchSearchEngine() {
     $searchBoxBtn.attr('src', logo);
     $searchInpWrap.find('img').attr('src', logo);
   }
+  searchInput.target.placeholder = `输入搜索内容或网址 - ${title}`;
   $searchInpWrap.find('.content').css('box-shadow', `0 0 0.2rem ${color || 'var(--icon-color)'}`);
 }
 // 搜索提示词
