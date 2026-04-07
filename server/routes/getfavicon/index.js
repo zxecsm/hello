@@ -47,42 +47,77 @@ timedTask.add(async (flag) => {
   }
 });
 
-// 下载图标
-async function downFile(url, path) {
-  const res = await axios({
-    method: 'get',
-    url,
-    responseType: 'arraybuffer',
-    timeout: 5000,
-    maxContentLength: 500 * 1024,
-  });
+// 下载图片
+async function downloadImage(url) {
+  try {
+    const res = await axios({
+      method: 'get',
+      url,
+      responseType: 'arraybuffer',
+      timeout: 3000,
+      maxContentLength: 500 * 1024,
+    });
 
-  if (res.data && res.data.length > 0) {
-    await _f.writeFile(path, res.data);
+    const type = (res.headers?.['content-type'] || '').toLowerCase();
+
+    if (res.data && res.data.length > 0 && type.startsWith('image/')) {
+      return res.data;
+    }
+    return null;
+  } catch {
+    return null;
   }
 }
 
-// 提取图标
-function extractIconUrl($, host, protocol) {
-  const prefix = `${protocol}//${host}`;
-  const defaultIcon = `${prefix}/favicon.ico`;
+// 提取 icon
+function extractIconUrl($, baseUrl) {
+  if (!$) return '';
 
-  if (!$) return defaultIcon;
-
+  const icons = [];
   for (const el of $('link')) {
-    const { rel, href } = el.attribs;
-    if (!href || !rel?.includes('icon') || /^data:image/i.test(href)) continue;
-    if (/^http/i.test(href)) return href;
-    // //aa.com/img/xxx.png
-    if (/^\/\//.test(href)) return protocol + href;
-    // /img/xxx.png
-    if (/^\//.test(href)) return prefix + href;
-    // ./img/xxx.png
-    if (/^\./.test(href)) return prefix + href.slice(1);
-    // img/xxx.png
-    return `${prefix}/${href}`;
+    const attrs = el.attribs;
+    const rel = (attrs.rel || '').toLowerCase();
+    const href = attrs.href;
+    const sizes = attrs.sizes;
+
+    if (!href || /^data:image/i.test(href)) continue;
+
+    const isIcon =
+      rel.includes('icon') ||
+      rel === 'apple-touch-icon' ||
+      rel === 'mask-icon' ||
+      rel === 'fluid-icon';
+
+    if (!isIcon) continue;
+
+    let score = 0;
+
+    // 类型权重
+    if (rel === 'apple-touch-icon') score += 10000;
+    if (rel === 'fluid-icon') score += 8000;
+    if (rel === 'mask-icon') score += 6000;
+    if (rel.includes('icon')) score += 3000;
+
+    // size 权重
+    if (sizes) {
+      for (const s of sizes.split(/\s+/)) {
+        const [w, h] = s.split('x').map(Number);
+        if (w && h) score += w * h;
+      }
+    } else if (rel === 'apple-touch-icon') {
+      score += 180 * 180;
+    }
+
+    try {
+      const absUrl = new URL(href, baseUrl).href;
+      icons.push({ href: absUrl, score });
+    } catch {}
   }
-  return defaultIcon;
+
+  if (!icons.length) return '';
+
+  icons.sort((a, b) => b.score - a.score);
+  return icons[0].href;
 }
 
 route.get(
@@ -125,52 +160,74 @@ route.get(
           return;
         }
 
+        // miss 防抖
         if ((await _f.getType(missFlagPath)) === 'file') {
-          res.sendFile(defaultIcon, { dotfiles: 'allow' });
-          return;
+          const stat = await _f.lstat(missFlagPath);
+          if (Date.now() - stat.mtimeMs > 60 * 1000) {
+            await _f.del(missFlagPath);
+          } else {
+            res.sendFile(defaultIcon, { dotfiles: 'allow' });
+            return;
+          }
         }
 
+        let iconBuf = null;
         try {
           // 自行解析获取图标
           let htmlResp;
           try {
             htmlResp = await axios.get(`${protocol}//${host}`, {
-              timeout: 5000,
+              timeout: 3000,
             });
           } catch {
             protocol = 'http:';
             htmlResp = await axios.get(`${protocol}//${host}`, {
-              timeout: 5000,
+              timeout: 3000,
             });
           }
-          if (!htmlResp?.headers || !htmlResp.headers['content-type']?.includes('text/html')) {
-            throw new Error('只允许获取HTML文件');
+
+          const baseUrl = `${protocol}//${host}`;
+
+          const type = (htmlResp.headers?.['content-type'] || '').toLowerCase();
+
+          if (!type.includes('text/html')) {
+            throw new Error('只允许HTML');
           }
 
           const head = extractFullHead(htmlResp.data);
+          if (_f.getTextSize(head) > 300 * 1024) {
+            throw new Error('HTML文件过大');
+          }
 
-          const $ = _f.getTextSize(head) > 300 * 1024 ? null : cheerio.load(head);
+          const $ = cheerio.load(head);
+          const iconUrl = extractIconUrl($, baseUrl) || new URL('/favicon.ico', baseUrl).href;
 
-          await downFile(extractIconUrl($, host, protocol), iconPath);
+          iconBuf = await downloadImage(iconUrl);
+
+          if (!iconBuf) {
+            throw new Error('解析获取图标失败');
+          }
         } catch (err) {
           // 调用备用接口获取图标
           if (_d.faviconSpareApi) {
-            await downFile(
+            await uLog(req, `调用备用接口获取图标(${urlStr})`);
+
+            iconBuf = await downloadImage(
               tplReplace(_d.faviconSpareApi, {
                 host,
               }),
-              iconPath,
             );
-
-            await uLog(req, `调用备用接口获取图标(${urlStr})`);
+            if (!iconBuf) {
+              throw new Error('备用接口获取图标失败');
+            }
           } else {
             throw err;
           }
         }
 
-        if ((await _f.getType(iconPath)) === 'file') {
+        if (iconBuf) {
           try {
-            const buf = await convertImageFormat(iconPath, {
+            const buf = await convertImageFormat(iconBuf, {
               format: 'png',
               width: 200,
               height: 200,
@@ -182,6 +239,7 @@ route.get(
             }
           } catch (error) {
             await errLog(req, `${error}(${urlStr})`);
+            await _f.writeFile(iconPath, iconBuf);
           }
           res.sendFile(iconPath, { dotfiles: 'allow' });
         } else {

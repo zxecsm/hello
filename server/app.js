@@ -323,8 +323,13 @@ app.get(
         }
 
         if ((await _f.getType(miss)) === 'file') {
-          _success(res, 'ok', obj);
-          return;
+          const stat = await _f.lstat(miss);
+          if (Date.now() - stat.mtimeMs > 60 * 1000) {
+            await _f.del(miss);
+          } else {
+            _success(res, 'ok', obj);
+            return;
+          }
         }
 
         let result;
@@ -332,18 +337,20 @@ app.get(
           result = await axios({
             method: 'get',
             url: `${protocol}//${host}${pathname}`,
-            timeout: 5000,
+            timeout: 3000,
           });
         } catch {
           protocol = 'http:';
           result = await axios({
             method: 'get',
             url: `${protocol}//${host}${pathname}`,
-            timeout: 5000,
+            timeout: 3000,
           });
         }
 
-        if (!result?.headers || !result.headers['content-type']?.includes('text/html')) {
+        const type = (result.headers?.['content-type'] || '').toLowerCase();
+
+        if (!type.includes('text/html')) {
           throw new Error('只允许获取HTML文件');
         }
 
