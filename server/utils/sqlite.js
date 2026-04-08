@@ -1,4 +1,4 @@
-import sqlite3 from 'sqlite3';
+import Database from 'better-sqlite3';
 import appConfig from '../data/config.js';
 import _f from './f.js';
 import _path from './path.js';
@@ -10,57 +10,62 @@ _f.fs.mkdirSync(_path.dirname(dbPath), { recursive: true });
 // ===== SQLite 封装 =====
 class DB {
   constructor(path) {
-    this.db = new sqlite3.Database(path, (err) => {
-      // eslint-disable-next-line no-console
-      if (err) console.error('Open DB Error:', err.message);
-    });
+    this.db = new Database(path);
 
     // 优化性能
-    this.db.exec(
-      `
+    this.db.exec(`
       PRAGMA journal_mode = WAL;
       PRAGMA synchronous = NORMAL;
       PRAGMA wal_autocheckpoint = 500;
       PRAGMA cache_size = 2000;
       PRAGMA temp_store = MEMORY;
-      `,
-      (err) => {
-        // eslint-disable-next-line no-console
-        if (err) console.error('PRAGMA Error:', err.message);
-      },
-    );
+    `);
   }
 
   run(sql, params = []) {
     return new Promise((resolve, reject) => {
-      this.db.run(sql, params, function (err) {
-        if (err) reject(err);
-        else resolve(this);
-      });
+      try {
+        const stmt = this.db.prepare(sql);
+        const result = stmt.run(params);
+        resolve(result);
+      } catch (err) {
+        reject(err);
+      }
     });
   }
 
   get(sql, params = []) {
     return new Promise((resolve, reject) => {
-      this.db.get(sql, params, (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      });
+      try {
+        const stmt = this.db.prepare(sql);
+        const result = stmt.get(params);
+        resolve(result);
+      } catch (err) {
+        reject(err);
+      }
     });
   }
 
   all(sql, params = []) {
     return new Promise((resolve, reject) => {
-      this.db.all(sql, params, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
+      try {
+        const stmt = this.db.prepare(sql);
+        const result = stmt.all(params);
+        resolve(result);
+      } catch (err) {
+        reject(err);
+      }
     });
   }
 
   close() {
     return new Promise((resolve, reject) => {
-      this.db.close((err) => (err ? reject(err) : resolve()));
+      try {
+        this.db.close();
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
     });
   }
 }
@@ -68,7 +73,7 @@ class DB {
 const database = new DB(dbPath);
 
 // ===== 链式封装 =====
-class Database {
+class DatabaseChain {
   constructor(tableName) {
     this.db = database;
     this.reset();
@@ -157,11 +162,11 @@ class Database {
   }
 
   search(words, fields, { flag, sort = false } = {}) {
-    const { clause: searchClause, params: searchParams } = Database.searchSql(words, fields);
+    const { clause: searchClause, params: searchParams } = DatabaseChain.searchSql(words, fields);
     if (searchClause) this.whereRaw(searchClause, searchParams, { flag });
 
     if (sort) {
-      const { scoreSql, params: scoreParams } = Database.scoreSql(words, fields);
+      const { scoreSql, params: scoreParams } = DatabaseChain.scoreSql(words, fields);
       if (scoreSql) {
         this.orderBy(scoreSql, 'DESC', { params: scoreParams, flag });
       }
@@ -365,10 +370,12 @@ class Database {
     this._limit = {};
     return this;
   }
+
   clearOffset() {
     this._offset = {};
     return this;
   }
+
   clearPage() {
     this.clearLimit();
     this.clearOffset();
@@ -542,7 +549,7 @@ class Database {
       sql += ' WHERE ' + whereClauses.join(' AND ');
     }
 
-    return this.db.run(sql, [...setParams, ...whereParams]);
+    return await this.db.run(sql, [...setParams, ...whereParams]);
   }
 
   async delete({ all = false } = {}) {
@@ -560,16 +567,16 @@ class Database {
       params.push(...whereParams);
     }
 
-    return this.db.run(sql, params);
+    return await this.db.run(sql, params);
   }
 
   async getRandom({ limit = 1 } = {}) {
     const total = await this.clone().count();
 
     if (!total) return [];
-    if (total <= limit) return this.clone().find();
+    if (total <= limit) return await this.clone().find();
 
-    return this.clone()
+    return await this.clone()
       .page(limit, Math.floor(Math.random() * (total - limit) + 1))
       .find();
   }
@@ -670,7 +677,7 @@ class Database {
       this._wheres.forEach((w) => params.push(...w.params));
     }
 
-    return this.db.run(sql, params);
+    return await this.db.run(sql, params);
   }
 
   /*
@@ -698,7 +705,7 @@ class Database {
     level = (CASE WHEN id = ? THEN ? WHEN id = ? THEN ? END)
   WHERE class_id = ?
   */
-  batchDiffUpdate(updateRules, conditions = {}) {
+  async batchDiffUpdate(updateRules, conditions = {}) {
     if (!Object.keys(conditions || {}).length)
       throw new Error(
         'batchDiffUpdate: missing conditions — updating entire table is not allowed.',
@@ -718,14 +725,14 @@ class Database {
     const whereClause = whereClauseRaw ? `WHERE ${whereClauseRaw}` : '';
 
     const sql = `UPDATE ${this._table} SET ${setFragments.join(', ')} ${whereClause}`;
-    return this.db.run(sql, [...valueParams, ...whereParams]);
+    return await this.db.run(sql, [...valueParams, ...whereParams]);
   }
 }
 
 // ===== 导出 =====
-export const db = (table) => new Database(table);
+export const db = (table) => new DatabaseChain(table);
 export const runSql = (sql, params) => database.run(sql, params);
 export const getSql = (sql, params) => database.get(sql, params);
 export const allSql = (sql, params) => database.all(sql, params);
-export const scoreSql = Database.scoreSql;
-export const searchSql = Database.searchSql;
+export const scoreSql = DatabaseChain.scoreSql;
+export const searchSql = DatabaseChain.searchSql;

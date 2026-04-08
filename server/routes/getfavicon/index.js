@@ -191,7 +191,7 @@ route.get(
           const type = (htmlResp.headers?.['content-type'] || '').toLowerCase();
 
           if (!type.includes('text/html')) {
-            throw new Error('只允许HTML');
+            throw new Error('只允许获取HTML文件');
           }
 
           const head = extractFullHead(htmlResp.data);
@@ -214,7 +214,7 @@ route.get(
 
             iconBuf = await downloadImage(
               tplReplace(_d.faviconSpareApi, {
-                host,
+                host: encodeURIComponent(host),
               }),
             );
             if (!iconBuf) {
