@@ -7,6 +7,8 @@ import express from 'express';
 
 import axios from 'axios';
 
+import * as cheerio from 'cheerio';
+
 // 获取访问设备信息
 import { UAParser } from 'ua-parser-js';
 
@@ -61,7 +63,6 @@ import getFile from './routes/getfile/index.js';
 import { _d } from './data/data.js';
 import _crypto from './utils/crypto.js';
 import _f from './utils/f.js';
-import cheerio from './routes/bmk/cheerio.js';
 import { db } from './utils/sqlite.js';
 import V from './utils/validRules.js';
 import { sym } from './utils/symbols.js';

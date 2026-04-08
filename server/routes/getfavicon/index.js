@@ -4,7 +4,7 @@ import express from 'express';
 
 import axios from 'axios';
 
-import cheerio from '../bmk/cheerio.js';
+import * as cheerio from 'cheerio';
 
 import {
   _err,
@@ -49,6 +49,7 @@ timedTask.add(async (flag) => {
 
 // 下载图片
 async function downloadImage(url) {
+  // console.log('download', url);
   try {
     const res = await axios({
       method: 'get',
@@ -114,6 +115,7 @@ function extractIconUrl($, baseUrl) {
     } catch {}
   }
 
+  // console.log('icons', icons);
   if (!icons.length) return '';
 
   icons.sort((a, b) => b.score - a.score);
@@ -205,7 +207,7 @@ route.get(
           iconBuf = await downloadImage(iconUrl);
 
           if (!iconBuf) {
-            throw new Error('解析获取图标失败');
+            throw new Error(`解析获取图标失败: ${iconUrl}`);
           }
         } catch (err) {
           // 调用备用接口获取图标

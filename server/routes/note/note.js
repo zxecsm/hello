@@ -1,11 +1,11 @@
 import MarkdownIt from 'markdown-it';
+import * as cheerio from 'cheerio';
 import appConfig from '../../data/config.js';
 import _f from '../../utils/f.js';
 import _path from '../../utils/path.js';
 
 import { errLog, formatDate } from '../../utils/utils.js';
 
-import cheerio from '../bmk/cheerio.js';
 import { sym } from '../../utils/symbols.js';
 
 const kHello = sym('hello');

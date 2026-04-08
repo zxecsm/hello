@@ -641,23 +641,28 @@ export function getTimePath(timestamp) {
 }
 
 // 读取深层值
-export function getIn(target, keys, defaultValue = undefined) {
-  if (!target) return defaultValue;
+export function getIn(target, keys, defaultValue) {
+  const path = Array.isArray(keys)
+    ? keys
+    : typeof keys === 'string'
+      ? keys.split('.').filter(Boolean)
+      : [];
 
-  const keyArray = Array.isArray(keys) ? keys : keys.split('.');
+  let obj = target;
 
-  let current = target;
-  for (const key of keyArray) {
-    if (current == null) return defaultValue;
-    current = current[key];
+  for (const key of path) {
+    if (obj == null) return defaultValue;
+    obj = obj[key];
   }
 
-  return current !== undefined ? current : defaultValue;
+  return obj === undefined ? defaultValue : obj;
 }
 
 export function tplReplace(tpl, data) {
   return tpl.replace(/\{\{(.*?)\}\}/g, (_, k) => {
-    return getIn(data, k.trim().split('.').filter(Boolean), '');
+    k = k.trim();
+    if (!k) return '';
+    return getIn(data, k.split('.').filter(Boolean), '');
   });
 }
 
