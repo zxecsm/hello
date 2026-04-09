@@ -1,12 +1,13 @@
 import express from 'express';
-import { _err, _success, formatDate } from '../../utils/utils.js';
+import { formatDate } from '../../utils/utils.js';
 import { _d } from '../../data/data.js';
+import resp from '../../utils/response.js';
 const route = express.Router();
 
 route.all('/', (req, res) => {
   try {
     if (!_d.pubApi.echoApi) {
-      return _err(res, '接口未开放')(req);
+      return resp.forbidden(res, '接口未开放')(req);
     }
 
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -35,9 +36,9 @@ route.all('/', (req, res) => {
       response.debug = { rawBody: req.rawBody || null };
     }
 
-    _success(res, '获取回显成功', response)(req, JSON.stringify(response), 1);
+    resp.success(res, '获取回显成功', response)(req, JSON.stringify(response), 1);
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 

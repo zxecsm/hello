@@ -3,9 +3,6 @@ import express from 'express';
 import { db } from '../../utils/sqlite.js';
 
 import {
-  _success,
-  _nologin,
-  _err,
   getWordCount,
   getSplitWord,
   syncUpdateData,
@@ -19,6 +16,7 @@ import { readSearchConfig, writeSearchConfig } from './search.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
+import resp from '../../utils/response.js';
 
 const route = express.Router();
 const kHello = sym('hello');
@@ -29,16 +27,16 @@ route.use((req, res, next) => {
   if (req[kHello].userinfo.account) {
     next();
   } else {
-    _nologin(res);
+    resp.unauthorized(res);
   }
 });
 
 // 配置
 route.get('/config', async (req, res) => {
   try {
-    _success(res, 'ok', await readSearchConfig(req[kHello].userinfo.account));
+    resp.success(res, 'ok', await readSearchConfig(req[kHello].userinfo.account));
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -81,9 +79,9 @@ route.post(
       await writeSearchConfig(account, config);
       syncUpdateData(req, 'searchConfig');
 
-      _success(res, '添加搜索引擎成功')(req, `${title}-${link}`, 1);
+      resp.success(res, '添加搜索引擎成功')(req, `${title}-${link}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -125,9 +123,9 @@ route.post(
         }
       }
 
-      _success(res, '修改搜索引擎成功')(req, `${title}-${link}`, 1);
+      resp.success(res, '修改搜索引擎成功')(req, `${title}-${link}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -159,9 +157,9 @@ route.post(
         syncUpdateData(req, 'searchConfig');
       }
 
-      _success(res, '删除搜索引擎成功')(req, `${id}${log ? `-${log}` : ''}`, 1);
+      resp.success(res, '删除搜索引擎成功')(req, `${id}${log ? `-${log}` : ''}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -186,9 +184,9 @@ route.post(
       await writeSearchConfig(account, config);
       syncUpdateData(req, 'searchConfig');
 
-      _success(res, '切换搜索引擎成功')(req, id, 1);
+      resp.success(res, '切换搜索引擎成功')(req, id, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -222,9 +220,9 @@ route.post(
         }
       }
 
-      _success(res, '删除搜索引擎LOGO成功')(req, `${id}${log ? `-${log}` : ''}`, 1);
+      resp.success(res, '删除搜索引擎LOGO成功')(req, `${id}${log ? `-${log}` : ''}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -267,9 +265,9 @@ route.post(
       await writeSearchConfig(account, config);
       syncUpdateData(req, 'searchConfig');
 
-      _success(res, '添加翻译接口成功')(req, `${title}-${link}`, 1);
+      resp.success(res, '添加翻译接口成功')(req, `${title}-${link}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -310,9 +308,9 @@ route.post(
         }
       }
 
-      _success(res, '修改翻译接口成功')(req, `${title}-${link}`, 1);
+      resp.success(res, '修改翻译接口成功')(req, `${title}-${link}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -345,9 +343,9 @@ route.post(
         syncUpdateData(req, 'searchConfig');
       }
 
-      _success(res, '删除翻译接口成功')(req, `${id}${log ? `-${log}` : ''}`, 1);
+      resp.success(res, '删除翻译接口成功')(req, `${id}${log ? `-${log}` : ''}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -372,9 +370,9 @@ route.post(
       await writeSearchConfig(account, config);
       syncUpdateData(req, 'searchConfig');
 
-      _success(res, '切换翻译接口成功')(req, id, 1);
+      resp.success(res, '切换翻译接口成功')(req, id, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -409,9 +407,9 @@ route.post(
         }
       }
 
-      _success(res, '删除翻译接口LOGO成功')(req, `${id}${log ? `-${log}` : ''}`, 1);
+      resp.success(res, '删除翻译接口LOGO成功')(req, `${id}${log ? `-${log}` : ''}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -429,9 +427,9 @@ route.get(
     try {
       const { word } = req[kValidate];
 
-      _success(res, '获取分词成功', getSplitWord(word))(req, word, 1);
+      resp.success(res, '获取分词成功', getSplitWord(word))(req, word, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -477,13 +475,13 @@ route.get(
         data = await historydb.select('id,content').page(pageSize, offset).find();
       }
 
-      _success(res, 'ok', {
+      resp.success(res, 'ok', {
         ...result,
         data,
         splitWord,
       });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -515,9 +513,9 @@ route.post(
 
       syncUpdateData(req, 'history');
 
-      _success(res, '保存搜索记录成功')(req, content, 1);
+      resp.success(res, '保存搜索记录成功')(req, content, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -546,7 +544,7 @@ route.get(
           .limit(10)
           .find();
 
-        _success(res, 'ok', {
+        resp.success(res, 'ok', {
           list: list.map((item) => {
             return {
               ...item,
@@ -639,9 +637,9 @@ route.get(
         return b.sNum - a.sNum;
       });
 
-      _success(res, 'ok', { list, splitWord });
+      resp.success(res, 'ok', { list, splitWord });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -672,9 +670,9 @@ route.post(
       syncUpdateData(req, 'history');
       syncUpdateData(req, 'trash');
 
-      _success(res, '删除搜索历史成功')(req, ids.length, 1);
+      resp.success(res, '删除搜索历史成功')(req, ids.length, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );

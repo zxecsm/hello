@@ -5,14 +5,9 @@ import { allSql, db } from '../../utils/sqlite.js';
 import {
   deepClone,
   getSongInfo,
-  _success,
-  _nologin,
-  _nothing,
-  _err,
   receiveFiles,
   isImgFile,
   isMusicFile,
-  paramErr,
   unique,
   getTimePath,
   errLog,
@@ -59,6 +54,7 @@ import jwt from '../../utils/jwt.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
+import resp from '../../utils/response.js';
 const maxSonglistCount = 2000;
 
 const route = express.Router();
@@ -91,7 +87,7 @@ route.post(
 
       if (!account) {
         if (!token) {
-          paramErr(res, req, 'token 不能为空', 'body');
+          resp.badRequest(res, req, 'token 不能为空', 'body');
           return;
         }
 
@@ -102,14 +98,14 @@ route.post(
 
           await errLog(req, share.text);
 
-          _success(res, 'ok', errData);
+          resp.success(res, 'ok', errData);
           return;
         }
 
         const { data } = share.data;
 
         if (!data.some((item) => item === id)) {
-          _success(res, 'ok', errData);
+          resp.success(res, 'ok', errData);
           return;
         }
       }
@@ -121,7 +117,7 @@ route.post(
 
       const songInfo = await db('songs').select('lrc').where({ id }).findOne();
       if (!songInfo) {
-        _success(res, 'ok', errData);
+        resp.success(res, 'ok', errData);
         return;
       }
 
@@ -138,16 +134,16 @@ route.post(
         });
 
         if (lrcList.length === 1) {
-          _success(res, 'ok', errData);
+          resp.success(res, 'ok', errData);
         } else {
-          _success(res, 'ok', lrcList);
+          resp.success(res, 'ok', lrcList);
         }
       } else {
-        _success(res, 'ok', errData);
+        resp.success(res, 'ok', errData);
       }
     } catch (error) {
       await errLog(req, error);
-      _success(res, 'ok', errData);
+      resp.success(res, 'ok', errData);
     }
   },
 );
@@ -170,21 +166,21 @@ route.post(
 
       if (!account) {
         if (!token) {
-          paramErr(res, req, 'token 不能为空', 'body');
+          resp.badRequest(res, req, 'token 不能为空', 'body');
           return;
         }
 
         const share = await validShareState(token, 'music');
 
         if (share.state === 0) {
-          _err(res, share.text)(req, id, 1);
+          resp.forbidden(res, share.text)(req, id, 1);
           return;
         }
 
         const { data } = share.data;
 
         if (!data.some((item) => item === id)) {
-          _err(res, '歌曲不存在')(req, id, 1);
+          resp.notFound(res, '歌曲不存在')(req, id, 1);
           return;
         }
       }
@@ -197,7 +193,7 @@ route.post(
         .findOne();
 
       if (!info) {
-        _err(res, '歌曲不存在')(req, id, 1);
+        resp.notFound(res, '歌曲不存在')(req, id, 1);
         return;
       }
 
@@ -205,9 +201,9 @@ route.post(
       info.lrc = !!info.lrc;
       info.url = !!info.url;
       info.mv = !!info.mv;
-      _success(res, 'ok', info);
+      resp.success(res, 'ok', info);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -230,12 +226,12 @@ route.post(
       const share = await validShareAddUserState(req, ['music'], id, pass, captchaId);
 
       if (share.state === 0) {
-        _err(res, share.text)(req, id, 1);
+        resp.notFound(res, share.text)(req, id, 1);
         return;
       }
 
       if (share.state === 2) {
-        _success(res, share.text, {
+        resp.success(res, share.text, {
           id: share.id,
           needCaptcha: share.needCaptcha,
         })(req, share.id, 1);
@@ -243,7 +239,7 @@ route.post(
       }
 
       if (share.state === 3) {
-        _nothing(res, share.text);
+        resp.ok(res, share.text);
         return;
       }
 
@@ -262,7 +258,7 @@ route.post(
       }
 
       if (data.length === 0) {
-        _err(res, '歌曲不存在')(req, id, 1);
+        resp.notFound(res, '歌曲不存在')(req, id, 1);
         return;
       }
 
@@ -275,7 +271,7 @@ route.post(
         username = des || username;
       }
 
-      _success(res, '读取歌曲分享成功', {
+      resp.success(res, '读取歌曲分享成功', {
         username,
         logo,
         email,
@@ -289,7 +285,7 @@ route.post(
         ),
       })(req, id, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -299,7 +295,7 @@ route.use((req, res, next) => {
   if (req[kHello].userinfo.account) {
     next();
   } else {
-    _nologin(res);
+    resp.unauthorized(res);
   }
 });
 
@@ -349,13 +345,13 @@ route.get(
         }));
       }
 
-      _success(res, 'ok', {
+      resp.success(res, 'ok', {
         ...result,
         data: list,
         splitWord,
       });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -549,9 +545,9 @@ route.get(
         }
       }
 
-      _success(res, 'ok', songList);
+      resp.success(res, 'ok', songList);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -574,7 +570,7 @@ route.get(
       const songListObj = (await getMusicList(account)).find((item) => item.id === id);
 
       if (!songListObj) {
-        _err(res, '歌单不存在')(req, id, 1);
+        resp.notFound(res, '歌单不存在')(req, id, 1);
         return;
       }
 
@@ -590,7 +586,7 @@ route.get(
       await uLog(req, `导出歌单(${songListObj.name}-${id}-${list.length})`);
       res.send(JSON.stringify(list));
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -618,7 +614,7 @@ route.post(
       const idx = songLists.findIndex((item) => item.id === id);
 
       if (idx < 0) {
-        _err(res, '歌单不存在')(req, id, 1);
+        resp.forbidden(res, '歌单不存在')(req, id, 1);
         return;
       }
 
@@ -628,7 +624,7 @@ route.post(
       );
 
       if (newSongList.length > maxSonglistCount) {
-        _err(res, `歌单限制${maxSonglistCount}首`)(req);
+        resp.forbidden(res, `歌单限制${maxSonglistCount}首`)(req);
         return;
       }
 
@@ -638,9 +634,9 @@ route.post(
 
       syncUpdateData(req, 'music');
 
-      _success(res, '导入歌曲成功')(req, `${songLists[idx].name}-${id}-${list.length}`, 1);
+      resp.success(res, '导入歌曲成功')(req, `${songLists[idx].name}-${id}-${list.length}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -696,9 +692,9 @@ route.post(
       } else {
         syncUpdateData(req, 'musicinfo');
       }
-      _success(res);
+      resp.success(res);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -741,9 +737,9 @@ route.get('/last-play', async (req, res) => {
       }
     }
 
-    _success(res, 'ok', obj);
+    resp.success(res, 'ok', obj);
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -753,13 +749,13 @@ route.get('/random-list', async (req, res) => {
     const list = await db('songs').getRandom({ limit: maxSonglistCount });
 
     if (list.length === 0) {
-      _err(res, '音乐库为空')(req);
+      resp.notFound(res, '音乐库为空')(req);
       return;
     }
 
-    _success(res, 'ok', myShuffle(list));
+    resp.success(res, 'ok', myShuffle(list));
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -795,9 +791,9 @@ route.post(
       }
 
       syncUpdateData(req, 'playinglist');
-      _success(res, '更新播放列表成功')(req);
+      resp.success(res, '更新播放列表成功')(req);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -826,9 +822,9 @@ route.get('/playlist', async (req, res) => {
       }
     }
 
-    _success(res, 'ok', list);
+    resp.success(res, 'ok', list);
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -852,9 +848,9 @@ route.post(
 
       syncUpdateData(req, 'music');
 
-      _success(res, '歌单移动位置成功')(req, `${fromId}-${toId}`, 1);
+      resp.success(res, '歌单移动位置成功')(req, `${fromId}-${toId}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -886,13 +882,13 @@ route.post(
 
         syncUpdateData(req, 'music');
 
-        _success(res, '删除歌单成功')(req, `${songListTitle}-${id}`, 1);
+        resp.success(res, '删除歌单成功')(req, `${songListTitle}-${id}`, 1);
         return;
       }
 
-      _err(res, '无权删除默认歌单')(req, id, 1);
+      resp.forbidden(res, '无权删除默认歌单')(req, id, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -924,11 +920,11 @@ route.post(
       if (id === 'all' && req[kHello].isRoot) {
         _d.songList[2].name = name;
         _d.songList[2].des = des;
-        _success(res, '更新歌单信息成功')(req, log, 1);
+        resp.success(res, '更新歌单信息成功')(req, log, 1);
       } else if (idx < 2 && idx >= 0 && req[kHello].isRoot) {
         _d.songList[idx].name = name;
         _d.songList[idx].des = des;
-        _success(res, '更新歌单信息成功')(req, log, 1);
+        resp.success(res, '更新歌单信息成功')(req, log, 1);
       } else if (idx > 1) {
         list[idx].name = name;
         list[idx].des = des;
@@ -941,12 +937,12 @@ route.post(
 
         syncUpdateData(req, 'music');
 
-        _success(res, '更新歌单信息成功')(req, log, 1);
+        resp.success(res, '更新歌单信息成功')(req, log, 1);
       } else {
-        _err(res, '无权更新当前歌单信息')(req, log, 1);
+        resp.forbidden(res, '无权更新当前歌单信息')(req, log, 1);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -973,14 +969,14 @@ route.post(
         req[kValidate];
 
       if (!req[kHello].isRoot) {
-        _err(res, '无权更新歌曲信息')(req, `${id}-${artist}-${title}`, 1);
+        resp.forbidden(res, '无权更新歌曲信息')(req, `${id}-${artist}-${title}`, 1);
         return;
       }
 
       const songInfo = await db('songs').select('url,hash,artist,title').where({ id }).findOne();
 
       if (!songInfo) {
-        _err(res, '歌曲不存在')(req, id, 1);
+        resp.forbidden(res, '歌曲不存在')(req, id, 1);
         return;
       }
 
@@ -1023,9 +1019,9 @@ route.post(
 
       syncUpdateData(req, 'music');
 
-      _success(res, '更新歌曲信息成功')(req, `${id}-${artist}-${title}`, 1);
+      resp.success(res, '更新歌曲信息成功')(req, `${id}-${artist}-${title}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1049,7 +1045,7 @@ route.post(
       const list = await getMusicList(account);
 
       if (list.length >= fieldLength.songList + 2) {
-        _err(res, `歌单限制${fieldLength.songList}`)(req);
+        resp.forbidden(res, `歌单限制${fieldLength.songList}`)(req);
         return;
       }
 
@@ -1065,9 +1061,9 @@ route.post(
 
       syncUpdateData(req, 'music');
 
-      _success(res, '添加歌单成功')(req, `${id}-${name}${des ? `-${des}` : ''}`, 1);
+      resp.success(res, '添加歌单成功')(req, `${id}-${name}${des ? `-${des}` : ''}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1093,9 +1089,9 @@ route.post(
 
       syncUpdateData(req, 'music');
 
-      _success(res, '歌曲移动位置成功')(req, `${listId}: ${fromId}=>${toId}`, 1);
+      resp.success(res, '歌曲移动位置成功')(req, `${listId}: ${fromId}=>${toId}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1124,7 +1120,7 @@ route.post(
       const newSongList = unique([...add, ...list[1].item], ['id']);
 
       if (newSongList.length > maxSonglistCount) {
-        _err(res, `歌单限制${maxSonglistCount}首`)(req);
+        resp.forbidden(res, `歌单限制${maxSonglistCount}首`)(req);
         return;
       }
 
@@ -1139,9 +1135,9 @@ route.post(
 
       syncUpdateData(req, 'music');
 
-      _success(res, '收藏歌曲成功')(req, ids.length, 1);
+      resp.success(res, '收藏歌曲成功')(req, ids.length, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1169,9 +1165,9 @@ route.post(
 
       syncUpdateData(req, 'music');
 
-      _success(res, '移除收藏歌曲成功')(req, id, 1);
+      resp.success(res, '移除收藏歌曲成功')(req, id, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1197,12 +1193,12 @@ route.post(
       if (listId === 'all') {
         // 限制删除数量
         if (ids.length > fieldLength.maxPagesize) {
-          paramErr(res, req, `ids.length 不能大于: ${fieldLength.maxPagesize}`, 'body');
+          resp.badRequest(res, req, `ids.length 不能大于: ${fieldLength.maxPagesize}`, 'body');
           return;
         }
 
         if (!req[kHello].isRoot) {
-          _err(res, '无权删除歌曲')(req, `${listId}-${ids.length}`, 1);
+          resp.forbidden(res, '无权删除歌曲')(req, `${listId}-${ids.length}`, 1);
           return;
         }
 
@@ -1236,13 +1232,13 @@ route.post(
 
       syncUpdateData(req, 'music');
 
-      _success(res, `${listId === 'all' ? '删除' : '移除'}歌曲成功`)(
+      resp.success(res, `${listId === 'all' ? '删除' : '移除'}歌曲成功`)(
         req,
         `${listId}-${ids.length}`,
         1,
       );
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
       return;
     }
   },
@@ -1282,7 +1278,7 @@ route.post(
         const newSongList = unique([...ids, ...list[tIdx].item], ['id']);
 
         if (newSongList.length > maxSonglistCount) {
-          _err(res, `歌单限制${maxSonglistCount}首`)(req);
+          resp.forbidden(res, `歌单限制${maxSonglistCount}首`)(req);
           return;
         }
 
@@ -1292,7 +1288,7 @@ route.post(
 
         syncUpdateData(req, 'music');
 
-        _success(res, '添加歌曲成功')(req, `${ids.length}=>${toId}`, 1);
+        resp.success(res, '添加歌曲成功')(req, `${ids.length}=>${toId}`, 1);
         return;
       }
       if (fIdx > 1 && tIdx > 1 && fromId !== toId) {
@@ -1300,7 +1296,7 @@ route.post(
         const newSongList = unique([...ids, ...list[tIdx].item], ['id']);
 
         if (newSongList.length > maxSonglistCount) {
-          _err(res, `歌单限制${maxSonglistCount}首`)(req);
+          resp.forbidden(res, `歌单限制${maxSonglistCount}首`)(req);
           return;
         }
 
@@ -1313,12 +1309,12 @@ route.post(
 
         syncUpdateData(req, 'music');
 
-        _success(res, '移动歌曲成功')(req, `${ids.length}=>${toId}`, 1);
+        resp.success(res, '移动歌曲成功')(req, `${ids.length}=>${toId}`, 1);
         return;
       }
-      _err(res, '无权操作')(req, ids.length, 1);
+      resp.forbidden(res, '无权操作')(req, ids.length, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1337,7 +1333,7 @@ route.post(
       const { id } = req[kValidate];
 
       if (!req[kHello].isRoot) {
-        _err(res, '无权操作')(req, id, 1);
+        resp.forbidden(res, '无权操作')(req, id, 1);
         return;
       }
 
@@ -1355,9 +1351,9 @@ route.post(
 
       syncUpdateData(req, 'music');
 
-      _success(res, '删除MV成功');
+      resp.success(res, '删除MV成功');
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1378,21 +1374,21 @@ route.get(
       const musicinfo = await db('songs').select('lrc').where({ id }).findOne();
 
       if (!musicinfo) {
-        _err(res, '歌曲不存在')(req, id, 1);
+        resp.notFound(res, '歌曲不存在')(req, id, 1);
       }
 
       const url = appConfig.musicDir(musicinfo.lrc);
 
       if ((await _f.getType(url)) === 'file') {
         const str = (await _f.readFile(url, null, '')).toString();
-        _success(res, 'ok', str);
+        resp.success(res, 'ok', str);
       } else {
         await _f.writeFile(url, '');
 
-        _success(res, 'ok', '');
+        resp.success(res, 'ok', '');
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1418,7 +1414,7 @@ route.post(
       const { id, text } = req[kValidate];
 
       if (!req[kHello].isRoot) {
-        _err(res, '无权操作')(req, id, 1);
+        resp.forbidden(res, '无权操作')(req, id, 1);
         return;
       }
 
@@ -1428,7 +1424,7 @@ route.post(
         .findOne();
 
       if (!musicinfo) {
-        _err(res, '歌曲不存在')(req, id, 1);
+        resp.forbidden(res, '歌曲不存在')(req, id, 1);
       }
 
       const url = appConfig.musicDir(musicinfo.lrc);
@@ -1458,9 +1454,9 @@ route.post(
         await errLog(req, `写入元数据到歌曲文件失败(${musicinfo.artist}-${musicinfo.title}`);
       }
 
-      _success(res, '更新歌词成功')(req, `${id}-${musicinfo.artist}-${musicinfo.title}`, 1);
+      resp.success(res, '更新歌词成功')(req, `${id}-${musicinfo.artist}-${musicinfo.title}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1502,9 +1498,9 @@ route.post(
 
       syncUpdateData(req, 'sharelist');
 
-      _success(res, '分享歌曲成功', { id })(req, `${title}-${id}-${list.length}`, 1);
+      resp.success(res, '分享歌曲成功', { id })(req, `${title}-${id}-${list.length}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1527,19 +1523,19 @@ route.post(
 
       if (type === 'song') {
         if (!HASH) {
-          paramErr(res, req, 'HASH 不能为空', 'query');
+          resp.badRequest(res, req, 'HASH 不能为空', 'query');
           return;
         }
 
         if (!isMusicFile(name)) {
-          _err(res, '歌曲格式错误')(req, name, 1);
+          resp.forbidden(res, '歌曲格式错误')(req, name, 1);
           return;
         }
 
         const song = await db('songs').select('id,artist,title').where({ hash: HASH }).findOne();
 
         if (song) {
-          _err(res, '歌曲已存在')(req, `${song.artist}-${song.title}`, 1);
+          resp.forbidden(res, '歌曲已存在')(req, `${song.artist}-${song.title}`, 1);
           return;
         }
 
@@ -1595,20 +1591,20 @@ route.post(
           lrc: _path.normalizeNoSlash(timePath, songId, `${songId}.lrc`),
         });
 
-        _success(res, '上传歌曲成功')(req, `${songId}-${artist}-${title}`, 1);
+        resp.success(res, '上传歌曲成功')(req, `${songId}-${artist}-${title}`, 1);
       } else if (type === 'cover') {
         if (!id) {
-          paramErr(res, req, 'id 不能为空', 'query');
+          resp.badRequest(res, req, 'id 不能为空', 'query');
           return;
         }
 
         if (!req[kHello].isRoot) {
-          _err(res, '无权上传封面')(req, id, 1);
+          resp.forbidden(res, '无权上传封面')(req, id, 1);
           return;
         }
 
         if (!isImgFile(name)) {
-          _err(res, '封面图片格式不支持')(req, name, 1);
+          resp.forbidden(res, '封面图片格式不支持')(req, name, 1);
           return;
         }
 
@@ -1618,7 +1614,7 @@ route.post(
           .findOne();
 
         if (!songInfo) {
-          _err(res, '歌曲不存在')(req, id, 1);
+          resp.forbidden(res, '歌曲不存在')(req, id, 1);
           return;
         }
 
@@ -1671,27 +1667,27 @@ route.post(
 
         syncUpdateData(req, 'music');
 
-        _success(res, '上传封面成功')(req, `${id}-${artist}-${title}`, 1);
+        resp.success(res, '上传封面成功')(req, `${id}-${artist}-${title}`, 1);
       } else if (type === 'mv') {
         if (!id) {
-          paramErr(res, req, 'id 不能为空', 'query');
+          resp.badRequest(res, req, 'id 不能为空', 'query');
           return;
         }
 
         if (!req[kHello].isRoot) {
-          _err(res, '无权上传MV')(req, id, 1);
+          resp.forbidden(res, '无权上传MV')(req, id, 1);
           return;
         }
 
         if (!/\.(mp4)$/i.test(name)) {
-          _err(res, 'MV格式错误')(req, name, 1);
+          resp.forbidden(res, 'MV格式错误')(req, name, 1);
           return;
         }
 
         const songInfo = await db('songs').select('url,mv,title,artist').where({ id }).findOne();
 
         if (!songInfo) {
-          _err(res, '歌曲不存在')(req, id, 1);
+          resp.forbidden(res, '歌曲不存在')(req, id, 1);
           return;
         }
 
@@ -1714,10 +1710,10 @@ route.post(
               mv: `${_path.extname(url)[0]}.${_path.extname(name)[2]}`,
             });
         }
-        _success(res, '上传MV成功')(req, `${id}-${artist}-${title}`, 1);
+        resp.success(res, '上传MV成功')(req, `${id}-${artist}-${title}`, 1);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1741,7 +1737,7 @@ route.post(
         const url = appConfig.musicDir(songInfo.url);
 
         if ((await _f.getType(url)) === 'file') {
-          _success(res);
+          resp.success(res);
           return;
         }
 
@@ -1751,9 +1747,9 @@ route.post(
         await _delDir(_path.dirname(url));
       }
 
-      _nothing(res);
+      resp.ok(res);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1777,7 +1773,7 @@ route.post(
       const share = await validShareState(token, 'music');
 
       if (share.state === 0) {
-        _err(res, share.text)(req);
+        resp.forbidden(res, share.text)(req);
         return;
       }
 
@@ -1796,9 +1792,9 @@ route.post(
 
       syncUpdateData(req, 'music');
 
-      _success(res, '保存歌单成功')(req, `${data.length}=>${name}-${id}`, 1);
+      resp.success(res, '保存歌单成功')(req, `${data.length}=>${name}-${id}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );

@@ -1,4 +1,3 @@
-import axios from 'axios';
 import _connect from '../../utils/connect.js';
 
 import { db } from '../../utils/sqlite.js';
@@ -25,6 +24,7 @@ import { _delDir } from '../file/file.js';
 import _path from '../../utils/path.js';
 import nanoid from '../../utils/nanoid.js';
 import { sym } from '../../utils/symbols.js';
+import request from '../../utils/request.js';
 
 const kHello = sym('hello');
 
@@ -316,22 +316,19 @@ export async function hdForwardToLink(req, list = [], fArr, text, fList = []) {
       }
 
       if (type === 'post') header['content-type'] = contentType;
-      header['x-source-service'] = appConfig.appFlag;
       if (type === 'get') {
-        await axios({
+        await request({
           method: type,
           url: link,
           headers: header,
           params: body,
-          timeout: 3000,
         });
       } else if (type === 'post') {
-        await axios({
+        await request({
           method: type,
           url: link,
           headers: header,
           data: body,
-          timeout: 3000,
         });
       }
     });

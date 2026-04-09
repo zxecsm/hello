@@ -18,6 +18,7 @@ import nanoid from './nanoid.js';
 import _crypto from './crypto.js';
 import V from './validRules.js';
 import { sym } from './symbols.js';
+import resp from './response.js';
 
 const kHello = sym('hello');
 const kValidate = sym('validate');
@@ -43,16 +44,15 @@ export async function writelog(req, str, flag = appConfig.appName) {
 
     const date = formatDate({ template: '{0}-{1}-{2} {3}:{4}:{5}' });
 
-    if (req) {
-      const { country, province, city, isp } = getCity(req[kHello].ip);
+    if (req?.[kHello]) {
+      const { ip, os, userinfo = {} } = req[kHello];
+      const { country, province, city, isp } = getCity(ip);
 
-      const { username, account } = req[kHello].userinfo;
+      const { username, account } = userinfo;
 
       str = `[${date}]${username || account ? ' - ' : ''}${username || ''}${
         account ? `(${account})` : ''
-      } - ${str} - [${country} ${province} ${city} ${isp}](${
-        req[kHello].ip
-      }) - ${req[kHello].os}\n`;
+      } - ${str} - [${country} ${province} ${city} ${isp}](${ip}) - ${os}\n`;
     } else {
       str = `[${date}] - ${str}\n`;
     }
@@ -105,20 +105,6 @@ export function errLog(req, err) {
   );
 }
 
-// 参数错误
-export function paramErr(res, req, err = '', data = {}) {
-  let str = '';
-  try {
-    if (typeof data === 'string') {
-      str = JSON.stringify(req[data]);
-    } else {
-      str = JSON.stringify(data);
-    }
-  } catch {}
-
-  _err(res, '参数错误')(req, `${err}${str ? ` - ${str}` : ''}`, 1);
-}
-
 // 参数验证中间件
 export function validate(...rules) {
   return async (req, res, next) => {
@@ -134,7 +120,7 @@ export function validate(...rules) {
           req[kValidate][type] = res;
         }
       } catch (err) {
-        return paramErr(res, req, err, type);
+        return resp.badRequest(res, req, err, type);
       }
     }
 
@@ -165,68 +151,6 @@ export function formatDate({ template = '{0}-{1}-{2} {3}:{4}:{5}', timestamp = D
     const index = Number(key); // 转换为数字
     return timeArr[index] !== undefined ? timeArr[index] : '';
   });
-}
-
-//处理返回的结果
-export function _send(res, options) {
-  res.status(200).json({
-    code: 1,
-    codeText: 'ok',
-    data: null,
-    ...options,
-  });
-}
-
-export function _success(res, codeText = '操作成功', data = null) {
-  _send(res, {
-    data,
-    codeText,
-  });
-
-  return function (req, txt, concat) {
-    if (txt) {
-      if (concat) {
-        txt = `${codeText}(${txt})`;
-      }
-    } else {
-      txt = codeText;
-    }
-    uLog(req, txt);
-  };
-}
-
-export function _nologin(res) {
-  _send(res, {
-    code: 2,
-    codeText: `当前未登录，请登录后再操作`,
-  });
-}
-
-export function _nothing(res, codeText = 'ok', data = null) {
-  _send(res, {
-    code: 3,
-    codeText,
-    data,
-  });
-}
-
-export function _err(res, codeText = '操作失败', data = null) {
-  _send(res, {
-    code: 0,
-    codeText,
-    data,
-  });
-
-  return function (req, txt, concat) {
-    if (txt) {
-      if (concat) {
-        txt = `${codeText}(${txt})`;
-      }
-    } else {
-      txt = codeText;
-    }
-    errLog(req, txt);
-  };
 }
 
 // 等待

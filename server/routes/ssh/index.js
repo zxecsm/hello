@@ -1,14 +1,5 @@
 import express from 'express';
-import {
-  _err,
-  _nologin,
-  _success,
-  createPagingData,
-  getSplitWord,
-  paramErr,
-  syncUpdateData,
-  validate,
-} from '../../utils/utils.js';
+import { createPagingData, getSplitWord, syncUpdateData, validate } from '../../utils/utils.js';
 import { fieldLength } from '../config.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
@@ -23,6 +14,7 @@ import {
   writeQuickCommands,
 } from './ssh.js';
 import _path from '../../utils/path.js';
+import resp from '../../utils/response.js';
 
 const route = express.Router();
 const kHello = sym('hello');
@@ -33,7 +25,7 @@ route.use((req, res, next) => {
   if (req[kHello].userinfo.account) {
     next();
   } else {
-    _nologin(res);
+    resp.unauthorized(res);
   }
 });
 
@@ -108,13 +100,13 @@ route.post(
         });
       }
 
-      _success(res, 'ok', {
+      resp.success(res, 'ok', {
         ...result,
         data: list,
         splitWord,
       });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -130,9 +122,9 @@ route.get('/category', async (req, res) => {
       .orderBy('serial', 'DESC')
       .find();
 
-    _success(res, 'ok', list);
+    resp.success(res, 'ok', list);
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -160,9 +152,9 @@ route.post(
       syncUpdateData(req, 'ssh');
       syncUpdateData(req, 'trash');
 
-      _success(res, '删除SSH配置成功')(req, ids.length, 1);
+      resp.success(res, '删除SSH配置成功')(req, ids.length, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -205,9 +197,9 @@ route.post(
       });
       syncUpdateData(req, 'ssh');
 
-      _success(res, '添加SSH配置成功')(req, config.title, 1);
+      resp.success(res, '添加SSH配置成功')(req, config.title, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -241,7 +233,7 @@ route.post(
       const { id, port, username, title, password, host, private_key, passphrase, auth_type } =
         req[kValidate];
       if (id === 'local' && !req[kHello].isRoot) {
-        _err(res, '无权操作')(req);
+        resp.forbidden(res, '无权操作')(req);
         return;
       }
 
@@ -266,7 +258,7 @@ route.post(
             account,
           });
           syncUpdateData(req, 'ssh');
-          _success(res, '添加本机SSH配置成功')(req, title, 1);
+          resp.success(res, '添加本机SSH配置成功')(req, title, 1);
           return;
         }
       }
@@ -283,9 +275,9 @@ route.post(
       });
       syncUpdateData(req, 'ssh');
 
-      _success(res, '更新SSH配置成功')(req, title, 1);
+      resp.success(res, '更新SSH配置成功')(req, title, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -307,9 +299,9 @@ route.get(
         .select('id,title,port,host,username,auth_type,passphrase,password,private_key')
         .where({ id, account })
         .findOne();
-      _success(res, 'ok', ssh || {});
+      resp.success(res, 'ok', ssh || {});
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -334,9 +326,9 @@ route.post(
 
       syncUpdateData(req, 'ssh');
 
-      _success(res, '设置ssh权重成功')(req, `${id}-${top}`, 1);
+      resp.success(res, '设置ssh权重成功')(req, `${id}-${top}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -364,9 +356,9 @@ route.post(
 
       syncUpdateData(req, 'ssh');
 
-      _success(res, '更新分类成功')(req, `${id}: ${categoryStr}`, 1);
+      resp.success(res, '更新分类成功')(req, `${id}: ${categoryStr}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -391,9 +383,9 @@ route.post(
 
       syncUpdateData(req, 'sshCategory');
 
-      _success(res, '编辑分类标题成功')(req, `${title}-${id}`, 1);
+      resp.success(res, '编辑分类标题成功')(req, `${title}-${id}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -416,7 +408,7 @@ route.post(
       const total = await db('ssh_category').count();
 
       if (total >= fieldLength.maxNoteCategory) {
-        _err(res, `类型限制${fieldLength.maxNoteCategory}`)(req);
+        resp.forbidden(res, `类型限制${fieldLength.maxNoteCategory}`)(req);
         return;
       }
       await db('ssh_category').insert({
@@ -428,9 +420,9 @@ route.post(
 
       syncUpdateData(req, 'sshCategory');
 
-      _success(res, '添加分类成功')(req, title, 1);
+      resp.success(res, '添加分类成功')(req, title, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -454,9 +446,9 @@ route.get(
 
       syncUpdateData(req, 'sshCategory');
 
-      _success(res, '删除分类成功')(req, id, 1);
+      resp.success(res, '删除分类成功')(req, id, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -483,7 +475,7 @@ route.post(
       try {
         temid = await V.parse(temid, V.string().trim().min(1), 'temid');
       } catch (error) {
-        paramErr(res, req, error, { temid });
+        resp.badRequest(res, req, error, { temid });
         return;
       }
 
@@ -493,7 +485,7 @@ route.post(
         .findOne();
 
       if (!config) {
-        _err(res, '获取配置信息失败')(req, id, 1);
+        resp.forbidden(res, '获取配置信息失败')(req, id, 1);
         return;
       }
       createTerminal(
@@ -502,14 +494,14 @@ route.post(
         config,
         defaultPath ? _path.normalizeNoSlash('/', defaultPath) : '',
       );
-      _success(res, '请求连接SSH成功', {
+      resp.success(res, '请求连接SSH成功', {
         title: config.title,
         username: config.username,
         host: config.host,
         port: config.port,
       })(req, `${config.title}：${temid}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -518,9 +510,9 @@ route.post(
 route.get('/quick-list', async (req, res) => {
   try {
     const { account } = req[kHello].userinfo;
-    _success(res, 'ok', await readQuickCommands(account));
+    resp.success(res, 'ok', await readQuickCommands(account));
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -563,9 +555,9 @@ route.post(
 
       await writeQuickCommands(account, quickGroupList);
       syncUpdateData(req, 'quickCommand');
-      _success(res, '添加快捷命令成功')(req, title, 1);
+      resp.success(res, '添加快捷命令成功')(req, title, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -607,9 +599,9 @@ route.post(
         }
       }
 
-      _success(res, '修改快捷命令成功')(req, title, 1);
+      resp.success(res, '修改快捷命令成功')(req, title, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -635,9 +627,9 @@ route.post(
         await writeQuickCommands(account, quickGroupList);
         syncUpdateData(req, 'quickCommand');
       }
-      _success(res, '删除快捷命令成功')(req, id, 1);
+      resp.success(res, '删除快捷命令成功')(req, id, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -659,9 +651,9 @@ route.post(
       const { account } = req[kHello].userinfo;
       await quickMoveLocation(account, groupId, fromId, toId);
       syncUpdateData(req, 'quickCommand');
-      _success(res, '移动快捷命令位置成功')(req, `${groupId}: ${fromId} => ${toId}`, 1);
+      resp.success(res, '移动快捷命令位置成功')(req, `${groupId}: ${fromId} => ${toId}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -696,9 +688,9 @@ route.post(
         }
       }
 
-      _success(res, '移动到分组成功')(req, `${fromId}:${id} => ${toId}`, 1);
+      resp.success(res, '移动到分组成功')(req, `${fromId}:${id} => ${toId}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -722,9 +714,9 @@ route.post(
 
       await writeQuickCommands(account, quickGroupList);
       syncUpdateData(req, 'quickCommand');
-      _success(res, '添加快捷命令分组成功')(req, title, 1);
+      resp.success(res, '添加快捷命令分组成功')(req, title, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -752,9 +744,9 @@ route.post(
         syncUpdateData(req, 'quickCommand');
       }
 
-      _success(res, '更新快捷命令分组成功')(req, title, 1);
+      resp.success(res, '更新快捷命令分组成功')(req, title, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -775,9 +767,9 @@ route.post(
       const { account } = req[kHello].userinfo;
       await quickGroupMoveLocation(account, fromId, toId);
       syncUpdateData(req, 'quickCommand');
-      _success(res, '移动快捷命令分组位置成功')(req, `${fromId} => ${toId}`, 1);
+      resp.success(res, '移动快捷命令分组位置成功')(req, `${fromId} => ${toId}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -799,9 +791,9 @@ route.post(
       await writeQuickCommands(account, quickGroupList);
 
       syncUpdateData(req, 'quickCommand');
-      _success(res, '删除快捷命令成功')(req, id, 1);
+      resp.success(res, '删除快捷命令成功')(req, id, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );

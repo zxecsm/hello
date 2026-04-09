@@ -2,17 +2,7 @@ import express from 'express';
 
 import { db } from '../../utils/sqlite.js';
 
-import {
-  _success,
-  _nologin,
-  _err,
-  paramErr,
-  _nothing,
-  syncUpdateData,
-  createPagingData,
-  getSplitWord,
-  validate,
-} from '../../utils/utils.js';
+import { syncUpdateData, createPagingData, getSplitWord, validate } from '../../utils/utils.js';
 
 import timedTask from '../../utils/timedTask.js';
 
@@ -32,6 +22,7 @@ import jwt from '../../utils/jwt.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
+import resp from '../../utils/response.js';
 
 const route = express.Router();
 const kHello = sym('hello');
@@ -56,12 +47,12 @@ route.post(
       const share = await validShareAddUserState(req, ['bookmk'], id, pass, captchaId);
 
       if (share.state === 0) {
-        _err(res, share.text)(req, id, 1);
+        resp.notFound(res, share.text)(req, id, 1);
         return;
       }
 
       if (share.state === 2) {
-        _success(res, share.text, {
+        resp.success(res, share.text, {
           id: share.id,
           needCaptcha: share.needCaptcha,
         })(req, share.id, 1);
@@ -69,7 +60,7 @@ route.post(
       }
 
       if (share.state === 3) {
-        _nothing(res, share.text);
+        resp.ok(res, share.text);
         return;
       }
 
@@ -85,7 +76,7 @@ route.post(
         username = des || username;
       }
 
-      _success(res, '获取书签分享成功', {
+      resp.success(res, '获取书签分享成功', {
         username,
         logo,
         email,
@@ -99,7 +90,7 @@ route.post(
         ),
       })(req, id, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -126,7 +117,7 @@ route.post(
       const { account } = req[kHello].userinfo;
 
       if (!acc && !account) {
-        _nologin(res);
+        resp.unauthorized(res);
         return;
       }
 
@@ -181,13 +172,13 @@ route.post(
         });
       }
 
-      _success(res, 'ok', {
+      resp.success(res, 'ok', {
         ...result,
         splitWord,
         data,
       });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -209,7 +200,7 @@ route.get(
       const { account } = req[kHello].userinfo;
 
       if (!acc && !account) {
-        _nologin(res);
+        resp.unauthorized(res);
         return;
       }
 
@@ -227,7 +218,7 @@ route.get(
       }
 
       if (!id || !account) {
-        _success(res, 'ok', { list, home });
+        resp.success(res, 'ok', { list, home });
         return;
       }
 
@@ -255,9 +246,9 @@ route.get(
         });
       }
 
-      _success(res, 'ok', { list, home });
+      resp.success(res, 'ok', { list, home });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -274,7 +265,7 @@ route.use((req, res, next) => {
   if (req[kHello].userinfo.account) {
     next();
   } else {
-    _nologin(res);
+    resp.unauthorized(res);
   }
 });
 
@@ -298,9 +289,9 @@ route.post(
 
       syncUpdateData(req, 'bookmark');
 
-      _success(res, '移动分组位置成功')(req, `${fromId}=>${toId}`, 1);
+      resp.success(res, '移动分组位置成功')(req, `${fromId}=>${toId}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -326,9 +317,9 @@ route.post(
 
       syncUpdateData(req, 'bookmark');
 
-      _success(res, '移动书签位置成功')(req, `${groupId}: ${fromId}=>${toId}`, 1);
+      resp.success(res, '移动书签位置成功')(req, `${groupId}: ${fromId}=>${toId}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -356,7 +347,7 @@ route.post(
         .count();
 
       if (total >= fieldLength.bmkGroup) {
-        return _err(res, `分组限制${fieldLength.bmkGroup}个`)(req);
+        return resp.forbidden(res, `分组限制${fieldLength.bmkGroup}个`)(req);
       }
 
       await updateBmkGroupOrder(account);
@@ -371,9 +362,9 @@ route.post(
 
       syncUpdateData(req, 'bookmark');
 
-      _success(res, '添加分组成功')(req, title, 1);
+      resp.success(res, '添加分组成功')(req, title, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -403,9 +394,9 @@ route.post(
       syncUpdateData(req, 'bookmark');
       syncUpdateData(req, 'trash');
 
-      _success(res, '删除分组成功')(req, ids.length, 1);
+      resp.success(res, '删除分组成功')(req, ids.length, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -434,9 +425,9 @@ route.post(
 
       syncUpdateData(req, 'bookmark');
 
-      _success(res, `${share === 1 ? '公开' : '锁定'}分组成功`)(req, ids.length, 1);
+      resp.success(res, `${share === 1 ? '公开' : '锁定'}分组成功`)(req, ids.length, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -460,9 +451,9 @@ route.get(
 
       syncUpdateData(req, 'bookmark');
 
-      _success(res, '删除书签LOGO成功')(req, id, 1);
+      resp.success(res, '删除书签LOGO成功')(req, id, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -492,9 +483,9 @@ route.post(
 
       syncUpdateData(req, 'bookmark');
 
-      _success(res, '更新分组标题成功')(req, title, 1);
+      resp.success(res, '更新分组标题成功')(req, title, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -525,7 +516,7 @@ route.post(
 
       // 添加书签的分组必须存在
       if (groupId !== 'home' && !(await bmkGroupExist(account, groupId))) {
-        paramErr(res, req);
+        resp.badRequest(res, req, '书签分组不存在', 'body');
         return;
       }
 
@@ -533,7 +524,7 @@ route.post(
 
       // 计算添加的书签和现有的书签
       if (total + bms.length > fieldLength.bmk) {
-        return _err(res, `分组书签限制${fieldLength.bmk}个`)(req);
+        return resp.forbidden(res, `分组书签限制${fieldLength.bmk}个`)(req);
       }
 
       await updateBmkOrder(account, groupId);
@@ -553,9 +544,9 @@ route.post(
 
       syncUpdateData(req, 'bookmark');
 
-      _success(res, '添加书签成功')(req, `${groupId}-${bms.length}`, 1);
+      resp.success(res, '添加书签成功')(req, `${groupId}-${bms.length}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -590,9 +581,9 @@ route.post(
 
       syncUpdateData(req, 'bookmark');
 
-      _success(res, '更新书签信息成功')(req, `${groupId}: ${id}-${title}-${link}-${des}`, 1);
+      resp.success(res, '更新书签信息成功')(req, `${groupId}: ${id}-${title}-${link}-${des}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -617,7 +608,7 @@ route.post(
 
       // 移动到的分组需要存在
       if (groupId !== 'home' && !(await bmkGroupExist(account, groupId))) {
-        paramErr(res, req);
+        resp.badRequest(res, req, '书签分组不存在', 'body');
         return;
       }
 
@@ -625,7 +616,7 @@ route.post(
 
       // 计算分组书签数量
       if (total + ids.length > fieldLength.bmk) {
-        return _err(res, `分组书签限制${fieldLength.bmk}个`)(req);
+        return resp.forbidden(res, `分组书签限制${fieldLength.bmk}个`)(req);
       }
 
       await updateBmkOrder(account, groupId);
@@ -662,9 +653,9 @@ route.post(
 
       syncUpdateData(req, 'bookmark');
 
-      _success(res, '书签移动分组成功')(req, `${ids.length}=>${groupId}`, 1);
+      resp.success(res, '书签移动分组成功')(req, `${ids.length}=>${groupId}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -693,9 +684,9 @@ route.post(
       syncUpdateData(req, 'bookmark');
       syncUpdateData(req, 'trash');
 
-      _success(res, '删除书签成功')(req, ids.length, 1);
+      resp.success(res, '删除书签成功')(req, ids.length, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -725,7 +716,7 @@ route.post(
         .find();
 
       if (bms.length === 0) {
-        _err(res, '当前分组为空')(req, id, 1);
+        resp.forbidden(res, '当前分组为空')(req, id, 1);
         return;
       }
 
@@ -743,13 +734,13 @@ route.post(
 
       syncUpdateData(req, 'sharelist');
 
-      _success(res, '分享分组成功', { id: obj.id })(
+      resp.success(res, '分享分组成功', { id: obj.id })(
         req,
         `${id}: ${title}-${obj.id}-${bms.length}`,
         1,
       );
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -771,7 +762,7 @@ route.post(
       const share = await validShareState(token, 'bookmk');
 
       if (share.state === 0) {
-        _err(res, share.text)(req);
+        resp.forbidden(res, share.text)(req);
         return;
       }
 
@@ -782,7 +773,7 @@ route.post(
       const total = await db('bmk_group').where({ account, state: 1 }).count();
 
       if (total >= 200) {
-        return _err(res, '分组限制200个')(req);
+        return resp.forbidden(res, '分组限制200个')(req);
       }
 
       const pid = nanoid();
@@ -814,9 +805,9 @@ route.post(
 
       syncUpdateData(req, 'bookmark');
 
-      _success(res, '保存分享书签成功')(req, `${arr.length}=>${title}`, 1);
+      resp.success(res, '保存分享书签成功')(req, `${arr.length}=>${title}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -854,7 +845,7 @@ route.post(
       const total = await db('bmk_group').where({ account, state: 1 }).count();
 
       if (total + list.length > fieldLength.bmkGroup) {
-        return _err(res, `分组限制${fieldLength.bmkGroup}个`)(req);
+        return resp.forbidden(res, `分组限制${fieldLength.bmkGroup}个`)(req);
       }
 
       await updateBmkGroupOrder(account);
@@ -890,9 +881,9 @@ route.post(
 
       syncUpdateData(req, 'bookmark');
 
-      _success(res, '导入书签成功')(req, count, 1);
+      resp.success(res, '导入书签成功')(req, count, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -927,9 +918,9 @@ route.get('/export', async (req, res) => {
       };
     });
 
-    _success(res, '导出书签成功', list)(req, bms.length, 1);
+    resp.success(res, '导出书签成功', list)(req, bms.length, 1);
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 

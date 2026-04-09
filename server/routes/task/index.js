@@ -1,10 +1,11 @@
 import express from 'express';
-import { _err, _nologin, _success, paramErr, validate } from '../../utils/utils.js';
+import { validate } from '../../utils/utils.js';
 import { fieldLength } from '../config.js';
 import taskState from '../../utils/taskState.js';
 import { validShareState } from '../user/user.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
+import resp from '../../utils/response.js';
 
 const route = express.Router();
 const kHello = sym('hello');
@@ -36,12 +37,12 @@ route.post(
       try {
         temid = await V.parse(temid, V.string().trim().min(1), 'temid');
       } catch (error) {
-        paramErr(res, req, error, { temid });
+        resp.badRequest(res, req, error, { temid });
         return;
       }
 
       if (!token && !account) {
-        _nologin(res);
+        resp.unauthorized(res);
         return;
       }
 
@@ -51,7 +52,7 @@ route.post(
         const share = await validShareState(token, 'file');
 
         if (share.state === 0) {
-          _err(res, share.text)(req);
+          resp.forbidden(res, share.text)(req);
           return;
         }
 
@@ -61,7 +62,7 @@ route.post(
       }
 
       if (!key.startsWith(`${accFlag}_`)) {
-        paramErr(res, req, `key 必须 ${accFlag}_ 开头`, 'body');
+        resp.badRequest(res, req, `key 必须 ${accFlag}_ 开头`, 'body');
         return;
       }
 
@@ -70,9 +71,9 @@ route.post(
         taskState.delete(key);
       }
 
-      _success(res, 'ok', { text: task ? task.text : '', state: task ? task.state : -1 });
+      resp.success(res, 'ok', { text: task ? task.text : '', state: task ? task.state : -1 });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -103,12 +104,12 @@ route.post(
       try {
         temid = await V.parse(temid, V.string().trim().min(1), 'temid');
       } catch (error) {
-        paramErr(res, req, error, { temid });
+        resp.badRequest(res, req, error, { temid });
         return;
       }
 
       if (!token && !account) {
-        _nologin(res);
+        resp.unauthorized(res);
         return;
       }
 
@@ -118,7 +119,7 @@ route.post(
         const share = await validShareState(token, 'file');
 
         if (share.state === 0) {
-          _err(res, share.text)(req);
+          resp.forbidden(res, share.text)(req);
           return;
         }
         accFlag = share.data.id + account || temid;
@@ -127,7 +128,7 @@ route.post(
       }
 
       if (!key.startsWith(`${accFlag}_`)) {
-        paramErr(res, req, `key 必须 ${accFlag}_ 开头`, 'body');
+        resp.badRequest(res, req, `key 必须 ${accFlag}_ 开头`, 'body');
         return;
       }
 
@@ -137,9 +138,9 @@ route.post(
         taskState.delete(key);
       }
 
-      _success(res);
+      resp.success(res);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -149,16 +150,16 @@ route.use((req, res, next) => {
   if (req[kHello].userinfo.account) {
     next();
   } else {
-    _nologin(res);
+    resp.unauthorized(res);
   }
 });
 
 // 获取任务列表
 route.post('/list', async (req, res) => {
   try {
-    _success(res, 'ok', taskState.getTaskKeys(req[kHello].userinfo.account));
+    resp.success(res, 'ok', taskState.getTaskKeys(req[kHello].userinfo.account));
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 

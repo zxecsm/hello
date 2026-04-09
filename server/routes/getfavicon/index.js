@@ -2,17 +2,13 @@ import { resolve } from 'path';
 
 import express from 'express';
 
-import axios from 'axios';
-
 import * as cheerio from 'cheerio';
 
 import {
-  _err,
   errLog,
   extractFullHead,
   getDirname,
   isurl,
-  paramErr,
   tplReplace,
   uLog,
   validate,
@@ -30,6 +26,8 @@ import { _d } from '../../data/data.js';
 import { fieldLength } from '../config.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
+import request from '../../utils/request.js';
+import resp from '../../utils/response.js';
 
 const route = express.Router();
 
@@ -51,11 +49,10 @@ timedTask.add(async (flag) => {
 async function downloadImage(url) {
   // console.log('download', url);
   try {
-    const res = await axios({
+    const res = await request({
       method: 'get',
       url,
       responseType: 'arraybuffer',
-      timeout: 3000,
       maxContentLength: 500 * 1024,
     });
 
@@ -136,14 +133,14 @@ route.get(
 
       // 检查接口是否开启
       if (!_d.pubApi.faviconApi && !req[kHello].userinfo.account) {
-        return _err(res, '接口未开放')(req, urlStr, 1);
+        return resp.forbidden(res, '接口未开放')(req, urlStr, 1);
       }
 
       let protocol = 'https:'; // 默认https
       const url = `${urlStr.startsWith('http') ? '' : `${protocol}//`}${urlStr}`;
 
       if (!isurl(url)) {
-        paramErr(res, req, 'url 格式错误', { url });
+        resp.badRequest(res, req, 'url 格式错误', { url });
         return;
       }
 
@@ -178,14 +175,10 @@ route.get(
           // 自行解析获取图标
           let htmlResp;
           try {
-            htmlResp = await axios.get(`${protocol}//${host}`, {
-              timeout: 3000,
-            });
+            htmlResp = await request.get(`${protocol}//${host}`);
           } catch {
             protocol = 'http:';
-            htmlResp = await axios.get(`${protocol}//${host}`, {
-              timeout: 3000,
-            });
+            htmlResp = await request.get(`${protocol}//${host}`);
           }
 
           const baseUrl = `${protocol}//${host}`;
@@ -261,7 +254,7 @@ route.get(
         res.sendFile(defaultIcon, { dotfiles: 'allow' });
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );

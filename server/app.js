@@ -5,8 +5,6 @@ import cookieParser from 'cookie-parser';
 
 import express from 'express';
 
-import axios from 'axios';
-
 import * as cheerio from 'cheerio';
 
 // 获取访问设备信息
@@ -15,13 +13,10 @@ import { UAParser } from 'ua-parser-js';
 import {
   writelog,
   getIn,
-  _err,
   debounce,
   getDirname,
-  paramErr,
   isurl,
   uLog,
-  _success,
   parseJson,
   extractFullHead,
   errLog,
@@ -67,6 +62,8 @@ import { db } from './utils/sqlite.js';
 import V from './utils/validRules.js';
 import { sym } from './utils/symbols.js';
 import getCity from './utils/getCity.js';
+import request from './utils/request.js';
+import resp from './utils/response.js';
 
 const __dirname = getDirname(import.meta);
 const kHello = sym('hello');
@@ -105,6 +102,27 @@ app.use((_, res, next) => {
 
 app.use(async (req, res, next) => {
   try {
+    const ip = getClientIp(req); // 客户端ip
+    const method = req.method.toLocaleLowerCase(); // 请求类型
+    // 身份验证
+    const jwtData = await jwt.get(req.cookies.token);
+    const userinfo = jwtData && jwtData.data.type === 'authentication' ? jwtData.data.data : {}; // 用户信息
+
+    req[kHello] = {
+      userinfo,
+      path: decodeURIComponent(req.path),
+      temid: '',
+      ip,
+      os: formatClientInfo(req.headers['user-agent']),
+      method,
+      jwtData,
+    };
+
+    if (req.headers['x-source-service'] === appConfig.appFlag) {
+      resp.forbidden(res, '请求被禁止')(req);
+      return;
+    }
+
     // 客户端临时ID格式
     let temid = req.headers['x-tem-id'] || '';
     try {
@@ -114,26 +132,11 @@ app.use(async (req, res, next) => {
         'temid',
       );
     } catch (error) {
-      paramErr(res, req, error, { temid });
+      resp.badRequest(res, req, error, { temid });
       return;
     }
 
-    const ip = getClientIp(req); // 客户端ip
-    const method = req.method.toLocaleLowerCase(); // 请求类型
-
-    // 身份验证
-    const jwtData = await jwt.get(req.cookies.token);
-    const userinfo = jwtData && jwtData.data.type === 'authentication' ? jwtData.data.data : {}; // 用户信息
-
-    req[kHello] = {
-      userinfo,
-      path: decodeURIComponent(req.path),
-      temid,
-      ip,
-      os: formatClientInfo(req.headers['user-agent']),
-      method,
-      jwtData,
-    };
+    req[kHello].temid = temid;
 
     // 限制请求频率
     const flag = userinfo.account || '';
@@ -145,11 +148,11 @@ app.use(async (req, res, next) => {
       next();
     } else {
       informReqLimit(req);
-      _err(res, '请求频率超过限制')(req);
+      resp.forbidden(res, '请求频率超过限制')(req);
     }
   } catch (error) {
     await writelog(req, `[ app.use ] - ${error}`, 'error');
-    _err(res);
+    resp.error(res);
   }
 });
 
@@ -199,7 +202,7 @@ app.use(async (req, res, next) => {
     next();
   } catch (error) {
     await writelog(req, `[ app.use ] - ${error}`, 'error');
-    _err(res);
+    resp.error(res);
   }
 });
 
@@ -234,13 +237,6 @@ app.all(
     try {
       const { method } = req[kHello];
 
-      const source = req.headers['x-source-service'];
-
-      if (source === appConfig.appFlag) {
-        _err(res, '不能转发消息给自己')(req);
-        return;
-      }
-
       let text = '';
       if (method === 'get') {
         text = req.query.text;
@@ -257,7 +253,7 @@ app.all(
       try {
         text = await V.parse(text, V.string().trim().min(1).max(fieldLength.chatContent), 'text');
       } catch (error) {
-        paramErr(res, req, error, { text });
+        resp.badRequest(res, req, error, { text });
       }
 
       const user = await db('user')
@@ -266,15 +262,15 @@ app.all(
         .findOne();
 
       if (!user) {
-        _err(res, `${appConfig.notifyAccountDes}未开启收信接口`)(req);
+        resp.forbidden(res, `${appConfig.notifyAccountDes}未开启收信接口`)(req);
         return;
       }
 
       await heperMsgAndForward(req, user.account, text);
 
-      _success(res, `接收${appConfig.notifyAccountDes}消息成功`)(req, text, 1);
+      resp.success(res, `接收${appConfig.notifyAccountDes}消息成功`)(req, text, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -294,14 +290,14 @@ app.get(
 
       // 检查接口是否开启
       if (!_d.pubApi.siteInfoApi && !req[kHello].userinfo.account) {
-        return _err(res, '接口未开放')(req, u, 1);
+        return resp.forbidden(res, '接口未开放')(req, u, 1);
       }
 
       let protocol = 'https:'; // 默认https
       const url = `${u.startsWith('http') ? '' : `${protocol}//`}${u}`;
 
       if (!isurl(url)) {
-        paramErr(res, req, 'url 格式错误', { url });
+        resp.badRequest(res, req, 'url 格式错误', { url });
         return;
       }
 
@@ -319,7 +315,7 @@ app.get(
 
         // 缓存存在，则使用缓存
         if ((await _f.getType(p)) === 'file') {
-          _success(res, 'ok', parseJson((await _f.fsp.readFile(p)).toString(), {}));
+          resp.success(res, 'ok', parseJson((await _f.fsp.readFile(p)).toString(), {}));
           return;
         }
 
@@ -328,25 +324,17 @@ app.get(
           if (Date.now() - stat.mtimeMs > 60 * 1000) {
             await _f.del(miss);
           } else {
-            _success(res, 'ok', obj);
+            resp.success(res, 'ok', obj);
             return;
           }
         }
 
         let result;
         try {
-          result = await axios({
-            method: 'get',
-            url: `${protocol}//${host}${pathname}`,
-            timeout: 3000,
-          });
+          result = await request.get(`${protocol}//${host}${pathname}`);
         } catch {
           protocol = 'http:';
-          result = await axios({
-            method: 'get',
-            url: `${protocol}//${host}${pathname}`,
-            timeout: 3000,
-          });
+          result = await request.get(`${protocol}//${host}${pathname}`);
         }
 
         const type = (result.headers?.['content-type'] || '').toLowerCase();
@@ -370,7 +358,7 @@ app.get(
 
         await _f.writeFile(p, JSON.stringify(obj));
 
-        _success(res, 'ok', obj);
+        resp.success(res, 'ok', obj);
       } catch (error) {
         if (miss) {
           try {
@@ -381,10 +369,10 @@ app.get(
         }
 
         await errLog(req, `${error}(${u})`);
-        _success(res, 'ok', obj);
+        resp.success(res, 'ok', obj);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -404,12 +392,12 @@ app.get(
 
       // 检查接口是否开启
       if (!_d.pubApi.ipLocationApi) {
-        return _err(res, '接口未开放')(req, ip, 1);
+        return resp.forbidden(res, '接口未开放')(req, ip, 1);
       }
 
-      _success(res, '获取ip地理位置成功', getCity(ip))(req, ip, 1);
+      resp.success(res, '获取ip地理位置成功', getCity(ip))(req, ip, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );

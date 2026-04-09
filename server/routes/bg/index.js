@@ -9,10 +9,6 @@ import { db } from '../../utils/sqlite.js';
 import timedTask from '../../utils/timedTask.js';
 
 import {
-  _success,
-  _nologin,
-  _nothing,
-  _err,
   receiveFiles,
   isImgFile,
   getTimePath,
@@ -36,6 +32,7 @@ import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
 import getFile from '../getfile/index.js';
+import resp from '../../utils/response.js';
 
 const route = express.Router();
 const kHello = sym('hello');
@@ -59,7 +56,7 @@ route.get(
 
       // 检查壁纸接口是否开启
       if (!_d.pubApi.randomBgApi) {
-        return _err(res, '接口未开放')(req);
+        return resp.forbidden(res, '接口未开放')(req);
       }
 
       // 从数据库中随机选择一条数据
@@ -67,12 +64,12 @@ route.get(
 
       // 如果没有数据，返回错误
       if (!bgData) {
-        return _err(res, '壁纸库为空')(req);
+        return resp.notFound(res, '壁纸库为空')(req);
       }
 
       await getFile(req, res, `/bg/${bgData.id}`, false);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -82,7 +79,7 @@ route.use((req, res, next) => {
   if (req[kHello].userinfo.account) {
     next();
   } else {
-    _nologin(res);
+    resp.unauthorized(res);
   }
 });
 
@@ -125,13 +122,13 @@ route.get(
       const bgData = await getRandomBg(type, 'id,type');
 
       if (!bgData) {
-        _err(res, '壁纸库为空，请先上传壁纸')(req);
+        resp.notFound(res, '壁纸库为空，请先上传壁纸')(req);
         return;
       }
 
-      _success(res, 'ok', bgData);
+      resp.success(res, 'ok', bgData);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -157,9 +154,9 @@ route.post(
 
       syncUpdateData(req, 'userinfo');
 
-      _success(res, '更换壁纸成功')(req, `${type}-${id}`, 1);
+      resp.success(res, '更换壁纸成功')(req, `${type}-${id}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -188,9 +185,9 @@ route.post(
 
       syncUpdateData(req, 'bg');
 
-      _success(res, '收藏壁纸成功')(req, ids.length, 1);
+      resp.success(res, '收藏壁纸成功')(req, ids.length, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -242,7 +239,7 @@ route.get(
           result = createPagingData(Array(0), pageSize, pageNo);
         }
 
-        _success(res, 'ok', {
+        resp.success(res, 'ok', {
           ...result,
           data,
         });
@@ -268,12 +265,12 @@ route.get(
         });
       }
 
-      _success(res, 'ok', {
+      resp.success(res, 'ok', {
         ...result,
         data,
       });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -303,13 +300,13 @@ route.post(
 
         syncUpdateData(req, 'bg');
 
-        _success(res, '删除收藏壁纸成功')(req, ids.length, 1);
+        resp.success(res, '删除收藏壁纸成功')(req, ids.length, 1);
         return;
       }
 
       // 验证管理员
       if (!req[kHello].isRoot) {
-        _err(res, '无权操作')(req);
+        resp.forbidden(res, '无权操作')(req);
         return;
       }
 
@@ -329,9 +326,9 @@ route.post(
 
       syncUpdateData(req, 'bg');
 
-      _success(res, '删除壁纸成功')(req, ids.length, 1);
+      resp.success(res, '删除壁纸成功')(req, ids.length, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -357,7 +354,7 @@ route.post(
 
       const bg = await db('bg').select('url').where({ hash: HASH }).findOne();
       if (bg) {
-        _err(res, '壁纸已存在')(req, `${name}-${HASH}`, 1);
+        resp.forbidden(res, '壁纸已存在')(req, `${name}-${HASH}`, 1);
         return;
       }
 
@@ -385,9 +382,9 @@ route.post(
         title,
       });
 
-      _success(res, '上传壁纸成功')(req, url, 1);
+      resp.success(res, '上传壁纸成功')(req, url, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -409,7 +406,7 @@ route.post(
 
       if (bg) {
         if ((await _f.getType(appConfig.bgDir(bg.url))) === 'file') {
-          _success(res);
+          resp.success(res);
           return;
         }
 
@@ -417,9 +414,9 @@ route.post(
         await db('bg').where({ id: bg.id }).delete();
       }
 
-      _nothing(res);
+      resp.ok(res);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );

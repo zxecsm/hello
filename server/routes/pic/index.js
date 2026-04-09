@@ -9,12 +9,8 @@ import { getImgInfo } from '../../utils/img.js';
 import { db } from '../../utils/sqlite.js';
 
 import {
-  _success,
-  _nothing,
-  _err,
   receiveFiles,
   isImgFile,
-  _nologin,
   getTimePath,
   createPagingData,
   concurrencyTasks,
@@ -29,6 +25,7 @@ import _path from '../../utils/path.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
+import resp from '../../utils/response.js';
 
 const route = express.Router();
 const kHello = sym('hello');
@@ -39,7 +36,7 @@ route.use((req, res, next) => {
   if (req[kHello].userinfo.account) {
     next();
   } else {
-    _nologin(res);
+    resp.unauthorized(res);
   }
 });
 
@@ -65,7 +62,7 @@ route.post(
       const pic = await db('pic').select('hash').where({ hash: HASH }).findOne();
 
       if (pic) {
-        _err(res, '图片已存在')(req, HASH, 1);
+        resp.forbidden(res, '图片已存在')(req, HASH, 1);
         return;
       }
 
@@ -91,9 +88,9 @@ route.post(
 
       await db('pic').insert(obj);
 
-      _success(res, '上传图片成功', { id: obj.id })(req, obj.url, 1);
+      resp.success(res, '上传图片成功', { id: obj.id })(req, obj.url, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -115,16 +112,16 @@ route.post(
 
       if (pic) {
         if ((await _f.getType(appConfig.picDir(pic.url))) === 'file') {
-          _success(res, 'ok', { id: pic.id });
+          resp.success(res, 'ok', { id: pic.id });
           return;
         }
 
         await db('pic').where({ id: pic.id }).delete();
       }
 
-      _nothing(res);
+      resp.ok(res);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -133,7 +130,7 @@ route.use((req, res, next) => {
   if (req[kHello].isRoot) {
     next();
   } else {
-    _err(res, '无权操作')(req);
+    resp.forbidden(res, '无权操作')(req);
   }
 });
 
@@ -162,12 +159,12 @@ route.get(
         list = await db('pic').select('id').orderBy('serial', 'desc').page(pageSize, offset).find();
       }
 
-      _success(res, 'ok', {
+      resp.success(res, 'ok', {
         ...result,
         data: list,
       });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -203,9 +200,9 @@ route.post(
         .where({ id: { in: ids } })
         .delete();
 
-      _success(res, '删除图片成功')(req, ids.length, 1);
+      resp.success(res, '删除图片成功')(req, ids.length, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );

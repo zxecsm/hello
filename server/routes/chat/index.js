@@ -6,13 +6,8 @@ import _f from '../../utils/f.js';
 import { db } from '../../utils/sqlite.js';
 
 import {
-  _success,
-  _nologin,
-  _nothing,
-  _err,
   receiveFiles,
   mergefile,
-  paramErr,
   getTimePath,
   createPagingData,
   errLog,
@@ -46,6 +41,7 @@ import _connect from '../../utils/connect.js';
 import _path from '../../utils/path.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
+import resp from '../../utils/response.js';
 
 const route = express.Router();
 const kHello = sym('hello');
@@ -56,7 +52,7 @@ route.use((req, res, next) => {
   if (req[kHello].userinfo.account) {
     next();
   } else {
-    _nologin(res);
+    resp.unauthorized(res);
   }
 });
 
@@ -75,16 +71,16 @@ route.post(
       const { account: acc, notify } = req[kValidate];
       const { account } = req[kHello].userinfo;
       if (account === acc) {
-        paramErr(res, req, `account 不能为: ${account}`, 'body');
+        resp.badRequest(res, req, `account 不能为: ${account}`, 'body');
         return;
       }
 
       await becomeFriends(account, acc);
       await db('friends').where({ friend: acc, account }).update({ notify });
 
-      _success(res, `${notify === 0 ? '开启' : '关闭'}免打扰成功`)(req, `${acc}-${notify}`, 1);
+      resp.success(res, `${notify === 0 ? '开启' : '关闭'}免打扰成功`)(req, `${acc}-${notify}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -111,16 +107,16 @@ route.post(
       const { account } = req[kHello].userinfo;
 
       if (account === acc) {
-        paramErr(res, req, `account 不能为: ${account}`, 'body');
+        resp.badRequest(res, req, `account 不能为: ${account}`, 'body');
         return;
       }
 
       await becomeFriends(account, acc);
       await db('friends').where({ friend: acc, account }).update({ des });
 
-      _success(res, '设置备注成功')(req, `${acc}-${des}`, 1);
+      resp.success(res, '设置备注成功')(req, `${acc}-${des}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -144,7 +140,7 @@ route.get(
       const notify = f ? f.notify : 1;
 
       if (acc === appConfig.chatRoomAccount) {
-        _success(res, 'ok', {
+        resp.success(res, 'ok', {
           username: '聊天室',
           des: '聊天室',
           online: true,
@@ -153,7 +149,7 @@ route.get(
         });
         return;
       } else if (acc === appConfig.notifyAccount) {
-        _success(res, 'ok', {
+        resp.success(res, 'ok', {
           username: appConfig.notifyAccount,
           des: appConfig.notifyAccountDes,
           online: true,
@@ -162,7 +158,7 @@ route.get(
         });
         return;
       } else if (acc === account) {
-        _success(res, 'ok', {
+        resp.success(res, 'ok', {
           username,
           des: appConfig.ownAccountDes,
           online: true,
@@ -175,7 +171,7 @@ route.get(
       const user = await getUserInfo(acc, 'username,hide,update_at');
 
       if (!user) {
-        _err(res, '无法获取用户信息')(req, acc, 1);
+        resp.forbidden(res, '无法获取用户信息')(req, acc, 1);
         return;
       }
 
@@ -187,7 +183,7 @@ route.get(
 
       const con = _connect.get(acc);
 
-      _success(res, 'ok', {
+      resp.success(res, 'ok', {
         username: user.username,
         des,
         online,
@@ -195,7 +191,7 @@ route.get(
         notify,
       });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -311,9 +307,9 @@ route.get(
         return item;
       });
 
-      _success(res, 'ok', list);
+      resp.success(res, 'ok', list);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -337,16 +333,16 @@ route.get(
         const u = appConfig.uploadDir(file.url);
 
         if ((await _f.getType(u)) === 'file') {
-          _success(res, 'ok', {
+          resp.success(res, 'ok', {
             isText: await _f.isTextFile(u), // 判断是否文本文件
           });
           return;
         }
       }
 
-      _nothing(res);
+      resp.ok(res);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -378,7 +374,7 @@ route.post(
         const user = await getUserInfo(to, 'account,username');
 
         if (!user) {
-          _err(res, '用户无法接收消息')(req, to, 1);
+          resp.forbidden(res, '用户无法接收消息')(req, to, 1);
           return;
         }
 
@@ -406,9 +402,9 @@ route.post(
         errLog(req, `发送通知到自定义地址失败(${err})`);
       });
 
-      _success(res, `发送${chatType[obj.type]}消息成功`)(req, `${content}=>${log}`, 1);
+      resp.success(res, `发送${chatType[obj.type]}消息成功`)(req, `${content}=>${log}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -432,7 +428,7 @@ route.post(
         const user = await getUserInfo(to, 'account,username');
 
         if (!user) {
-          _err(res, '用户无法接收消息')(req, to, 1);
+          resp.forbidden(res, '用户无法接收消息')(req, to, 1);
           return;
         }
 
@@ -442,7 +438,7 @@ route.post(
       const chat = await db('chat').select('type,flag,content,size,hash').where({ id }).findOne();
 
       if (!chat) {
-        _err(res, '转发的信息不存在')(req, id, 1);
+        resp.forbidden(res, '转发的信息不存在')(req, id, 1);
         return;
       }
 
@@ -452,7 +448,7 @@ route.post(
 
       // 只能转发群和发送给自己的或自己发送的消息
       if (flag !== appConfig.chatRoomAccount && !flag.includes(account)) {
-        _err(res, '无权转发')(req, id, 1);
+        resp.forbidden(res, '无权转发')(req, id, 1);
         return;
       }
 
@@ -475,9 +471,9 @@ route.post(
         errLog(req, `发送通知到自定义地址失败(${err})`);
       });
 
-      _success(res, '信息转发成功')(req, `${msg.content}=>${log}`, 1);
+      resp.success(res, '信息转发成功')(req, `${msg.content}=>${log}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -499,7 +495,7 @@ route.get(
 
       if (clear === 1) {
         await db('friends').where({ account, read: 0 }).batchUpdate({ read: 1 });
-        _success(res, '消息标记已读成功')(req);
+        resp.success(res, '消息标记已读成功')(req);
         return;
       }
 
@@ -515,12 +511,12 @@ route.get(
         })
         .count();
 
-      _success(res, 'ok', {
+      resp.success(res, 'ok', {
         group,
         friend,
       });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -546,7 +542,7 @@ route.post(
         const user = await getUserInfo(to, 'account,username');
 
         if (!user) {
-          _err(res, '无法删除消息')(req, to, 1);
+          resp.forbidden(res, '无法删除消息')(req, to, 1);
           return;
         }
 
@@ -557,7 +553,7 @@ route.post(
         await db('chat').where({ id, _from: account }).delete();
         await sendNotifyMsg(req, to, 'del', { msgId: id });
 
-        _success(res, '撤回消息成功')(req, `${id}=>${log}`, 1);
+        resp.success(res, '撤回消息成功')(req, `${id}=>${log}`, 1);
       } else {
         if (to === appConfig.chatRoomAccount) {
           // 群消息只能管理员清空
@@ -566,9 +562,9 @@ route.post(
 
             await sendNotifyMsg(req, to, 'clear');
 
-            _success(res, '清空消息成功')(req, log, 1);
+            resp.success(res, '清空消息成功')(req, log, 1);
           } else {
-            _err(res, '无权清空消息')(req, to, 1);
+            resp.forbidden(res, '无权清空消息')(req, to, 1);
           }
         } else {
           await db('chat')
@@ -579,11 +575,11 @@ route.post(
 
           await sendNotifyMsg(req, to, 'clear');
 
-          _success(res, '清空消息成功')(req, log, 1);
+          resp.success(res, '清空消息成功')(req, log, 1);
         }
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -608,27 +604,27 @@ route.post(
       const { account } = req[kHello].userinfo;
 
       if (to === account) {
-        paramErr(res, req, `to 不能为: ${account}`, 'body');
+        resp.badRequest(res, req, `to 不能为: ${account}`, 'body');
         return;
       }
 
       const user = await getUserInfo(to, 'hide,update_at,username');
 
       if (!user) {
-        _err(res, '用户无法接收消息')(req, to, 1);
+        resp.forbidden(res, '用户无法接收消息')(req, to, 1);
         return;
       }
 
       if (user.hide === 1 || Date.now() - user.update_at > 1000 * 30) {
-        _err(res, '对方已离线')(req, to, 1);
+        resp.forbidden(res, '对方已离线')(req, to, 1);
         return;
       }
 
       await sendNotifyMsg(req, to, 'shake');
 
-      _success(res, '抖动对方窗口成功')(req, `${user.username}-${to}`, 1);
+      resp.success(res, '抖动对方窗口成功')(req, `${user.username}-${to}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -700,12 +696,12 @@ route.get(
         return obj;
       });
 
-      _success(res, 'ok', {
+      resp.success(res, 'ok', {
         ...result,
         data: list,
       });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -734,9 +730,9 @@ route.post(
 
       await receiveFiles(req, path, name, fieldLength.maxFileChunk);
 
-      _success(res);
+      resp.success(res);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -767,7 +763,7 @@ route.post(
         const user = await getUserInfo(to, 'account,username');
 
         if (!user) {
-          _err(res, '用户无法接收消息')(req, to, 1);
+          resp.forbidden(res, '用户无法接收消息')(req, to, 1);
           return;
         }
 
@@ -777,7 +773,7 @@ route.post(
       const upload = await db('upload').select('url').where({ id: HASH }).findOne();
 
       if (upload) {
-        _err(res, '语音发送失败')(req, `语音=>${log}`, 1);
+        resp.forbidden(res, '语音发送失败')(req, `语音=>${log}`, 1);
         return;
       }
 
@@ -819,9 +815,9 @@ route.post(
         errLog(req, `发送通知到自定义地址失败(${err})`);
       });
 
-      _success(res, '发送语音消息成功')(req, `${obj.content}=>${log}`, 1);
+      resp.success(res, '发送语音消息成功')(req, `${obj.content}=>${log}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -852,7 +848,7 @@ route.post(
         let user = await getUserInfo(to, 'account,username');
 
         if (!user) {
-          _err(res, '用户无法接收消息')(req, to, 1);
+          resp.forbidden(res, '用户无法接收消息')(req, to, 1);
           return;
         }
 
@@ -862,7 +858,7 @@ route.post(
       const upload = await db('upload').select('url').where({ id: HASH }).findOne();
 
       if (upload) {
-        _err(res, '文件发送失败')(req, `${name}=>${log}`, 1);
+        resp.forbidden(res, '文件发送失败')(req, `${name}=>${log}`, 1);
         return;
       }
 
@@ -913,9 +909,9 @@ route.post(
         errLog(req, `发送通知到自定义地址失败(${err})`);
       });
 
-      _success(res, `发送${chatType[type]}消息成功`)(req, `${obj.content}=>${log}`, 1);
+      resp.success(res, `发送${chatType[type]}消息成功`)(req, `${obj.content}=>${log}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -938,9 +934,9 @@ route.post(
       const path = appConfig.temDir(`${account}_${HASH}`),
         arr = await _f.readdir(path);
 
-      _success(res, 'ok', arr);
+      resp.success(res, 'ok', arr);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -984,7 +980,7 @@ route.post(
               const user = await getUserInfo(to, 'account,username');
 
               if (!user) {
-                _err(res, '用户无法接收消息')(req, to, 1);
+                resp.forbidden(res, '用户无法接收消息')(req, to, 1);
                 return;
               }
 
@@ -1022,9 +1018,9 @@ route.post(
               errLog(req, `发送通知到自定义地址失败(${err})`);
             });
 
-            _success(res, `发送${chatType[type]}消息成功`)(req, `${obj.content}=>${log}`, 1);
+            resp.success(res, `发送${chatType[type]}消息成功`)(req, `${obj.content}=>${log}`, 1);
           } else {
-            _success(res, `发送失败`)(req, `${name}=>${log}`, 1);
+            resp.success(res, `发送失败`)(req, `${name}=>${log}`, 1);
           }
 
           return;
@@ -1033,9 +1029,9 @@ route.post(
         await db('upload').where({ id: HASH }).delete();
       }
 
-      _nothing(res);
+      resp.ok(res);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1065,12 +1061,12 @@ route.post(
 
       if (state === 1) {
         if (!isurl(link)) {
-          paramErr(res, req, 'link 格式错误', 'body');
+          resp.badRequest(res, req, 'link 格式错误', 'body');
           return;
         }
 
         if (!body) {
-          paramErr(res, req, 'body 不能为空', 'body');
+          resp.badRequest(res, req, 'body 不能为空', 'body');
           return;
         }
 
@@ -1079,7 +1075,7 @@ route.post(
           !parseObjectJson(body) &&
           !parseArrayJson(body)
         ) {
-          paramErr(res, req, 'body 必须为JSON对象字符串', 'body');
+          resp.badRequest(res, req, 'body 必须为JSON对象字符串', 'body');
           return;
         }
       }
@@ -1095,7 +1091,7 @@ route.post(
       });
 
       if (_f.getTextSize(forward_msg_link) > 10 * 1024) {
-        paramErr(res, req, 'forward_msg_link 字符大小不能超过限制', {
+        resp.badRequest(res, req, 'forward_msg_link 字符大小不能超过限制', {
           forward_msg_link,
         });
         return;
@@ -1105,7 +1101,7 @@ route.post(
         try {
           await hdForwardToLink(req, [{ forward_msg_link }], [], '测试消息', []);
         } catch (error) {
-          _err(res, '发送测试消息失败')(req, error, 1);
+          resp.forbidden(res, '发送测试消息失败')(req, error, 1);
           return;
         }
       }
@@ -1115,9 +1111,9 @@ route.post(
         forward_msg_link,
       });
 
-      _success(res, `${state === 1 ? '配置' : '关闭'}转发消息接口成功`)(req);
+      resp.success(res, `${state === 1 ? '配置' : '关闭'}转发消息接口成功`)(req);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );

@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { _err, _success, uLog, validate } from '../../utils/utils.js';
+import { uLog, validate } from '../../utils/utils.js';
 
 import appConfig from '../../data/config.js';
 
@@ -10,6 +10,7 @@ import { _delDir } from '../file/file.js';
 import { fieldLength } from '../config.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
+import resp from '../../utils/response.js';
 
 const route = express.Router();
 const kValidate = sym('validate');
@@ -31,9 +32,9 @@ route.get(
 
       const note = (await _f.readFile(p, null, '')).toString();
 
-      _success(res, '读取便条成功', note)(req, k, 1);
+      resp.success(res, '读取便条成功', note)(req, k, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -71,9 +72,9 @@ route.post(
           await uLog(req, `删除便条成功(${k})`);
         }
       }
-      _success(res);
+      resp.success(res);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );

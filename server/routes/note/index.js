@@ -3,10 +3,6 @@ import express from 'express';
 import { db, searchSql } from '../../utils/sqlite.js';
 
 import {
-  _success,
-  _nologin,
-  _err,
-  paramErr,
   getWordContent,
   syncUpdateData,
   createPagingData,
@@ -24,6 +20,7 @@ import nanoid from '../../utils/nanoid.js';
 import appConfig from '../../data/config.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
+import resp from '../../utils/response.js';
 
 const route = express.Router();
 const kHello = sym('hello');
@@ -84,7 +81,7 @@ route.get(
             res.send(content);
             uLog(req, `下载笔记成功(${id})`);
           } else {
-            _success(res, '读取笔记成功', {
+            resp.success(res, '读取笔记成功', {
               username,
               title,
               content,
@@ -98,13 +95,13 @@ route.get(
             })(req, id, 1);
           }
         } else {
-          _err(res, '笔记未公开')(req, id, 1);
+          resp.forbidden(res, '笔记未公开')(req, id, 1);
         }
       } else {
-        _err(res, '笔记不存在')(req, id, 1);
+        resp.notFound(res, '笔记不存在')(req, id, 1);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -131,7 +128,7 @@ route.post(
       const { account } = req[kHello].userinfo;
 
       if (!acc && !account) {
-        _nologin(res);
+        resp.unauthorized(res);
         return;
       }
 
@@ -293,13 +290,13 @@ route.post(
         });
       }
 
-      _success(res, 'ok', {
+      resp.success(res, 'ok', {
         ...result,
         data: list,
         splitWord,
       });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -325,9 +322,9 @@ route.get(
         .orderBy('serial', 'DESC')
         .find();
 
-      _success(res, 'ok', list);
+      resp.success(res, 'ok', list);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -337,7 +334,7 @@ route.use((req, res, next) => {
   if (req[kHello].userinfo.account) {
     next();
   } else {
-    _nologin(res);
+    resp.unauthorized(res);
   }
 });
 
@@ -358,18 +355,18 @@ route.post(
 
       await db('user').where({ account, state: 1 }).update({ note_history: state });
 
-      _success(res, `${state === 0 ? '关闭' : '开启'}笔记历史记录成功`)(req);
+      resp.success(res, `${state === 0 ? '关闭' : '开启'}笔记历史记录成功`)(req);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
 route.get('/history-state', async (req, res) => {
   try {
     const { note_history } = req[kHello].userinfo;
-    _success(res, 'ok', { note_history });
+    resp.success(res, 'ok', { note_history });
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -397,9 +394,9 @@ route.post(
 
       syncUpdateData(req, 'note');
 
-      _success(res, `${share === 0 ? '锁定' : '公开'}笔记成功`)(req, ids.length, 1);
+      resp.success(res, `${share === 0 ? '锁定' : '公开'}笔记成功`)(req, ids.length, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -433,9 +430,9 @@ route.post(
         syncUpdateData(req, 'trash');
       }
 
-      _success(res, '删除笔记成功')(req, ids.length, 1);
+      resp.success(res, '删除笔记成功')(req, ids.length, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -472,9 +469,9 @@ route.post(
         account,
       });
 
-      _success(res, '上传笔记成功')(req, title, 1);
+      resp.success(res, '上传笔记成功')(req, title, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -523,7 +520,7 @@ route.post(
 
         syncUpdateData(req, 'trash');
 
-        _success(res, '更新笔记成功')(req, `${title}-${id}`, 1);
+        resp.success(res, '更新笔记成功')(req, `${title}-${id}`, 1);
       } else {
         id = nanoid();
 
@@ -538,10 +535,10 @@ route.post(
 
         syncUpdateData(req, 'note');
 
-        _success(res, '新增笔记成功', { id })(req, `${title}-${id}`, 1);
+        resp.success(res, '新增笔记成功', { id })(req, `${title}-${id}`, 1);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -567,7 +564,7 @@ route.post(
       update_at = new Date(update_at + ' 00:00:00').getTime();
 
       if (create_at > update_at) {
-        paramErr(res, req, 'create_at 不能大于 update_at', 'body');
+        resp.badRequest(res, req, 'create_at 不能大于 update_at', 'body');
         return;
       }
 
@@ -584,9 +581,9 @@ route.post(
 
       syncUpdateData(req, 'trash');
 
-      _success(res, '更新笔记信息成功')(req, `${title}-${id}`, 1);
+      resp.success(res, '更新笔记信息成功')(req, `${title}-${id}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -611,9 +608,9 @@ route.post(
 
       syncUpdateData(req, 'note');
 
-      _success(res, '设置笔记权重成功')(req, `${id}-${top}`, 1);
+      resp.success(res, '设置笔记权重成功')(req, `${id}-${top}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -641,9 +638,9 @@ route.post(
 
       syncUpdateData(req, 'note', id);
 
-      _success(res, '更新分类成功')(req, `${id}: ${categoryStr}`, 1);
+      resp.success(res, '更新分类成功')(req, `${id}: ${categoryStr}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -668,9 +665,9 @@ route.post(
 
       syncUpdateData(req, 'category', id);
 
-      _success(res, '编辑分类标题成功')(req, `${title}-${id}`, 1);
+      resp.success(res, '编辑分类标题成功')(req, `${title}-${id}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -693,7 +690,7 @@ route.post(
       const total = await db('note_category').count();
 
       if (total >= fieldLength.maxNoteCategory) {
-        _err(res, `类型限制${fieldLength.maxNoteCategory}`)(req);
+        resp.forbidden(res, `类型限制${fieldLength.maxNoteCategory}`)(req);
         return;
       }
       await db('note_category').insert({
@@ -705,9 +702,9 @@ route.post(
 
       syncUpdateData(req, 'category');
 
-      _success(res, '添加分类成功')(req, title, 1);
+      resp.success(res, '添加分类成功')(req, title, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -731,9 +728,9 @@ route.get(
 
       syncUpdateData(req, 'category', id);
 
-      _success(res, '删除分类成功')(req, id, 1);
+      resp.success(res, '删除分类成功')(req, id, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );

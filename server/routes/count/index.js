@@ -5,10 +5,6 @@ import { db } from '../../utils/sqlite.js';
 import timedTask from '../../utils/timedTask.js';
 
 import {
-  _nologin,
-  _err,
-  _success,
-  paramErr,
   syncUpdateData,
   createPagingData,
   isValidDate,
@@ -25,6 +21,7 @@ import nanoid from '../../utils/nanoid.js';
 import appConfig from '../../data/config.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
+import resp from '../../utils/response.js';
 
 const route = express.Router();
 const kHello = sym('hello');
@@ -35,7 +32,7 @@ route.use((req, res, next) => {
   if (req[kHello].userinfo.account) {
     next();
   } else {
-    _nologin(res);
+    resp.unauthorized(res);
   }
 });
 
@@ -194,13 +191,13 @@ route.get(
         });
       }
 
-      _success(res, 'ok', {
+      resp.success(res, 'ok', {
         ...result,
         data: list,
         expireCount,
       });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -225,7 +222,7 @@ route.post(
       end = new Date(end + ' 00:00:00').getTime();
 
       if (start >= end) {
-        paramErr(res, req);
+        resp.badRequest(res, req, '开始时间必须小于结束时间', 'body');
         return;
       }
 
@@ -243,9 +240,9 @@ route.post(
 
       syncUpdateData(req, 'countlist');
 
-      _success(res, `添加倒计时成功`)(req, title, 1);
+      resp.success(res, `添加倒计时成功`)(req, title, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -273,9 +270,9 @@ route.post(
 
       syncUpdateData(req, 'countlist');
 
-      _success(res, `删除倒计时成功`)(req, ids.length, 1);
+      resp.success(res, `删除倒计时成功`)(req, ids.length, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -301,7 +298,7 @@ route.post(
       end = new Date(end + ' 00:00:00').getTime();
 
       if (start >= end) {
-        paramErr(res, req);
+        resp.badRequest(res, req, '开始时间必须小于结束时间', 'body');
         return;
       }
 
@@ -316,9 +313,9 @@ route.post(
 
       syncUpdateData(req, 'countlist');
 
-      _success(res, '更新倒计时成功')(req, title, 1);
+      resp.success(res, '更新倒计时成功')(req, title, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -343,9 +340,9 @@ route.post(
 
       syncUpdateData(req, 'countlist');
 
-      _success(res, '修改倒计时权重成功')(req, `${id}-${top}`, 1);
+      resp.success(res, '修改倒计时权重成功')(req, `${id}-${top}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -370,9 +367,9 @@ route.post(
 
       syncUpdateData(req, 'countlist');
 
-      _success(res, '修改倒计时状态成功')(req, `${id}-${state}`, 1);
+      resp.success(res, '修改倒计时状态成功')(req, `${id}-${state}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );

@@ -2,19 +2,13 @@ import express from 'express';
 
 import { db } from '../../utils/sqlite.js';
 
-import {
-  _nologin,
-  _err,
-  _success,
-  syncUpdateData,
-  createPagingData,
-  validate,
-} from '../../utils/utils.js';
+import { syncUpdateData, createPagingData, validate } from '../../utils/utils.js';
 
 import { fieldLength } from '../config.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
+import resp from '../../utils/response.js';
 
 const route = express.Router();
 const kHello = sym('hello');
@@ -25,7 +19,7 @@ route.use((req, res, next) => {
   if (req[kHello].userinfo.account) {
     next();
   } else {
-    _nologin(res);
+    resp.unauthorized(res);
   }
 });
 
@@ -68,13 +62,13 @@ route.get(
           .find();
       }
 
-      _success(res, 'ok', {
+      resp.success(res, 'ok', {
         ...result,
         data,
         undoneCount,
       });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -105,9 +99,9 @@ route.post(
 
       syncUpdateData(req, 'todolist');
 
-      _success(res, `添加待办成功`)(req, content, 1);
+      resp.success(res, `添加待办成功`)(req, content, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -135,9 +129,9 @@ route.post(
 
       syncUpdateData(req, 'todolist');
 
-      _success(res, `删除待办成功`)(req, ids.length, 1);
+      resp.success(res, `删除待办成功`)(req, ids.length, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -162,9 +156,9 @@ route.get(
 
       syncUpdateData(req, 'todolist');
 
-      _success(res, state === 1 ? '标记为未完成' : '标记为已完成')(req, id, 1);
+      resp.success(res, state === 1 ? '标记为未完成' : '标记为已完成')(req, id, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -189,9 +183,9 @@ route.post(
 
       syncUpdateData(req, 'todolist');
 
-      _success(res, '编辑待办成功')(req, content, 1);
+      resp.success(res, '编辑待办成功')(req, content, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );

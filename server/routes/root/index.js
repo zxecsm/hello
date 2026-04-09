@@ -12,9 +12,6 @@ import { runSql, db } from '../../utils/sqlite.js';
 import timedTask from '../../utils/timedTask.js';
 
 import {
-  _success,
-  _err,
-  paramErr,
   createPagingData,
   isEmail,
   concurrencyTasks,
@@ -36,6 +33,7 @@ import { getSystemUsage } from '../../utils/sys.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
+import resp from '../../utils/response.js';
 
 const route = express.Router();
 const kHello = sym('hello');
@@ -44,7 +42,7 @@ const kValidate = sym('validate');
 // 验证管理员
 route.use((req, res, next) => {
   if (!req[kHello].isRoot) {
-    _err(res, '无权操作')(req);
+    resp.forbidden(res, '无权操作')(req);
   } else {
     next();
   }
@@ -68,11 +66,11 @@ route.post(
     try {
       const { user, pass, host, secure, port, state } = req[kValidate];
       if (state === 1 && !isEmail(user)) {
-        paramErr(res, req, 'user 必须为邮箱格式', 'body');
+        resp.badRequest(res, req, 'user 必须为邮箱格式', 'body');
         return;
       }
       if (state === 1 && !host) {
-        paramErr(res, req, 'host 不能为空', 'body');
+        resp.badRequest(res, req, 'host 不能为空', 'body');
         return;
       }
 
@@ -85,9 +83,9 @@ route.post(
         state: state === 1 ? true : false,
       };
 
-      _success(res, '更新邮箱配置成功')(req);
+      resp.success(res, '更新邮箱配置成功')(req);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -133,7 +131,7 @@ route.get(
         };
       });
 
-      _success(res, 'ok', {
+      resp.success(res, 'ok', {
         ...result,
         registerState: _d.registerState,
         trashState: _d.trashState,
@@ -144,7 +142,7 @@ route.get(
         data: list,
       });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -164,9 +162,9 @@ route.post(
 
       _d.faviconSpareApi = link;
 
-      _success(res, '设置图标备用api接口成功')(req, link, 1);
+      resp.success(res, '设置图标备用api接口成功')(req, link, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -193,12 +191,12 @@ route.post(
       await db('user').where({ account }).update({ state });
 
       if (state === 1) {
-        _success(res, '激活账号成功')(req, account, 1);
+        resp.success(res, '激活账号成功')(req, account, 1);
       } else {
-        _success(res, '关闭账号成功')(req, account, 1);
+        resp.success(res, '关闭账号成功')(req, account, 1);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -223,9 +221,9 @@ route.post(
 
       await deleteUser(account); // 删除账号数据
 
-      _success(res, '销毁账号成功')(req, account, 1);
+      resp.success(res, '销毁账号成功')(req, account, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -250,9 +248,9 @@ route.get('/clean-music-file', async (req, res) => {
 
       await _f.removeEmptyDirs(musicDir);
     }
-    _success(res, '清理歌曲文件成功')(req);
+    resp.success(res, '清理歌曲文件成功')(req);
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -275,9 +273,9 @@ route.get('/clean-bg-file', async (req, res) => {
 
       await _f.removeEmptyDirs(bgDir);
     }
-    _success(res, '清理壁纸文件成功')(req);
+    resp.success(res, '清理壁纸文件成功')(req);
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -300,9 +298,9 @@ route.get('/clean-pic-file', async (req, res) => {
 
       await _f.removeEmptyDirs(picDir);
     }
-    _success(res, '清理图床文件成功')(req);
+    resp.success(res, '清理图床文件成功')(req);
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -323,9 +321,9 @@ route.get(
 
       await _delDir(delP);
 
-      _success(res, '清理缩略图文件成功')(req, type, 1);
+      resp.success(res, '清理缩略图文件成功')(req, type, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -335,9 +333,9 @@ route.post('/register-state', async (req, res) => {
   try {
     _d.registerState = !_d.registerState;
 
-    _success(res, `${_d.registerState ? '开启' : '关闭'}注册成功`, _d.registerState)(req);
+    resp.success(res, `${_d.registerState ? '开启' : '关闭'}注册成功`, _d.registerState)(req);
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -346,9 +344,9 @@ route.post('/update-tokenkey', async (req, res) => {
   try {
     _d.tokenKey = _crypto.generateSecureKey();
 
-    _success(res, '更新tokenKey成功')(req);
+    resp.success(res, '更新tokenKey成功')(req);
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -371,9 +369,9 @@ route.get(
         .filter(Boolean)
         .reverse();
 
-      _success(res, 'ok', log);
+      resp.success(res, 'ok', log);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -384,9 +382,9 @@ route.get('/log-list', async (req, res) => {
     const list = (await readMenu(appConfig.logDir())).filter((f) => f.type === 'file');
 
     list.sort((a, b) => b.time - a.time);
-    _success(res, 'ok', list);
+    resp.success(res, 'ok', list);
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -409,9 +407,9 @@ route.post(
         await _delDir(appConfig.logDir(name));
       }
 
-      _success(res, '删除日志成功')(req, name, 1);
+      resp.success(res, '删除日志成功')(req, name, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -421,9 +419,9 @@ route.post('/trash-state', async (req, res) => {
   try {
     _d.trashState = !_d.trashState;
 
-    _success(res, `${_d.trashState ? '开启' : '关闭'}文件回收站成功`, _d.trashState)(req);
+    resp.success(res, `${_d.trashState ? '开启' : '关闭'}文件回收站成功`, _d.trashState)(req);
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -452,9 +450,9 @@ route.post(
         ipLocationApi: !!ipLocationApi,
       };
 
-      _success(res, `修改接口状态成功`, _d.pubApi)(req);
+      resp.success(res, `修改接口状态成功`, _d.pubApi)(req);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -496,9 +494,9 @@ route.post(
         await cleanSiteInfo(req);
       }
 
-      _success(res, `修改文件缓存过期时间成功`, _d.cacheExp)(req);
+      resp.success(res, `修改文件缓存过期时间成功`, _d.cacheExp)(req);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -507,9 +505,9 @@ route.post(
 route.post('/clean-database', async (req, res) => {
   try {
     await runSql('VACUUM;');
-    _success(res, '清理数据库成功')(req);
+    resp.success(res, '清理数据库成功')(req);
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -542,9 +540,9 @@ route.post(
       await _f.writeFile(appConfig.customDir('custom_head.html'), head);
       await _f.writeFile(appConfig.customDir('custom_body.html'), body);
 
-      _success(res, '添加自定义代码成功')(req);
+      resp.success(res, '添加自定义代码成功')(req);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -582,9 +580,9 @@ route.post(
         );
       });
 
-      _success(res, '修改tips状态成功')(req, _d.tipsFlag, 1);
+      resp.success(res, '修改tips状态成功')(req, _d.tipsFlag, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -603,14 +601,14 @@ route.post(
       const { email } = req[kValidate];
 
       if (!_d.email.state) {
-        _err(res, '未开启邮箱验证');
+        resp.forbidden(res, '未开启邮箱验证');
         return;
       }
 
       await mailer.sendMail(email, 'Hello账号验证邮件', '测试邮件');
-      _success(res, '测试邮件发送成功')(req, email, 1);
+      resp.success(res, '测试邮件发送成功')(req, email, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -626,14 +624,14 @@ route.post(
       const verify = req[kHello].userinfo.verify;
 
       if (!verify) {
-        _err(res, '未开启两步验证')(req);
+        resp.forbidden(res, '未开启两步验证')(req);
       } else if (_2fa.verify(verify, token)) {
-        _success(res, '验证码正确')(req);
+        resp.success(res, '验证码正确')(req);
       } else {
-        _err(res, '验证码错误')(req);
+        resp.forbidden(res, '验证码错误')(req);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -654,7 +652,7 @@ route.post(
 
       const userInfo = await db('user').select('account').where({ username }).findOne();
       if (userInfo) {
-        _err(res, '用户名已注册')(req, username, 1);
+        resp.forbidden(res, '用户名已注册')(req, username, 1);
         return;
       }
 
@@ -673,9 +671,9 @@ route.post(
       await becomeFriends(account, appConfig.chatRoomAccount);
       await becomeFriends(account, appConfig.notifyAccount);
 
-      _success(res, '创建账号成功', { account, username })(req, `${username}-${account}`, 1);
+      resp.success(res, '创建账号成功', { account, username })(req, `${username}-${account}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -683,9 +681,9 @@ route.post(
 // 系统状态
 route.get('/sys-status', async (req, res) => {
   try {
-    _success(res, 'ok', await getSystemUsage());
+    resp.success(res, 'ok', await getSystemUsage());
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 

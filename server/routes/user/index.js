@@ -8,11 +8,6 @@ import appConfig from '../../data/config.js';
 
 import {
   writelog,
-  _success,
-  _nologin,
-  _nothing,
-  _err,
-  paramErr,
   receiveFiles,
   getTimePath,
   syncUpdateData,
@@ -60,6 +55,7 @@ import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
 import captcha from '../../utils/captcha.js';
 import { getSSH, resetSSHExpireTime } from '../ssh/terminal.js';
+import resp from '../../utils/response.js';
 
 const verifyCode = new Map();
 
@@ -82,9 +78,9 @@ route.post(
 
       await writelog(req, `[ ${err.slice(0, 1000)} ]`, 'panel_error');
 
-      _success(res);
+      resp.success(res);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -100,9 +96,9 @@ route.get('/custom-code', async (req, res) => {
       body: (await _f.readFile(bodyPath, null, '')).toString(),
     };
 
-    _success(res, 'ok', obj);
+    resp.success(res, 'ok', obj);
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -152,14 +148,14 @@ route.post(
   async (req, res) => {
     try {
       if (!_d.registerState || registerCount > 20) {
-        _err(res, '已关闭注册功能')(req);
+        resp.forbidden(res, '已关闭注册功能')(req);
         return;
       }
 
       const { username, password, captchaId } = req[kValidate];
 
       if (!captcha.consume(captchaId, username)) {
-        _success(res, '需要验证验证码，请完成验证', {
+        resp.success(res, '需要验证验证码，请完成验证', {
           needCaptcha: true,
           username,
         })(req, username, 1);
@@ -169,7 +165,7 @@ route.post(
       const userInfo = await db('user').select('account').where({ username }).findOne();
 
       if (userInfo) {
-        _err(res, '用户名无法使用')(req, username, 1);
+        resp.forbidden(res, '用户名无法使用')(req, username, 1);
         return;
       }
 
@@ -201,9 +197,9 @@ route.post(
         `${username}(${account})，在 [${os}(${ip})] 注册账号成功`,
       );
 
-      _success(res, '注册账号成功', { account, username })(req, `${username}-${account}`, 1);
+      resp.success(res, '注册账号成功', { account, username })(req, `${username}-${account}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -232,14 +228,14 @@ route.post(
         .findOne();
 
       if (!userinfo) {
-        _err(res, '用户无法免密登录')(req, username, 1);
+        resp.forbidden(res, '用户无法免密登录')(req, username, 1);
         return;
       }
 
       const { account, remote_login } = userinfo;
 
       if (remote_login === 0) {
-        _err(res, '用户未开启免密登录')(req, `${username}-${account}`, 1);
+        resp.forbidden(res, '用户未开启免密登录')(req, `${username}-${account}`, 1);
         return;
       }
 
@@ -263,9 +259,9 @@ route.post(
         'all',
       );
 
-      _success(res, '发送登录请求成功')(req, `${username}-${account}`, 1);
+      resp.success(res, '发送登录请求成功')(req, `${username}-${account}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -293,21 +289,21 @@ route.post(
         .findOne();
 
       if (!userinfo) {
-        _err(res, '用户无法免密登录')(req, username, 1);
+        resp.forbidden(res, '用户无法免密登录')(req, username, 1);
         return;
       }
 
       const { remote_login } = userinfo;
 
       if (remote_login === 0) {
-        _err(res, '用户未开启免密登录')(req, `${username}-${userinfo.account}`, 1);
+        resp.forbidden(res, '用户未开启免密登录')(req, `${username}-${userinfo.account}`, 1);
         return;
       }
 
       const key = `${userinfo.account}_${code}`;
 
       if (!verifyCode.has(key)) {
-        _nothing(res);
+        resp.ok(res);
         return;
       }
 
@@ -329,12 +325,12 @@ route.post(
         `您的账号通过免密验证，在 [${os}(${ip})] 登录成功。如非本人操作，请及时修改密码（密码修改成功，全平台清空登录态）`,
       );
 
-      _success(res, '登录成功', {
+      resp.success(res, '登录成功', {
         account,
         username,
       })(req, `${username}-${account}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -355,13 +351,13 @@ route.get(
       const { flag, theme } = req[kValidate];
       const { ip } = req[kHello];
       if (!captchaVerifyLimit.verify(ip, flag)) {
-        _err(res, '请稍后再试')(req, flag, 1);
+        resp.forbidden(res, '请稍后再试')(req, flag, 1);
         return;
       }
       captchaVerifyLimit.add(ip, flag);
-      _success(res, 'ok', await captcha.get(flag, theme));
+      resp.success(res, 'ok', await captcha.get(flag, theme));
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -389,23 +385,23 @@ route.post(
       const { flag } = captcha.getValue(id) || {};
       if (flag) {
         if (!captchaVerifyLimit.verify(ip, flag)) {
-          _err(res, '请稍后再试')(req, flag, 1);
+          resp.forbidden(res, '请稍后再试')(req, flag, 1);
           return;
         }
 
         if (!captcha.verify(id, track)) {
           captchaVerifyLimit.add(ip, flag);
-          _err(res, '验证失败，请重试')(req, flag, 1);
+          resp.forbidden(res, '验证失败，请重试')(req, flag, 1);
           return;
         }
 
         captchaVerifyLimit.delete(ip, flag);
-        _success(res, '验证成功')(req, flag, 1);
+        resp.success(res, '验证成功')(req, flag, 1);
       } else {
-        _err(res, '验证失败，请重试')(req, id, 1);
+        resp.forbidden(res, '验证失败，请重试')(req, id, 1);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -428,7 +424,7 @@ route.post(
       const needCaptcha = !loginVerifyLimit.verify(username);
 
       if (needCaptcha && !captcha.consume(captchaId, username)) {
-        _success(res, '需要验证验证码，请完成验证', {
+        resp.success(res, '需要验证验证码，请完成验证', {
           needCaptcha,
           username,
         })(req, username, 1);
@@ -446,7 +442,7 @@ route.post(
 
       if (!userinfo) {
         loginVerifyLimit.add(username);
-        _err(res, '用户名或密码错误，请重新输入')(req, username, 1);
+        resp.forbidden(res, '用户名或密码错误，请重新输入')(req, username, 1);
         return;
       }
 
@@ -456,7 +452,7 @@ route.post(
       if (!userinfo.password || (await _crypto.verifyPassword(password, userinfo.password))) {
         if (verify) {
           // 如果开启两部验证，则继续验证身份
-          _success(res, '账号密码验证成功，请完成两步验证', {
+          resp.success(res, '账号密码验证成功，请完成两步验证', {
             account,
             verify: true,
           })(req, `${username}-${account}`, 1);
@@ -474,15 +470,15 @@ route.post(
             `您的账号在 [${os}(${ip})] 登录成功。如非本人操作，请及时修改密码（密码修改成功，全平台清空登录态）`,
           );
 
-          _success(res, '登录成功', { account, username })(req, `${username}-${account}`, 1);
+          resp.success(res, '登录成功', { account, username })(req, `${username}-${account}`, 1);
         }
       } else {
         loginVerifyLimit.add(username);
 
-        _err(res, '用户名或密码错误，请重新输入')(req, `${username}-${account}`, 1);
+        resp.forbidden(res, '用户名或密码错误，请重新输入')(req, `${username}-${account}`, 1);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -506,7 +502,7 @@ route.post(
       const needCaptcha = !towfaVerify.verify(account);
 
       if (needCaptcha && !captcha.consume(captchaId, account)) {
-        _success(res, '需要验证验证码，请完成验证', {
+        resp.success(res, '需要验证验证码，请完成验证', {
           needCaptcha,
           account,
         })(req, account, 1);
@@ -517,7 +513,7 @@ route.post(
 
       if (!user) {
         towfaVerify.add(account);
-        _err(res, '用户无法两步验证')(req, account, 1);
+        resp.forbidden(res, '用户无法两步验证')(req, account, 1);
         return;
       }
 
@@ -542,13 +538,13 @@ route.post(
           `您的账号在 [${os}(${ip})] 登录成功。如非本人操作，请及时修改密码（密码修改成功，全平台清空登录态）`,
         );
 
-        _success(res, '登录成功', { account, username })(req, `${username}-${account}`, 1);
+        resp.success(res, '登录成功', { account, username })(req, `${username}-${account}`, 1);
       } else {
         towfaVerify.add(account);
-        _err(res, '验证码错误，请重新输入')(req, `${username}-${account}`, 1);
+        resp.forbidden(res, '验证码错误，请重新输入')(req, `${username}-${account}`, 1);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -568,7 +564,7 @@ route.get(
       const { username, captchaId } = req[kValidate];
 
       if (!captcha.consume(captchaId, username)) {
-        _success(res, '需要验证验证码，请完成验证', {
+        resp.success(res, '需要验证验证码，请完成验证', {
           needCaptcha: true,
           username,
         })(req, username, 1);
@@ -576,7 +572,7 @@ route.get(
       }
 
       if (!_d.email.state) {
-        _err(res, '邮箱验证功能已关闭')(req, username, 1);
+        resp.forbidden(res, '邮箱验证功能已关闭')(req, username, 1);
         return;
       }
 
@@ -590,20 +586,20 @@ route.get(
         .findOne();
 
       if (!userinfo) {
-        _err(res, '用户无法验证邮箱')(req, username, 1);
+        resp.forbidden(res, '用户无法验证邮箱')(req, username, 1);
         return;
       }
 
       const { account, email } = userinfo;
 
       if (!email) {
-        _err(res, '用户未绑定邮箱')(req, `${username}-${account}`, 1);
+        resp.forbidden(res, '用户未绑定邮箱')(req, `${username}-${account}`, 1);
         return;
       }
 
       if (mailer.get(email)) {
         // 如果有缓存
-        _success(res, '验证码已发送', { account, email })(req, `${username}-${account}`, 1);
+        resp.success(res, '验证码已发送', { account, email })(req, `${username}-${account}`, 1);
 
         return;
       }
@@ -611,9 +607,9 @@ route.get(
       const code = Math.random().toFixed(6).slice(2);
 
       await mailer.sendCode(email, code);
-      _success(res, '验证码发送成功', { account, email })(req, `${username}-${account}`, 1);
+      resp.success(res, '验证码发送成功', { account, email })(req, `${username}-${account}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -636,7 +632,7 @@ route.post(
       const { email, code, account, captchaId } = req[kValidate];
       const needCaptcha = !emailVerify.verify(email);
       if (needCaptcha && !captcha.consume(captchaId, account)) {
-        _success(res, '需要验证验证码，请完成验证', {
+        resp.success(res, '需要验证验证码，请完成验证', {
           needCaptcha,
           account,
         })(req, account, 1);
@@ -654,7 +650,7 @@ route.post(
 
       if (!userinfo) {
         emailVerify.add(email);
-        _err(res, '用户无法重置密码')(req, account, 1);
+        resp.forbidden(res, '用户无法重置密码')(req, account, 1);
         return;
       }
 
@@ -678,17 +674,17 @@ route.post(
         // 删除验证码缓存
         mailer.del(email);
 
-        _success(res, '已重置密码为空，请尽快修改密码', {
+        resp.success(res, '已重置密码为空，请尽快修改密码', {
           account,
           username,
         })(req, `${username}-${account}`, 1);
       } else {
         emailVerify.add(email);
 
-        _err(res, '验证码错误，请重新输入')(req, `${username}-${account}`, 1);
+        resp.forbidden(res, '验证码错误，请重新输入')(req, `${username}-${account}`, 1);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -698,7 +694,7 @@ route.use((req, res, next) => {
   if (req[kHello].userinfo.account) {
     next();
   } else {
-    _nologin(res);
+    resp.unauthorized(res);
   }
 });
 
@@ -723,9 +719,9 @@ route.get(
         fieldLength.shareTokenExp,
       );
 
-      _success(res, '获取fileToken成功', token)(req, token, 1);
+      resp.success(res, '获取fileToken成功', token)(req, token, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -733,9 +729,9 @@ route.get(
 // 获取字体列表
 route.get('/font-list', async (req, res) => {
   try {
-    _success(res, 'ok', await getFontList());
+    resp.success(res, 'ok', await getFontList());
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -753,19 +749,19 @@ route.post(
       const { email } = req[kValidate];
 
       if (!_d.email.state) {
-        _err(res, '邮箱验证功能已关闭')(req, email, 1);
+        resp.forbidden(res, '邮箱验证功能已关闭')(req, email, 1);
         return;
       }
 
       if (mailer.get(email)) {
-        _success(res, '验证码已发送')(req, email, 1);
+        resp.success(res, '验证码已发送')(req, email, 1);
         return;
       }
 
       const userinfo = await db('user').select('account').where({ email }).findOne();
 
       if (userinfo) {
-        _err(res, '邮箱已绑定用户')(req, email, 1);
+        resp.forbidden(res, '邮箱已绑定用户')(req, email, 1);
         return;
       }
 
@@ -773,9 +769,9 @@ route.post(
 
       await mailer.sendCode(email, code);
 
-      _success(res, '验证码发送成功')(req, email, 1);
+      resp.success(res, '验证码发送成功')(req, email, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -798,7 +794,7 @@ route.post(
       const { account, password: pd } = req[kHello].userinfo;
 
       if (pd && !(await _crypto.verifyPassword(password, pd))) {
-        _err(res, '密码错误，请重新输入')(req, email, 1);
+        resp.forbidden(res, '密码错误，请重新输入')(req, email, 1);
         return;
       }
 
@@ -807,19 +803,19 @@ route.post(
 
         syncUpdateData(req, 'userinfo');
 
-        _success(res, '解绑邮箱成功')(req, email, 1);
+        resp.success(res, '解绑邮箱成功')(req, email, 1);
         return;
       }
 
       if (!email) {
-        paramErr(res, req, 'email 不能为空', 'body');
+        resp.badRequest(res, req, 'email 不能为空', 'body');
         return;
       }
 
       const userinfo = await db('user').select('account').where({ email }).findOne();
 
       if (userinfo) {
-        _err(res, '邮箱已绑定用户')(req, email, 1);
+        resp.forbidden(res, '邮箱已绑定用户')(req, email, 1);
         return;
       }
 
@@ -830,12 +826,12 @@ route.post(
 
         syncUpdateData(req, 'userinfo');
 
-        _success(res, '绑定邮箱成功')(req, email, 1);
+        resp.success(res, '绑定邮箱成功')(req, email, 1);
       } else {
-        _err(res, '验证码错误，请重新输入')(req, email, 1);
+        resp.forbidden(res, '验证码错误，请重新输入')(req, email, 1);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -845,9 +841,9 @@ route.get('/verify', async (req, res) => {
   try {
     const { account } = req[kHello].userinfo;
 
-    _success(res, 'ok', _2fa.create(account));
+    resp.success(res, 'ok', _2fa.create(account));
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -867,7 +863,7 @@ route.post(
 
       const { account, password: pd } = req[kHello].userinfo;
       if (pd && !(await _crypto.verifyPassword(password, pd))) {
-        _err(res, '密码错误，请重新输入')(req);
+        resp.forbidden(res, '密码错误，请重新输入')(req);
         return;
       }
 
@@ -876,7 +872,7 @@ route.post(
 
         syncUpdateData(req, 'userinfo');
 
-        _success(res, '关闭两步验证成功')(req);
+        resp.success(res, '关闭两步验证成功')(req);
         return;
       }
 
@@ -890,12 +886,12 @@ route.post(
 
         _2fa.del(account); // 成功后删除token缓存
 
-        _success(res, '开启两步验证成功')(req);
+        resp.success(res, '开启两步验证成功')(req);
       } else {
-        _err(res, '验证码错误，请重新输入')(req);
+        resp.forbidden(res, '验证码错误，请重新输入')(req);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -903,9 +899,9 @@ route.post(
 // tips标识
 route.get('/tips', async (req, res) => {
   try {
-    _success(res, 'ok', _d.tipsFlag);
+    resp.success(res, 'ok', _d.tipsFlag);
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -923,7 +919,7 @@ route.post(
 
       // 登录码冲突则中断验证
       if (verifyCode.has(key)) {
-        _err(res, '登录码冲突，请刷新登录码再试')(req);
+        resp.forbidden(res, '登录码冲突，请刷新登录码再试')(req);
         return;
       }
 
@@ -939,7 +935,7 @@ route.post(
           // 超时未获取则删除信息
           verifyCode.delete(key);
 
-          _err(res, '批准登录超时')(req);
+          resp.forbidden(res, '批准登录超时')(req);
           return;
         }
 
@@ -947,11 +943,11 @@ route.post(
           clearInterval(timer);
           timer = null;
 
-          _success(res, '批准登录成功')(req);
+          resp.success(res, '批准登录成功')(req);
         }
       }, 1000);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -980,12 +976,12 @@ route.post(
             exp_token_time: parseInt(Date.now() / 1000),
           });
 
-        _success(res, '修改密码成功，请重新登录')(req);
+        resp.success(res, '修改密码成功，请重新登录')(req);
       } else {
-        _err(res, '原密码错误，请重新输入')(req);
+        resp.forbidden(res, '原密码错误，请重新输入')(req);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1015,9 +1011,9 @@ route.get(
         res.clearCookie('token');
       }
 
-      _success(res, '退出登录成功')(req, other, 1);
+      resp.success(res, '退出登录成功')(req, other, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1038,7 +1034,7 @@ route.post(
         .findOne();
 
       if (userinfo) {
-        _err(res, '用户名无法使用')(req, username, 1);
+        resp.forbidden(res, '用户名无法使用')(req, username, 1);
         return;
       }
 
@@ -1053,9 +1049,9 @@ route.post(
 
       syncUpdateData(req, 'userinfo');
 
-      _success(res, '修改用户名成功')(req, username, 1);
+      resp.success(res, '修改用户名成功')(req, username, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
       return;
     }
   },
@@ -1077,12 +1073,12 @@ route.post(
       const { account, username, password: pd } = req[kHello].userinfo;
 
       if (pd && !(await _crypto.verifyPassword(password, pd))) {
-        _err(res, '密码错误，请重新输入')(req);
+        resp.forbidden(res, '密码错误，请重新输入')(req);
         return;
       }
 
       if (req[kHello].isRoot || account === appConfig.notifyAccount) {
-        _err(res, '无权操作')(req);
+        resp.forbidden(res, '无权操作')(req);
       } else {
         await deleteUser(account);
 
@@ -1096,10 +1092,10 @@ route.post(
           `${username}(${account})，在 [${os}(${ip})] 注销账号成功`,
         );
 
-        _success(res, '注销账号成功')(req);
+        resp.success(res, '注销账号成功')(req);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1126,7 +1122,7 @@ route.get('/userinfo', async (req, res) => {
 
     forward_msg_link = parseForwardMsgLink(forward_msg_link);
 
-    _success(res, 'ok', {
+    resp.success(res, 'ok', {
       logo,
       username,
       forward_msg_link,
@@ -1141,7 +1137,7 @@ route.get('/userinfo', async (req, res) => {
       email,
     });
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -1154,9 +1150,9 @@ route.get('/delete-logo', async (req, res) => {
 
     syncUpdateData(req, 'userinfo');
 
-    _success(res, '删除头像成功')(req);
+    resp.success(res, '删除头像成功')(req);
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -1181,7 +1177,7 @@ route.post(
       const { name, HASH, type, id } = req[kValidate];
 
       if (['bookmark', 'engine', 'translator'].includes(type) && !id) {
-        paramErr(res, req, 'id 不能为空', 'query');
+        resp.badRequest(res, req, 'id 不能为空', 'query');
         return;
       }
 
@@ -1208,13 +1204,13 @@ route.post(
 
         syncUpdateData(req, 'bookmark');
 
-        _success(res, '更新书签LOGO成功')(req, logo, 1);
+        resp.success(res, '更新书签LOGO成功')(req, logo, 1);
       } else if (type === 'userlogo') {
         await db('user').where({ account, state: 1 }).update({ logo });
 
         syncUpdateData(req, 'userinfo');
 
-        _success(res, '更新头像成功')(req, logo, 1);
+        resp.success(res, '更新头像成功')(req, logo, 1);
       } else if (type === 'engine') {
         const config = await readSearchConfig(account);
 
@@ -1229,7 +1225,7 @@ route.post(
             syncUpdateData(req, 'searchConfig');
           }
         }
-        _success(res, '更新搜索引擎LOGO成功')(req, logo, 1);
+        resp.success(res, '更新搜索引擎LOGO成功')(req, logo, 1);
       } else if (type === 'translator') {
         const config = await readSearchConfig(account);
 
@@ -1244,10 +1240,10 @@ route.post(
             syncUpdateData(req, 'searchConfig');
           }
         }
-        _success(res, '更新翻译接口LOGO成功')(req, logo, 1);
+        resp.success(res, '更新翻译接口LOGO成功')(req, logo, 1);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1269,12 +1265,12 @@ route.get('/daily-change-bg', async (req, res) => {
     syncUpdateData(req, 'userinfo');
 
     if (tem === 1) {
-      _success(res, '成功开启')(req, '开启每日更新壁纸');
+      resp.success(res, '成功开启')(req, '开启每日更新壁纸');
     } else {
-      _success(res, '成功关闭')(req, '关闭每日更新壁纸');
+      resp.success(res, '成功关闭')(req, '关闭每日更新壁纸');
     }
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -1296,14 +1292,14 @@ route.get('/hide-state', async (req, res) => {
     syncUpdateData(req, 'userinfo');
 
     if (tem === 1) {
-      _success(res, '成功开启')(req, '开启隐身');
+      resp.success(res, '成功开启')(req, '开启隐身');
     } else {
       onlineMsg(req, 1); // 通知上线
 
-      _success(res, '成功关闭')(req, '关闭隐身');
+      resp.success(res, '成功关闭')(req, '关闭隐身');
     }
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -1325,12 +1321,12 @@ route.get('/remote-login-state', async (req, res) => {
     syncUpdateData(req, 'userinfo');
 
     if (tem === 1) {
-      _success(res, '成功开启')(req, '开启免密登录');
+      resp.success(res, '成功开启')(req, '开启免密登录');
     } else {
-      _success(res, '成功关闭')(req, '关闭免密登录');
+      resp.success(res, '成功关闭')(req, '关闭免密登录');
     }
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -1353,7 +1349,7 @@ route.get(
       try {
         temid = await V.parse(temid, V.string().trim().min(1), 'temid');
       } catch (error) {
-        paramErr(res, req, error, { temid });
+        resp.badRequest(res, req, error, { temid });
         return;
       }
 
@@ -1396,16 +1392,16 @@ route.get(
         con.cbs = con.cbs.filter((item) => item !== cb);
 
         if (state) {
-          _success(res, 'ok', { flag: con.flag, msgs });
+          resp.success(res, 'ok', { flag: con.flag, msgs });
         } else {
-          _nothing(res, 'ok', { flag: con.flag });
+          resp.ok(res, 'ok', { flag: con.flag });
         }
       }
 
       // 保活SSH连接
       resetSSHExpireTime(temid);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1442,7 +1438,7 @@ route.post(
       try {
         temid = await V.parse(temid, V.string().trim().min(1), 'temid');
       } catch (error) {
-        paramErr(res, req, error, { temid });
+        resp.badRequest(res, req, error, { temid });
         return;
       }
 
@@ -1466,7 +1462,7 @@ route.post(
             'data',
           );
         } catch (error) {
-          paramErr(res, req, error, 'body');
+          resp.badRequest(res, req, error, 'body');
           return;
         }
         const ssh = getSSH(temid);
@@ -1506,7 +1502,7 @@ route.post(
           }
         }
 
-        _success(res);
+        resp.success(res);
       }
       // 多端同步数据
       else if (type === 'updatedata') {
@@ -1541,13 +1537,13 @@ route.post(
             'data',
           );
         } catch (error) {
-          paramErr(res, req, error, 'body');
+          resp.badRequest(res, req, error, 'body');
           return;
         }
         const { flag, id } = _vdata;
 
         syncUpdateData(req, flag, id);
-        _success(res);
+        resp.success(res);
       }
 
       // 远程播放歌曲
@@ -1555,7 +1551,7 @@ route.post(
         try {
           data.state = await V.parse(data.state, V.number().toInt().enum([1, 0]), 'data.state');
         } catch (error) {
-          paramErr(res, req, error, 'body');
+          resp.badRequest(res, req, error, 'body');
           return;
         }
 
@@ -1563,7 +1559,7 @@ route.post(
           try {
             data.obj = await V.parse(data.obj, V.object(), 'data.obj');
           } catch (error) {
-            paramErr(res, req, error, 'body');
+            resp.badRequest(res, req, error, 'body');
             return;
           }
         }
@@ -1572,7 +1568,7 @@ route.post(
 
         _connect.send(data.to, temid, { type, data }, 'other');
 
-        _success(res);
+        resp.success(res);
       }
       // 控制播放模式
       else if (type === 'playmode') {
@@ -1583,7 +1579,7 @@ route.post(
             'data.state',
           );
         } catch (error) {
-          paramErr(res, req, error, 'body');
+          resp.badRequest(res, req, error, 'body');
           return;
         }
 
@@ -1591,14 +1587,14 @@ route.post(
 
         _connect.send(data.to, temid, { type, data }, 'other');
 
-        _success(res);
+        resp.success(res);
       }
       // 控制音量
       else if (type === 'vol') {
         try {
           data.value = await V.parse(data.value, V.number().toNumber().min(0).max(1), 'data.value');
         } catch (error) {
-          paramErr(res, req, error, 'body');
+          resp.badRequest(res, req, error, 'body');
           return;
         }
 
@@ -1606,14 +1602,14 @@ route.post(
 
         _connect.send(data.to, temid, { type, data }, 'other');
 
-        _success(res);
+        resp.success(res);
       }
       // 控制播放进度
       else if (type === 'progress') {
         try {
           data.value = await V.parse(data.value, V.number().toNumber().min(0).max(1), 'data.value');
         } catch (error) {
-          paramErr(res, req, error, 'body');
+          resp.badRequest(res, req, error, 'body');
           return;
         }
 
@@ -1621,7 +1617,7 @@ route.post(
 
         _connect.send(data.to, temid, { type, data }, 'other');
 
-        _success(res);
+        resp.success(res);
       }
       // 聊天室
       else if (type === 'chat') {
@@ -1637,7 +1633,7 @@ route.post(
             'data.flag',
           );
         } catch (error) {
-          paramErr(res, req, error, 'body');
+          resp.badRequest(res, req, error, 'body');
           return;
         }
 
@@ -1652,14 +1648,14 @@ route.post(
               'data.msgData.msgId',
             );
           } catch (error) {
-            paramErr(res, req, error, 'body');
+            resp.badRequest(res, req, error, 'body');
             return;
           }
         }
 
         await sendNotifyMsg(req, data.to, data.flag, data.msgData);
 
-        _success(res);
+        resp.success(res);
       }
       // 文件粘贴数据
       else if (type === 'pastefiledata') {
@@ -1670,7 +1666,7 @@ route.post(
             'data.type',
           );
         } catch (error) {
-          paramErr(res, req, error, 'body');
+          resp.badRequest(res, req, error, 'body');
           return;
         }
 
@@ -1690,19 +1686,19 @@ route.post(
               'data.data',
             );
           } catch (error) {
-            paramErr(res, req, error, 'body');
+            resp.badRequest(res, req, error, 'body');
             return;
           }
 
           _connect.send(account, temid, { type, data }, 'other');
-          _success(res);
+          resp.success(res);
         } else {
           _connect.send(account, temid, { type, data: {} }, 'other');
-          _success(res);
+          resp.success(res);
         }
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1730,9 +1726,9 @@ route.post(
 
       syncUpdateData(req, 'sharelist');
 
-      _success(res, '删除分享成功')(req, ids.length, 1);
+      resp.success(res, '删除分享成功')(req, ids.length, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1773,12 +1769,12 @@ route.get(
           .find();
       }
 
-      _success(res, 'ok', {
+      resp.success(res, 'ok', {
         ...result,
         data,
       });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1811,9 +1807,9 @@ route.post(
 
       syncUpdateData(req, 'sharelist');
 
-      _success(res, '更新分享成功')(req, `${title}-${id}`, 1);
+      resp.success(res, '更新分享成功')(req, `${title}-${id}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1991,13 +1987,13 @@ route.get(
         }
       }
 
-      _success(res, 'ok', {
+      resp.success(res, 'ok', {
         ...result,
         data,
         splitWord,
       });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -2054,9 +2050,9 @@ route.post(
 
       syncUpdateData(req, 'trash');
 
-      _success(res, '删除成功')(req, `${type}-${ids.length}`, 1);
+      resp.success(res, '删除成功')(req, `${type}-${ids.length}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -2091,9 +2087,9 @@ route.post(
 
       syncUpdateData(req, type);
 
-      _success(res, '恢复成功')(req, `${type}-${ids.length}`, 1);
+      resp.success(res, '恢复成功')(req, `${type}-${ids.length}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );

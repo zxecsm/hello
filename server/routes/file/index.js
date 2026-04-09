@@ -1,12 +1,8 @@
 import express from 'express';
 
 import {
-  _nologin,
-  _success,
-  _err,
   receiveFiles,
   mergefile,
-  _nothing,
   syncUpdateData,
   uLog,
   concurrencyTasks,
@@ -18,7 +14,6 @@ import {
   validate,
   isMusicFile,
   isImgFile,
-  paramErr,
 } from '../../utils/utils.js';
 
 import appConfig from '../../data/config.js';
@@ -53,11 +48,12 @@ import jwt from '../../utils/jwt.js';
 import taskState from '../../utils/taskState.js';
 import zipper from '../../utils/zip.js';
 import fileList from './cacheFileList.js';
-import axios from 'axios';
 import nanoid from '../../utils/nanoid.js';
 import _crypto from '../../utils/crypto.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
+import request from '../../utils/request.js';
+import resp from '../../utils/response.js';
 
 const route = express.Router();
 const kHello = sym('hello');
@@ -83,12 +79,12 @@ route.post(
       const share = await validShareAddUserState(req, ['file', 'dir'], id, pass, captchaId);
 
       if (share.state === 3) {
-        _nothing(res, share.text);
+        resp.ok(res, share.text);
         return;
       }
 
       if (share.state === 2) {
-        _success(res, share.text, {
+        resp.success(res, share.text, {
           id: share.id,
           needCaptcha: share.needCaptcha,
         })(req, share.id, 1);
@@ -96,7 +92,7 @@ route.post(
       }
 
       if (share.state === 0) {
-        _err(res, share.text)(req, id, 1);
+        resp.notFound(res, share.text)(req, id, 1);
         return;
       }
 
@@ -108,7 +104,7 @@ route.post(
         username = des || username;
       }
 
-      _success(res, '获取文件分享成功', {
+      resp.success(res, '获取文件分享成功', {
         username,
         logo,
         email,
@@ -122,7 +118,7 @@ route.post(
         ),
       })(req, id, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -173,14 +169,14 @@ route.post(
       try {
         temid = await V.parse(temid, V.string().trim().min(1), 'temid');
       } catch (error) {
-        paramErr(res, req, error, { temid });
+        resp.badRequest(res, req, error, { temid });
         return;
       }
 
       const { account } = req[kHello].userinfo;
 
       if (!token && !account) {
-        _nologin(res);
+        resp.unauthorized(res);
         return;
       }
 
@@ -192,7 +188,7 @@ route.post(
         const share = await validShareState(token, 'file');
 
         if (share.state === 0) {
-          _err(res, share.text)(req);
+          resp.forbidden(res, share.text)(req);
           return;
         }
 
@@ -243,7 +239,7 @@ route.post(
         fileList.resetExpireTime(accFlag, `${p}_${word}`);
         taskState.delete(taskKey);
 
-        _success(
+        resp.success(
           res,
           'ok',
           createPagingData(
@@ -261,7 +257,7 @@ route.post(
         clearTimeout(timer);
         timer = null;
 
-        _success(res, 'ok', { key: taskKey });
+        resp.success(res, 'ok', { key: taskKey });
       }, 1000);
 
       try {
@@ -327,7 +323,7 @@ route.post(
           timer = null;
           taskState.delete(taskKey);
 
-          _success(
+          resp.success(
             res,
             'ok',
             createPagingData(
@@ -348,7 +344,7 @@ route.post(
         if (timer) {
           clearTimeout(timer);
           timer = null;
-          _err(res, `${hdType}失败`)(req, error, 1);
+          resp.forbidden(res, `${hdType}失败`)(req, error, 1);
         } else {
           await errLog(req, `${hdType}失败(${error})`);
           if (account) {
@@ -357,7 +353,7 @@ route.post(
         }
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -379,7 +375,7 @@ route.post(
       const { account } = req[kHello].userinfo;
 
       if (!token && !account) {
-        _nologin(res);
+        resp.unauthorized(res);
         return;
       }
 
@@ -389,7 +385,7 @@ route.post(
         const share = await validShareState(token, 'file');
 
         if (share.state === 0) {
-          _err(res, share.text)(req);
+          resp.forbidden(res, share.text)(req);
           return;
         }
 
@@ -411,24 +407,24 @@ route.post(
       const stat = await _f.lstat(p);
 
       if (!stat || (await _f.getType(stat)) === 'dir') {
-        _err(res, '文件不存在')(req, p, 1);
+        resp.forbidden(res, '文件不存在')(req, p, 1);
         return;
       }
 
       // 文本文件并且小于等于10M直接返回
       if (stat.size <= fieldLength.textFileSize && (await _f.isTextFile(p))) {
         //文本文件
-        _success(res, 'ok', {
+        resp.success(res, 'ok', {
           type: 'text',
           data: (await _f.readFile(p, null, '')).toString(),
         });
       } else {
-        _success(res, 'ok', {
+        resp.success(res, 'ok', {
           type: 'other',
         });
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -438,7 +434,7 @@ route.use((req, res, next) => {
   if (req[kHello].userinfo.account) {
     next();
   } else {
-    _nologin(res);
+    resp.unauthorized(res);
   }
 });
 
@@ -459,18 +455,18 @@ route.post(
 
       await db('user').where({ account, state: 1 }).update({ file_history: state });
 
-      _success(res, `${state === 0 ? '关闭' : '开启'}文件历史记录成功`)(req);
+      resp.success(res, `${state === 0 ? '关闭' : '开启'}文件历史记录成功`)(req);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
 route.get('/history-state', async (req, res) => {
   try {
     const { file_history } = req[kHello].userinfo;
-    _success(res, 'ok', { file_history });
+    resp.success(res, 'ok', { file_history });
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -478,9 +474,9 @@ route.get('/history-state', async (req, res) => {
 route.get('/cd-history', async (req, res) => {
   try {
     const { account } = req[kHello].userinfo;
-    _success(res, 'ok', await readHistoryDirs(account));
+    resp.success(res, 'ok', await readHistoryDirs(account));
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -488,9 +484,9 @@ route.get('/cd-history', async (req, res) => {
 route.get('/favorites', async (req, res) => {
   try {
     const { account } = req[kHello].userinfo;
-    _success(res, 'ok', await readFavorites(account));
+    resp.success(res, 'ok', await readFavorites(account));
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -527,13 +523,13 @@ route.post(
 
       fileList.clear(account);
 
-      _success(res, `${type === 'add' ? '' : '移除'}收藏文件夹成功`)(
+      resp.success(res, `${type === 'add' ? '' : '移除'}收藏文件夹成功`)(
         req,
         appConfig.userRootDir(account, path),
         1,
       );
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -559,7 +555,7 @@ route.get(
       const signal = controller.signal;
       const taskKey = taskState.add(account, `读取文件夹大小...`, controller);
 
-      _success(res, 'ok', { key: taskKey });
+      resp.success(res, 'ok', { key: taskKey });
 
       try {
         let size = 0;
@@ -587,7 +583,7 @@ route.get(
         errorNotifyMsg(req, `${errText}`);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -607,7 +603,7 @@ route.post(
       const { path, name } = req[kValidate];
 
       if (!_path.isFilename(name)) {
-        _err(res, '名称包含了不允许的特殊字符')(req, name, 1);
+        resp.forbidden(res, '名称包含了不允许的特殊字符')(req, name, 1);
         return;
       }
 
@@ -617,7 +613,7 @@ route.post(
 
       // 过滤回收站
       if ((await _f.exists(fpath)) || appConfig.trashDir(account) === fpath) {
-        _err(res, '已存在重名文件')(req, fpath, 1);
+        resp.forbidden(res, '已存在重名文件')(req, fpath, 1);
         return;
       }
 
@@ -627,9 +623,9 @@ route.post(
 
       fileList.clear(account);
 
-      _success(res, '新建文件成功')(req, fpath, 1);
+      resp.success(res, '新建文件成功')(req, fpath, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -651,7 +647,7 @@ route.post(
       const { path, name, targetPath, isSymlink } = req[kValidate];
 
       if (!_path.isFilename(name)) {
-        _err(res, '名称包含了不允许的特殊字符')(req, name, 1);
+        resp.forbidden(res, '名称包含了不允许的特殊字符')(req, name, 1);
         return;
       }
 
@@ -663,13 +659,13 @@ route.post(
       const tType = await _f.getType(tPath);
 
       if (!tType) {
-        _err(res, '目标路径不存在')(req, tPath, 1);
+        resp.forbidden(res, '目标路径不存在')(req, tPath, 1);
         return;
       }
 
       // 过滤回收站
       if ((await _f.exists(curPath)) || appConfig.trashDir(account) === curPath) {
-        _err(res, '已存在重名文件')(req, curPath, 1);
+        resp.forbidden(res, '已存在重名文件')(req, curPath, 1);
         return;
       }
 
@@ -677,7 +673,7 @@ route.post(
         await _f.symlink(tPath, curPath);
       } else {
         if (tType === 'dir') {
-          _err(res, '不能创建目录的硬链接')(req, tPath, 1);
+          resp.forbidden(res, '不能创建目录的硬链接')(req, tPath, 1);
           return;
         }
         await _f.link(tPath, curPath);
@@ -687,9 +683,9 @@ route.post(
 
       fileList.clear(account);
 
-      _success(res, '新建符号链接成功')(req, `${curPath}=>${tPath}`, 1);
+      resp.success(res, '新建符号链接成功')(req, `${curPath}=>${tPath}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -730,13 +726,13 @@ route.post(
 
       syncUpdateData(req, 'sharelist');
 
-      _success(res, `分享${data.type === 'dir' ? '文件夹' : '文件'}成功`)(
+      resp.success(res, `分享${data.type === 'dir' ? '文件夹' : '文件'}成功`)(
         req,
         appConfig.userRootDir(account, data.path, data.name),
         1,
       );
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -769,7 +765,7 @@ route.post(
       const type = await _f.getType(stat);
 
       if (!type || type === 'dir' || appConfig.trashDir(account) === fpath) {
-        _err(res, '文件不存在')(req, fpath, 1);
+        resp.forbidden(res, '文件不存在')(req, fpath, 1);
         return;
       }
 
@@ -813,9 +809,9 @@ route.post(
 
       fileList.clear(account);
 
-      _success(res, '保存文件成功')(req, fpath, 1);
+      resp.success(res, '保存文件成功')(req, fpath, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -849,7 +845,7 @@ route.post(
       const p = appConfig.userRootDir(account, path);
 
       if ((await _f.getType(p)) !== 'dir') {
-        _err(res, '目标文件夹不存在')(req, p, 1);
+        resp.forbidden(res, '目标文件夹不存在')(req, p, 1);
         return;
       }
 
@@ -859,7 +855,7 @@ route.post(
 
       fileList.clear(account);
 
-      _success(res, 'ok', { key: taskKey });
+      resp.success(res, 'ok', { key: taskKey });
 
       try {
         let count = 0;
@@ -906,7 +902,7 @@ route.post(
         await heperMsgAndForward(req, account, errText);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -938,13 +934,13 @@ route.post(
       const p = appConfig.userRootDir(account, path);
 
       if ((await _f.getType(p)) !== 'dir') {
-        _err(res, '目标文件夹不存在')(req, p, 1);
+        resp.forbidden(res, '目标文件夹不存在')(req, p, 1);
         return;
       }
 
-      _success(res, 'ok', { hasSameName: await hasSameNameFile(p, data) });
+      resp.success(res, 'ok', { hasSameName: await hasSameNameFile(p, data) });
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -977,7 +973,7 @@ route.post(
       const p = appConfig.userRootDir(account, path);
 
       if ((await _f.getType(p)) !== 'dir') {
-        _err(res, '目标文件夹不存在')(req, p, 1);
+        resp.forbidden(res, '目标文件夹不存在')(req, p, 1);
         return;
       }
 
@@ -987,7 +983,7 @@ route.post(
 
       fileList.clear(account);
 
-      _success(res, 'ok', { key: taskKey });
+      resp.success(res, 'ok', { key: taskKey });
 
       try {
         let count = 0;
@@ -1032,7 +1028,7 @@ route.post(
         await heperMsgAndForward(req, account, errText);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1067,7 +1063,7 @@ route.post(
       const f = _path.normalizeNoSlash(p, name);
 
       if (!(await _f.exists(f))) {
-        _err(res, `${flag}不存在`)(req, f, 1);
+        resp.forbidden(res, `${flag}不存在`)(req, f, 1);
         return;
       }
 
@@ -1085,7 +1081,7 @@ route.post(
 
       fileList.clear(account);
 
-      _success(res, 'ok', { key: taskKey });
+      resp.success(res, 'ok', { key: taskKey });
 
       try {
         await zipper.zip([data], t, {
@@ -1106,7 +1102,7 @@ route.post(
         await heperMsgAndForward(req, account, errText);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1140,7 +1136,7 @@ route.post(
       const f = _path.normalizeNoSlash(p, name);
 
       if ((await _f.getType(f)) !== 'file') {
-        _err(res, '解压文件不存在')(req, f, 1);
+        resp.forbidden(res, '解压文件不存在')(req, f, 1);
         return;
       }
 
@@ -1154,7 +1150,7 @@ route.post(
 
       fileList.clear(account);
 
-      _success(res, 'ok', { key: taskKey });
+      resp.success(res, 'ok', { key: taskKey });
 
       try {
         if ((await _f.exists(t)) || t === appConfig.trashDir(account)) {
@@ -1179,7 +1175,7 @@ route.post(
         await heperMsgAndForward(req, account, errText);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1214,7 +1210,7 @@ route.post(
 
       fileList.clear(account);
 
-      _success(res, 'ok', { key: taskKey });
+      resp.success(res, 'ok', { key: taskKey });
 
       try {
         let count = 0;
@@ -1276,7 +1272,7 @@ route.post(
         await heperMsgAndForward(req, account, errText);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1292,7 +1288,7 @@ route.get('/clear-trash', async (req, res) => {
 
     fileList.clear(account);
 
-    _success(res, 'ok', { key: taskKey });
+    resp.success(res, 'ok', { key: taskKey });
 
     try {
       let count = 0;
@@ -1329,7 +1325,7 @@ route.get('/clear-trash', async (req, res) => {
       await heperMsgAndForward(req, account, errText);
     }
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 });
 
@@ -1348,7 +1344,7 @@ route.post(
       const { path, name } = req[kValidate];
 
       if (!_path.isFilename(name)) {
-        _err(res, '名称包含了不允许的特殊字符')(req, name, 1);
+        resp.forbidden(res, '名称包含了不允许的特殊字符')(req, name, 1);
         return;
       }
 
@@ -1357,7 +1353,7 @@ route.post(
       const fpath = appConfig.userRootDir(account, `${path}/${name}`);
 
       if (await _f.exists(fpath)) {
-        _err(res, '已存在重名文件')(req, fpath, 1);
+        resp.forbidden(res, '已存在重名文件')(req, fpath, 1);
         return;
       }
 
@@ -1367,9 +1363,9 @@ route.post(
 
       fileList.clear(account);
 
-      _success(res, '新建文件夹成功')(req, fpath, 1);
+      resp.success(res, '新建文件夹成功')(req, fpath, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1393,7 +1389,7 @@ route.post(
       const { data, name } = req[kValidate];
 
       if (!_path.isFilename(name)) {
-        _err(res, '名称包含了不允许的特殊字符')(req, name, 1);
+        resp.forbidden(res, '名称包含了不允许的特殊字符')(req, name, 1);
         return;
       }
 
@@ -1407,12 +1403,12 @@ route.post(
         t = _path.normalizeNoSlash(dir, name);
 
       if (!(await _f.exists(p))) {
-        _err(res, `${flag}不存在`)(req, p, 1);
+        resp.forbidden(res, `${flag}不存在`)(req, p, 1);
         return;
       }
 
       if ((await _f.exists(t)) || appConfig.trashDir(account) === t) {
-        _err(res, '已存在重名文件')(req, t, 1);
+        resp.forbidden(res, '已存在重名文件')(req, t, 1);
         return;
       }
 
@@ -1422,9 +1418,9 @@ route.post(
 
       fileList.clear(account);
 
-      _success(res, `重命名${flag}成功`)(req, `${p}=>${t}`, 1);
+      resp.success(res, `重命名${flag}成功`)(req, `${p}=>${t}`, 1);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1455,7 +1451,7 @@ route.post(
       const { data, mode, r } = req[kValidate];
 
       if (!req[kHello].isRoot) {
-        _err(res, '无权操作')(req);
+        resp.forbidden(res, '无权操作')(req);
         return;
       }
 
@@ -1467,7 +1463,7 @@ route.post(
 
       fileList.clear(account);
 
-      _success(res, 'ok', { key: taskKey });
+      resp.success(res, 'ok', { key: taskKey });
 
       try {
         let count = 0;
@@ -1500,7 +1496,7 @@ route.post(
         await heperMsgAndForward(req, account, errText);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1530,7 +1526,7 @@ route.post(
       const { data, uid, gid, r } = req[kValidate];
 
       if (!req[kHello].isRoot) {
-        _err(res, '无权操作')(req);
+        resp.forbidden(res, '无权操作')(req);
         return;
       }
 
@@ -1542,7 +1538,7 @@ route.post(
 
       fileList.clear(account);
 
-      _success(res, 'ok', { key: taskKey });
+      resp.success(res, 'ok', { key: taskKey });
 
       try {
         let count = 0;
@@ -1575,7 +1571,7 @@ route.post(
         await heperMsgAndForward(req, account, errText);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1604,9 +1600,9 @@ route.post(
 
       await receiveFiles(req, path, name, fieldLength.maxFileChunk);
 
-      _success(res);
+      resp.success(res);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1658,7 +1654,7 @@ route.post(
 
       fileList.clear(account);
 
-      _success(res, `上传文件成功`)(req, targetPath, 1);
+      resp.success(res, `上传文件成功`)(req, targetPath, 1);
     } catch (error) {
       if (timer) {
         clearTimeout(timer);
@@ -1667,7 +1663,7 @@ route.post(
         errorNotifyMsg(req, `上传文件失败`);
       }
 
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1690,9 +1686,9 @@ route.post(
       const path = appConfig.temDir(`${account}_${HASH}`),
         list = await _f.readdir(path);
 
-      _success(res, 'ok', list);
+      resp.success(res, 'ok', list);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1713,13 +1709,13 @@ route.post(
       const p = appConfig.userRootDir(req[kHello].userinfo.account, path);
 
       if (await _f.exists(p)) {
-        _success(res);
+        resp.success(res);
         return;
       }
 
-      _nothing(res);
+      resp.ok(res);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1740,7 +1736,7 @@ route.post(
 
       const normalizePath = _path.normalize(path);
       if (normalizePath.endsWith('/')) {
-        return _success(res, 'ok', normalizePath);
+        return resp.success(res, 'ok', normalizePath);
       }
 
       const p = appConfig.userRootDir(req[kHello].userinfo.account, path);
@@ -1749,7 +1745,7 @@ route.post(
 
       const dirList = await _f.readdir(dir);
       if (!dirList || dirList.length === 0) {
-        return _success(res, 'ok', normalizePath);
+        return resp.success(res, 'ok', normalizePath);
       }
 
       let best = null;
@@ -1777,9 +1773,9 @@ route.post(
         resultPath += '/';
       }
 
-      _success(res, 'ok', resultPath);
+      resp.success(res, 'ok', resultPath);
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1803,7 +1799,7 @@ route.post(
       const targetPath = appConfig.userRootDir(account, path);
 
       if ((await _f.getType(targetPath)) !== 'dir') {
-        _err(res, '目标文件夹不存在')(req, targetPath, 1);
+        resp.forbidden(res, '目标文件夹不存在')(req, targetPath, 1);
         return;
       }
 
@@ -1813,7 +1809,7 @@ route.post(
       const signal = controller.signal;
       const taskKey = taskState.add(account, `下载文件: ${filename}`, controller);
 
-      _success(res, 'ok', { key: taskKey });
+      resp.success(res, 'ok', { key: taskKey });
 
       const temPath = appConfig.temDir(`${account}_${_crypto.getStringHash(url)}`);
       try {
@@ -1825,7 +1821,7 @@ route.post(
           headers.Range = `bytes=${downloadedBytes}-`;
         }
 
-        const response = await axios({
+        const response = await request({
           method: 'get',
           url,
           responseType: 'stream',
@@ -1833,6 +1829,7 @@ route.post(
           headers,
           decompress: false, // 防止 gzip 会导致续传失败
           validateStatus: (s) => s === 200 || s === 206,
+          timeout: 0,
         });
 
         // 判断是否支持续传（206）
@@ -1882,7 +1879,7 @@ route.post(
         await heperMsgAndForward(req, account, errText);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );
@@ -1902,7 +1899,7 @@ route.post(
       const { type, path } = req[kValidate];
 
       if (!req[kHello].isRoot) {
-        _err(res, '无权操作')(req);
+        resp.forbidden(res, '无权操作')(req);
         return;
       }
 
@@ -1912,7 +1909,7 @@ route.post(
       const targetPath = appConfig.userRootDir(account, path);
 
       if ((await _f.getType(targetPath)) !== 'dir') {
-        _err(res, '目标文件夹不存在')(req, targetPath, 1);
+        resp.forbidden(res, '目标文件夹不存在')(req, targetPath, 1);
         return;
       }
 
@@ -1920,7 +1917,7 @@ route.post(
       const signal = controller.signal;
       const taskKey = taskState.add(account, `添加${typeName}...`, controller);
 
-      _success(res, 'ok', { key: taskKey });
+      resp.success(res, 'ok', { key: taskKey });
 
       try {
         let skip = 0;
@@ -1971,7 +1968,7 @@ route.post(
         await heperMsgAndForward(req, account, errText);
       }
     } catch (error) {
-      _err(res)(req, error);
+      resp.error(res)(req, error);
     }
   },
 );

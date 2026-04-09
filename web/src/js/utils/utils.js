@@ -547,16 +547,6 @@ export function _postAjax(url, data = {}, opt = {}, callback) {
         if (load) {
           _loadingBar.end();
         }
-        if (data.code === 0) {
-          if (!stopErrorMsg) {
-            _msg.error(data.codeText);
-          }
-          reject(data.codeText);
-          return;
-        } else if (data.code === 2) {
-          toLogin();
-          return;
-        }
         resolve(data);
       },
       error: (err) => {
@@ -566,8 +556,17 @@ export function _postAjax(url, data = {}, opt = {}, callback) {
         if (load) {
           _loadingBar.end();
         }
+
+        const { codeText, code } = err?.responseJSON || {};
+        if (code === 2) {
+          toLogin();
+          return;
+        }
+
         if (!stopErrorMsg) {
-          if (err.statusText === 'error') {
+          if (code === 0 && codeText) {
+            _msg.error(codeText);
+          } else if (err.statusText === 'error') {
             _msg.error(`连接失败!( ╯□╰ )`);
           } else if (err.statusText === 'timeout') {
             // _msg.error(`请求超时!( ╯□╰ )`);
@@ -610,16 +609,6 @@ export function _getAjax(url, data = {}, opt = {}) {
         if (load) {
           _loadingBar.end();
         }
-        if (data.code === 0) {
-          if (!stopErrorMsg) {
-            _msg.error(data.codeText);
-          }
-          reject(data.codeText);
-          return;
-        } else if (data.code === 2) {
-          toLogin();
-          return;
-        }
         resolve(data);
       },
       error: (err) => {
@@ -629,8 +618,17 @@ export function _getAjax(url, data = {}, opt = {}) {
         if (load) {
           _loadingBar.end();
         }
+
+        const { codeText, code } = err?.responseJSON || {};
+        if (code === 2) {
+          toLogin();
+          return;
+        }
+
         if (!stopErrorMsg) {
-          if (err.statusText === 'error') {
+          if (code === 0 && codeText) {
+            _msg.error(codeText);
+          } else if (err.statusText === 'error') {
             _msg.error(`连接失败!( ╯□╰ )`);
           } else if (err.statusText === 'timeout') {
             // _msg.error(`请求超时!( ╯□╰ )`);
@@ -677,17 +675,17 @@ export function _upFile(url, data = {}, file, callback, signal) {
         return xhr;
       },
       success: (data) => {
-        if (data.code === 0) {
-          _msg.error(data.codeText);
-          reject(data.codeText);
-          return;
-        } else if (data.code === 2) {
+        resolve(data);
+      },
+      error: (err) => {
+        const { codeText, code } = err?.responseJSON || {};
+        if (code === 2) {
           toLogin();
           return;
         }
-        resolve(data);
-      },
-      error: () => {
+        if (code === 0 && codeText) {
+          _msg.error(codeText);
+        }
         reject();
       },
     });

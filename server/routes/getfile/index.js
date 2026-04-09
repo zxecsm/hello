@@ -1,6 +1,6 @@
 import appConfig from '../../data/config.js';
 
-import { _err, _nologin, isImgFile, paramErr, errLog } from '../../utils/utils.js';
+import { isImgFile, errLog } from '../../utils/utils.js';
 
 import { db } from '../../utils/sqlite.js';
 
@@ -13,6 +13,7 @@ import _path from '../../utils/path.js';
 import jwt from '../../utils/jwt.js';
 import V from '../../utils/validRules.js';
 import { sym } from '../../utils/symbols.js';
+import resp from '../../utils/response.js';
 
 const kHello = sym('hello');
 const kValidate = sym('validate');
@@ -37,7 +38,7 @@ export default async function getFile(req, res, originalPath, verifyLogin = true
         }),
       );
     } catch (error) {
-      paramErr(res, req, error, params);
+      resp.badRequest(res, req, error, params);
       return;
     }
 
@@ -66,11 +67,11 @@ export default async function getFile(req, res, originalPath, verifyLogin = true
     if (publicArr.includes(dir)) {
     } else if (verifyArr.includes(dir)) {
       if (!account && verifyLogin) {
-        _nologin(res);
+        resp.unauthorized(res);
         return;
       }
     } else {
-      _err(res, '无权访问')(req, dir, 1);
+      resp.forbidden(res, '无权访问')(req, dir, 1);
       return;
     }
 
@@ -101,7 +102,7 @@ export default async function getFile(req, res, originalPath, verifyLogin = true
     const stat = await _f.lstat(path);
 
     if (!path || !stat || stat.isDirectory()) {
-      _err(res, '文件不存在')(req, path, 1);
+      resp.notFound(res, '文件不存在')(req, path, 1);
       return;
     }
 
@@ -125,14 +126,14 @@ export default async function getFile(req, res, originalPath, verifyLogin = true
 
     res.sendFile(tObj.path, { dotfiles: 'allow' });
   } catch (error) {
-    _err(res)(req, error);
+    resp.error(res)(req, error);
   }
 }
 async function getPicPath(req, res, id) {
   try {
     id = await V.parse(id, V.string().trim().min(1).max(fieldLength.id).alphanumeric(), 'pic id');
   } catch (error) {
-    paramErr(res, req, error, { id });
+    resp.badRequest(res, req, error, { id });
     return null;
   }
   const pic = await db('pic').select('url').where({ id }).findOne();
@@ -146,7 +147,7 @@ async function getBgPath(req, res, id) {
   try {
     id = await V.parse(id, V.string().trim().min(1).max(fieldLength.id).alphanumeric(), 'bg id');
   } catch (error) {
-    paramErr(res, req, error, { id });
+    resp.badRequest(res, req, error, { id });
     return null;
   }
   const bg = await db('bg').select('url').where({ id }).findOne();
@@ -165,7 +166,7 @@ async function getLogoPath(req, res, pArr) {
       'logo account',
     );
   } catch (error) {
-    paramErr(res, req, error, { account: acc });
+    resp.badRequest(res, req, error, { account: acc });
     return null;
   }
   return appConfig.logoDir(acc, pArr.slice(1).join('/'));
@@ -175,7 +176,7 @@ async function getUploadPath(req, res, id, account, dir) {
   try {
     id = await V.parse(id, V.string().trim().min(1).max(fieldLength.id).alphanumeric(), 'chat id');
   } catch (error) {
-    paramErr(res, req, error, { id });
+    resp.badRequest(res, req, error, { id });
     return null;
   }
 
@@ -189,7 +190,7 @@ async function getUploadPath(req, res, id, account, dir) {
     // 消息文件存在，并且是群和自己发送或收到的消息
     return appConfig.uploadDir(msg.url);
   } else {
-    _err(res, '无权访问')(req, `${dir}-${id}`, 1);
+    resp.forbidden(res, '无权访问')(req, `${dir}-${id}`, 1);
     return null;
   }
 }
@@ -198,7 +199,7 @@ async function getShareFilePath(req, res, token, pArr, dir) {
   const share = await validShareState(token, 'file');
 
   if (share.state === 0) {
-    _err(res, share.text)(req, dir, 1);
+    resp.forbidden(res, share.text)(req, dir, 1);
     return null;
   }
 
@@ -225,14 +226,14 @@ async function getShareMusicPath(req, res, token, pArr, dir, account) {
   } else {
     const share = await validShareState(token, 'music');
     if (share.state === 0) {
-      _err(res, share.text)(req, dir, 1);
+      resp.forbidden(res, share.text)(req, dir, 1);
       return null;
     }
     if (share.state === 1) {
       if (share.data.data.some((item) => item === id)) {
         return getMusicPath(req, res, pArr);
       } else {
-        _err(res, '无权访问')(req, dir, 1);
+        resp.forbidden(res, '无权访问')(req, dir, 1);
         return null;
       }
     }
@@ -253,7 +254,7 @@ async function getPubPath(req, res, pArr) {
       'pub account',
     );
   } catch (error) {
-    paramErr(res, req, error, { account: acc });
+    resp.badRequest(res, req, error, { account: acc });
     return null;
   }
   return appConfig.pubDir(acc, pArr.slice(1).join('/'));
@@ -265,7 +266,7 @@ async function getMusicPath(req, res, pArr) {
     id = await V.parse(id, V.string().trim().min(1).max(fieldLength.id).alphanumeric(), 'song id');
     type = await V.parse(type, V.string().trim().enum(['pic', 'url', 'mv']), 'song type');
   } catch (error) {
-    paramErr(res, req, error, { id, type });
+    resp.badRequest(res, req, error, { id, type });
     return null;
   }
   const song = await db('songs').select(type).where({ id }).findOne();
