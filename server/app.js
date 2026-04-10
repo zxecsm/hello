@@ -72,11 +72,29 @@ const kValidate = sym('validate');
 const app = express();
 app.disable('x-powered-by');
 
-// Cookie
+//  Cookie 解析
 app.use(cookieParser());
-app.use(express.json({ limit: '10250kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10250kb' }));
-app.use(express.static(resolve(__dirname, 'static'), { dotfiles: 'allow' }));
+app.use(express.json({ limit: '10mb' }));
+app.use(
+  express.urlencoded({
+    extended: true, // 支持复杂对象
+    limit: '10mb',
+  }),
+);
+
+app.use((_, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff'); // 防止 MIME 类型嗅探
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN'); // 防止 iframe 嵌套攻击
+  next();
+});
+
+const staticOptions = {
+  dotfiles: 'allow', // 允许访问 .xxx 文件
+  maxAge: '7d', // 强缓存
+  etag: true, // 文件指纹缓存
+  lastModified: true, // 修改时间缓存
+};
+app.use(express.static(resolve(__dirname, 'static'), staticOptions));
 
 // 同一ip在10秒内最多允许500个请求
 const reqLimit = verifyLimit({ space: 10, count: 500 }, false);
@@ -93,12 +111,6 @@ const informReqLimit = debounce(
   5000,
   1,
 );
-
-app.use((_, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-  next();
-});
 
 app.use(async (req, res, next) => {
   try {
@@ -156,13 +168,7 @@ app.use(async (req, res, next) => {
   }
 });
 
-app.use(
-  '/api/font',
-  express.static(appConfig.fontDir(), {
-    dotfiles: 'allow',
-    maxAge: 2592000000,
-  }),
-);
+app.use('/api/font', express.static(appConfig.fontDir(), staticOptions));
 
 app.use(async (req, res, next) => {
   try {
