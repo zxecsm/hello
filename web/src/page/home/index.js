@@ -26,6 +26,7 @@ import {
   isLogin,
   isRoot,
   getScreenSize,
+  delay,
 } from '../../js/utils/utils.js';
 import _d from '../../js/common/config';
 import _msg from '../../js/plugins/message';
@@ -238,7 +239,8 @@ async function closeLoading() {
   await updateSearchConfig();
   loadingPage.end();
   $pageBg.removeClass('sce');
-  $searchBoxBtn.stop().slideDown(_d.speed, () => {
+  await delay(_d.speed);
+  $searchBoxBtn.stop().show(_d.speed, () => {
     timeMsg();
     // 查看消息
     reqChatNews()

@@ -1964,6 +1964,9 @@ body {
     background-color: var(--color10);
     border-radius: 50%;
     animation: rubberBand 5s ease-in-out infinite;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
     opacity: 0.9;
     &:hover {
       opacity: 1;
@@ -2148,15 +2151,18 @@ body {
               align-items: center;
               justify-content: center;
               &:hover {
-                img {
+                div {
                   width: 5rem;
                   height: 5rem;
                 }
               }
-              img {
+              div {
                 width: 4rem;
                 height: 4rem;
                 border-radius: var(--border-radius1);
+                background-repeat: no-repeat;
+                background-size: cover;
+                background-position: center;
               }
             }
             .inp_box {

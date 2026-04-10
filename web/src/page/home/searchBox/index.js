@@ -410,7 +410,7 @@ export function hideSearchBox() {
   homeLoadImg.unBind();
   $homeBmWrap.find('ul').html('');
   $searchBoxMask.stop().hide(_d.speed);
-  $searchBoxBtn.stop().slideDown(_d.speed);
+  $searchBoxBtn.stop().show(_d.speed);
   $pageBg.removeClass('sce');
 }
 // 开启选中状态
@@ -464,7 +464,7 @@ export function showSearchBox() {
     setCatSize();
   });
   setZidx($searchBoxMask[0], 'search', hideSearchBox);
-  $searchBoxBtn.stop().slideUp(_d.speed);
+  $searchBoxBtn.stop().hide(_d.speed);
   $pageBg.addClass('sce');
   $searchLogo.find('.logo_box').addClass('active');
 }
@@ -553,21 +553,22 @@ export async function updateSearchConfig(loading) {
 // 切换搜索引擎
 async function switchSearchEngine() {
   const { logo, color, link, id, title } = getSearchEngine();
+  const $sLogo = $searchInpWrap.find('.search_box .logo div');
   if (id !== 'bing') {
     const icon = logo
       ? getFilePath(`/logo/${setUserInfo().account}/${logo}`)
       : getFaviconPath(link);
     try {
       const cache = await imgjz(icon);
-      $searchBoxBtn.attr('src', cache);
-      $searchInpWrap.find('img').attr('src', cache);
+      $searchBoxBtn.css('background-image', `url(${cache})`);
+      $sLogo.css('background-image', `url(${cache})`);
     } catch {
-      $searchBoxBtn.attr('src', defaultIcon);
-      $searchInpWrap.find('img').attr('src', defaultIcon);
+      $searchBoxBtn.css('background-image', `url(${defaultIcon})`);
+      $sLogo.css('background-image', `url(${defaultIcon})`);
     }
   } else {
-    $searchBoxBtn.attr('src', logo);
-    $searchInpWrap.find('img').attr('src', logo);
+    $searchBoxBtn.css('background-image', `url(${logo})`);
+    $sLogo.css('background-image', `url(${logo})`);
   }
   searchInput.target.placeholder = `输入搜索内容或网址 - ${title}`;
   $searchInpWrap.find('.content').css('box-shadow', `0 0 0.2rem ${color || 'var(--icon-color)'}`);
@@ -925,14 +926,16 @@ function getSearchEngineList() {
     `
     <div class="item setting" cursor="true"><i class="icon iconfont icon-shezhi"></i><span class="text">管理搜索引擎</span></div>
     <div v-for="{id,title,logo,color,link},i in _d.searchEngineData" cursor="y" :data-id="id" class="item {{getSearchEngine().id === id ? 'active' : ''}}">
-      <img v-if="i == 0" :src="logo" style="width: 4rem;height: 4rem;border-radius: var(--border-radius1);"/>
-      <img v-else style="width: 4rem;height: 4rem;border-radius: var(--border-radius1);" :data-src="getLogoPath(link,logo)"/>
+      <img v-if="i == 0" :src="logo" :style="imgStyle"/>
+      <img v-else :style="imgStyle" :data-src="getLogoPath(link,logo)"/>
       <span class="search_name" style="margin-left:1rem;flex:auto;">{{title}}</span>
       <i class="iconfont icon-color" style="color:{{color}}"></i>
     </div>
     <div class="item add" cursor="true"><i class="icon iconfont icon-tianjia"></i><span class="text">添加搜索引擎</span></div>
     `,
     {
+      imgStyle:
+        'width: 4rem;height: 4rem;border-radius: var(--border-radius1);object-fit: cover;object-position: center;',
       _d,
       getLogoPath(link, logo) {
         if (logo) {
@@ -1210,13 +1213,15 @@ function getTranslatorList() {
     `
     <div class="item setting" cursor="true"><i class="icon iconfont icon-shezhi"></i><span class="text">管理翻译接口</span></div>
     <div v-for="{id,title,logo,link},i in _d.translatorData" cursor="y" :data-id="id" class="item {{getTranslator().id === id ? 'active' : ''}}">
-      <img v-if="i == 0" :src="logo" style="width: 4rem;height: 4rem;border-radius: var(--border-radius1);"/>
-      <img v-else style="width: 4rem;height: 4rem;border-radius: var(--border-radius1);" :data-src="getLogoPath(link,logo)"/>
+      <img v-if="i == 0" :src="logo" :style="imgStyle"/>
+      <img v-else :style="imgStyle" :data-src="getLogoPath(link,logo)"/>
       <span class="translator_name" style="margin-left:1rem;flex:auto;">{{title}}</span>
     </div>
     <div class="item add" cursor="true"><i class="icon iconfont icon-tianjia"></i><span class="text">添加翻译接口</span></div>
     `,
     {
+      imgStyle:
+        'width: 4rem;height: 4rem;border-radius: var(--border-radius1);object-fit: cover;object-position: center;',
       _d,
       getLogoPath(link, logo) {
         if (logo) {

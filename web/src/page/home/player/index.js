@@ -537,11 +537,13 @@ export function moveSongToList(e, pid, ar) {
   const html = _tpl(
     `
     <div v-for="v in list" cursor="y" class="item" :data-id="v.id">
-      <img style="width: 4rem;height: 4rem;border-radius: var(--border-radius1);" :data-src="v.pic"/>
+      <img :style="imgStyle" :data-src="v.pic"/>
       <span style="margin-left:1rem;">{{v.name}}</span>
     </div>
     `,
     {
+      imgStyle:
+        'width: 4rem;height: 4rem;border-radius: var(--border-radius1);object-fit: cover;object-position: center;',
       list,
       pid,
     },
