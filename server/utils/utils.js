@@ -805,3 +805,16 @@ export function extractFullHead(html) {
   const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
   return headMatch ? headMatch[0] : '<head></head>';
 }
+
+// 开启跨域
+export function openCors(req, res, next) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+
+  next();
+}

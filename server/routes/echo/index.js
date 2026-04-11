@@ -1,20 +1,14 @@
 import express from 'express';
-import { formatDate } from '../../utils/utils.js';
+import { formatDate, openCors } from '../../utils/utils.js';
 import { _d } from '../../data/data.js';
 import resp from '../../utils/response.js';
 const route = express.Router();
 
-route.all('/', (req, res) => {
+route.all('/', openCors, (req, res) => {
   try {
     if (!_d.pubApi.echoApi) {
       return resp.forbidden(res, '接口未开放')(req);
     }
-
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', '*');
-    res.setHeader('Access-Control-Allow-Headers', '*');
-
-    if (req.method === 'OPTIONS') return res.sendStatus(204);
 
     const contentType = req.headers['content-type'] || '';
     const isFileUpload = contentType.startsWith('multipart/form-data');

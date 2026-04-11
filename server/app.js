@@ -21,6 +21,7 @@ import {
   extractFullHead,
   errLog,
   validate,
+  openCors,
 } from './utils/utils.js';
 
 import appConfig from './data/config.js';
@@ -233,6 +234,7 @@ app.use('/api/ssh', sshRoute);
 // 收信接口
 app.all(
   '/api/s/:chat_id',
+  openCors,
   validate(
     'params',
     V.object({
@@ -284,6 +286,7 @@ app.all(
 // 获取页面信息
 app.get(
   '/api/site-info',
+  openCors,
   validate(
     'query',
     V.object({
@@ -386,6 +389,7 @@ app.get(
 // ip地理位置
 app.get(
   '/api/ip-location',
+  openCors,
   validate(
     'query',
     V.object({
