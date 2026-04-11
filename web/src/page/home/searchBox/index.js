@@ -2,6 +2,7 @@ import $ from 'jquery';
 import './cat.less';
 import defaultIcon from '../../../images/img/default-icon.png';
 import imgTianjia from '../../../images/img/tianjia.png';
+import loadSvg from '../../../images/img/loading.svg';
 import {
   myOpen,
   debounce,
@@ -927,13 +928,14 @@ function getSearchEngineList() {
     <div class="item setting" cursor="true"><i class="icon iconfont icon-shezhi"></i><span class="text">管理搜索引擎</span></div>
     <div v-for="{id,title,logo,color,link},i in _d.searchEngineData" cursor="y" :data-id="id" class="item {{getSearchEngine().id === id ? 'active' : ''}}">
       <img v-if="i == 0" :src="logo" :style="imgStyle"/>
-      <img v-else :style="imgStyle" :data-src="getLogoPath(link,logo)"/>
+      <img v-else :style="imgStyle" :src="loadSvg" :data-src="getLogoPath(link,logo)"/>
       <span class="search_name" style="margin-left:1rem;flex:auto;">{{title}}</span>
       <i class="iconfont icon-color" style="color:{{color}}"></i>
     </div>
     <div class="item add" cursor="true"><i class="icon iconfont icon-tianjia"></i><span class="text">添加搜索引擎</span></div>
     `,
     {
+      loadSvg,
       imgStyle:
         'width: 4rem;height: 4rem;border-radius: var(--border-radius1);object-fit: cover;object-position: center;',
       _d,
@@ -1214,12 +1216,13 @@ function getTranslatorList() {
     <div class="item setting" cursor="true"><i class="icon iconfont icon-shezhi"></i><span class="text">管理翻译接口</span></div>
     <div v-for="{id,title,logo,link},i in _d.translatorData" cursor="y" :data-id="id" class="item {{getTranslator().id === id ? 'active' : ''}}">
       <img v-if="i == 0" :src="logo" :style="imgStyle"/>
-      <img v-else :style="imgStyle" :data-src="getLogoPath(link,logo)"/>
+      <img v-else :style="imgStyle" :src="loadSvg" :data-src="getLogoPath(link,logo)"/>
       <span class="translator_name" style="margin-left:1rem;flex:auto;">{{title}}</span>
     </div>
     <div class="item add" cursor="true"><i class="icon iconfont icon-tianjia"></i><span class="text">添加翻译接口</span></div>
     `,
     {
+      loadSvg,
       imgStyle:
         'width: 4rem;height: 4rem;border-radius: var(--border-radius1);object-fit: cover;object-position: center;',
       _d,
