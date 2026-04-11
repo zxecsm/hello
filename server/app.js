@@ -389,19 +389,20 @@ app.get(
   validate(
     'query',
     V.object({
-      ip: V.string().trim().min(1).custom(getClientIp.isIp, 'ip 格式错误'),
+      ip: V.string().trim().default('').allowEmpty().min(1).custom(getClientIp.isIp, 'ip 格式错误'),
     }),
   ),
   async (req, res) => {
     try {
-      const { ip } = req[kValidate];
+      let { ip } = req[kValidate];
+      ip = ip || req[kHello].ip;
 
       // 检查接口是否开启
-      if (!_d.pubApi.ipLocationApi) {
+      if (!_d.pubApi.ipLocationApi && !req[kHello].userinfo.account) {
         return resp.forbidden(res, '接口未开放')(req, ip, 1);
       }
 
-      resp.success(res, '获取ip地理位置成功', getCity(ip))(req, ip, 1);
+      resp.success(res, '获取ip地理位置成功', { ...getCity(ip), ip })(req, ip, 1);
     } catch (error) {
       resp.error(res)(req, error);
     }

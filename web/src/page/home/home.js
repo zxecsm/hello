@@ -1,4 +1,4 @@
-import { reqUserAllowLogin } from '../../api/user';
+import { reqUserAllowLogin, reqUserIpLocation } from '../../api/user';
 import _d from '../../js/common/config';
 import localData from '../../js/common/localData';
 import _msg from '../../js/plugins/message';
@@ -126,6 +126,7 @@ export function waitLogin(callback) {
   }
 }
 export function timeMsg() {
+  if (isIframe()) return;
   const hour = new Date().getHours();
   let msg = '';
   let icon = '';
@@ -170,4 +171,77 @@ export function timeMsg() {
 
   localData.set('timeMsg', msg);
   _msg.msg({ message: msg, icon, duration: 5000 });
+}
+export function welcomeMsg() {
+  if (isIframe()) return;
+  reqUserIpLocation()
+    .then((res) => {
+      if (res.code === 1) {
+        const { ip, province, country } = res.data;
+        if (localData.get('ip') === ip) return;
+        localData.set('ip', ip);
+        _msg.msg({
+          type: 'success',
+          message: `✨✨✨欢迎来自 ${country} ${province} 的朋友！🎈🎈🎈`,
+          icon: 'iconfont icon-cat',
+          duration: 5000,
+        });
+        fireworks();
+      }
+    })
+    .catch(() => {});
+}
+export function fireworks(count = 6) {
+  const colors = ['#ff4d4f', '#40a9ff', '#73d13d', '#faad14', '#9254de'];
+
+  function explode(x, y) {
+    for (let i = 0; i < 80; i++) {
+      const el = document.createElement('div');
+
+      el.style.cssText = `
+        position: fixed;
+        width: 6px;
+        height: 6px;
+        left: ${x}px;
+        top: ${y}px;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9999;
+        background: ${colors[Math.floor(Math.random() * colors.length)]};
+      `;
+
+      document.body.appendChild(el);
+
+      const angle = Math.random() * 2 * Math.PI;
+      const distance = Math.random() * 300 + 50;
+
+      const dx = Math.cos(angle) * distance;
+      const dy = Math.sin(angle) * distance;
+
+      const duration = 2500 + Math.random() * 1000;
+
+      el.animate(
+        [
+          { transform: 'translate(0,0)', opacity: 1 },
+          { transform: `translate(${dx}px, ${dy}px)`, opacity: 0 },
+        ],
+        {
+          duration,
+          easing: 'cubic-bezier(0,0.8,0.2,1)',
+          fill: 'forwards',
+        },
+      );
+
+      setTimeout(() => el.remove(), duration);
+    }
+  }
+
+  // 连续触发多个烟花
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const x = Math.random() * window.innerWidth;
+      const y = Math.random() * window.innerHeight * 0.6; // 上半部分更像烟花
+      explode(x, y);
+    }, i * 500); // 每隔0.5秒一个
+  }
 }

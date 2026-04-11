@@ -125,7 +125,7 @@ import { closeCountBox, countMsg, getCountList, setExpireCount } from './count_d
 import { reqCountList } from '../../api/count.js';
 import { deepClone } from '../../js/utils/template.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
-import { handleAllowLoginMsg, shakeChat, timeMsg } from './home.js';
+import { handleAllowLoginMsg, shakeChat, timeMsg, welcomeMsg } from './home.js';
 import localData from '../../js/common/localData.js';
 const $pageBg = $('.page_bg'),
   $pageBgFilter = $('.page_bg_filter'),
@@ -242,6 +242,7 @@ async function closeLoading() {
   await delay(_d.speed);
   $searchBoxBtn.stop().show(_d.speed, () => {
     timeMsg();
+    welcomeMsg();
     // 查看消息
     reqChatNews()
       .then((result) => {
@@ -269,18 +270,22 @@ async function closeLoading() {
       })
       .catch(() => {});
     // 查看是否有未完成事项
-    reqTodoList().then((res) => {
-      if (res.code === 1) {
-        setTodoUndone(res.data.undoneCount);
-        todoMsg();
-      }
-    });
-    reqCountList().then((res) => {
-      if (res.code === 1) {
-        setExpireCount(res.data.expireCount);
-        countMsg();
-      }
-    });
+    reqTodoList()
+      .then((res) => {
+        if (res.code === 1) {
+          setTodoUndone(res.data.undoneCount);
+          todoMsg();
+        }
+      })
+      .catch(() => {});
+    reqCountList()
+      .then((res) => {
+        if (res.code === 1) {
+          setExpireCount(res.data.expireCount);
+          countMsg();
+        }
+      })
+      .catch(() => {});
   });
 }
 // 初始化

@@ -111,6 +111,8 @@ const defaultData = {
   },
   sysInfoSize: {},
   userInfoSize: {},
+  timeMsg: '',
+  ip: '',
 };
 function encode(obj) {
   return encodeURIComponent(JSON.stringify(obj));

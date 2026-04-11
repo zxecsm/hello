@@ -43,7 +43,7 @@ import MdWorker from '../../js/utils/md.worker.js';
 import loadingPage from '../../js/plugins/loading/index.js';
 import { _tpl } from '../../js/utils/template.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
-import { otherWindowMsg, timeMsg, waitLogin } from '../home/home.js';
+import { otherWindowMsg, timeMsg, waitLogin, welcomeMsg } from '../home/home.js';
 import localData from '../../js/common/localData.js';
 const mdWorker = new MdWorker();
 let urlparmes = queryURLParams(myOpen()),
@@ -298,9 +298,8 @@ mdWorker.addEventListener('message', (event) => {
     $setBtnsWrap.find('.show_navigation_btn').remove();
   }
   loadingPage.end();
-  if (!isIframe()) {
-    timeMsg();
-  }
+  timeMsg();
+  welcomeMsg();
   $setBtnsWrap.addClass('open');
   $contentWrap.addClass('open');
   if (HASH) {

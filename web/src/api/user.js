@@ -153,3 +153,7 @@ export function reqUserGetCaptcha(data) {
 export function reqUserCaptcha(data) {
   return _postAjax('/user/captcha', data);
 }
+// 获取地理位置
+export function reqUserIpLocation() {
+  return _getAjax('/ip-location', {}, { load: 0, stopErrorMsg: 1 });
+}

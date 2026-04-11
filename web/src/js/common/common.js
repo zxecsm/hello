@@ -25,7 +25,7 @@ import { reqUserCustomCode, reqUserError } from '../../api/user';
 import './codeRain';
 import localData from './localData';
 import wave from '../plugins/wave';
-import { timeMsg } from '../../page/home/home';
+import { timeMsg, welcomeMsg } from '../../page/home/home';
 import bear from '../plugins/bear';
 import ScreenWakeLock from './screenWakeLock';
 import _path from '../utils/path';
@@ -73,9 +73,8 @@ window.addEventListener('load', function () {
   }
   if (window._pageName === 'home' || window._pageName === 'note') return;
   loadingPage.end();
-  if (!isIframe()) {
-    timeMsg();
-  }
+  timeMsg();
+  welcomeMsg();
 });
 //鼠标点击效果
 ~(function () {
@@ -310,9 +309,7 @@ changeHeadBtnSort(localData.get('headBtnToRight'));
     // 页面变为可见时触发
     if (document.visibilityState === 'visible') {
       icon.href = iconlogo;
-      if (!isIframe()) {
-        timeMsg();
-      }
+      timeMsg();
     }
   });
 })();

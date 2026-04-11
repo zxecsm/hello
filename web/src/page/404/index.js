@@ -3,7 +3,20 @@ import '../../css/common/common.css';
 import '../../font/iconfont.css';
 import './index.less';
 import '../../js/common/common';
-import { randomNum } from '../../js/utils/utils';
+import { isIframe, randomNum } from '../../js/utils/utils';
+import { otherWindowMsg, waitLogin } from '../home/home';
+import realtime from '../../js/plugins/realtime';
+
+if (!isIframe()) {
+  waitLogin(() => {
+    // 同步数据
+    realtime.init().add((res) => {
+      res.forEach((item) => {
+        otherWindowMsg(item);
+      });
+    });
+  });
+}
 
 // 随机动画效果
 const animations = [

@@ -3,14 +3,25 @@ import '../../css/common/common.css';
 import '../../font/iconfont.css';
 import './index.less';
 import '../../js/common/common';
-import { isLogin, myOpen, queryURLParams, toLogin } from '../../js/utils/utils';
+import { isIframe, isLogin, myOpen, queryURLParams, toLogin } from '../../js/utils/utils';
 import { reqBmkAddBmk, reqBmkList, reqBmkSiteInfo } from '../../api/bmk';
 import rMenu from '../../js/plugins/rightMenu';
 import _d from '../../js/common/config';
 import _msg from '../../js/plugins/message';
+import { otherWindowMsg } from '../home/home';
+import realtime from '../../js/plugins/realtime';
 
 if (!isLogin()) {
   toLogin();
+}
+
+if (!isIframe()) {
+  // 同步数据
+  realtime.init().add((res) => {
+    res.forEach((item) => {
+      otherWindowMsg(item);
+    });
+  });
 }
 
 const { HASH } = queryURLParams(myOpen());
