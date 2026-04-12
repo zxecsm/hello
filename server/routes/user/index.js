@@ -17,7 +17,6 @@ import {
   batchTask,
   concurrencyTasks,
   getWordContent,
-  validate,
 } from '../../utils/utils.js';
 
 import { db } from '../../utils/sqlite.js';
@@ -52,16 +51,14 @@ import getCity from '../../utils/getCity.js';
 import nanoid from '../../utils/nanoid.js';
 import { readSearchConfig, writeSearchConfig } from '../search/search.js';
 import V from '../../utils/validRules.js';
-import { sym } from '../../utils/symbols.js';
 import captcha from '../../utils/captcha.js';
 import { getSSH, resetSSHExpireTime } from '../ssh/terminal.js';
 import resp from '../../utils/response.js';
+import { asyncHandler, validate } from '../../utils/customMiddleware.js';
 
 const verifyCode = new Map();
 
 const route = express.Router();
-const kHello = sym('hello');
-const kValidate = sym('validate');
 
 // 记录错误
 route.post(
@@ -72,22 +69,19 @@ route.post(
       err: V.string().min(1),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { err } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { err } = res.locals.ctx;
 
-      await writelog(req, `[ ${err.slice(0, 1000)} ]`, 'panel_error');
+    await writelog(res, `[ ${err.slice(0, 1000)} ]`, 100);
 
-      resp.success(res);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res)();
+  }),
 );
 
 // 获取自定义code
-route.get('/custom-code', async (req, res) => {
-  try {
+route.get(
+  '/custom-code',
+  asyncHandler(async (_, res) => {
     const headPath = appConfig.customDir('custom_head.html');
     const bodyPath = appConfig.customDir('custom_body.html');
 
@@ -96,11 +90,9 @@ route.get('/custom-code', async (req, res) => {
       body: (await _f.readFile(bodyPath, null, '')).toString(),
     };
 
-    resp.success(res, 'ok', obj);
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+    resp.success(res, 'ok', obj)();
+  }),
+);
 
 // 注册限制
 let registerCount = 0;
@@ -128,7 +120,7 @@ timedTask.add(async (flag) => {
 
     if (num) {
       const text = `清理过期临时缓存文件：${num}`;
-      await writelog(false, text, 'user');
+      await writelog(false, text);
       await heperMsgAndForward(null, appConfig.adminAccount, text);
     }
   }
@@ -145,63 +137,56 @@ route.post(
       captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      if (!_d.registerState || registerCount > 20) {
-        resp.forbidden(res, '已关闭注册功能')(req);
-        return;
-      }
-
-      const { username, password, captchaId } = req[kValidate];
-
-      if (!captcha.consume(captchaId, username)) {
-        resp.success(res, '需要验证验证码，请完成验证', {
-          needCaptcha: true,
-          username,
-        })(req, username, 1);
-        return;
-      }
-
-      const userInfo = await db('user').select('account').where({ username }).findOne();
-
-      if (userInfo) {
-        resp.forbidden(res, '用户名无法使用')(req, username, 1);
-        return;
-      }
-
-      // 写入用户数据
-      const account = nanoid();
-      const create_at = Date.now();
-      await db('user').insert({
-        create_at,
-        update_at: create_at,
-        account,
-        username,
-        chat_id: nanoid(),
-        password: await _crypto.hashPassword(password),
-      });
-
-      // 种下Cookie
-      await jwt.setCookie(res, { account, username });
-
-      registerCount++;
-
-      await becomeFriends(account, appConfig.chatRoomAccount);
-      await becomeFriends(account, appConfig.notifyAccount);
-
-      const { os, ip } = req[kHello];
-
-      await heperMsgAndForward(
-        req,
-        appConfig.adminAccount,
-        `${username}(${account})，在 [${os}(${ip})] 注册账号成功`,
-      );
-
-      resp.success(res, '注册账号成功', { account, username })(req, `${username}-${account}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+  asyncHandler(async (_, res) => {
+    if (!_d.registerState || registerCount > 20) {
+      return resp.forbidden(res, '已关闭注册功能')();
     }
-  },
+
+    const { username, password, captchaId } = res.locals.ctx;
+
+    if (!captcha.consume(captchaId, username)) {
+      return resp.success(res, '需要验证验证码，请完成验证', {
+        needCaptcha: true,
+        username,
+      })();
+    }
+
+    const userInfo = await db('user').select('account').where({ username }).findOne();
+
+    if (userInfo) {
+      return resp.forbidden(res, '用户名无法使用')();
+    }
+
+    // 写入用户数据
+    const account = nanoid();
+    const create_at = Date.now();
+    await db('user').insert({
+      create_at,
+      update_at: create_at,
+      account,
+      username,
+      chat_id: nanoid(),
+      password: await _crypto.hashPassword(password),
+    });
+
+    // 种下Cookie
+    await jwt.setCookie(res, { account, username });
+
+    registerCount++;
+
+    await becomeFriends(account, appConfig.chatRoomAccount);
+    await becomeFriends(account, appConfig.notifyAccount);
+
+    const { os, ip } = res.locals.hello;
+
+    await heperMsgAndForward(
+      res,
+      appConfig.adminAccount,
+      `${username}(${account})，在 [${os}(${ip})] 注册账号成功`,
+    );
+
+    resp.success(res, '注册账号成功', { account, username })();
+  }),
 );
 
 // 批准登录请求
@@ -214,56 +199,50 @@ route.post(
       username: V.string().trim().min(1).max(fieldLength.username),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { code, username } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { code, username } = res.locals.ctx;
 
-      const userinfo = await db('user')
-        .select('account, remote_login')
-        .where({
-          username,
-          state: 1,
-          account: { '!=': appConfig.notifyAccount },
-        })
-        .findOne();
+    const userinfo = await db('user')
+      .select('account, remote_login')
+      .where({
+        username,
+        state: 1,
+        account: { '!=': appConfig.notifyAccount },
+      })
+      .findOne();
 
-      if (!userinfo) {
-        resp.forbidden(res, '用户无法免密登录')(req, username, 1);
-        return;
-      }
-
-      const { account, remote_login } = userinfo;
-
-      if (remote_login === 0) {
-        resp.forbidden(res, '用户未开启免密登录')(req, `${username}-${account}`, 1);
-        return;
-      }
-
-      const { ip, os } = req[kHello];
-
-      const { country, province, city, isp } = getCity(ip);
-
-      // 发送允许登录消息
-      _connect.send(
-        userinfo.account,
-        req[kHello].temid,
-        {
-          type: 'allowLogin',
-          data: {
-            ip,
-            os,
-            addr: `${country} ${province} ${city} ${isp}`,
-            code,
-          },
-        },
-        'all',
-      );
-
-      resp.success(res, '发送登录请求成功')(req, `${username}-${account}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (!userinfo) {
+      return resp.forbidden(res, '用户无法免密登录')();
     }
-  },
+
+    const { remote_login } = userinfo;
+
+    if (remote_login === 0) {
+      return resp.forbidden(res, '用户未开启免密登录')();
+    }
+
+    const { ip, os } = res.locals.hello;
+
+    const { country, province, city, isp } = getCity(ip);
+
+    // 发送允许登录消息
+    _connect.send(
+      userinfo.account,
+      res.locals.hello.temid,
+      {
+        type: 'allowLogin',
+        data: {
+          ip,
+          os,
+          addr: `${country} ${province} ${city} ${isp}`,
+          code,
+        },
+      },
+      'all',
+    );
+
+    resp.success(res, '发送登录请求成功')();
+  }),
 );
 
 // 免密登录
@@ -276,63 +255,56 @@ route.post(
       username: V.string().trim().min(1).max(fieldLength.username),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { code, username } = req[kValidate];
-      const userinfo = await db('user')
-        .select('account, remote_login')
-        .where({
-          username,
-          state: 1,
-          account: { '!=': appConfig.notifyAccount },
-        })
-        .findOne();
-
-      if (!userinfo) {
-        resp.forbidden(res, '用户无法免密登录')(req, username, 1);
-        return;
-      }
-
-      const { remote_login } = userinfo;
-
-      if (remote_login === 0) {
-        resp.forbidden(res, '用户未开启免密登录')(req, `${username}-${userinfo.account}`, 1);
-        return;
-      }
-
-      const key = `${userinfo.account}_${code}`;
-
-      if (!verifyCode.has(key)) {
-        resp.ok(res);
-        return;
-      }
-
-      // 轮询请求一直到key被赋值，获取账号信息并删除记录，种下cookie
-      const account = verifyCode.get(key);
-
-      verifyCode.delete(key);
-
-      await jwt.setCookie(res, {
-        account,
+  asyncHandler(async (_, res) => {
+    const { code, username } = res.locals.ctx;
+    const userinfo = await db('user')
+      .select('account, remote_login')
+      .where({
         username,
-      });
+        state: 1,
+        account: { '!=': appConfig.notifyAccount },
+      })
+      .findOne();
 
-      const { os, ip } = req[kHello];
-
-      await heperMsgAndForward(
-        req,
-        account,
-        `您的账号通过免密验证，在 [${os}(${ip})] 登录成功。如非本人操作，请及时修改密码（密码修改成功，全平台清空登录态）`,
-      );
-
-      resp.success(res, '登录成功', {
-        account,
-        username,
-      })(req, `${username}-${account}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (!userinfo) {
+      return resp.forbidden(res, '用户无法免密登录')();
     }
-  },
+
+    const { remote_login } = userinfo;
+
+    if (remote_login === 0) {
+      return resp.forbidden(res, '用户未开启免密登录')();
+    }
+
+    const key = `${userinfo.account}_${code}`;
+
+    if (!verifyCode.has(key)) {
+      return resp.ok(res)();
+    }
+
+    // 轮询请求一直到key被赋值，获取账号信息并删除记录，种下cookie
+    const account = verifyCode.get(key);
+
+    verifyCode.delete(key);
+
+    await jwt.setCookie(res, {
+      account,
+      username,
+    });
+
+    const { os, ip } = res.locals.hello;
+
+    await heperMsgAndForward(
+      res,
+      account,
+      `您的账号通过免密验证，在 [${os}(${ip})] 登录成功。如非本人操作，请及时修改密码（密码修改成功，全平台清空登录态）`,
+    );
+
+    resp.success(res, '登录成功', {
+      account,
+      username,
+    })();
+  }),
 );
 
 // 获取验证码
@@ -346,20 +318,15 @@ route.get(
       theme: V.string().trim().default('light').enum(['light', 'dark']),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { flag, theme } = req[kValidate];
-      const { ip } = req[kHello];
-      if (!captchaVerifyLimit.verify(ip, flag)) {
-        resp.forbidden(res, '请稍后再试')(req, flag, 1);
-        return;
-      }
-      captchaVerifyLimit.add(ip, flag);
-      resp.success(res, 'ok', await captcha.get(flag, theme));
-    } catch (error) {
-      resp.error(res)(req, error);
+  asyncHandler(async (_, res) => {
+    const { flag, theme } = res.locals.ctx;
+    const { ip } = res.locals.hello;
+    if (!captchaVerifyLimit.verify(ip, flag)) {
+      return resp.forbidden(res, '请稍后再试')();
     }
-  },
+    captchaVerifyLimit.add(ip, flag);
+    resp.success(res, 'ok', await captcha.get(flag, theme))();
+  }),
 );
 
 // 验证验证码
@@ -378,32 +345,26 @@ route.post(
       ),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id, track } = req[kValidate];
-      const { ip } = req[kHello];
-      const { flag } = captcha.getValue(id) || {};
-      if (flag) {
-        if (!captchaVerifyLimit.verify(ip, flag)) {
-          resp.forbidden(res, '请稍后再试')(req, flag, 1);
-          return;
-        }
-
-        if (!captcha.verify(id, track)) {
-          captchaVerifyLimit.add(ip, flag);
-          resp.forbidden(res, '验证失败，请重试')(req, flag, 1);
-          return;
-        }
-
-        captchaVerifyLimit.delete(ip, flag);
-        resp.success(res, '验证成功')(req, flag, 1);
-      } else {
-        resp.forbidden(res, '验证失败，请重试')(req, id, 1);
+  asyncHandler(async (_, res) => {
+    const { id, track } = res.locals.ctx;
+    const { ip } = res.locals.hello;
+    const { flag } = captcha.getValue(id) || {};
+    if (flag) {
+      if (!captchaVerifyLimit.verify(ip, flag)) {
+        return resp.forbidden(res, '请稍后再试')();
       }
-    } catch (error) {
-      resp.error(res)(req, error);
+
+      if (!captcha.verify(id, track)) {
+        captchaVerifyLimit.add(ip, flag);
+        return resp.forbidden(res, '验证失败，请重试')();
+      }
+
+      captchaVerifyLimit.delete(ip, flag);
+      resp.success(res, '验证成功')();
+    } else {
+      resp.forbidden(res, '验证失败，请重试')();
     }
-  },
+  }),
 );
 
 // 登录
@@ -418,69 +379,63 @@ route.post(
       captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { username, password, captchaId } = req[kValidate];
-      const needCaptcha = !loginVerifyLimit.verify(username);
+  asyncHandler(async (_, res) => {
+    const { username, password, captchaId } = res.locals.ctx;
+    const needCaptcha = !loginVerifyLimit.verify(username);
 
-      if (needCaptcha && !captcha.consume(captchaId, username)) {
-        resp.success(res, '需要验证验证码，请完成验证', {
-          needCaptcha,
-          username,
-        })(req, username, 1);
-        return;
-      }
-
-      const userinfo = await db('user')
-        .select('verify,account,password')
-        .where({
-          username,
-          state: 1,
-          account: { '!=': appConfig.notifyAccount },
-        })
-        .findOne();
-
-      if (!userinfo) {
-        loginVerifyLimit.add(username);
-        resp.forbidden(res, '用户名或密码错误，请重新输入')(req, username, 1);
-        return;
-      }
-
-      const { verify, account } = userinfo;
-
-      // 验证密码，如果未设置密码或密码正确
-      if (!userinfo.password || (await _crypto.verifyPassword(password, userinfo.password))) {
-        if (verify) {
-          // 如果开启两部验证，则继续验证身份
-          resp.success(res, '账号密码验证成功，请完成两步验证', {
-            account,
-            verify: true,
-          })(req, `${username}-${account}`, 1);
-        } else {
-          await jwt.setCookie(res, {
-            account,
-            username,
-          });
-
-          const { os, ip } = req[kHello];
-
-          await heperMsgAndForward(
-            req,
-            account,
-            `您的账号在 [${os}(${ip})] 登录成功。如非本人操作，请及时修改密码（密码修改成功，全平台清空登录态）`,
-          );
-
-          resp.success(res, '登录成功', { account, username })(req, `${username}-${account}`, 1);
-        }
-      } else {
-        loginVerifyLimit.add(username);
-
-        resp.forbidden(res, '用户名或密码错误，请重新输入')(req, `${username}-${account}`, 1);
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (needCaptcha && !captcha.consume(captchaId, username)) {
+      return resp.success(res, '需要验证验证码，请完成验证', {
+        needCaptcha,
+        username,
+      })();
     }
-  },
+
+    const userinfo = await db('user')
+      .select('verify,account,password')
+      .where({
+        username,
+        state: 1,
+        account: { '!=': appConfig.notifyAccount },
+      })
+      .findOne();
+
+    if (!userinfo) {
+      loginVerifyLimit.add(username);
+      return resp.forbidden(res, '用户名或密码错误，请重新输入')();
+    }
+
+    const { verify, account } = userinfo;
+
+    // 验证密码，如果未设置密码或密码正确
+    if (!userinfo.password || (await _crypto.verifyPassword(password, userinfo.password))) {
+      if (verify) {
+        // 如果开启两部验证，则继续验证身份
+        resp.success(res, '账号密码验证成功，请完成两步验证', {
+          account,
+          verify: true,
+        })();
+      } else {
+        await jwt.setCookie(res, {
+          account,
+          username,
+        });
+
+        const { os, ip } = res.locals.hello;
+
+        await heperMsgAndForward(
+          res,
+          account,
+          `您的账号在 [${os}(${ip})] 登录成功。如非本人操作，请及时修改密码（密码修改成功，全平台清空登录态）`,
+        );
+
+        resp.success(res, '登录成功', { account, username })();
+      }
+    } else {
+      loginVerifyLimit.add(username);
+
+      resp.forbidden(res, '用户名或密码错误，请重新输入')();
+    }
+  }),
 );
 
 // 两步验证
@@ -496,57 +451,51 @@ route.post(
       captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { token, account, password, captchaId } = req[kValidate];
-      const needCaptcha = !towfaVerify.verify(account);
+  asyncHandler(async (_, res) => {
+    const { token, account, password, captchaId } = res.locals.ctx;
+    const needCaptcha = !towfaVerify.verify(account);
 
-      if (needCaptcha && !captcha.consume(captchaId, account)) {
-        resp.success(res, '需要验证验证码，请完成验证', {
-          needCaptcha,
-          account,
-        })(req, account, 1);
-        return;
-      }
-
-      const user = await getUserInfo(account, 'username,verify,password');
-
-      if (!user) {
-        towfaVerify.add(account);
-        resp.forbidden(res, '用户无法两步验证')(req, account, 1);
-        return;
-      }
-
-      const { username, verify, password: pd } = user;
-
-      // 验证密码和验证码
-      if (
-        (!pd || (await _crypto.verifyPassword(password, pd))) &&
-        verify &&
-        _2fa.verify(verify, token)
-      ) {
-        await jwt.setCookie(res, {
-          account,
-          username,
-        });
-
-        const { os, ip } = req[kHello];
-
-        await heperMsgAndForward(
-          req,
-          account,
-          `您的账号在 [${os}(${ip})] 登录成功。如非本人操作，请及时修改密码（密码修改成功，全平台清空登录态）`,
-        );
-
-        resp.success(res, '登录成功', { account, username })(req, `${username}-${account}`, 1);
-      } else {
-        towfaVerify.add(account);
-        resp.forbidden(res, '验证码错误，请重新输入')(req, `${username}-${account}`, 1);
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (needCaptcha && !captcha.consume(captchaId, account)) {
+      return resp.success(res, '需要验证验证码，请完成验证', {
+        needCaptcha,
+        account,
+      })();
     }
-  },
+
+    const user = await getUserInfo(account, 'username,verify,password');
+
+    if (!user) {
+      towfaVerify.add(account);
+      return resp.forbidden(res, '用户无法两步验证')();
+    }
+
+    const { username, verify, password: pd } = user;
+
+    // 验证密码和验证码
+    if (
+      (!pd || (await _crypto.verifyPassword(password, pd))) &&
+      verify &&
+      _2fa.verify(verify, token)
+    ) {
+      await jwt.setCookie(res, {
+        account,
+        username,
+      });
+
+      const { os, ip } = res.locals.hello;
+
+      await heperMsgAndForward(
+        res,
+        account,
+        `您的账号在 [${os}(${ip})] 登录成功。如非本人操作，请及时修改密码（密码修改成功，全平台清空登录态）`,
+      );
+
+      resp.success(res, '登录成功', { account, username })();
+    } else {
+      towfaVerify.add(account);
+      resp.forbidden(res, '验证码错误，请重新输入')();
+    }
+  }),
 );
 
 // 发送邮件验证码
@@ -559,59 +508,49 @@ route.get(
       captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { username, captchaId } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { username, captchaId } = res.locals.ctx;
 
-      if (!captcha.consume(captchaId, username)) {
-        resp.success(res, '需要验证验证码，请完成验证', {
-          needCaptcha: true,
-          username,
-        })(req, username, 1);
-        return;
-      }
-
-      if (!_d.email.state) {
-        resp.forbidden(res, '邮箱验证功能已关闭')(req, username, 1);
-        return;
-      }
-
-      const userinfo = await db('user')
-        .select('account,email')
-        .where({
-          username,
-          state: 1,
-          account: { '!=': appConfig.notifyAccount },
-        })
-        .findOne();
-
-      if (!userinfo) {
-        resp.forbidden(res, '用户无法验证邮箱')(req, username, 1);
-        return;
-      }
-
-      const { account, email } = userinfo;
-
-      if (!email) {
-        resp.forbidden(res, '用户未绑定邮箱')(req, `${username}-${account}`, 1);
-        return;
-      }
-
-      if (mailer.get(email)) {
-        // 如果有缓存
-        resp.success(res, '验证码已发送', { account, email })(req, `${username}-${account}`, 1);
-
-        return;
-      }
-
-      const code = Math.random().toFixed(6).slice(2);
-
-      await mailer.sendCode(email, code);
-      resp.success(res, '验证码发送成功', { account, email })(req, `${username}-${account}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (!captcha.consume(captchaId, username)) {
+      return resp.success(res, '需要验证验证码，请完成验证', {
+        needCaptcha: true,
+        username,
+      })();
     }
-  },
+
+    if (!_d.email.state) {
+      return resp.forbidden(res, '邮箱验证功能已关闭')();
+    }
+
+    const userinfo = await db('user')
+      .select('account,email')
+      .where({
+        username,
+        state: 1,
+        account: { '!=': appConfig.notifyAccount },
+      })
+      .findOne();
+
+    if (!userinfo) {
+      return resp.forbidden(res, '用户无法验证邮箱')();
+    }
+
+    const { account, email } = userinfo;
+
+    if (!email) {
+      return resp.forbidden(res, '用户未绑定邮箱')();
+    }
+
+    if (mailer.get(email)) {
+      // 如果有缓存
+      return resp.success(res, '验证码已发送', { account, email })();
+    }
+
+    const code = Math.random().toFixed(6).slice(2);
+
+    await mailer.sendCode(email, code);
+    resp.success(res, '验证码发送成功', { account, email })();
+  }),
 );
 
 // 重置密码
@@ -627,76 +566,72 @@ route.post(
       captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { email, code, account, captchaId } = req[kValidate];
-      const needCaptcha = !emailVerify.verify(email);
-      if (needCaptcha && !captcha.consume(captchaId, account)) {
-        resp.success(res, '需要验证验证码，请完成验证', {
-          needCaptcha,
-          account,
-        })(req, account, 1);
-        return;
-      }
+  asyncHandler(async (_, res) => {
+    const { email, code, account, captchaId } = res.locals.ctx;
+    const needCaptcha = !emailVerify.verify(email);
+    if (needCaptcha && !captcha.consume(captchaId, account)) {
+      return resp.success(res, '需要验证验证码，请完成验证', {
+        needCaptcha,
+        account,
+      })();
+    }
 
-      const userinfo = await db('user')
-        .select('username')
-        .where({
-          email,
-          account: { '=': account, '!=': appConfig.notifyAccount },
-          state: 1,
-        })
-        .findOne();
+    const userinfo = await db('user')
+      .select('username')
+      .where({
+        email,
+        account: { '=': account, '!=': appConfig.notifyAccount },
+        state: 1,
+      })
+      .findOne();
 
-      if (!userinfo) {
-        emailVerify.add(email);
-        resp.forbidden(res, '用户无法重置密码')(req, account, 1);
-        return;
-      }
+    if (!userinfo) {
+      emailVerify.add(email);
+      return resp.forbidden(res, '用户无法重置密码')();
+    }
 
-      const { username } = userinfo;
+    const { username } = userinfo;
 
-      if (mailer.get(email) === code) {
-        // 清除密码和两部验证token
-        await db('user')
-          .where({ account, state: 1 })
-          .update({
-            password: '',
-            verify: '',
-            exp_token_time: parseInt(Date.now() / 1000) - 2,
-          });
-
-        await jwt.setCookie(res, {
-          account,
-          username,
+    if (mailer.get(email) === code) {
+      // 清除密码和两部验证token
+      await db('user')
+        .where({ account, state: 1 })
+        .update({
+          password: '',
+          verify: '',
+          exp_token_time: parseInt(Date.now() / 1000) - 2,
         });
 
-        // 删除验证码缓存
-        mailer.del(email);
+      await jwt.setCookie(res, {
+        account,
+        username,
+      });
 
-        resp.success(res, '已重置密码为空，请尽快修改密码', {
-          account,
-          username,
-        })(req, `${username}-${account}`, 1);
-      } else {
-        emailVerify.add(email);
+      // 删除验证码缓存
+      mailer.del(email);
 
-        resp.forbidden(res, '验证码错误，请重新输入')(req, `${username}-${account}`, 1);
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+      resp.success(res, '已重置密码为空，请尽快修改密码', {
+        account,
+        username,
+      })();
+    } else {
+      emailVerify.add(email);
+
+      resp.forbidden(res, '验证码错误，请重新输入')();
     }
-  },
+  }),
 );
 
 // 验证登录态
-route.use((req, res, next) => {
-  if (req[kHello].userinfo.account) {
-    next();
-  } else {
-    resp.unauthorized(res);
-  }
-});
+route.use(
+  asyncHandler((_, res, next) => {
+    if (res.locals.hello.userinfo.account) {
+      next();
+    } else {
+      resp.unauthorized(res)();
+    }
+  }),
+);
 
 // 未登录用户访问指定文件的临时权限
 route.get(
@@ -707,33 +642,28 @@ route.get(
       p: V.string().notEmpty().min(1).max(fieldLength.url),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { p } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { p } = res.locals.ctx;
 
-      const token = await jwt.set(
-        {
-          type: 'temAccessFile',
-          data: { account: req[kHello].userinfo.account, p },
-        },
-        fieldLength.shareTokenExp,
-      );
+    const token = await jwt.set(
+      {
+        type: 'temAccessFile',
+        data: { account: res.locals.hello.userinfo.account, p },
+      },
+      fieldLength.shareTokenExp,
+    );
 
-      resp.success(res, '获取fileToken成功', token)(req, token, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '获取fileToken成功', token)();
+  }),
 );
 
 // 获取字体列表
-route.get('/font-list', async (req, res) => {
-  try {
+route.get(
+  '/font-list',
+  asyncHandler(async (_, res) => {
     resp.success(res, 'ok', await getFontList());
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+  }),
+);
 
 // 发送邮件验证码
 route.post(
@@ -744,36 +674,29 @@ route.post(
       email: V.string().trim().min(1).max(fieldLength.email).email(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { email } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { email } = res.locals.ctx;
 
-      if (!_d.email.state) {
-        resp.forbidden(res, '邮箱验证功能已关闭')(req, email, 1);
-        return;
-      }
-
-      if (mailer.get(email)) {
-        resp.success(res, '验证码已发送')(req, email, 1);
-        return;
-      }
-
-      const userinfo = await db('user').select('account').where({ email }).findOne();
-
-      if (userinfo) {
-        resp.forbidden(res, '邮箱已绑定用户')(req, email, 1);
-        return;
-      }
-
-      const code = Math.random().toFixed(6).slice(2);
-
-      await mailer.sendCode(email, code);
-
-      resp.success(res, '验证码发送成功')(req, email, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (!_d.email.state) {
+      return resp.forbidden(res, '邮箱验证功能已关闭')();
     }
-  },
+
+    if (mailer.get(email)) {
+      return resp.success(res, '验证码已发送')();
+    }
+
+    const userinfo = await db('user').select('account').where({ email }).findOne();
+
+    if (userinfo) {
+      return resp.forbidden(res, '邮箱已绑定用户')();
+    }
+
+    const code = Math.random().toFixed(6).slice(2);
+
+    await mailer.sendCode(email, code);
+
+    resp.success(res, '验证码发送成功')();
+  }),
 );
 
 // 绑定邮箱
@@ -787,65 +710,56 @@ route.post(
       password: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { email, code, password } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { email, code, password } = res.locals.ctx;
 
-      const { account, password: pd } = req[kHello].userinfo;
+    const { account, password: pd } = res.locals.hello.userinfo;
 
-      if (pd && !(await _crypto.verifyPassword(password, pd))) {
-        resp.forbidden(res, '密码错误，请重新输入')(req, email, 1);
-        return;
-      }
-
-      if (!code) {
-        await db('user').where({ account, state: 1 }).update({ email: '' });
-
-        syncUpdateData(req, 'userinfo');
-
-        resp.success(res, '解绑邮箱成功')(req, email, 1);
-        return;
-      }
-
-      if (!email) {
-        resp.badRequest(res, req, 'email 不能为空', 'body');
-        return;
-      }
-
-      const userinfo = await db('user').select('account').where({ email }).findOne();
-
-      if (userinfo) {
-        resp.forbidden(res, '邮箱已绑定用户')(req, email, 1);
-        return;
-      }
-
-      if (mailer.get(email) === code) {
-        await db('user').where({ account, state: 1 }).update({ email });
-
-        mailer.del(email);
-
-        syncUpdateData(req, 'userinfo');
-
-        resp.success(res, '绑定邮箱成功')(req, email, 1);
-      } else {
-        resp.forbidden(res, '验证码错误，请重新输入')(req, email, 1);
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (pd && !(await _crypto.verifyPassword(password, pd))) {
+      return resp.forbidden(res, '密码错误，请重新输入')();
     }
-  },
+
+    if (!code) {
+      await db('user').where({ account, state: 1 }).update({ email: '' });
+
+      syncUpdateData(res, 'userinfo');
+
+      return resp.success(res, '解绑邮箱成功')();
+    }
+
+    if (!email) {
+      return resp.badRequest(res)('email 不能为空', 1);
+    }
+
+    const userinfo = await db('user').select('account').where({ email }).findOne();
+
+    if (userinfo) {
+      return resp.forbidden(res, '邮箱已绑定用户')();
+    }
+
+    if (mailer.get(email) === code) {
+      await db('user').where({ account, state: 1 }).update({ email });
+
+      mailer.del(email);
+
+      syncUpdateData(res, 'userinfo');
+
+      resp.success(res, '绑定邮箱成功')();
+    } else {
+      resp.forbidden(res, '验证码错误，请重新输入')();
+    }
+  }),
 );
 
 // 获取临时两部验证token
-route.get('/verify', async (req, res) => {
-  try {
-    const { account } = req[kHello].userinfo;
+route.get(
+  '/verify',
+  asyncHandler(async (_, res) => {
+    const { account } = res.locals.hello.userinfo;
 
-    resp.success(res, 'ok', _2fa.create(account));
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+    resp.success(res, 'ok', _2fa.create(account))();
+  }),
+);
 
 // 设置两部验证
 route.post(
@@ -857,99 +771,86 @@ route.post(
       password: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { token, password } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { token, password } = res.locals.ctx;
 
-      const { account, password: pd } = req[kHello].userinfo;
-      if (pd && !(await _crypto.verifyPassword(password, pd))) {
-        resp.forbidden(res, '密码错误，请重新输入')(req);
-        return;
-      }
-
-      if (!token) {
-        await db('user').where({ account, state: 1 }).update({ verify: '' });
-
-        syncUpdateData(req, 'userinfo');
-
-        resp.success(res, '关闭两步验证成功')(req);
-        return;
-      }
-
-      const verify = _2fa.create(account);
-
-      // 验证token
-      if (_2fa.verify(verify, token)) {
-        await db('user').where({ account, state: 1 }).update({ verify });
-
-        syncUpdateData(req, 'userinfo');
-
-        _2fa.del(account); // 成功后删除token缓存
-
-        resp.success(res, '开启两步验证成功')(req);
-      } else {
-        resp.forbidden(res, '验证码错误，请重新输入')(req);
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+    const { account, password: pd } = res.locals.hello.userinfo;
+    if (pd && !(await _crypto.verifyPassword(password, pd))) {
+      return resp.forbidden(res, '密码错误，请重新输入')();
     }
-  },
+
+    if (!token) {
+      await db('user').where({ account, state: 1 }).update({ verify: '' });
+
+      syncUpdateData(res, 'userinfo');
+
+      return resp.success(res, '关闭两步验证成功')();
+    }
+
+    const verify = _2fa.create(account);
+
+    // 验证token
+    if (_2fa.verify(verify, token)) {
+      await db('user').where({ account, state: 1 }).update({ verify });
+
+      syncUpdateData(res, 'userinfo');
+
+      _2fa.del(account); // 成功后删除token缓存
+
+      resp.success(res, '开启两步验证成功')();
+    } else {
+      resp.forbidden(res, '验证码错误，请重新输入')();
+    }
+  }),
 );
 
 // tips标识
-route.get('/tips', async (req, res) => {
-  try {
-    resp.success(res, 'ok', _d.tipsFlag);
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+route.get(
+  '/tips',
+  asyncHandler(async (_, res) => {
+    resp.success(res, 'ok', _d.tipsFlag)();
+  }),
+);
 
 // 批准登录
 route.post(
   '/allow-code-login',
   validate('body', V.object({ code: V.string().trim().min(6).max(6).alphanumeric() })),
-  async (req, res) => {
-    try {
-      const { code } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { code } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const key = `${account}_${code}`;
+    const key = `${account}_${code}`;
 
-      // 登录码冲突则中断验证
-      if (verifyCode.has(key)) {
-        resp.forbidden(res, '登录码冲突，请刷新登录码再试')(req);
-        return;
+    // 登录码冲突则中断验证
+    if (verifyCode.has(key)) {
+      return resp.forbidden(res, '登录码冲突，请刷新登录码再试')();
+    }
+
+    // 设置账号信息，等待登录端获取
+    verifyCode.set(key, account);
+
+    let num = 0;
+    let timer = setInterval(() => {
+      if (++num > 10) {
+        clearInterval(timer);
+        timer = null;
+
+        // 超时未获取则删除信息
+        verifyCode.delete(key);
+
+        return resp.forbidden(res, '批准登录超时')();
       }
 
-      // 设置账号信息，等待登录端获取
-      verifyCode.set(key, account);
+      if (!verifyCode.has(key)) {
+        clearInterval(timer);
+        timer = null;
 
-      let num = 0;
-      let timer = setInterval(() => {
-        if (++num > 10) {
-          clearInterval(timer);
-          timer = null;
-
-          // 超时未获取则删除信息
-          verifyCode.delete(key);
-
-          resp.forbidden(res, '批准登录超时')(req);
-          return;
-        }
-
-        if (!verifyCode.has(key)) {
-          clearInterval(timer);
-          timer = null;
-
-          resp.success(res, '批准登录成功')(req);
-        }
-      }, 1000);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+        resp.success(res, '批准登录成功')();
+      }
+    }, 1000);
+  }),
 );
 
 // 修改密码
@@ -962,99 +863,85 @@ route.post(
       newpassword: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { account, password } = req[kHello].userinfo,
-        { oldpassword, newpassword } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { account, password } = res.locals.hello.userinfo,
+      { oldpassword, newpassword } = res.locals.ctx;
 
-      //对比原密码
-      if ((await _crypto.verifyPassword(oldpassword, password)) || !password) {
-        await db('user')
-          .where({ account, state: 1 })
-          .update({
-            password: await _crypto.hashPassword(newpassword),
-            exp_token_time: parseInt(Date.now() / 1000),
-          });
+    //对比原密码
+    if ((await _crypto.verifyPassword(oldpassword, password)) || !password) {
+      await db('user')
+        .where({ account, state: 1 })
+        .update({
+          password: await _crypto.hashPassword(newpassword),
+          exp_token_time: parseInt(Date.now() / 1000),
+        });
 
-        resp.success(res, '修改密码成功，请重新登录')(req);
-      } else {
-        resp.forbidden(res, '原密码错误，请重新输入')(req);
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+      resp.success(res, '修改密码成功，请重新登录')();
+    } else {
+      resp.forbidden(res, '原密码错误，请重新输入')();
     }
-  },
+  }),
 );
 
 // 退出登录
 route.get(
   '/logout',
   validate('query', V.object({ other: V.number().toInt().enum([0, 1]) })),
-  async (req, res) => {
-    try {
-      const { other } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { other } = res.locals.ctx;
 
-      if (other === 1) {
-        const { account, username } = req[kHello].userinfo;
-        //退出其他登录设备
-        await db('user')
-          .where({ account, state: 1 })
-          .update({
-            exp_token_time: parseInt(Date.now() / 1000) - 2,
-          });
-
-        await jwt.setCookie(res, {
-          account,
-          username,
+    if (other === 1) {
+      const { account, username } = res.locals.hello.userinfo;
+      //退出其他登录设备
+      await db('user')
+        .where({ account, state: 1 })
+        .update({
+          exp_token_time: parseInt(Date.now() / 1000) - 2,
         });
-      } else if (other === 0) {
-        res.clearCookie('token');
-      }
 
-      resp.success(res, '退出登录成功')(req, other, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+      await jwt.setCookie(res, {
+        account,
+        username,
+      });
+    } else if (other === 0) {
+      res.clearCookie('token');
     }
-  },
+
+    resp.success(res, '退出登录成功')();
+  }),
 );
 
 // 修改用户名
 route.post(
   '/changename',
   validate('body', V.object({ username: V.string().trim().min(1).max(fieldLength.username) })),
-  async (req, res) => {
-    try {
-      const { username } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { username } = res.locals.ctx;
 
-      const userinfo = await db('user')
-        .select('account')
-        .where({
-          username,
-        })
-        .findOne();
-
-      if (userinfo) {
-        resp.forbidden(res, '用户名无法使用')(req, username, 1);
-        return;
-      }
-
-      const { account } = req[kHello].userinfo;
-
-      await db('user').where({ account, state: 1 }).update({ username });
-
-      await jwt.setCookie(res, {
-        account,
+    const userinfo = await db('user')
+      .select('account')
+      .where({
         username,
-      });
+      })
+      .findOne();
 
-      syncUpdateData(req, 'userinfo');
-
-      resp.success(res, '修改用户名成功')(req, username, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-      return;
+    if (userinfo) {
+      return resp.forbidden(res, '用户名无法使用')();
     }
-  },
+
+    const { account } = res.locals.hello.userinfo;
+
+    await db('user').where({ account, state: 1 }).update({ username });
+
+    await jwt.setCookie(res, {
+      account,
+      username,
+    });
+
+    syncUpdateData(res, 'userinfo');
+
+    resp.success(res, '修改用户名成功')();
+  }),
 );
 
 // 账号状态
@@ -1066,43 +953,39 @@ route.post(
       password: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { password } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { password } = res.locals.ctx;
 
-      const { account, username, password: pd } = req[kHello].userinfo;
+    const { account, username, password: pd } = res.locals.hello.userinfo;
 
-      if (pd && !(await _crypto.verifyPassword(password, pd))) {
-        resp.forbidden(res, '密码错误，请重新输入')(req);
-        return;
-      }
-
-      if (req[kHello].isRoot || account === appConfig.notifyAccount) {
-        resp.forbidden(res, '无权操作')(req);
-      } else {
-        await deleteUser(account);
-
-        res.clearCookie('token');
-
-        const { os, ip } = req[kHello];
-
-        await heperMsgAndForward(
-          req,
-          appConfig.adminAccount,
-          `${username}(${account})，在 [${os}(${ip})] 注销账号成功`,
-        );
-
-        resp.success(res, '注销账号成功')(req);
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (pd && !(await _crypto.verifyPassword(password, pd))) {
+      return resp.forbidden(res, '密码错误，请重新输入')();
     }
-  },
+
+    if (res.locals.hello.isRoot || account === appConfig.notifyAccount) {
+      resp.forbidden(res, '无权操作')();
+    } else {
+      await deleteUser(account);
+
+      res.clearCookie('token');
+
+      const { os, ip } = res.locals.hello;
+
+      await heperMsgAndForward(
+        res,
+        appConfig.adminAccount,
+        `${username}(${account})，在 [${os}(${ip})] 注销账号成功`,
+      );
+
+      resp.success(res, '注销账号成功')();
+    }
+  }),
 );
 
 // 用户信息
-route.get('/userinfo', async (req, res) => {
-  try {
+route.get(
+  '/userinfo',
+  asyncHandler(async (_, res) => {
     let {
       logo,
       username,
@@ -1116,7 +999,7 @@ route.get('/userinfo', async (req, res) => {
       email,
       remote_login,
       daily_change_bg,
-    } = req[kHello].userinfo;
+    } = res.locals.hello.userinfo;
 
     verify = verify ? true : '';
 
@@ -1135,26 +1018,23 @@ route.get('/userinfo', async (req, res) => {
       bgxs,
       hide,
       email,
-    });
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+    })();
+  }),
+);
 
 // 删除头像
-route.get('/delete-logo', async (req, res) => {
-  try {
-    const { account } = req[kHello].userinfo;
+route.get(
+  '/delete-logo',
+  asyncHandler(async (_, res) => {
+    const { account } = res.locals.hello.userinfo;
 
     await db('user').where({ account, state: 1 }).update({ logo: '' });
 
-    syncUpdateData(req, 'userinfo');
+    syncUpdateData(res, 'userinfo');
 
-    resp.success(res, '删除头像成功')(req);
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+    resp.success(res, '删除头像成功')();
+  }),
+);
 
 // 上传logo
 route.post(
@@ -1172,86 +1052,82 @@ route.post(
       id: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { name, HASH, type, id } = req[kValidate];
+  asyncHandler(async (req, res) => {
+    const { name, HASH, type, id } = res.locals.ctx;
 
-      if (['bookmark', 'engine', 'translator'].includes(type) && !id) {
-        resp.badRequest(res, req, 'id 不能为空', 'query');
-        return;
-      }
-
-      const { account } = req[kHello].userinfo;
-
-      const timePath = getTimePath();
-
-      const path = appConfig.logoDir(account, timePath);
-
-      await receiveFiles(
-        req,
-        path,
-        `${HASH}.${_path.extname(name)[2]}`,
-        fieldLength.maxLogoSize,
-        HASH,
-      );
-
-      const logo = _path.normalizeNoSlash(timePath, `${HASH}.${_path.extname(name)[2]}`);
-
-      if (type === 'bookmark') {
-        await db('bmk')
-          .where({ account, id, state: 1 })
-          .update({ logo: _path.normalizeNoSlash('/logo', account, logo) });
-
-        syncUpdateData(req, 'bookmark');
-
-        resp.success(res, '更新书签LOGO成功')(req, logo, 1);
-      } else if (type === 'userlogo') {
-        await db('user').where({ account, state: 1 }).update({ logo });
-
-        syncUpdateData(req, 'userinfo');
-
-        resp.success(res, '更新头像成功')(req, logo, 1);
-      } else if (type === 'engine') {
-        const config = await readSearchConfig(account);
-
-        if (Array.isArray(config.searchEngineData)) {
-          const idx = config.searchEngineData.findIndex((s) => s.id === id);
-          if (idx >= 0) {
-            config.searchEngineData[idx] = {
-              ...config.searchEngineData[idx],
-              logo,
-            };
-            await writeSearchConfig(account, config);
-            syncUpdateData(req, 'searchConfig');
-          }
-        }
-        resp.success(res, '更新搜索引擎LOGO成功')(req, logo, 1);
-      } else if (type === 'translator') {
-        const config = await readSearchConfig(account);
-
-        if (Array.isArray(config.translatorData)) {
-          const idx = config.translatorData.findIndex((t) => t.id === id);
-          if (idx >= 0) {
-            config.translatorData[idx] = {
-              ...config.translatorData[idx],
-              logo,
-            };
-            await writeSearchConfig(account, config);
-            syncUpdateData(req, 'searchConfig');
-          }
-        }
-        resp.success(res, '更新翻译接口LOGO成功')(req, logo, 1);
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (['bookmark', 'engine', 'translator'].includes(type) && !id) {
+      return resp.badRequest(res)('id 不能为空', 1);
     }
-  },
+
+    const { account } = res.locals.hello.userinfo;
+
+    const timePath = getTimePath();
+
+    const path = appConfig.logoDir(account, timePath);
+
+    await receiveFiles(
+      req,
+      path,
+      `${HASH}.${_path.extname(name)[2]}`,
+      fieldLength.maxLogoSize,
+      HASH,
+    );
+
+    const logo = _path.normalizeNoSlash(timePath, `${HASH}.${_path.extname(name)[2]}`);
+
+    if (type === 'bookmark') {
+      await db('bmk')
+        .where({ account, id, state: 1 })
+        .update({ logo: _path.normalizeNoSlash('/logo', account, logo) });
+
+      syncUpdateData(res, 'bookmark');
+
+      resp.success(res, '更新书签LOGO成功')();
+    } else if (type === 'userlogo') {
+      await db('user').where({ account, state: 1 }).update({ logo });
+
+      syncUpdateData(res, 'userinfo');
+
+      resp.success(res, '更新头像成功')();
+    } else if (type === 'engine') {
+      const config = await readSearchConfig(account);
+
+      if (Array.isArray(config.searchEngineData)) {
+        const idx = config.searchEngineData.findIndex((s) => s.id === id);
+        if (idx >= 0) {
+          config.searchEngineData[idx] = {
+            ...config.searchEngineData[idx],
+            logo,
+          };
+          await writeSearchConfig(account, config);
+          syncUpdateData(res, 'searchConfig');
+        }
+      }
+      resp.success(res, '更新搜索引擎LOGO成功')();
+    } else if (type === 'translator') {
+      const config = await readSearchConfig(account);
+
+      if (Array.isArray(config.translatorData)) {
+        const idx = config.translatorData.findIndex((t) => t.id === id);
+        if (idx >= 0) {
+          config.translatorData[idx] = {
+            ...config.translatorData[idx],
+            logo,
+          };
+          await writeSearchConfig(account, config);
+          syncUpdateData(res, 'searchConfig');
+        }
+      }
+      resp.success(res, '更新翻译接口LOGO成功')();
+    }
+  }),
 );
 
 // 每日更换壁纸
-route.get('/daily-change-bg', async (req, res) => {
-  try {
-    const { account, daily_change_bg } = req[kHello].userinfo;
+route.get(
+  '/daily-change-bg',
+  asyncHandler(async (_, res) => {
+    const { account, daily_change_bg } = res.locals.hello.userinfo;
 
     let tem;
 
@@ -1262,22 +1138,21 @@ route.get('/daily-change-bg', async (req, res) => {
     }
     await db('user').where({ account, state: 1 }).update({ daily_change_bg: tem });
 
-    syncUpdateData(req, 'userinfo');
+    syncUpdateData(res, 'userinfo');
 
     if (tem === 1) {
-      resp.success(res, '成功开启')(req, '开启每日更新壁纸');
+      resp.success(res, '成功开启')();
     } else {
-      resp.success(res, '成功关闭')(req, '关闭每日更新壁纸');
+      resp.success(res, '成功关闭')();
     }
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+  }),
+);
 
 // 隐身状态
-route.get('/hide-state', async (req, res) => {
-  try {
-    const { account, hide } = req[kHello].userinfo;
+route.get(
+  '/hide-state',
+  asyncHandler(async (_, res) => {
+    const { account, hide } = res.locals.hello.userinfo;
 
     let tem;
 
@@ -1289,24 +1164,23 @@ route.get('/hide-state', async (req, res) => {
 
     await db('user').where({ account, state: 1 }).update({ hide: tem });
 
-    syncUpdateData(req, 'userinfo');
+    syncUpdateData(res, 'userinfo');
 
     if (tem === 1) {
-      resp.success(res, '成功开启')(req, '开启隐身');
+      resp.success(res, '成功开启')();
     } else {
-      onlineMsg(req, 1); // 通知上线
+      onlineMsg(res, 1); // 通知上线
 
-      resp.success(res, '成功关闭')(req, '关闭隐身');
+      resp.success(res, '成功关闭')();
     }
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+  }),
+);
 
 // 免密登录状态
-route.get('/remote-login-state', async (req, res) => {
-  try {
-    const { account, remote_login } = req[kHello].userinfo;
+route.get(
+  '/remote-login-state',
+  asyncHandler(async (_, res) => {
+    const { account, remote_login } = res.locals.hello.userinfo;
 
     let tem;
 
@@ -1318,17 +1192,15 @@ route.get('/remote-login-state', async (req, res) => {
 
     await db('user').where({ account, state: 1 }).update({ remote_login: tem });
 
-    syncUpdateData(req, 'userinfo');
+    syncUpdateData(res, 'userinfo');
 
     if (tem === 1) {
-      resp.success(res, '成功开启')(req, '开启免密登录');
+      resp.success(res, '成功开启')();
     } else {
-      resp.success(res, '成功关闭')(req, '关闭免密登录');
+      resp.success(res, '成功关闭')();
     }
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+  }),
+);
 
 // 获取推送消息
 route.get(
@@ -1340,70 +1212,65 @@ route.get(
       page: V.string().trim().default('').allowEmpty().max(20),
     }),
   ),
-  async (req, res) => {
+  asyncHandler(async (_, res) => {
+    const { account } = res.locals.hello.userinfo;
+
+    let { temid, ip, os } = res.locals.hello;
+
     try {
-      const { account } = req[kHello].userinfo;
-
-      let { temid, ip, os } = req[kHello];
-
-      try {
-        temid = await V.parse(temid, V.string().trim().min(1), 'temid');
-      } catch (error) {
-        resp.badRequest(res, req, error, { temid });
-        return;
-      }
-
-      let { flag, page } = req[kValidate]; //标识和设备ID
-
-      if (page === 'home') {
-        await db('user').where({ account, state: 1 }).update({ update_at: Date.now() });
-        // 主页才通知在线
-        onlineMsg(req);
-      }
-
-      const con = _connect.add(account, cb, { temid, page, ip, os });
-
-      // 初始化指令标识
-      if (!flag) {
-        flag = con.flag;
-      }
-
-      let msgs = [];
-
-      function cb() {
-        msgs = _connect.getMessages(account, temid, flag);
-        // 验证标识和是否有推送消息，没有则继续等待
-        if (con.flag === flag || msgs.length === 0) return;
-        stop(1);
-      }
-
-      // 超时断开连接
-      let timer = setTimeout(stop, 20000);
-
-      cb();
-
-      function stop(state) {
-        if (timer) {
-          clearTimeout(timer);
-          timer = null;
-        }
-
-        // 删除触发器
-        con.cbs = con.cbs.filter((item) => item !== cb);
-
-        if (state) {
-          resp.success(res, 'ok', { flag: con.flag, msgs });
-        } else {
-          resp.ok(res, 'ok', { flag: con.flag });
-        }
-      }
-
-      // 保活SSH连接
-      resetSSHExpireTime(temid);
+      temid = await V.parse(temid, V.string().trim().min(1), 'temid');
     } catch (error) {
-      resp.error(res)(req, error);
+      return resp.badRequest(res)(error, 1);
     }
-  },
+
+    let { flag, page } = res.locals.ctx; //标识和设备ID
+
+    if (page === 'home') {
+      await db('user').where({ account, state: 1 }).update({ update_at: Date.now() });
+      // 主页才通知在线
+      onlineMsg(res);
+    }
+
+    const con = _connect.add(account, cb, { temid, page, ip, os });
+
+    // 初始化指令标识
+    if (!flag) {
+      flag = con.flag;
+    }
+
+    let msgs = [];
+
+    function cb() {
+      msgs = _connect.getMessages(account, temid, flag);
+      // 验证标识和是否有推送消息，没有则继续等待
+      if (con.flag === flag || msgs.length === 0) return;
+      stop(1);
+    }
+
+    // 超时断开连接
+    let timer = setTimeout(stop, 20000);
+
+    cb();
+
+    function stop(state) {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+
+      // 删除触发器
+      con.cbs = con.cbs.filter((item) => item !== cb);
+
+      if (state) {
+        resp.success(res, 'ok', { flag: con.flag, msgs })();
+      } else {
+        resp.ok(res, 'ok', { flag: con.flag })();
+      }
+    }
+
+    // 保活SSH连接
+    resetSSHExpireTime(temid);
+  }),
 );
 
 // 接收指令
@@ -1427,280 +1294,270 @@ route.post(
       data: V.object(),
     }),
   ),
-  async (req, res) => {
+  asyncHandler(async (_, res) => {
+    const { account } = res.locals.hello.userinfo;
+
+    let temid = res.locals.hello.temid;
+
+    const { type, data } = res.locals.ctx; //指令内容和登录设备ID
+
     try {
-      const { account } = req[kHello].userinfo;
+      temid = await V.parse(temid, V.string().trim().min(1), 'temid');
+    } catch (error) {
+      return resp.badRequest(res)(error, 1);
+    }
 
-      let temid = req[kHello].temid;
-
-      const { type, data } = req[kValidate]; //指令内容和登录设备ID
-
+    if (type === 'ssh') {
+      let _vdata = {};
       try {
-        temid = await V.parse(temid, V.string().trim().min(1), 'temid');
+        _vdata = await V.parse(
+          data,
+          V.object({
+            type: V.string().trim().enum(['cmd', 'size']),
+            text: V.string()
+              .default('')
+              .allowEmpty()
+              .custom(
+                (v) => _f.getTextSize(v) <= fieldLength.customCodeSize,
+                `text 不能超过: ${fieldLength.customCodeSize} 字节`,
+              ),
+            cols: V.number().toNumber().default(0).min(0),
+            rows: V.number().toNumber().default(0).min(0),
+          }),
+          'data',
+        );
       } catch (error) {
-        resp.badRequest(res, req, error, { temid });
-        return;
+        return resp.badRequest(res)(error, 1);
       }
-
-      if (type === 'ssh') {
-        let _vdata = {};
+      const ssh = getSSH(temid);
+      if (ssh) {
         try {
-          _vdata = await V.parse(
-            data,
-            V.object({
-              type: V.string().trim().enum(['cmd', 'size']),
-              text: V.string()
-                .default('')
-                .allowEmpty()
-                .custom(
-                  (v) => _f.getTextSize(v) <= fieldLength.customCodeSize,
-                  `text 不能超过: ${fieldLength.customCodeSize} 字节`,
-                ),
-              cols: V.number().toNumber().default(0).min(0),
-              rows: V.number().toNumber().default(0).min(0),
-            }),
-            'data',
-          );
-        } catch (error) {
-          resp.badRequest(res, req, error, 'body');
-          return;
-        }
-        const ssh = getSSH(temid);
-        if (ssh) {
-          try {
-            if (_vdata.type === 'size') {
-              // 更新终端大小
-              ssh.stream.setWindow(_vdata.rows, _vdata.cols, 0, 0);
-            } else if (_vdata.type === 'cmd') {
-              // 执行命令
-              ssh.stream.write(_vdata.text);
-            }
-          } catch (error) {
-            if (_vdata.type === 'cmd') {
-              _connect.send(
-                account,
-                temid,
-                {
-                  type: 'ssh',
-                  data: `SSH Error: ${error.message}`,
-                },
-                'self',
-              );
-            }
+          if (_vdata.type === 'size') {
+            // 更新终端大小
+            ssh.stream.setWindow(_vdata.rows, _vdata.cols, 0, 0);
+          } else if (_vdata.type === 'cmd') {
+            // 执行命令
+            ssh.stream.write(_vdata.text);
           }
-        } else {
+        } catch (error) {
           if (_vdata.type === 'cmd') {
             _connect.send(
               account,
               temid,
               {
                 type: 'ssh',
-                data: 'SSH connection has been disconnected. Please reconnect.',
+                data: `SSH Error: ${error.message}`,
               },
               'self',
             );
           }
         }
-
-        resp.success(res);
-      }
-      // 多端同步数据
-      else if (type === 'updatedata') {
-        let _vdata = {};
-        try {
-          _vdata = await V.parse(
-            data,
-            V.object({
-              flag: V.string()
-                .trim()
-                .enum([
-                  'bookmark',
-                  'userinfo',
-                  'playinglist',
-                  'musicinfo',
-                  'todolist',
-                  'countlist',
-                  'music',
-                  'bg',
-                  'sharelist',
-                  'note',
-                  'trash',
-                  'history',
-                  'category',
-                  'sshCategory',
-                  'file',
-                  'searchConfig',
-                  'quickCommand',
-                ]),
-              id: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
-            }),
-            'data',
+      } else {
+        if (_vdata.type === 'cmd') {
+          _connect.send(
+            account,
+            temid,
+            {
+              type: 'ssh',
+              data: 'SSH connection has been disconnected. Please reconnect.',
+            },
+            'self',
           );
-        } catch (error) {
-          resp.badRequest(res, req, error, 'body');
-          return;
-        }
-        const { flag, id } = _vdata;
-
-        syncUpdateData(req, flag, id);
-        resp.success(res);
-      }
-
-      // 远程播放歌曲
-      else if (type === 'play') {
-        try {
-          data.state = await V.parse(data.state, V.number().toInt().enum([1, 0]), 'data.state');
-        } catch (error) {
-          resp.badRequest(res, req, error, 'body');
-          return;
-        }
-
-        if (data.state === 1) {
-          try {
-            data.obj = await V.parse(data.obj, V.object(), 'data.obj');
-          } catch (error) {
-            resp.badRequest(res, req, error, 'body');
-            return;
-          }
-        }
-
-        data.to = account;
-
-        _connect.send(data.to, temid, { type, data }, 'other');
-
-        resp.success(res);
-      }
-      // 控制播放模式
-      else if (type === 'playmode') {
-        try {
-          data.state = await V.parse(
-            data.state,
-            V.string().trim().enum(['random', 'loop', 'order']),
-            'data.state',
-          );
-        } catch (error) {
-          resp.badRequest(res, req, error, 'body');
-          return;
-        }
-
-        data.to = account;
-
-        _connect.send(data.to, temid, { type, data }, 'other');
-
-        resp.success(res);
-      }
-      // 控制音量
-      else if (type === 'vol') {
-        try {
-          data.value = await V.parse(data.value, V.number().toNumber().min(0).max(1), 'data.value');
-        } catch (error) {
-          resp.badRequest(res, req, error, 'body');
-          return;
-        }
-
-        data.to = account;
-
-        _connect.send(data.to, temid, { type, data }, 'other');
-
-        resp.success(res);
-      }
-      // 控制播放进度
-      else if (type === 'progress') {
-        try {
-          data.value = await V.parse(data.value, V.number().toNumber().min(0).max(1), 'data.value');
-        } catch (error) {
-          resp.badRequest(res, req, error, 'body');
-          return;
-        }
-
-        data.to = account;
-
-        _connect.send(data.to, temid, { type, data }, 'other');
-
-        resp.success(res);
-      }
-      // 聊天室
-      else if (type === 'chat') {
-        try {
-          data.to = await V.parse(
-            data.to,
-            V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-            'data.to',
-          );
-          data.flag = await V.parse(
-            data.flag,
-            V.string().trim().enum(['addmsg', 'del', 'clear']),
-            'data.flag',
-          );
-        } catch (error) {
-          resp.badRequest(res, req, error, 'body');
-          return;
-        }
-
-        // 撤回、清空、发送新消息操作
-        // 如果是删除验证消息id
-        if (data.flag === 'del') {
-          try {
-            data.msgData = await V.parse(data.msgData, V.object(), 'data.msgData');
-            data.msgData.msgId = await V.parse(
-              data.msgData.msgId,
-              V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-              'data.msgData.msgId',
-            );
-          } catch (error) {
-            resp.badRequest(res, req, error, 'body');
-            return;
-          }
-        }
-
-        await sendNotifyMsg(req, data.to, data.flag, data.msgData);
-
-        resp.success(res);
-      }
-      // 文件粘贴数据
-      else if (type === 'pastefiledata') {
-        try {
-          data.type = await V.parse(
-            data.type,
-            V.string().trim().default('').allowEmpty().enum(['copy', 'cut']),
-            'data.type',
-          );
-        } catch (error) {
-          resp.badRequest(res, req, error, 'body');
-          return;
-        }
-
-        if (data.type) {
-          try {
-            data.data = await V.parse(
-              data.data,
-              V.array(
-                V.object({
-                  name: V.string().min(1).notEmpty().max(fieldLength.filename),
-                  path: V.string().min(1).notEmpty().max(fieldLength.url),
-                  type: V.string().trim().enum(['dir', 'file']),
-                }),
-              )
-                .min(1)
-                .max(fieldLength.maxPagesize),
-              'data.data',
-            );
-          } catch (error) {
-            resp.badRequest(res, req, error, 'body');
-            return;
-          }
-
-          _connect.send(account, temid, { type, data }, 'other');
-          resp.success(res);
-        } else {
-          _connect.send(account, temid, { type, data: {} }, 'other');
-          resp.success(res);
         }
       }
-    } catch (error) {
-      resp.error(res)(req, error);
+
+      resp.success(res)();
     }
-  },
+    // 多端同步数据
+    else if (type === 'updatedata') {
+      let _vdata = {};
+      try {
+        _vdata = await V.parse(
+          data,
+          V.object({
+            flag: V.string()
+              .trim()
+              .enum([
+                'bookmark',
+                'userinfo',
+                'playinglist',
+                'musicinfo',
+                'todolist',
+                'countlist',
+                'music',
+                'bg',
+                'sharelist',
+                'note',
+                'trash',
+                'history',
+                'category',
+                'sshCategory',
+                'file',
+                'searchConfig',
+                'quickCommand',
+              ]),
+            id: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+          }),
+          'data',
+        );
+      } catch (error) {
+        return resp.badRequest(res)(error, 1);
+      }
+      const { flag, id } = _vdata;
+
+      syncUpdateData(res, flag, id);
+      resp.success(res)();
+    }
+
+    // 远程播放歌曲
+    else if (type === 'play') {
+      try {
+        data.state = await V.parse(data.state, V.number().toInt().enum([1, 0]), 'data.state');
+      } catch (error) {
+        return resp.badRequest(res)(error, 1);
+      }
+
+      if (data.state === 1) {
+        try {
+          data.obj = await V.parse(data.obj, V.object(), 'data.obj');
+        } catch (error) {
+          return resp.badRequest(res)(error, 1);
+        }
+      }
+
+      data.to = account;
+
+      _connect.send(data.to, temid, { type, data }, 'other');
+
+      resp.success(res)();
+    }
+    // 控制播放模式
+    else if (type === 'playmode') {
+      try {
+        data.state = await V.parse(
+          data.state,
+          V.string().trim().enum(['random', 'loop', 'order']),
+          'data.state',
+        );
+      } catch (error) {
+        return resp.badRequest(res)(error, 1);
+      }
+
+      data.to = account;
+
+      _connect.send(data.to, temid, { type, data }, 'other');
+
+      resp.success(res)();
+    }
+    // 控制音量
+    else if (type === 'vol') {
+      try {
+        data.value = await V.parse(data.value, V.number().toNumber().min(0).max(1), 'data.value');
+      } catch (error) {
+        return resp.badRequest(res)(error, 1);
+      }
+
+      data.to = account;
+
+      _connect.send(data.to, temid, { type, data }, 'other');
+
+      resp.success(res)();
+    }
+    // 控制播放进度
+    else if (type === 'progress') {
+      try {
+        data.value = await V.parse(data.value, V.number().toNumber().min(0).max(1), 'data.value');
+      } catch (error) {
+        return resp.badRequest(res)(error, 1);
+      }
+
+      data.to = account;
+
+      _connect.send(data.to, temid, { type, data }, 'other');
+
+      resp.success(res)();
+    }
+    // 聊天室
+    else if (type === 'chat') {
+      try {
+        data.to = await V.parse(
+          data.to,
+          V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+          'data.to',
+        );
+        data.flag = await V.parse(
+          data.flag,
+          V.string().trim().enum(['addmsg', 'del', 'clear']),
+          'data.flag',
+        );
+      } catch (error) {
+        return resp.badRequest(res)(error, 1);
+      }
+
+      // 撤回、清空、发送新消息操作
+      // 如果是删除验证消息id
+      if (data.flag === 'del') {
+        try {
+          data.msgData = await V.parse(data.msgData, V.object(), 'data.msgData');
+          data.msgData.msgId = await V.parse(
+            data.msgData.msgId,
+            V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+            'data.msgData.msgId',
+          );
+        } catch (error) {
+          return resp.badRequest(res)(error, 1);
+        }
+      }
+
+      await sendNotifyMsg(
+        res.locals.hello.userinfo,
+        res.locals.hello.temid,
+        data.to,
+        data.flag,
+        data.msgData,
+      );
+
+      resp.success(res)();
+    }
+    // 文件粘贴数据
+    else if (type === 'pastefiledata') {
+      try {
+        data.type = await V.parse(
+          data.type,
+          V.string().trim().default('').allowEmpty().enum(['copy', 'cut']),
+          'data.type',
+        );
+      } catch (error) {
+        return resp.badRequest(res)(error, 1);
+      }
+
+      if (data.type) {
+        try {
+          data.data = await V.parse(
+            data.data,
+            V.array(
+              V.object({
+                name: V.string().min(1).notEmpty().max(fieldLength.filename),
+                path: V.string().min(1).notEmpty().max(fieldLength.url),
+                type: V.string().trim().enum(['dir', 'file']),
+              }),
+            )
+              .min(1)
+              .max(fieldLength.maxPagesize),
+            'data.data',
+          );
+        } catch (error) {
+          return resp.badRequest(res)(error, 1);
+        }
+
+        _connect.send(account, temid, { type, data }, 'other');
+        resp.success(res)();
+      } else {
+        _connect.send(account, temid, { type, data: {} }, 'other');
+        resp.success(res)();
+      }
+    }
+  }),
 );
 
 // 删除分享
@@ -1714,23 +1571,19 @@ route.post(
         .max(fieldLength.maxPagesize),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { ids } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { ids } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('share')
-        .where({ id: { in: ids }, account })
-        .delete();
+    await db('share')
+      .where({ id: { in: ids }, account })
+      .delete();
 
-      syncUpdateData(req, 'sharelist');
+    syncUpdateData(res, 'sharelist');
 
-      resp.success(res, '删除分享成功')(req, ids.length, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '删除分享成功')();
+  }),
 );
 
 // 获取分享列表
@@ -1743,40 +1596,36 @@ route.get(
       pageSize: V.number().toInt().default(20).min(1).max(fieldLength.maxPagesize),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { pageNo, pageSize } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { pageNo, pageSize } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const total = await db('share').where({ account }).count();
+    const total = await db('share').where({ account }).count();
 
-      const result = createPagingData(Array(total), pageSize, pageNo);
+    const result = createPagingData(Array(total), pageSize, pageNo);
 
-      const offset = (result.pageNo - 1) * pageSize;
+    const offset = (result.pageNo - 1) * pageSize;
 
-      let data = [];
+    let data = [];
 
-      if (total > 0) {
-        data = await db('share')
-          .select('id,type,title,pass,exp_time')
-          .where({
-            account,
-          })
-          .orderBy('serial', 'desc')
-          .limit(pageSize)
-          .offset(offset)
-          .find();
-      }
-
-      resp.success(res, 'ok', {
-        ...result,
-        data,
-      });
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (total > 0) {
+      data = await db('share')
+        .select('id,type,title,pass,exp_time')
+        .where({
+          account,
+        })
+        .orderBy('serial', 'desc')
+        .limit(pageSize)
+        .offset(offset)
+        .find();
     }
-  },
+
+    resp.success(res, 'ok', {
+      ...result,
+      data,
+    })();
+  }),
 );
 
 // 编辑分享
@@ -1791,27 +1640,23 @@ route.post(
       pass: V.string().trim().default('').allowEmpty().max(fieldLength.sharePass),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id, title, expireTime, pass } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id, title, expireTime, pass } = res.locals.ctx;
 
-      const obj = {
-        exp_time: expireTime === 0 ? 0 : Date.now() + expireTime * 24 * 60 * 60 * 1000,
-        title,
-        pass,
-      };
+    const obj = {
+      exp_time: expireTime === 0 ? 0 : Date.now() + expireTime * 24 * 60 * 60 * 1000,
+      title,
+      pass,
+    };
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('share').where({ id, account }).update(obj);
+    await db('share').where({ id, account }).update(obj);
 
-      syncUpdateData(req, 'sharelist');
+    syncUpdateData(res, 'sharelist');
 
-      resp.success(res, '更新分享成功')(req, `${title}-${id}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '更新分享成功')();
+  }),
 );
 
 // 回收站列表
@@ -1826,176 +1671,169 @@ route.get(
       pageSize: V.number().toInt().default(20).min(1).max(fieldLength.maxPagesize),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { word, type, pageNo, pageSize } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { word, type, pageNo, pageSize } = res.locals.ctx;
 
-      let fieldArr = [];
-      let fields = '';
+    let fieldArr = [];
+    let fields = '';
 
+    if (type === 'bmk') {
+      fields = 'b.id,b.title,b.link,b.des,b.group_id,g.title AS group_title,b.logo';
+      fieldArr = ['b.title', 'b.link', 'b.des'];
+    } else if (type === 'history') {
+      fields = 'id,content';
+      fieldArr = ['content'];
+    } else if (type === 'bmk_group') {
+      fields = 'id,title';
+      fieldArr = ['title'];
+    } else if (type === 'note') {
+      fields = 'title,create_at,update_at,id,content,visit_count,top,category';
+      fieldArr = ['title', 'content'];
+    } else if (type === 'ssh') {
+      fields = 'id,title,port,host,username,category,top,auth_type';
+      fieldArr = ['title', 'host', 'username', 'port'];
+    }
+
+    const { account } = res.locals.hello.userinfo;
+    let trashdb = null;
+    if (type === 'bmk') {
+      trashdb = db('bmk AS b')
+        .select(fields)
+        .join(
+          'bmk_group AS g',
+          {
+            'b.group_id': { value: 'g.id', raw: true },
+          },
+          { type: 'LEFT' },
+        )
+        .where({ 'b.account': account, 'b.state': 0 });
+    } else {
+      trashdb = db(type).select(fields).where({
+        account,
+        state: 0,
+      });
+    }
+
+    let splitWord = [];
+
+    if (word) {
+      splitWord = getSplitWord(word);
+
+      const curSplit = splitWord.slice(0, 10);
+      curSplit[0] = { value: curSplit[0], weight: 10 };
+      trashdb.search(curSplit, fieldArr, { sort: true });
+    } else {
       if (type === 'bmk') {
-        fields = 'b.id,b.title,b.link,b.des,b.group_id,g.title AS group_title,b.logo';
-        fieldArr = ['b.title', 'b.link', 'b.des'];
-      } else if (type === 'history') {
-        fields = 'id,content';
-        fieldArr = ['content'];
-      } else if (type === 'bmk_group') {
-        fields = 'id,title';
-        fieldArr = ['title'];
-      } else if (type === 'note') {
-        fields = 'title,create_at,update_at,id,content,visit_count,top,category';
-        fieldArr = ['title', 'content'];
-      } else if (type === 'ssh') {
-        fields = 'id,title,port,host,username,category,top,auth_type';
-        fieldArr = ['title', 'host', 'username', 'port'];
-      }
-
-      const { account } = req[kHello].userinfo;
-      let trashdb = null;
-      if (type === 'bmk') {
-        trashdb = db('bmk AS b')
-          .select(fields)
-          .join(
-            'bmk_group AS g',
-            {
-              'b.group_id': { value: 'g.id', raw: true },
-            },
-            { type: 'LEFT' },
-          )
-          .where({ 'b.account': account, 'b.state': 0 });
+        trashdb.orderBy('b.serial', 'desc');
       } else {
-        trashdb = db(type).select(fields).where({
-          account,
-          state: 0,
-        });
+        trashdb.orderBy(type === 'note' ? 'create_at' : 'serial', 'desc');
       }
+    }
 
-      let splitWord = [];
+    const total = await trashdb.count();
 
-      if (word) {
-        splitWord = getSplitWord(word);
+    const result = createPagingData(Array(total), pageSize, pageNo);
 
-        const curSplit = splitWord.slice(0, 10);
-        curSplit[0] = { value: curSplit[0], weight: 10 };
-        trashdb.search(curSplit, fieldArr, { sort: true });
-      } else {
-        if (type === 'bmk') {
-          trashdb.orderBy('b.serial', 'desc');
-        } else {
-          trashdb.orderBy(type === 'note' ? 'create_at' : 'serial', 'desc');
-        }
-      }
+    const offset = (result.pageNo - 1) * pageSize;
 
-      const total = await trashdb.count();
+    let data = [];
 
-      const result = createPagingData(Array(total), pageSize, pageNo);
+    if (total > 0) {
+      data = await trashdb.page(pageSize, offset).find();
 
-      const offset = (result.pageNo - 1) * pageSize;
+      if (type === 'note') {
+        const noteCategory = await db('note_category').select('id,title').where({ account }).find();
 
-      let data = [];
+        data = data.map((item) => {
+          let { title, content, id, create_at, update_at, visit_count, top, category } = item;
+          let con = [];
+          let images = [];
 
-      if (total > 0) {
-        data = await trashdb.page(pageSize, offset).find();
+          if (content) {
+            const { text, images: img } = parseMarkDown(content);
+            content = text.replace(/[\n\r]/g, '');
+            images = img;
 
-        if (type === 'note') {
-          const noteCategory = await db('note_category')
-            .select('id,title')
-            .where({ account })
-            .find();
+            if (word) {
+              // 提取关键词
+              const wc = getWordContent(splitWord, content);
 
-          data = data.map((item) => {
-            let { title, content, id, create_at, update_at, visit_count, top, category } = item;
-            let con = [];
-            let images = [];
+              const idx = wc.findIndex(
+                (item) => item.value.toLowerCase() === splitWord[0].toLowerCase(),
+              );
 
-            if (content) {
-              const { text, images: img } = parseMarkDown(content);
-              content = text.replace(/[\n\r]/g, '');
-              images = img;
+              let start = 0,
+                end = 0;
 
-              if (word) {
-                // 提取关键词
-                const wc = getWordContent(splitWord, content);
-
-                const idx = wc.findIndex(
-                  (item) => item.value.toLowerCase() === splitWord[0].toLowerCase(),
-                );
-
-                let start = 0,
-                  end = 0;
-
-                if (idx >= 0) {
-                  if (idx > 15) {
-                    start = idx - 15;
-                    end = idx + 15;
-                  } else {
-                    end = 30;
-                  }
+              if (idx >= 0) {
+                if (idx > 15) {
+                  start = idx - 15;
+                  end = idx + 15;
                 } else {
                   end = 30;
                 }
-
-                con = wc.slice(start, end);
+              } else {
+                end = 30;
               }
 
-              if (con.length === 0) {
-                con = [
-                  {
-                    value: content.slice(0, fieldLength.notePreviewLength),
-                    type: 'text',
-                  },
-                ];
-                if (content.length > fieldLength.notePreviewLength) {
-                  con.push({ type: 'icon', value: '...' });
-                }
+              con = wc.slice(start, end);
+            }
+
+            if (con.length === 0) {
+              con = [
+                {
+                  value: content.slice(0, fieldLength.notePreviewLength),
+                  type: 'text',
+                },
+              ];
+              if (content.length > fieldLength.notePreviewLength) {
+                con.push({ type: 'icon', value: '...' });
               }
             }
+          }
 
-            const cArr = category.split('-').filter(Boolean);
-            const categoryArr = noteCategory.filter((item) => cArr.includes(item.id));
+          const cArr = category.split('-').filter(Boolean);
+          const categoryArr = noteCategory.filter((item) => cArr.includes(item.id));
 
-            return {
-              id,
-              title,
-              create_at,
-              update_at,
-              visit_count,
-              top,
-              con,
-              category,
-              categoryArr,
-              images,
-            };
-          });
-        } else if (type === 'bmk') {
-          data.forEach((item) => {
-            if (!item.group_title) {
-              item.group_title = item.group_id === 'home' ? '主页' : '未知分组';
-            }
-          });
-        } else if (type === 'ssh') {
-          const sshCategory = await db('ssh_category').select('id,title').where({ account }).find();
-          data = data.map((item) => {
-            const cArr = item.category.split('-').filter(Boolean);
-            const categoryArr = sshCategory.filter((item) => cArr.includes(item.id));
+          return {
+            id,
+            title,
+            create_at,
+            update_at,
+            visit_count,
+            top,
+            con,
+            category,
+            categoryArr,
+            images,
+          };
+        });
+      } else if (type === 'bmk') {
+        data.forEach((item) => {
+          if (!item.group_title) {
+            item.group_title = item.group_id === 'home' ? '主页' : '未知分组';
+          }
+        });
+      } else if (type === 'ssh') {
+        const sshCategory = await db('ssh_category').select('id,title').where({ account }).find();
+        data = data.map((item) => {
+          const cArr = item.category.split('-').filter(Boolean);
+          const categoryArr = sshCategory.filter((item) => cArr.includes(item.id));
 
-            return {
-              ...item,
-              categoryArr,
-            };
-          });
-        }
+          return {
+            ...item,
+            categoryArr,
+          };
+        });
       }
-
-      resp.success(res, 'ok', {
-        ...result,
-        data,
-        splitWord,
-      });
-    } catch (error) {
-      resp.error(res)(req, error);
     }
-  },
+
+    resp.success(res, 'ok', {
+      ...result,
+      data,
+      splitWord,
+    })();
+  }),
 );
 
 // 删除回收站
@@ -2010,51 +1848,47 @@ route.post(
         .max(fieldLength.maxPagesize),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { ids, type } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { ids, type } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db(type)
-        .where({ id: { in: ids }, account, state: 0 })
-        .delete();
+    await db(type)
+      .where({ id: { in: ids }, account, state: 0 })
+      .delete();
 
-      // 删除分组，则删除分组下的所有书签
-      if (type === 'bmk_group') {
-        await batchTask(async (offset, limit) => {
-          const list = ids.slice(offset, offset + limit);
+    // 删除分组，则删除分组下的所有书签
+    if (type === 'bmk_group') {
+      await batchTask(async (offset, limit) => {
+        const list = ids.slice(offset, offset + limit);
 
-          if (list.length === 0) return false;
+        if (list.length === 0) return false;
 
-          await db('bmk')
-            .where({ group_id: { in: list }, account })
-            .delete();
+        await db('bmk')
+          .where({ group_id: { in: list }, account })
+          .delete();
 
-          return true;
-        }, 3);
-      }
-
-      // 移动笔记历史到文件回收站
-      if (type === 'note') {
-        const trashDir = appConfig.trashDir(account);
-
-        await concurrencyTasks(ids, 5, async (id) => {
-          const noteHistoryDir = appConfig.noteHistoryDir(account, id);
-
-          if (await _f.exists(noteHistoryDir)) {
-            await _f.rename(noteHistoryDir, _path.normalizeNoSlash(trashDir, id));
-          }
-        });
-      }
-
-      syncUpdateData(req, 'trash');
-
-      resp.success(res, '删除成功')(req, `${type}-${ids.length}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+        return true;
+      }, 3);
     }
-  },
+
+    // 移动笔记历史到文件回收站
+    if (type === 'note') {
+      const trashDir = appConfig.trashDir(account);
+
+      await concurrencyTasks(ids, 5, async (id) => {
+        const noteHistoryDir = appConfig.noteHistoryDir(account, id);
+
+        if (await _f.exists(noteHistoryDir)) {
+          await _f.rename(noteHistoryDir, _path.normalizeNoSlash(trashDir, id));
+        }
+      });
+    }
+
+    syncUpdateData(res, 'trash');
+
+    resp.success(res, '删除成功')();
+  }),
 );
 
 // 恢复回收站内容
@@ -2069,29 +1903,25 @@ route.post(
         .max(fieldLength.maxPagesize),
     }),
   ),
-  async (req, res) => {
-    try {
-      let { ids, type } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    let { ids, type } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db(type)
-        .where({ id: { in: ids }, account, state: 0 })
-        .update({ state: 1 });
+    await db(type)
+      .where({ id: { in: ids }, account, state: 0 })
+      .update({ state: 1 });
 
-      syncUpdateData(req, 'trash');
+    syncUpdateData(res, 'trash');
 
-      if (type === 'bmk_group' || type === 'bmk') {
-        type = 'bookmark';
-      }
-
-      syncUpdateData(req, type);
-
-      resp.success(res, '恢复成功')(req, `${type}-${ids.length}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (type === 'bmk_group' || type === 'bmk') {
+      type = 'bookmark';
     }
-  },
+
+    syncUpdateData(res, type);
+
+    resp.success(res, '恢复成功')();
+  }),
 );
 
 export default route;

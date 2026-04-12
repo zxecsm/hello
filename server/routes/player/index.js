@@ -10,16 +10,14 @@ import {
   isMusicFile,
   unique,
   getTimePath,
-  errLog,
   syncUpdateData,
   createPagingData,
-  uLog,
   concurrencyTasks,
   getSplitWord,
   myShuffle,
   normalizePageNo,
   parseJson,
-  validate,
+  writelog,
 } from '../../utils/utils.js';
 
 import { _d } from '../../data/data.js';
@@ -53,13 +51,11 @@ import pinyin from '../../utils/pinyin.js';
 import jwt from '../../utils/jwt.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
-import { sym } from '../../utils/symbols.js';
 import resp from '../../utils/response.js';
+import { asyncHandler, validate } from '../../utils/customMiddleware.js';
 const maxSonglistCount = 2000;
 
 const route = express.Router();
-const kHello = sym('hello');
-const kValidate = sym('validate');
 
 // 获取歌词
 route.post(
@@ -71,7 +67,7 @@ route.post(
       token: V.string().trim().default('').allowEmpty().max(fieldLength.url),
     }),
   ),
-  async (req, res) => {
+  asyncHandler(async (_, res) => {
     const errData = [
       {
         t: 0,
@@ -81,14 +77,13 @@ route.post(
     ];
 
     try {
-      const { id, token } = req[kValidate];
+      const { id, token } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+      const { account } = res.locals.hello.userinfo;
 
       if (!account) {
         if (!token) {
-          resp.badRequest(res, req, 'token 不能为空', 'body');
-          return;
+          return resp.badRequest(res)('token 不能为空', 1);
         }
 
         const share = await validShareState(token, 'music');
@@ -96,17 +91,15 @@ route.post(
         if (share.state === 0) {
           errData[0].p = share.text;
 
-          await errLog(req, share.text);
+          await writelog(res, share.text, 500);
 
-          resp.success(res, 'ok', errData);
-          return;
+          return resp.success(res, 'ok', errData)();
         }
 
         const { data } = share.data;
 
         if (!data.some((item) => item === id)) {
-          resp.success(res, 'ok', errData);
-          return;
+          return resp.success(res, 'ok', errData)();
         }
       }
 
@@ -117,8 +110,7 @@ route.post(
 
       const songInfo = await db('songs').select('lrc').where({ id }).findOne();
       if (!songInfo) {
-        resp.success(res, 'ok', errData);
-        return;
+        return resp.success(res, 'ok', errData)();
       }
 
       const url = appConfig.musicDir(songInfo.lrc);
@@ -134,18 +126,18 @@ route.post(
         });
 
         if (lrcList.length === 1) {
-          resp.success(res, 'ok', errData);
+          resp.success(res, 'ok', errData)();
         } else {
-          resp.success(res, 'ok', lrcList);
+          resp.success(res, 'ok', lrcList)();
         }
       } else {
-        resp.success(res, 'ok', errData);
+        resp.success(res, 'ok', errData)();
       }
-    } catch (error) {
-      await errLog(req, error);
-      resp.success(res, 'ok', errData);
+    } catch {
+      await writelog(res, error, 500);
+      resp.success(res, 'ok', errData)();
     }
-  },
+  }),
 );
 
 // 歌曲信息
@@ -158,54 +150,46 @@ route.post(
       token: V.string().trim().default('').allowEmpty().max(fieldLength.url),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id, token } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id, token } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      if (!account) {
-        if (!token) {
-          resp.badRequest(res, req, 'token 不能为空', 'body');
-          return;
-        }
-
-        const share = await validShareState(token, 'music');
-
-        if (share.state === 0) {
-          resp.forbidden(res, share.text)(req, id, 1);
-          return;
-        }
-
-        const { data } = share.data;
-
-        if (!data.some((item) => item === id)) {
-          resp.notFound(res, '歌曲不存在')(req, id, 1);
-          return;
-        }
+    if (!account) {
+      if (!token) {
+        return resp.badRequest(res)('token 不能为空', 1);
       }
 
-      const info = await db('songs')
-        .select(
-          'id,pic,lrc,url,mv,title,artist,duration,album,year,collect_count,play_count,create_at',
-        )
-        .where({ id })
-        .findOne();
+      const share = await validShareState(token, 'music');
 
-      if (!info) {
-        resp.notFound(res, '歌曲不存在')(req, id, 1);
-        return;
+      if (share.state === 0) {
+        return resp.forbidden(res, share.text)();
       }
 
-      info.pic = !!info.pic;
-      info.lrc = !!info.lrc;
-      info.url = !!info.url;
-      info.mv = !!info.mv;
-      resp.success(res, 'ok', info);
-    } catch (error) {
-      resp.error(res)(req, error);
+      const { data } = share.data;
+
+      if (!data.some((item) => item === id)) {
+        return resp.notFound(res, '歌曲不存在')();
+      }
     }
-  },
+
+    const info = await db('songs')
+      .select(
+        'id,pic,lrc,url,mv,title,artist,duration,album,year,collect_count,play_count,create_at',
+      )
+      .where({ id })
+      .findOne();
+
+    if (!info) {
+      return resp.notFound(res, '歌曲不存在')();
+    }
+
+    info.pic = !!info.pic;
+    info.lrc = !!info.lrc;
+    info.url = !!info.url;
+    info.mv = !!info.mv;
+    resp.success(res, 'ok', info)();
+  }),
 );
 
 // 分享
@@ -219,85 +203,79 @@ route.post(
       captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id, pass, captchaId } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id, pass, captchaId } = res.locals.ctx;
 
-      const share = await validShareAddUserState(req, ['music'], id, pass, captchaId);
+    const share = await validShareAddUserState(res, ['music'], id, pass, captchaId);
 
-      if (share.state === 0) {
-        resp.notFound(res, share.text)(req, id, 1);
-        return;
-      }
-
-      if (share.state === 2) {
-        resp.success(res, share.text, {
-          id: share.id,
-          needCaptcha: share.needCaptcha,
-        })(req, share.id, 1);
-        return;
-      }
-
-      if (share.state === 3) {
-        resp.ok(res, share.text);
-        return;
-      }
-
-      let { username, logo, email, exp_time, title, account: acc, data } = share.data;
-
-      // 通过id分批读取音乐信息并策略化
-      const mObj = await batchGetMusics(data);
-
-      for (let i = 0; i < data.length; i++) {
-        if (mObj.hasOwnProperty(data[i])) {
-          data[i] = mObj[data[i]];
-        } else {
-          data.splice(i, 1);
-          i--;
-        }
-      }
-
-      if (data.length === 0) {
-        resp.notFound(res, '歌曲不存在')(req, id, 1);
-        return;
-      }
-
-      const { account } = req[kHello].userinfo;
-
-      if (account && account != acc) {
-        const f = await getFriendInfo(account, acc, 'des');
-        const des = f ? f.des : '';
-
-        username = des || username;
-      }
-
-      resp.success(res, '读取歌曲分享成功', {
-        username,
-        logo,
-        email,
-        exp_time,
-        account: acc,
-        data,
-        title,
-        token: await jwt.set(
-          { type: 'share', data: { id, types: ['music'] } },
-          fieldLength.shareTokenExp,
-        ),
-      })(req, id, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (share.state === 0) {
+      return resp.notFound(res, share.text)();
     }
-  },
+
+    if (share.state === 2) {
+      return resp.success(res, share.text, {
+        id: share.id,
+        needCaptcha: share.needCaptcha,
+      })();
+    }
+
+    if (share.state === 3) {
+      return resp.ok(res, share.text)();
+    }
+
+    let { username, logo, email, exp_time, title, account: acc, data } = share.data;
+
+    // 通过id分批读取音乐信息并策略化
+    const mObj = await batchGetMusics(data);
+
+    for (let i = 0; i < data.length; i++) {
+      if (mObj.hasOwnProperty(data[i])) {
+        data[i] = mObj[data[i]];
+      } else {
+        data.splice(i, 1);
+        i--;
+      }
+    }
+
+    if (data.length === 0) {
+      return resp.notFound(res, '歌曲不存在')();
+    }
+
+    const { account } = res.locals.hello.userinfo;
+
+    if (account && account != acc) {
+      const f = await getFriendInfo(account, acc, 'des');
+      const des = f ? f.des : '';
+
+      username = des || username;
+    }
+
+    resp.success(res, '读取歌曲分享成功', {
+      username,
+      logo,
+      email,
+      exp_time,
+      account: acc,
+      data,
+      title,
+      token: await jwt.set(
+        { type: 'share', data: { id, types: ['music'] } },
+        fieldLength.shareTokenExp,
+      ),
+    })();
+  }),
 );
 
 // 验证登录态
-route.use((req, res, next) => {
-  if (req[kHello].userinfo.account) {
-    next();
-  } else {
-    resp.unauthorized(res);
-  }
-});
+route.use(
+  asyncHandler((_, res, next) => {
+    if (res.locals.hello.userinfo.account) {
+      next();
+    } else {
+      resp.unauthorized(res)();
+    }
+  }),
+);
 
 // 搜索
 route.get(
@@ -309,51 +287,47 @@ route.get(
       word: V.string().trim().min(1).max(fieldLength.searchWord),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { word, pageNo } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { word, pageNo } = res.locals.ctx;
 
-      const pageSize = 100;
+    const pageSize = 100;
 
-      const splitWord = getSplitWord(word);
+    const splitWord = getSplitWord(word);
 
-      const curSplit = splitWord.slice(0, 10);
-      curSplit[0] = { value: curSplit[0], weight: 10 };
-      const songdb = db('songs')
-        .select(
-          'id,pic,lrc,url,mv,title,artist,duration,album,year,collect_count,play_count,create_at',
-        )
-        .search(curSplit, ['title', 'artist'], {
-          sort: true,
-        });
-
-      const total = await songdb.count();
-
-      const result = createPagingData(Array(total), pageSize, pageNo);
-
-      let list = [];
-
-      if (total > 0) {
-        const offset = (result.pageNo - 1) * pageSize;
-
-        list = (await songdb.page(pageSize, offset).find()).map((m) => ({
-          ...m,
-          pic: !!m.pic,
-          lrc: !!m.lrc,
-          url: !!m.url,
-          mv: !!m.mv,
-        }));
-      }
-
-      resp.success(res, 'ok', {
-        ...result,
-        data: list,
-        splitWord,
+    const curSplit = splitWord.slice(0, 10);
+    curSplit[0] = { value: curSplit[0], weight: 10 };
+    const songdb = db('songs')
+      .select(
+        'id,pic,lrc,url,mv,title,artist,duration,album,year,collect_count,play_count,create_at',
+      )
+      .search(curSplit, ['title', 'artist'], {
+        sort: true,
       });
-    } catch (error) {
-      resp.error(res)(req, error);
+
+    const total = await songdb.count();
+
+    const result = createPagingData(Array(total), pageSize, pageNo);
+
+    let list = [];
+
+    if (total > 0) {
+      const offset = (result.pageNo - 1) * pageSize;
+
+      list = (await songdb.page(pageSize, offset).find()).map((m) => ({
+        ...m,
+        pic: !!m.pic,
+        lrc: !!m.lrc,
+        url: !!m.url,
+        mv: !!m.mv,
+      }));
     }
-  },
+
+    resp.success(res, 'ok', {
+      ...result,
+      data: list,
+      splitWord,
+    })();
+  }),
 );
 
 // 获取列表
@@ -373,183 +347,179 @@ route.get(
       onlyMv: V.number().toInt().default(0).enum([0, 1]),
     }),
   ),
-  async (req, res) => {
-    try {
-      let { id, pageNo, pageSize, sort, playId, onlyMv } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    let { id, pageNo, pageSize, sort, playId, onlyMv } = res.locals.ctx;
 
-      if (id === 'all' && playId) onlyMv = 0;
+    if (id === 'all' && playId) onlyMv = 0;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      let songList = await getMusicList(account);
+    let songList = await getMusicList(account);
 
-      let ids = []; // 需要获取歌曲信息的ids
+    let ids = []; // 需要获取歌曲信息的ids
 
-      songList.forEach((list) => {
-        const { item, id: listid } = list;
+    songList.forEach((list) => {
+      const { item, id: listid } = list;
 
-        if (item.length === 0) return;
+      if (item.length === 0) return;
 
-        if (listid === id) {
-          ids.push(...item.map((m) => m.id));
-        } else {
-          ids.push(item[0].id);
-        }
-      });
+      if (listid === id) {
+        ids.push(...item.map((m) => m.id));
+      } else {
+        ids.push(item[0].id);
+      }
+    });
 
-      // 通过id分批读取音乐信息并策略化
-      const musicsObj = await batchGetMusics(ids);
+    // 通过id分批读取音乐信息并策略化
+    const musicsObj = await batchGetMusics(ids);
 
-      let hasChange = false;
+    let hasChange = false;
 
-      songList.forEach((list) => {
-        if (list.id === id) {
-          for (let i = 0; i < list.item.length; i++) {
-            const m = list.item[i];
+    songList.forEach((list) => {
+      if (list.id === id) {
+        for (let i = 0; i < list.item.length; i++) {
+          const m = list.item[i];
 
-            if (musicsObj.hasOwnProperty(m.id)) {
-              list.item[i] = musicsObj[m.id];
-            } else {
-              hasChange = true;
-              list.item.splice(i, 1);
-              i--;
-            }
-          }
-        } else {
-          if (list.item.length > 0) {
-            const m = list.item[0];
-
-            if (musicsObj.hasOwnProperty(m.id)) {
-              list.item[0] = musicsObj[m.id];
-            }
+          if (musicsObj.hasOwnProperty(m.id)) {
+            list.item[i] = musicsObj[m.id];
+          } else {
+            hasChange = true;
+            list.item.splice(i, 1);
+            i--;
           }
         }
+      } else {
+        if (list.item.length > 0) {
+          const m = list.item[0];
+
+          if (musicsObj.hasOwnProperty(m.id)) {
+            list.item[0] = musicsObj[m.id];
+          }
+        }
+      }
+    });
+
+    // 如果有已删除的歌曲，则删除并更新列表数据
+    if (hasChange) {
+      const list = deepClone(songList);
+
+      list.forEach((item) => {
+        item.item = item.item.map((y) => ({ id: y.id }));
       });
 
-      // 如果有已删除的歌曲，则删除并更新列表数据
-      if (hasChange) {
-        const list = deepClone(songList);
+      await updateSongList(account, list);
+    }
 
-        list.forEach((item) => {
-          item.item = item.item.map((y) => ({ id: y.id }));
-        });
+    // 所有歌曲歌单获取最新一首用来读取封面
+    const newSong = await db('songs').select('id,pic').orderBy('serial', 'DESC').limit(1).find();
 
-        await updateSongList(account, list);
-      }
+    songList.splice(2, 0, { id: 'all', item: newSong });
 
-      // 所有歌曲歌单获取最新一首用来读取封面
-      const newSong = await db('songs').select('id,pic').orderBy('serial', 'DESC').limit(1).find();
+    // 更新默认歌单列表信息
+    for (let i = 0; i < 3; i++) {
+      songList[i].name = _d.songList[i].name;
+      songList[i].des = _d.songList[i].des;
+    }
 
-      songList.splice(2, 0, { id: 'all', item: newSong });
+    // 更新歌单封面
+    songList = handleMusicList(songList);
 
-      // 更新默认歌单列表信息
-      for (let i = 0; i < 3; i++) {
-        songList[i].name = _d.songList[i].name;
-        songList[i].des = _d.songList[i].des;
-      }
+    // 歌单id没有默认为收藏歌单
+    id ? null : (id = songList[1].id);
 
-      // 更新歌单封面
-      songList = handleMusicList(songList);
+    for (let i = 0; i < songList.length; i++) {
+      const item = songList[i];
 
-      // 歌单id没有默认为收藏歌单
-      id ? null : (id = songList[1].id);
+      item.num = i;
 
-      for (let i = 0; i < songList.length; i++) {
-        const item = songList[i];
+      if (item.id !== id && i != 1) {
+        // 过滤非选择的歌单
+        delete item.item;
+      } else {
+        if (item.id === 'all') {
+          const songDB = db('songs').select(
+            'id,pic,lrc,url,mv,title,artist,duration,album,year,collect_count,play_count,create_at',
+          );
+          if (onlyMv === 1) {
+            songDB.where({ mv: { '!=': '' } });
+          }
+          const total = await songDB.count();
 
-        item.num = i;
+          pageNo = normalizePageNo(total, pageSize, pageNo);
 
-        if (item.id !== id && i != 1) {
-          // 过滤非选择的歌单
-          delete item.item;
-        } else {
-          if (item.id === 'all') {
-            const songDB = db('songs').select(
-              'id,pic,lrc,url,mv,title,artist,duration,album,year,collect_count,play_count,create_at',
-            );
-            if (onlyMv === 1) {
-              songDB.where({ mv: { '!=': '' } });
-            }
-            const total = await songDB.count();
+          let list = [];
 
-            pageNo = normalizePageNo(total, pageSize, pageNo);
+          if (total > 0) {
+            let offset = (pageNo - 1) * pageSize;
+            const orderMap = {
+              artist: ['artist_pinyin', 'ASC'],
+              title: ['title_pinyin', 'ASC'],
+              playCount: ['play_count', 'DESC'],
+              collectCount: ['collect_count', 'DESC'],
+              default: ['serial', 'DESC'],
+            };
+            const [orderField, orderDir] = orderMap[sort] || orderMap.default;
+            songDB.orderBy(orderField, orderDir);
 
-            let list = [];
-
-            if (total > 0) {
-              let offset = (pageNo - 1) * pageSize;
-              const orderMap = {
-                artist: ['artist_pinyin', 'ASC'],
-                title: ['title_pinyin', 'ASC'],
-                playCount: ['play_count', 'DESC'],
-                collectCount: ['collect_count', 'DESC'],
-                default: ['serial', 'DESC'],
-              };
-              const [orderField, orderDir] = orderMap[sort] || orderMap.default;
-              songDB.orderBy(orderField, orderDir);
-
-              if (playId) {
-                // 定位到正则播放歌曲所在页
-                const row = await songDB.clone().select('serial').where({ id: playId }).findOne();
-                if (row) {
-                  let count = 0;
-                  if (sort === 'default') {
-                    count = await songDB
-                      .clone()
-                      .where({
-                        serial: {
-                          [`${orderDir === 'ASC' ? '<=' : '>='}`]: row.serial,
-                        },
-                      })
-                      .count();
-                  } else {
-                    count =
-                      (
-                        await allSql(
-                          `WITH OrderedSongs AS (
+            if (playId) {
+              // 定位到正则播放歌曲所在页
+              const row = await songDB.clone().select('serial').where({ id: playId }).findOne();
+              if (row) {
+                let count = 0;
+                if (sort === 'default') {
+                  count = await songDB
+                    .clone()
+                    .where({
+                      serial: {
+                        [`${orderDir === 'ASC' ? '<=' : '>='}`]: row.serial,
+                      },
+                    })
+                    .count();
+                } else {
+                  count =
+                    (
+                      await allSql(
+                        `WITH OrderedSongs AS (
                                 SELECT id, ${orderField}, ROW_NUMBER() OVER (ORDER BY ${orderField} ${orderDir}) AS row_num
                                 FROM songs
                               )
                               SELECT row_num
                               FROM OrderedSongs
                               WHERE id = ?`,
-                          [playId],
-                        )
-                      )[0]?.row_num || 0;
-                  }
-                  pageNo = Math.ceil(count / pageSize);
-                  offset = (pageNo - 1) * pageSize;
+                        [playId],
+                      )
+                    )[0]?.row_num || 0;
                 }
+                pageNo = Math.ceil(count / pageSize);
+                offset = (pageNo - 1) * pageSize;
               }
-
-              list = await songDB.page(pageSize, offset).find();
             }
 
-            const obj = createPagingData(Array(total), pageSize, pageNo);
-
-            item.item = list;
-            item.totalPage = obj.totalPage;
-            item.pageNo = obj.pageNo;
-            item.total = obj.total;
-            item.len = total;
+            list = await songDB.page(pageSize, offset).find();
           }
 
-          item.item = item.item.map((m, idx) => ({
-            ...m,
-            num: idx,
-            mv: !!m.mv,
-            pic: !!m.pic,
-            url: !!m.url,
-            lrc: !!m.lrc,
-          }));
-        }
-      }
+          const obj = createPagingData(Array(total), pageSize, pageNo);
 
-      resp.success(res, 'ok', songList);
-    } catch (error) {
-      resp.error(res)(req, error);
+          item.item = list;
+          item.totalPage = obj.totalPage;
+          item.pageNo = obj.pageNo;
+          item.total = obj.total;
+          item.len = total;
+        }
+
+        item.item = item.item.map((m, idx) => ({
+          ...m,
+          num: idx,
+          mv: !!m.mv,
+          pic: !!m.pic,
+          url: !!m.url,
+          lrc: !!m.lrc,
+        }));
+      }
     }
-  },
+
+    resp.success(res, 'ok', songList)();
+  }),
 );
 
 // 导出歌单
@@ -561,34 +531,28 @@ route.get(
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const songListObj = (await getMusicList(account)).find((item) => item.id === id);
+    const songListObj = (await getMusicList(account)).find((item) => item.id === id);
 
-      if (!songListObj) {
-        resp.notFound(res, '歌单不存在')(req, id, 1);
-        return;
-      }
-
-      const musicsObj = await batchGetMusics(songListObj.item.map((m) => m.id));
-
-      const list = songListObj.item.reduce((pre, cur) => {
-        if (!musicsObj.hasOwnProperty(cur.id)) return pre;
-
-        pre.push(musicsObj[cur.id]);
-        return pre;
-      }, []);
-
-      await uLog(req, `导出歌单(${songListObj.name}-${id}-${list.length})`);
-      res.send(JSON.stringify(list));
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (!songListObj) {
+      return resp.notFound(res, '歌单不存在')();
     }
-  },
+
+    const musicsObj = await batchGetMusics(songListObj.item.map((m) => m.id));
+
+    const list = songListObj.item.reduce((pre, cur) => {
+      if (!musicsObj.hasOwnProperty(cur.id)) return pre;
+
+      pre.push(musicsObj[cur.id]);
+      return pre;
+    }, []);
+
+    res.send(JSON.stringify(list));
+  }),
 );
 
 // 导入歌单
@@ -603,42 +567,36 @@ route.post(
         .max(maxSonglistCount),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { list, id } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { list, id } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const songLists = await getMusicList(account);
+    const songLists = await getMusicList(account);
 
-      const idx = songLists.findIndex((item) => item.id === id);
+    const idx = songLists.findIndex((item) => item.id === id);
 
-      if (idx < 0) {
-        resp.forbidden(res, '歌单不存在')(req, id, 1);
-        return;
-      }
-
-      const newSongList = unique(
-        [...list.map((item) => ({ id: item.id })), ...songLists[idx].item],
-        ['id'],
-      );
-
-      if (newSongList.length > maxSonglistCount) {
-        resp.forbidden(res, `歌单限制${maxSonglistCount}首`)(req);
-        return;
-      }
-
-      songLists[idx].item = newSongList;
-
-      await updateSongList(account, songLists);
-
-      syncUpdateData(req, 'music');
-
-      resp.success(res, '导入歌曲成功')(req, `${songLists[idx].name}-${id}-${list.length}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (idx < 0) {
+      return resp.forbidden(res, '歌单不存在')();
     }
-  },
+
+    const newSongList = unique(
+      [...list.map((item) => ({ id: item.id })), ...songLists[idx].item],
+      ['id'],
+    );
+
+    if (newSongList.length > maxSonglistCount) {
+      return resp.forbidden(res, `歌单限制${maxSonglistCount}首`)();
+    }
+
+    songLists[idx].item = newSongList;
+
+    await updateSongList(account, songLists);
+
+    syncUpdateData(res, 'music');
+
+    resp.success(res, '导入歌曲成功')();
+  }),
 );
 
 // 最后播放
@@ -655,54 +613,51 @@ route.post(
       duration: V.number().toNumber().min(0),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { history, lastplay, currentTime, duration } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { history, lastplay, currentTime, duration } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const change = await db('last_play').where({ account }).update({
+    const change = await db('last_play').where({ account }).update({
+      song_id: lastplay.id,
+      play_current_time: currentTime,
+      duration,
+    });
+    if (change.changes === 0) {
+      await db('last_play').insert({
+        create_at: new Date(),
+        account,
         song_id: lastplay.id,
         play_current_time: currentTime,
         duration,
       });
-      if (change.changes === 0) {
-        await db('last_play').insert({
-          create_at: new Date(),
-          account,
-          song_id: lastplay.id,
-          play_current_time: currentTime,
-          duration,
-        });
-      }
-
-      // 增加播放历史记录
-      if (history === 1) {
-        // 自增播放次数
-        await db('songs').where({ id: lastplay.id }).increment({ play_count: 1 });
-
-        const list = await getMusicList(account);
-
-        list[0].item.unshift({ id: lastplay.id });
-        list[0].item = unique(list[0].item, ['id']).slice(0, maxSonglistCount);
-
-        await updateSongList(account, list);
-
-        syncUpdateData(req, 'music');
-      } else {
-        syncUpdateData(req, 'musicinfo');
-      }
-      resp.success(res);
-    } catch (error) {
-      resp.error(res)(req, error);
     }
-  },
+
+    // 增加播放历史记录
+    if (history === 1) {
+      // 自增播放次数
+      await db('songs').where({ id: lastplay.id }).increment({ play_count: 1 });
+
+      const list = await getMusicList(account);
+
+      list[0].item.unshift({ id: lastplay.id });
+      list[0].item = unique(list[0].item, ['id']).slice(0, maxSonglistCount);
+
+      await updateSongList(account, list);
+
+      syncUpdateData(res, 'music');
+    } else {
+      syncUpdateData(res, 'musicinfo');
+    }
+    resp.success(res)();
+  }),
 );
 
 // 最后播放记录
-route.get('/last-play', async (req, res) => {
-  try {
-    const { account } = req[kHello].userinfo;
+route.get(
+  '/last-play',
+  asyncHandler(async (_, res) => {
+    const { account } = res.locals.hello.userinfo;
 
     const lastm = await db('last_play')
       .select('song_id,play_current_time,duration')
@@ -737,27 +692,23 @@ route.get('/last-play', async (req, res) => {
       }
     }
 
-    resp.success(res, 'ok', obj);
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+    resp.success(res, 'ok', obj)();
+  }),
+);
 
 // 随机播放列表
-route.get('/random-list', async (req, res) => {
-  try {
+route.get(
+  '/random-list',
+  asyncHandler(async (_, res) => {
     const list = await db('songs').getRandom({ limit: maxSonglistCount });
 
     if (list.length === 0) {
-      resp.notFound(res, '音乐库为空')(req);
-      return;
+      return resp.notFound(res, '音乐库为空')();
     }
 
-    resp.success(res, 'ok', myShuffle(list));
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+    resp.success(res, 'ok', myShuffle(list))();
+  }),
+);
 
 // 播放列表
 route.post(
@@ -770,38 +721,35 @@ route.post(
       ),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { data } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { data } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const change = await db('playing_list')
-        .where({ account })
-        .update({
-          data: JSON.stringify(data),
-        });
+    const change = await db('playing_list')
+      .where({ account })
+      .update({
+        data: JSON.stringify(data),
+      });
 
-      if (change.changes === 0) {
-        await db('playing_list').insert({
-          create_at: Date.now(),
-          account,
-          data: JSON.stringify,
-        });
-      }
-
-      syncUpdateData(req, 'playinglist');
-      resp.success(res, '更新播放列表成功')(req);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (change.changes === 0) {
+      await db('playing_list').insert({
+        create_at: Date.now(),
+        account,
+        data: JSON.stringify,
+      });
     }
-  },
+
+    syncUpdateData(res, 'playinglist');
+    resp.success(res, '更新播放列表成功')();
+  }),
 );
 
 // 播放列表
-route.get('/playlist', async (req, res) => {
-  try {
-    const { account } = req[kHello].userinfo;
+route.get(
+  '/playlist',
+  asyncHandler(async (_, res) => {
+    const { account } = res.locals.hello.userinfo;
 
     const playing = await db('playing_list').select('data').where({ account }).findOne();
 
@@ -822,11 +770,9 @@ route.get('/playlist', async (req, res) => {
       }
     }
 
-    resp.success(res, 'ok', list);
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+    resp.success(res, 'ok', list)();
+  }),
+);
 
 // 歌单位置
 route.post(
@@ -838,21 +784,17 @@ route.post(
       toId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { fromId, toId } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { fromId, toId } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await songlistMoveLocation(account, fromId, toId);
+    await songlistMoveLocation(account, fromId, toId);
 
-      syncUpdateData(req, 'music');
+    syncUpdateData(res, 'music');
 
-      resp.success(res, '歌单移动位置成功')(req, `${fromId}-${toId}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '歌单移动位置成功')();
+  }),
 );
 
 // 删除歌单
@@ -864,33 +806,26 @@ route.post(
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const list = await getMusicList(account);
+    const list = await getMusicList(account);
 
-      const idx = list.findIndex((item) => item.id === id);
+    const idx = list.findIndex((item) => item.id === id);
 
-      // 过滤默认歌单
-      if (idx > 1) {
-        const songListTitle = list.splice(idx, 1)[0].name;
+    // 过滤默认歌单
+    if (idx > 1) {
+      await updateSongList(account, list);
 
-        await updateSongList(account, list);
+      syncUpdateData(res, 'music');
 
-        syncUpdateData(req, 'music');
-
-        resp.success(res, '删除歌单成功')(req, `${songListTitle}-${id}`, 1);
-        return;
-      }
-
-      resp.forbidden(res, '无权删除默认歌单')(req, id, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+      return resp.success(res, '删除歌单成功')();
     }
-  },
+
+    resp.forbidden(res, '无权删除默认歌单')();
+  }),
 );
 
 // 歌单编辑
@@ -905,46 +840,40 @@ route.post(
       toId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id, name, des, toId } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id, name, des, toId } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const list = await getMusicList(account);
+    const list = await getMusicList(account);
 
-      const idx = list.findIndex((item) => item.id === id);
+    const idx = list.findIndex((item) => item.id === id);
 
-      const log = `${id}-${name}${des ? `-${des}` : ''}`;
+    if (id === 'all' && res.locals.hello.isRoot) {
+      _d.songList[2].name = name;
+      _d.songList[2].des = des;
+      resp.success(res, '更新歌单信息成功')();
+    } else if (idx < 2 && idx >= 0 && res.locals.hello.isRoot) {
+      _d.songList[idx].name = name;
+      _d.songList[idx].des = des;
+      resp.success(res, '更新歌单信息成功')();
+    } else if (idx > 1) {
+      list[idx].name = name;
+      list[idx].des = des;
 
-      if (id === 'all' && req[kHello].isRoot) {
-        _d.songList[2].name = name;
-        _d.songList[2].des = des;
-        resp.success(res, '更新歌单信息成功')(req, log, 1);
-      } else if (idx < 2 && idx >= 0 && req[kHello].isRoot) {
-        _d.songList[idx].name = name;
-        _d.songList[idx].des = des;
-        resp.success(res, '更新歌单信息成功')(req, log, 1);
-      } else if (idx > 1) {
-        list[idx].name = name;
-        list[idx].des = des;
+      await updateSongList(account, list);
 
-        await updateSongList(account, list);
-
-        if (toId) {
-          await songlistMoveLocation(account, id, toId);
-        }
-
-        syncUpdateData(req, 'music');
-
-        resp.success(res, '更新歌单信息成功')(req, log, 1);
-      } else {
-        resp.forbidden(res, '无权更新当前歌单信息')(req, log, 1);
+      if (toId) {
+        await songlistMoveLocation(account, id, toId);
       }
-    } catch (error) {
-      resp.error(res)(req, error);
+
+      syncUpdateData(res, 'music');
+
+      resp.success(res, '更新歌单信息成功')();
+    } else {
+      resp.forbidden(res, '无权更新当前歌单信息')();
     }
-  },
+  }),
 );
 
 // 编辑歌曲
@@ -963,67 +892,64 @@ route.post(
       play_count: V.number().toInt().min(0),
     }),
   ),
-  async (req, res) => {
+  asyncHandler(async (_, res) => {
+    const { id, title, artist, album, year, duration, collect_count, play_count } = res.locals.ctx;
+
+    if (!res.locals.hello.isRoot) {
+      return resp.forbidden(res, '无权更新歌曲信息')();
+    }
+
+    const songInfo = await db('songs').select('url,hash,artist,title').where({ id }).findOne();
+
+    if (!songInfo) {
+      return resp.forbidden(res, '歌曲不存在')();
+    }
+
+    let newHASH = '';
+
     try {
-      const { id, title, artist, album, year, duration, collect_count, play_count } =
-        req[kValidate];
+      const songUrl = appConfig.musicDir(songInfo.url);
 
-      if (!req[kHello].isRoot) {
-        resp.forbidden(res, '无权更新歌曲信息')(req, `${id}-${artist}-${title}`, 1);
-        return;
-      }
-
-      const songInfo = await db('songs').select('url,hash,artist,title').where({ id }).findOne();
-
-      if (!songInfo) {
-        resp.forbidden(res, '歌曲不存在')(req, id, 1);
-        return;
-      }
-
-      let newHASH = '';
-
-      try {
-        const songUrl = appConfig.musicDir(songInfo.url);
-
-        // 写入歌曲文件
-        await nodeID3.update(
-          {
-            title,
-            artist,
-            album,
-            year,
-          },
-          songUrl,
-        );
-
-        // 重新计算歌曲HASH
-        newHASH = await _crypto.sampleHash(songUrl);
-      } catch {
-        await errLog(req, `写入元数据到歌曲文件失败(${songInfo.artist}-${songInfo.title})`);
-      }
-
-      await db('songs')
-        .where({ id })
-        .update({
+      // 写入歌曲文件
+      await nodeID3.update(
+        {
           title,
-          title_pinyin: pinyin(title),
           artist,
-          artist_pinyin: pinyin(artist),
           album,
           year,
-          duration,
-          play_count,
-          collect_count,
-          hash: newHASH || songInfo.hash,
-        });
+        },
+        songUrl,
+      );
 
-      syncUpdateData(req, 'music');
-
-      resp.success(res, '更新歌曲信息成功')(req, `${id}-${artist}-${title}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+      // 重新计算歌曲HASH
+      newHASH = await _crypto.sampleHash(songUrl);
+    } catch (err) {
+      await writelog(
+        res,
+        `写入元数据到歌曲文件失败(${songInfo.artist}-${songInfo.title}-${err})`,
+        500,
+      );
     }
-  },
+
+    await db('songs')
+      .where({ id })
+      .update({
+        title,
+        title_pinyin: pinyin(title),
+        artist,
+        artist_pinyin: pinyin(artist),
+        album,
+        year,
+        duration,
+        play_count,
+        collect_count,
+        hash: newHASH || songInfo.hash,
+      });
+
+    syncUpdateData(res, 'music');
+
+    resp.success(res, '更新歌曲信息成功')();
+  }),
 );
 
 // 添加歌单
@@ -1036,36 +962,31 @@ route.post(
       des: V.string().trim().default('').allowEmpty().max(fieldLength.des),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { name, des } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { name, des } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const list = await getMusicList(account);
+    const list = await getMusicList(account);
 
-      if (list.length >= fieldLength.songList + 2) {
-        resp.forbidden(res, `歌单限制${fieldLength.songList}`)(req);
-        return;
-      }
-
-      const id = nanoid();
-      list.push({
-        name,
-        des,
-        item: [],
-        id,
-      });
-
-      await updateSongList(account, list);
-
-      syncUpdateData(req, 'music');
-
-      resp.success(res, '添加歌单成功')(req, `${id}-${name}${des ? `-${des}` : ''}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (list.length >= fieldLength.songList + 2) {
+      return resp.forbidden(res, `歌单限制${fieldLength.songList}`)();
     }
-  },
+
+    const id = nanoid();
+    list.push({
+      name,
+      des,
+      item: [],
+      id,
+    });
+
+    await updateSongList(account, list);
+
+    syncUpdateData(res, 'music');
+
+    resp.success(res, '添加歌单成功')();
+  }),
 );
 
 // 移动歌曲
@@ -1079,21 +1000,17 @@ route.post(
       listId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { fromId, toId, listId } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { fromId, toId, listId } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await songMoveLocation(account, listId, fromId, toId);
+    await songMoveLocation(account, listId, fromId, toId);
 
-      syncUpdateData(req, 'music');
+    syncUpdateData(res, 'music');
 
-      resp.success(res, '歌曲移动位置成功')(req, `${listId}: ${fromId}=>${toId}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '歌曲移动位置成功')();
+  }),
 );
 
 // 收藏歌曲
@@ -1107,39 +1024,34 @@ route.post(
         .max(fieldLength.maxPagesize),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { ids } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { ids } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const list = await getMusicList(account);
+    const list = await getMusicList(account);
 
-      const add = ids.map((item) => ({ id: item }));
+    const add = ids.map((item) => ({ id: item }));
 
-      const newSongList = unique([...add, ...list[1].item], ['id']);
+    const newSongList = unique([...add, ...list[1].item], ['id']);
 
-      if (newSongList.length > maxSonglistCount) {
-        resp.forbidden(res, `歌单限制${maxSonglistCount}首`)(req);
-        return;
-      }
-
-      list[1].item = newSongList;
-
-      await updateSongList(account, list);
-
-      // 更新歌曲收藏记录
-      await db('songs')
-        .where({ id: { in: ids } })
-        .increment({ collect_count: 1 });
-
-      syncUpdateData(req, 'music');
-
-      resp.success(res, '收藏歌曲成功')(req, ids.length, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (newSongList.length > maxSonglistCount) {
+      return resp.forbidden(res, `歌单限制${maxSonglistCount}首`)();
     }
-  },
+
+    list[1].item = newSongList;
+
+    await updateSongList(account, list);
+
+    // 更新歌曲收藏记录
+    await db('songs')
+      .where({ id: { in: ids } })
+      .increment({ collect_count: 1 });
+
+    syncUpdateData(res, 'music');
+
+    resp.success(res, '收藏歌曲成功')();
+  }),
 );
 
 // 移除收藏
@@ -1151,25 +1063,21 @@ route.post(
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const list = await getMusicList(account);
+    const list = await getMusicList(account);
 
-      list[1].item = list[1].item.filter((v) => v.id !== id);
+    list[1].item = list[1].item.filter((v) => v.id !== id);
 
-      await updateSongList(account, list);
+    await updateSongList(account, list);
 
-      syncUpdateData(req, 'music');
+    syncUpdateData(res, 'music');
 
-      resp.success(res, '移除收藏歌曲成功')(req, id, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '移除收藏歌曲成功')();
+  }),
 );
 
 // 删除
@@ -1184,64 +1092,51 @@ route.post(
         .max(maxSonglistCount),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { listId, ids } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { listId, ids } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      if (listId === 'all') {
-        // 限制删除数量
-        if (ids.length > fieldLength.maxPagesize) {
-          resp.badRequest(res, req, `ids.length 不能大于: ${fieldLength.maxPagesize}`, 'body');
-          return;
-        }
-
-        if (!req[kHello].isRoot) {
-          resp.forbidden(res, '无权删除歌曲')(req, `${listId}-${ids.length}`, 1);
-          return;
-        }
-
-        const dels = await db('songs')
-          .select('url,artist,title')
-          .where({ id: { in: ids } })
-          .find();
-
-        await concurrencyTasks(dels, 5, async (del) => {
-          const { url, artist, title } = del;
-
-          await _delDir(appConfig.musicDir(_path.dirname(url)));
-
-          await uLog(req, `删除歌曲(${artist}-${title})`);
-        });
-
-        await db('songs')
-          .where({ id: { in: ids } })
-          .delete();
-      } else {
-        const list = await getMusicList(account);
-
-        const idx = list.findIndex((item) => item.id === listId);
-
-        if (idx >= 0) {
-          list[idx].item = list[idx].item.filter((item) => !ids.some((y) => y === item.id));
-
-          await updateSongList(account, list);
-        }
+    if (listId === 'all') {
+      // 限制删除数量
+      if (ids.length > fieldLength.maxPagesize) {
+        return resp.badRequest(res)(`ids.length 不能大于: ${fieldLength.maxPagesize}`, 1);
       }
 
-      syncUpdateData(req, 'music');
+      if (!res.locals.hello.isRoot) {
+        return resp.forbidden(res, '无权删除歌曲')();
+      }
 
-      resp.success(res, `${listId === 'all' ? '删除' : '移除'}歌曲成功`)(
-        req,
-        `${listId}-${ids.length}`,
-        1,
-      );
-    } catch (error) {
-      resp.error(res)(req, error);
-      return;
+      const dels = await db('songs')
+        .select('url,artist,title')
+        .where({ id: { in: ids } })
+        .find();
+
+      await concurrencyTasks(dels, 5, async (del) => {
+        const { url } = del;
+
+        await _delDir(appConfig.musicDir(_path.dirname(url)));
+      });
+
+      await db('songs')
+        .where({ id: { in: ids } })
+        .delete();
+    } else {
+      const list = await getMusicList(account);
+
+      const idx = list.findIndex((item) => item.id === listId);
+
+      if (idx >= 0) {
+        list[idx].item = list[idx].item.filter((item) => !ids.some((y) => y === item.id));
+
+        await updateSongList(account, list);
+      }
     }
-  },
+
+    syncUpdateData(res, 'music');
+
+    resp.success(res, `${listId === 'all' ? '删除' : '移除'}歌曲成功`)();
+  }),
 );
 
 // 音乐移动到歌单
@@ -1257,66 +1152,55 @@ route.post(
         .max(fieldLength.maxPagesize),
     }),
   ),
-  async (req, res) => {
-    try {
-      let { fromId, toId, ids } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    let { fromId, toId, ids } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const list = await getMusicList(account);
+    const list = await getMusicList(account);
 
-      ids = ids.map((item) => ({ id: item }));
+    ids = ids.map((item) => ({ id: item }));
 
-      const fIdx = list.findIndex((item) => item.id === fromId),
-        tIdx = list.findIndex((item) => item.id === toId);
+    const fIdx = list.findIndex((item) => item.id === fromId),
+      tIdx = list.findIndex((item) => item.id === toId);
 
-      if (
-        (fromId === 'all' && tIdx > 1 && fromId !== toId) ||
-        (fIdx >= 0 && fIdx < 2 && tIdx > 1)
-      ) {
-        // 从所有歌曲歌单和默认歌单添加到非默认歌单
-        const newSongList = unique([...ids, ...list[tIdx].item], ['id']);
+    if ((fromId === 'all' && tIdx > 1 && fromId !== toId) || (fIdx >= 0 && fIdx < 2 && tIdx > 1)) {
+      // 从所有歌曲歌单和默认歌单添加到非默认歌单
+      const newSongList = unique([...ids, ...list[tIdx].item], ['id']);
 
-        if (newSongList.length > maxSonglistCount) {
-          resp.forbidden(res, `歌单限制${maxSonglistCount}首`)(req);
-          return;
-        }
-
-        list[tIdx].item = newSongList;
-
-        await updateSongList(account, list);
-
-        syncUpdateData(req, 'music');
-
-        resp.success(res, '添加歌曲成功')(req, `${ids.length}=>${toId}`, 1);
-        return;
+      if (newSongList.length > maxSonglistCount) {
+        return resp.forbidden(res, `歌单限制${maxSonglistCount}首`)();
       }
-      if (fIdx > 1 && tIdx > 1 && fromId !== toId) {
-        // 从非默认歌单移动到非默认歌单
-        const newSongList = unique([...ids, ...list[tIdx].item], ['id']);
 
-        if (newSongList.length > maxSonglistCount) {
-          resp.forbidden(res, `歌单限制${maxSonglistCount}首`)(req);
-          return;
-        }
+      list[tIdx].item = newSongList;
 
-        // 原歌单删除选中歌曲
-        list[fIdx].item = list[fIdx].item.filter((item) => !ids.some((y) => y.id === item.id));
+      await updateSongList(account, list);
 
-        list[tIdx].item = newSongList;
+      syncUpdateData(res, 'music');
 
-        await updateSongList(account, list);
-
-        syncUpdateData(req, 'music');
-
-        resp.success(res, '移动歌曲成功')(req, `${ids.length}=>${toId}`, 1);
-        return;
-      }
-      resp.forbidden(res, '无权操作')(req, ids.length, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+      return resp.success(res, '添加歌曲成功')();
     }
-  },
+    if (fIdx > 1 && tIdx > 1 && fromId !== toId) {
+      // 从非默认歌单移动到非默认歌单
+      const newSongList = unique([...ids, ...list[tIdx].item], ['id']);
+
+      if (newSongList.length > maxSonglistCount) {
+        return resp.forbidden(res, `歌单限制${maxSonglistCount}首`)();
+      }
+
+      // 原歌单删除选中歌曲
+      list[fIdx].item = list[fIdx].item.filter((item) => !ids.some((y) => y.id === item.id));
+
+      list[tIdx].item = newSongList;
+
+      await updateSongList(account, list);
+
+      syncUpdateData(res, 'music');
+
+      return resp.success(res, '移动歌曲成功')();
+    }
+    resp.forbidden(res, '无权操作')();
+  }),
 );
 
 // 删除mv
@@ -1328,34 +1212,28 @@ route.post(
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id } = res.locals.ctx;
 
-      if (!req[kHello].isRoot) {
-        resp.forbidden(res, '无权操作')(req, id, 1);
-        return;
-      }
-
-      const dels = await db('songs').select('mv,artist,title').where({ id }).find();
-
-      for (let i = 0; i < dels.length; i++) {
-        const { mv, artist, title } = dels[i];
-        if (mv) {
-          await _delDir(appConfig.musicDir(mv));
-          await uLog(req, `删除MV(${artist}-${title})`);
-        }
-      }
-
-      await db('songs').where({ id }).update({ mv: '' });
-
-      syncUpdateData(req, 'music');
-
-      resp.success(res, '删除MV成功');
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (!res.locals.hello.isRoot) {
+      return resp.forbidden(res, '无权操作')();
     }
-  },
+
+    const dels = await db('songs').select('mv,artist,title').where({ id }).find();
+
+    for (let i = 0; i < dels.length; i++) {
+      const { mv } = dels[i];
+      if (mv) {
+        await _delDir(appConfig.musicDir(mv));
+      }
+    }
+
+    await db('songs').where({ id }).update({ mv: '' });
+
+    syncUpdateData(res, 'music');
+
+    resp.success(res, '删除MV成功')();
+  }),
 );
 
 // 读取歌词
@@ -1367,30 +1245,26 @@ route.get(
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id } = res.locals.ctx;
 
-      const musicinfo = await db('songs').select('lrc').where({ id }).findOne();
+    const musicinfo = await db('songs').select('lrc').where({ id }).findOne();
 
-      if (!musicinfo) {
-        resp.notFound(res, '歌曲不存在')(req, id, 1);
-      }
-
-      const url = appConfig.musicDir(musicinfo.lrc);
-
-      if ((await _f.getType(url)) === 'file') {
-        const str = (await _f.readFile(url, null, '')).toString();
-        resp.success(res, 'ok', str);
-      } else {
-        await _f.writeFile(url, '');
-
-        resp.success(res, 'ok', '');
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (!musicinfo) {
+      return resp.notFound(res, '歌曲不存在')();
     }
-  },
+
+    const url = appConfig.musicDir(musicinfo.lrc);
+
+    if ((await _f.getType(url)) === 'file') {
+      const str = (await _f.readFile(url, null, '')).toString();
+      resp.success(res, 'ok', str)();
+    } else {
+      await _f.writeFile(url, '');
+
+      resp.success(res, 'ok', '')();
+    }
+  }),
 );
 
 // 编辑歌词
@@ -1409,56 +1283,52 @@ route.post(
         ),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id, text } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id, text } = res.locals.ctx;
 
-      if (!req[kHello].isRoot) {
-        resp.forbidden(res, '无权操作')(req, id, 1);
-        return;
-      }
-
-      const musicinfo = await db('songs')
-        .select('url,lrc,artist,title,hash')
-        .where({ id })
-        .findOne();
-
-      if (!musicinfo) {
-        resp.forbidden(res, '歌曲不存在')(req, id, 1);
-      }
-
-      const url = appConfig.musicDir(musicinfo.lrc);
-
-      await _f.writeFile(url, text);
-
-      try {
-        const songUrl = appConfig.musicDir(musicinfo.url);
-
-        // 写入歌曲文件
-        await nodeID3.update(
-          {
-            unsynchronisedLyrics: {
-              language: 'eng',
-              text,
-            },
-          },
-          songUrl,
-        );
-
-        const newHASH = await _crypto.sampleHash(songUrl);
-
-        if (newHASH && newHASH !== musicinfo.hash) {
-          await db('songs').where({ id }).update({ hash: newHASH });
-        }
-      } catch {
-        await errLog(req, `写入元数据到歌曲文件失败(${musicinfo.artist}-${musicinfo.title}`);
-      }
-
-      resp.success(res, '更新歌词成功')(req, `${id}-${musicinfo.artist}-${musicinfo.title}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (!res.locals.hello.isRoot) {
+      return resp.forbidden(res, '无权操作')();
     }
-  },
+
+    const musicinfo = await db('songs').select('url,lrc,artist,title,hash').where({ id }).findOne();
+
+    if (!musicinfo) {
+      return resp.forbidden(res, '歌曲不存在')();
+    }
+
+    const url = appConfig.musicDir(musicinfo.lrc);
+
+    await _f.writeFile(url, text);
+
+    try {
+      const songUrl = appConfig.musicDir(musicinfo.url);
+
+      // 写入歌曲文件
+      await nodeID3.update(
+        {
+          unsynchronisedLyrics: {
+            language: 'eng',
+            text,
+          },
+        },
+        songUrl,
+      );
+
+      const newHASH = await _crypto.sampleHash(songUrl);
+
+      if (newHASH && newHASH !== musicinfo.hash) {
+        await db('songs').where({ id }).update({ hash: newHASH });
+      }
+    } catch (err) {
+      await writelog(
+        res,
+        `写入元数据到歌曲文件失败(${musicinfo.artist}-${musicinfo.title}-${err}`,
+        500,
+      );
+    }
+
+    resp.success(res, '更新歌词成功')();
+  }),
 );
 
 // 分享
@@ -1475,34 +1345,30 @@ route.post(
         .max(maxSonglistCount),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { list, title, expireTime, pass } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { list, title, expireTime, pass } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const id = nanoid();
-      const create_at = Date.now();
-      const obj = {
-        id,
-        create_at,
-        exp_time: expireTime === 0 ? 0 : create_at + expireTime * 24 * 60 * 60 * 1000,
-        title,
-        pass,
-        data: JSON.stringify(list),
-        account,
-        type: 'music',
-      };
+    const id = nanoid();
+    const create_at = Date.now();
+    const obj = {
+      id,
+      create_at,
+      exp_time: expireTime === 0 ? 0 : create_at + expireTime * 24 * 60 * 60 * 1000,
+      title,
+      pass,
+      data: JSON.stringify(list),
+      account,
+      type: 'music',
+    };
 
-      await db('share').insert(obj);
+    await db('share').insert(obj);
 
-      syncUpdateData(req, 'sharelist');
+    syncUpdateData(res, 'sharelist');
 
-      resp.success(res, '分享歌曲成功', { id })(req, `${title}-${id}-${list.length}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '分享歌曲成功', { id })();
+  }),
 );
 
 // 歌曲上传
@@ -1517,205 +1383,190 @@ route.post(
       id: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { HASH, name, type, id } = req[kValidate];
+  asyncHandler(async (req, res) => {
+    const { HASH, name, type, id } = res.locals.ctx;
 
-      if (type === 'song') {
-        if (!HASH) {
-          resp.badRequest(res, req, 'HASH 不能为空', 'query');
-          return;
-        }
-
-        if (!isMusicFile(name)) {
-          resp.forbidden(res, '歌曲格式错误')(req, name, 1);
-          return;
-        }
-
-        const song = await db('songs').select('id,artist,title').where({ hash: HASH }).findOne();
-
-        if (song) {
-          resp.forbidden(res, '歌曲已存在')(req, `${song.artist}-${song.title}`, 1);
-          return;
-        }
-
-        const songId = nanoid();
-
-        const create_at = Date.now();
-
-        const timePath = getTimePath(create_at);
-
-        const suffix = _path.extname(name)[2];
-
-        const tDir = appConfig.musicDir(timePath, songId);
-        const tName = `${songId}.${suffix}`;
-
-        await receiveFiles(req, tDir, tName, fieldLength.maxSongSize, HASH);
-
-        // 读取歌曲元数据
-        const songInfo = await getSongInfo(_path.normalizeNoSlash(tDir, tName));
-
-        let {
-          album = '',
-          year = '',
-          title,
-          duration,
-          artist,
-          pic = '',
-          lrc = '',
-          picFormat,
-        } = songInfo;
-
-        picFormat = _path.basename(picFormat)[0];
-        if (picFormat && pic) {
-          // 提取封面
-          await _f.writeFile(_path.normalizeNoSlash(tDir, `${songId}.${picFormat}`), pic);
-          pic = _path.normalizeNoSlash(timePath, songId, `${songId}.${picFormat}`);
-        }
-
-        await _f.writeFile(_path.normalizeNoSlash(tDir, `${songId}.lrc`), lrc);
-
-        await db('songs').insert({
-          id: songId,
-          create_at,
-          artist,
-          artist_pinyin: pinyin(artist),
-          title,
-          title_pinyin: pinyin(title),
-          duration,
-          album,
-          year,
-          hash: HASH,
-          pic,
-          url: _path.normalizeNoSlash(timePath, songId, tName),
-          lrc: _path.normalizeNoSlash(timePath, songId, `${songId}.lrc`),
-        });
-
-        resp.success(res, '上传歌曲成功')(req, `${songId}-${artist}-${title}`, 1);
-      } else if (type === 'cover') {
-        if (!id) {
-          resp.badRequest(res, req, 'id 不能为空', 'query');
-          return;
-        }
-
-        if (!req[kHello].isRoot) {
-          resp.forbidden(res, '无权上传封面')(req, id, 1);
-          return;
-        }
-
-        if (!isImgFile(name)) {
-          resp.forbidden(res, '封面图片格式不支持')(req, name, 1);
-          return;
-        }
-
-        const songInfo = await db('songs')
-          .select('url,pic,hash,title,artist')
-          .where({ id })
-          .findOne();
-
-        if (!songInfo) {
-          resp.forbidden(res, '歌曲不存在')(req, id, 1);
-          return;
-        }
-
-        const { url, pic, title, artist, hash } = songInfo;
-
-        const tDir = appConfig.musicDir(_path.dirname(url));
-        const tName = `${_path.basename(url)[1]}.${_path.extname(name)[2]}`;
-
-        await receiveFiles(req, tDir, tName, fieldLength.maxSongPicSize, HASH);
-
-        // 如果上传封面文件和现有的封面文件名不同，删除现有的
-        if (_path.basename(pic)[0] !== tName) {
-          if (pic) {
-            await _delDir(_path.normalizeNoSlash(tDir, _path.basename(pic)[0]));
-          }
-        }
-
-        let newHASH = '';
-
-        try {
-          const songUrl = appConfig.musicDir(url);
-
-          // 写入歌曲文件
-          await nodeID3.update(
-            {
-              image: {
-                type: {
-                  id: 3,
-                  name: 'front cover',
-                },
-                imageBuffer: await _f.fsp.readFile(_path.normalizeNoSlash(tDir, tName)),
-              },
-            },
-            songUrl,
-          );
-
-          newHASH = await _crypto.sampleHash(songUrl);
-        } catch {
-          await errLog(req, `写入元数据到歌曲文件失败(${artist}-${title})`);
-        }
-
-        if (_path.basename(pic)[0] !== tName || (newHASH && newHASH !== hash)) {
-          await db('songs')
-            .where({ id })
-            .update({
-              pic: `${_path.extname(url)[0]}.${_path.extname(name)[2]}`,
-              hash: newHASH || hash,
-            });
-        }
-
-        syncUpdateData(req, 'music');
-
-        resp.success(res, '上传封面成功')(req, `${id}-${artist}-${title}`, 1);
-      } else if (type === 'mv') {
-        if (!id) {
-          resp.badRequest(res, req, 'id 不能为空', 'query');
-          return;
-        }
-
-        if (!req[kHello].isRoot) {
-          resp.forbidden(res, '无权上传MV')(req, id, 1);
-          return;
-        }
-
-        if (!/\.(mp4)$/i.test(name)) {
-          resp.forbidden(res, 'MV格式错误')(req, name, 1);
-          return;
-        }
-
-        const songInfo = await db('songs').select('url,mv,title,artist').where({ id }).findOne();
-
-        if (!songInfo) {
-          resp.forbidden(res, '歌曲不存在')(req, id, 1);
-          return;
-        }
-
-        const { url, mv, title, artist } = songInfo;
-
-        const tDir = appConfig.musicDir(_path.dirname(url));
-        const tName = `${_path.basename(url)[1]}.${_path.extname(name)[2]}`;
-
-        await receiveFiles(req, tDir, tName, fieldLength.maxMvSize, HASH);
-
-        if (_path.basename(mv)[0] != tName) {
-          // 上传和现有文件名不同上传现有的
-          if (mv) {
-            await _delDir(_path.normalizeNoSlash(tDir, _path.basename(mv)[0]));
-          }
-
-          await db('songs')
-            .where({ id })
-            .update({
-              mv: `${_path.extname(url)[0]}.${_path.extname(name)[2]}`,
-            });
-        }
-        resp.success(res, '上传MV成功')(req, `${id}-${artist}-${title}`, 1);
+    if (type === 'song') {
+      if (!HASH) {
+        return resp.badRequest(res)('HASH 不能为空', 1);
       }
-    } catch (error) {
-      resp.error(res)(req, error);
+
+      if (!isMusicFile(name)) {
+        return resp.forbidden(res, '歌曲格式错误')();
+      }
+
+      const song = await db('songs').select('id,artist,title').where({ hash: HASH }).findOne();
+
+      if (song) {
+        return resp.forbidden(res, '歌曲已存在')();
+      }
+
+      const songId = nanoid();
+
+      const create_at = Date.now();
+
+      const timePath = getTimePath(create_at);
+
+      const suffix = _path.extname(name)[2];
+
+      const tDir = appConfig.musicDir(timePath, songId);
+      const tName = `${songId}.${suffix}`;
+
+      await receiveFiles(req, tDir, tName, fieldLength.maxSongSize, HASH);
+
+      // 读取歌曲元数据
+      const songInfo = await getSongInfo(_path.normalizeNoSlash(tDir, tName));
+
+      let {
+        album = '',
+        year = '',
+        title,
+        duration,
+        artist,
+        pic = '',
+        lrc = '',
+        picFormat,
+      } = songInfo;
+
+      picFormat = _path.basename(picFormat)[0];
+      if (picFormat && pic) {
+        // 提取封面
+        await _f.writeFile(_path.normalizeNoSlash(tDir, `${songId}.${picFormat}`), pic);
+        pic = _path.normalizeNoSlash(timePath, songId, `${songId}.${picFormat}`);
+      }
+
+      await _f.writeFile(_path.normalizeNoSlash(tDir, `${songId}.lrc`), lrc);
+
+      await db('songs').insert({
+        id: songId,
+        create_at,
+        artist,
+        artist_pinyin: pinyin(artist),
+        title,
+        title_pinyin: pinyin(title),
+        duration,
+        album,
+        year,
+        hash: HASH,
+        pic,
+        url: _path.normalizeNoSlash(timePath, songId, tName),
+        lrc: _path.normalizeNoSlash(timePath, songId, `${songId}.lrc`),
+      });
+
+      resp.success(res, '上传歌曲成功')();
+    } else if (type === 'cover') {
+      if (!id) {
+        return resp.badRequest(res)('id 不能为空', 1);
+      }
+
+      if (!res.locals.hello.isRoot) {
+        return resp.forbidden(res, '无权上传封面')();
+      }
+
+      if (!isImgFile(name)) {
+        return resp.forbidden(res, '封面图片格式不支持')();
+      }
+
+      const songInfo = await db('songs')
+        .select('url,pic,hash,title,artist')
+        .where({ id })
+        .findOne();
+
+      if (!songInfo) {
+        return resp.forbidden(res, '歌曲不存在')();
+      }
+
+      const { url, pic, title, artist, hash } = songInfo;
+
+      const tDir = appConfig.musicDir(_path.dirname(url));
+      const tName = `${_path.basename(url)[1]}.${_path.extname(name)[2]}`;
+
+      await receiveFiles(req, tDir, tName, fieldLength.maxSongPicSize, HASH);
+
+      // 如果上传封面文件和现有的封面文件名不同，删除现有的
+      if (_path.basename(pic)[0] !== tName) {
+        if (pic) {
+          await _delDir(_path.normalizeNoSlash(tDir, _path.basename(pic)[0]));
+        }
+      }
+
+      let newHASH = '';
+
+      try {
+        const songUrl = appConfig.musicDir(url);
+
+        // 写入歌曲文件
+        await nodeID3.update(
+          {
+            image: {
+              type: {
+                id: 3,
+                name: 'front cover',
+              },
+              imageBuffer: await _f.fsp.readFile(_path.normalizeNoSlash(tDir, tName)),
+            },
+          },
+          songUrl,
+        );
+
+        newHASH = await _crypto.sampleHash(songUrl);
+      } catch (err) {
+        await writelog(res, `写入元数据到歌曲文件失败(${artist}-${title}-${err})`, 500);
+      }
+
+      if (_path.basename(pic)[0] !== tName || (newHASH && newHASH !== hash)) {
+        await db('songs')
+          .where({ id })
+          .update({
+            pic: `${_path.extname(url)[0]}.${_path.extname(name)[2]}`,
+            hash: newHASH || hash,
+          });
+      }
+
+      syncUpdateData(res, 'music');
+
+      resp.success(res, '上传封面成功')();
+    } else if (type === 'mv') {
+      if (!id) {
+        return resp.badRequest(res)('id 不能为空', 1);
+      }
+
+      if (!res.locals.hello.isRoot) {
+        return resp.forbidden(res, '无权上传MV')();
+      }
+
+      if (!/\.(mp4)$/i.test(name)) {
+        return resp.forbidden(res, 'MV格式错误')();
+      }
+
+      const songInfo = await db('songs').select('url,mv,title,artist').where({ id }).findOne();
+
+      if (!songInfo) {
+        return resp.forbidden(res, '歌曲不存在')();
+      }
+
+      const { url, mv } = songInfo;
+
+      const tDir = appConfig.musicDir(_path.dirname(url));
+      const tName = `${_path.basename(url)[1]}.${_path.extname(name)[2]}`;
+
+      await receiveFiles(req, tDir, tName, fieldLength.maxMvSize, HASH);
+
+      if (_path.basename(mv)[0] != tName) {
+        // 上传和现有文件名不同上传现有的
+        if (mv) {
+          await _delDir(_path.normalizeNoSlash(tDir, _path.basename(mv)[0]));
+        }
+
+        await db('songs')
+          .where({ id })
+          .update({
+            mv: `${_path.extname(url)[0]}.${_path.extname(name)[2]}`,
+          });
+      }
+      resp.success(res, '上传MV成功')();
     }
-  },
+  }),
 );
 
 // 歌曲重复
@@ -1727,31 +1578,26 @@ route.post(
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { HASH } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { HASH } = res.locals.ctx;
 
-      const songInfo = await db('songs').select('url,id').where({ hash: HASH }).findOne();
+    const songInfo = await db('songs').select('url,id').where({ hash: HASH }).findOne();
 
-      if (songInfo) {
-        const url = appConfig.musicDir(songInfo.url);
+    if (songInfo) {
+      const url = appConfig.musicDir(songInfo.url);
 
-        if ((await _f.getType(url)) === 'file') {
-          resp.success(res);
-          return;
-        }
-
-        // 歌曲不存在删除数据和歌曲目录，重新上传
-        await db('songs').where({ id: songInfo.id }).delete();
-
-        await _delDir(_path.dirname(url));
+      if ((await _f.getType(url)) === 'file') {
+        return resp.success(res)();
       }
 
-      resp.ok(res);
-    } catch (error) {
-      resp.error(res)(req, error);
+      // 歌曲不存在删除数据和歌曲目录，重新上传
+      await db('songs').where({ id: songInfo.id }).delete();
+
+      await _delDir(_path.dirname(url));
     }
-  },
+
+    resp.ok(res)();
+  }),
 );
 
 // 保存分享
@@ -1764,39 +1610,34 @@ route.post(
       token: V.string().trim().min(1).max(fieldLength.url),
     }),
   ),
-  async function (req, res) {
-    try {
-      const { name, token } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { name, token } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const share = await validShareState(token, 'music');
+    const share = await validShareState(token, 'music');
 
-      if (share.state === 0) {
-        resp.forbidden(res, share.text)(req);
-        return;
-      }
-
-      const data = share.data.data.map((item) => ({ id: item })).slice(0, maxSonglistCount);
-
-      const songList = await getMusicList(account);
-      const id = nanoid();
-
-      songList.push({
-        name,
-        id,
-        item: data,
-        des: '',
-      });
-      await updateSongList(account, songList);
-
-      syncUpdateData(req, 'music');
-
-      resp.success(res, '保存歌单成功')(req, `${data.length}=>${name}-${id}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (share.state === 0) {
+      return resp.forbidden(res, share.text)();
     }
-  },
+
+    const data = share.data.data.map((item) => ({ id: item })).slice(0, maxSonglistCount);
+
+    const songList = await getMusicList(account);
+    const id = nanoid();
+
+    songList.push({
+      name,
+      id,
+      item: data,
+      des: '',
+    });
+    await updateSongList(account, songList);
+
+    syncUpdateData(res, 'music');
+
+    resp.success(res, '保存歌单成功')();
+  }),
 );
 
 export default route;

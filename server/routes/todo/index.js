@@ -2,26 +2,26 @@ import express from 'express';
 
 import { db } from '../../utils/sqlite.js';
 
-import { syncUpdateData, createPagingData, validate } from '../../utils/utils.js';
+import { syncUpdateData, createPagingData } from '../../utils/utils.js';
 
 import { fieldLength } from '../config.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
-import { sym } from '../../utils/symbols.js';
 import resp from '../../utils/response.js';
+import { asyncHandler, validate } from '../../utils/customMiddleware.js';
 
 const route = express.Router();
-const kHello = sym('hello');
-const kValidate = sym('validate');
 
 // 验证登录态
-route.use((req, res, next) => {
-  if (req[kHello].userinfo.account) {
-    next();
-  } else {
-    resp.unauthorized(res);
-  }
-});
+route.use(
+  asyncHandler((_, res, next) => {
+    if (res.locals.hello.userinfo.account) {
+      next();
+    } else {
+      resp.unauthorized(res)();
+    }
+  }),
+);
 
 // 待办列表
 route.get(
@@ -33,44 +33,40 @@ route.get(
       pageSize: V.number().toInt().default(40).min(1).max(fieldLength.maxPagesize),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { pageNo, pageSize } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { pageNo, pageSize } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const total = await db('todo').where({ account }).count();
+    const total = await db('todo').where({ account }).count();
 
-      const result = createPagingData(Array(total), pageSize, pageNo);
+    const result = createPagingData(Array(total), pageSize, pageNo);
 
-      const offset = (result.pageNo - 1) * pageSize;
+    const offset = (result.pageNo - 1) * pageSize;
 
-      let data = [],
-        undoneCount = 0;
+    let data = [],
+      undoneCount = 0;
 
-      if (total > 0) {
-        // 未完成代办数
-        undoneCount = await db('todo').where({ account, state: 1 }).count();
+    if (total > 0) {
+      // 未完成代办数
+      undoneCount = await db('todo').where({ account, state: 1 }).count();
 
-        data = await db('todo')
-          .select('id,content,state,update_at')
-          .where({ account })
-          .orderBy('state', 'desc')
-          .orderBy('update_at', 'desc')
-          .limit(pageSize)
-          .offset(offset)
-          .find();
-      }
-
-      resp.success(res, 'ok', {
-        ...result,
-        data,
-        undoneCount,
-      });
-    } catch (error) {
-      resp.error(res)(req, error);
+      data = await db('todo')
+        .select('id,content,state,update_at')
+        .where({ account })
+        .orderBy('state', 'desc')
+        .orderBy('update_at', 'desc')
+        .limit(pageSize)
+        .offset(offset)
+        .find();
     }
-  },
+
+    resp.success(res, 'ok', {
+      ...result,
+      data,
+      undoneCount,
+    })();
+  }),
 );
 
 // 增加待办
@@ -82,28 +78,24 @@ route.post(
       content: V.string().trim().min(1).max(fieldLength.todoContent),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { content } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { content } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const create_at = Date.now();
-      await db('todo').insert({
-        id: nanoid(),
-        create_at,
-        account,
-        content,
-        update_at: create_at,
-      });
+    const create_at = Date.now();
+    await db('todo').insert({
+      id: nanoid(),
+      create_at,
+      account,
+      content,
+      update_at: create_at,
+    });
 
-      syncUpdateData(req, 'todolist');
+    syncUpdateData(res, 'todolist');
 
-      resp.success(res, `添加待办成功`)(req, content, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, `添加待办成功`)();
+  }),
 );
 
 // 删除待办
@@ -117,23 +109,19 @@ route.post(
         .max(fieldLength.maxPagesize),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { ids } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { ids } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('todo')
-        .where({ id: { in: ids }, account })
-        .delete();
+    await db('todo')
+      .where({ id: { in: ids }, account })
+      .delete();
 
-      syncUpdateData(req, 'todolist');
+    syncUpdateData(res, 'todolist');
 
-      resp.success(res, `删除待办成功`)(req, ids.length, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, `删除待办成功`)();
+  }),
 );
 
 // 待办状态
@@ -146,21 +134,17 @@ route.get(
       state: V.number().toInt().enum([0, 1]),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id, state } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id, state } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('todo').where({ id, account }).update({ state, update_at: Date.now() });
+    await db('todo').where({ id, account }).update({ state, update_at: Date.now() });
 
-      syncUpdateData(req, 'todolist');
+    syncUpdateData(res, 'todolist');
 
-      resp.success(res, state === 1 ? '标记为未完成' : '标记为已完成')(req, id, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, state === 1 ? '标记为未完成' : '标记为已完成')();
+  }),
 );
 
 // 编辑待办
@@ -173,21 +157,17 @@ route.post(
       content: V.string().trim().min(1).max(fieldLength.todoContent),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id, content } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id, content } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('todo').where({ id, account }).update({ content, update_at: Date.now() });
+    await db('todo').where({ id, account }).update({ content, update_at: Date.now() });
 
-      syncUpdateData(req, 'todolist');
+    syncUpdateData(res, 'todolist');
 
-      resp.success(res, '编辑待办成功')(req, content, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '编辑待办成功')();
+  }),
 );
 
 export default route;

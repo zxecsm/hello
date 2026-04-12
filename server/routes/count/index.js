@@ -10,7 +10,6 @@ import {
   isValidDate,
   writelog,
   concurrencyTasks,
-  validate,
 } from '../../utils/utils.js';
 
 import { helloHelperMsg, sendNotificationsToCustomAddresses } from '../chat/chat.js';
@@ -20,21 +19,21 @@ import { computerDay } from './count.js';
 import nanoid from '../../utils/nanoid.js';
 import appConfig from '../../data/config.js';
 import V from '../../utils/validRules.js';
-import { sym } from '../../utils/symbols.js';
 import resp from '../../utils/response.js';
+import { asyncHandler, validate } from '../../utils/customMiddleware.js';
 
 const route = express.Router();
-const kHello = sym('hello');
-const kValidate = sym('validate');
 
 // 验证登录态
-route.use((req, res, next) => {
-  if (req[kHello].userinfo.account) {
-    next();
-  } else {
-    resp.unauthorized(res);
-  }
-});
+route.use(
+  asyncHandler((_, res, next) => {
+    if (res.locals.hello.userinfo.account) {
+      next();
+    } else {
+      resp.unauthorized(res)();
+    }
+  }),
+);
 
 // 定时通知是否有未完成代办事项和倒计时到期
 let countNum = 0;
@@ -122,20 +121,22 @@ timedTask.add(async () => {
 
       sendNotificationsToCustomAddresses(
         {
-          [kHello]: {
-            userinfo: {
-              username: appConfig.notifyAccount,
-              account: appConfig.notifyAccount,
+          locals: {
+            hello: {
+              userinfo: {
+                username: appConfig.notifyAccount,
+                account: appConfig.notifyAccount,
+              },
             },
           },
         },
         msg,
       ).catch((err) => {
-        writelog(false, `发送通知到自定义地址失败(${err})`, 'error');
+        writelog(false, `发送通知到自定义地址失败(${err})`, 500);
       });
     });
 
-    writelog(false, `通知倒计时和代办事项成功`, 'user');
+    writelog(false, `通知倒计时和代办事项成功`);
   }
 });
 
@@ -149,57 +150,53 @@ route.get(
       pageSize: V.number().toInt().default(40).min(1).max(fieldLength.maxPagesize),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { pageNo, pageSize } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { pageNo, pageSize } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const total = await db('count_down').where({ account }).count();
+    const total = await db('count_down').where({ account }).count();
 
-      const result = createPagingData(Array(total), pageSize, pageNo);
+    const result = createPagingData(Array(total), pageSize, pageNo);
 
-      const offset = (result.pageNo - 1) * pageSize;
+    const offset = (result.pageNo - 1) * pageSize;
 
-      let list = [],
-        expireCount = 0;
+    let list = [],
+      expireCount = 0;
 
-      if (total > 0) {
-        // 剩下不到两天的数量
-        expireCount = await db('count_down')
-          .where({
-            account,
-            state: 1,
-            end: { '<': Date.now() + 2 * 1000 * 60 * 60 * 24 },
-          })
-          .count();
+    if (total > 0) {
+      // 剩下不到两天的数量
+      expireCount = await db('count_down')
+        .where({
+          account,
+          state: 1,
+          end: { '<': Date.now() + 2 * 1000 * 60 * 60 * 24 },
+        })
+        .count();
 
-        list = (
-          await db('count_down')
-            .select('id,title,link,start,end,state,top')
-            .where({ account })
-            .orderBy('top', 'desc')
-            .orderBy('end', 'asc')
-            .page(pageSize, offset)
-            .find()
-        ).map((item) => {
-          const { start, end } = item;
-          return {
-            ...item,
-            ...computerDay(start, end),
-          };
-        });
-      }
-
-      resp.success(res, 'ok', {
-        ...result,
-        data: list,
-        expireCount,
+      list = (
+        await db('count_down')
+          .select('id,title,link,start,end,state,top')
+          .where({ account })
+          .orderBy('top', 'desc')
+          .orderBy('end', 'asc')
+          .page(pageSize, offset)
+          .find()
+      ).map((item) => {
+        const { start, end } = item;
+        return {
+          ...item,
+          ...computerDay(start, end),
+        };
       });
-    } catch (error) {
-      resp.error(res)(req, error);
     }
-  },
+
+    resp.success(res, 'ok', {
+      ...result,
+      data: list,
+      expireCount,
+    })();
+  }),
 );
 
 // 增加
@@ -214,37 +211,32 @@ route.post(
       link: V.string().trim().default('').allowEmpty().max(fieldLength.url).httpUrl(),
     }),
   ),
-  async (req, res) => {
-    try {
-      let { title, start, end, link } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    let { title, start, end, link } = res.locals.ctx;
 
-      start = new Date(start + ' 00:00:00').getTime();
-      end = new Date(end + ' 00:00:00').getTime();
+    start = new Date(start + ' 00:00:00').getTime();
+    end = new Date(end + ' 00:00:00').getTime();
 
-      if (start >= end) {
-        resp.badRequest(res, req, '开始时间必须小于结束时间', 'body');
-        return;
-      }
-
-      const { account } = req[kHello].userinfo;
-
-      await db('count_down').insert({
-        id: nanoid(),
-        create_at: Date.now(),
-        account,
-        title,
-        start,
-        end,
-        link,
-      });
-
-      syncUpdateData(req, 'countlist');
-
-      resp.success(res, `添加倒计时成功`)(req, title, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (start >= end) {
+      return resp.badRequest(res)('开始时间必须小于结束时间', 1);
     }
-  },
+
+    const { account } = res.locals.hello.userinfo;
+
+    await db('count_down').insert({
+      id: nanoid(),
+      create_at: Date.now(),
+      account,
+      title,
+      start,
+      end,
+      link,
+    });
+
+    syncUpdateData(res, 'countlist');
+
+    resp.success(res, `添加倒计时成功`)();
+  }),
 );
 
 // 删除
@@ -258,23 +250,19 @@ route.post(
         .max(fieldLength.maxPagesize),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { ids } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { ids } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('count_down')
-        .where({ id: { in: ids }, account })
-        .delete();
+    await db('count_down')
+      .where({ id: { in: ids }, account })
+      .delete();
 
-      syncUpdateData(req, 'countlist');
+    syncUpdateData(res, 'countlist');
 
-      resp.success(res, `删除倒计时成功`)(req, ids.length, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, `删除倒计时成功`)();
+  }),
 );
 
 // 编辑
@@ -290,34 +278,29 @@ route.post(
       link: V.string().trim().default('').allowEmpty().max(fieldLength.url).httpUrl(),
     }),
   ),
-  async (req, res) => {
-    try {
-      let { id, title, start, end, link } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    let { id, title, start, end, link } = res.locals.ctx;
 
-      start = new Date(start + ' 00:00:00').getTime();
-      end = new Date(end + ' 00:00:00').getTime();
+    start = new Date(start + ' 00:00:00').getTime();
+    end = new Date(end + ' 00:00:00').getTime();
 
-      if (start >= end) {
-        resp.badRequest(res, req, '开始时间必须小于结束时间', 'body');
-        return;
-      }
-
-      const { account } = req[kHello].userinfo;
-
-      await db('count_down').where({ id, account }).update({
-        title,
-        start,
-        end,
-        link,
-      });
-
-      syncUpdateData(req, 'countlist');
-
-      resp.success(res, '更新倒计时成功')(req, title, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (start >= end) {
+      return resp.badRequest(res)('开始时间必须小于结束时间', 1);
     }
-  },
+
+    const { account } = res.locals.hello.userinfo;
+
+    await db('count_down').where({ id, account }).update({
+      title,
+      start,
+      end,
+      link,
+    });
+
+    syncUpdateData(res, 'countlist');
+
+    resp.success(res, '更新倒计时成功')();
+  }),
 );
 
 // 置顶权重
@@ -330,21 +313,17 @@ route.post(
       top: V.number().toInt().min(0).max(fieldLength.top),
     }),
   ),
-  async (req, res) => {
-    try {
-      let { id, top } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    let { id, top } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('count_down').where({ id, account }).update({ top });
+    await db('count_down').where({ id, account }).update({ top });
 
-      syncUpdateData(req, 'countlist');
+    syncUpdateData(res, 'countlist');
 
-      resp.success(res, '修改倒计时权重成功')(req, `${id}-${top}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '修改倒计时权重成功')();
+  }),
 );
 
 // 状态
@@ -357,21 +336,17 @@ route.post(
       state: V.number().toInt().enum([0, 1]),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id, state } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id, state } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('count_down').where({ id, account }).update({ state });
+    await db('count_down').where({ id, account }).update({ state });
 
-      syncUpdateData(req, 'countlist');
+    syncUpdateData(res, 'countlist');
 
-      resp.success(res, '修改倒计时状态成功')(req, `${id}-${state}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '修改倒计时状态成功')();
+  }),
 );
 
 export default route;

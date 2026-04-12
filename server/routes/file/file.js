@@ -79,13 +79,13 @@ export async function getAllFile(path) {
           }
         }
       } catch (error) {
-        await writelog(false, `[ getAllFile ] - ${error}`, 'error');
+        await writelog(false, `[ getAllFile ] - ${error}`, 500);
       }
     }
 
     return result;
   } catch (error) {
-    await writelog(false, `[ getAllFile ] - ${error}`, 'error');
+    await writelog(false, `[ getAllFile ] - ${error}`, 500);
     return [];
   }
 }
@@ -166,13 +166,13 @@ export async function readMenu(path) {
         }
         arr.push(info);
       } catch (error) {
-        await writelog(false, `[ readMenu ] - ${error}`, 'error');
+        await writelog(false, `[ readMenu ] - ${error}`, 500);
       }
     });
 
     return arr;
   } catch (error) {
-    await writelog(false, `[ readMenu ] - ${error}`, 'error');
+    await writelog(false, `[ readMenu ] - ${error}`, 500);
     return [];
   }
 }

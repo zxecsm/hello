@@ -115,7 +115,7 @@ export async function bmkGroupExist(account, groupId) {
 }
 
 // 清理缓存siteInfo
-export async function cleanSiteInfo(req = false) {
+export async function cleanSiteInfo(res = false) {
   if (_d.cacheExp.siteInfoCache > 0) {
     const now = Date.now();
 
@@ -138,14 +138,14 @@ export async function cleanSiteInfo(req = false) {
 
     if (num) {
       const text = `删除过期网站描述信息缓存：${num}`;
-      await writelog(req, text, 'user');
+      await writelog(res, text);
       await heperMsgAndForward(null, appConfig.adminAccount, text);
     }
   }
 }
 
 // 清理缓存favicon
-export async function cleanFavicon(req = false) {
+export async function cleanFavicon(res = false) {
   if (_d.cacheExp.faviconCache > 0) {
     const now = Date.now();
 
@@ -168,7 +168,7 @@ export async function cleanFavicon(req = false) {
 
     if (num) {
       const text = `删除过期缓存图标：${num}`;
-      await writelog(req, text, 'user');
+      await writelog(res, text);
       await heperMsgAndForward(null, appConfig.adminAccount, text);
     }
   }

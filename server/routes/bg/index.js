@@ -15,8 +15,6 @@ import {
   syncUpdateData,
   concurrencyTasks,
   createPagingData,
-  uLog,
-  validate,
   unique,
 } from '../../utils/utils.js';
 
@@ -30,13 +28,11 @@ import _path from '../../utils/path.js';
 import _connect from '../../utils/connect.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
-import { sym } from '../../utils/symbols.js';
 import getFile from '../getfile/index.js';
 import resp from '../../utils/response.js';
+import { asyncHandler, validate } from '../../utils/customMiddleware.js';
 
 const route = express.Router();
-const kHello = sym('hello');
-const kValidate = sym('validate');
 
 // 获取随机一张壁纸
 route.get(
@@ -50,38 +46,36 @@ route.get(
     ],
     ['query', V.object({ w: V.number().toInt().default(0).min(0) })],
   ),
-  async (req, res) => {
-    try {
-      const { type } = req[kValidate].params;
+  asyncHandler(async (req, res) => {
+    const { type } = res.locals.ctx.params;
 
-      // 检查壁纸接口是否开启
-      if (!_d.pubApi.randomBgApi) {
-        return resp.forbidden(res, '接口未开放')(req);
-      }
-
-      // 从数据库中随机选择一条数据
-      const bgData = await getRandomBg(type === 'd' ? 'bg' : 'bgxs', 'id');
-
-      // 如果没有数据，返回错误
-      if (!bgData) {
-        return resp.notFound(res, '壁纸库为空')(req);
-      }
-
-      await getFile(req, res, `/bg/${bgData.id}`, false);
-    } catch (error) {
-      resp.error(res)(req, error);
+    // 检查壁纸接口是否开启
+    if (!_d.pubApi.randomBgApi) {
+      return resp.forbidden(res, '接口未开放')();
     }
-  },
+
+    // 从数据库中随机选择一条数据
+    const bgData = await getRandomBg(type === 'd' ? 'bg' : 'bgxs', 'id');
+
+    // 如果没有数据，返回错误
+    if (!bgData) {
+      return resp.notFound(res, '壁纸库为空')();
+    }
+
+    await getFile(req, res, `/bg/${bgData.id}`, false);
+  }),
 );
 
 // 验证登录态
-route.use((req, res, next) => {
-  if (req[kHello].userinfo.account) {
-    next();
-  } else {
-    resp.unauthorized(res);
-  }
-});
+route.use(
+  asyncHandler((_, res, next) => {
+    if (res.locals.hello.userinfo.account) {
+      next();
+    } else {
+      resp.unauthorized(res)();
+    }
+  }),
+);
 
 // 每日切换壁纸
 timedTask.add(async (flag) => {
@@ -115,22 +109,17 @@ timedTask.add(async (flag) => {
 route.get(
   '/random',
   validate('query', V.object({ type: V.string().trim().enum(['bg', 'bgxs']) })),
-  async (req, res) => {
-    try {
-      const { type } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { type } = res.locals.ctx;
 
-      const bgData = await getRandomBg(type, 'id,type');
+    const bgData = await getRandomBg(type, 'id,type');
 
-      if (!bgData) {
-        resp.notFound(res, '壁纸库为空，请先上传壁纸')(req);
-        return;
-      }
-
-      resp.success(res, 'ok', bgData);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (!bgData) {
+      return resp.notFound(res, '壁纸库为空，请先上传壁纸')();
     }
-  },
+
+    resp.success(res, 'ok', bgData)();
+  }),
 );
 
 // 更换壁纸
@@ -143,22 +132,18 @@ route.post(
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { type, id } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { type, id } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
-      await db('user')
-        .where({ account, state: 1 })
-        .update({ [type]: id });
+    const { account } = res.locals.hello.userinfo;
+    await db('user')
+      .where({ account, state: 1 })
+      .update({ [type]: id });
 
-      syncUpdateData(req, 'userinfo');
+    syncUpdateData(res, 'userinfo');
 
-      resp.success(res, '更换壁纸成功')(req, `${type}-${id}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '更换壁纸成功')();
+  }),
 );
 
 // 收藏壁纸
@@ -171,25 +156,21 @@ route.post(
       .max(fieldLength.bgPageSize),
     'ids',
   ),
-  async (req, res) => {
-    try {
-      const ids = req[kValidate];
-      const { account } = req[kHello].userinfo;
+  asyncHandler(async (_, res) => {
+    const ids = res.locals.ctx;
+    const { account } = res.locals.hello.userinfo;
 
-      const list = unique([...(await getCollectBgList(account)), ...ids]).slice(
-        0,
-        fieldLength.collectBg,
-      );
+    const list = unique([...(await getCollectBgList(account)), ...ids]).slice(
+      0,
+      fieldLength.collectBg,
+    );
 
-      await updateCollecBgtList(account, list);
+    await updateCollecBgtList(account, list);
 
-      syncUpdateData(req, 'bg');
+    syncUpdateData(res, 'bg');
 
-      resp.success(res, '收藏壁纸成功')(req, ids.length, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '收藏壁纸成功')();
+  }),
 );
 
 // 壁纸列表
@@ -204,75 +185,70 @@ route.get(
       pageSize: V.number().toInt().default(40).min(1).max(fieldLength.bgPageSize),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { type, pageNo, pageSize, collect } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { type, pageNo, pageSize, collect } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
-      const collectList = await getCollectBgList(account);
+    const { account } = res.locals.hello.userinfo;
+    const collectList = await getCollectBgList(account);
 
-      if (collect === 1) {
-        let data = [];
-        let result = null;
-        if (collectList.length > 0) {
-          const obj = await batchGetCollectBgList(collectList);
-          let isChange = false;
-          const list = [];
-          collectList.forEach((id) => {
-            const item = obj[id];
-            if (item) {
-              list.push(id);
-              if (item.type === type) {
-                data.push(item);
-              }
-            } else {
-              isChange = true;
-            }
-          });
-          if (isChange) {
-            await updateCollecBgtList(account, list);
-          }
-          result = createPagingData(Array(data.length), pageSize, pageNo);
-          const offset = (result.pageNo - 1) * pageSize;
-          data = data.reverse().slice(offset, offset + pageSize);
-        } else {
-          result = createPagingData(Array(0), pageSize, pageNo);
-        }
-
-        resp.success(res, 'ok', {
-          ...result,
-          data,
-        });
-        return;
-      }
-
-      const bgdb = db('bg').where({ type });
-
-      const total = await bgdb.count();
-
-      const result = createPagingData(Array(total), pageSize, pageNo);
-
-      const offset = (result.pageNo - 1) * pageSize;
-
+    if (collect === 1) {
       let data = [];
-      if (total > 0) {
-        data = await bgdb.select('id,type').page(pageSize, offset).orderBy('serial', 'DESC').find();
-        data = data.map((item) => {
-          if (collectList.includes(item.id)) {
-            item.isCollect = true;
+      let result = null;
+      if (collectList.length > 0) {
+        const obj = await batchGetCollectBgList(collectList);
+        let isChange = false;
+        const list = [];
+        collectList.forEach((id) => {
+          const item = obj[id];
+          if (item) {
+            list.push(id);
+            if (item.type === type) {
+              data.push(item);
+            }
+          } else {
+            isChange = true;
           }
-          return item;
         });
+        if (isChange) {
+          await updateCollecBgtList(account, list);
+        }
+        result = createPagingData(Array(data.length), pageSize, pageNo);
+        const offset = (result.pageNo - 1) * pageSize;
+        data = data.reverse().slice(offset, offset + pageSize);
+      } else {
+        result = createPagingData(Array(0), pageSize, pageNo);
       }
 
-      resp.success(res, 'ok', {
+      return resp.success(res, 'ok', {
         ...result,
         data,
-      });
-    } catch (error) {
-      resp.error(res)(req, error);
+      })();
     }
-  },
+
+    const bgdb = db('bg').where({ type });
+
+    const total = await bgdb.count();
+
+    const result = createPagingData(Array(total), pageSize, pageNo);
+
+    const offset = (result.pageNo - 1) * pageSize;
+
+    let data = [];
+    if (total > 0) {
+      data = await bgdb.select('id,type').page(pageSize, offset).orderBy('serial', 'DESC').find();
+      data = data.map((item) => {
+        if (collectList.includes(item.id)) {
+          item.isCollect = true;
+        }
+        return item;
+      });
+    }
+
+    resp.success(res, 'ok', {
+      ...result,
+      data,
+    })();
+  }),
 );
 
 // 删除壁纸
@@ -287,50 +263,43 @@ route.post(
       collect: V.number().toInt().default(0).enum([0, 1]),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { ids, collect } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { ids, collect } = res.locals.ctx;
 
-      if (collect === 1) {
-        const { account } = req[kHello].userinfo;
+    if (collect === 1) {
+      const { account } = res.locals.hello.userinfo;
 
-        const list = (await getCollectBgList(account)).filter((item) => !ids.includes(item));
+      const list = (await getCollectBgList(account)).filter((item) => !ids.includes(item));
 
-        await updateCollecBgtList(account, list);
+      await updateCollecBgtList(account, list);
 
-        syncUpdateData(req, 'bg');
+      syncUpdateData(res, 'bg');
 
-        resp.success(res, '删除收藏壁纸成功')(req, ids.length, 1);
-        return;
-      }
-
-      // 验证管理员
-      if (!req[kHello].isRoot) {
-        resp.forbidden(res, '无权操作')(req);
-        return;
-      }
-
-      const bgDb = db('bg')
-        .select('url')
-        .where({ id: { in: ids } });
-
-      const dels = await bgDb.find();
-
-      await bgDb.delete();
-
-      await concurrencyTasks(dels, 5, async (del) => {
-        const { url } = del;
-        await _delDir(appConfig.bgDir(url));
-        await uLog(req, `删除壁纸(${url})`);
-      });
-
-      syncUpdateData(req, 'bg');
-
-      resp.success(res, '删除壁纸成功')(req, ids.length, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+      return resp.success(res, '删除收藏壁纸成功')();
     }
-  },
+
+    // 验证管理员
+    if (!res.locals.hello.isRoot) {
+      return resp.forbidden(res, '无权操作')();
+    }
+
+    const bgDb = db('bg')
+      .select('url')
+      .where({ id: { in: ids } });
+
+    const dels = await bgDb.find();
+
+    await bgDb.delete();
+
+    await concurrencyTasks(dels, 5, async (del) => {
+      const { url } = del;
+      await _delDir(appConfig.bgDir(url));
+    });
+
+    syncUpdateData(res, 'bg');
+
+    resp.success(res, '删除壁纸成功')();
+  }),
 );
 
 // 上传
@@ -348,45 +317,40 @@ route.post(
         .custom(isImgFile, '必须为受支持的图片格式'),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { HASH, name } = req[kValidate];
+  asyncHandler(async (req, res) => {
+    const { HASH, name } = res.locals.ctx;
 
-      const bg = await db('bg').select('url').where({ hash: HASH }).findOne();
-      if (bg) {
-        resp.forbidden(res, '壁纸已存在')(req, `${name}-${HASH}`, 1);
-        return;
-      }
-
-      const [title, , suffix] = _path.extname(name);
-      const create_at = Date.now();
-      const timePath = getTimePath(create_at);
-
-      const tDir = appConfig.bgDir(timePath);
-      const tName = `${HASH}.${suffix}`;
-
-      await receiveFiles(req, tDir, tName, fieldLength.maxBgSize, HASH);
-
-      // 获取壁纸尺寸进行分类
-      const { width, height } = await getImgInfo(_path.normalizeNoSlash(tDir, tName));
-      const type = width < height ? 'bgxs' : 'bg';
-
-      const url = _path.normalizeNoSlash(timePath, tName);
-
-      await db('bg').insert({
-        create_at,
-        id: nanoid(),
-        hash: HASH,
-        url,
-        type,
-        title,
-      });
-
-      resp.success(res, '上传壁纸成功')(req, url, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    const bg = await db('bg').select('url').where({ hash: HASH }).findOne();
+    if (bg) {
+      return resp.forbidden(res, '壁纸已存在')();
     }
-  },
+
+    const [title, , suffix] = _path.extname(name);
+    const create_at = Date.now();
+    const timePath = getTimePath(create_at);
+
+    const tDir = appConfig.bgDir(timePath);
+    const tName = `${HASH}.${suffix}`;
+
+    await receiveFiles(req, tDir, tName, fieldLength.maxBgSize, HASH);
+
+    // 获取壁纸尺寸进行分类
+    const { width, height } = await getImgInfo(_path.normalizeNoSlash(tDir, tName));
+    const type = width < height ? 'bgxs' : 'bg';
+
+    const url = _path.normalizeNoSlash(timePath, tName);
+
+    await db('bg').insert({
+      create_at,
+      id: nanoid(),
+      hash: HASH,
+      url,
+      type,
+      title,
+    });
+
+    resp.success(res, '上传壁纸成功')();
+  }),
 );
 
 // 重复
@@ -398,27 +362,22 @@ route.post(
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { HASH } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { HASH } = res.locals.ctx;
 
-      const bg = await db('bg').select('url,id').where({ hash: HASH }).findOne();
+    const bg = await db('bg').select('url,id').where({ hash: HASH }).findOne();
 
-      if (bg) {
-        if ((await _f.getType(appConfig.bgDir(bg.url))) === 'file') {
-          resp.success(res);
-          return;
-        }
-
-        // 壁纸文件丢失，删除数据，重新上传
-        await db('bg').where({ id: bg.id }).delete();
+    if (bg) {
+      if ((await _f.getType(appConfig.bgDir(bg.url))) === 'file') {
+        return resp.success(res)();
       }
 
-      resp.ok(res);
-    } catch (error) {
-      resp.error(res)(req, error);
+      // 壁纸文件丢失，删除数据，重新上传
+      await db('bg').where({ id: bg.id }).delete();
     }
-  },
+
+    resp.ok(res)();
+  }),
 );
 
 export default route;

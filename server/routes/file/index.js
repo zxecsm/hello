@@ -4,16 +4,14 @@ import {
   receiveFiles,
   mergefile,
   syncUpdateData,
-  uLog,
   concurrencyTasks,
   errorNotifyMsg,
   formatDate,
-  errLog,
   createPagingData,
   getDuplicates,
-  validate,
   isMusicFile,
   isImgFile,
+  writelog,
 } from '../../utils/utils.js';
 
 import appConfig from '../../data/config.js';
@@ -51,13 +49,11 @@ import fileList from './cacheFileList.js';
 import nanoid from '../../utils/nanoid.js';
 import _crypto from '../../utils/crypto.js';
 import V from '../../utils/validRules.js';
-import { sym } from '../../utils/symbols.js';
 import request from '../../utils/request.js';
 import resp from '../../utils/response.js';
+import { asyncHandler, validate } from '../../utils/customMiddleware.js';
 
 const route = express.Router();
-const kHello = sym('hello');
-const kValidate = sym('validate');
 
 // 分享文件
 route.post(
@@ -70,57 +66,50 @@ route.post(
       captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id, pass, captchaId } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id, pass, captchaId } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const share = await validShareAddUserState(req, ['file', 'dir'], id, pass, captchaId);
+    const share = await validShareAddUserState(res, ['file', 'dir'], id, pass, captchaId);
 
-      if (share.state === 3) {
-        resp.ok(res, share.text);
-        return;
-      }
-
-      if (share.state === 2) {
-        resp.success(res, share.text, {
-          id: share.id,
-          needCaptcha: share.needCaptcha,
-        })(req, share.id, 1);
-        return;
-      }
-
-      if (share.state === 0) {
-        resp.notFound(res, share.text)(req, id, 1);
-        return;
-      }
-
-      let { username, logo, email, exp_time, title, account: acc, data } = share.data;
-
-      if (account && account != acc) {
-        const f = await getFriendInfo(account, acc, 'des');
-        const des = f ? f.des : '';
-        username = des || username;
-      }
-
-      resp.success(res, '获取文件分享成功', {
-        username,
-        logo,
-        email,
-        exp_time,
-        account: acc,
-        data,
-        title,
-        token: await jwt.set(
-          { type: 'share', data: { id, types: ['file', 'dir'] } },
-          fieldLength.shareTokenExp,
-        ),
-      })(req, id, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (share.state === 3) {
+      return resp.ok(res, share.text)();
     }
-  },
+
+    if (share.state === 2) {
+      return resp.success(res, share.text, {
+        id: share.id,
+        needCaptcha: share.needCaptcha,
+      })();
+    }
+
+    if (share.state === 0) {
+      return resp.notFound(res, share.text)();
+    }
+
+    let { username, logo, email, exp_time, title, account: acc, data } = share.data;
+
+    if (account && account != acc) {
+      const f = await getFriendInfo(account, acc, 'des');
+      const des = f ? f.des : '';
+      username = des || username;
+    }
+
+    resp.success(res, '获取文件分享成功', {
+      username,
+      logo,
+      email,
+      exp_time,
+      account: acc,
+      data,
+      title,
+      token: await jwt.set(
+        { type: 'share', data: { id, types: ['file', 'dir'] } },
+        fieldLength.shareTokenExp,
+      ),
+    })();
+  }),
 );
 
 // 读取目录
@@ -160,202 +149,193 @@ route.post(
       hidden: V.number().default(0).toInt().enum([0, 1]),
     }),
   ),
-  async (req, res) => {
+  asyncHandler(async (_, res) => {
+    const { path, pageNo, pageSize, sortType, isDesc, subDir, update, word, token, hidden } =
+      res.locals.ctx;
+
+    let temid = res.locals.hello.temid;
     try {
-      const { path, pageNo, pageSize, sortType, isDesc, subDir, update, word, token, hidden } =
-        req[kValidate];
+      temid = await V.parse(temid, V.string().trim().min(1), 'temid');
+    } catch (error) {
+      return resp.badRequest(res)(error, 1);
+    }
 
-      let temid = req[kHello].temid;
+    const { account } = res.locals.hello.userinfo;
+
+    if (!token && !account) {
+      return resp.unauthorized(res)();
+    }
+
+    let p = '';
+    let rootP = '';
+    let accFlag = '';
+
+    if (token) {
+      const share = await validShareState(token, 'file');
+
+      if (share.state === 0) {
+        return resp.forbidden(res, share.text)();
+      }
+
+      const { data, account, id: shareID } = share.data;
+
+      const { name } = data;
+
+      // 用户根目录
+      rootP = appConfig.userRootDir(account, data.path, name);
+
+      p = _path.normalizeNoSlash(rootP, path);
+      accFlag = shareID + account || temid;
+    } else {
+      p = appConfig.userRootDir(account, path);
+      rootP = appConfig.userRootDir(account);
+      accFlag = account;
+    }
+
+    let favorites = null;
+    if (account && !token) {
       try {
-        temid = await V.parse(temid, V.string().trim().min(1), 'temid');
+        // 保存路径历史
+        const list = (await readHistoryDirs(account)).filter((item) => item !== path);
+
+        list.push(path);
+
+        if (list.length > fieldLength.cdHistoryLength) {
+          list.slice(-fieldLength.cdHistoryLength);
+        }
+
+        await writeHistoryDirs(account, list);
+
+        favorites = await readFavorites(account);
       } catch (error) {
-        resp.badRequest(res, req, error, { temid });
-        return;
+        await writelog(res, error, 500);
       }
+    }
 
-      const { account } = req[kHello].userinfo;
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const hdType = word ? '搜索文件' : '读取文件列表';
+    const taskKey = taskState.add(accFlag, `${hdType}...`, controller);
 
-      if (!token && !account) {
-        resp.unauthorized(res);
-        return;
-      }
+    const cacheList = fileList.get(accFlag, `${p}_${word}`);
 
-      let p = '';
-      let rootP = '';
-      let accFlag = '';
+    // 有缓存则返回缓存
+    if (update === 0 && cacheList) {
+      fileList.resetExpireTime(accFlag, `${p}_${word}`);
+      taskState.delete(taskKey);
 
-      if (token) {
-        const share = await validShareState(token, 'file');
+      return resp.success(
+        res,
+        'ok',
+        createPagingData(
+          fileListSortAndCacheSize(cacheList, rootP, sortType, isDesc, hidden),
+          pageSize,
+          pageNo,
+        ),
+      )();
+    }
 
-        if (share.state === 0) {
-          resp.forbidden(res, share.text)(req);
-          return;
-        }
+    // 超时获取不到则当任务处理
+    let timer = setTimeout(() => {
+      clearTimeout(timer);
+      timer = null;
 
-        const { data, account, id: shareID } = share.data;
+      resp.success(res, 'ok', { key: taskKey })();
+    }, 1000);
 
-        const { name } = data;
+    try {
+      let arr = [];
+      let count = 0;
 
-        // 用户根目录
-        rootP = appConfig.userRootDir(account, data.path, name);
+      if (await _f.getType(p)) {
+        const stack = [p];
 
-        p = _path.normalizeNoSlash(rootP, path);
-        accFlag = shareID + account || temid;
-      } else {
-        p = appConfig.userRootDir(account, path);
-        rootP = appConfig.userRootDir(account);
-        accFlag = account;
-      }
+        while (stack.length > 0 && !signal.aborted) {
+          const currentPath = stack.pop();
+          const list = await readMenu(currentPath);
 
-      let favorites = null;
-      if (account && !token) {
-        try {
-          // 保存路径历史
-          const list = (await readHistoryDirs(account)).filter((item) => item !== path);
+          for (const item of list) {
+            if (signal.aborted) break;
 
-          list.push(path);
+            count++;
+            taskState.update(taskKey, `${hdType}...${count}`);
 
-          if (list.length > fieldLength.cdHistoryLength) {
-            list.slice(-fieldLength.cdHistoryLength);
+            const fullPath = _path.normalizeNoSlash(item.path, item.name);
+
+            if (item.type === 'dir' && subDir === 1 && word) {
+              stack.push(fullPath);
+            }
+
+            // 去除路径前缀
+            const path = _path.normalizeNoSlash('/' + item.path.slice(rootP.length));
+
+            const obj = {
+              ...item,
+              path,
+            };
+
+            if (
+              obj.type === 'file' &&
+              obj.fileType === 'symlink' &&
+              _path.isPathWithin(rootP, obj.linkTarget, 1)
+            ) {
+              obj.linkTarget = _path.normalizeNoSlash('/' + item.linkTarget.slice(rootP.length));
+            }
+
+            if (favorites && item.type === 'dir') {
+              obj.favorite = favorites.includes(_path.normalizeNoSlash(path, item.name)) ? 1 : 0;
+            }
+
+            if (!res.locals.hello.isRoot) {
+              delete obj.mode;
+              delete obj.gid;
+              delete obj.uid;
+            }
+
+            // 关键词过滤
+            if (!word || (word && obj.name.toLowerCase().includes(word.toLowerCase()))) {
+              arr.push(obj);
+            }
           }
-
-          await writeHistoryDirs(account, list);
-
-          favorites = await readFavorites(account);
-        } catch (error) {
-          await errLog(req, error);
         }
       }
 
-      const controller = new AbortController();
-      const signal = controller.signal;
-      const hdType = word ? '搜索文件' : '读取文件列表';
-      const taskKey = taskState.add(accFlag, `${hdType}...`, controller);
-
-      const cacheList = fileList.get(accFlag, `${p}_${word}`);
-
-      // 有缓存则返回缓存
-      if (update === 0 && cacheList) {
-        fileList.resetExpireTime(accFlag, `${p}_${word}`);
+      // 未超时直接返回结果
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
         taskState.delete(taskKey);
 
         resp.success(
           res,
           'ok',
           createPagingData(
-            fileListSortAndCacheSize(cacheList, rootP, sortType, isDesc, hidden),
+            fileListSortAndCacheSize(arr, rootP, sortType, isDesc, hidden),
             pageSize,
             pageNo,
           ),
-        );
-
-        return;
-      }
-
-      // 超时获取不到则当任务处理
-      let timer = setTimeout(() => {
-        clearTimeout(timer);
-        timer = null;
-
-        resp.success(res, 'ok', { key: taskKey });
-      }, 1000);
-
-      try {
-        let arr = [];
-        let count = 0;
-
-        if (await _f.getType(p)) {
-          const stack = [p];
-
-          while (stack.length > 0 && !signal.aborted) {
-            const currentPath = stack.pop();
-            const list = await readMenu(currentPath);
-
-            for (const item of list) {
-              if (signal.aborted) break;
-
-              count++;
-              taskState.update(taskKey, `${hdType}...${count}`);
-
-              const fullPath = _path.normalizeNoSlash(item.path, item.name);
-
-              if (item.type === 'dir' && subDir === 1 && word) {
-                stack.push(fullPath);
-              }
-
-              // 去除路径前缀
-              const path = _path.normalizeNoSlash('/' + item.path.slice(rootP.length));
-
-              const obj = {
-                ...item,
-                path,
-              };
-
-              if (
-                obj.type === 'file' &&
-                obj.fileType === 'symlink' &&
-                _path.isPathWithin(rootP, obj.linkTarget, 1)
-              ) {
-                obj.linkTarget = _path.normalizeNoSlash('/' + item.linkTarget.slice(rootP.length));
-              }
-
-              if (favorites && item.type === 'dir') {
-                obj.favorite = favorites.includes(_path.normalizeNoSlash(path, item.name)) ? 1 : 0;
-              }
-
-              if (!req[kHello].isRoot) {
-                delete obj.mode;
-                delete obj.gid;
-                delete obj.uid;
-              }
-
-              // 关键词过滤
-              if (!word || (word && obj.name.toLowerCase().includes(word.toLowerCase()))) {
-                arr.push(obj);
-              }
-            }
-          }
-        }
-
-        // 未超时直接返回结果
-        if (timer) {
-          clearTimeout(timer);
-          timer = null;
-          taskState.delete(taskKey);
-
-          resp.success(
-            res,
-            'ok',
-            createPagingData(
-              fileListSortAndCacheSize(arr, rootP, sortType, isDesc, hidden),
-              pageSize,
-              pageNo,
-            ),
-          );
-        } else {
-          taskState.done(taskKey);
-          // 超时缓存结果
-          fileList.add(accFlag, `${p}_${word}`, arr);
-        }
-      } catch (error) {
-        taskState.delete(taskKey);
-
-        // 未超时直接返回失败
-        if (timer) {
-          clearTimeout(timer);
-          timer = null;
-          resp.forbidden(res, `${hdType}失败`)(req, error, 1);
-        } else {
-          await errLog(req, `${hdType}失败(${error})`);
-          if (account) {
-            errorNotifyMsg(req, `${hdType}失败`);
-          }
-        }
+        )();
+      } else {
+        taskState.done(taskKey);
+        // 超时缓存结果
+        fileList.add(accFlag, `${p}_${word}`, arr);
       }
     } catch (error) {
-      resp.error(res)(req, error);
+      taskState.delete(taskKey);
+
+      // 未超时直接返回失败
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+        resp.forbidden(res, `${hdType}失败`)(error, 1);
+      } else {
+        await writelog(res, `${hdType}失败(${error})`, 500);
+        if (account) {
+          errorNotifyMsg(res, `${hdType}失败`);
+        }
+      }
     }
-  },
+  }),
 );
 
 // 读取文件
@@ -368,75 +348,70 @@ route.post(
       token: V.string().trim().default('').allowEmpty().max(fieldLength.url),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { path, token } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { path, token } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      if (!token && !account) {
-        resp.unauthorized(res);
-        return;
-      }
-
-      let p = '';
-
-      if (token) {
-        const share = await validShareState(token, 'file');
-
-        if (share.state === 0) {
-          resp.forbidden(res, share.text)(req);
-          return;
-        }
-
-        const { data, account } = share.data;
-
-        const { name, type } = data;
-
-        const rootP = appConfig.userRootDir(account, data.path, name);
-
-        if (type === 'file') {
-          p = rootP;
-        } else if (type === 'dir') {
-          p = _path.normalizeNoSlash(rootP, path);
-        }
-      } else {
-        p = appConfig.userRootDir(account, path);
-      }
-
-      const stat = await _f.lstat(p);
-
-      if (!stat || (await _f.getType(stat)) === 'dir') {
-        resp.forbidden(res, '文件不存在')(req, p, 1);
-        return;
-      }
-
-      // 文本文件并且小于等于10M直接返回
-      if (stat.size <= fieldLength.textFileSize && (await _f.isTextFile(p))) {
-        //文本文件
-        resp.success(res, 'ok', {
-          type: 'text',
-          data: (await _f.readFile(p, null, '')).toString(),
-        });
-      } else {
-        resp.success(res, 'ok', {
-          type: 'other',
-        });
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (!token && !account) {
+      return resp.unauthorized(res)();
     }
-  },
+
+    let p = '';
+
+    if (token) {
+      const share = await validShareState(token, 'file');
+
+      if (share.state === 0) {
+        return resp.forbidden(res, share.text)();
+      }
+
+      const { data, account } = share.data;
+
+      const { name, type } = data;
+
+      const rootP = appConfig.userRootDir(account, data.path, name);
+
+      if (type === 'file') {
+        p = rootP;
+      } else if (type === 'dir') {
+        p = _path.normalizeNoSlash(rootP, path);
+      }
+    } else {
+      p = appConfig.userRootDir(account, path);
+    }
+
+    const stat = await _f.lstat(p);
+
+    if (!stat || (await _f.getType(stat)) === 'dir') {
+      return resp.forbidden(res, '文件不存在')();
+    }
+
+    // 文本文件并且小于等于10M直接返回
+    if (stat.size <= fieldLength.textFileSize && (await _f.isTextFile(p))) {
+      //文本文件
+      resp.success(res, 'ok', {
+        type: 'text',
+        data: (await _f.readFile(p, null, '')).toString(),
+      })();
+    } else {
+      resp.success(res, 'ok', {
+        type: 'other',
+      })();
+    }
+  }),
 );
 
 // 验证登录态
-route.use((req, res, next) => {
-  if (req[kHello].userinfo.account) {
-    next();
-  } else {
-    resp.unauthorized(res);
-  }
-});
+route.use(
+  asyncHandler((_, res, next) => {
+    if (res.locals.hello.userinfo.account) {
+      next();
+    } else {
+      resp.unauthorized(res)();
+    }
+  }),
+);
 
 // 文件编辑历史记录
 route.post(
@@ -447,48 +422,41 @@ route.post(
       state: V.number().toInt().default(0).enum([0, 1]),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { state } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { state } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('user').where({ account, state: 1 }).update({ file_history: state });
+    await db('user').where({ account, state: 1 }).update({ file_history: state });
 
-      resp.success(res, `${state === 0 ? '关闭' : '开启'}文件历史记录成功`)(req);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, `${state === 0 ? '关闭' : '开启'}文件历史记录成功`)();
+  }),
 );
-route.get('/history-state', async (req, res) => {
-  try {
-    const { file_history } = req[kHello].userinfo;
-    resp.success(res, 'ok', { file_history });
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+route.get(
+  '/history-state',
+  asyncHandler(async (_, res) => {
+    const { file_history } = res.locals.hello.userinfo;
+    resp.success(res, 'ok', { file_history })();
+  }),
+);
 
 // 获取访问路径历史
-route.get('/cd-history', async (req, res) => {
-  try {
-    const { account } = req[kHello].userinfo;
-    resp.success(res, 'ok', await readHistoryDirs(account));
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+route.get(
+  '/cd-history',
+  asyncHandler(async (_, res) => {
+    const { account } = res.locals.hello.userinfo;
+    resp.success(res, 'ok', await readHistoryDirs(account))();
+  }),
+);
 
 // 获取收藏目录
-route.get('/favorites', async (req, res) => {
-  try {
-    const { account } = req[kHello].userinfo;
-    resp.success(res, 'ok', await readFavorites(account));
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+route.get(
+  '/favorites',
+  asyncHandler(async (_, res) => {
+    const { account } = res.locals.hello.userinfo;
+    resp.success(res, 'ok', await readFavorites(account))();
+  }),
+);
 
 // 收藏目录
 route.post(
@@ -504,34 +472,26 @@ route.post(
       }),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { data, type } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { data, type } = res.locals.ctx;
 
-      const path = _path.normalizeNoSlash(data.path, data.name);
+    const path = _path.normalizeNoSlash(data.path, data.name);
 
-      const { account } = req[kHello].userinfo;
-      const list = (await readFavorites(account)).filter((item) => item !== path);
+    const { account } = res.locals.hello.userinfo;
+    const list = (await readFavorites(account)).filter((item) => item !== path);
 
-      if (type === 'add') {
-        list.push(path);
-      }
-
-      await writeFavorites(account, list);
-
-      syncUpdateData(req, 'file');
-
-      fileList.clear(account);
-
-      resp.success(res, `${type === 'add' ? '' : '移除'}收藏文件夹成功`)(
-        req,
-        appConfig.userRootDir(account, path),
-        1,
-      );
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (type === 'add') {
+      list.push(path);
     }
-  },
+
+    await writeFavorites(account, list);
+
+    syncUpdateData(res, 'file');
+
+    fileList.clear(account);
+
+    resp.success(res, `${type === 'add' ? '' : '移除'}收藏文件夹成功`)();
+  }),
 );
 
 // 读取目录大小
@@ -543,49 +503,44 @@ route.get(
       path: V.string().notEmpty().min(1).max(fieldLength.url),
     }),
   ),
-  async (req, res) => {
+  asyncHandler(async (_, res) => {
+    const { path } = res.locals.ctx;
+
+    const { account } = res.locals.hello.userinfo;
+
+    const p = appConfig.userRootDir(account, path);
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const taskKey = taskState.add(account, `读取文件夹大小...`, controller);
+
+    resp.success(res, 'ok', { key: taskKey })();
+
     try {
-      const { path } = req[kValidate];
+      let size = 0;
+      let count = 0;
 
-      const { account } = req[kHello].userinfo;
+      await _f.readDirSize(p, {
+        signal,
+        progress({ size: s, count: c }) {
+          if (s) size += s;
+          if (c) count++;
+          taskState.update(taskKey, `读取文件夹大小...${count} (${_f.formatBytes(size)})`);
+        },
+      });
 
-      const p = appConfig.userRootDir(account, path);
-
-      const controller = new AbortController();
-      const signal = controller.signal;
-      const taskKey = taskState.add(account, `读取文件夹大小...`, controller);
-
-      resp.success(res, 'ok', { key: taskKey });
-
-      try {
-        let size = 0;
-        let count = 0;
-
-        await _f.readDirSize(p, {
-          signal,
-          progress({ size: s, count: c }) {
-            if (s) size += s;
-            if (c) count++;
-            taskState.update(taskKey, `读取文件夹大小...${count} (${_f.formatBytes(size)})`);
-          },
-        });
-
-        taskState.done(taskKey);
-        await uLog(req, `读取文件夹大小成功(${p}-${_f.formatBytes(size)})`);
-        if (!signal.aborted) {
-          fileSize.add(p, size);
-          syncUpdateData(req, 'file');
-        }
-      } catch (error) {
-        taskState.delete(taskKey);
-        const errText = `读取文件夹大小失败`;
-        await errLog(req, `${errText}(${p}-${error})`);
-        errorNotifyMsg(req, `${errText}`);
+      taskState.done(taskKey);
+      if (!signal.aborted) {
+        fileSize.add(p, size);
+        syncUpdateData(res, 'file');
       }
     } catch (error) {
-      resp.error(res)(req, error);
+      taskState.delete(taskKey);
+      const errText = `读取文件夹大小失败`;
+      await writelog(res, `${errText}(${error})`, 500);
+      errorNotifyMsg(res, errText);
     }
-  },
+  }),
 );
 
 // 新建文件
@@ -598,36 +553,30 @@ route.post(
       name: V.string().trim().min(1).max(fieldLength.filename),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { path, name } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { path, name } = res.locals.ctx;
 
-      if (!_path.isFilename(name)) {
-        resp.forbidden(res, '名称包含了不允许的特殊字符')(req, name, 1);
-        return;
-      }
-
-      const { account } = req[kHello].userinfo;
-
-      const fpath = appConfig.userRootDir(account, `${path}/${name}`);
-
-      // 过滤回收站
-      if ((await _f.exists(fpath)) || appConfig.trashDir(account) === fpath) {
-        resp.forbidden(res, '已存在重名文件')(req, fpath, 1);
-        return;
-      }
-
-      await _f.writeFile(fpath, '');
-
-      syncUpdateData(req, 'file');
-
-      fileList.clear(account);
-
-      resp.success(res, '新建文件成功')(req, fpath, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (!_path.isFilename(name)) {
+      return resp.forbidden(res, '名称包含了不允许的特殊字符')();
     }
-  },
+
+    const { account } = res.locals.hello.userinfo;
+
+    const fpath = appConfig.userRootDir(account, `${path}/${name}`);
+
+    // 过滤回收站
+    if ((await _f.exists(fpath)) || appConfig.trashDir(account) === fpath) {
+      return resp.forbidden(res, '已存在重名文件')();
+    }
+
+    await _f.writeFile(fpath, '');
+
+    syncUpdateData(res, 'file');
+
+    fileList.clear(account);
+
+    resp.success(res, '新建文件成功')();
+  }),
 );
 
 // 创建符号链接
@@ -642,52 +591,44 @@ route.post(
       isSymlink: V.number().toInt().default(1).enum([0, 1]),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { path, name, targetPath, isSymlink } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { path, name, targetPath, isSymlink } = res.locals.ctx;
 
-      if (!_path.isFilename(name)) {
-        resp.forbidden(res, '名称包含了不允许的特殊字符')(req, name, 1);
-        return;
-      }
-
-      const { account } = req[kHello].userinfo;
-
-      const curPath = appConfig.userRootDir(account, `${path}/${name}`);
-      const tPath = appConfig.userRootDir(account, targetPath);
-
-      const tType = await _f.getType(tPath);
-
-      if (!tType) {
-        resp.forbidden(res, '目标路径不存在')(req, tPath, 1);
-        return;
-      }
-
-      // 过滤回收站
-      if ((await _f.exists(curPath)) || appConfig.trashDir(account) === curPath) {
-        resp.forbidden(res, '已存在重名文件')(req, curPath, 1);
-        return;
-      }
-
-      if (isSymlink) {
-        await _f.symlink(tPath, curPath);
-      } else {
-        if (tType === 'dir') {
-          resp.forbidden(res, '不能创建目录的硬链接')(req, tPath, 1);
-          return;
-        }
-        await _f.link(tPath, curPath);
-      }
-
-      syncUpdateData(req, 'file');
-
-      fileList.clear(account);
-
-      resp.success(res, '新建符号链接成功')(req, `${curPath}=>${tPath}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (!_path.isFilename(name)) {
+      return resp.forbidden(res, '名称包含了不允许的特殊字符')();
     }
-  },
+
+    const { account } = res.locals.hello.userinfo;
+
+    const curPath = appConfig.userRootDir(account, `${path}/${name}`);
+    const tPath = appConfig.userRootDir(account, targetPath);
+
+    const tType = await _f.getType(tPath);
+
+    if (!tType) {
+      return resp.forbidden(res, '目标路径不存在')();
+    }
+
+    // 过滤回收站
+    if ((await _f.exists(curPath)) || appConfig.trashDir(account) === curPath) {
+      return resp.forbidden(res, '已存在重名文件')();
+    }
+
+    if (isSymlink) {
+      await _f.symlink(tPath, curPath);
+    } else {
+      if (tType === 'dir') {
+        return resp.forbidden(res, '不能创建目录的硬链接')();
+      }
+      await _f.link(tPath, curPath);
+    }
+
+    syncUpdateData(res, 'file');
+
+    fileList.clear(account);
+
+    resp.success(res, '新建符号链接成功')();
+  }),
 );
 
 // 分享
@@ -707,34 +648,26 @@ route.post(
       }),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { data, title, expireTime, pass } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { data, title, expireTime, pass } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('share').insert({
-        id: nanoid(),
-        create_at: Date.now(),
-        account,
-        type: data.type,
-        exp_time: expireTime === 0 ? 0 : Date.now() + expireTime * 24 * 60 * 60 * 1000,
-        title,
-        pass,
-        data: JSON.stringify(data),
-      });
+    await db('share').insert({
+      id: nanoid(),
+      create_at: Date.now(),
+      account,
+      type: data.type,
+      exp_time: expireTime === 0 ? 0 : Date.now() + expireTime * 24 * 60 * 60 * 1000,
+      title,
+      pass,
+      data: JSON.stringify(data),
+    });
 
-      syncUpdateData(req, 'sharelist');
+    syncUpdateData(res, 'sharelist');
 
-      resp.success(res, `分享${data.type === 'dir' ? '文件夹' : '文件'}成功`)(
-        req,
-        appConfig.userRootDir(account, data.path, data.name),
-        1,
-      );
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, `分享${data.type === 'dir' ? '文件夹' : '文件'}成功`)();
+  }),
 );
 
 // 保存文件
@@ -753,67 +686,62 @@ route.post(
         ),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { path, text } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { path, text } = res.locals.ctx;
 
-      const { account, file_history } = req[kHello].userinfo;
+    const { account, file_history } = res.locals.hello.userinfo;
 
-      const fpath = appConfig.userRootDir(account, path);
+    const fpath = appConfig.userRootDir(account, path);
 
-      const stat = await _f.lstat(fpath);
-      const type = await _f.getType(stat);
+    const stat = await _f.lstat(fpath);
+    const type = await _f.getType(stat);
 
-      if (!type || type === 'dir' || appConfig.trashDir(account) === fpath) {
-        resp.forbidden(res, '文件不存在')(req, fpath, 1);
-        return;
-      }
+    if (!type || type === 'dir' || appConfig.trashDir(account) === fpath) {
+      return resp.forbidden(res, '文件不存在')();
+    }
 
-      if (type === 'file') {
-        if (file_history === 1) {
-          try {
-            if (stat.size > 0) {
-              // 保存编辑历史版本
-              const [, filename, , suffix] = _path.basename(fpath);
+    if (type === 'file') {
+      if (file_history === 1) {
+        try {
+          if (stat.size > 0) {
+            // 保存编辑历史版本
+            const [, filename, , suffix] = _path.basename(fpath);
 
-              const historyDir = _path.normalizeNoSlash(
-                _path.dirname(fpath),
-                appConfig.textFileHistoryDirName,
-              );
+            const historyDir = _path.normalizeNoSlash(
+              _path.dirname(fpath),
+              appConfig.textFileHistoryDirName,
+            );
 
-              const newName = `${filename}_${formatDate({
-                template: `{0}{1}{2}-{3}{4}{5}`,
-              })}${suffix ? `.${suffix}` : ''}`;
+            const newName = `${filename}_${formatDate({
+              template: `{0}{1}{2}-{3}{4}{5}`,
+            })}${suffix ? `.${suffix}` : ''}`;
 
-              await _f.cp(fpath, _path.normalizeNoSlash(historyDir, newName));
-            }
-          } catch (error) {
-            await errLog(req, `保存文件历史版本失败(${fpath}-${error})`);
+            await _f.cp(fpath, _path.normalizeNoSlash(historyDir, newName));
           }
+        } catch (error) {
+          await writelog(res, `保存文件历史版本失败(${error})`, 500);
         }
       }
-
-      await _f.writeFile(fpath, text);
-
-      // 修改搜索引擎配置, 触发更新
-      if (appConfig.searchConfigDir(account, 'config.json') === fpath) {
-        syncUpdateData(req, 'searchConfig', '', 'all');
-      }
-
-      // 修改快捷命令配置, 触发更新
-      if (appConfig.sshConfigDir(account, 'quick.json') === fpath) {
-        syncUpdateData(req, 'quickCommand', '', 'all');
-      }
-
-      syncUpdateData(req, 'file');
-
-      fileList.clear(account);
-
-      resp.success(res, '保存文件成功')(req, fpath, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
     }
-  },
+
+    await _f.writeFile(fpath, text);
+
+    // 修改搜索引擎配置, 触发更新
+    if (appConfig.searchConfigDir(account, 'config.json') === fpath) {
+      syncUpdateData(res, 'searchConfig', '', 'all');
+    }
+
+    // 修改快捷命令配置, 触发更新
+    if (appConfig.sshConfigDir(account, 'quick.json') === fpath) {
+      syncUpdateData(res, 'quickCommand', '', 'all');
+    }
+
+    syncUpdateData(res, 'file');
+
+    fileList.clear(account);
+
+    resp.success(res, '保存文件成功')();
+  }),
 );
 
 // 复制
@@ -836,75 +764,68 @@ route.post(
         .custom((arr) => getDuplicates(arr, ['name']).length === 0, '不能有同名文件或文件夹'),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { path, data, rename } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { path, data, rename } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const p = appConfig.userRootDir(account, path);
+    const p = appConfig.userRootDir(account, path);
 
-      if ((await _f.getType(p)) !== 'dir') {
-        resp.forbidden(res, '目标文件夹不存在')(req, p, 1);
-        return;
-      }
-
-      const controller = new AbortController();
-      const signal = controller.signal;
-      const taskKey = taskState.add(account, `复制文件...`, controller);
-
-      fileList.clear(account);
-
-      resp.success(res, 'ok', { key: taskKey });
-
-      try {
-        let count = 0;
-        let size = 0;
-
-        const trashDir = appConfig.trashDir(account);
-
-        await concurrencyTasks(data, 5, async (task) => {
-          if (signal.aborted) return;
-
-          const { name, path, type } = task;
-
-          const f = appConfig.userRootDir(account, `${path}/${name}`);
-
-          let to = _path.normalizeNoSlash(p, name);
-
-          if (_path.isPathWithin(f, to) || !name) return;
-
-          // 已存在添加后缀
-          if (((await _f.exists(to)) && rename === 1) || to === trashDir) {
-            to = await getUniqueFilename(to);
-          }
-
-          if (f === to) return;
-
-          await _f.cp(f, to, {
-            signal,
-            progress({ size: s, count: c }) {
-              if (s) size += s;
-              if (c) count++;
-              taskState.update(taskKey, `复制文件...${count} (${_f.formatBytes(size)})`);
-            },
-          });
-
-          await uLog(req, `复制${type === 'dir' ? '文件夹' : '文件'}(${f}=>${to})`);
-        });
-
-        taskState.done(taskKey);
-        syncUpdateData(req, 'file');
-      } catch (error) {
-        taskState.delete(taskKey);
-        const errText = `复制文件失败`;
-        await errLog(req, `${errText}(${error})`);
-        await heperMsgAndForward(req, account, errText);
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+    if ((await _f.getType(p)) !== 'dir') {
+      return resp.forbidden(res, '目标文件夹不存在')();
     }
-  },
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const taskKey = taskState.add(account, `复制文件...`, controller);
+
+    fileList.clear(account);
+
+    resp.success(res, 'ok', { key: taskKey })();
+
+    try {
+      let count = 0;
+      let size = 0;
+
+      const trashDir = appConfig.trashDir(account);
+
+      await concurrencyTasks(data, 5, async (task) => {
+        if (signal.aborted) return;
+
+        const { name, path } = task;
+
+        const f = appConfig.userRootDir(account, `${path}/${name}`);
+
+        let to = _path.normalizeNoSlash(p, name);
+
+        if (_path.isPathWithin(f, to) || !name) return;
+
+        // 已存在添加后缀
+        if (((await _f.exists(to)) && rename === 1) || to === trashDir) {
+          to = await getUniqueFilename(to);
+        }
+
+        if (f === to) return;
+
+        await _f.cp(f, to, {
+          signal,
+          progress({ size: s, count: c }) {
+            if (s) size += s;
+            if (c) count++;
+            taskState.update(taskKey, `复制文件...${count} (${_f.formatBytes(size)})`);
+          },
+        });
+      });
+
+      taskState.done(taskKey);
+      syncUpdateData(res, 'file');
+    } catch (error) {
+      taskState.delete(taskKey);
+      const errText = `复制文件失败`;
+      await writelog(res, `${errText}(${error})`, 500);
+      await heperMsgAndForward(res, account, errText);
+    }
+  }),
 );
 
 // 是否存在同名文件
@@ -925,24 +846,19 @@ route.post(
         .max(fieldLength.maxPagesize),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { path, data } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { path, data } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const p = appConfig.userRootDir(account, path);
+    const p = appConfig.userRootDir(account, path);
 
-      if ((await _f.getType(p)) !== 'dir') {
-        resp.forbidden(res, '目标文件夹不存在')(req, p, 1);
-        return;
-      }
-
-      resp.success(res, 'ok', { hasSameName: await hasSameNameFile(p, data) });
-    } catch (error) {
-      resp.error(res)(req, error);
+    if ((await _f.getType(p)) !== 'dir') {
+      return resp.forbidden(res, '目标文件夹不存在')();
     }
-  },
+
+    resp.success(res, 'ok', { hasSameName: await hasSameNameFile(p, data) })();
+  }),
 );
 
 // 移动
@@ -965,72 +881,65 @@ route.post(
         .custom((arr) => getDuplicates(arr, ['name']).length === 0, '不能有同名文件或文件夹'),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { path, data, rename } = req[kValidate];
-      const { account } = req[kHello].userinfo;
+  asyncHandler(async (_, res) => {
+    const { path, data, rename } = res.locals.ctx;
+    const { account } = res.locals.hello.userinfo;
 
-      const p = appConfig.userRootDir(account, path);
+    const p = appConfig.userRootDir(account, path);
 
-      if ((await _f.getType(p)) !== 'dir') {
-        resp.forbidden(res, '目标文件夹不存在')(req, p, 1);
-        return;
-      }
-
-      const controller = new AbortController();
-      const signal = controller.signal;
-      const taskKey = taskState.add(account, `移动文件...`, controller);
-
-      fileList.clear(account);
-
-      resp.success(res, 'ok', { key: taskKey });
-
-      try {
-        let count = 0;
-        let size = 0;
-
-        const trashDir = appConfig.trashDir(account);
-
-        await concurrencyTasks(data, 5, async (task) => {
-          if (signal.aborted) return;
-
-          const { name, path, type } = task;
-
-          const f = appConfig.userRootDir(account, `${path}/${name}`);
-
-          let t = _path.normalizeNoSlash(p, name);
-
-          if (_path.isPathWithin(f, t, true)) return;
-
-          if (((await _f.exists(t)) && rename === 1) || t === trashDir) {
-            t = await getUniqueFilename(t);
-          }
-
-          await _f.rename(f, t, {
-            signal,
-            progress({ size: s, count: c }) {
-              if (!s && !c) return;
-              if (s) size += s;
-              if (c) count++;
-              taskState.update(taskKey, `移动文件...${count} (${_f.formatBytes(size)})`);
-            },
-          });
-
-          await uLog(req, `移动${type === 'dir' ? '文件夹' : '文件'}(${f}=>${t})`);
-        });
-
-        taskState.done(taskKey);
-        syncUpdateData(req, 'file');
-      } catch (error) {
-        taskState.delete(taskKey);
-        const errText = `移动文件失败`;
-        await errLog(req, `${errText}(${error})`);
-        await heperMsgAndForward(req, account, errText);
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+    if ((await _f.getType(p)) !== 'dir') {
+      return resp.forbidden(res, '目标文件夹不存在')();
     }
-  },
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const taskKey = taskState.add(account, `移动文件...`, controller);
+
+    fileList.clear(account);
+
+    resp.success(res, 'ok', { key: taskKey })();
+
+    try {
+      let count = 0;
+      let size = 0;
+
+      const trashDir = appConfig.trashDir(account);
+
+      await concurrencyTasks(data, 5, async (task) => {
+        if (signal.aborted) return;
+
+        const { name, path } = task;
+
+        const f = appConfig.userRootDir(account, `${path}/${name}`);
+
+        let t = _path.normalizeNoSlash(p, name);
+
+        if (_path.isPathWithin(f, t, true)) return;
+
+        if (((await _f.exists(t)) && rename === 1) || t === trashDir) {
+          t = await getUniqueFilename(t);
+        }
+
+        await _f.rename(f, t, {
+          signal,
+          progress({ size: s, count: c }) {
+            if (!s && !c) return;
+            if (s) size += s;
+            if (c) count++;
+            taskState.update(taskKey, `移动文件...${count} (${_f.formatBytes(size)})`);
+          },
+        });
+      });
+
+      taskState.done(taskKey);
+      syncUpdateData(res, 'file');
+    } catch (error) {
+      taskState.delete(taskKey);
+      const errText = `移动文件失败`;
+      await writelog(res, `${errText}(${error})`, 500);
+      await heperMsgAndForward(res, account, errText);
+    }
+  }),
 );
 
 // 压缩
@@ -1046,65 +955,58 @@ route.post(
       }),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { data } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { data } = res.locals.ctx;
 
-      const flag = data.type === 'dir' ? '文件夹' : '文件';
+    const flag = data.type === 'dir' ? '文件夹' : '文件';
 
-      const { name, path } = data;
+    const { name, path } = data;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const p = appConfig.userRootDir(account, path);
+    const p = appConfig.userRootDir(account, path);
 
-      data.path = p;
+    data.path = p;
 
-      const f = _path.normalizeNoSlash(p, name);
+    const f = _path.normalizeNoSlash(p, name);
 
-      if (!(await _f.exists(f))) {
-        resp.forbidden(res, `${flag}不存在`)(req, f, 1);
-        return;
-      }
-
-      const fname = (_path.extname(name)[0] || name) + '.zip';
-
-      let t = _path.normalizeNoSlash(p, fname);
-
-      if ((await _f.exists(t)) || t === appConfig.trashDir(account)) {
-        t = await getUniqueFilename(t);
-      }
-
-      const controller = new AbortController();
-      const signal = controller.signal;
-      const taskKey = taskState.add(account, `压缩文件...`, controller);
-
-      fileList.clear(account);
-
-      resp.success(res, 'ok', { key: taskKey });
-
-      try {
-        await zipper.zip([data], t, {
-          signal,
-          progress({ size, count }) {
-            taskState.update(taskKey, `压缩文件...${count} (${_f.formatBytes(size)})`);
-          },
-        });
-
-        await uLog(req, `压缩${flag}(${f}=>${t})`);
-
-        taskState.done(taskKey);
-        syncUpdateData(req, 'file');
-      } catch (error) {
-        taskState.delete(taskKey);
-        const errText = `压缩${flag}失败`;
-        await errLog(req, `${errText}(${f}-${error})`);
-        await heperMsgAndForward(req, account, errText);
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (!(await _f.exists(f))) {
+      return resp.forbidden(res, `${flag}不存在`)();
     }
-  },
+
+    const fname = (_path.extname(name)[0] || name) + '.zip';
+
+    let t = _path.normalizeNoSlash(p, fname);
+
+    if ((await _f.exists(t)) || t === appConfig.trashDir(account)) {
+      t = await getUniqueFilename(t);
+    }
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const taskKey = taskState.add(account, `压缩文件...`, controller);
+
+    fileList.clear(account);
+
+    resp.success(res, 'ok', { key: taskKey })();
+
+    try {
+      await zipper.zip([data], t, {
+        signal,
+        progress({ size, count }) {
+          taskState.update(taskKey, `压缩文件...${count} (${_f.formatBytes(size)})`);
+        },
+      });
+
+      taskState.done(taskKey);
+      syncUpdateData(res, 'file');
+    } catch (error) {
+      taskState.delete(taskKey);
+      const errText = `压缩${flag}失败`;
+      await writelog(res, `${errText}(${error})`, 500);
+      await heperMsgAndForward(res, account, errText);
+    }
+  }),
 );
 
 // 解压缩
@@ -1124,60 +1026,53 @@ route.post(
       }),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { data } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { data } = res.locals.ctx;
 
-      const { name, path } = data;
+    const { name, path } = data;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const p = appConfig.userRootDir(account, path);
-      const f = _path.normalizeNoSlash(p, name);
+    const p = appConfig.userRootDir(account, path);
+    const f = _path.normalizeNoSlash(p, name);
 
-      if ((await _f.getType(f)) !== 'file') {
-        resp.forbidden(res, '解压文件不存在')(req, f, 1);
-        return;
-      }
-
-      const fname = _path.extname(name)[0] || name;
-
-      let t = _path.normalizeNoSlash(p, fname);
-
-      const controller = new AbortController();
-      const signal = controller.signal;
-      const taskKey = taskState.add(account, `解压文件...`, controller);
-
-      fileList.clear(account);
-
-      resp.success(res, 'ok', { key: taskKey });
-
-      try {
-        if ((await _f.exists(t)) || t === appConfig.trashDir(account)) {
-          t = await getUniqueFilename(t);
-        }
-
-        await zipper.unzip(f, t, {
-          signal,
-          progress({ size, count }) {
-            taskState.update(taskKey, `解压文件...${count} (${_f.formatBytes(size)})`);
-          },
-        });
-
-        await uLog(req, `解压文件(${f}=>${t})`);
-
-        taskState.done(taskKey);
-        syncUpdateData(req, 'file');
-      } catch (error) {
-        taskState.delete(taskKey);
-        const errText = `解压文件失败`;
-        await errLog(req, `${errText}(${f}-${error})`);
-        await heperMsgAndForward(req, account, errText);
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+    if ((await _f.getType(f)) !== 'file') {
+      return resp.forbidden(res, '解压文件不存在')();
     }
-  },
+
+    const fname = _path.extname(name)[0] || name;
+
+    let t = _path.normalizeNoSlash(p, fname);
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const taskKey = taskState.add(account, `解压文件...`, controller);
+
+    fileList.clear(account);
+
+    resp.success(res, 'ok', { key: taskKey })();
+
+    try {
+      if ((await _f.exists(t)) || t === appConfig.trashDir(account)) {
+        t = await getUniqueFilename(t);
+      }
+
+      await zipper.unzip(f, t, {
+        signal,
+        progress({ size, count }) {
+          taskState.update(taskKey, `解压文件...${count} (${_f.formatBytes(size)})`);
+        },
+      });
+
+      taskState.done(taskKey);
+      syncUpdateData(res, 'file');
+    } catch (error) {
+      taskState.delete(taskKey);
+      const errText = `解压文件失败`;
+      await writelog(res, `${errText}(${error})`, 500);
+      await heperMsgAndForward(res, account, errText);
+    }
+  }),
 );
 
 // 删除
@@ -1198,89 +1093,80 @@ route.post(
         .max(fieldLength.maxPagesize),
     }),
   ),
-  async (req, res) => {
+  asyncHandler(async (_, res) => {
+    const { data, force } = res.locals.ctx;
+
+    const { account } = res.locals.hello.userinfo;
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const taskKey = taskState.add(account, `删除文件...`, controller);
+
+    fileList.clear(account);
+
+    resp.success(res, 'ok', { key: taskKey })();
+
     try {
-      const { data, force } = req[kValidate];
+      let count = 0;
+      let size = 0;
 
-      const { account } = req[kHello].userinfo;
+      const trashDir = appConfig.trashDir(account);
 
-      const controller = new AbortController();
-      const signal = controller.signal;
-      const taskKey = taskState.add(account, `删除文件...`, controller);
+      await concurrencyTasks(data, 5, async (task) => {
+        if (signal.aborted) return;
 
-      fileList.clear(account);
+        let { path, name } = task;
 
-      resp.success(res, 'ok', { key: taskKey });
+        const p = appConfig.userRootDir(account, `${path}/${name}`);
 
-      try {
-        let count = 0;
-        let size = 0;
-
-        const trashDir = appConfig.trashDir(account);
-
-        await concurrencyTasks(data, 5, async (task) => {
-          if (signal.aborted) return;
-
-          let { path, name, type } = task;
-
-          const p = appConfig.userRootDir(account, `${path}/${name}`);
-
-          let handleType = '删除';
-
-          if (
-            force === 1 ||
-            _path.isPathWithin(p, trashDir, true) ||
-            _path.isPathWithin(trashDir, p, true)
-          ) {
-            await _f.del(p, {
-              signal,
-              progress({ size: s, count: c }) {
-                if (s) size += s;
-                if (c) count++;
-                taskState.update(taskKey, `删除文件...${count} (${_f.formatBytes(size)})`);
-              },
-            });
-          } else {
-            let targetPath = _path.normalizeNoSlash(trashDir, name);
-            if (await _f.exists(targetPath)) {
-              targetPath = await getUniqueFilename(targetPath);
-            }
-
-            taskState.update(taskKey, `放入回收站...`);
-            await _f.rename(p, targetPath, {
-              signal,
-              progress({ size: s, count: c }) {
-                if (!s && !c) return;
-                if (s) size += s;
-                if (c) count++;
-                taskState.update(taskKey, `放入回收站...${count} (${_f.formatBytes(size)})`);
-              },
-            });
-
-            handleType = '回收';
+        if (
+          force === 1 ||
+          _path.isPathWithin(p, trashDir, true) ||
+          _path.isPathWithin(trashDir, p, true)
+        ) {
+          await _f.del(p, {
+            signal,
+            progress({ size: s, count: c }) {
+              if (s) size += s;
+              if (c) count++;
+              taskState.update(taskKey, `删除文件...${count} (${_f.formatBytes(size)})`);
+            },
+          });
+        } else {
+          let targetPath = _path.normalizeNoSlash(trashDir, name);
+          if (await _f.exists(targetPath)) {
+            targetPath = await getUniqueFilename(targetPath);
           }
 
-          await uLog(req, `${handleType}${type === 'dir' ? '文件夹' : '文件'}(${p})`);
-        });
+          taskState.update(taskKey, `放入回收站...`);
+          await _f.rename(p, targetPath, {
+            signal,
+            progress({ size: s, count: c }) {
+              if (!s && !c) return;
+              if (s) size += s;
+              if (c) count++;
+              taskState.update(taskKey, `放入回收站...${count} (${_f.formatBytes(size)})`);
+            },
+          });
+        }
+      });
 
-        taskState.done(taskKey);
-        syncUpdateData(req, 'file');
-      } catch (error) {
-        taskState.delete(taskKey);
-        const errText = `删除文件失败`;
-        await errLog(req, `${errText}(${error})`);
-        await heperMsgAndForward(req, account, errText);
-      }
+      taskState.done(taskKey);
+      syncUpdateData(res, 'file');
     } catch (error) {
-      resp.error(res)(req, error);
+      taskState.delete(taskKey);
+      const errText = `删除文件失败`;
+      await writelog(res, `${errText}(${error})`, 500);
+      await heperMsgAndForward(res, account, errText);
     }
-  },
+  }),
 );
 
 // 清空回收站
-route.get('/clear-trash', async (req, res) => {
-  try {
-    const { account } = req[kHello].userinfo;
+route.get(
+  '/clear-trash',
+  asyncHandler(async (_, res) => {
+    const { account } = res.locals.hello.userinfo;
 
     const controller = new AbortController();
     const signal = controller.signal;
@@ -1288,7 +1174,7 @@ route.get('/clear-trash', async (req, res) => {
 
     fileList.clear(account);
 
-    resp.success(res, 'ok', { key: taskKey });
+    resp.success(res, 'ok', { key: taskKey })();
 
     try {
       let count = 0;
@@ -1315,19 +1201,16 @@ route.get('/clear-trash', async (req, res) => {
         });
       }
 
-      await uLog(req, `清空回收站成功`);
       taskState.done(taskKey);
-      syncUpdateData(req, 'file');
+      syncUpdateData(res, 'file');
     } catch (error) {
       taskState.delete(taskKey);
       const errText = `清空回收站失败`;
-      await errLog(req, `${errText}(${error})`);
-      await heperMsgAndForward(req, account, errText);
+      await writelog(res, `${errText}(${error})`, 500);
+      await heperMsgAndForward(res, account, errText);
     }
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+  }),
+);
 
 // 新建目录
 route.post(
@@ -1339,35 +1222,29 @@ route.post(
       name: V.string().trim().min(1).max(fieldLength.filename),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { path, name } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { path, name } = res.locals.ctx;
 
-      if (!_path.isFilename(name)) {
-        resp.forbidden(res, '名称包含了不允许的特殊字符')(req, name, 1);
-        return;
-      }
-
-      const { account } = req[kHello].userinfo;
-
-      const fpath = appConfig.userRootDir(account, `${path}/${name}`);
-
-      if (await _f.exists(fpath)) {
-        resp.forbidden(res, '已存在重名文件')(req, fpath, 1);
-        return;
-      }
-
-      await _f.mkdir(fpath);
-
-      syncUpdateData(req, 'file');
-
-      fileList.clear(account);
-
-      resp.success(res, '新建文件夹成功')(req, fpath, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (!_path.isFilename(name)) {
+      return resp.forbidden(res, '名称包含了不允许的特殊字符')();
     }
-  },
+
+    const { account } = res.locals.hello.userinfo;
+
+    const fpath = appConfig.userRootDir(account, `${path}/${name}`);
+
+    if (await _f.exists(fpath)) {
+      return resp.forbidden(res, '已存在重名文件')();
+    }
+
+    await _f.mkdir(fpath);
+
+    syncUpdateData(res, 'file');
+
+    fileList.clear(account);
+
+    resp.success(res, '新建文件夹成功')();
+  }),
 );
 
 // 重命名
@@ -1384,45 +1261,38 @@ route.post(
       }),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { data, name } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { data, name } = res.locals.ctx;
 
-      if (!_path.isFilename(name)) {
-        resp.forbidden(res, '名称包含了不允许的特殊字符')(req, name, 1);
-        return;
-      }
-
-      const flag = data.type === 'dir' ? '文件夹' : '文件';
-
-      const { account } = req[kHello].userinfo;
-
-      const dir = appConfig.userRootDir(account, data.path);
-
-      const p = _path.normalizeNoSlash(dir, data.name),
-        t = _path.normalizeNoSlash(dir, name);
-
-      if (!(await _f.exists(p))) {
-        resp.forbidden(res, `${flag}不存在`)(req, p, 1);
-        return;
-      }
-
-      if ((await _f.exists(t)) || appConfig.trashDir(account) === t) {
-        resp.forbidden(res, '已存在重名文件')(req, t, 1);
-        return;
-      }
-
-      await _f.rename(p, t);
-
-      syncUpdateData(req, 'file');
-
-      fileList.clear(account);
-
-      resp.success(res, `重命名${flag}成功`)(req, `${p}=>${t}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (!_path.isFilename(name)) {
+      return resp.forbidden(res, '名称包含了不允许的特殊字符')();
     }
-  },
+
+    const flag = data.type === 'dir' ? '文件夹' : '文件';
+
+    const { account } = res.locals.hello.userinfo;
+
+    const dir = appConfig.userRootDir(account, data.path);
+
+    const p = _path.normalizeNoSlash(dir, data.name),
+      t = _path.normalizeNoSlash(dir, name);
+
+    if (!(await _f.exists(p))) {
+      return resp.forbidden(res, `${flag}不存在`)();
+    }
+
+    if ((await _f.exists(t)) || appConfig.trashDir(account) === t) {
+      return resp.forbidden(res, '已存在重名文件')();
+    }
+
+    await _f.rename(p, t);
+
+    syncUpdateData(res, 'file');
+
+    fileList.clear(account);
+
+    resp.success(res, `重命名${flag}成功`)();
+  }),
 );
 
 // 文件权限
@@ -1446,59 +1316,52 @@ route.post(
         .max(fieldLength.maxPagesize),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { data, mode, r } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { data, mode, r } = res.locals.ctx;
 
-      if (!req[kHello].isRoot) {
-        resp.forbidden(res, '无权操作')(req);
-        return;
-      }
-
-      const { account } = req[kHello].userinfo;
-
-      const controller = new AbortController();
-      const signal = controller.signal;
-      const taskKey = taskState.add(account, `设置权限...`, controller);
-
-      fileList.clear(account);
-
-      resp.success(res, 'ok', { key: taskKey });
-
-      try {
-        let count = 0;
-
-        await concurrencyTasks(data, 5, async (task) => {
-          if (signal.aborted) return;
-
-          const { name, path } = task;
-
-          const p = appConfig.userRootDir(account, `${path}/${name}`);
-
-          await _f.chmod(p, mode, {
-            signal,
-            progress({ count: c }) {
-              if (c) count++;
-              taskState.update(taskKey, `设置权限...${count}`);
-            },
-            recursive: r,
-          });
-
-          await uLog(req, `${r ? '递归' : ''}设置权限为${mode}(${p})`);
-        });
-
-        taskState.done(taskKey);
-        syncUpdateData(req, 'file');
-      } catch (error) {
-        taskState.delete(taskKey);
-        const errText = `设置权限失败`;
-        await errLog(req, `${errText}(${error})`);
-        await heperMsgAndForward(req, account, errText);
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (!res.locals.hello.isRoot) {
+      return resp.forbidden(res, '无权操作')();
     }
-  },
+
+    const { account } = res.locals.hello.userinfo;
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const taskKey = taskState.add(account, `设置权限...`, controller);
+
+    fileList.clear(account);
+
+    resp.success(res, 'ok', { key: taskKey })();
+
+    try {
+      let count = 0;
+
+      await concurrencyTasks(data, 5, async (task) => {
+        if (signal.aborted) return;
+
+        const { name, path } = task;
+
+        const p = appConfig.userRootDir(account, `${path}/${name}`);
+
+        await _f.chmod(p, mode, {
+          signal,
+          progress({ count: c }) {
+            if (c) count++;
+            taskState.update(taskKey, `设置权限...${count}`);
+          },
+          recursive: r,
+        });
+      });
+
+      taskState.done(taskKey);
+      syncUpdateData(res, 'file');
+    } catch (error) {
+      taskState.delete(taskKey);
+      const errText = `设置权限失败`;
+      await writelog(res, `${errText}(${error})`, 500);
+      await heperMsgAndForward(res, account, errText);
+    }
+  }),
 );
 
 // 文件用户组
@@ -1521,59 +1384,52 @@ route.post(
         .max(fieldLength.maxPagesize),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { data, uid, gid, r } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { data, uid, gid, r } = res.locals.ctx;
 
-      if (!req[kHello].isRoot) {
-        resp.forbidden(res, '无权操作')(req);
-        return;
-      }
-
-      const { account } = req[kHello].userinfo;
-
-      const controller = new AbortController();
-      const signal = controller.signal;
-      const taskKey = taskState.add(account, `设置用户组...`, controller);
-
-      fileList.clear(account);
-
-      resp.success(res, 'ok', { key: taskKey });
-
-      try {
-        let count = 0;
-
-        await concurrencyTasks(data, 5, async (task) => {
-          if (signal.aborted) return;
-
-          const { name, path } = task;
-
-          const p = appConfig.userRootDir(account, `${path}/${name}`);
-
-          await _f.chown(p, uid, gid, {
-            signal,
-            progress({ count: c }) {
-              if (c) count++;
-              taskState.update(taskKey, `设置用户组...${count}`);
-            },
-            recursive: r,
-          });
-
-          await uLog(req, `${r ? '递归' : ''}设置用户组为uid：${uid} gid：${gid}(${p})`);
-        });
-
-        taskState.done(taskKey);
-        syncUpdateData(req, 'file');
-      } catch (error) {
-        taskState.delete(taskKey);
-        const errText = `设置用户组失败`;
-        await errLog(req, `${errText}(${error})`);
-        await heperMsgAndForward(req, account, errText);
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (!res.locals.hello.isRoot) {
+      return resp.forbidden(res, '无权操作')();
     }
-  },
+
+    const { account } = res.locals.hello.userinfo;
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const taskKey = taskState.add(account, `设置用户组...`, controller);
+
+    fileList.clear(account);
+
+    resp.success(res, 'ok', { key: taskKey })();
+
+    try {
+      let count = 0;
+
+      await concurrencyTasks(data, 5, async (task) => {
+        if (signal.aborted) return;
+
+        const { name, path } = task;
+
+        const p = appConfig.userRootDir(account, `${path}/${name}`);
+
+        await _f.chown(p, uid, gid, {
+          signal,
+          progress({ count: c }) {
+            if (c) count++;
+            taskState.update(taskKey, `设置用户组...${count}`);
+          },
+          recursive: r,
+        });
+      });
+
+      taskState.done(taskKey);
+      syncUpdateData(res, 'file');
+    } catch (error) {
+      taskState.delete(taskKey);
+      const errText = `设置用户组失败`;
+      await writelog(res, `${errText}(${error})`, 500);
+      await heperMsgAndForward(res, account, errText);
+    }
+  }),
 );
 
 // 上传
@@ -1590,21 +1446,17 @@ route.post(
         .pattern(/^_[0-9]+$/, '必须 _ 开头数字结尾'),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { HASH, name } = req[kValidate];
+  asyncHandler(async (req, res) => {
+    const { HASH, name } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const path = appConfig.temDir(`${account}_${HASH}`);
+    const path = appConfig.temDir(`${account}_${HASH}`);
 
-      await receiveFiles(req, path, name, fieldLength.maxFileChunk);
+    await receiveFiles(req, path, name, fieldLength.maxFileChunk);
 
-      resp.success(res);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res)();
+  }),
 );
 
 // 合并文件
@@ -1618,16 +1470,16 @@ route.post(
       path: V.string().notEmpty().min(1).max(fieldLength.url),
     }),
   ),
-  async (req, res) => {
+  asyncHandler(async (_, res) => {
     let timer = setTimeout(() => {
       clearTimeout(timer);
       timer = null;
     }, fieldLength.operationTimeout);
 
     try {
-      const { HASH, count, path } = req[kValidate];
+      const { HASH, count, path } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+      const { account } = res.locals.hello.userinfo;
 
       let targetPath = appConfig.userRootDir(
         account,
@@ -1649,23 +1501,23 @@ route.post(
         clearTimeout(timer);
         timer = null;
       } else {
-        syncUpdateData(req, 'file', '', 'all');
+        syncUpdateData(res, 'file', '', 'all');
       }
 
       fileList.clear(account);
 
-      resp.success(res, `上传文件成功`)(req, targetPath, 1);
+      resp.success(res, `上传文件成功`)();
     } catch (error) {
       if (timer) {
         clearTimeout(timer);
         timer = null;
       } else {
-        errorNotifyMsg(req, `上传文件失败`);
+        errorNotifyMsg(res, `上传文件失败`);
       }
 
-      resp.error(res)(req, error);
+      resp.error(res)(error);
     }
-  },
+  }),
 );
 
 // 断点续传
@@ -1677,20 +1529,16 @@ route.post(
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { HASH } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { HASH } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const path = appConfig.temDir(`${account}_${HASH}`),
-        list = await _f.readdir(path);
+    const path = appConfig.temDir(`${account}_${HASH}`),
+      list = await _f.readdir(path);
 
-      resp.success(res, 'ok', list);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, 'ok', list)();
+  }),
 );
 
 // 重复
@@ -1702,22 +1550,17 @@ route.post(
       path: V.string().notEmpty().min(1).max(fieldLength.url),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { path } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { path } = res.locals.ctx;
 
-      const p = appConfig.userRootDir(req[kHello].userinfo.account, path);
+    const p = appConfig.userRootDir(res.locals.hello.userinfo.account, path);
 
-      if (await _f.exists(p)) {
-        resp.success(res);
-        return;
-      }
-
-      resp.ok(res);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (await _f.exists(p)) {
+      return resp.success(res)();
     }
-  },
+
+    resp.ok(res)();
+  }),
 );
 
 // 补全路径
@@ -1730,54 +1573,50 @@ route.post(
       type: V.string().trim().default('all').enum(['dir', 'file', 'all']),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { path, type } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { path, type } = res.locals.ctx;
 
-      const normalizePath = _path.normalize(path);
-      if (normalizePath.endsWith('/')) {
-        return resp.success(res, 'ok', normalizePath);
-      }
-
-      const p = appConfig.userRootDir(req[kHello].userinfo.account, path);
-      const name = _path.basename(p)[0];
-      const dir = _path.dirname(p);
-
-      const dirList = await _f.readdir(dir);
-      if (!dirList || dirList.length === 0) {
-        return resp.success(res, 'ok', normalizePath);
-      }
-
-      let best = null;
-
-      for (const item of dirList) {
-        if (!item.startsWith(name)) continue;
-
-        if (type !== 'all') {
-          const t = await _f.getType(_path.normalizeNoSlash(dir, item));
-          if (t !== type) continue;
-        }
-
-        if (!best || item.length < best.length) {
-          best = item;
-        }
-      }
-
-      const result = best || name;
-
-      const base = _path.dirname(path);
-      let resultPath = _path.normalizeNoSlash(base, result);
-
-      const resultType = await _f.getType(_path.normalizeNoSlash(dir, result));
-      if (resultType === 'dir') {
-        resultPath += '/';
-      }
-
-      resp.success(res, 'ok', resultPath);
-    } catch (error) {
-      resp.error(res)(req, error);
+    const normalizePath = _path.normalize(path);
+    if (normalizePath.endsWith('/')) {
+      return resp.success(res, 'ok', normalizePath)();
     }
-  },
+
+    const p = appConfig.userRootDir(res.locals.hello.userinfo.account, path);
+    const name = _path.basename(p)[0];
+    const dir = _path.dirname(p);
+
+    const dirList = await _f.readdir(dir);
+    if (!dirList || dirList.length === 0) {
+      return resp.success(res, 'ok', normalizePath)();
+    }
+
+    let best = null;
+
+    for (const item of dirList) {
+      if (!item.startsWith(name)) continue;
+
+      if (type !== 'all') {
+        const t = await _f.getType(_path.normalizeNoSlash(dir, item));
+        if (t !== type) continue;
+      }
+
+      if (!best || item.length < best.length) {
+        best = item;
+      }
+    }
+
+    const result = best || name;
+
+    const base = _path.dirname(path);
+    let resultPath = _path.normalizeNoSlash(base, result);
+
+    const resultType = await _f.getType(_path.normalizeNoSlash(dir, result));
+    if (resultType === 'dir') {
+      resultPath += '/';
+    }
+
+    resp.success(res, 'ok', resultPath)();
+  }),
 );
 
 // 离线下载
@@ -1790,98 +1629,89 @@ route.post(
       path: V.string().notEmpty().min(1).max(fieldLength.url),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { url, path } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { url, path } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const targetPath = appConfig.userRootDir(account, path);
+    const targetPath = appConfig.userRootDir(account, path);
 
-      if ((await _f.getType(targetPath)) !== 'dir') {
-        resp.forbidden(res, '目标文件夹不存在')(req, targetPath, 1);
-        return;
-      }
-
-      const filename = _path.sanitizeFilename(_path.basename(url)[0] || 'unknown');
-
-      const controller = new AbortController();
-      const signal = controller.signal;
-      const taskKey = taskState.add(account, `下载文件: ${filename}`, controller);
-
-      resp.success(res, 'ok', { key: taskKey });
-
-      const temPath = appConfig.temDir(`${account}_${_crypto.getStringHash(url)}`);
-      try {
-        const stats = await _f.lstat(temPath);
-        let downloadedBytes = stats ? stats.size : 0;
-
-        const headers = {};
-        if (downloadedBytes > 0) {
-          headers.Range = `bytes=${downloadedBytes}-`;
-        }
-
-        const response = await request({
-          method: 'get',
-          url,
-          responseType: 'stream',
-          signal,
-          headers,
-          decompress: false, // 防止 gzip 会导致续传失败
-          validateStatus: (s) => s === 200 || s === 206,
-          timeout: 0,
-        });
-
-        // 判断是否支持续传（206）
-        const isResume = downloadedBytes > 0 && response.status === 206;
-
-        if (!isResume && downloadedBytes > 0) {
-          // 服务器不支持续传 → 重头下载
-          downloadedBytes = 0;
-        }
-
-        // 写入模式：续传 append / 覆盖 write
-        const writer = await _f.createWriteStream(temPath, {
-          flags: downloadedBytes > 0 ? 'a' : 'w',
-        });
-
-        await _f.streamp.pipeline(
-          response.data,
-          new _f.stream.Transform({
-            transform(chunk, _, callback) {
-              downloadedBytes += chunk.length;
-              taskState.update(
-                taskKey,
-                `下载文件: ${filename} (${_f.formatBytes(downloadedBytes)})`,
-              );
-              callback(null, chunk);
-            },
-          }),
-          writer,
-          { signal },
-        );
-
-        let outputFilePath = _path.normalizeNoSlash(targetPath, filename);
-
-        // 已存在添加后缀
-        if ((await _f.exists(outputFilePath)) || outputFilePath === appConfig.trashDir(account)) {
-          outputFilePath = await getUniqueFilename(outputFilePath);
-        }
-
-        await _f.rename(temPath, outputFilePath);
-        taskState.done(taskKey);
-        uLog(req, `离线下载文件: ${url}=>${outputFilePath}`);
-        syncUpdateData(req, 'file');
-      } catch (error) {
-        taskState.delete(taskKey);
-        const errText = `离线下载文件失败`;
-        await errLog(req, `${errText}: ${url}(${error})`);
-        await heperMsgAndForward(req, account, errText);
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+    if ((await _f.getType(targetPath)) !== 'dir') {
+      return resp.forbidden(res, '目标文件夹不存在')();
     }
-  },
+
+    const filename = _path.sanitizeFilename(_path.basename(url)[0] || 'unknown');
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const taskKey = taskState.add(account, `下载文件: ${filename}`, controller);
+
+    resp.success(res, 'ok', { key: taskKey })();
+
+    const temPath = appConfig.temDir(`${account}_${_crypto.getStringHash(url)}`);
+    try {
+      const stats = await _f.lstat(temPath);
+      let downloadedBytes = stats ? stats.size : 0;
+
+      const headers = {};
+      if (downloadedBytes > 0) {
+        headers.Range = `bytes=${downloadedBytes}-`;
+      }
+
+      const response = await request({
+        method: 'get',
+        url,
+        responseType: 'stream',
+        signal,
+        headers,
+        decompress: false, // 防止 gzip 会导致续传失败
+        validateStatus: (s) => s === 200 || s === 206,
+        timeout: 0,
+      });
+
+      // 判断是否支持续传（206）
+      const isResume = downloadedBytes > 0 && response.status === 206;
+
+      if (!isResume && downloadedBytes > 0) {
+        // 服务器不支持续传 → 重头下载
+        downloadedBytes = 0;
+      }
+
+      // 写入模式：续传 append / 覆盖 write
+      const writer = await _f.createWriteStream(temPath, {
+        flags: downloadedBytes > 0 ? 'a' : 'w',
+      });
+
+      await _f.streamp.pipeline(
+        response.data,
+        new _f.stream.Transform({
+          transform(chunk, _, callback) {
+            downloadedBytes += chunk.length;
+            taskState.update(taskKey, `下载文件: ${filename} (${_f.formatBytes(downloadedBytes)})`);
+            callback(null, chunk);
+          },
+        }),
+        writer,
+        { signal },
+      );
+
+      let outputFilePath = _path.normalizeNoSlash(targetPath, filename);
+
+      // 已存在添加后缀
+      if ((await _f.exists(outputFilePath)) || outputFilePath === appConfig.trashDir(account)) {
+        outputFilePath = await getUniqueFilename(outputFilePath);
+      }
+
+      await _f.rename(temPath, outputFilePath);
+      taskState.done(taskKey);
+      syncUpdateData(res, 'file');
+    } catch (error) {
+      taskState.delete(taskKey);
+      const errText = `离线下载文件失败`;
+      await writelog(res, `${errText}(${error})`, 500);
+      await heperMsgAndForward(res, account, errText);
+    }
+  }),
 );
 
 // 添加到播放器和壁纸
@@ -1894,83 +1724,76 @@ route.post(
       path: V.string().notEmpty().min(1).max(fieldLength.url),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { type, path } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { type, path } = res.locals.ctx;
 
-      if (!req[kHello].isRoot) {
-        resp.forbidden(res, '无权操作')(req);
-        return;
-      }
-
-      const typeName = type === 'music' ? '音乐' : '壁纸';
-      const { account } = req[kHello].userinfo;
-
-      const targetPath = appConfig.userRootDir(account, path);
-
-      if ((await _f.getType(targetPath)) !== 'dir') {
-        resp.forbidden(res, '目标文件夹不存在')(req, targetPath, 1);
-        return;
-      }
-
-      const controller = new AbortController();
-      const signal = controller.signal;
-      const taskKey = taskState.add(account, `添加${typeName}...`, controller);
-
-      resp.success(res, 'ok', { key: taskKey });
-
-      try {
-        let skip = 0;
-        let count = 0;
-        let totalSize = 0;
-
-        await _f.walk(
-          targetPath,
-          async ({ type: ftype, path: p, stat }) => {
-            if (ftype !== 'dir') {
-              try {
-                const size = stat.size;
-                if (
-                  (type === 'music' &&
-                    isMusicFile(p) &&
-                    size < fieldLength.maxSongSize * 1024 * 1024 &&
-                    (await fileToMusic(p))) ||
-                  (type === 'bg' &&
-                    isImgFile(p) &&
-                    size < fieldLength.maxBgSize * 1024 * 1024 &&
-                    (await fileToBg(p)))
-                ) {
-                  totalSize += size;
-                  count++;
-                } else {
-                  skip++;
-                }
-              } catch (error) {
-                await errLog(req, `扫描添加${typeName}失败：${p}(${error})`);
-              }
-
-              taskState.update(
-                taskKey,
-                `添加${typeName}...${count} (${_f.formatBytes(totalSize)}) 跳过 ${skip}`,
-              );
-            }
-          },
-          { signal, concurrency: 5 },
-        );
-
-        taskState.done(taskKey);
-        uLog(req, `扫描添加${typeName}成功: ${targetPath}(${count})`);
-        syncUpdateData(req, type);
-      } catch (error) {
-        taskState.delete(taskKey);
-        const errText = `扫描添加${typeName}失败`;
-        await errLog(req, `${errText}：${targetPath}(${error})`);
-        await heperMsgAndForward(req, account, errText);
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (!res.locals.hello.isRoot) {
+      return resp.forbidden(res, '无权操作')();
     }
-  },
+
+    const typeName = type === 'music' ? '音乐' : '壁纸';
+    const { account } = res.locals.hello.userinfo;
+
+    const targetPath = appConfig.userRootDir(account, path);
+
+    if ((await _f.getType(targetPath)) !== 'dir') {
+      return resp.forbidden(res, '目标文件夹不存在')();
+    }
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const taskKey = taskState.add(account, `添加${typeName}...`, controller);
+
+    resp.success(res, 'ok', { key: taskKey })();
+
+    try {
+      let skip = 0;
+      let count = 0;
+      let totalSize = 0;
+
+      await _f.walk(
+        targetPath,
+        async ({ type: ftype, path: p, stat }) => {
+          if (ftype !== 'dir') {
+            try {
+              const size = stat.size;
+              if (
+                (type === 'music' &&
+                  isMusicFile(p) &&
+                  size < fieldLength.maxSongSize * 1024 * 1024 &&
+                  (await fileToMusic(p))) ||
+                (type === 'bg' &&
+                  isImgFile(p) &&
+                  size < fieldLength.maxBgSize * 1024 * 1024 &&
+                  (await fileToBg(p)))
+              ) {
+                totalSize += size;
+                count++;
+              } else {
+                skip++;
+              }
+            } catch (error) {
+              await writelog(res, `扫描添加${typeName}失败(${error})`, 500);
+            }
+
+            taskState.update(
+              taskKey,
+              `添加${typeName}...${count} (${_f.formatBytes(totalSize)}) 跳过 ${skip}`,
+            );
+          }
+        },
+        { signal, concurrency: 5 },
+      );
+
+      taskState.done(taskKey);
+      syncUpdateData(res, type);
+    } catch (error) {
+      taskState.delete(taskKey);
+      const errText = `扫描添加${typeName}失败`;
+      await writelog(res, `${errText}(${error})`, 500);
+      await heperMsgAndForward(res, account, errText);
+    }
+  }),
 );
 
 export default route;

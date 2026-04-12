@@ -8,8 +8,6 @@ import {
   createPagingData,
   isValidDate,
   getSplitWord,
-  uLog,
-  validate,
 } from '../../utils/utils.js';
 
 import { getFriendInfo } from '../chat/chat.js';
@@ -19,12 +17,10 @@ import _f from '../../utils/f.js';
 import nanoid from '../../utils/nanoid.js';
 import appConfig from '../../data/config.js';
 import V from '../../utils/validRules.js';
-import { sym } from '../../utils/symbols.js';
 import resp from '../../utils/response.js';
+import { asyncHandler, validate } from '../../utils/customMiddleware.js';
 
 const route = express.Router();
-const kHello = sym('hello');
-const kValidate = sym('validate');
 
 // 读取笔记
 route.get(
@@ -36,74 +32,69 @@ route.get(
       download: V.number().toInt().default(0).enum([0, 1]),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { v: id, download } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { v: id, download } = res.locals.ctx;
 
-      const note = await db('note AS n')
-        .join('user AS u', { 'n.account': { value: 'u.account', raw: true } }, { type: 'LEFT' })
-        .select(
-          'u.account,u.username,u.logo,u.email,n.create_at,n.update_at,n.title,n.state,n.share,n.content,n.visit_count,n.category',
-        )
-        .where({ 'n.id': id })
-        .findOne();
+    const note = await db('note AS n')
+      .join('user AS u', { 'n.account': { value: 'u.account', raw: true } }, { type: 'LEFT' })
+      .select(
+        'u.account,u.username,u.logo,u.email,n.create_at,n.update_at,n.title,n.state,n.share,n.content,n.visit_count,n.category',
+      )
+      .where({ 'n.id': id })
+      .findOne();
 
-      if (note) {
-        let {
-          username,
-          share,
-          title,
-          content,
-          account: acc,
-          create_at,
-          update_at,
-          visit_count,
-          state,
-          logo,
-          email,
-          category,
-        } = note;
+    if (note) {
+      let {
+        username,
+        share,
+        title,
+        content,
+        account: acc,
+        create_at,
+        update_at,
+        visit_count,
+        state,
+        logo,
+        email,
+        category,
+      } = note;
 
-        await db('note').where({ id }).increment({ visit_count: 1 });
+      await db('note').where({ id }).increment({ visit_count: 1 });
 
-        const { account } = req[kHello].userinfo;
+      const { account } = res.locals.hello.userinfo;
 
-        // 公开并且未删除 或 是自己的
-        if ((share === 1 && state === 1) || acc === account) {
-          if (account && note.account !== account) {
-            const f = await getFriendInfo(account, acc, 'des');
-            const des = f ? f.des : '';
+      // 公开并且未删除 或 是自己的
+      if ((share === 1 && state === 1) || acc === account) {
+        if (account && note.account !== account) {
+          const f = await getFriendInfo(account, acc, 'des');
+          const des = f ? f.des : '';
 
-            username = des || username;
-          }
+          username = des || username;
+        }
 
-          if (download === 1) {
-            res.send(content);
-            uLog(req, `下载笔记成功(${id})`);
-          } else {
-            resp.success(res, '读取笔记成功', {
-              username,
-              title,
-              content,
-              visit_count,
-              account: acc,
-              create_at,
-              update_at,
-              logo,
-              email,
-              category,
-            })(req, id, 1);
-          }
+        if (download === 1) {
+          res.send(content);
         } else {
-          resp.forbidden(res, '笔记未公开')(req, id, 1);
+          resp.success(res, '读取笔记成功', {
+            username,
+            title,
+            content,
+            visit_count,
+            account: acc,
+            create_at,
+            update_at,
+            logo,
+            email,
+            category,
+          })();
         }
       } else {
-        resp.notFound(res, '笔记不存在')(req, id, 1);
+        resp.forbidden(res, '笔记未公开')();
       }
-    } catch (error) {
-      resp.error(res)(req, error);
+    } else {
+      resp.notFound(res, '笔记不存在')();
     }
-  },
+  }),
 );
 
 // 搜索笔记
@@ -121,62 +112,54 @@ route.post(
         .max(10),
     }),
   ),
-  async (req, res) => {
-    try {
-      let { account: acc, word, category, pageNo, pageSize } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    let { account: acc, word, category, pageNo, pageSize } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      if (!acc && !account) {
-        resp.unauthorized(res);
-        return;
-      }
+    if (!acc && !account) {
+      return resp.unauthorized(res)();
+    }
 
-      const notedb = db('note').where({ account: acc || account, state: 1 });
+    const notedb = db('note').where({ account: acc || account, state: 1 });
 
-      let isOwn = true;
+    let isOwn = true;
 
-      if (acc && acc !== account) {
-        // 非自己只能访问公开的
-        isOwn = false;
-        notedb.where({ share: 1 });
+    if (acc && acc !== account) {
+      // 非自己只能访问公开的
+      isOwn = false;
+      notedb.where({ share: 1 });
+    }
+
+    if (category.length > 0) {
+      let hasLocked = false;
+
+      const idx = category.findIndex((item) => item === 'locked');
+      if (idx >= 0) {
+        category.splice(idx, 1);
+        hasLocked = true;
       }
 
       if (category.length > 0) {
-        let hasLocked = false;
+        // 分类
+        const categorySql = searchSql(
+          category,
+          category.map(() => 'category'),
+        );
 
-        const idx = category.findIndex((item) => item === 'locked');
-        if (idx >= 0) {
-          category.splice(idx, 1);
-          hasLocked = true;
-        }
-
-        if (category.length > 0) {
-          // 分类
-          const categorySql = searchSql(
-            category,
-            category.map(() => 'category'),
-          );
-
-          if (isOwn) {
-            if (hasLocked) {
-              notedb.where(
-                { share: 0 },
-                {
-                  process({ clause, params }) {
-                    return {
-                      clause: `((${clause}) OR ${categorySql.clause})`,
-                      params: [...params, ...categorySql.params],
-                    };
-                  },
+        if (isOwn) {
+          if (hasLocked) {
+            notedb.where(
+              { share: 0 },
+              {
+                process({ clause, params }) {
+                  return {
+                    clause: `((${clause}) OR ${categorySql.clause})`,
+                    params: [...params, ...categorySql.params],
+                  };
                 },
-              );
-            } else {
-              notedb.search(
-                category,
-                category.map(() => 'category'),
-              );
-            }
+              },
+            );
           } else {
             notedb.search(
               category,
@@ -184,121 +167,123 @@ route.post(
             );
           }
         } else {
-          if (isOwn && hasLocked) {
-            notedb.where({ share: 0 });
-          }
+          notedb.search(
+            category,
+            category.map(() => 'category'),
+          );
+        }
+      } else {
+        if (isOwn && hasLocked) {
+          notedb.where({ share: 0 });
         }
       }
+    }
 
-      let splitWord = [];
+    let splitWord = [];
 
-      if (word) {
-        // 搜索
-        splitWord = getSplitWord(word);
+    if (word) {
+      // 搜索
+      splitWord = getSplitWord(word);
 
-        const curSplit = splitWord.slice(0, 10);
-        curSplit[0] = { value: curSplit[0], weight: 10 };
-        notedb.search(curSplit, ['title', 'content'], { sort: true });
-      } else {
-        notedb.orderBy('top', 'DESC').orderBy('create_at', 'DESC');
-      }
+      const curSplit = splitWord.slice(0, 10);
+      curSplit[0] = { value: curSplit[0], weight: 10 };
+      notedb.search(curSplit, ['title', 'content'], { sort: true });
+    } else {
+      notedb.orderBy('top', 'DESC').orderBy('create_at', 'DESC');
+    }
 
-      const total = await notedb.count();
+    const total = await notedb.count();
 
-      const result = createPagingData(Array(total), pageSize, pageNo);
+    const result = createPagingData(Array(total), pageSize, pageNo);
 
-      let list = [];
-      if (total > 0) {
-        const offset = (result.pageNo - 1) * pageSize;
+    let list = [];
+    if (total > 0) {
+      const offset = (result.pageNo - 1) * pageSize;
 
-        list = await notedb
-          .select('title,create_at,update_at,id,share,content,visit_count,top,category')
-          .page(pageSize, offset)
-          .find();
+      list = await notedb
+        .select('title,create_at,update_at,id,share,content,visit_count,top,category')
+        .page(pageSize, offset)
+        .find();
 
-        const noteCategory = await db('note_category')
-          .select('id,title')
-          .where({ account: acc || account })
-          .find();
+      const noteCategory = await db('note_category')
+        .select('id,title')
+        .where({ account: acc || account })
+        .find();
 
-        list = list.map((item) => {
-          let { title, content, id, create_at, update_at, share, visit_count, top, category } =
-            item;
+      list = list.map((item) => {
+        let { title, content, id, create_at, update_at, share, visit_count, top, category } = item;
 
-          let con = [];
-          let images = [];
+        let con = [];
+        let images = [];
 
-          if (content) {
-            const { text, images: img } = parseMarkDown(content);
-            content = text.replace(/[\n\r]/g, '');
-            images = img;
+        if (content) {
+          const { text, images: img } = parseMarkDown(content);
+          content = text.replace(/[\n\r]/g, '');
+          images = img;
 
-            if (word) {
-              // 提取关键词
-              const wc = getWordContent(splitWord, content);
+          if (word) {
+            // 提取关键词
+            const wc = getWordContent(splitWord, content);
 
-              const idx = wc.findIndex(
-                (item) => item.value.toLowerCase() === splitWord[0].toLowerCase(),
-              );
+            const idx = wc.findIndex(
+              (item) => item.value.toLowerCase() === splitWord[0].toLowerCase(),
+            );
 
-              let start = 0,
-                end = 0;
+            let start = 0,
+              end = 0;
 
-              if (idx >= 0) {
-                if (idx > 15) {
-                  start = idx - 15;
-                  end = idx + 15;
-                } else {
-                  end = 30;
-                }
+            if (idx >= 0) {
+              if (idx > 15) {
+                start = idx - 15;
+                end = idx + 15;
               } else {
                 end = 30;
               }
-
-              con = wc.slice(start, end);
+            } else {
+              end = 30;
             }
 
-            if (con.length === 0) {
-              con = [
-                {
-                  value: content.slice(0, fieldLength.notePreviewLength),
-                  type: 'text',
-                },
-              ];
-              if (content.length > fieldLength.notePreviewLength) {
-                con.push({ type: 'icon', value: '...' });
-              }
-            }
+            con = wc.slice(start, end);
           }
 
-          const cArr = category.split('-').filter(Boolean);
-          const categoryArr = noteCategory.filter((item) => cArr.includes(item.id));
+          if (con.length === 0) {
+            con = [
+              {
+                value: content.slice(0, fieldLength.notePreviewLength),
+                type: 'text',
+              },
+            ];
+            if (content.length > fieldLength.notePreviewLength) {
+              con.push({ type: 'icon', value: '...' });
+            }
+          }
+        }
 
-          return {
-            id,
-            share,
-            title,
-            visit_count,
-            con,
-            top,
-            category,
-            categoryArr,
-            create_at,
-            update_at,
-            images,
-          };
-        });
-      }
+        const cArr = category.split('-').filter(Boolean);
+        const categoryArr = noteCategory.filter((item) => cArr.includes(item.id));
 
-      resp.success(res, 'ok', {
-        ...result,
-        data: list,
-        splitWord,
+        return {
+          id,
+          share,
+          title,
+          visit_count,
+          con,
+          top,
+          category,
+          categoryArr,
+          create_at,
+          update_at,
+          images,
+        };
       });
-    } catch (error) {
-      resp.error(res)(req, error);
     }
-  },
+
+    resp.success(res, 'ok', {
+      ...result,
+      data: list,
+      splitWord,
+    })();
+  }),
 );
 
 // 获取分类
@@ -310,33 +295,31 @@ route.get(
       account: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { account: acc } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { account: acc } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const list = await db('note_category')
-        .select('id,title')
-        .where({ account: acc || account })
-        .orderBy('serial', 'DESC')
-        .find();
+    const list = await db('note_category')
+      .select('id,title')
+      .where({ account: acc || account })
+      .orderBy('serial', 'DESC')
+      .find();
 
-      resp.success(res, 'ok', list);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, 'ok', list)();
+  }),
 );
 
 // 验证登录态
-route.use((req, res, next) => {
-  if (req[kHello].userinfo.account) {
-    next();
-  } else {
-    resp.unauthorized(res);
-  }
-});
+route.use(
+  asyncHandler((_, res, next) => {
+    if (res.locals.hello.userinfo.account) {
+      next();
+    } else {
+      resp.unauthorized(res)();
+    }
+  }),
+);
 
 // 笔记历史状态
 route.post(
@@ -347,28 +330,23 @@ route.post(
       state: V.number().toInt().default(0).enum([0, 1]),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { state } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { state } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('user').where({ account, state: 1 }).update({ note_history: state });
+    await db('user').where({ account, state: 1 }).update({ note_history: state });
 
-      resp.success(res, `${state === 0 ? '关闭' : '开启'}笔记历史记录成功`)(req);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, `${state === 0 ? '关闭' : '开启'}笔记历史记录成功`)();
+  }),
 );
-route.get('/history-state', async (req, res) => {
-  try {
-    const { note_history } = req[kHello].userinfo;
-    resp.success(res, 'ok', { note_history });
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+route.get(
+  '/history-state',
+  asyncHandler(async (_, res) => {
+    const { note_history } = res.locals.hello.userinfo;
+    resp.success(res, 'ok', { note_history })();
+  }),
+);
 
 // 笔记状态
 route.post(
@@ -382,23 +360,19 @@ route.post(
         .max(fieldLength.maxPagesize),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { ids, share } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { ids, share } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('note')
-        .where({ id: { in: ids }, account, state: 1 })
-        .update({ share });
+    await db('note')
+      .where({ id: { in: ids }, account, state: 1 })
+      .update({ share });
 
-      syncUpdateData(req, 'note');
+    syncUpdateData(res, 'note');
 
-      resp.success(res, `${share === 0 ? '锁定' : '公开'}笔记成功`)(req, ids.length, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, `${share === 0 ? '锁定' : '公开'}笔记成功`)();
+  }),
 );
 
 // 删除笔记
@@ -412,29 +386,25 @@ route.post(
         .max(fieldLength.maxPagesize),
     }),
   ),
-  async (req, res) => {
-    try {
-      let { ids } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    let { ids } = res.locals.ctx;
 
-      ids = ids.filter((item) => ![appConfig.aboutid, appConfig.tipsid].includes(item)); // 过滤关于和tips
+    ids = ids.filter((item) => ![appConfig.aboutid, appConfig.tipsid].includes(item)); // 过滤关于和tips
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      if (ids.length > 0) {
-        await db('note')
-          .where({ id: { in: ids }, account, state: 1 })
-          .update({ state: 0 });
+    if (ids.length > 0) {
+      await db('note')
+        .where({ id: { in: ids }, account, state: 1 })
+        .update({ state: 0 });
 
-        syncUpdateData(req, 'note');
+      syncUpdateData(res, 'note');
 
-        syncUpdateData(req, 'trash');
-      }
-
-      resp.success(res, '删除笔记成功')(req, ids.length, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+      syncUpdateData(res, 'trash');
     }
-  },
+
+    resp.success(res, '删除笔记成功')();
+  }),
 );
 
 // 上传笔记
@@ -453,27 +423,23 @@ route.post(
         ),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { title, content } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { title, content } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const create_at = Date.now();
-      await db('note').insert({
-        id: nanoid(),
-        create_at,
-        title,
-        content,
-        update_at: create_at,
-        account,
-      });
+    const create_at = Date.now();
+    await db('note').insert({
+      id: nanoid(),
+      create_at,
+      title,
+      content,
+      update_at: create_at,
+      account,
+    });
 
-      resp.success(res, '上传笔记成功')(req, title, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '上传笔记成功')();
+  }),
 );
 
 // 编辑笔记
@@ -493,54 +459,50 @@ route.post(
         ),
     }),
   ),
-  async (req, res) => {
-    try {
-      let { id, title, content } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    let { id, title, content } = res.locals.ctx;
 
-      const time = Date.now();
+    const time = Date.now();
 
-      const { account, note_history } = req[kHello].userinfo;
+    const { account, note_history } = res.locals.hello.userinfo;
 
-      const note = await db('note').select('content').where({ id, account }).findOne();
+    const note = await db('note').select('content').where({ id, account }).findOne();
 
-      if (note) {
-        // 保存笔记历史版本
-        if (note_history === 1) {
-          await saveNoteHistory(req, id, note.content);
-          syncUpdateData(req, 'file');
-        }
-
-        await db('note').where({ id, account }).update({
-          title,
-          content,
-          update_at: time,
-        });
-
-        syncUpdateData(req, 'note', id);
-
-        syncUpdateData(req, 'trash');
-
-        resp.success(res, '更新笔记成功')(req, `${title}-${id}`, 1);
-      } else {
-        id = nanoid();
-
-        await db('note').insert({
-          id,
-          create_at: time,
-          title,
-          content,
-          update_at: time,
-          account,
-        });
-
-        syncUpdateData(req, 'note');
-
-        resp.success(res, '新增笔记成功', { id })(req, `${title}-${id}`, 1);
+    if (note) {
+      // 保存笔记历史版本
+      if (note_history === 1) {
+        await saveNoteHistory(res, id, note.content);
+        syncUpdateData(res, 'file');
       }
-    } catch (error) {
-      resp.error(res)(req, error);
+
+      await db('note').where({ id, account }).update({
+        title,
+        content,
+        update_at: time,
+      });
+
+      syncUpdateData(res, 'note', id);
+
+      syncUpdateData(res, 'trash');
+
+      resp.success(res, '更新笔记成功')();
+    } else {
+      id = nanoid();
+
+      await db('note').insert({
+        id,
+        create_at: time,
+        title,
+        content,
+        update_at: time,
+        account,
+      });
+
+      syncUpdateData(res, 'note');
+
+      resp.success(res, '新增笔记成功', { id })();
     }
-  },
+  }),
 );
 
 // 编辑笔记信息
@@ -556,36 +518,31 @@ route.post(
       visit_count: V.number().toInt().min(0),
     }),
   ),
-  async (req, res) => {
-    try {
-      let { id, title, create_at, update_at, visit_count } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    let { id, title, create_at, update_at, visit_count } = res.locals.ctx;
 
-      create_at = new Date(create_at + ' 00:00:00').getTime();
-      update_at = new Date(update_at + ' 00:00:00').getTime();
+    create_at = new Date(create_at + ' 00:00:00').getTime();
+    update_at = new Date(update_at + ' 00:00:00').getTime();
 
-      if (create_at > update_at) {
-        resp.badRequest(res, req, 'create_at 不能大于 update_at', 'body');
-        return;
-      }
-
-      const { account } = req[kHello].userinfo;
-
-      await db('note').where({ id, account }).update({
-        title,
-        create_at,
-        update_at,
-        visit_count,
-      });
-
-      syncUpdateData(req, 'note', id);
-
-      syncUpdateData(req, 'trash');
-
-      resp.success(res, '更新笔记信息成功')(req, `${title}-${id}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (create_at > update_at) {
+      return resp.badRequest(res)('create_at 不能大于 update_at', 1);
     }
-  },
+
+    const { account } = res.locals.hello.userinfo;
+
+    await db('note').where({ id, account }).update({
+      title,
+      create_at,
+      update_at,
+      visit_count,
+    });
+
+    syncUpdateData(res, 'note', id);
+
+    syncUpdateData(res, 'trash');
+
+    resp.success(res, '更新笔记信息成功')();
+  }),
 );
 
 // 置顶权重
@@ -598,21 +555,17 @@ route.post(
       top: V.number().toInt().min(0).max(fieldLength.top),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id, top } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id, top } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('note').where({ id, account }).update({ top });
+    await db('note').where({ id, account }).update({ top });
 
-      syncUpdateData(req, 'note');
+    syncUpdateData(res, 'note');
 
-      resp.success(res, '设置笔记权重成功')(req, `${id}-${top}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '设置笔记权重成功')();
+  }),
 );
 
 // 编辑笔记分类
@@ -627,22 +580,18 @@ route.post(
         .max(10),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id, category } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id, category } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const categoryStr = category.join('-');
-      await db('note').where({ id, account }).update({ category: categoryStr });
+    const categoryStr = category.join('-');
+    await db('note').where({ id, account }).update({ category: categoryStr });
 
-      syncUpdateData(req, 'note', id);
+    syncUpdateData(res, 'note', id);
 
-      resp.success(res, '更新分类成功')(req, `${id}: ${categoryStr}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '更新分类成功')();
+  }),
 );
 
 // 编辑分类
@@ -655,21 +604,17 @@ route.post(
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { title, id } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { title, id } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('note_category').where({ id, account }).update({ title });
+    await db('note_category').where({ id, account }).update({ title });
 
-      syncUpdateData(req, 'category', id);
+    syncUpdateData(res, 'category', id);
 
-      resp.success(res, '编辑分类标题成功')(req, `${title}-${id}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '编辑分类标题成功')();
+  }),
 );
 
 // 添加分类
@@ -681,32 +626,27 @@ route.post(
       title: V.string().trim().min(1).max(fieldLength.noteCategoryTitle),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { title } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { title } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const total = await db('note_category').count();
+    const total = await db('note_category').count();
 
-      if (total >= fieldLength.maxNoteCategory) {
-        resp.forbidden(res, `类型限制${fieldLength.maxNoteCategory}`)(req);
-        return;
-      }
-      await db('note_category').insert({
-        id: nanoid(),
-        create_at: Date.now(),
-        title,
-        account,
-      });
-
-      syncUpdateData(req, 'category');
-
-      resp.success(res, '添加分类成功')(req, title, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (total >= fieldLength.maxNoteCategory) {
+      return resp.forbidden(res, `类型限制${fieldLength.maxNoteCategory}`)();
     }
-  },
+    await db('note_category').insert({
+      id: nanoid(),
+      create_at: Date.now(),
+      title,
+      account,
+    });
+
+    syncUpdateData(res, 'category');
+
+    resp.success(res, '添加分类成功')();
+  }),
 );
 
 // 删除分类
@@ -718,21 +658,17 @@ route.get(
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('note_category').where({ id, account }).delete();
+    await db('note_category').where({ id, account }).delete();
 
-      syncUpdateData(req, 'category', id);
+    syncUpdateData(res, 'category', id);
 
-      resp.success(res, '删除分类成功')(req, id, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '删除分类成功')();
+  }),
 );
 
 export default route;

@@ -25,13 +25,13 @@ let timer = setInterval(() => {
         cb(flag);
       } catch (error) {
         heperMsgAndForward(null, appConfig.adminAccount, `定时任务出错 - ${error}`);
-        writelog(false, `[ timedTask ] - ${error}`, 'error');
+        writelog(false, `[ timedTask ] - ${error}`, 500);
       }
     });
   } catch (error) {
     stop();
     heperMsgAndForward(null, appConfig.adminAccount, `定时任务出错，已停止 - ${error}`);
-    writelog(false, `[ timedTask ] - ${error}`, 'error');
+    writelog(false, `[ timedTask ] - ${error}`, 500);
   }
 }, 1000);
 

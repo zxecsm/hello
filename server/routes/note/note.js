@@ -4,18 +4,14 @@ import appConfig from '../../data/config.js';
 import _f from '../../utils/f.js';
 import _path from '../../utils/path.js';
 
-import { errLog, formatDate } from '../../utils/utils.js';
-
-import { sym } from '../../utils/symbols.js';
-
-const kHello = sym('hello');
+import { formatDate, writelog } from '../../utils/utils.js';
 
 // 保存笔记历史
-export async function saveNoteHistory(req, noteId, content) {
+export async function saveNoteHistory(res, noteId, content) {
   try {
     if (!content) return;
 
-    const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
     const noteDir = appConfig.noteHistoryDir(account, noteId);
 
@@ -26,7 +22,7 @@ export async function saveNoteHistory(req, noteId, content) {
 
     await _f.writeFile(notePath, content);
   } catch (error) {
-    errLog(req, `保存笔记历史版本失败(${error})`);
+    writelog(res, `保存笔记历史版本失败(${error})`, 500);
   }
 }
 

@@ -1,7 +1,5 @@
 import express from 'express';
 
-import { uLog, validate } from '../../utils/utils.js';
-
 import appConfig from '../../data/config.js';
 
 import _f from '../../utils/f.js';
@@ -9,11 +7,10 @@ import _f from '../../utils/f.js';
 import { _delDir } from '../file/file.js';
 import { fieldLength } from '../config.js';
 import V from '../../utils/validRules.js';
-import { sym } from '../../utils/symbols.js';
 import resp from '../../utils/response.js';
+import { asyncHandler, validate } from '../../utils/customMiddleware.js';
 
 const route = express.Router();
-const kValidate = sym('validate');
 
 // 读取便条
 route.get(
@@ -24,19 +21,15 @@ route.get(
       k: V.string().trim().min(1).max(fieldLength.filename).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { k } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { k } = res.locals.ctx;
 
-      const p = appConfig.notepadDir(`${k}.md`);
+    const p = appConfig.notepadDir(`${k}.md`);
 
-      const note = (await _f.readFile(p, null, '')).toString();
+    const note = (await _f.readFile(p, null, '')).toString();
 
-      resp.success(res, '读取便条成功', note)(req, k, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '读取便条成功', note)();
+  }),
 );
 
 // 保存便条
@@ -55,28 +48,20 @@ route.post(
         ),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { k, data } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { k, data } = res.locals.ctx;
 
-      const p = appConfig.notepadDir(`${k}.md`);
+    const p = appConfig.notepadDir(`${k}.md`);
 
-      if (data) {
-        await _f.writeFile(p, data);
-
-        await uLog(req, `更新便条成功(${k})`);
-      } else {
-        if (await _f.exists(p)) {
-          await _delDir(p);
-
-          await uLog(req, `删除便条成功(${k})`);
-        }
+    if (data) {
+      await _f.writeFile(p, data);
+    } else {
+      if (await _f.exists(p)) {
+        await _delDir(p);
       }
-      resp.success(res);
-    } catch (error) {
-      resp.error(res)(req, error);
     }
-  },
+    resp.success(res, '更新便条成功')();
+  }),
 );
 
 export default route;

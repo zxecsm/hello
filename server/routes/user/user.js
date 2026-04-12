@@ -8,7 +8,7 @@ import _f from '../../utils/f.js';
 import { _delDir } from '../file/file.js';
 
 import shareVerify from '../../utils/shareVerify.js';
-import { isValidShare, errLog, getDirname } from '../../utils/utils.js';
+import { isValidShare, getDirname, writelog } from '../../utils/utils.js';
 import jwt from '../../utils/jwt.js';
 import captcha from '../../utils/captcha.js';
 
@@ -64,6 +64,8 @@ export async function deleteUser(account) {
 
   await db('song_list').where({ account }).delete();
 
+  await db('collect_bg').where({ account }).delete();
+
   await db('todo').where({ account }).batchDelete();
 
   await _delDir(appConfig.userRootDir(account));
@@ -117,7 +119,7 @@ export async function validShareState(shareToken, t) {
 }
 
 // 验证分享
-export async function validShareAddUserState(req, types, id, pass, captchaId) {
+export async function validShareAddUserState(res, types, id, pass, captchaId) {
   const needCaptcha = !shareVerify.verify(id);
   if (needCaptcha && !captcha.consume(captchaId, id)) {
     return {
@@ -150,7 +152,7 @@ export async function validShareAddUserState(req, types, id, pass, captchaId) {
     // 进入页面第一次空提取码不计算
     if (pass) {
       shareVerify.add(id);
-      await errLog(req, `提取码错误(${id})`);
+      await writelog(res, `提取码错误`, 500);
     }
 
     return {

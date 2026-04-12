@@ -16,12 +16,8 @@ import {
   debounce,
   getDirname,
   isurl,
-  uLog,
   parseJson,
   extractFullHead,
-  errLog,
-  validate,
-  openCors,
 } from './utils/utils.js';
 
 import appConfig from './data/config.js';
@@ -61,14 +57,12 @@ import _crypto from './utils/crypto.js';
 import _f from './utils/f.js';
 import { db } from './utils/sqlite.js';
 import V from './utils/validRules.js';
-import { sym } from './utils/symbols.js';
 import getCity from './utils/getCity.js';
 import request from './utils/request.js';
 import resp from './utils/response.js';
+import { asyncHandler, openCors, validate } from './utils/customMiddleware.js';
 
 const __dirname = getDirname(import.meta);
-const kHello = sym('hello');
-const kValidate = sym('validate');
 
 const app = express();
 app.disable('x-powered-by');
@@ -101,17 +95,40 @@ app.use(express.static(resolve(__dirname, 'static'), staticOptions));
 const reqLimit = verifyLimit({ space: 10, count: 500 }, false);
 
 const informReqLimit = debounce(
-  async (req) => {
+  async (res) => {
     try {
-      const { os, ip } = req[kHello];
-      await heperMsgAndForward(req, appConfig.adminAccount, `[${os}(${ip})] 请求频率超过限制`);
+      const { os, ip } = res.locals.hello;
+      await heperMsgAndForward(res, appConfig.adminAccount, `[${os}(${ip})] 请求频率超过限制`);
     } catch (error) {
-      await writelog(req, `[ informReqLimit ] - ${error}`, 'error');
+      await writelog(res, `[ informReqLimit ] - ${error}`, 500);
     }
   },
   5000,
   1,
 );
+
+// 记录日志
+app.use((_, res, next) => {
+  const start = Date.now();
+  let logged = false;
+
+  function done() {
+    if (logged) return;
+    logged = true;
+
+    const duration = Date.now() - start;
+    writelog(
+      res,
+      [res.locals.codeText, `${duration}ms`, 'auto'].filter(Boolean).join(' - '),
+      res.statusCode,
+    );
+  }
+
+  res.on('finish', done);
+  res.on('close', done);
+
+  next();
+});
 
 app.use(async (req, res, next) => {
   try {
@@ -121,19 +138,19 @@ app.use(async (req, res, next) => {
     const jwtData = await jwt.get(req.cookies.token);
     const userinfo = jwtData && jwtData.data.type === 'authentication' ? jwtData.data.data : {}; // 用户信息
 
-    req[kHello] = {
+    res.locals.hello = {
       userinfo,
       path: decodeURIComponent(req.path),
       temid: '',
       ip,
+      ipLocation: getCity(ip),
       os: formatClientInfo(req.headers['user-agent']),
       method,
       jwtData,
     };
 
     if (req.headers['x-source-service'] === appConfig.appFlag) {
-      resp.forbidden(res, '请求被禁止')(req);
-      return;
+      return resp.forbidden(res, '请求被禁止')('x-source-service', 1);
     }
 
     // 客户端临时ID格式
@@ -145,41 +162,38 @@ app.use(async (req, res, next) => {
         'temid',
       );
     } catch (error) {
-      resp.badRequest(res, req, error, { temid });
-      return;
+      return resp.badRequest(res)(error, 1);
     }
 
-    req[kHello].temid = temid;
+    res.locals.hello.temid = temid;
 
     // 限制请求频率
     const flag = userinfo.account || '';
 
-    if (reqLimit.verify(ip, flag)) {
-      reqLimit.add(ip, flag);
-
-      await writelog(req, `${method}(${req[kHello].path})`);
-      next();
-    } else {
-      informReqLimit(req);
-      resp.forbidden(res, '请求频率超过限制')(req);
+    if (!reqLimit.verify(ip, flag)) {
+      informReqLimit(res);
+      return resp.forbidden(res, '请求频率超过限制')();
     }
+
+    reqLimit.add(ip, flag);
+
+    next();
   } catch (error) {
-    await writelog(req, `[ app.use ] - ${error}`, 'error');
-    resp.error(res);
+    resp.error(res)(`[ app.use reqLimit ] - ${error}`);
   }
 });
 
 app.use('/api/font', express.static(appConfig.fontDir(), staticOptions));
 
-app.use(async (req, res, next) => {
+app.use(async (_, res, next) => {
   try {
     const {
       temid,
       jwtData,
       userinfo: { account },
-    } = req[kHello];
+    } = res.locals.hello;
 
-    req[kHello].userinfo = {}; // 清空用户信息
+    res.locals.hello.userinfo = {}; // 清空用户信息
 
     if (
       jwtData &&
@@ -194,22 +208,21 @@ app.use(async (req, res, next) => {
       if (user && (user.exp_token_time || 0) < iat) {
         if (temid) {
           // 客户端ID绑定账号
-          req[kHello].temid = user.account + temid;
+          res.locals.hello.temid = user.account + temid;
         }
-        req[kHello].userinfo = user; // 验证身份成功，保存用户信息
-        req[kHello].isRoot = user.account === appConfig.adminAccount;
+        res.locals.hello.userinfo = user; // 验证身份成功，保存用户信息
+        res.locals.hello.isRoot = user.account === appConfig.adminAccount;
 
         // token剩下一半时间到期，重置token
         if (Date.now() / 1000 - iat >= (exp - iat) / 2) {
-          const { account, username } = req[kHello].userinfo;
+          const { account, username } = res.locals.hello.userinfo;
           await jwt.setCookie(res, { account, username });
         }
       }
     }
     next();
   } catch (error) {
-    await writelog(req, `[ app.use ] - ${error}`, 'error');
-    resp.error(res);
+    resp.error(res)(`[ app.use userinfo ] - ${error}`);
   }
 });
 
@@ -241,46 +254,41 @@ app.all(
       chat_id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { method } = req[kHello];
+  asyncHandler(async (req, res) => {
+    const { method } = res.locals.hello;
 
-      let text = '';
-      if (method === 'get') {
+    let text = '';
+    if (method === 'get') {
+      text = req.query.text;
+    } else if (method === 'post') {
+      text = req.body.text;
+
+      if (!text) {
         text = req.query.text;
-      } else if (method === 'post') {
-        text = req.body.text;
-
-        if (!text) {
-          text = req.query.text;
-        }
       }
-
-      const { chat_id } = req[kValidate];
-
-      try {
-        text = await V.parse(text, V.string().trim().min(1).max(fieldLength.chatContent), 'text');
-      } catch (error) {
-        resp.badRequest(res, req, error, { text });
-      }
-
-      const user = await db('user')
-        .select('account')
-        .where({ chat_id, state: 1, receive_chat_state: 1 })
-        .findOne();
-
-      if (!user) {
-        resp.forbidden(res, `${appConfig.notifyAccountDes}未开启收信接口`)(req);
-        return;
-      }
-
-      await heperMsgAndForward(req, user.account, text);
-
-      resp.success(res, `接收${appConfig.notifyAccountDes}消息成功`)(req, text, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
     }
-  },
+
+    const { chat_id } = req.locals.ctx;
+
+    try {
+      text = await V.parse(text, V.string().trim().min(1).max(fieldLength.chatContent), 'text');
+    } catch (error) {
+      return resp.badRequest(res)(error, 1);
+    }
+
+    const user = await db('user')
+      .select('account')
+      .where({ chat_id, state: 1, receive_chat_state: 1 })
+      .findOne();
+
+    if (!user) {
+      return resp.forbidden(res, `${appConfig.notifyAccountDes}未开启收信接口`)();
+    }
+
+    await heperMsgAndForward(res, user.account, text);
+
+    resp.success(res, `接收${appConfig.notifyAccountDes}消息成功`)();
+  }),
 );
 
 // 获取页面信息
@@ -293,97 +301,93 @@ app.get(
       u: V.string().trim().min(1).max(fieldLength.url),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { u } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { u } = res.locals.ctx;
 
-      // 检查接口是否开启
-      if (!_d.pubApi.siteInfoApi && !req[kHello].userinfo.account) {
-        return resp.forbidden(res, '接口未开放')(req, u, 1);
-      }
-
-      let protocol = 'https:'; // 默认https
-      const url = `${u.startsWith('http') ? '' : `${protocol}//`}${u}`;
-
-      if (!isurl(url)) {
-        resp.badRequest(res, req, 'url 格式错误', { url });
-        return;
-      }
-
-      const obj = { title: '', des: '' };
-      let p = '',
-        miss = '';
-
-      try {
-        await uLog(req, `获取网站信息(${u})`);
-        const { host, pathname } = new URL(url);
-
-        p = appConfig.siteinfoDir(`${_crypto.getStringHash(`${host}${pathname}`)}.json`);
-
-        miss = p + '.miss';
-
-        // 缓存存在，则使用缓存
-        if ((await _f.getType(p)) === 'file') {
-          resp.success(res, 'ok', parseJson((await _f.fsp.readFile(p)).toString(), {}));
-          return;
-        }
-
-        if ((await _f.getType(miss)) === 'file') {
-          const stat = await _f.lstat(miss);
-          if (Date.now() - stat.mtimeMs > 60 * 1000) {
-            await _f.del(miss);
-          } else {
-            resp.success(res, 'ok', obj);
-            return;
-          }
-        }
-
-        let result;
-        try {
-          result = await request.get(`${protocol}//${host}${pathname}`);
-        } catch {
-          protocol = 'http:';
-          result = await request.get(`${protocol}//${host}${pathname}`);
-        }
-
-        const type = (result.headers?.['content-type'] || '').toLowerCase();
-
-        if (!type.includes('text/html')) {
-          throw new Error('只允许获取HTML文件');
-        }
-
-        const head = extractFullHead(result.data);
-
-        if (_f.getTextSize(head) > 300 * 1024) {
-          throw new Error('HTML文件过大');
-        }
-
-        const $ = cheerio.load(head);
-        const $title = $('title');
-        const $des = $('meta[name="description"]');
-
-        obj.title = $title.text() || '';
-        obj.des = $des.attr('content') || '';
-
-        await _f.writeFile(p, JSON.stringify(obj));
-
-        resp.success(res, 'ok', obj);
-      } catch (error) {
-        if (miss) {
-          try {
-            await _f.writeFile(miss, '');
-          } catch (err) {
-            await errLog(req, `${err}(${u})`);
-          }
-        }
-
-        await errLog(req, `${error}(${u})`);
-        resp.success(res, 'ok', obj);
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
+    // 检查接口是否开启
+    if (!_d.pubApi.siteInfoApi && !res.locals.hello.userinfo.account) {
+      return resp.forbidden(res, '接口未开放')();
     }
-  },
+
+    let protocol = 'https:'; // 默认https
+    const url = `${u.startsWith('http') ? '' : `${protocol}//`}${u}`;
+
+    if (!isurl(url)) {
+      return resp.badRequest(res)('url 格式错误', 1);
+    }
+
+    const obj = { title: '', des: '' };
+    let p = '',
+      miss = '';
+
+    try {
+      const { host, pathname } = new URL(url);
+
+      p = appConfig.siteinfoDir(`${_crypto.getStringHash(`${host}${pathname}`)}.json`);
+
+      miss = p + '.miss';
+
+      // 缓存存在，则使用缓存
+      if ((await _f.getType(p)) === 'file') {
+        return resp.success(
+          res,
+          '获取网站信息成功',
+          parseJson((await _f.fsp.readFile(p)).toString(), {}),
+        )();
+      }
+
+      if ((await _f.getType(miss)) === 'file') {
+        const stat = await _f.lstat(miss);
+        if (Date.now() - stat.mtimeMs > 60 * 1000) {
+          await _f.del(miss);
+        } else {
+          return resp.success(res, '获取网站信息成功', obj)();
+        }
+      }
+
+      let result;
+      try {
+        result = await request.get(`${protocol}//${host}${pathname}`);
+      } catch {
+        protocol = 'http:';
+        result = await request.get(`${protocol}//${host}${pathname}`);
+      }
+
+      const type = (result.headers?.['content-type'] || '').toLowerCase();
+
+      if (!type.includes('text/html')) {
+        throw new Error('只允许获取HTML文件');
+      }
+
+      const head = extractFullHead(result.data);
+
+      if (_f.getTextSize(head) > 300 * 1024) {
+        throw new Error('HTML文件过大');
+      }
+
+      const $ = cheerio.load(head);
+      const $title = $('title');
+      const $des = $('meta[name="description"]');
+
+      obj.title = $title.text() || '';
+      obj.des = $des.attr('content') || '';
+
+      await _f.writeFile(p, JSON.stringify(obj));
+
+      resp.success(res, '获取网站信息成功', obj)();
+    } catch (error) {
+      if (miss) {
+        try {
+          await _f.writeFile(miss, '');
+        } catch (err) {
+          await writelog(res, err, 500);
+        }
+      }
+
+      await writelog(res, error, 500);
+      resp.success(res, '获取网站信息成功', obj)();
+    }
+  }),
 );
 
 // ip地理位置
@@ -396,34 +400,33 @@ app.get(
       ip: V.string().trim().default('').allowEmpty().min(1).custom(getClientIp.isIp, 'ip 格式错误'),
     }),
   ),
-  async (req, res) => {
-    try {
-      let { ip } = req[kValidate];
-      ip = ip || req[kHello].ip;
+  asyncHandler(async (_, res) => {
+    const { ip } = res.locals.ctx;
+    const hello = res.locals.hello;
 
-      // 检查接口是否开启
-      if (!_d.pubApi.ipLocationApi && !req[kHello].userinfo.account) {
-        return resp.forbidden(res, '接口未开放')(req, ip, 1);
-      }
-
-      resp.success(res, '获取ip地理位置成功', { ...getCity(ip), ip })(req, ip, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    // 检查接口是否开启
+    if (!_d.pubApi.ipLocationApi && !hello.userinfo.account) {
+      return resp.forbidden(res, '接口未开放')();
     }
-  },
+
+    const result = ip ? { ...getCity(ip), ip } : { ...hello.ipLocation, ip: hello.ip };
+    resp.success(res, '获取ip地理位置成功', result)();
+  }),
 );
 
-app.use(async (req, res, next) => {
-  const path = req[kHello].path;
-  const routePath = '/api/f/';
-  if (path.startsWith(routePath)) {
-    const filePath = path.slice(routePath.length);
-    req[kHello].path = routePath;
-    await getFile(req, res, filePath);
-  } else {
-    next();
-  }
-});
+app.use(
+  asyncHandler(async (req, res, next) => {
+    const path = res.locals.hello.path;
+    const routePath = '/api/f/';
+    if (path.startsWith(routePath)) {
+      const filePath = path.slice(routePath.length);
+      res.locals.hello.path = routePath;
+      await getFile(req, res, filePath);
+    } else {
+      next();
+    }
+  }),
+);
 
 app.use((_, res) => {
   res.status(404).redirect('/404');

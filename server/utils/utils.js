@@ -11,17 +11,9 @@ import _connect from './connect.js';
 
 import _f from './f.js';
 
-import getCity from './getCity.js';
-
 import _path from './path.js';
 import nanoid from './nanoid.js';
 import _crypto from './crypto.js';
-import V from './validRules.js';
-import { sym } from './symbols.js';
-import resp from './response.js';
-
-const kHello = sym('hello');
-const kValidate = sym('validate');
 
 // 获取模块目录
 export function getDirname(meta) {
@@ -34,33 +26,48 @@ export function getFilename(meta) {
 }
 
 // 记录日志
-export async function writelog(req, str, flag = appConfig.appName) {
+export async function writelog(res, str = '', code = 200) {
   try {
-    str = str + '';
+    str = String(str)
+      .replace(/[\n\r]+/g, ' ')
+      .trim();
 
-    str = str.trim().replace(/[\n\r]+/g, ' ');
+    if (str === '') return;
 
-    if (str.trim() === '') return;
+    let flag = '';
+    if (code < 200) {
+      flag = 'panel_error';
+    } else if (code >= 200 && code < 300) {
+      flag = 'success';
+    } else {
+      flag = 'error';
+    }
 
     const date = formatDate({ template: '{0}-{1}-{2} {3}:{4}:{5}' });
 
-    if (req?.[kHello]) {
-      const { ip, os, userinfo = {} } = req[kHello];
-      const { country, province, city, isp } = getCity(ip);
-
+    if (res?.locals?.hello) {
+      const { ip, os, userinfo = {}, path, method, ipLocation } = res.locals.hello;
+      const { country, province, city, isp } = ipLocation;
       const { username, account } = userinfo;
-
-      str = `[${date}]${username || account ? ' - ' : ''}${username || ''}${
-        account ? `(${account})` : ''
-      } - ${str} - [${country} ${province} ${city} ${isp}](${ip}) - ${os}\n`;
+      str =
+        [
+          `[${date}]`,
+          code,
+          (username || '') + (account ? `(${account})` : ''),
+          `${method}(${path})`,
+          str,
+          `[${country} ${province} ${city} ${isp}](${ip})`,
+          os,
+        ]
+          .filter(Boolean)
+          .join(' - ') + '\n';
     } else {
-      str = `[${date}] - ${str}\n`;
+      str = [`[${date}]`, code, str].filter(Boolean).join(' - ') + '\n';
     }
+
+    devLog(str);
 
     const targetPath = appConfig.logDir(`${flag}.log`);
-    if (flag !== appConfig.appName) {
-      devLog(str);
-    }
     await _f.appendFile(targetPath, str);
 
     const s = await _f.lstat(targetPath);
@@ -86,46 +93,6 @@ export function devLog(str) {
     // eslint-disable-next-line no-console
     console.log(str);
   }
-}
-// 操作日志
-export function uLog(req, str) {
-  return writelog(
-    req,
-    `${req ? `${req[kHello].method}(${req[kHello].path}) - ` : ''}${str}`,
-    'user',
-  );
-}
-
-// 错误日志
-export function errLog(req, err) {
-  return writelog(
-    req,
-    `${req ? `${req[kHello].method}(${req[kHello].path}) - ` : ''}${err}`,
-    'error',
-  );
-}
-
-// 参数验证中间件
-export function validate(...rules) {
-  return async (req, res, next) => {
-    rules = Array.isArray(rules[0]) ? rules : [rules];
-
-    req[kValidate] = {};
-    for (const [type, schema, path = ''] of rules) {
-      try {
-        const res = await V.parse(req[type], schema, path);
-        if (rules.length === 1) {
-          req[kValidate] = res;
-        } else {
-          req[kValidate][type] = res;
-        }
-      } catch (err) {
-        return resp.badRequest(res, req, err, type);
-      }
-    }
-
-    next();
-  };
 }
 
 // 验证颜色
@@ -601,10 +568,10 @@ export function isValidShare(t) {
 }
 
 // 同步更新数据
-export function syncUpdateData(req, flag, id = '', type = 'other') {
+export function syncUpdateData(res, flag, id = '', type = 'other') {
   _connect.send(
-    req[kHello].userinfo.account,
-    req[kHello].temid,
+    res.locals.hello.userinfo.account,
+    res.locals.hello.temid,
     {
       type: 'updatedata',
       data: {
@@ -617,10 +584,10 @@ export function syncUpdateData(req, flag, id = '', type = 'other') {
 }
 
 // 错误通知消息
-export function errorNotifyMsg(req, text) {
+export function errorNotifyMsg(res, text) {
   _connect.send(
-    req[kHello].userinfo.account,
-    req[kHello].temid,
+    res.locals.hello.userinfo.account,
+    res.locals.hello.temid,
     {
       type: 'errMsg',
       data: {
@@ -804,17 +771,4 @@ export function getOrigin(req) {
 export function extractFullHead(html) {
   const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
   return headMatch ? headMatch[0] : '<head></head>';
-}
-
-// 开启跨域
-export function openCors(req, res, next) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
-  }
-
-  next();
 }

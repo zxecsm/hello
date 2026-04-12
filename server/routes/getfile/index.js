@@ -1,6 +1,6 @@
 import appConfig from '../../data/config.js';
 
-import { isImgFile, errLog } from '../../utils/utils.js';
+import { isImgFile, writelog } from '../../utils/utils.js';
 
 import { db } from '../../utils/sqlite.js';
 
@@ -12,128 +12,116 @@ import { fieldLength } from '../config.js';
 import _path from '../../utils/path.js';
 import jwt from '../../utils/jwt.js';
 import V from '../../utils/validRules.js';
-import { sym } from '../../utils/symbols.js';
 import resp from '../../utils/response.js';
 
-const kHello = sym('hello');
-const kValidate = sym('validate');
-
 export default async function getFile(req, res, originalPath, verifyLogin = true) {
+  const params = { ...req.query, p: originalPath };
   try {
-    const params = { ...req.query, p: originalPath };
-    try {
-      req[kValidate] = await V.parse(
-        params,
-        V.object({
-          w: V.number().toInt().default(0).min(0),
-          token: V.string().trim().default('').allowEmpty().max(fieldLength.url),
-          p: V.string().notEmpty().min(1).max(fieldLength.url),
-          d: V.number().toInt().default(0).enum([0, 1]),
-          n: V.string()
-            .trim()
-            .default('')
-            .allowEmpty()
-            .max(fieldLength.filename)
-            .custom(_path.isFilename, '文件名不合法'),
-        }),
-      );
-    } catch (error) {
-      resp.badRequest(res, req, error, params);
-      return;
-    }
-
-    let { token, p, w, d, n } = req[kValidate];
-
-    let { account } = req[kHello].userinfo;
-
-    const jwtData = token ? await jwt.get(token) : '';
-
-    // 以指定的用户身份访问指定的文件
-    if (jwtData?.data?.type === 'temAccessFile') {
-      account = jwtData.data.data.account;
-      p = jwtData.data.data.p;
-    }
-
-    const url = _path.normalizeNoSlash('/' + p);
-
-    // 获取访问目录
-    const pArr = url.split('/').filter(Boolean);
-
-    let dir = pArr.shift();
-
-    const publicArr = ['pic', 'sharemusic', 'sharefile', 'logo', 'pub'];
-    const verifyArr = ['bg', 'upload', 'file', 'music']; // 目录需要登录态
-
-    if (publicArr.includes(dir)) {
-    } else if (verifyArr.includes(dir)) {
-      if (!account && verifyLogin) {
-        resp.unauthorized(res);
-        return;
-      }
-    } else {
-      resp.forbidden(res, '无权访问')(req, dir, 1);
-      return;
-    }
-
-    // 合并url
-    let path = '';
-
-    if (dir === 'pic') {
-      path = await getPicPath(req, res, pArr[0]);
-    } else if (dir === 'bg') {
-      path = await getBgPath(req, res, pArr[0]);
-    } else if (dir === 'upload') {
-      path = await getUploadPath(req, res, pArr[0], account, dir);
-    } else if (dir === 'file') {
-      path = getFilePath(account, pArr);
-    } else if (dir === 'sharefile') {
-      path = await getShareFilePath(req, res, token, pArr, dir);
-    } else if (dir === 'music') {
-      path = await getMusicPath(req, res, pArr);
-    } else if (dir === 'sharemusic') {
-      path = await getShareMusicPath(req, res, token, pArr, dir, account);
-    } else if (dir === 'logo') {
-      path = await getLogoPath(req, res, pArr);
-    } else if (dir === 'pub') {
-      path = await getPubPath(req, res, pArr);
-    }
-
-    if (path === null) return;
-    const stat = await _f.lstat(path);
-
-    if (!path || !stat || stat.isDirectory()) {
-      resp.notFound(res, '文件不存在')(req, path, 1);
-      return;
-    }
-
-    const tObj = await getThumbPath(req, w, dir, path, stat);
-
-    res.setHeader('X-File-Size', tObj.size);
-
-    if (d === 1) {
-      const [oFileName, , , suffix] = _path.basename(tObj.path);
-      const fileName = n
-        ? _path.extname(n)[2]
-          ? n
-          : n + (n.includes('.') ? '' : '.') + suffix
-        : oFileName;
-      res.setHeader(
-        'Content-Disposition',
-        "attachment; filename*=UTF-8''" + encodeURIComponent(fileName),
-      );
-      res.setHeader('Content-Type', 'application/octet-stream');
-    }
-
-    res.sendFile(tObj.path, { dotfiles: 'allow' });
+    res.locals.ctx = await V.parse(
+      params,
+      V.object({
+        w: V.number().toInt().default(0).min(0),
+        token: V.string().trim().default('').allowEmpty().max(fieldLength.url),
+        p: V.string().notEmpty().min(1).max(fieldLength.url),
+        d: V.number().toInt().default(0).enum([0, 1]),
+        n: V.string()
+          .trim()
+          .default('')
+          .allowEmpty()
+          .max(fieldLength.filename)
+          .custom(_path.isFilename, '文件名不合法'),
+      }),
+    );
   } catch (error) {
-    resp.error(res)(req, error);
+    return resp.badRequest(res)(error, 1);
   }
+
+  let { token, p, w, d, n } = res.locals.ctx;
+
+  let { account } = res.locals.hello.userinfo;
+
+  const jwtData = token ? await jwt.get(token) : '';
+
+  // 以指定的用户身份访问指定的文件
+  if (jwtData?.data?.type === 'temAccessFile') {
+    account = jwtData.data.data.account;
+    p = jwtData.data.data.p;
+  }
+
+  const url = _path.normalizeNoSlash('/' + p);
+
+  // 获取访问目录
+  const pArr = url.split('/').filter(Boolean);
+
+  let dir = pArr.shift();
+
+  const publicArr = ['pic', 'sharemusic', 'sharefile', 'logo', 'pub'];
+  const verifyArr = ['bg', 'upload', 'file', 'music']; // 目录需要登录态
+
+  if (publicArr.includes(dir)) {
+  } else if (verifyArr.includes(dir)) {
+    if (!account && verifyLogin) {
+      return resp.unauthorized(res)();
+    }
+  } else {
+    return resp.forbidden(res, '无权访问')();
+  }
+
+  // 合并url
+  let path = '';
+
+  if (dir === 'pic') {
+    path = await getPicPath(res, pArr[0]);
+  } else if (dir === 'bg') {
+    path = await getBgPath(res, pArr[0]);
+  } else if (dir === 'upload') {
+    path = await getUploadPath(res, pArr[0], account);
+  } else if (dir === 'file') {
+    path = getFilePath(account, pArr);
+  } else if (dir === 'sharefile') {
+    path = await getShareFilePath(res, token, pArr);
+  } else if (dir === 'music') {
+    path = await getMusicPath(res, pArr);
+  } else if (dir === 'sharemusic') {
+    path = await getShareMusicPath(res, token, pArr, account);
+  } else if (dir === 'logo') {
+    path = await getLogoPath(res, pArr);
+  } else if (dir === 'pub') {
+    path = await getPubPath(res, pArr);
+  }
+
+  if (path === null) return;
+  const stat = await _f.lstat(path);
+
+  if (!path || !stat || stat.isDirectory()) {
+    return resp.notFound(res, '文件不存在')();
+  }
+
+  const tObj = await getThumbPath(res, w, dir, path, stat);
+
+  res.setHeader('X-File-Size', tObj.size);
+
+  if (d === 1) {
+    const [oFileName, , , suffix] = _path.basename(tObj.path);
+    const fileName = n
+      ? _path.extname(n)[2]
+        ? n
+        : n + (n.includes('.') ? '' : '.') + suffix
+      : oFileName;
+    res.setHeader(
+      'Content-Disposition',
+      "attachment; filename*=UTF-8''" + encodeURIComponent(fileName),
+    );
+    res.setHeader('Content-Type', 'application/octet-stream');
+  }
+
+  res.sendFile(tObj.path, { dotfiles: 'allow' });
 }
-async function getPicPath(req, res, id) {
+async function getPicPath(res, id) {
   try {
     id = await V.parse(id, V.string().trim().min(1).max(fieldLength.id).alphanumeric(), 'pic id');
   } catch (error) {
-    resp.badRequest(res, req, error, { id });
+    resp.badRequest(res)(error, 1);
     return null;
   }
   const pic = await db('pic').select('url').where({ id }).findOne();
@@ -143,11 +131,11 @@ async function getPicPath(req, res, id) {
   return '';
 }
 
-async function getBgPath(req, res, id) {
+async function getBgPath(res, id) {
   try {
     id = await V.parse(id, V.string().trim().min(1).max(fieldLength.id).alphanumeric(), 'bg id');
   } catch (error) {
-    resp.badRequest(res, req, error, { id });
+    resp.badRequest(res)(error, 1);
     return null;
   }
   const bg = await db('bg').select('url').where({ id }).findOne();
@@ -157,7 +145,7 @@ async function getBgPath(req, res, id) {
   return '';
 }
 
-async function getLogoPath(req, res, pArr) {
+async function getLogoPath(res, pArr) {
   let acc = pArr[0];
   try {
     acc = await V.parse(
@@ -166,17 +154,17 @@ async function getLogoPath(req, res, pArr) {
       'logo account',
     );
   } catch (error) {
-    resp.badRequest(res, req, error, { account: acc });
+    resp.badRequest(res)(error, 1);
     return null;
   }
   return appConfig.logoDir(acc, pArr.slice(1).join('/'));
 }
 
-async function getUploadPath(req, res, id, account, dir) {
+async function getUploadPath(res, id, account) {
   try {
     id = await V.parse(id, V.string().trim().min(1).max(fieldLength.id).alphanumeric(), 'chat id');
   } catch (error) {
-    resp.badRequest(res, req, error, { id });
+    resp.badRequest(res)(error, 1);
     return null;
   }
 
@@ -190,16 +178,16 @@ async function getUploadPath(req, res, id, account, dir) {
     // 消息文件存在，并且是群和自己发送或收到的消息
     return appConfig.uploadDir(msg.url);
   } else {
-    resp.forbidden(res, '无权访问')(req, `${dir}-${id}`, 1);
+    resp.forbidden(res, '无权访问')();
     return null;
   }
 }
 
-async function getShareFilePath(req, res, token, pArr, dir) {
+async function getShareFilePath(res, token, pArr) {
   const share = await validShareState(token, 'file');
 
   if (share.state === 0) {
-    resp.forbidden(res, share.text)(req, dir, 1);
+    resp.forbidden(res, share.text)();
     return null;
   }
 
@@ -219,21 +207,21 @@ async function getShareFilePath(req, res, token, pArr, dir) {
   return '';
 }
 
-async function getShareMusicPath(req, res, token, pArr, dir, account) {
+async function getShareMusicPath(res, token, pArr, account) {
   let [, id] = pArr;
   if (account) {
-    return getMusicPath(req, res, pArr);
+    return getMusicPath(res, pArr);
   } else {
     const share = await validShareState(token, 'music');
     if (share.state === 0) {
-      resp.forbidden(res, share.text)(req, dir, 1);
+      resp.forbidden(res, share.text)();
       return null;
     }
     if (share.state === 1) {
       if (share.data.data.some((item) => item === id)) {
-        return getMusicPath(req, res, pArr);
+        return getMusicPath(res, pArr);
       } else {
-        resp.forbidden(res, '无权访问')(req, dir, 1);
+        resp.forbidden(res, '无权访问')();
         return null;
       }
     }
@@ -245,7 +233,7 @@ function getFilePath(account, pArr) {
   return appConfig.userRootDir(account, pArr.join('/'));
 }
 
-async function getPubPath(req, res, pArr) {
+async function getPubPath(res, pArr) {
   let acc = pArr[0];
   try {
     acc = await V.parse(
@@ -254,19 +242,19 @@ async function getPubPath(req, res, pArr) {
       'pub account',
     );
   } catch (error) {
-    resp.badRequest(res, req, error, { account: acc });
+    resp.badRequest(res)(error, 1);
     return null;
   }
   return appConfig.pubDir(acc, pArr.slice(1).join('/'));
 }
 
-async function getMusicPath(req, res, pArr) {
+async function getMusicPath(res, pArr) {
   let [type, id] = pArr;
   try {
     id = await V.parse(id, V.string().trim().min(1).max(fieldLength.id).alphanumeric(), 'song id');
     type = await V.parse(type, V.string().trim().enum(['pic', 'url', 'mv']), 'song type');
   } catch (error) {
-    resp.badRequest(res, req, error, { id, type });
+    resp.badRequest(res)(error, 1);
     return null;
   }
   const song = await db('songs').select(type).where({ id }).findOne();
@@ -276,7 +264,7 @@ async function getMusicPath(req, res, pArr) {
   return '';
 }
 
-async function getThumbPath(req, w, dir, path, stat) {
+async function getThumbPath(res, w, dir, path, stat) {
   let size = stat.size;
 
   try {
@@ -324,7 +312,7 @@ async function getThumbPath(req, w, dir, path, stat) {
     }
     return { path, size };
   } catch (error) {
-    await errLog(req, `生成缩略图失败(${error})-${path}`);
+    await writelog(res, `生成缩略图失败(${error})`, 500);
     return { path, size };
   }
 }

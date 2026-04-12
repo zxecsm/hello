@@ -1,13 +1,16 @@
 import express from 'express';
-import { formatDate, openCors } from '../../utils/utils.js';
+import { formatDate } from '../../utils/utils.js';
 import { _d } from '../../data/data.js';
 import resp from '../../utils/response.js';
+import { asyncHandler, openCors } from '../../utils/customMiddleware.js';
 const route = express.Router();
 
-route.all('/', openCors, (req, res) => {
-  try {
+route.all(
+  '/',
+  openCors,
+  asyncHandler((req, res) => {
     if (!_d.pubApi.echoApi) {
-      return resp.forbidden(res, '接口未开放')(req);
+      return resp.forbidden(res, '接口未开放')();
     }
 
     const contentType = req.headers['content-type'] || '';
@@ -30,10 +33,8 @@ route.all('/', openCors, (req, res) => {
       response.debug = { rawBody: req.rawBody || null };
     }
 
-    resp.success(res, '获取回显成功', response)(req, JSON.stringify(response), 1);
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+    resp.success(res, '获取回显成功', response)();
+  }),
+);
 
 export default route;

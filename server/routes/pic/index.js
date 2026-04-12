@@ -14,8 +14,6 @@ import {
   getTimePath,
   createPagingData,
   concurrencyTasks,
-  uLog,
-  validate,
 } from '../../utils/utils.js';
 
 import { fieldLength } from '../config.js';
@@ -24,21 +22,21 @@ import { _delDir } from '../file/file.js';
 import _path from '../../utils/path.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
-import { sym } from '../../utils/symbols.js';
 import resp from '../../utils/response.js';
+import { asyncHandler, validate } from '../../utils/customMiddleware.js';
 
 const route = express.Router();
-const kHello = sym('hello');
-const kValidate = sym('validate');
 
 // 验证登录态
-route.use((req, res, next) => {
-  if (req[kHello].userinfo.account) {
-    next();
-  } else {
-    resp.unauthorized(res);
-  }
-});
+route.use(
+  asyncHandler((_, res, next) => {
+    if (res.locals.hello.userinfo.account) {
+      next();
+    } else {
+      resp.unauthorized(res)();
+    }
+  }),
+);
 
 // 上传图片
 route.post(
@@ -55,44 +53,39 @@ route.post(
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { HASH, name } = req[kValidate];
+  asyncHandler(async (req, res) => {
+    const { HASH, name } = res.locals.ctx;
 
-      const pic = await db('pic').select('hash').where({ hash: HASH }).findOne();
+    const pic = await db('pic').select('hash').where({ hash: HASH }).findOne();
 
-      if (pic) {
-        resp.forbidden(res, '图片已存在')(req, HASH, 1);
-        return;
-      }
-
-      const [title, , suffix] = _path.extname(name);
-
-      const create_at = Date.now();
-      const timePath = getTimePath(create_at);
-
-      const tDir = appConfig.picDir(timePath);
-      const tName = `${HASH}.${suffix}`;
-
-      await receiveFiles(req, tDir, tName, fieldLength.maxPicSize, HASH);
-
-      await getImgInfo(_path.normalizeNoSlash(tDir, tName));
-
-      const obj = {
-        id: nanoid(),
-        create_at,
-        hash: HASH,
-        url: _path.normalizeNoSlash(timePath, tName),
-        title,
-      };
-
-      await db('pic').insert(obj);
-
-      resp.success(res, '上传图片成功', { id: obj.id })(req, obj.url, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (pic) {
+      return resp.forbidden(res, '图片已存在')();
     }
-  },
+
+    const [title, , suffix] = _path.extname(name);
+
+    const create_at = Date.now();
+    const timePath = getTimePath(create_at);
+
+    const tDir = appConfig.picDir(timePath);
+    const tName = `${HASH}.${suffix}`;
+
+    await receiveFiles(req, tDir, tName, fieldLength.maxPicSize, HASH);
+
+    await getImgInfo(_path.normalizeNoSlash(tDir, tName));
+
+    const obj = {
+      id: nanoid(),
+      create_at,
+      hash: HASH,
+      url: _path.normalizeNoSlash(timePath, tName),
+      title,
+    };
+
+    await db('pic').insert(obj);
+
+    resp.success(res, '上传图片成功', { id: obj.id })();
+  }),
 );
 
 // 重复图片
@@ -104,35 +97,32 @@ route.post(
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { HASH } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { HASH } = res.locals.ctx;
 
-      const pic = await db('pic').select('id,url').where({ hash: HASH }).findOne();
+    const pic = await db('pic').select('id,url').where({ hash: HASH }).findOne();
 
-      if (pic) {
-        if ((await _f.getType(appConfig.picDir(pic.url))) === 'file') {
-          resp.success(res, 'ok', { id: pic.id });
-          return;
-        }
-
-        await db('pic').where({ id: pic.id }).delete();
+    if (pic) {
+      if ((await _f.getType(appConfig.picDir(pic.url))) === 'file') {
+        return resp.success(res, 'ok', { id: pic.id })();
       }
 
-      resp.ok(res);
-    } catch (error) {
-      resp.error(res)(req, error);
+      await db('pic').where({ id: pic.id }).delete();
     }
-  },
+
+    resp.ok(res)();
+  }),
 );
 
-route.use((req, res, next) => {
-  if (req[kHello].isRoot) {
-    next();
-  } else {
-    resp.forbidden(res, '无权操作')(req);
-  }
-});
+route.use(
+  asyncHandler((_, res, next) => {
+    if (res.locals.hello.isRoot) {
+      next();
+    } else {
+      resp.forbidden(res, '无权操作')();
+    }
+  }),
+);
 
 // 图片列表
 route.get(
@@ -144,29 +134,25 @@ route.get(
       pageSize: V.number().toInt().default(40).min(1).max(fieldLength.bgPageSize),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { pageNo, pageSize } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { pageNo, pageSize } = res.locals.ctx;
 
-      const total = await db('pic').count();
+    const total = await db('pic').count();
 
-      const result = createPagingData(Array(total), pageSize, pageNo);
+    const result = createPagingData(Array(total), pageSize, pageNo);
 
-      let list = [];
-      if (total > 0) {
-        const offset = (result.pageNo - 1) * pageSize;
+    let list = [];
+    if (total > 0) {
+      const offset = (result.pageNo - 1) * pageSize;
 
-        list = await db('pic').select('id').orderBy('serial', 'desc').page(pageSize, offset).find();
-      }
-
-      resp.success(res, 'ok', {
-        ...result,
-        data: list,
-      });
-    } catch (error) {
-      resp.error(res)(req, error);
+      list = await db('pic').select('id').orderBy('serial', 'desc').page(pageSize, offset).find();
     }
-  },
+
+    resp.success(res, 'ok', {
+      ...result,
+      data: list,
+    })();
+  }),
 );
 
 // 删除图片
@@ -179,32 +165,26 @@ route.post(
       .max(fieldLength.bgPageSize),
     'ids',
   ),
-  async (req, res) => {
-    try {
-      const ids = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const ids = res.locals.ctx;
 
-      const dels = await db('pic')
-        .select('url')
-        .where({ id: { in: ids } })
-        .find();
+    const dels = await db('pic')
+      .select('url')
+      .where({ id: { in: ids } })
+      .find();
 
-      await concurrencyTasks(dels, 5, async (del) => {
-        const { url } = del;
+    await concurrencyTasks(dels, 5, async (del) => {
+      const { url } = del;
 
-        await _delDir(appConfig.picDir(url));
+      await _delDir(appConfig.picDir(url));
+    });
 
-        await uLog(req, `删除图片(${url})`);
-      });
+    await db('pic')
+      .where({ id: { in: ids } })
+      .delete();
 
-      await db('pic')
-        .where({ id: { in: ids } })
-        .delete();
-
-      resp.success(res, '删除图片成功')(req, ids.length, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '删除图片成功')();
+  }),
 );
 
 export default route;

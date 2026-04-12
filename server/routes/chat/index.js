@@ -10,16 +10,15 @@ import {
   mergefile,
   getTimePath,
   createPagingData,
-  errLog,
   isurl,
   getSplitWord,
   unique,
   getSongInfo,
   isValidDate,
   isTooDeep,
-  validate,
   parseObjectJson,
   parseArrayJson,
+  writelog,
 } from '../../utils/utils.js';
 import { fieldLength } from '../config.js';
 
@@ -40,21 +39,21 @@ import {
 import _connect from '../../utils/connect.js';
 import _path from '../../utils/path.js';
 import V from '../../utils/validRules.js';
-import { sym } from '../../utils/symbols.js';
 import resp from '../../utils/response.js';
+import { asyncHandler, validate } from '../../utils/customMiddleware.js';
 
 const route = express.Router();
-const kHello = sym('hello');
-const kValidate = sym('validate');
 
 // 验证登录态
-route.use((req, res, next) => {
-  if (req[kHello].userinfo.account) {
-    next();
-  } else {
-    resp.unauthorized(res);
-  }
-});
+route.use(
+  asyncHandler((_, res, next) => {
+    if (res.locals.hello.userinfo.account) {
+      next();
+    } else {
+      resp.unauthorized(res)();
+    }
+  }),
+);
 
 // 勿扰
 route.post(
@@ -66,23 +65,18 @@ route.post(
       notify: V.number().toInt().default(1).enum([0, 1]),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { account: acc, notify } = req[kValidate];
-      const { account } = req[kHello].userinfo;
-      if (account === acc) {
-        resp.badRequest(res, req, `account 不能为: ${account}`, 'body');
-        return;
-      }
-
-      await becomeFriends(account, acc);
-      await db('friends').where({ friend: acc, account }).update({ notify });
-
-      resp.success(res, `${notify === 0 ? '开启' : '关闭'}免打扰成功`)(req, `${acc}-${notify}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+  asyncHandler(async (_, res) => {
+    const { account: acc, notify } = res.locals.ctx;
+    const { account } = res.locals.hello.userinfo;
+    if (account === acc) {
+      return resp.badRequest(res)(`account 不能为: ${account}`, 1);
     }
-  },
+
+    await becomeFriends(account, acc);
+    await db('friends').where({ friend: acc, account }).update({ notify });
+
+    resp.success(res, `${notify === 0 ? '开启' : '关闭'}免打扰成功`)();
+  }),
 );
 
 // 设置备注
@@ -100,25 +94,20 @@ route.post(
       des: V.string().trim().default('').allowEmpty().max(fieldLength.chatDes),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { account: acc, des } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { account: acc, des } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      if (account === acc) {
-        resp.badRequest(res, req, `account 不能为: ${account}`, 'body');
-        return;
-      }
-
-      await becomeFriends(account, acc);
-      await db('friends').where({ friend: acc, account }).update({ des });
-
-      resp.success(res, '设置备注成功')(req, `${acc}-${des}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (account === acc) {
+      return resp.badRequest(res)(`account 不能为: ${account}`, 1);
     }
-  },
+
+    await becomeFriends(account, acc);
+    await db('friends').where({ friend: acc, account }).update({ des });
+
+    resp.success(res, '设置备注成功')();
+  }),
 );
 
 // 获取备注
@@ -130,70 +119,62 @@ route.get(
       account: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { account: acc } = req[kValidate],
-        { account, username } = req[kHello].userinfo;
+  asyncHandler(async (_, res) => {
+    const { account: acc } = res.locals.ctx,
+      { account, username } = res.locals.hello.userinfo;
 
-      const f = await getFriendInfo(account, acc, 'des,notify');
-      const des = f ? f.des : '';
-      const notify = f ? f.notify : 1;
+    const f = await getFriendInfo(account, acc, 'des,notify');
+    const des = f ? f.des : '';
+    const notify = f ? f.notify : 1;
 
-      if (acc === appConfig.chatRoomAccount) {
-        resp.success(res, 'ok', {
-          username: '聊天室',
-          des: '聊天室',
-          online: true,
-          os: [],
-          notify,
-        });
-        return;
-      } else if (acc === appConfig.notifyAccount) {
-        resp.success(res, 'ok', {
-          username: appConfig.notifyAccount,
-          des: appConfig.notifyAccountDes,
-          online: true,
-          os: [],
-          notify,
-        });
-        return;
-      } else if (acc === account) {
-        resp.success(res, 'ok', {
-          username,
-          des: appConfig.ownAccountDes,
-          online: true,
-          os: [],
-          notify,
-        });
-        return;
-      }
-
-      const user = await getUserInfo(acc, 'username,hide,update_at');
-
-      if (!user) {
-        resp.forbidden(res, '无法获取用户信息')(req, acc, 1);
-        return;
-      }
-
-      let online = true;
-
-      if (user.hide === 1 || Date.now() - user.update_at >= 1000 * 30) {
-        online = false;
-      }
-
-      const con = _connect.get(acc);
-
-      resp.success(res, 'ok', {
-        username: user.username,
-        des,
-        online,
-        os: con ? con.onlines.map((item) => item.os) : [],
+    if (acc === appConfig.chatRoomAccount) {
+      return resp.success(res, 'ok', {
+        username: '聊天室',
+        des: '聊天室',
+        online: true,
+        os: [],
         notify,
-      });
-    } catch (error) {
-      resp.error(res)(req, error);
+      })();
+    } else if (acc === appConfig.notifyAccount) {
+      return resp.success(res, 'ok', {
+        username: appConfig.notifyAccount,
+        des: appConfig.notifyAccountDes,
+        online: true,
+        os: [],
+        notify,
+      })();
+    } else if (acc === account) {
+      return resp.success(res, 'ok', {
+        username,
+        des: appConfig.ownAccountDes,
+        online: true,
+        os: [],
+        notify,
+      })();
     }
-  },
+
+    const user = await getUserInfo(acc, 'username,hide,update_at');
+
+    if (!user) {
+      return resp.forbidden(res, '无法获取用户信息')();
+    }
+
+    let online = true;
+
+    if (user.hide === 1 || Date.now() - user.update_at >= 1000 * 30) {
+      online = false;
+    }
+
+    const con = _connect.get(acc);
+
+    resp.success(res, 'ok', {
+      username: user.username,
+      des,
+      online,
+      os: con ? con.onlines.map((item) => item.os) : [],
+      notify,
+    })();
+  }),
 );
 
 // 读取消息
@@ -210,108 +191,102 @@ route.get(
       end: V.string().trim().default('').allowEmpty().custom(isValidDate, '必须 YYYY-MM-DD 格式'),
     }),
   ),
-  async (req, res) => {
-    try {
-      let { account: acc, type, flag, word, start, end } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    let { account: acc, type, flag, word, start, end } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      // 标记已读
-      await markAsRead(account, acc);
+    // 标记已读
+    await markAsRead(account, acc);
 
-      const chatdb = db('chat AS c').join(
-        'user AS u',
-        { 'u.account': { value: 'c._from', raw: true } },
-        { type: 'LEFT' },
-      );
+    const chatdb = db('chat AS c').join(
+      'user AS u',
+      { 'u.account': { value: 'c._from', raw: true } },
+      { type: 'LEFT' },
+    );
 
-      if (acc === appConfig.chatRoomAccount) {
-        // 群
-        chatdb.where({ 'c.flag': appConfig.chatRoomAccount });
-      } else {
-        chatdb.where({
-          'c.flag': { in: [`${account}-${acc}`, `${acc}-${account}`] },
-        });
+    if (acc === appConfig.chatRoomAccount) {
+      // 群
+      chatdb.where({ 'c.flag': appConfig.chatRoomAccount });
+    } else {
+      chatdb.where({
+        'c.flag': { in: [`${account}-${acc}`, `${acc}-${account}`] },
+      });
+    }
+
+    if (start && end) {
+      // 日期过滤
+      const sTime = new Date(start + ' 00:00:00').getTime();
+      const eTime = new Date(end + ' 00:00:00').getTime();
+
+      chatdb.where({ 'c.create_at': { '>=': sTime, '<': eTime } });
+    }
+
+    let splitWord = [];
+
+    if (word) {
+      // 关键词搜索
+      splitWord = getSplitWord(word);
+
+      const curSplit = splitWord.slice(0, 10);
+
+      chatdb.search(curSplit, ['u.username', 'c.content']);
+    }
+
+    // 获取游标消息
+    const offsetMsg = flag ? await db('chat').select('serial').where({ id: flag }).findOne() : null;
+
+    // 根据游标定位位置
+    if (offsetMsg && type !== 0) {
+      if (type === 1) {
+        chatdb.where({ 'c.serial': { '<': offsetMsg.serial } });
+      } else if (type === 2) {
+        chatdb.where({ 'c.serial': { '>': offsetMsg.serial } });
       }
+    }
 
-      if (start && end) {
-        // 日期过滤
-        const sTime = new Date(start + ' 00:00:00').getTime();
-        const eTime = new Date(end + ' 00:00:00').getTime();
+    const pageSize = fieldLength.chatPageSize;
+    let list = [];
 
-        chatdb.where({ 'c.create_at': { '>=': sTime, '<': eTime } });
-      }
+    const fields = `u.logo,u.email,u.username,c._from,c._to,c.id,c.create_at,c.content,c.hash,c.size,c.type`;
+    chatdb.select(fields).limit(pageSize);
 
-      let splitWord = [];
-
-      if (word) {
-        // 关键词搜索
-        splitWord = getSplitWord(word);
-
-        const curSplit = splitWord.slice(0, 10);
-
-        chatdb.search(curSplit, ['u.username', 'c.content']);
-      }
-
-      // 获取游标消息
-      const offsetMsg = flag
-        ? await db('chat').select('serial').where({ id: flag }).findOne()
-        : null;
-
-      // 根据游标定位位置
-      if (offsetMsg && type !== 0) {
-        if (type === 1) {
-          chatdb.where({ 'c.serial': { '<': offsetMsg.serial } });
-        } else if (type === 2) {
-          chatdb.where({ 'c.serial': { '>': offsetMsg.serial } });
-        }
-      }
-
-      const pageSize = fieldLength.chatPageSize;
-      let list = [];
-
-      const fields = `u.logo,u.email,u.username,c._from,c._to,c.id,c.create_at,c.content,c.hash,c.size,c.type`;
-      chatdb.select(fields).limit(pageSize);
-
-      if (type === 0 || !offsetMsg) {
-        // 打开聊天框或没有游标
+    if (type === 0 || !offsetMsg) {
+      // 打开聊天框或没有游标
+      list = await chatdb.clone().orderBy('c.serial', 'desc').find();
+      list.reverse();
+    } else {
+      // 向上截取
+      if (type === 1) {
         list = await chatdb.clone().orderBy('c.serial', 'desc').find();
         list.reverse();
-      } else {
-        // 向上截取
-        if (type === 1) {
-          list = await chatdb.clone().orderBy('c.serial', 'desc').find();
-          list.reverse();
-        } else if (type === 2) {
-          // 向下截取
-          list = await chatdb.clone().orderBy('c.serial', 'asc').find();
-        }
+      } else if (type === 2) {
+        // 向下截取
+        list = await chatdb.clone().orderBy('c.serial', 'asc').find();
       }
-
-      // 添加备注信息
-      const accIds = unique(list.map((item) => item._from));
-      const friends = await db('friends')
-        .select('friend,des')
-        .where({
-          account,
-          friend: { in: accIds },
-        })
-        .find();
-
-      list = list.map((item) => {
-        item.des = '';
-        const f = friends.find((y) => y.friend === item._from);
-        if (f) {
-          item.des = f.des;
-        }
-        return item;
-      });
-
-      resp.success(res, 'ok', list);
-    } catch (error) {
-      resp.error(res)(req, error);
     }
-  },
+
+    // 添加备注信息
+    const accIds = unique(list.map((item) => item._from));
+    const friends = await db('friends')
+      .select('friend,des')
+      .where({
+        account,
+        friend: { in: accIds },
+      })
+      .find();
+
+    list = list.map((item) => {
+      item.des = '';
+      const f = friends.find((y) => y.friend === item._from);
+      if (f) {
+        item.des = f.des;
+      }
+      return item;
+    });
+
+    resp.success(res, 'ok', list)();
+  }),
 );
 
 // 文件过期
@@ -323,28 +298,23 @@ route.get(
       hash: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { hash } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { hash } = res.locals.ctx;
 
-      const file = await db('upload').select('url').where({ id: hash }).findOne();
+    const file = await db('upload').select('url').where({ id: hash }).findOne();
 
-      if (file) {
-        const u = appConfig.uploadDir(file.url);
+    if (file) {
+      const u = appConfig.uploadDir(file.url);
 
-        if ((await _f.getType(u)) === 'file') {
-          resp.success(res, 'ok', {
-            isText: await _f.isTextFile(u), // 判断是否文本文件
-          });
-          return;
-        }
+      if ((await _f.getType(u)) === 'file') {
+        return resp.success(res, 'ok', {
+          isText: await _f.isTextFile(u), // 判断是否文本文件
+        })();
       }
-
-      resp.ok(res);
-    } catch (error) {
-      resp.error(res)(req, error);
     }
-  },
+
+    resp.ok(res)();
+  }),
 );
 
 // 接收信息
@@ -364,49 +334,41 @@ route.post(
       content: V.string().trim().min(1).max(fieldLength.chatContent),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { to, content } = req[kValidate];
+  asyncHandler(async (req, res) => {
+    const { to, content } = res.locals.ctx;
 
-      let log = to;
-      // 非群非助手验证用户是否存在
-      if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
-        const user = await getUserInfo(to, 'account,username');
+    // 非群非助手验证用户是否存在
+    if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
+      const user = await getUserInfo(to, 'account,username');
 
-        if (!user) {
-          resp.forbidden(res, '用户无法接收消息')(req, to, 1);
-          return;
-        }
-
-        log = `${user.username}-${user.account}`;
+      if (!user) {
+        return resp.forbidden(res, '用户无法接收消息')();
       }
-
-      const obj = {
-        _to: to,
-        content,
-        type: 'text',
-      };
-
-      const { account } = req[kHello].userinfo;
-
-      // 保存并推送消息
-      const msg = await saveChatMsg(account, obj);
-      await sendNotifyMsg(req, obj._to, 'addmsg', obj);
-
-      if (to === appConfig.notifyAccount) {
-        // 如果发送给助手，处理响应
-        await hdHelloMsg(req, content, obj.type);
-      }
-
-      sendNotificationsToCustomAddresses(req, msg).catch((err) => {
-        errLog(req, `发送通知到自定义地址失败(${err})`);
-      });
-
-      resp.success(res, `发送${chatType[obj.type]}消息成功`)(req, `${content}=>${log}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
     }
-  },
+
+    const obj = {
+      _to: to,
+      content,
+      type: 'text',
+    };
+
+    const { account } = res.locals.hello.userinfo;
+
+    // 保存并推送消息
+    const msg = await saveChatMsg(account, obj);
+    await sendNotifyMsg(res, obj._to, 'addmsg', obj);
+
+    if (to === appConfig.notifyAccount) {
+      // 如果发送给助手，处理响应
+      await hdHelloMsg(req, res, content, obj.type);
+    }
+
+    sendNotificationsToCustomAddresses(res, msg).catch((err) => {
+      writelog(res, `发送通知到自定义地址失败(${err})`, 500);
+    });
+
+    resp.success(res, `发送${chatType[obj.type]}消息成功`)();
+  }),
 );
 
 // 转发消息
@@ -419,63 +381,53 @@ route.post(
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { to, id } = req[kValidate];
+  asyncHandler(async (req, res) => {
+    const { to, id } = res.locals.ctx;
 
-      let log = to;
-      if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
-        const user = await getUserInfo(to, 'account,username');
+    if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
+      const user = await getUserInfo(to, 'account,username');
 
-        if (!user) {
-          resp.forbidden(res, '用户无法接收消息')(req, to, 1);
-          return;
-        }
-
-        log = `${user.username}-${user.account}`;
+      if (!user) {
+        return resp.forbidden(res, '用户无法接收消息')();
       }
-
-      const chat = await db('chat').select('type,flag,content,size,hash').where({ id }).findOne();
-
-      if (!chat) {
-        resp.forbidden(res, '转发的信息不存在')(req, id, 1);
-        return;
-      }
-
-      const { account } = req[kHello].userinfo;
-
-      const { flag, hash } = chat;
-
-      // 只能转发群和发送给自己的或自己发送的消息
-      if (flag !== appConfig.chatRoomAccount && !flag.includes(account)) {
-        resp.forbidden(res, '无权转发')(req, id, 1);
-        return;
-      }
-
-      // 更换发送目标
-      chat._to = to;
-
-      // 文件消息，更新时间，避免被清理
-      if (hash) {
-        await db('upload').where({ id: hash }).update({ update_at: Date.now() });
-      }
-
-      const msg = await saveChatMsg(account, chat);
-      await sendNotifyMsg(req, to, 'addmsg', chat);
-
-      if (to === appConfig.notifyAccount) {
-        await hdHelloMsg(req, chat.content, chat.type);
-      }
-
-      sendNotificationsToCustomAddresses(req, msg).catch((err) => {
-        errLog(req, `发送通知到自定义地址失败(${err})`);
-      });
-
-      resp.success(res, '信息转发成功')(req, `${msg.content}=>${log}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
     }
-  },
+
+    const chat = await db('chat').select('type,flag,content,size,hash').where({ id }).findOne();
+
+    if (!chat) {
+      return resp.forbidden(res, '转发的信息不存在')();
+    }
+
+    const { account } = res.locals.hello.userinfo;
+
+    const { flag, hash } = chat;
+
+    // 只能转发群和发送给自己的或自己发送的消息
+    if (flag !== appConfig.chatRoomAccount && !flag.includes(account)) {
+      return resp.forbidden(res, '无权转发')();
+    }
+
+    // 更换发送目标
+    chat._to = to;
+
+    // 文件消息，更新时间，避免被清理
+    if (hash) {
+      await db('upload').where({ id: hash }).update({ update_at: Date.now() });
+    }
+
+    const msg = await saveChatMsg(account, chat);
+    await sendNotifyMsg(res, to, 'addmsg', chat);
+
+    if (to === appConfig.notifyAccount) {
+      await hdHelloMsg(req, res, chat.content, chat.type);
+    }
+
+    sendNotificationsToCustomAddresses(res, msg).catch((err) => {
+      writelog(res, `发送通知到自定义地址失败(${err})`, 500);
+    });
+
+    resp.success(res, '信息转发成功')();
+  }),
 );
 
 // 未读消息
@@ -487,38 +439,33 @@ route.get(
       clear: V.number().toInt().default(0).enum([0, 1]),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { clear } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { clear } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      if (clear === 1) {
-        await db('friends').where({ account, read: 0 }).batchUpdate({ read: 1 });
-        resp.success(res, '消息标记已读成功')(req);
-        return;
-      }
-
-      const group = await db('friends')
-        .where({ account, read: 0, friend: appConfig.chatRoomAccount })
-        .count();
-
-      const friend = await db('friends')
-        .where({
-          account,
-          read: 0,
-          friend: { '!=': appConfig.chatRoomAccount },
-        })
-        .count();
-
-      resp.success(res, 'ok', {
-        group,
-        friend,
-      });
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (clear === 1) {
+      await db('friends').where({ account, read: 0 }).batchUpdate({ read: 1 });
+      return resp.success(res, '消息标记已读成功')();
     }
-  },
+
+    const group = await db('friends')
+      .where({ account, read: 0, friend: appConfig.chatRoomAccount })
+      .count();
+
+    const friend = await db('friends')
+      .where({
+        account,
+        read: 0,
+        friend: { '!=': appConfig.chatRoomAccount },
+      })
+      .count();
+
+    resp.success(res, 'ok', {
+      group,
+      friend,
+    })();
+  }),
 );
 
 // 删除消息
@@ -531,57 +478,49 @@ route.post(
       to: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id, to } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id, to } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      let log = to;
-      if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
-        const user = await getUserInfo(to, 'account,username');
+    if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
+      const user = await getUserInfo(to, 'account,username');
 
-        if (!user) {
-          resp.forbidden(res, '无法删除消息')(req, to, 1);
-          return;
-        }
-
-        log = `${user.username}-${user.account}`;
+      if (!user) {
+        return resp.forbidden(res, '无法删除消息')();
       }
-
-      if (id) {
-        await db('chat').where({ id, _from: account }).delete();
-        await sendNotifyMsg(req, to, 'del', { msgId: id });
-
-        resp.success(res, '撤回消息成功')(req, `${id}=>${log}`, 1);
-      } else {
-        if (to === appConfig.chatRoomAccount) {
-          // 群消息只能管理员清空
-          if (req[kHello].isRoot) {
-            await db('chat').where({ _to: appConfig.chatRoomAccount }).batchDelete();
-
-            await sendNotifyMsg(req, to, 'clear');
-
-            resp.success(res, '清空消息成功')(req, log, 1);
-          } else {
-            resp.forbidden(res, '无权清空消息')(req, to, 1);
-          }
-        } else {
-          await db('chat')
-            .where({
-              $or: [{ flag: `${account}-${to}` }, { flag: `${to}-${account}` }],
-            })
-            .batchDelete();
-
-          await sendNotifyMsg(req, to, 'clear');
-
-          resp.success(res, '清空消息成功')(req, log, 1);
-        }
-      }
-    } catch (error) {
-      resp.error(res)(req, error);
     }
-  },
+
+    if (id) {
+      await db('chat').where({ id, _from: account }).delete();
+      await sendNotifyMsg(res, to, 'del', { msgId: id });
+
+      resp.success(res, '撤回消息成功')();
+    } else {
+      if (to === appConfig.chatRoomAccount) {
+        // 群消息只能管理员清空
+        if (res.locals.hello.isRoot) {
+          await db('chat').where({ _to: appConfig.chatRoomAccount }).batchDelete();
+
+          await sendNotifyMsg(res, to, 'clear');
+
+          resp.success(res, '清空消息成功')();
+        } else {
+          resp.forbidden(res, '无权清空消息')();
+        }
+      } else {
+        await db('chat')
+          .where({
+            $or: [{ flag: `${account}-${to}` }, { flag: `${to}-${account}` }],
+          })
+          .batchDelete();
+
+        await sendNotifyMsg(res, to, 'clear');
+
+        resp.success(res, '清空消息成功')();
+      }
+    }
+  }),
 );
 
 // 抖一下
@@ -598,35 +537,28 @@ route.post(
         .notEnum([appConfig.chatRoomAccount, appConfig.notifyAccount]),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { to } = req[kValidate];
-      const { account } = req[kHello].userinfo;
+  asyncHandler(async (_, res) => {
+    const { to } = res.locals.ctx;
+    const { account } = res.locals.hello.userinfo;
 
-      if (to === account) {
-        resp.badRequest(res, req, `to 不能为: ${account}`, 'body');
-        return;
-      }
-
-      const user = await getUserInfo(to, 'hide,update_at,username');
-
-      if (!user) {
-        resp.forbidden(res, '用户无法接收消息')(req, to, 1);
-        return;
-      }
-
-      if (user.hide === 1 || Date.now() - user.update_at > 1000 * 30) {
-        resp.forbidden(res, '对方已离线')(req, to, 1);
-        return;
-      }
-
-      await sendNotifyMsg(req, to, 'shake');
-
-      resp.success(res, '抖动对方窗口成功')(req, `${user.username}-${to}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (to === account) {
+      return resp.badRequest(res)(`to 不能为: ${account}`, 1);
     }
-  },
+
+    const user = await getUserInfo(to, 'hide,update_at,username');
+
+    if (!user) {
+      return resp.forbidden(res, '用户无法接收消息')();
+    }
+
+    if (user.hide === 1 || Date.now() - user.update_at > 1000 * 30) {
+      return resp.forbidden(res, '对方已离线')();
+    }
+
+    await sendNotifyMsg(res, to, 'shake');
+
+    resp.success(res, '抖动对方窗口成功')();
+  }),
 );
 
 // 成员
@@ -640,70 +572,66 @@ route.get(
       word: V.string().trim().default('').allowEmpty().max(fieldLength.searchWord),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { pageNo, pageSize, word } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { pageNo, pageSize, word } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const userDB = db('user').where({ state: 1 });
-      if (word) {
-        userDB.where({ $or: [{ username: word }, { account: word }, { email: word }] });
-      }
-      const total = await userDB.count();
-
-      const result = createPagingData(Array(total), pageSize, pageNo);
-
-      const offset = (result.pageNo - 1) * pageSize;
-
-      const users = await getChatUserList(account, pageSize, offset, word);
-
-      const n = Date.now();
-      const cons = _connect.getConnects();
-
-      const list = users.map((u) => {
-        const { username, account: acc, update_at, logo, hide, email, des, read, msg } = u;
-
-        const con = cons[acc];
-
-        const obj = {
-          username,
-          account: acc,
-          logo,
-          online: 1,
-          des: des === null ? '' : des,
-          email,
-          os: con ? con.onlines.map((item) => item.os) : [], // 展示登录设备信息
-          read: read === null ? 1 : read,
-          msg,
-        };
-        if (acc === account) {
-          obj.des = appConfig.ownAccountDes;
-        }
-        if (acc === appConfig.notifyAccount) {
-          obj.username = appConfig.notifyAccount;
-          obj.des = appConfig.notifyAccountDes;
-        }
-        if (
-          (hide === 1 || n - update_at > 1000 * 30) &&
-          account !== acc &&
-          acc !== appConfig.notifyAccount
-        ) {
-          obj.online = 0;
-          obj.os = [];
-        }
-
-        return obj;
-      });
-
-      resp.success(res, 'ok', {
-        ...result,
-        data: list,
-      });
-    } catch (error) {
-      resp.error(res)(req, error);
+    const userDB = db('user').where({ state: 1 });
+    if (word) {
+      userDB.where({ $or: [{ username: word }, { account: word }, { email: word }] });
     }
-  },
+    const total = await userDB.count();
+
+    const result = createPagingData(Array(total), pageSize, pageNo);
+
+    const offset = (result.pageNo - 1) * pageSize;
+
+    const users = await getChatUserList(account, pageSize, offset, word);
+
+    const n = Date.now();
+    const cons = _connect.getConnects();
+
+    const list = users.map((u) => {
+      const { username, account: acc, update_at, logo, hide, email, des, read, msg } = u;
+
+      const con = cons[acc];
+
+      const obj = {
+        username,
+        account: acc,
+        logo,
+        online: 1,
+        des: des === null ? '' : des,
+        email,
+        os: con ? con.onlines.map((item) => item.os) : [], // 展示登录设备信息
+        read: read === null ? 1 : read,
+        msg,
+      };
+      if (acc === account) {
+        obj.des = appConfig.ownAccountDes;
+      }
+      if (acc === appConfig.notifyAccount) {
+        obj.username = appConfig.notifyAccount;
+        obj.des = appConfig.notifyAccountDes;
+      }
+      if (
+        (hide === 1 || n - update_at > 1000 * 30) &&
+        account !== acc &&
+        acc !== appConfig.notifyAccount
+      ) {
+        obj.online = 0;
+        obj.os = [];
+      }
+
+      return obj;
+    });
+
+    resp.success(res, 'ok', {
+      ...result,
+      data: list,
+    })();
+  }),
 );
 
 // 接收文件
@@ -720,21 +648,17 @@ route.post(
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { name, HASH } = req[kValidate];
+  asyncHandler(async (req, res) => {
+    const { name, HASH } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const path = appConfig.temDir(`${account}_${HASH}`);
+    const path = appConfig.temDir(`${account}_${HASH}`);
 
-      await receiveFiles(req, path, name, fieldLength.maxFileChunk);
+    await receiveFiles(req, path, name, fieldLength.maxFileChunk);
 
-      resp.success(res);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res)();
+  }),
 );
 
 // 接收语音
@@ -752,74 +676,65 @@ route.post(
       to: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { HASH, name, to } = req[kValidate];
+  asyncHandler(async (req, res) => {
+    const { HASH, name, to } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      let log = to;
-      if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
-        const user = await getUserInfo(to, 'account,username');
+    if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
+      const user = await getUserInfo(to, 'account,username');
 
-        if (!user) {
-          resp.forbidden(res, '用户无法接收消息')(req, to, 1);
-          return;
-        }
-
-        log = `${user.username}-${user.account}`;
+      if (!user) {
+        return resp.forbidden(res, '用户无法接收消息')();
       }
-
-      const upload = await db('upload').select('url').where({ id: HASH }).findOne();
-
-      if (upload) {
-        resp.forbidden(res, '语音发送失败')(req, `语音=>${log}`, 1);
-        return;
-      }
-
-      const time = Date.now();
-
-      const timePath = getTimePath(time);
-      const tDir = appConfig.uploadDir(timePath);
-      const tName = `${HASH}.${_path.extname(name)[2]}`;
-
-      await receiveFiles(req, tDir, tName, fieldLength.maxVoiceSize, HASH);
-
-      const fobj = {
-        id: HASH,
-        create_at: time,
-        url: _path.normalizeNoSlash(timePath, tName),
-        update_at: time,
-      };
-
-      const { duration } = await getSongInfo(_path.normalizeNoSlash(tDir, tName));
-
-      const obj = {
-        _to: to,
-        content: '语音',
-        hash: HASH,
-        type: 'voice',
-        size: duration,
-      };
-
-      await db('upload').insert(fobj);
-
-      const msg = await saveChatMsg(account, obj);
-      await sendNotifyMsg(req, obj._to, 'addmsg', obj);
-
-      if (to === appConfig.notifyAccount) {
-        await hdHelloMsg(req, obj.content, obj.type);
-      }
-
-      sendNotificationsToCustomAddresses(req, msg).catch((err) => {
-        errLog(req, `发送通知到自定义地址失败(${err})`);
-      });
-
-      resp.success(res, '发送语音消息成功')(req, `${obj.content}=>${log}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
     }
-  },
+
+    const upload = await db('upload').select('url').where({ id: HASH }).findOne();
+
+    if (upload) {
+      return resp.forbidden(res, '语音发送失败')();
+    }
+
+    const time = Date.now();
+
+    const timePath = getTimePath(time);
+    const tDir = appConfig.uploadDir(timePath);
+    const tName = `${HASH}.${_path.extname(name)[2]}`;
+
+    await receiveFiles(req, tDir, tName, fieldLength.maxVoiceSize, HASH);
+
+    const fobj = {
+      id: HASH,
+      create_at: time,
+      url: _path.normalizeNoSlash(timePath, tName),
+      update_at: time,
+    };
+
+    const { duration } = await getSongInfo(_path.normalizeNoSlash(tDir, tName));
+
+    const obj = {
+      _to: to,
+      content: '语音',
+      hash: HASH,
+      type: 'voice',
+      size: duration,
+    };
+
+    await db('upload').insert(fobj);
+
+    const msg = await saveChatMsg(account, obj);
+    await sendNotifyMsg(res, obj._to, 'addmsg', obj);
+
+    if (to === appConfig.notifyAccount) {
+      await hdHelloMsg(req, res, obj.content, obj.type);
+    }
+
+    sendNotificationsToCustomAddresses(res, msg).catch((err) => {
+      writelog(res, `发送通知到自定义地址失败(${err})`, 500);
+    });
+
+    resp.success(res, '发送语音消息成功')();
+  }),
 );
 
 // 合并文件
@@ -839,81 +754,72 @@ route.post(
       type: V.string().trim().enum(['image', 'file']),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { HASH, count, name, to, type } = req[kValidate];
+  asyncHandler(async (req, res) => {
+    const { HASH, count, name, to, type } = res.locals.ctx;
 
-      let log = to;
-      if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
-        let user = await getUserInfo(to, 'account,username');
+    if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
+      let user = await getUserInfo(to, 'account,username');
 
-        if (!user) {
-          resp.forbidden(res, '用户无法接收消息')(req, to, 1);
-          return;
-        }
-
-        log = `${user.username}-${user.account}`;
+      if (!user) {
+        return resp.forbidden(res, '用户无法接收消息')();
       }
-
-      const upload = await db('upload').select('url').where({ id: HASH }).findOne();
-
-      if (upload) {
-        resp.forbidden(res, '文件发送失败')(req, `${name}=>${log}`, 1);
-        return;
-      }
-
-      const { account } = req[kHello].userinfo;
-
-      const suffix = _path.extname(name)[2];
-      const time = Date.now();
-      const timePath = getTimePath(time);
-
-      const tDir = appConfig.uploadDir(timePath);
-      const tName = `${HASH}${suffix ? `.${suffix}` : ''}`;
-
-      const targetPath = _path.normalizeNoSlash(tDir, tName);
-
-      await mergefile(count, appConfig.temDir(`${account}_${HASH}`), targetPath, HASH);
-
-      const fobj = {
-        id: HASH,
-        create_at: time,
-        url: _path.normalizeNoSlash(timePath, tName),
-        update_at: time,
-      };
-
-      const stat = await _f.lstat(targetPath);
-
-      const obj = {
-        _to: to,
-        content: name,
-        hash: HASH,
-        type,
-        size: stat.size,
-      };
-
-      await db('upload').insert(fobj);
-
-      if (type === 'image') {
-        obj.content = tName;
-      }
-
-      const msg = await saveChatMsg(account, obj);
-      await sendNotifyMsg(req, obj._to, 'addmsg', obj);
-
-      if (to === appConfig.notifyAccount) {
-        await hdHelloMsg(req, obj.content, type);
-      }
-
-      sendNotificationsToCustomAddresses(req, msg).catch((err) => {
-        errLog(req, `发送通知到自定义地址失败(${err})`);
-      });
-
-      resp.success(res, `发送${chatType[type]}消息成功`)(req, `${obj.content}=>${log}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
     }
-  },
+
+    const upload = await db('upload').select('url').where({ id: HASH }).findOne();
+
+    if (upload) {
+      return resp.forbidden(res, '文件发送失败')();
+    }
+
+    const { account } = res.locals.hello.userinfo;
+
+    const suffix = _path.extname(name)[2];
+    const time = Date.now();
+    const timePath = getTimePath(time);
+
+    const tDir = appConfig.uploadDir(timePath);
+    const tName = `${HASH}${suffix ? `.${suffix}` : ''}`;
+
+    const targetPath = _path.normalizeNoSlash(tDir, tName);
+
+    await mergefile(count, appConfig.temDir(`${account}_${HASH}`), targetPath, HASH);
+
+    const fobj = {
+      id: HASH,
+      create_at: time,
+      url: _path.normalizeNoSlash(timePath, tName),
+      update_at: time,
+    };
+
+    const stat = await _f.lstat(targetPath);
+
+    const obj = {
+      _to: to,
+      content: name,
+      hash: HASH,
+      type,
+      size: stat.size,
+    };
+
+    await db('upload').insert(fobj);
+
+    if (type === 'image') {
+      obj.content = tName;
+    }
+
+    const msg = await saveChatMsg(account, obj);
+    await sendNotifyMsg(res, obj._to, 'addmsg', obj);
+
+    if (to === appConfig.notifyAccount) {
+      await hdHelloMsg(req, res, obj.content, type);
+    }
+
+    sendNotificationsToCustomAddresses(res, msg).catch((err) => {
+      writelog(res, `发送通知到自定义地址失败(${err})`, 500);
+    });
+
+    resp.success(res, `发送${chatType[type]}消息成功`)();
+  }),
 );
 
 // 断点续传
@@ -925,20 +831,16 @@ route.post(
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { HASH } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { HASH } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const path = appConfig.temDir(`${account}_${HASH}`),
-        arr = await _f.readdir(path);
+    const path = appConfig.temDir(`${account}_${HASH}`),
+      arr = await _f.readdir(path);
 
-      resp.success(res, 'ok', arr);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, 'ok', arr)();
+  }),
 );
 
 // 检查上传文件是否重复
@@ -961,79 +863,70 @@ route.post(
         .max(fieldLength.maxFileSlice * fieldLength.maxFileChunk * 1024 * 1024),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { HASH, type, name, to, size } = req[kValidate];
+  asyncHandler(async (req, res) => {
+    const { HASH, type, name, to, size } = res.locals.ctx;
 
-      const upload = await db('upload').select('url').where({ id: HASH }).findOne();
+    const upload = await db('upload').select('url').where({ id: HASH }).findOne();
 
-      if (upload) {
-        // 文件已存在则，跳过上传
-        const p = appConfig.uploadDir(upload.url);
+    if (upload) {
+      // 文件已存在则，跳过上传
+      const p = appConfig.uploadDir(upload.url);
 
-        const stats = await _f.lstat(p);
-        if (stats) {
-          let log = to;
+      const stats = await _f.lstat(p);
+      if (stats) {
+        if (!stats.isDirectory() && stats.size === size) {
+          if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
+            const user = await getUserInfo(to, 'account,username');
 
-          if (!stats.isDirectory() && stats.size === size) {
-            if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
-              const user = await getUserInfo(to, 'account,username');
-
-              if (!user) {
-                resp.forbidden(res, '用户无法接收消息')(req, to, 1);
-                return;
-              }
-
-              log = `${user.username}-${user.account}`;
+            if (!user) {
+              return resp.forbidden(res, '用户无法接收消息')();
             }
-
-            await db('upload').where({ id: HASH }).update({ update_at: Date.now() });
-
-            const suffix = _path.extname(name)[2];
-
-            const tName = `${HASH}${suffix ? `.${suffix}` : ''}`;
-
-            const obj = {
-              _to: to,
-              content: name,
-              hash: HASH,
-              type,
-              size,
-            };
-
-            if (type === 'image') {
-              obj.content = tName;
-            }
-
-            const { account } = req[kHello].userinfo;
-
-            const msg = await saveChatMsg(account, obj);
-            await sendNotifyMsg(req, obj._to, 'addmsg', obj);
-
-            if (to === appConfig.notifyAccount) {
-              await hdHelloMsg(req, obj.content, type);
-            }
-
-            sendNotificationsToCustomAddresses(req, msg).catch((err) => {
-              errLog(req, `发送通知到自定义地址失败(${err})`);
-            });
-
-            resp.success(res, `发送${chatType[type]}消息成功`)(req, `${obj.content}=>${log}`, 1);
-          } else {
-            resp.success(res, `发送失败`)(req, `${name}=>${log}`, 1);
           }
 
-          return;
+          await db('upload').where({ id: HASH }).update({ update_at: Date.now() });
+
+          const suffix = _path.extname(name)[2];
+
+          const tName = `${HASH}${suffix ? `.${suffix}` : ''}`;
+
+          const obj = {
+            _to: to,
+            content: name,
+            hash: HASH,
+            type,
+            size,
+          };
+
+          if (type === 'image') {
+            obj.content = tName;
+          }
+
+          const { account } = res.locals.hello.userinfo;
+
+          const msg = await saveChatMsg(account, obj);
+          await sendNotifyMsg(res, obj._to, 'addmsg', obj);
+
+          if (to === appConfig.notifyAccount) {
+            await hdHelloMsg(req, res, obj.content, type);
+          }
+
+          sendNotificationsToCustomAddresses(res, msg).catch((err) => {
+            writelog(res, `发送通知到自定义地址失败(${err})`, 500);
+          });
+
+          resp.success(res, `发送${chatType[type]}消息成功`)();
+        } else {
+          resp.success(res, `发送失败`)();
         }
 
-        await db('upload').where({ id: HASH }).delete();
+        return;
       }
 
-      resp.ok(res);
-    } catch (error) {
-      resp.error(res)(req, error);
+      await db('upload').where({ id: HASH }).delete();
     }
-  },
+
+    resp.ok(res)();
+  }),
 );
 
 // 配置自定义转发地址接口
@@ -1055,67 +948,56 @@ route.post(
       body: V.string().trim().default('').allowEmpty().max(fieldLength.url),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { state, type, link, header, body, contentType } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { state, type, link, header, body, contentType } = res.locals.ctx;
 
-      if (state === 1) {
-        if (!isurl(link)) {
-          resp.badRequest(res, req, 'link 格式错误', 'body');
-          return;
-        }
-
-        if (!body) {
-          resp.badRequest(res, req, 'body 不能为空', 'body');
-          return;
-        }
-
-        if (
-          (type === 'get' || (type === 'post' && contentType === 'application/json')) &&
-          !parseObjectJson(body) &&
-          !parseArrayJson(body)
-        ) {
-          resp.badRequest(res, req, 'body 必须为JSON对象字符串', 'body');
-          return;
-        }
+    if (state === 1) {
+      if (!isurl(link)) {
+        return resp.badRequest(res)('link 格式错误', 1);
       }
 
-      const { account } = req[kHello].userinfo;
-
-      const forward_msg_link = JSON.stringify({
-        type,
-        link,
-        body,
-        header,
-        contentType,
-      });
-
-      if (_f.getTextSize(forward_msg_link) > 10 * 1024) {
-        resp.badRequest(res, req, 'forward_msg_link 字符大小不能超过限制', {
-          forward_msg_link,
-        });
-        return;
+      if (!body) {
+        return resp.badRequest(res)('body 不能为空', 1);
       }
 
-      if (state === 1) {
-        try {
-          await hdForwardToLink(req, [{ forward_msg_link }], [], '测试消息', []);
-        } catch (error) {
-          resp.forbidden(res, '发送测试消息失败')(req, error, 1);
-          return;
-        }
+      if (
+        (type === 'get' || (type === 'post' && contentType === 'application/json')) &&
+        !parseObjectJson(body) &&
+        !parseArrayJson(body)
+      ) {
+        return resp.badRequest(res)('body 必须为JSON对象字符串', 1);
       }
-
-      await db('user').where({ account, state: 1 }).update({
-        forward_msg_state: state,
-        forward_msg_link,
-      });
-
-      resp.success(res, `${state === 1 ? '配置' : '关闭'}转发消息接口成功`)(req);
-    } catch (error) {
-      resp.error(res)(req, error);
     }
-  },
+
+    const { account } = res.locals.hello.userinfo;
+
+    const forward_msg_link = JSON.stringify({
+      type,
+      link,
+      body,
+      header,
+      contentType,
+    });
+
+    if (_f.getTextSize(forward_msg_link) > 10 * 1024) {
+      return resp.badRequest(res)('forward_msg_link 字符大小不能超过限制', 1);
+    }
+
+    if (state === 1) {
+      try {
+        await hdForwardToLink(res, [{ forward_msg_link }], [], '测试消息', []);
+      } catch (error) {
+        return resp.forbidden(res, '发送测试消息失败')(error, 1);
+      }
+    }
+
+    await db('user').where({ account, state: 1 }).update({
+      forward_msg_state: state,
+      forward_msg_link,
+    });
+
+    resp.success(res, `${state === 1 ? '配置' : '关闭'}转发消息接口成功`)();
+  }),
 );
 
 export default route;

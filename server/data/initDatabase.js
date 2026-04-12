@@ -529,7 +529,7 @@ async function createTables() {
       await syncIndexes(tableName, indexes);
     }
   } catch (error) {
-    await writelog(false, `[ createTables ] - ${error}`, 'error');
+    await writelog(false, `[ createTables ] - ${error}`, 500);
     throw error;
   }
 }
@@ -601,7 +601,7 @@ async function insertInitialData() {
 
     return initPassword;
   } catch (error) {
-    await writelog(false, `[ insertInitialData ] - ${error}`, 'error');
+    await writelog(false, `[ insertInitialData ] - ${error}`, 500);
     throw error;
   }
 }

@@ -1,8 +1,7 @@
 import express from 'express';
-import { createPagingData, getSplitWord, syncUpdateData, validate } from '../../utils/utils.js';
+import { createPagingData, getSplitWord, syncUpdateData } from '../../utils/utils.js';
 import { fieldLength } from '../config.js';
 import V from '../../utils/validRules.js';
-import { sym } from '../../utils/symbols.js';
 import { createTerminal } from './terminal.js';
 import { db } from '../../utils/sqlite.js';
 import _f from '../../utils/f.js';
@@ -15,19 +14,20 @@ import {
 } from './ssh.js';
 import _path from '../../utils/path.js';
 import resp from '../../utils/response.js';
+import { asyncHandler, validate } from '../../utils/customMiddleware.js';
 
 const route = express.Router();
-const kHello = sym('hello');
-const kValidate = sym('validate');
 
 // 验证登录态
-route.use((req, res, next) => {
-  if (req[kHello].userinfo.account) {
-    next();
-  } else {
-    resp.unauthorized(res);
-  }
-});
+route.use(
+  asyncHandler((_, res, next) => {
+    if (res.locals.hello.userinfo.account) {
+      next();
+    } else {
+      resp.unauthorized(res)();
+    }
+  }),
+);
 
 // 搜索ssh
 route.post(
@@ -43,78 +43,75 @@ route.post(
         .max(10),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { word, category, pageNo, pageSize } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { word, category, pageNo, pageSize } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const sshdb = db('ssh').where({ account, state: 1 });
+    const sshdb = db('ssh').where({ account, state: 1 });
 
-      if (category.length > 0) {
-        sshdb.search(
-          category,
-          category.map(() => 'category'),
-        );
-      }
-
-      let splitWord = [];
-
-      if (word) {
-        // 搜索
-        splitWord = getSplitWord(word);
-
-        const curSplit = splitWord.slice(0, 10);
-        curSplit[0] = { value: curSplit[0], weight: 10 };
-        sshdb.search(curSplit, ['host', 'username', 'title', 'port'], {
-          sort: true,
-        });
-      } else {
-        sshdb.orderBy('top', 'DESC').orderBy('serial', 'DESC');
-      }
-
-      const total = await sshdb.count();
-
-      const result = createPagingData(Array(total), pageSize, pageNo);
-
-      let list = [];
-      if (total > 0) {
-        const offset = (result.pageNo - 1) * pageSize;
-        list = await sshdb
-          .select(
-            'id,title,port,host,username,category,top,auth_type,passphrase,password,private_key',
-          )
-          .page(pageSize, offset)
-          .find();
-
-        const sshCategory = await db('ssh_category').select('id,title').where({ account }).find();
-
-        list = list.map((item) => {
-          const cArr = item.category.split('-').filter(Boolean);
-          const categoryArr = sshCategory.filter((item) => cArr.includes(item.id));
-
-          return {
-            ...item,
-            categoryArr,
-          };
-        });
-      }
-
-      resp.success(res, 'ok', {
-        ...result,
-        data: list,
-        splitWord,
-      });
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (category.length > 0) {
+      sshdb.search(
+        category,
+        category.map(() => 'category'),
+      );
     }
-  },
+
+    let splitWord = [];
+
+    if (word) {
+      // 搜索
+      splitWord = getSplitWord(word);
+
+      const curSplit = splitWord.slice(0, 10);
+      curSplit[0] = { value: curSplit[0], weight: 10 };
+      sshdb.search(curSplit, ['host', 'username', 'title', 'port'], {
+        sort: true,
+      });
+    } else {
+      sshdb.orderBy('top', 'DESC').orderBy('serial', 'DESC');
+    }
+
+    const total = await sshdb.count();
+
+    const result = createPagingData(Array(total), pageSize, pageNo);
+
+    let list = [];
+    if (total > 0) {
+      const offset = (result.pageNo - 1) * pageSize;
+      list = await sshdb
+        .select(
+          'id,title,port,host,username,category,top,auth_type,passphrase,password,private_key',
+        )
+        .page(pageSize, offset)
+        .find();
+
+      const sshCategory = await db('ssh_category').select('id,title').where({ account }).find();
+
+      list = list.map((item) => {
+        const cArr = item.category.split('-').filter(Boolean);
+        const categoryArr = sshCategory.filter((item) => cArr.includes(item.id));
+
+        return {
+          ...item,
+          categoryArr,
+        };
+      });
+    }
+
+    resp.success(res, 'ok', {
+      ...result,
+      data: list,
+      splitWord,
+    })();
+  }),
 );
 
 // 获取分类
-route.get('/category', async (req, res) => {
-  try {
-    const { account } = req[kHello].userinfo;
+route.get(
+  '/category',
+  asyncHandler(async (_, res) => {
+    const { account } = res.locals.hello.userinfo;
 
     const list = await db('ssh_category')
       .select('id,title')
@@ -122,11 +119,9 @@ route.get('/category', async (req, res) => {
       .orderBy('serial', 'DESC')
       .find();
 
-    resp.success(res, 'ok', list);
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+    resp.success(res, 'ok', list)();
+  }),
+);
 
 // 删除
 route.post(
@@ -139,24 +134,20 @@ route.post(
         .max(fieldLength.maxPagesize),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { ids } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { ids } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('ssh')
-        .where({ id: { in: ids }, account, state: 1 })
-        .update({ state: 0 });
+    await db('ssh')
+      .where({ id: { in: ids }, account, state: 1 })
+      .update({ state: 0 });
 
-      syncUpdateData(req, 'ssh');
-      syncUpdateData(req, 'trash');
+    syncUpdateData(res, 'ssh');
+    syncUpdateData(res, 'trash');
 
-      resp.success(res, '删除SSH配置成功')(req, ids.length, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '删除SSH配置成功')();
+  }),
 );
 
 // 添加ssh
@@ -182,26 +173,22 @@ route.post(
       auth_type: V.string().trim().enum(['password', 'key']),
     }),
   ),
-  async (req, res) => {
-    try {
-      const config = req[kValidate];
-      const { account } = req[kHello].userinfo;
-      const now = Date.now();
+  asyncHandler(async (_, res) => {
+    const config = res.locals.ctx;
+    const { account } = res.locals.hello.userinfo;
+    const now = Date.now();
 
-      await db('ssh').insert({
-        ...config,
-        id: nanoid(),
-        account,
-        create_at: now,
-        update_at: now,
-      });
-      syncUpdateData(req, 'ssh');
+    await db('ssh').insert({
+      ...config,
+      id: nanoid(),
+      account,
+      create_at: now,
+      update_at: now,
+    });
+    syncUpdateData(res, 'ssh');
 
-      resp.success(res, '添加SSH配置成功')(req, config.title, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '添加SSH配置成功')();
+  }),
 );
 
 // 编辑ssh
@@ -228,58 +215,52 @@ route.post(
       auth_type: V.string().trim().enum(['password', 'key']),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id, port, username, title, password, host, private_key, passphrase, auth_type } =
-        req[kValidate];
-      if (id === 'local' && !req[kHello].isRoot) {
-        resp.forbidden(res, '无权操作')(req);
-        return;
-      }
-
-      const { account } = req[kHello].userinfo;
-      const now = Date.now();
-
-      if (id === 'local') {
-        const ssh = await db('ssh').where({ id, account }).findOne();
-        if (!ssh) {
-          await db('ssh').insert({
-            id,
-            port,
-            username,
-            title,
-            password,
-            host,
-            private_key,
-            passphrase,
-            auth_type,
-            create_at: now,
-            update_at: now,
-            account,
-          });
-          syncUpdateData(req, 'ssh');
-          resp.success(res, '添加本机SSH配置成功')(req, title, 1);
-          return;
-        }
-      }
-      await db('ssh').where({ id, account }).update({
-        port,
-        username,
-        title,
-        password,
-        host,
-        private_key,
-        passphrase,
-        auth_type,
-        update_at: now,
-      });
-      syncUpdateData(req, 'ssh');
-
-      resp.success(res, '更新SSH配置成功')(req, title, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+  asyncHandler(async (_, res) => {
+    const { id, port, username, title, password, host, private_key, passphrase, auth_type } =
+      res.locals.ctx;
+    if (id === 'local' && !res.locals.hello.isRoot) {
+      return resp.forbidden(res, '无权操作')();
     }
-  },
+
+    const { account } = res.locals.hello.userinfo;
+    const now = Date.now();
+
+    if (id === 'local') {
+      const ssh = await db('ssh').where({ id, account }).findOne();
+      if (!ssh) {
+        await db('ssh').insert({
+          id,
+          port,
+          username,
+          title,
+          password,
+          host,
+          private_key,
+          passphrase,
+          auth_type,
+          create_at: now,
+          update_at: now,
+          account,
+        });
+        syncUpdateData(res, 'ssh');
+        return resp.success(res, '添加本机SSH配置成功')();
+      }
+    }
+    await db('ssh').where({ id, account }).update({
+      port,
+      username,
+      title,
+      password,
+      host,
+      private_key,
+      passphrase,
+      auth_type,
+      update_at: now,
+    });
+    syncUpdateData(res, 'ssh');
+
+    resp.success(res, '更新SSH配置成功')();
+  }),
 );
 
 // 获取ssh配置
@@ -291,19 +272,15 @@ route.get(
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id } = req[kValidate];
-      const { account } = req[kHello].userinfo;
-      const ssh = await db('ssh')
-        .select('id,title,port,host,username,auth_type,passphrase,password,private_key')
-        .where({ id, account })
-        .findOne();
-      resp.success(res, 'ok', ssh || {});
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+  asyncHandler(async (_, res) => {
+    const { id } = res.locals.ctx;
+    const { account } = res.locals.hello.userinfo;
+    const ssh = await db('ssh')
+      .select('id,title,port,host,username,auth_type,passphrase,password,private_key')
+      .where({ id, account })
+      .findOne();
+    resp.success(res, 'ok', ssh || {})();
+  }),
 );
 
 // 置顶权重
@@ -316,21 +293,17 @@ route.post(
       top: V.number().toInt().min(0).max(fieldLength.top),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id, top } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id, top } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('ssh').where({ id, account }).update({ top });
+    await db('ssh').where({ id, account }).update({ top });
 
-      syncUpdateData(req, 'ssh');
+    syncUpdateData(res, 'ssh');
 
-      resp.success(res, '设置ssh权重成功')(req, `${id}-${top}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '设置ssh权重成功')();
+  }),
 );
 
 // 编辑分类
@@ -345,22 +318,18 @@ route.post(
         .max(10),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id, category } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id, category } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const categoryStr = category.join('-');
-      await db('ssh').where({ id, account }).update({ category: categoryStr });
+    const categoryStr = category.join('-');
+    await db('ssh').where({ id, account }).update({ category: categoryStr });
 
-      syncUpdateData(req, 'ssh');
+    syncUpdateData(res, 'ssh');
 
-      resp.success(res, '更新分类成功')(req, `${id}: ${categoryStr}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '更新分类成功')();
+  }),
 );
 
 // 编辑分类
@@ -373,21 +342,17 @@ route.post(
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { title, id } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { title, id } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('ssh_category').where({ id, account }).update({ title });
+    await db('ssh_category').where({ id, account }).update({ title });
 
-      syncUpdateData(req, 'sshCategory');
+    syncUpdateData(res, 'sshCategory');
 
-      resp.success(res, '编辑分类标题成功')(req, `${title}-${id}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '编辑分类标题成功')();
+  }),
 );
 
 // 添加分类
@@ -399,32 +364,27 @@ route.post(
       title: V.string().trim().min(1).max(fieldLength.title),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { title } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { title } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      const total = await db('ssh_category').count();
+    const total = await db('ssh_category').count();
 
-      if (total >= fieldLength.maxNoteCategory) {
-        resp.forbidden(res, `类型限制${fieldLength.maxNoteCategory}`)(req);
-        return;
-      }
-      await db('ssh_category').insert({
-        id: nanoid(),
-        create_at: Date.now(),
-        title,
-        account,
-      });
-
-      syncUpdateData(req, 'sshCategory');
-
-      resp.success(res, '添加分类成功')(req, title, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    if (total >= fieldLength.maxNoteCategory) {
+      return resp.forbidden(res, `类型限制${fieldLength.maxNoteCategory}`)();
     }
-  },
+    await db('ssh_category').insert({
+      id: nanoid(),
+      create_at: Date.now(),
+      title,
+      account,
+    });
+
+    syncUpdateData(res, 'sshCategory');
+
+    resp.success(res, '添加分类成功')();
+  }),
 );
 
 // 删除分类
@@ -436,21 +396,17 @@ route.get(
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id } = req[kValidate];
+  asyncHandler(async (_, res) => {
+    const { id } = res.locals.ctx;
 
-      const { account } = req[kHello].userinfo;
+    const { account } = res.locals.hello.userinfo;
 
-      await db('ssh_category').where({ id, account }).delete();
+    await db('ssh_category').where({ id, account }).delete();
 
-      syncUpdateData(req, 'sshCategory');
+    syncUpdateData(res, 'sshCategory');
 
-      resp.success(res, '删除分类成功')(req, id, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    resp.success(res, '删除分类成功')();
+  }),
 );
 
 // 连接ssh
@@ -463,58 +419,51 @@ route.post(
       defaultPath: V.string().trim().allowEmpty().max(fieldLength.url),
     }),
   ),
-  async (req, res) => {
+  asyncHandler(async (_, res) => {
+    const { id, defaultPath } = res.locals.ctx;
+
+    let {
+      userinfo: { account },
+      temid,
+    } = res.locals.hello;
+
     try {
-      const { id, defaultPath } = req[kValidate];
-
-      let {
-        userinfo: { account },
-        temid,
-      } = req[kHello];
-
-      try {
-        temid = await V.parse(temid, V.string().trim().min(1), 'temid');
-      } catch (error) {
-        resp.badRequest(res, req, error, { temid });
-        return;
-      }
-
-      const config = await db('ssh')
-        .select('title,port,username,password,host,private_key,passphrase,auth_type')
-        .where({ id, account })
-        .findOne();
-
-      if (!config) {
-        resp.forbidden(res, '获取配置信息失败')(req, id, 1);
-        return;
-      }
-      createTerminal(
-        account,
-        temid,
-        config,
-        defaultPath ? _path.normalizeNoSlash('/', defaultPath) : '',
-      );
-      resp.success(res, '请求连接SSH成功', {
-        title: config.title,
-        username: config.username,
-        host: config.host,
-        port: config.port,
-      })(req, `${config.title}：${temid}`, 1);
+      temid = await V.parse(temid, V.string().trim().min(1), 'temid');
     } catch (error) {
-      resp.error(res)(req, error);
+      return resp.badRequest(res)(error, 1);
     }
-  },
+
+    const config = await db('ssh')
+      .select('title,port,username,password,host,private_key,passphrase,auth_type')
+      .where({ id, account })
+      .findOne();
+
+    if (!config) {
+      return resp.forbidden(res, '获取配置信息失败')();
+    }
+    createTerminal(
+      account,
+      temid,
+      config,
+      defaultPath ? _path.normalizeNoSlash('/', defaultPath) : '',
+    );
+    resp.success(res, '请求连接SSH成功', {
+      title: config.title,
+      username: config.username,
+      host: config.host,
+      port: config.port,
+    })();
+  }),
 );
 
 // 获取快捷命令
-route.get('/quick-list', async (req, res) => {
-  try {
-    const { account } = req[kHello].userinfo;
-    resp.success(res, 'ok', await readQuickCommands(account));
-  } catch (error) {
-    resp.error(res)(req, error);
-  }
-});
+route.get(
+  '/quick-list',
+  asyncHandler(async (_, res) => {
+    const { account } = res.locals.hello.userinfo;
+    resp.success(res, 'ok', await readQuickCommands(account))();
+  }),
+);
 
 // 添加快捷命令
 route.post(
@@ -534,32 +483,28 @@ route.post(
       enter: V.number().toInt().default(0).enum([0, 1]),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { command, id, title, enter } = req[kValidate];
-      const { account } = req[kHello].userinfo;
-      const quickGroupList = await readQuickCommands(account);
-      const quickGroup = quickGroupList.find((item) => item.id === id);
+  asyncHandler(async (_, res) => {
+    const { command, id, title, enter } = res.locals.ctx;
+    const { account } = res.locals.hello.userinfo;
+    const quickGroupList = await readQuickCommands(account);
+    const quickGroup = quickGroupList.find((item) => item.id === id);
 
-      const commandId = nanoid();
-      if (quickGroup) {
-        quickGroup.commands.push({ id: commandId, enter, title, command });
-      } else {
-        quickGroupList[0].commands.push({
-          id: commandId,
-          enter,
-          title,
-          command,
-        });
-      }
-
-      await writeQuickCommands(account, quickGroupList);
-      syncUpdateData(req, 'quickCommand');
-      resp.success(res, '添加快捷命令成功')(req, title, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    const commandId = nanoid();
+    if (quickGroup) {
+      quickGroup.commands.push({ id: commandId, enter, title, command });
+    } else {
+      quickGroupList[0].commands.push({
+        id: commandId,
+        enter,
+        title,
+        command,
+      });
     }
-  },
+
+    await writeQuickCommands(account, quickGroupList);
+    syncUpdateData(res, 'quickCommand');
+    resp.success(res, '添加快捷命令成功')();
+  }),
 );
 
 // 编辑快捷命令
@@ -581,29 +526,25 @@ route.post(
       enter: V.number().toInt().default(0).enum([0, 1]),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { command, enter, groupId, id, title } = req[kValidate];
-      const { account } = req[kHello].userinfo;
-      const quickGroupList = await readQuickCommands(account);
-      const quickGroup = quickGroupList.find((item) => item.id === groupId);
+  asyncHandler(async (_, res) => {
+    const { command, enter, groupId, id, title } = res.locals.ctx;
+    const { account } = res.locals.hello.userinfo;
+    const quickGroupList = await readQuickCommands(account);
+    const quickGroup = quickGroupList.find((item) => item.id === groupId);
 
-      if (quickGroup) {
-        const quick = quickGroup.commands.find((item) => item.id === id);
-        if (quick) {
-          quick.title = title;
-          quick.command = command;
-          quick.enter = enter;
-          await writeQuickCommands(account, quickGroupList);
-          syncUpdateData(req, 'quickCommand');
-        }
+    if (quickGroup) {
+      const quick = quickGroup.commands.find((item) => item.id === id);
+      if (quick) {
+        quick.title = title;
+        quick.command = command;
+        quick.enter = enter;
+        await writeQuickCommands(account, quickGroupList);
+        syncUpdateData(res, 'quickCommand');
       }
-
-      resp.success(res, '修改快捷命令成功')(req, title, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
     }
-  },
+
+    resp.success(res, '修改快捷命令成功')();
+  }),
 );
 
 // 删除快捷命令
@@ -616,22 +557,18 @@ route.post(
       groupId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id, groupId } = req[kValidate];
-      const { account } = req[kHello].userinfo;
-      const quickGroupList = await readQuickCommands(account);
-      const quick = quickGroupList.find((item) => item.id === groupId);
-      if (quick) {
-        quick.commands = quick.commands.filter((item) => item.id !== id);
-        await writeQuickCommands(account, quickGroupList);
-        syncUpdateData(req, 'quickCommand');
-      }
-      resp.success(res, '删除快捷命令成功')(req, id, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+  asyncHandler(async (_, res) => {
+    const { id, groupId } = res.locals.ctx;
+    const { account } = res.locals.hello.userinfo;
+    const quickGroupList = await readQuickCommands(account);
+    const quick = quickGroupList.find((item) => item.id === groupId);
+    if (quick) {
+      quick.commands = quick.commands.filter((item) => item.id !== id);
+      await writeQuickCommands(account, quickGroupList);
+      syncUpdateData(res, 'quickCommand');
     }
-  },
+    resp.success(res, '删除快捷命令成功')();
+  }),
 );
 
 // 移动快捷命令位置
@@ -645,17 +582,13 @@ route.post(
       groupId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { fromId, toId, groupId } = req[kValidate];
-      const { account } = req[kHello].userinfo;
-      await quickMoveLocation(account, groupId, fromId, toId);
-      syncUpdateData(req, 'quickCommand');
-      resp.success(res, '移动快捷命令位置成功')(req, `${groupId}: ${fromId} => ${toId}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+  asyncHandler(async (_, res) => {
+    const { fromId, toId, groupId } = res.locals.ctx;
+    const { account } = res.locals.hello.userinfo;
+    await quickMoveLocation(account, groupId, fromId, toId);
+    syncUpdateData(res, 'quickCommand');
+    resp.success(res, '移动快捷命令位置成功')();
+  }),
 );
 
 // 移动快捷命令到分组
@@ -669,30 +602,26 @@ route.post(
       toId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { fromId, toId, id } = req[kValidate];
-      const { account } = req[kHello].userinfo;
-      const quickGroupList = await readQuickCommands(account);
-      const fIdx = quickGroupList.findIndex((item) => item.id === fromId);
-      const tIdx = quickGroupList.findIndex((item) => item.id === toId);
-      if (fIdx >= 0 && tIdx >= 0 && fIdx !== tIdx) {
-        const fCommand = quickGroupList[fIdx].commands.find((item) => item.id === id);
-        if (fCommand) {
-          quickGroupList[fIdx].commands = quickGroupList[fIdx].commands.filter(
-            (item) => item.id !== id,
-          );
-          quickGroupList[tIdx].commands.push(fCommand);
-          await writeQuickCommands(account, quickGroupList);
-          syncUpdateData(req, 'quickCommand');
-        }
+  asyncHandler(async (_, res) => {
+    const { fromId, toId, id } = res.locals.ctx;
+    const { account } = res.locals.hello.userinfo;
+    const quickGroupList = await readQuickCommands(account);
+    const fIdx = quickGroupList.findIndex((item) => item.id === fromId);
+    const tIdx = quickGroupList.findIndex((item) => item.id === toId);
+    if (fIdx >= 0 && tIdx >= 0 && fIdx !== tIdx) {
+      const fCommand = quickGroupList[fIdx].commands.find((item) => item.id === id);
+      if (fCommand) {
+        quickGroupList[fIdx].commands = quickGroupList[fIdx].commands.filter(
+          (item) => item.id !== id,
+        );
+        quickGroupList[tIdx].commands.push(fCommand);
+        await writeQuickCommands(account, quickGroupList);
+        syncUpdateData(res, 'quickCommand');
       }
-
-      resp.success(res, '移动到分组成功')(req, `${fromId}:${id} => ${toId}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
     }
-  },
+
+    resp.success(res, '移动到分组成功')();
+  }),
 );
 
 // 添加快捷命令分组
@@ -704,21 +633,17 @@ route.post(
       title: V.string().trim().min(1).max(fieldLength.title),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { title } = req[kValidate];
-      const { account } = req[kHello].userinfo;
-      const quickGroupList = await readQuickCommands(account);
+  asyncHandler(async (_, res) => {
+    const { title } = res.locals.ctx;
+    const { account } = res.locals.hello.userinfo;
+    const quickGroupList = await readQuickCommands(account);
 
-      quickGroupList.push({ id: nanoid(), title, commands: [] });
+    quickGroupList.push({ id: nanoid(), title, commands: [] });
 
-      await writeQuickCommands(account, quickGroupList);
-      syncUpdateData(req, 'quickCommand');
-      resp.success(res, '添加快捷命令分组成功')(req, title, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    await writeQuickCommands(account, quickGroupList);
+    syncUpdateData(res, 'quickCommand');
+    resp.success(res, '添加快捷命令分组成功')();
+  }),
 );
 
 // 编辑快捷命令分组
@@ -731,24 +656,20 @@ route.post(
       title: V.string().trim().min(1).max(fieldLength.title),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { title, id } = req[kValidate];
-      const { account } = req[kHello].userinfo;
-      const quickGroupList = await readQuickCommands(account);
+  asyncHandler(async (_, res) => {
+    const { title, id } = res.locals.ctx;
+    const { account } = res.locals.hello.userinfo;
+    const quickGroupList = await readQuickCommands(account);
 
-      const quickGroup = quickGroupList.find((item) => item.id === id);
-      if (quickGroup) {
-        quickGroup.title = title;
-        await writeQuickCommands(account, quickGroupList);
-        syncUpdateData(req, 'quickCommand');
-      }
-
-      resp.success(res, '更新快捷命令分组成功')(req, title, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
+    const quickGroup = quickGroupList.find((item) => item.id === id);
+    if (quickGroup) {
+      quickGroup.title = title;
+      await writeQuickCommands(account, quickGroupList);
+      syncUpdateData(res, 'quickCommand');
     }
-  },
+
+    resp.success(res, '更新快捷命令分组成功')();
+  }),
 );
 
 // 移动快捷命令分组位置
@@ -761,17 +682,13 @@ route.post(
       toId: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { fromId, toId } = req[kValidate];
-      const { account } = req[kHello].userinfo;
-      await quickGroupMoveLocation(account, fromId, toId);
-      syncUpdateData(req, 'quickCommand');
-      resp.success(res, '移动快捷命令分组位置成功')(req, `${fromId} => ${toId}`, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+  asyncHandler(async (_, res) => {
+    const { fromId, toId } = res.locals.ctx;
+    const { account } = res.locals.hello.userinfo;
+    await quickGroupMoveLocation(account, fromId, toId);
+    syncUpdateData(res, 'quickCommand');
+    resp.success(res, '移动快捷命令分组位置成功')();
+  }),
 );
 
 // 删除快捷命令分组
@@ -783,19 +700,15 @@ route.post(
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric().not('default'),
     }),
   ),
-  async (req, res) => {
-    try {
-      const { id } = req[kValidate];
-      const { account } = req[kHello].userinfo;
-      const quickGroupList = (await readQuickCommands(account)).filter((item) => item.id !== id);
-      await writeQuickCommands(account, quickGroupList);
+  asyncHandler(async (_, res) => {
+    const { id } = res.locals.ctx;
+    const { account } = res.locals.hello.userinfo;
+    const quickGroupList = (await readQuickCommands(account)).filter((item) => item.id !== id);
+    await writeQuickCommands(account, quickGroupList);
 
-      syncUpdateData(req, 'quickCommand');
-      resp.success(res, '删除快捷命令成功')(req, id, 1);
-    } catch (error) {
-      resp.error(res)(req, error);
-    }
-  },
+    syncUpdateData(res, 'quickCommand');
+    resp.success(res, '删除快捷命令成功')();
+  }),
 );
 
 export default route;

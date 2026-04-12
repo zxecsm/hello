@@ -1,14 +1,13 @@
 import { Client } from 'ssh2';
 import { CacheByExpire } from '../../utils/cache.js';
-import { devLog, uLog } from '../../utils/utils.js';
+import { devLog } from '../../utils/utils.js';
 import _connect from '../../utils/connect.js';
 
 // 清理 SSH 资源（幂等）
-function closeSSH(sshObj, temid) {
+function closeSSH(sshObj) {
   if (!sshObj || sshObj._closed) return;
   sshObj._closed = true;
 
-  uLog(false, `断开SSH: ${temid}`);
   try {
     if (sshObj.stream) {
       sshObj.stream.removeAllListeners();
@@ -29,11 +28,11 @@ function closeSSH(sshObj, temid) {
 
 // SSH 连接缓存
 const sshCache = new CacheByExpire(60 * 1000, 60 * 1000, {
-  beforeDelete(temid, ssh) {
-    closeSSH(ssh, temid);
+  beforeDelete(_, ssh) {
+    closeSSH(ssh);
   },
-  beforeReplace(temid, ssh) {
-    closeSSH(ssh, temid);
+  beforeReplace(_, ssh) {
+    closeSSH(ssh);
   },
 });
 

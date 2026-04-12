@@ -3,12 +3,10 @@ import _connect from '../../utils/connect.js';
 import { db } from '../../utils/sqlite.js';
 
 import {
-  uLog,
   concurrencyTasks,
   tplReplace,
   isurl,
   replaceObjectValue,
-  errLog,
   batchTask,
   parseObjectJson,
   getOrigin,
@@ -23,10 +21,7 @@ import _f from '../../utils/f.js';
 import { _delDir } from '../file/file.js';
 import _path from '../../utils/path.js';
 import nanoid from '../../utils/nanoid.js';
-import { sym } from '../../utils/symbols.js';
 import request from '../../utils/request.js';
-
-const kHello = sym('hello');
 
 // 获取好友信息
 export async function getFriendInfo(mAcc, fAcc, fields = '*') {
@@ -44,8 +39,8 @@ export async function markAsRead(mAcc, fAcc) {
 }
 
 // 助手回复响应消息
-export async function hdHelloMsg(req, data, type) {
-  let { receive_chat_state, chat_id, account } = req[kHello].userinfo;
+export async function hdHelloMsg(req, res, data, type) {
+  let { receive_chat_state, chat_id, account } = res.locals.hello.userinfo;
   const origin = getOrigin(req);
 
   const stopMsgText = '接口为关闭状态\n\n回复 start 开启接口 或 update 开启并更新接口';
@@ -60,24 +55,16 @@ export async function hdHelloMsg(req, data, type) {
     await db('user').where({ account, state: 1 }).update({ receive_chat_state: 1, chat_id });
 
     msgText = `收信接口：\nGET：${origin}/api/s/${chat_id}?text=消息内容\nPOST：${origin}/api/s/${chat_id} body：{"text": "消息内容"}\n\n回复 update 更新接口 回复 stop 关闭接口`;
-
-    await uLog(req, `更新收信接口成功(${chat_id})`);
   } else if (type === 'text' && text === 'stop') {
     await db('user').where({ account, state: 1 }).update({ receive_chat_state: 0 });
 
     msgText = stopMsgText;
-
-    await uLog(req, `关闭收信接口成功(${chat_id})`);
   } else if (type === 'text' && text === 'start') {
     await db('user').where({ account, state: 1 }).update({ receive_chat_state: 1 });
-
-    await uLog(req, `开启收信接口成功(${chat_id})`);
   } else {
     if (receive_chat_state === 0) {
       msgText = stopMsgText;
     }
-
-    await uLog(req, `查看收信接口成功(${chat_id})`);
   }
 
   await helloHelperMsg(account, msgText);
@@ -98,9 +85,9 @@ export async function saveChatMsg(account, obj) {
 }
 
 // 推送通知
-export async function sendNotifyMsg(req, to, flag, msgData) {
-  const { account, logo, username } = req[kHello].userinfo;
-  const temid = req[kHello].temid;
+export async function sendNotifyMsg(res, to, flag, msgData) {
+  const { account, logo, username } = res.locals.hello.userinfo;
+  const temid = res.locals.hello.temid;
 
   const notifyObj = {
     type: 'chat',
@@ -220,7 +207,7 @@ export async function sendNotifyMsg(req, to, flag, msgData) {
 }
 
 // 发送消息到自定义地址
-export async function sendNotificationsToCustomAddresses(req, obj) {
+export async function sendNotificationsToCustomAddresses(res, obj) {
   if (obj._from === obj._to || obj._to === appConfig.notifyAccount) return; // 文件传输和给助手发的消息不发送
 
   if (obj._to === appConfig.chatRoomAccount) {
@@ -260,7 +247,7 @@ export async function sendNotificationsToCustomAddresses(req, obj) {
         })
         .find();
 
-      await hdForwardToLink(req, list, fArr, obj.content, fList);
+      await hdForwardToLink(res, list, fArr, obj.content, fList);
     }
   } else {
     const list = await db('user')
@@ -280,14 +267,14 @@ export async function sendNotificationsToCustomAddresses(req, obj) {
       })
       .find();
 
-    await hdForwardToLink(req, list, fArr, obj.content, fArr);
+    await hdForwardToLink(res, list, fArr, obj.content, fArr);
   }
 }
 
 // 处理转发到自定义地址
-export async function hdForwardToLink(req, list = [], fArr, text, fList = []) {
+export async function hdForwardToLink(res, list = [], fArr, text, fList = []) {
   if (list.length > 0) {
-    const { username, account: fromAccount } = req[kHello].userinfo;
+    const { username, account: fromAccount } = res.locals.hello.userinfo;
 
     await concurrencyTasks(list, 3, async (item) => {
       const { forward_msg_link, account } = item;
@@ -336,8 +323,8 @@ export async function hdForwardToLink(req, list = [], fArr, text, fList = []) {
 }
 
 // 上线通知
-export async function onlineMsg(req, pass) {
-  const { account, hide, username } = req[kHello].userinfo;
+export async function onlineMsg(res, pass) {
+  const { account, hide, username } = res.locals.hello.userinfo;
 
   const con = _connect.getConnects(); // 获取所有在线
 
@@ -363,7 +350,7 @@ export async function onlineMsg(req, pass) {
         }
         _connect.send(
           key,
-          req[kHello].temid,
+          res.locals.hello.temid,
           {
             type: 'online',
             data: { text: `${des || username} 已上线`, account },
@@ -447,21 +434,23 @@ export async function becomeFriends(me, friend, read1 = 1, read2 = 1, msg = '') 
 }
 
 // 助手消息和转发消息
-export async function heperMsgAndForward(req, to, text) {
+export async function heperMsgAndForward(res, to, text) {
   const msg = await helloHelperMsg(to, text);
 
   sendNotificationsToCustomAddresses(
     {
-      [kHello]: {
-        userinfo: {
-          username: appConfig.notifyAccount,
-          account: appConfig.notifyAccount,
+      locals: {
+        hello: {
+          userinfo: {
+            username: appConfig.notifyAccount,
+            account: appConfig.notifyAccount,
+          },
         },
       },
     },
     msg,
   ).catch((err) => {
-    errLog(req, `发送通知到自定义地址失败(${err})`);
+    writelog(res, `发送通知到自定义地址失败(${err})`, 500);
   });
 }
 
@@ -477,10 +466,12 @@ export async function helloHelperMsg(to, text) {
 
   await sendNotifyMsg(
     {
-      [kHello]: {
-        userinfo: {
-          account: appConfig.notifyAccount,
-          username: appConfig.notifyAccount,
+      locals: {
+        hello: {
+          userinfo: {
+            account: appConfig.notifyAccount,
+            username: appConfig.notifyAccount,
+          },
         },
       },
     },
@@ -525,7 +516,7 @@ export function getChatUserList(account, pageSize, offset, word = '') {
 }
 
 // 清理到期聊天文件
-export async function cleanUpload(req = false) {
+export async function cleanUpload(res = false) {
   if (_d.cacheExp.uploadSaveDay > 0) {
     const uploadDir = appConfig.uploadDir();
 
@@ -564,7 +555,7 @@ export async function cleanUpload(req = false) {
 
     if (count) {
       const text = `清理到期聊天室文件：${count}`;
-      await writelog(req, text, 'user');
+      await writelog(res, text);
       await heperMsgAndForward(null, appConfig.adminAccount, text);
     }
   }
