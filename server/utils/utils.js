@@ -34,15 +34,6 @@ export async function writelog(res, str = '', code = 200) {
 
     if (str === '') return;
 
-    let flag = '';
-    if (code < 200) {
-      flag = 'panel_error';
-    } else if (code >= 200 && code < 300) {
-      flag = 'success';
-    } else {
-      flag = 'error';
-    }
-
     const date = formatDate({ template: '{0}-{1}-{2} {3}:{4}:{5}' });
 
     if (res?.locals?.hello) {
@@ -66,6 +57,8 @@ export async function writelog(res, str = '', code = 200) {
     }
 
     devLog(str);
+
+    const flag = [...String(code)].fill('x', 1).join('');
 
     const targetPath = appConfig.logDir(`${flag}.log`);
     await _f.appendFile(targetPath, str);

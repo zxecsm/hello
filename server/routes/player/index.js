@@ -91,7 +91,7 @@ route.post(
         if (share.state === 0) {
           errData[0].p = share.text;
 
-          await writelog(res, share.text, 500);
+          await writelog(res, share.text, 403);
 
           return resp.success(res, 'ok', errData)();
         }
@@ -133,7 +133,7 @@ route.post(
       } else {
         resp.success(res, 'ok', errData)();
       }
-    } catch {
+    } catch (error) {
       await writelog(res, error, 500);
       resp.success(res, 'ok', errData)();
     }

@@ -152,7 +152,7 @@ export async function validShareAddUserState(res, types, id, pass, captchaId) {
     // 进入页面第一次空提取码不计算
     if (pass) {
       shareVerify.add(id);
-      await writelog(res, `提取码错误`, 500);
+      await writelog(res, `提取码错误`, 403);
     }
 
     return {
