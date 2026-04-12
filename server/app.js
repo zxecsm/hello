@@ -268,7 +268,7 @@ app.all(
       }
     }
 
-    const { chat_id } = req.locals.ctx;
+    const { chat_id } = res.locals.ctx;
 
     try {
       text = await V.parse(text, V.string().trim().min(1).max(fieldLength.chatContent), 'text');
