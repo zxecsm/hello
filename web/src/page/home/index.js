@@ -5,7 +5,6 @@ import './pwa.js';
 import '../../css/common/common.css';
 import '../../font/iconfont.css';
 import './index.less';
-import imgBgSvg from '../../images/img/bg.svg';
 import {
   queryURLParams,
   myOpen,
@@ -344,31 +343,16 @@ export function updateUserInfo(cb) {
           $userLogoBtn.css('background-image', `url(${getTextImg(username)})`);
         }
 
-        // 没有壁纸使用默认
-        const isBig = isBigScreen();
-        if ((isBig && !bg) || (!isBig && !bgxs)) {
-          $pageBg.css('background-image', `url(${imgBgSvg})`);
-          cb && cb();
-        } else {
-          // 更新壁纸
-          let bgUrl = '';
-          if (isBig) {
-            bgUrl = getFilePath(`/bg/${bg}`);
-          } else {
-            bgUrl = getFilePath(`/bg/${bgxs}`);
-          }
-          imgjz(bgUrl)
-            .then((cache) => {
-              $pageBg.css('background-image', `url(${cache})`);
-              cb && cb();
-            })
-            .catch(() => {
-              $pageBg.css('background-image', `url(${imgBgSvg})`);
-              cb && cb();
-            });
-        }
-        // 更新个人信息
         renderUserinfo();
+        cb && cb();
+
+        const isBig = isBigScreen();
+        if ((isBig && !bg) || (!isBig && !bgxs)) return;
+        imgjz(getFilePath(`/bg/${isBig ? bg : bgxs}`))
+          .then((cache) => {
+            $pageBg.css('background-image', `url(${cache})`);
+          })
+          .catch(() => {});
       }
     })
     .catch(() => {});

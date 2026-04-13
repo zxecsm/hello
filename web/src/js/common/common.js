@@ -72,9 +72,10 @@ window.addEventListener('load', function () {
       .catch(() => {});
   }
   if (window._pageName === 'home' || window._pageName === 'note') return;
-  loadingPage.end();
-  timeMsg();
-  welcomeMsg();
+  loadingPage.end(() => {
+    timeMsg();
+    welcomeMsg();
+  });
 });
 //鼠标点击效果
 ~(function () {

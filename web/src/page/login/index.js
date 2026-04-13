@@ -54,17 +54,6 @@ $about.on('click', function () {
 if (isLogin()) {
   myOpen('/');
 }
-(async () => {
-  const url = `/api/bg/r/${isBigScreen() ? 'd' : 'm'}`;
-
-  try {
-    await loadImg(url);
-    $bg.css({
-      backgroundImage: `url(${url})`,
-      opacity: 0.8,
-    });
-  } catch {}
-})();
 function hdKeyUp(e) {
   if (e.key === 'Enter') {
     hdSubmit();
@@ -278,8 +267,17 @@ function closeRatify() {
   $ratify.css('display', 'none').find('.code_box').css('display', 'none');
   code = '';
 }
-window.addEventListener('load', function () {
+window.addEventListener('load', async function () {
   $box.addClass('open');
+  const url = `/api/bg/r/${isBigScreen() ? 'd' : 'm'}`;
+
+  try {
+    await loadImg(url);
+    $bg.css({
+      backgroundImage: `url(${url})`,
+      opacity: 0.8,
+    });
+  } catch {}
 });
 accInp.setValue(localData.get('username'));
 let showpd = localData.get('showpd');

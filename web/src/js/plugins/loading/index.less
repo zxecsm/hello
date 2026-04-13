@@ -16,16 +16,22 @@
     width: 50%;
     height: 100%;
     background-color: var(--color9);
-    transition: 0.5s ease;
   }
-  &.open .left {
-    transform: translateX(-100%);
-  }
-  &.open .right {
-    transform: translateX(100%);
-  }
-  &.open .center {
-    opacity: 0;
+  &.open {
+    .left,
+    .right,
+    .center {
+      transition: 0.5s ease;
+    }
+    .left {
+      transform: translateX(-100%);
+    }
+    .right {
+      transform: translateX(100%);
+    }
+    .center {
+      opacity: 0;
+    }
   }
   .left {
     left: 0;
