@@ -385,6 +385,7 @@ route.post(
     'body',
     V.object({
       randomBgApi: V.number().toInt().enum([0, 1]),
+      randomMusicApi: V.number().toInt().enum([0, 1]),
       siteInfoApi: V.number().toInt().enum([0, 1]),
       faviconApi: V.number().toInt().enum([0, 1]),
       echoApi: V.number().toInt().enum([0, 1]),
@@ -392,10 +393,12 @@ route.post(
     }),
   ),
   asyncHandler(async (_, res) => {
-    const { randomBgApi, siteInfoApi, faviconApi, echoApi, ipLocationApi } = res.locals.ctx;
+    const { randomBgApi, randomMusicApi, siteInfoApi, faviconApi, echoApi, ipLocationApi } =
+      res.locals.ctx;
 
     _d.pubApi = {
       randomBgApi: !!randomBgApi,
+      randomMusicApi: !!randomMusicApi,
       siteInfoApi: !!siteInfoApi,
       faviconApi: !!faviconApi,
       echoApi: !!echoApi,

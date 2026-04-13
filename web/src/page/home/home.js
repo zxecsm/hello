@@ -182,11 +182,11 @@ export function welcomeMsg() {
         localData.set('ip', ip);
         _msg.msg({
           type: 'success',
-          message: `✨✨✨欢迎来自 ${country} ${province} 的朋友！🎈🎈🎈`,
+          message: `✨ 欢迎来自 ${country} ${province} 的朋友！🎈`,
           icon: 'iconfont icon-cat',
           duration: 5000,
         });
-        fireworks();
+        fireworks(10);
       }
     })
     .catch(() => {});

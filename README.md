@@ -35,6 +35,12 @@ http://localhost:55555/api/bg/r/d    # 桌面端壁纸
 http://localhost:55555/api/bg/r/m    # 移动端壁纸
 ```
 
+随机音乐
+
+```
+http://localhost:55555/api/music
+```
+
 获取网站图标
 
 ```

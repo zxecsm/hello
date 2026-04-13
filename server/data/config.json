@@ -5,6 +5,7 @@
   "tipsFlag": 0,
   "pubApi": {
     "randomBgApi": true,
+    "randomMusicApi": true,
     "siteInfoApi": true,
     "faviconApi": true,
     "echoApi": true,

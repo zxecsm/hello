@@ -414,6 +414,25 @@ app.get(
   }),
 );
 
+// 随机音乐
+app.get(
+  '/api/music',
+  asyncHandler(async (req, res) => {
+    if (!_d.pubApi.randomMusicApi && !res.locals.hello.userinfo.account) {
+      return resp.forbidden(res, '接口未开放')();
+    }
+
+    const musicData = await db('songs').select('id').getRandomOne();
+
+    if (!musicData) {
+      return resp.notFound(res, '音乐库为空')();
+    }
+
+    await db('songs').where({ id: musicData.id }).increment({ play_count: 1 });
+    await getFile(req, res, `/music/url/${musicData.id}`, false);
+  }),
+);
+
 app.use(
   asyncHandler(async (req, res, next) => {
     const path = res.locals.hello.path;

@@ -50,7 +50,7 @@ route.get(
     const { type } = res.locals.ctx.params;
 
     // 检查壁纸接口是否开启
-    if (!_d.pubApi.randomBgApi) {
+    if (!_d.pubApi.randomBgApi && !res.locals.hello.userinfo.account) {
       return resp.forbidden(res, '接口未开放')();
     }
 

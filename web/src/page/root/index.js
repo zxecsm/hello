@@ -877,11 +877,12 @@ function handlePubApi(e) {
         const pre = originURL + _d.apiPath;
         rMenu.rightInfo(
           e,
-          `壁纸：\n  大屏：${pre}/bg/r/d\n  小屏：${pre}/bg/r/m\n\n获取网站图标：${originURL}${_d.faviconURL}?u=${originURL}\n\n获取网站信息：${pre}/site-info?u=${originURL}\n\nIP地理位置：${pre}/ip-location?ip=223.5.5.5\n\n回显接口：${pre}/echo`,
+          `壁纸：\n  大屏：${pre}/bg/r/d\n  小屏：${pre}/bg/r/m\n\n音乐：${pre}/music\n\n获取网站图标：${originURL}${_d.faviconURL}?u=${originURL}\n\n获取网站信息：${pre}/site-info?u=${originURL}\n\nIP地理位置：${pre}/ip-location?ip=223.5.5.5\n\n回显接口：${pre}/echo`,
           '接口信息',
         );
       } else if (id === 'state') {
-        const { randomBgApi, siteInfoApi, faviconApi, echoApi, ipLocationApi } = dataObj.pubApi;
+        const { randomBgApi, randomMusicApi, siteInfoApi, faviconApi, echoApi, ipLocationApi } =
+          dataObj.pubApi;
         const type = 'select';
         rMenu.inpMenu(
           e,
@@ -892,6 +893,15 @@ function handlePubApi(e) {
                 beforeText: '壁纸接口：',
                 type,
                 value: randomBgApi ? 'y' : 'n',
+                selectItem: [
+                  { value: 'y', text: '开启' },
+                  { value: 'n', text: '关闭' },
+                ],
+              },
+              randomMusicApi: {
+                beforeText: '音乐接口：',
+                type,
+                value: randomMusicApi ? 'y' : 'n',
                 selectItem: [
                   { value: 'y', text: '开启' },
                   { value: 'n', text: '关闭' },
@@ -937,10 +947,12 @@ function handlePubApi(e) {
           },
           function ({ inp, close, loading, isDiff }) {
             if (!isDiff()) return;
-            const { randomBgApi, siteInfoApi, faviconApi, echoApi, ipLocationApi } = inp;
+            const { randomBgApi, randomMusicApi, siteInfoApi, faviconApi, echoApi, ipLocationApi } =
+              inp;
 
             const obj = {
               randomBgApi: randomBgApi === 'y' ? 1 : 0,
+              randomMusicApi: randomMusicApi === 'y' ? 1 : 0,
               siteInfoApi: siteInfoApi === 'y' ? 1 : 0,
               faviconApi: faviconApi === 'y' ? 1 : 0,
               echoApi: echoApi === 'y' ? 1 : 0,

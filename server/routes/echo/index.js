@@ -9,7 +9,7 @@ route.all(
   '/',
   openCors,
   asyncHandler((req, res) => {
-    if (!_d.pubApi.echoApi) {
+    if (!_d.pubApi.echoApi && !res.locals.hello.userinfo.account) {
       return resp.forbidden(res, '接口未开放')();
     }
 
