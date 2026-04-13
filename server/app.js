@@ -417,6 +417,7 @@ app.get(
 // 随机音乐
 app.get(
   '/api/music',
+  openCors,
   asyncHandler(async (req, res) => {
     if (!_d.pubApi.randomMusicApi && !res.locals.hello.userinfo.account) {
       return resp.forbidden(res, '接口未开放')();
