@@ -213,13 +213,15 @@ route.get(
             width: 200,
             height: 200,
             fit: 'cover',
+            maxHeight: fieldLength.picMaxWH,
+            maxWidth: fieldLength.picMaxWH,
           });
 
           if (buf) {
             await _f.writeFile(iconPath, buf);
           }
         } catch (error) {
-          await writelog(res, error, 500);
+          await writelog(res, error, 403);
           await _f.writeFile(iconPath, iconBuf);
         }
         res.sendFile(iconPath, { dotfiles: 'allow' });
@@ -235,7 +237,7 @@ route.get(
         }
       }
 
-      await writelog(res, error, 500);
+      await writelog(res, error, 403);
 
       res.sendFile(defaultIcon, { dotfiles: 'allow' });
     }

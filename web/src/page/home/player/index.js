@@ -47,6 +47,7 @@ import {
   parseJson,
   switchFullScreenStateStyle,
   removeFullScreenStateStyle,
+  getImgInfo,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -1424,6 +1425,14 @@ export async function updateSongCover(obj) {
     if (size <= 0 || size >= _d.fieldLength.maxSongPicSize * 1024 * 1024) {
       pro.fail();
       _msg.error(`封面限制0-${_d.fieldLength.maxSongPicSize}MB`);
+      return;
+    }
+    try {
+      const { width, height } = await getImgInfo(file);
+      if (width > _d.fieldLength.picMaxWH || height > _d.fieldLength.picMaxWH) throw '';
+    } catch {
+      pro.fail();
+      _msg.error(`图片尺寸过大或格式错误`);
       return;
     }
     const result = await reqPlayerUp(

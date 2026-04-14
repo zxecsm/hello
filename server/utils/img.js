@@ -6,9 +6,7 @@ sharp.cache(false); // 禁用缓存，适合处理大量不同图片的场景
 
 // 读取图片信息
 export async function getImgInfo(path) {
-  const inputBuf = await _f.fsp.readFile(path);
-  const img = sharp(inputBuf);
-  return img.metadata();
+  return await sharp(typeof path === 'string' ? path : await _f.fsp.readFile(path)).metadata();
 }
 
 /*
@@ -20,21 +18,15 @@ export async function getImgInfo(path) {
 */
 export async function convertImageFormat(
   path,
-  { format, width, height, quality, fit = 'inside' } = {},
+  { format, width, height, quality, fit = 'inside', maxWidth = 5000, maxHeight = 5000 } = {},
 ) {
-  let inputBuf;
-  try {
-    if (typeof path === 'string') {
-      inputBuf = await _f.fsp.readFile(path);
-    } else {
-      inputBuf = path;
-    }
-  } catch (err) {
-    throw new Error(`读取文件失败: ${path} - ${err.message}`);
+  const img = sharp(typeof path === 'string' ? path : await _f.fsp.readFile(path));
+  const metadata = await img.metadata();
+
+  if (metadata.width > maxWidth || metadata.height > maxHeight) {
+    throw new Error(`图片尺寸过大: ${metadata.width}x${metadata.height}`);
   }
 
-  const img = sharp(inputBuf);
-  const metadata = await img.metadata();
   const originFormat = metadata.format?.toLowerCase() || 'unknown';
 
   // 确定目标格式（未指定则保持原格式）

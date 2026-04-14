@@ -364,7 +364,7 @@ route.post(
     }
 
     sendNotificationsToCustomAddresses(res, msg).catch((err) => {
-      writelog(res, `发送通知到自定义地址失败(${err})`, 500);
+      writelog(res, `发送通知到自定义地址失败(${err})`, 403);
     });
 
     resp.success(res, `发送${chatType[obj.type]}消息成功`)();
@@ -423,7 +423,7 @@ route.post(
     }
 
     sendNotificationsToCustomAddresses(res, msg).catch((err) => {
-      writelog(res, `发送通知到自定义地址失败(${err})`, 500);
+      writelog(res, `发送通知到自定义地址失败(${err})`, 403);
     });
 
     resp.success(res, '信息转发成功')();
@@ -730,7 +730,7 @@ route.post(
     }
 
     sendNotificationsToCustomAddresses(res, msg).catch((err) => {
-      writelog(res, `发送通知到自定义地址失败(${err})`, 500);
+      writelog(res, `发送通知到自定义地址失败(${err})`, 403);
     });
 
     resp.success(res, '发送语音消息成功')();
@@ -815,7 +815,7 @@ route.post(
     }
 
     sendNotificationsToCustomAddresses(res, msg).catch((err) => {
-      writelog(res, `发送通知到自定义地址失败(${err})`, 500);
+      writelog(res, `发送通知到自定义地址失败(${err})`, 403);
     });
 
     resp.success(res, `发送${chatType[type]}消息成功`)();
@@ -911,7 +911,7 @@ route.post(
           }
 
           sendNotificationsToCustomAddresses(res, msg).catch((err) => {
-            writelog(res, `发送通知到自定义地址失败(${err})`, 500);
+            writelog(res, `发送通知到自定义地址失败(${err})`, 403);
           });
 
           resp.success(res, `发送${chatType[type]}消息成功`)();

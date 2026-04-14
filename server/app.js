@@ -384,7 +384,7 @@ app.get(
         }
       }
 
-      await writelog(res, error, 500);
+      await writelog(res, error, 403);
       resp.success(res, '获取网站信息成功', obj)();
     }
   }),

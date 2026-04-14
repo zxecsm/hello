@@ -33,6 +33,7 @@ import {
   savePopLocationInfo,
   getFilePath,
   parseArrayJson,
+  getImgInfo,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -333,6 +334,14 @@ export async function upLogo(type, cb, id, loading = { start() {}, end() {} }) {
     if (file.size <= 0 || file.size >= _d.fieldLength.maxLogoSize * 1024 * 1024) {
       pro.fail();
       _msg.error(`图片限制0-${_d.fieldLength.maxLogoSize}MB`);
+      return;
+    }
+    try {
+      const { width, height } = await getImgInfo(file);
+      if (width > _d.fieldLength.picMaxWH || height > _d.fieldLength.picMaxWH) throw '';
+    } catch {
+      pro.fail();
+      _msg.error(`图片尺寸过大或格式错误`);
       return;
     }
     const HASH = await md5.sampleHash(file);

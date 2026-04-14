@@ -337,6 +337,11 @@ route.post(
 
     // 获取壁纸尺寸进行分类
     const { width, height } = await getImgInfo(_path.normalizeNoSlash(tDir, tName));
+
+    if (width > fieldLength.picMaxWH || height > fieldLength.picMaxWH) {
+      return resp.forbidden(res, '图片尺寸过大')(`${width}x${height}`, 1);
+    }
+
     const type = width < height ? 'bgxs' : 'bg';
 
     const url = _path.normalizeNoSlash(timePath, tName);

@@ -1,6 +1,6 @@
 import appConfig from '../../data/config.js';
 
-import { isImgFile, writelog } from '../../utils/utils.js';
+import { isImgFile } from '../../utils/utils.js';
 
 import { db } from '../../utils/sqlite.js';
 
@@ -98,6 +98,8 @@ export default async function getFile(req, res, originalPath, verifyLogin = true
   }
 
   const tObj = await getThumbPath(res, w, dir, path, stat);
+
+  if (!tObj) return;
 
   res.setHeader('X-File-Size', tObj.size);
 
@@ -300,6 +302,8 @@ async function getThumbPath(res, w, dir, path, stat) {
           format: 'webp',
           width: w,
           height: 1024,
+          maxHeight: fieldLength.picMaxWH,
+          maxWidth: fieldLength.picMaxWH,
         });
 
         size = buf.length;
@@ -312,8 +316,8 @@ async function getThumbPath(res, w, dir, path, stat) {
     }
     return { path, size };
   } catch (error) {
-    await writelog(res, `生成缩略图失败(${error})`, 500);
-    return { path, size };
+    resp.forbidden(res, '获取缩略图失败')(error, 1);
+    return null;
   }
 }
 

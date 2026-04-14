@@ -327,7 +327,7 @@ route.post(
 
     await db('bmk_group').insert({
       id: nanoid(),
-      create_at: new Date(),
+      create_at: Date.now(),
       title,
       account,
       num: total + 1,

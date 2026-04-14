@@ -450,7 +450,7 @@ export async function heperMsgAndForward(res, to, text) {
     },
     msg,
   ).catch((err) => {
-    writelog(res, `发送通知到自定义地址失败(${err})`, 500);
+    writelog(res, `发送通知到自定义地址失败(${err})`, 403);
   });
 }
 

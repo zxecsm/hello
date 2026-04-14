@@ -184,6 +184,23 @@ export function loadImg(url) {
     }
   });
 }
+export async function getImgInfo(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await loadImg(url);
+    const result = {
+      width: img.width,
+      height: img.height,
+      naturalWidth: img.naturalWidth,
+      naturalHeight: img.naturalHeight,
+    };
+    return result;
+  } catch (error) {
+    throw error;
+  } finally {
+    if (url) URL.revokeObjectURL(url);
+  }
+}
 // 图片加载
 export async function imgjz(url) {
   const cache = await cacheFile.add(url, 'image');

@@ -86,6 +86,7 @@ const fieldLength = {
   chatPageSize: 50, // 消息分页
   customCodeSize: 100 * 1024, // 自定义代码大小
   cdHistoryLength: 100, // 文件操作历史记录个数
+  picMaxWH: 5000, // 图片最大宽高
 };
 const _d = {
   appName: 'hello',

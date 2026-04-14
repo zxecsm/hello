@@ -20,7 +20,7 @@ const taskState = {
     const task = this.tasks.get(key);
     if (task) {
       task.state = 1;
-      task.time = new Date();
+      task.time = Date.now();
     }
   },
   get(key) {

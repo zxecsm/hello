@@ -20,6 +20,7 @@ import {
   isLogin,
   concurrencyTasks,
   _getTarget,
+  getImgInfo,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -72,6 +73,16 @@ async function hdUpFile(files) {
     if (size <= 0 || size >= _d.fieldLength.maxPicSize * 1024 * 1024) {
       pro.fail();
       _msg.error(`图片限制0-${_d.fieldLength.maxPicSize}MB：${name}`, null, {
+        reside: true,
+      });
+      return;
+    }
+    try {
+      const { width, height } = await getImgInfo(file);
+      if (width > _d.fieldLength.picMaxWH || height > _d.fieldLength.picMaxWH) throw '';
+    } catch {
+      pro.fail();
+      _msg.error(`图片尺寸过大或格式错误：${name}`, null, {
         reside: true,
       });
       return;

@@ -72,7 +72,11 @@ route.post(
 
     await receiveFiles(req, tDir, tName, fieldLength.maxPicSize, HASH);
 
-    await getImgInfo(_path.normalizeNoSlash(tDir, tName));
+    const { width, height } = await getImgInfo(_path.normalizeNoSlash(tDir, tName));
+
+    if (width > fieldLength.picMaxWH || height > fieldLength.picMaxWH) {
+      return resp.forbidden(res, '图片尺寸过大')(`${width}x${height}`, 1);
+    }
 
     const obj = {
       id: nanoid(),

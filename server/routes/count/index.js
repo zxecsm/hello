@@ -132,7 +132,7 @@ timedTask.add(async () => {
         },
         msg,
       ).catch((err) => {
-        writelog(false, `发送通知到自定义地址失败(${err})`, 500);
+        writelog(false, `发送通知到自定义地址失败(${err})`, 403);
       });
     });
 

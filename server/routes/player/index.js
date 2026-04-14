@@ -53,6 +53,7 @@ import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
 import resp from '../../utils/response.js';
 import { asyncHandler, validate } from '../../utils/customMiddleware.js';
+import { getImgInfo } from '../../utils/img.js';
 const maxSonglistCount = 2000;
 
 const route = express.Router();
@@ -625,7 +626,7 @@ route.post(
     });
     if (change.changes === 0) {
       await db('last_play').insert({
-        create_at: new Date(),
+        create_at: Date.now(),
         account,
         song_id: lastplay.id,
         play_current_time: currentTime,
@@ -1481,7 +1482,20 @@ route.post(
       const tDir = appConfig.musicDir(_path.dirname(url));
       const tName = `${_path.basename(url)[1]}.${_path.extname(name)[2]}`;
 
+      // 删除缩略图封面
+      _f.del(
+        appConfig.thumbDir(
+          `${_path.extname(_path.normalizeNoSlash(tDir, tName).slice(appConfig.appFilesDir().length))[0]}_256.webp`,
+        ),
+      );
+
       await receiveFiles(req, tDir, tName, fieldLength.maxSongPicSize, HASH);
+
+      const { width, height } = await getImgInfo(_path.normalizeNoSlash(tDir, tName));
+
+      if (width > fieldLength.picMaxWH || height > fieldLength.picMaxWH) {
+        return resp.forbidden(res, '图片尺寸过大')(`${width}x${height}`, 1);
+      }
 
       // 如果上传封面文件和现有的封面文件名不同，删除现有的
       if (_path.basename(pic)[0] !== tName) {
