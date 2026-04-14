@@ -55,7 +55,7 @@ import captcha from '../../utils/captcha.js';
 import { getSSH, resetSSHExpireTime } from '../ssh/terminal.js';
 import resp from '../../utils/response.js';
 import { asyncHandler, validate } from '../../utils/customMiddleware.js';
-import { getImgInfo, isPictureSizeSafe } from '../../utils/img.js';
+import { getImgInfo } from '../../utils/img.js';
 
 const verifyCode = new Map();
 
@@ -1074,12 +1074,10 @@ route.post(
       HASH,
     );
 
-    const { width, height } = await getImgInfo(
-      _path.normalizeNoSlash(path, `${HASH}.${_path.extname(name)[2]}`),
-    );
-
-    if (!isPictureSizeSafe(width, height)) {
-      return resp.forbidden(res, '图片尺寸过大')(`${width}x${height}`, 1);
+    try {
+      await getImgInfo(_path.normalizeNoSlash(path, `${HASH}.${_path.extname(name)[2]}`));
+    } catch (error) {
+      return resp.forbidden(res, '图片格式错误')(error, 1);
     }
 
     const logo = _path.normalizeNoSlash(timePath, `${HASH}.${_path.extname(name)[2]}`);

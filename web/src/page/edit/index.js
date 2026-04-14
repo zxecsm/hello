@@ -29,7 +29,6 @@ import {
   toggleUserSelect,
   getFilePath,
   getImgInfo,
-  isPictureSizeSafe,
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
@@ -549,11 +548,10 @@ async function hdUpFile(files) {
       return;
     }
     try {
-      const { width, height } = await getImgInfo(file);
-      if (!isPictureSizeSafe(width, height)) throw '';
+      await getImgInfo(file);
     } catch {
       pro.fail();
-      _msg.error(`图片尺寸过大或格式错误：${name}`, null, {
+      _msg.error(`图片格式错误：${name}`, null, {
         reside: true,
       });
       return;

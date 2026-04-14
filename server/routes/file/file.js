@@ -17,7 +17,7 @@ import _crypto from '../../utils/crypto.js';
 import { db } from '../../utils/sqlite.js';
 import nanoid from '../../utils/nanoid.js';
 import pinyin from '../../utils/pinyin.js';
-import { getImgInfo, isPictureSizeSafe } from '../../utils/img.js';
+import { getImgInfo } from '../../utils/img.js';
 
 // 删除站点文件
 export async function _delDir(path) {
@@ -286,12 +286,14 @@ export async function fileToBg(p) {
   await _f.cp(p, _path.normalizeNoSlash(tDir, tName));
 
   // 获取壁纸尺寸进行分类
-  const { width, height } = await getImgInfo(_path.normalizeNoSlash(tDir, tName));
-
-  if (!isPictureSizeSafe(width, height)) {
-    throw new Error(`图片尺寸过大: ${width}x${height}`);
+  let imgInfo = {};
+  try {
+    imgInfo = await getImgInfo(_path.normalizeNoSlash(tDir, tName));
+  } catch (error) {
+    throw new Error(error);
   }
 
+  const { width, height } = imgInfo;
   const type = width < height ? 'bgxs' : 'bg';
 
   const url = _path.normalizeNoSlash(timePath, tName);

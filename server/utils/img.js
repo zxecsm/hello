@@ -21,10 +21,6 @@ export async function convertImageFormat(
   const img = sharp(path);
   const metadata = await img.metadata();
 
-  if (!isPictureSizeSafe(metadata.width, metadata.height)) {
-    throw new Error(`图片尺寸过大: ${metadata.width}x${metadata.height}`);
-  }
-
   const originFormat = metadata.format?.toLowerCase() || 'unknown';
 
   // 确定目标格式（未指定则保持原格式）
@@ -89,13 +85,6 @@ export async function convertImageFormat(
   } catch (err) {
     throw new Error(`图片转换失败 (${originFormat} → ${targetFormat}): ${err.message}`);
   }
-}
-
-export function isPictureSizeSafe(width, height) {
-  const MAX_DIMENSION = 10000;
-  const MAX_PIXELS = 50_000_000; // 5000万像素
-
-  return width <= MAX_DIMENSION && height <= MAX_DIMENSION && width * height <= MAX_PIXELS;
 }
 
 export async function svgToBase64Png(svg) {

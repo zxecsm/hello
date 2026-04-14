@@ -53,7 +53,7 @@ import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
 import resp from '../../utils/response.js';
 import { asyncHandler, validate } from '../../utils/customMiddleware.js';
-import { getImgInfo, isPictureSizeSafe } from '../../utils/img.js';
+import { getImgInfo } from '../../utils/img.js';
 const maxSonglistCount = 2000;
 
 const route = express.Router();
@@ -1491,10 +1491,10 @@ route.post(
 
       await receiveFiles(req, tDir, tName, fieldLength.maxSongPicSize, HASH);
 
-      const { width, height } = await getImgInfo(_path.normalizeNoSlash(tDir, tName));
-
-      if (!isPictureSizeSafe(width, height)) {
-        return resp.forbidden(res, '图片尺寸过大')(`${width}x${height}`, 1);
+      try {
+        await getImgInfo(_path.normalizeNoSlash(tDir, tName));
+      } catch (error) {
+        return resp.forbidden(res, '图片格式错误')(error, 1);
       }
 
       // 如果上传封面文件和现有的封面文件名不同，删除现有的

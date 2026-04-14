@@ -4,7 +4,7 @@ import appConfig from '../../data/config.js';
 
 import _f from '../../utils/f.js';
 
-import { getImgInfo, isPictureSizeSafe } from '../../utils/img.js';
+import { getImgInfo } from '../../utils/img.js';
 
 import { db } from '../../utils/sqlite.js';
 
@@ -72,10 +72,10 @@ route.post(
 
     await receiveFiles(req, tDir, tName, fieldLength.maxPicSize, HASH);
 
-    const { width, height } = await getImgInfo(_path.normalizeNoSlash(tDir, tName));
-
-    if (!isPictureSizeSafe(width, height)) {
-      return resp.forbidden(res, '图片尺寸过大')(`${width}x${height}`, 1);
+    try {
+      await getImgInfo(_path.normalizeNoSlash(tDir, tName));
+    } catch (error) {
+      return resp.forbidden(res, '图片格式错误')(error, 1);
     }
 
     const obj = {

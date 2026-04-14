@@ -17,7 +17,6 @@ import {
   isRoot,
   concurrencyTasks,
   getImgInfo,
-  isPictureSizeSafe,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import pagination from '../../../js/plugins/pagination';
@@ -65,11 +64,10 @@ async function hdUpBg(files) {
       return;
     }
     try {
-      const { width, height } = await getImgInfo(file);
-      if (!isPictureSizeSafe(width, height)) throw '';
+      await getImgInfo(file);
     } catch {
       pro.fail();
-      _msg.error(`图片尺寸过大或格式错误：${name}`, null, {
+      _msg.error(`图片格式错误：${name}`, null, {
         reside: true,
       });
       return;
