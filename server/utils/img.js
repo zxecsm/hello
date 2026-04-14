@@ -1,12 +1,10 @@
 import sharp from 'sharp';
 
-import _f from './f.js';
-
 sharp.cache(false); // 禁用缓存，适合处理大量不同图片的场景
 
 // 读取图片信息
 export async function getImgInfo(path) {
-  return await sharp(typeof path === 'string' ? path : await _f.fsp.readFile(path)).metadata();
+  return await sharp(path).metadata();
 }
 
 /*
@@ -18,12 +16,12 @@ export async function getImgInfo(path) {
 */
 export async function convertImageFormat(
   path,
-  { format, width, height, quality, fit = 'inside', maxWidth = 5000, maxHeight = 5000 } = {},
+  { format, width, height, quality, fit = 'inside' } = {},
 ) {
-  const img = sharp(typeof path === 'string' ? path : await _f.fsp.readFile(path));
+  const img = sharp(path);
   const metadata = await img.metadata();
 
-  if (metadata.width > maxWidth || metadata.height > maxHeight) {
+  if (!isPictureSizeSafe(metadata.width, metadata.height)) {
     throw new Error(`图片尺寸过大: ${metadata.width}x${metadata.height}`);
   }
 
@@ -91,6 +89,13 @@ export async function convertImageFormat(
   } catch (err) {
     throw new Error(`图片转换失败 (${originFormat} → ${targetFormat}): ${err.message}`);
   }
+}
+
+export function isPictureSizeSafe(width, height) {
+  const MAX_DIMENSION = 10000;
+  const MAX_PIXELS = 50_000_000; // 5000万像素
+
+  return width <= MAX_DIMENSION && height <= MAX_DIMENSION && width * height <= MAX_PIXELS;
 }
 
 export async function svgToBase64Png(svg) {

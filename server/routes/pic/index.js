@@ -4,7 +4,7 @@ import appConfig from '../../data/config.js';
 
 import _f from '../../utils/f.js';
 
-import { getImgInfo } from '../../utils/img.js';
+import { getImgInfo, isPictureSizeSafe } from '../../utils/img.js';
 
 import { db } from '../../utils/sqlite.js';
 
@@ -74,7 +74,7 @@ route.post(
 
     const { width, height } = await getImgInfo(_path.normalizeNoSlash(tDir, tName));
 
-    if (width > fieldLength.picMaxWH || height > fieldLength.picMaxWH) {
+    if (!isPictureSizeSafe(width, height)) {
       return resp.forbidden(res, '图片尺寸过大')(`${width}x${height}`, 1);
     }
 

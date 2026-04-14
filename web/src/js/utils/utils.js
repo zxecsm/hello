@@ -184,6 +184,12 @@ export function loadImg(url) {
     }
   });
 }
+export function isPictureSizeSafe(width, height) {
+  const MAX_DIMENSION = 10000;
+  const MAX_PIXELS = 50_000_000; // 5000万像素
+
+  return width <= MAX_DIMENSION && height <= MAX_DIMENSION && width * height <= MAX_PIXELS;
+}
 export async function getImgInfo(file) {
   const url = URL.createObjectURL(file);
   try {

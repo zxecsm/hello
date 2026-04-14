@@ -53,7 +53,7 @@ import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
 import resp from '../../utils/response.js';
 import { asyncHandler, validate } from '../../utils/customMiddleware.js';
-import { getImgInfo } from '../../utils/img.js';
+import { getImgInfo, isPictureSizeSafe } from '../../utils/img.js';
 const maxSonglistCount = 2000;
 
 const route = express.Router();
@@ -1493,7 +1493,7 @@ route.post(
 
       const { width, height } = await getImgInfo(_path.normalizeNoSlash(tDir, tName));
 
-      if (width > fieldLength.picMaxWH || height > fieldLength.picMaxWH) {
+      if (!isPictureSizeSafe(width, height)) {
         return resp.forbidden(res, '图片尺寸过大')(`${width}x${height}`, 1);
       }
 

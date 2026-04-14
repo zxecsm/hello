@@ -22,7 +22,7 @@ import { _delDir } from '../file/file.js';
 
 import { batchGetCollectBgList, getCollectBgList, getRandomBg, updateCollecBgtList } from './bg.js';
 
-import { getImgInfo } from '../../utils/img.js';
+import { getImgInfo, isPictureSizeSafe } from '../../utils/img.js';
 import { fieldLength } from '../config.js';
 import _path from '../../utils/path.js';
 import _connect from '../../utils/connect.js';
@@ -338,7 +338,7 @@ route.post(
     // 获取壁纸尺寸进行分类
     const { width, height } = await getImgInfo(_path.normalizeNoSlash(tDir, tName));
 
-    if (width > fieldLength.picMaxWH || height > fieldLength.picMaxWH) {
+    if (!isPictureSizeSafe(width, height)) {
       return resp.forbidden(res, '图片尺寸过大')(`${width}x${height}`, 1);
     }
 

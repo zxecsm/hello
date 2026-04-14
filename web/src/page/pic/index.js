@@ -21,6 +21,7 @@ import {
   concurrencyTasks,
   _getTarget,
   getImgInfo,
+  isPictureSizeSafe,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -79,7 +80,7 @@ async function hdUpFile(files) {
     }
     try {
       const { width, height } = await getImgInfo(file);
-      if (width > _d.fieldLength.picMaxWH || height > _d.fieldLength.picMaxWH) throw '';
+      if (!isPictureSizeSafe(width, height)) throw '';
     } catch {
       pro.fail();
       _msg.error(`图片尺寸过大或格式错误：${name}`, null, {

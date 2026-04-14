@@ -213,8 +213,6 @@ route.get(
             width: 200,
             height: 200,
             fit: 'cover',
-            maxHeight: fieldLength.picMaxWH,
-            maxWidth: fieldLength.picMaxWH,
           });
 
           if (buf) {

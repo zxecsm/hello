@@ -302,8 +302,6 @@ async function getThumbPath(res, w, dir, path, stat) {
           format: 'webp',
           width: w,
           height: 1024,
-          maxHeight: fieldLength.picMaxWH,
-          maxWidth: fieldLength.picMaxWH,
         });
 
         size = buf.length;
