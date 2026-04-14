@@ -98,6 +98,8 @@ const _d = {
   trashDir: `/.trash`,
   noteHistoryDir: `${userConfigDir}/note_history`,
   fontDir: `${userConfigDir}/appFiles/font`,
+  thumbDir: `${userConfigDir}/appFiles/thumb`,
+  notepadDir: `${userConfigDir}/appFiles/notepad`,
   pubDir: `${userConfigDir}/pub`,
   fileConfigDir: `${userConfigDir}/file_config`,
   appFilesDir: `${userConfigDir}/appFiles`,

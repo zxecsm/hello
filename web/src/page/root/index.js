@@ -24,10 +24,10 @@ import {
   reqRootAccountState,
   reqRootChangeCacheTime,
   reqRootCleanBgFile,
+  reqRootCleanChatFile,
   reqRootCleanDatabase,
   reqRootCleanMusicFile,
   reqRootCleanPicFile,
-  reqRootCleanThumbFile,
   reqRootCreateAccount,
   reqRootCustomCode,
   reqRootDeleteAccount,
@@ -49,6 +49,8 @@ import md5 from '../../js/utils/md5.js';
 import realtime from '../../js/plugins/realtime/index.js';
 import { otherWindowMsg } from '../home/home.js';
 import localData from '../../js/common/localData.js';
+import { addTask } from '../../js/plugins/task/index.js';
+import { reqTaskList } from '../../api/task.js';
 
 const $contentWrap = $('.content_wrap'),
   $paginationBox = $('.pagination_box'),
@@ -215,11 +217,7 @@ function deleteAccount(e, obj) {
               getUserList();
             }
           })
-          .catch((error) => {
-            if (error.statusText === 'timeout') {
-              timeoutMsg();
-            }
-          });
+          .catch(() => {});
       }
     },
   );
@@ -253,21 +251,15 @@ $list
 if (isIframe()) {
   $headBtns.find('.h_go_home').remove();
 }
-function timeoutMsg(text = '操作后台处理中，可在日志中查看处理结果') {
-  _msg.msg(
-    {
-      message: text,
-      type: 'warning',
-      duration: 8000,
-      icon: 'iconfont icon-warning-circle',
-    },
-    (type) => {
-      if (type === 'click') {
-        _myOpen(`/log`, '日志', 'log');
-      }
-    },
-  );
-}
+reqTaskList()
+  .then((res) => {
+    if (res.code === 1) {
+      res.data.forEach((key) => {
+        addTask(key);
+      });
+    }
+  })
+  .catch(() => {});
 // 清理歌曲文件
 function cleanMusicFile(e, loading = { start() {}, end() {} }) {
   rMenu.pop(
@@ -282,15 +274,12 @@ function cleanMusicFile(e, loading = { start() {}, end() {} }) {
           .then((result) => {
             loading.end();
             if (result.code === 1) {
-              _msg.success(result.codeText);
+              addTask(result.data.key);
               return;
             }
           })
-          .catch((error) => {
+          .catch(() => {
             loading.end();
-            if (error.statusText === 'timeout') {
-              timeoutMsg();
-            }
           });
       }
     },
@@ -310,15 +299,12 @@ function cleanBgFile(e, loading = { start() {}, end() {} }) {
           .then((result) => {
             loading.end();
             if (result.code === 1) {
-              _msg.success(result.codeText);
+              addTask(result.data.key);
               return;
             }
           })
-          .catch((error) => {
+          .catch(() => {
             loading.end();
-            if (error.statusText === 'timeout') {
-              timeoutMsg();
-            }
           });
       }
     },
@@ -338,83 +324,40 @@ function cleanPicFile(e, loading = { start() {}, end() {} }) {
           .then((result) => {
             loading.end();
             if (result.code === 1) {
-              _msg.success(result.codeText);
+              addTask(result.data.key);
               return;
             }
           })
-          .catch((error) => {
+          .catch(() => {
             loading.end();
-            if (error.statusText === 'timeout') {
-              timeoutMsg();
-            }
           });
       }
     },
   );
 }
-// 清理缩略图
-function cleanThumbFile(e) {
-  const data = [
+// 清理聊天室文件
+function cleanChatFile(e, loading = { start() {}, end() {} }) {
+  rMenu.pop(
     {
-      id: 'all',
-      text: '所有',
+      e,
+      text: `确认清理：聊天室文件？`,
     },
-    {
-      id: 'pic',
-      text: '图床',
-    },
-    {
-      id: 'bg',
-      text: '壁纸',
-    },
-    {
-      id: 'music',
-      text: '歌曲封面',
-    },
-    {
-      id: 'upload',
-      text: '聊天室',
-    },
-    {
-      id: 'file',
-      text: '文件管理',
-    },
-  ];
-  rMenu.selectMenu(
-    e,
-    data,
-    ({ e, id, close, loading }) => {
-      const obj = data.find((item) => item.id === id);
-      if (obj) {
-        rMenu.pop(
-          {
-            e,
-            text: `确认清空：${obj.text} 缩略图？`,
-          },
-          (type) => {
-            if (type === 'confirm') {
-              loading.start();
-              reqRootCleanThumbFile({ type: id })
-                .then((result) => {
-                  loading.end();
-                  if (result.code === 1) {
-                    close();
-                    _msg.success(result.codeText);
-                    return;
-                  }
-                })
-                .catch((error) => {
-                  loading.end();
-                  if (error.statusText === 'timeout') {
-                    timeoutMsg();
-                  }
-                });
+    (type) => {
+      if (type === 'confirm') {
+        loading.start();
+        reqRootCleanChatFile()
+          .then((result) => {
+            loading.end();
+            if (result.code === 1) {
+              addTask(result.data.key);
+              return;
             }
-          },
-        );
+          })
+          .catch(() => {
+            loading.end();
+          });
       }
     },
-    '选择要清空缩略图的类型',
   );
 }
 // 切换注册状态
@@ -498,11 +441,7 @@ function cleanDatabase(e) {
             _msg.success(res.codeText);
           }
         })
-        .catch((error) => {
-          if (error.statusText === 'timeout') {
-            timeoutMsg();
-          }
-        });
+        .catch(() => {});
     }
   });
 }
@@ -757,8 +696,18 @@ function handleClearFile(e) {
   const data = [
     {
       id: 'thumb',
-      text: '清空缩略图',
-      beforeIcon: 'iconfont icon-tupian',
+      text: '管理缩略图',
+      beforeIcon: 'iconfont icon-shezhi',
+    },
+    {
+      id: 'logo',
+      text: '管理LOGO图标',
+      beforeIcon: 'iconfont icon-shezhi',
+    },
+    {
+      id: 'notepad',
+      text: '管理便条',
+      beforeIcon: 'iconfont icon-shezhi',
     },
     {
       id: 'bg',
@@ -775,22 +724,36 @@ function handleClearFile(e) {
       text: '清理歌曲文件',
       beforeIcon: 'iconfont icon-yinle1',
     },
+    {
+      id: 'chat',
+      text: '清理聊天室文件',
+      beforeIcon: 'iconfont icon-liaotian',
+    },
   ];
   rMenu.selectMenu(
     e,
     data,
-    ({ id, e, loading }) => {
+    ({ id, e, loading, close }) => {
       if (id === 'thumb') {
-        cleanThumbFile(e);
+        _myOpen(`/file#${_d.thumbDir}`, '文件管理', 'file');
+        close();
+      } else if (id === 'logo') {
+        _myOpen(`/file#${_d.userLogoDir}`, '文件管理', 'file');
+        close();
+      } else if (id === 'notepad') {
+        _myOpen(`/file#${_d.notepadDir}`, '文件管理', 'file');
+        close();
       } else if (id === 'bg') {
         cleanBgFile(e, loading);
       } else if (id === 'pic') {
         cleanPicFile(e, loading);
       } else if (id === 'song') {
         cleanMusicFile(e, loading);
+      } else if (id === 'chat') {
+        cleanChatFile(e, loading);
       }
     },
-    '清理文件',
+    '清理文件(处理僵尸文件和数据)',
   );
 }
 
@@ -842,11 +805,8 @@ function handleFileCacheExp(e) {
             _msg.success(res.codeText);
           }
         })
-        .catch((error) => {
+        .catch(() => {
           loading.end();
-          if (error.statusText === 'timeout') {
-            timeoutMsg();
-          }
         });
     },
     '设置文件缓存时间（天）',

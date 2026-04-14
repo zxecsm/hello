@@ -1,9 +1,17 @@
 import $ from 'jquery';
-import { reqTaskCancel, reqTaskInfo } from '../../api/task';
-import { _mySlide, _setTimeout } from '../../js/utils/utils';
-import _d from '../../js/common/config';
+import './index.less';
+import _d from '../../common/config';
+import { _mySlide, _setTimeout } from '../../utils/utils';
+import { reqTaskCancel, reqTaskInfo } from '../../../api/task';
 
-const $taskBox = $('.task_box'),
+const taskBox = document.createElement('div');
+taskBox.className = 'task_box';
+taskBox.innerHTML = `
+  <div cursor="y" class="zoom_btn iconfont icon-xiala"></div>
+  <div class="list"></div>
+`;
+document.body.appendChild(taskBox);
+const $taskBox = $(taskBox),
   $zoomBtn = $taskBox.find('.zoom_btn'),
   $list = $taskBox.find('.list');
 

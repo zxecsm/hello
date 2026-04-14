@@ -11,23 +11,23 @@ import { runSql, db } from '../../utils/sqlite.js';
 
 import timedTask from '../../utils/timedTask.js';
 
-import { createPagingData, isEmail, concurrencyTasks, writelog } from '../../utils/utils.js';
+import { createPagingData, isEmail, writelog } from '../../utils/utils.js';
 
 import { becomeFriends, cleanUpload, heperMsgAndForward } from '../chat/chat.js';
 
 import { fieldLength } from '../config.js';
 
-import { _delDir, getAllFile, readMenu } from '../file/file.js';
+import { _delDir, readMenu } from '../file/file.js';
 
 import { deleteUser } from '../user/user.js';
 import _path from '../../utils/path.js';
-import { cleanFavicon, cleanSiteInfo } from '../bmk/bmk.js';
 import _crypto from '../../utils/crypto.js';
 import { getSystemUsage } from '../../utils/sys.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
 import resp from '../../utils/response.js';
 import { asyncHandler, validate } from '../../utils/customMiddleware.js';
+import taskState from '../../utils/taskState.js';
 
 const route = express.Router();
 
@@ -204,24 +204,92 @@ route.post(
 route.get(
   '/clean-music-file',
   asyncHandler(async (_, res) => {
+    const { account } = res.locals.hello.userinfo;
     const musicDir = appConfig.musicDir();
 
-    if ((await _f.getType(musicDir)) === 'dir') {
-      const songs = await db('songs').select('url').find();
-      const allMusicFile = await getAllFile(musicDir);
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const taskKey = taskState.add(account, `清理歌曲: 数据(0)-文件(0)-空文件夹(0)`, controller);
 
-      await concurrencyTasks(allMusicFile, 5, async (item) => {
-        const { path, name } = item;
+    resp.success(res, 'ok', { key: taskKey })();
 
-        const url = `${path.slice(musicDir.length + 1)}/${_path.extname(name)[0]}`;
-        if (!songs.some((item) => _path.extname(item.url)[0] === url)) {
-          await _delDir(_path.normalizeNoSlash(path, name));
+    try {
+      const dbSet = new Set();
+      let dataCount = 0;
+      let fileCount = 0;
+      let emptyDirCount = 0;
+      let lastId = 0;
+
+      while (true) {
+        if (signal.aborted) throw new Error('Operation aborted');
+
+        const songs = await db('songs')
+          .select('url,serial')
+          .where({ serial: { '>': lastId } })
+          .limit(500)
+          .orderBy('serial', 'ASC')
+          .find();
+
+        if (!songs.length) break;
+
+        lastId = songs[songs.length - 1].serial;
+
+        const delDatas = [];
+        for (const song of songs) {
+          const filePath = _path.normalizeNoSlash(musicDir, song.url);
+          if ((await _f.getType(filePath)) !== 'file') {
+            delDatas.push(song.serial);
+          } else {
+            dbSet.add(_path.dirname(filePath));
+          }
         }
-      });
 
-      await _f.removeEmptyDirs(musicDir);
+        if (delDatas.length) {
+          await db('songs')
+            .where({ serial: { in: delDatas } })
+            .delete();
+          dataCount += delDatas.length;
+          taskState.update(
+            taskKey,
+            `清理歌曲: 数据(${dataCount})-文件(${fileCount})-空文件夹(${emptyDirCount})`,
+          );
+        }
+      }
+
+      await _f.walk(
+        musicDir,
+        async ({ path, type }) => {
+          if (type === 'file') {
+            if (!dbSet.has(_path.dirname(path))) {
+              await _delDir(path);
+              fileCount++;
+              taskState.update(
+                taskKey,
+                `清理歌曲: 数据(${dataCount})-文件(${fileCount})-空文件夹(${emptyDirCount})`,
+              );
+            }
+          }
+        },
+        { signal, concurrency: 5 },
+      );
+
+      await _f.removeEmptyDirs(musicDir, {
+        signal,
+        progress({ count }) {
+          emptyDirCount += count;
+          taskState.update(
+            taskKey,
+            `清理歌曲: 数据(${dataCount})-文件(${fileCount})-空文件夹(${emptyDirCount})`,
+          );
+        },
+      });
+      taskState.done(taskKey);
+    } catch (error) {
+      taskState.delete(taskKey);
+      const errText = `清理歌曲失败`;
+      await writelog(res, `${errText}(${error})`, 500);
+      await heperMsgAndForward(res, account, errText);
     }
-    resp.success(res, '清理歌曲文件成功')();
   }),
 );
 
@@ -229,23 +297,92 @@ route.get(
 route.get(
   '/clean-bg-file',
   asyncHandler(async (_, res) => {
+    const { account } = res.locals.hello.userinfo;
     const bgDir = appConfig.bgDir();
 
-    if ((await _f.getType(bgDir)) === 'dir') {
-      const bgs = await db('bg').select('url').find();
-      const allBgFile = await getAllFile(bgDir);
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const taskKey = taskState.add(account, `清理壁纸: 数据(0)-文件(0)-空文件夹(0)`, controller);
 
-      await concurrencyTasks(allBgFile, 5, async (item) => {
-        const { path, name } = item;
-        const url = _path.normalizeNoSlash(path.slice(bgDir.length + 1), name);
-        if (!bgs.some((item) => item.url === url)) {
-          await _delDir(_path.normalizeNoSlash(path, name));
+    resp.success(res, 'ok', { key: taskKey })();
+
+    try {
+      const dbSet = new Set();
+      let dataCount = 0;
+      let fileCount = 0;
+      let emptyDirCount = 0;
+      let lastId = 0;
+
+      while (true) {
+        if (signal.aborted) throw new Error('Operation aborted');
+
+        const bgs = await db('bg')
+          .select('url,serial')
+          .where({ serial: { '>': lastId } })
+          .limit(500)
+          .orderBy('serial', 'ASC')
+          .find();
+
+        if (!bgs.length) break;
+
+        lastId = bgs[bgs.length - 1].serial;
+
+        const delDatas = [];
+        for (const bg of bgs) {
+          const filePath = _path.normalizeNoSlash(bgDir, bg.url);
+          if ((await _f.getType(filePath)) !== 'file') {
+            delDatas.push(bg.serial);
+          } else {
+            dbSet.add(filePath);
+          }
         }
-      });
 
-      await _f.removeEmptyDirs(bgDir);
+        if (delDatas.length) {
+          await db('bg')
+            .where({ serial: { in: delDatas } })
+            .delete();
+          dataCount += delDatas.length;
+          taskState.update(
+            taskKey,
+            `清理壁纸: 数据(${dataCount})-文件(${fileCount})-空文件夹(${emptyDirCount})`,
+          );
+        }
+      }
+
+      await _f.walk(
+        bgDir,
+        async ({ path, type }) => {
+          if (type === 'file') {
+            if (!dbSet.has(path)) {
+              await _delDir(path);
+              fileCount++;
+              taskState.update(
+                taskKey,
+                `清理壁纸: 数据(${dataCount})-文件(${fileCount})-空文件夹(${emptyDirCount})`,
+              );
+            }
+          }
+        },
+        { signal, concurrency: 5 },
+      );
+
+      await _f.removeEmptyDirs(bgDir, {
+        signal,
+        progress({ count }) {
+          emptyDirCount += count;
+          taskState.update(
+            taskKey,
+            `清理壁纸: 数据(${dataCount})-文件(${fileCount})-空文件夹(${emptyDirCount})`,
+          );
+        },
+      });
+      taskState.done(taskKey);
+    } catch (error) {
+      taskState.delete(taskKey);
+      const errText = `清理壁纸失败`;
+      await writelog(res, `${errText}(${error})`, 500);
+      await heperMsgAndForward(res, account, errText);
     }
-    resp.success(res, '清理壁纸文件成功')();
   }),
 );
 
@@ -253,43 +390,217 @@ route.get(
 route.get(
   '/clean-pic-file',
   asyncHandler(async (_, res) => {
+    const { account } = res.locals.hello.userinfo;
     const picDir = appConfig.picDir();
 
-    if ((await _f.getType(picDir)) === 'dir') {
-      const pics = await db('pic').select('url').find();
-      const allPicFile = await getAllFile(picDir);
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const taskKey = taskState.add(account, `清理图床: 数据(0)-文件(0)-空文件夹(0)`, controller);
 
-      await concurrencyTasks(allPicFile, 5, async (item) => {
-        const { path, name } = item;
-        const url = _path.normalizeNoSlash(path.slice(picDir.length + 1), name);
-        if (!pics.some((item) => item.url === url)) {
-          await _delDir(_path.normalizeNoSlash(path, name));
+    resp.success(res, 'ok', { key: taskKey })();
+
+    try {
+      const dbSet = new Set();
+      let dataCount = 0;
+      let fileCount = 0;
+      let emptyDirCount = 0;
+      let lastId = 0;
+
+      while (true) {
+        if (signal.aborted) throw new Error('Operation aborted');
+
+        const pics = await db('pic')
+          .select('url,serial')
+          .where({ serial: { '>': lastId } })
+          .limit(500)
+          .orderBy('serial', 'ASC')
+          .find();
+
+        if (!pics.length) break;
+
+        lastId = pics[pics.length - 1].serial;
+
+        const delDatas = [];
+        for (const pic of pics) {
+          const filePath = _path.normalizeNoSlash(picDir, pic.url);
+          if ((await _f.getType(filePath)) !== 'file') {
+            delDatas.push(pic.serial);
+          } else {
+            dbSet.add(filePath);
+          }
         }
-      });
 
-      await _f.removeEmptyDirs(picDir);
+        if (delDatas.length) {
+          await db('pic')
+            .where({ serial: { in: delDatas } })
+            .delete();
+          dataCount += delDatas.length;
+          taskState.update(
+            taskKey,
+            `清理图床: 数据(${dataCount})-文件(${fileCount})-空文件夹(${emptyDirCount})`,
+          );
+        }
+      }
+
+      await _f.walk(
+        picDir,
+        async ({ path, type }) => {
+          if (type === 'file') {
+            if (!dbSet.has(path)) {
+              await _delDir(path);
+              fileCount++;
+              taskState.update(
+                taskKey,
+                `清理图床: 数据(${dataCount})-文件(${fileCount})-空文件夹(${emptyDirCount})`,
+              );
+            }
+          }
+        },
+        { signal, concurrency: 5 },
+      );
+
+      await _f.removeEmptyDirs(picDir, {
+        signal,
+        progress({ count }) {
+          emptyDirCount += count;
+          taskState.update(
+            taskKey,
+            `清理图床: 数据(${dataCount})-文件(${fileCount})-空文件夹(${emptyDirCount})`,
+          );
+        },
+      });
+      taskState.done(taskKey);
+    } catch (error) {
+      taskState.delete(taskKey);
+      const errText = `清理图床失败`;
+      await writelog(res, `${errText}(${error})`, 500);
+      await heperMsgAndForward(res, account, errText);
     }
-    resp.success(res, '清理图床文件成功')();
   }),
 );
 
-// 清理缩略图文件
+// 清理聊天文件
 route.get(
-  '/clean-thumb-file',
-  validate(
-    'query',
-    V.object({
-      type: V.string().trim().enum(['pic', 'music', 'bg', 'upload', 'all', 'file']),
-    }),
-  ),
+  '/clean-chat-file',
   asyncHandler(async (_, res) => {
-    const { type } = res.locals.ctx;
+    const { account } = res.locals.hello.userinfo;
+    const uploadDir = appConfig.uploadDir();
 
-    const delP = type === 'all' ? appConfig.thumbDir() : appConfig.thumbDir(type);
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const taskKey = taskState.add(account, `清理聊天室: 数据(0)-文件(0)-空文件夹(0)`, controller);
 
-    await _delDir(delP);
+    resp.success(res, 'ok', { key: taskKey })();
 
-    resp.success(res, '清理缩略图文件成功')();
+    try {
+      const dbSet = new Set();
+      let dataCount = 0;
+      let fileCount = 0;
+      let emptyDirCount = 0;
+      let lastId = 0;
+
+      while (true) {
+        if (signal.aborted) throw new Error('Operation aborted');
+
+        const uploads = await db('upload AS u')
+          .select('u.url,u.serial')
+          .join(
+            'chat AS c',
+            {
+              'u.id': { value: 'c.hash', raw: true },
+            },
+            { type: 'LEFT' },
+          )
+          .whereRaw('c.hash IS NULL')
+          .where({ 'u.serial': { '>': lastId } })
+          .limit(500)
+          .orderBy('u.serial', 'ASC')
+          .find();
+
+        if (uploads.length === 0) break;
+        lastId = uploads[uploads.length - 1].serial;
+
+        await db('upload')
+          .where({ serial: { in: uploads.map((u) => u.serial) } })
+          .delete();
+        dataCount += uploads.length;
+        taskState.update(
+          taskKey,
+          `清理聊天室: 数据(${dataCount})-文件(${fileCount})-空文件夹(${emptyDirCount})`,
+        );
+      }
+
+      lastId = 0;
+      while (true) {
+        if (signal.aborted) throw new Error('Operation aborted');
+
+        const uploads = await db('upload')
+          .select('url,serial')
+          .where({ serial: { '>': lastId } })
+          .limit(500)
+          .orderBy('serial', 'ASC')
+          .find();
+
+        if (!uploads.length) break;
+
+        lastId = uploads[uploads.length - 1].serial;
+
+        const delDatas = [];
+        for (const upload of uploads) {
+          const filePath = _path.normalizeNoSlash(uploadDir, upload.url);
+          if ((await _f.getType(filePath)) !== 'file') {
+            delDatas.push(upload.serial);
+          } else {
+            dbSet.add(filePath);
+          }
+        }
+
+        if (delDatas.length) {
+          await db('upload')
+            .where({ serial: { in: delDatas } })
+            .delete();
+          dataCount += delDatas.length;
+          taskState.update(
+            taskKey,
+            `清理聊天室: 数据(${dataCount})-文件(${fileCount})-空文件夹(${emptyDirCount})`,
+          );
+        }
+      }
+
+      await _f.walk(
+        uploadDir,
+        async ({ path, type }) => {
+          if (type === 'file') {
+            if (!dbSet.has(path)) {
+              await _delDir(path);
+              fileCount++;
+              taskState.update(
+                taskKey,
+                `清理聊天室: 数据(${dataCount})-文件(${fileCount})-空文件夹(${emptyDirCount})`,
+              );
+            }
+          }
+        },
+        { signal, concurrency: 5 },
+      );
+
+      await _f.removeEmptyDirs(uploadDir, {
+        signal,
+        progress({ count }) {
+          emptyDirCount += count;
+          taskState.update(
+            taskKey,
+            `清理聊天室: 数据(${dataCount})-文件(${fileCount})-空文件夹(${emptyDirCount})`,
+          );
+        },
+      });
+      taskState.done(taskKey);
+    } catch (error) {
+      taskState.delete(taskKey);
+      const errText = `清理聊天室失败`;
+      await writelog(res, `${errText}(${error})`, 500);
+      await heperMsgAndForward(res, account, errText);
+    }
   }),
 );
 
@@ -423,27 +734,11 @@ route.post(
   asyncHandler(async (_, res) => {
     const { uploadSaveDay, faviconCache, siteInfoCache } = res.locals.ctx;
 
-    const uploadSaveDayIschange = _d.cacheExp.uploadSaveDay !== uploadSaveDay;
-    const faviconCacheIschange = _d.cacheExp.faviconCache !== faviconCache;
-    const siteInfoCacheIschange = _d.cacheExp.siteInfoCache !== siteInfoCache;
-
     _d.cacheExp = {
       uploadSaveDay,
       faviconCache,
       siteInfoCache,
     };
-
-    if (uploadSaveDayIschange) {
-      await cleanUpload(res);
-    }
-
-    if (faviconCacheIschange) {
-      await cleanFavicon(res);
-    }
-
-    if (siteInfoCacheIschange) {
-      await cleanSiteInfo(res);
-    }
 
     resp.success(res, `修改文件缓存过期时间成功`, _d.cacheExp)();
   }),

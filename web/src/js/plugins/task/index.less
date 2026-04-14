@@ -1,0 +1,77 @@
+.task_box {
+  display: none;
+  flex-flow: column;
+  position: fixed;
+  z-index: 11;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  width: 100%;
+  max-width: 40rem;
+  max-height: 80%;
+  background-color: var(--color10);
+  bottom: 0;
+  right: 0;
+  border: 0.1rem solid var(--color9);
+  border-radius: var(--border-radius1-5);
+  overflow: hidden;
+  .zoom_btn {
+    flex: none;
+    height: 3rem;
+    line-height: 3rem;
+    width: 3rem;
+    margin: 0 auto;
+    text-align: center;
+    &:hover {
+      color: var(--text-hover-color);
+      transform: scale(1.1);
+    }
+  }
+  .list {
+    flex: auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 1rem;
+    .task {
+      display: flex;
+      flex-flow: row nowrap;
+      margin-bottom: 1rem;
+      width: 100%;
+      align-items: center;
+
+      border-radius: var(--border-radius1);
+      padding: 0.5rem;
+      border: 0.1rem solid var(--color9);
+
+      &.done {
+        border-color: var(--message-success-color);
+        .progress {
+          color: var(--message-success-color);
+        }
+      }
+      &.failed {
+        border-color: var(--message-error-color);
+        .progress {
+          color: var(--message-error-color);
+        }
+      }
+      .progress {
+        flex: auto;
+        line-height: 1.5;
+        padding: 1rem 0 1rem 0.5rem;
+        word-break: break-all;
+        color: var(--icon-color);
+      }
+      .cancel_task {
+        flex: none;
+        line-height: 3rem;
+        height: 3rem;
+        width: 3rem;
+        text-align: center;
+        &:hover {
+          color: var(--btn-danger-color);
+          transform: scale(1.1);
+        }
+      }
+    }
+  }
+}

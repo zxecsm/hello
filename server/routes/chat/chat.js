@@ -216,7 +216,7 @@ export async function sendNotificationsToCustomAddresses(res, obj) {
 
     while (true) {
       const list = await db('user')
-        .select('forward_msg_link,account')
+        .select('forward_msg_link,account,serial')
         .where({
           forward_msg_state: 1,
           account: { '!=': obj._from },
@@ -530,7 +530,7 @@ export async function cleanUpload(res = false) {
 
     while (true) {
       const list = await db('upload')
-        .select('id,url')
+        .select('url,serial')
         .where({ serial: { '>': lastSerial }, update_at: { '<': exp } })
         .orderBy('serial', 'ASC')
         .limit(800)
@@ -540,7 +540,7 @@ export async function cleanUpload(res = false) {
       lastSerial = list[list.length - 1].serial;
 
       await db('upload')
-        .where({ id: { in: list.map((item) => item.id) } })
+        .where({ serial: { in: list.map((item) => item.serial) } })
         .delete();
 
       await concurrencyTasks(list, 5, async (item) => {

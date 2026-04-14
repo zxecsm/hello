@@ -50,7 +50,7 @@ timedTask.add(async () => {
 
     while (true) {
       const list = await db('count_down')
-        .select('account')
+        .select('account,serial')
         .where({ state: 1, end: { '<': t }, serial: { '>': lastSerial } })
         .orderBy('serial', 'asc')
         .limit(800)
@@ -78,7 +78,7 @@ timedTask.add(async () => {
 
     while (true) {
       const list = await db('todo')
-        .select('account')
+        .select('account,serial')
         .where({ state: 1, serial: { '>': lastSerial } })
         .orderBy('serial', 'asc')
         .limit(800)

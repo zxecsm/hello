@@ -790,7 +790,7 @@ route.post(
       const trashDir = appConfig.trashDir(account);
 
       await concurrencyTasks(data, 5, async (task) => {
-        if (signal.aborted) return;
+        if (signal.aborted) throw new Error('Operation aborted');
 
         const { name, path } = task;
 
@@ -906,7 +906,7 @@ route.post(
       const trashDir = appConfig.trashDir(account);
 
       await concurrencyTasks(data, 5, async (task) => {
-        if (signal.aborted) return;
+        if (signal.aborted) throw new Error('Operation aborted');
 
         const { name, path } = task;
 
@@ -1113,7 +1113,7 @@ route.post(
       const trashDir = appConfig.trashDir(account);
 
       await concurrencyTasks(data, 5, async (task) => {
-        if (signal.aborted) return;
+        if (signal.aborted) throw new Error('Operation aborted');
 
         let { path, name } = task;
 
@@ -1186,7 +1186,7 @@ route.get(
         const list = await _f.fsp.readdir(trashDir);
 
         await concurrencyTasks(list, 5, async (item) => {
-          if (signal.aborted) return;
+          if (signal.aborted) throw new Error('Operation aborted');
 
           const p = _path.normalizeNoSlash(trashDir, item);
 
@@ -1337,7 +1337,7 @@ route.post(
       let count = 0;
 
       await concurrencyTasks(data, 5, async (task) => {
-        if (signal.aborted) return;
+        if (signal.aborted) throw new Error('Operation aborted');
 
         const { name, path } = task;
 
@@ -1405,7 +1405,7 @@ route.post(
       let count = 0;
 
       await concurrencyTasks(data, 5, async (task) => {
-        if (signal.aborted) return;
+        if (signal.aborted) throw new Error('Operation aborted');
 
         const { name, path } = task;
 
