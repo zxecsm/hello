@@ -1,8 +1,19 @@
-import appConfig from '../data/config.js';
-import { heperMsgAndForward } from '../routes/chat/chat.js';
 import { formatDate, writelog } from './utils.js';
 
 const cbs = new Set();
+
+let timer = setInterval(async () => {
+  try {
+    const flag = formatDate({ template: '{0}{1}{2}{3}{4}{5}' });
+    const results = await Promise.allSettled([...cbs].map((cb) => cb(flag)));
+
+    // 记录失败的回调
+    const failedResults = results.filter((r) => r.status === 'rejected');
+    for (const failed of failedResults) {
+      await writelog(false, `[ timedTask ] - ${failed.reason}`, 500);
+    }
+  } catch {}
+}, 1000);
 
 function add(cb) {
   cbs.add(cb);
@@ -16,24 +27,6 @@ function stop() {
   clearInterval(timer);
   timer = null;
 }
-
-let timer = setInterval(() => {
-  try {
-    const flag = formatDate({ template: '{0}{1}{2}{3}{4}{5}' });
-    cbs.forEach((cb) => {
-      try {
-        cb(flag);
-      } catch (error) {
-        heperMsgAndForward(null, appConfig.adminAccount, `定时任务出错 - ${error}`);
-        writelog(false, `[ timedTask ] - ${error}`, 500);
-      }
-    });
-  } catch (error) {
-    stop();
-    heperMsgAndForward(null, appConfig.adminAccount, `定时任务出错，已停止 - ${error}`);
-    writelog(false, `[ timedTask ] - ${error}`, 500);
-  }
-}, 1000);
 
 const timedTask = {
   add,

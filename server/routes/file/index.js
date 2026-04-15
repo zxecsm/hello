@@ -196,12 +196,12 @@ route.post(
     if (account && !token) {
       try {
         // 保存路径历史
-        const list = (await readHistoryDirs(account)).filter((item) => item !== path);
+        let list = (await readHistoryDirs(account)).filter((item) => item !== path);
 
         list.push(path);
 
         if (list.length > fieldLength.cdHistoryLength) {
-          list.slice(-fieldLength.cdHistoryLength);
+          list = list.slice(-fieldLength.cdHistoryLength);
         }
 
         await writeHistoryDirs(account, list);

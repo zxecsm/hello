@@ -1516,13 +1516,7 @@ route.post(
         }
       }
 
-      await sendNotifyMsg(
-        res.locals.hello.userinfo,
-        res.locals.hello.temid,
-        data.to,
-        data.flag,
-        data.msgData,
-      );
+      await sendNotifyMsg(res, data.to, data.flag, data.msgData);
 
       resp.success(res)();
     }

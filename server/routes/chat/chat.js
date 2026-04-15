@@ -309,6 +309,7 @@ export async function hdForwardToLink(res, list = [], fArr, text, fList = []) {
           url: link,
           headers: header,
           params: body,
+          retry: 2,
         });
       } else if (type === 'post') {
         await request({
@@ -316,6 +317,7 @@ export async function hdForwardToLink(res, list = [], fArr, text, fList = []) {
           url: link,
           headers: header,
           data: body,
+          retry: 2,
         });
       }
     });
