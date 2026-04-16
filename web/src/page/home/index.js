@@ -74,6 +74,7 @@ import {
   renderChatMsg,
   setCurChatAccount,
   showChatRoom,
+  switchScrollToBottom,
 } from './chat/index.js';
 import './timer.js';
 import { closeAllIframe, hideAllIframe } from './iframe.js';
@@ -772,6 +773,7 @@ function hdChatType(resData, notify) {
         if ($chatItem.length > 0) {
           $chatItem.stop().slideUp(_d.speed, () => {
             $chatItem.remove();
+            switchScrollToBottom();
           });
         }
       }
@@ -791,6 +793,7 @@ function hdChatType(resData, notify) {
       if (isCurChatRoom(chatAccount, from.account, to)) {
         chatMsgData.reset();
         $chatListBox.find('.chat_list').html('');
+        switchScrollToBottom();
       }
     }
   } else if (flag === 'shake') {

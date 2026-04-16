@@ -1157,7 +1157,7 @@ $chatListBox
   .on('scroll', switchScrollToBottom)
   .on('scroll', debounce(scrollTopMsg, 200))
   .on('scroll', debounce(scrollBottomMsg, 200));
-function switchScrollToBottom() {
+export function switchScrollToBottom() {
   if (
     $chatListBox.find('.chat_list').outerHeight() -
       $chatListBox.scrollTop() -
@@ -2070,6 +2070,7 @@ myResize({
     chatSize = obj;
     localData.set('chatSize', chatSize);
     switchFullScreenStateStyle(target);
+    switchScrollToBottom();
   },
 });
 // 手势
