@@ -1109,7 +1109,7 @@ export function percentToValue(min, max, percnet) {
 }
 // 图片格式
 export function isImgFile(name) {
-  return /\.(jpe?g|png|gif|webp|avif|svg|ico)$/i.test(name);
+  return /\.(jpe?g|png|gif|webp|avif|svg)$/i.test(name);
 }
 // 文件logo类型
 export function fileLogoType(fname, size) {

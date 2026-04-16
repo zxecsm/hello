@@ -224,7 +224,7 @@ export function isurl(url) {
 
 // 图片格式
 export function isImgFile(name) {
-  return /\.(jpe?g|png|gif|webp|avif|svg|ico)$/i.test(name);
+  return /\.(jpe?g|png|gif|webp|avif|svg)$/i.test(name);
 }
 
 // 转义正则符号

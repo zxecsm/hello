@@ -271,6 +271,10 @@ async function getThumbPath(res, w, dir, path, stat) {
 
   try {
     // 生成缩略图
+    if (size > fieldLength.maxBgSize * 1024 * 1024) {
+      resp.forbidden(res, '获取缩略图失败')('图片过大', 1);
+      return null;
+    }
     if (
       w > 0 &&
       !_path.isPathWithin(appConfig.thumbDir(), path, 1) &&

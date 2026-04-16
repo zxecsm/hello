@@ -1,6 +1,23 @@
 import sharp from 'sharp';
+import { parseICO } from 'icojs';
+import _f from './f.js';
 
 sharp.cache(false); // 禁用缓存，适合处理大量不同图片的场景
+
+export async function iconToPng(buf) {
+  buf = typeof buf === 'string' ? await _f.fsp.readFile(buf) : buf;
+
+  const images = await parseICO(buf, 'image/png');
+
+  if (!images.length) {
+    throw new Error('ICO 解析失败');
+  }
+
+  // 选最大尺寸
+  const img = images.sort((a, b) => b.width - a.width)[0];
+
+  return Buffer.from(img.buffer);
+}
 
 // 读取图片信息
 export async function getImgInfo(path) {

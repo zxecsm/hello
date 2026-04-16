@@ -17,6 +17,7 @@
     "cookie-parser": "^1.4.7",
     "express": "^5.2.1",
     "formidable": "^3.5.4",
+    "icojs": "^0.21.1",
     "ip2region": "^2.3.0",
     "jose": "^6.2.2",
     "markdown-it": "^14.1.1",

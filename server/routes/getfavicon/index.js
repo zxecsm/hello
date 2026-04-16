@@ -4,6 +4,8 @@ import express from 'express';
 
 import * as cheerio from 'cheerio';
 
+import { isICO } from 'icojs';
+
 import { extractFullHead, getDirname, isurl, tplReplace, writelog } from '../../utils/utils.js';
 
 import appConfig from '../../data/config.js';
@@ -11,7 +13,7 @@ import appConfig from '../../data/config.js';
 import _f from '../../utils/f.js';
 
 import timedTask from '../../utils/timedTask.js';
-import { convertImageFormat } from '../../utils/img.js';
+import { convertImageFormat, iconToPng } from '../../utils/img.js';
 import _crypto from '../../utils/crypto.js';
 import { cleanFavicon } from '../bmk/bmk.js';
 import { _d } from '../../data/data.js';
@@ -188,7 +190,7 @@ route.get(
         iconBuf = await downloadImage(iconUrl);
 
         if (!iconBuf) {
-          throw new Error(`解析获取图标失败: ${iconUrl}`);
+          throw new Error('解析获取图标失败');
         }
       } catch (err) {
         // 调用备用接口获取图标
@@ -208,6 +210,9 @@ route.get(
 
       if (iconBuf) {
         try {
+          if (isICO(iconBuf)) {
+            iconBuf = await iconToPng(iconBuf);
+          }
           const buf = await convertImageFormat(iconBuf, {
             format: 'png',
             width: 200,
@@ -217,10 +222,11 @@ route.get(
 
           if (buf) {
             await _f.writeFile(iconPath, buf);
+          } else {
+            throw new Error('转换图标失败');
           }
         } catch (error) {
-          await writelog(res, error, 403);
-          await _f.writeFile(iconPath, iconBuf);
+          throw new Error(`转换图标失败: ${error}`);
         }
         res.sendFile(iconPath, { dotfiles: 'allow' });
       } else {
