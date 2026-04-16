@@ -737,7 +737,7 @@ route.post(
       await db('playing_list').insert({
         create_at: Date.now(),
         account,
-        data: JSON.stringify,
+        data: JSON.stringify(data),
       });
     }
 

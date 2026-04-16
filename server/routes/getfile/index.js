@@ -269,19 +269,20 @@ async function getMusicPath(res, pArr) {
 async function getThumbPath(res, w, dir, path, stat) {
   let size = stat.size;
 
-  try {
-    // 生成缩略图
-    if (size > fieldLength.maxBgSize * 1024 * 1024) {
-      resp.forbidden(res, '获取缩略图失败')('图片过大', 1);
-      return null;
-    }
-    if (
-      w > 0 &&
-      !_path.isPathWithin(appConfig.thumbDir(), path, 1) &&
-      stat.isFile() &&
-      isImgFile(path) &&
-      ['pic', 'music', 'bg', 'upload', 'file', 'sharefile', 'sharemusic'].includes(dir)
-    ) {
+  // 生成缩略图
+  if (
+    w > 0 &&
+    !_path.isPathWithin(appConfig.thumbDir(), path, 1) &&
+    stat.isFile() &&
+    isImgFile(path) &&
+    ['pic', 'music', 'bg', 'upload', 'file', 'sharefile', 'sharemusic'].includes(dir)
+  ) {
+    try {
+      if (size > fieldLength.maxBgSize * 1024 * 1024) {
+        resp.forbidden(res, '获取缩略图失败')('图片过大', 1);
+        return null;
+      }
+
       if (dir === 'sharefile') {
         dir = 'file';
       }
@@ -315,12 +316,12 @@ async function getThumbPath(res, w, dir, path, stat) {
       }
 
       path = thumbP;
+    } catch (error) {
+      resp.forbidden(res, '获取缩略图失败')(error, 1);
+      return null;
     }
-    return { path, size };
-  } catch (error) {
-    resp.forbidden(res, '获取缩略图失败')(error, 1);
-    return null;
   }
+  return { path, size };
 }
 
 function normalizeWidth(w) {
