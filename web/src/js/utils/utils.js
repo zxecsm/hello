@@ -1176,7 +1176,8 @@ export function downloadFile(urlOrBlob, filename) {
 export async function downloadFiles(tasks) {
   if (tasks.length === 1) {
     let { fileUrl, filename } = tasks[0];
-    filename = filename || _path.basename(fileUrl)[0] || 'unknown';
+    filename =
+      filename || _path.basename(_path.trimEndSlash(new URL(fileUrl).pathname))[0] || 'unknown';
     downloadFile(fileUrl, filename);
     return;
   } else if (tasks.length < 1) {
@@ -1193,7 +1194,8 @@ export async function downloadFiles(tasks) {
     if (signal.aborted) return;
 
     let { fileUrl, filename } = task;
-    filename = filename || _path.basename(fileUrl)[0] || 'unknown';
+    filename =
+      filename || _path.basename(_path.trimEndSlash(new URL(fileUrl).pathname))[0] || 'unknown';
     await new Promise((resolve) => {
       const xhr = new XMLHttpRequest();
       xhr.open('GET', fileUrl, true);

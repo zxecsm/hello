@@ -1640,7 +1640,9 @@ route.post(
       return resp.forbidden(res, '目标文件夹不存在')();
     }
 
-    const filename = _path.sanitizeFilename(_path.basename(url)[0] || 'unknown');
+    const filename = _path.sanitizeFilename(
+      _path.basename(_path.trimEndSlash(new URL(url).pathname))[0] || 'unknown',
+    );
 
     const controller = new AbortController();
     const signal = controller.signal;

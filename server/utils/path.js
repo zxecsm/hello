@@ -69,7 +69,6 @@ function normalize(...paths) {
 // 获取文件名
 function basename(path) {
   path = toUnixPath(path);
-  path = path.split(/[?#]/)[0];
   const idx = path.lastIndexOf('/');
   const filename = idx < 0 ? path : path.slice(idx + 1);
   return [filename, ...extname(filename)];
@@ -78,7 +77,6 @@ function basename(path) {
 // 获取目录名
 function dirname(path) {
   path = toUnixPath(path);
-  path = path.split(/[?#]/)[0];
   const idx = path.lastIndexOf('/');
   if (idx < 0) return '/';
   return normalize(path.slice(0, idx) || '/');
