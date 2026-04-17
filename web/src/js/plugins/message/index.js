@@ -1,5 +1,5 @@
 import _d from '../../common/config';
-import { _mySlide, debounce, playSound } from '../../utils/utils';
+import { _mySlide, playSound } from '../../utils/utils';
 import imgMsg from '../../../images/img/msg.mp3';
 import onlineMsg from '../../../images/img/online.mp3';
 import './index.less';
@@ -274,7 +274,7 @@ function error(message = '操作失败', callback, { duration = 6000, reside = f
   new Msg(opt, callback);
 }
 function warning(message, callback, { duration = 8000, reside = false } = {}) {
-  _playSound(imgMsg);
+  playSound(imgMsg);
   const opt = {
     message,
     type: 'warning',
@@ -298,7 +298,7 @@ function info(message, callback, { duration = 3000, reside = false } = {}) {
 }
 function msg(opt, callback, sound) {
   if (sound) {
-    _playSound(imgMsg);
+    playSound(imgMsg);
   }
   if (document.visibilityState === 'hidden') {
     addCache({ opt, callback });
@@ -322,7 +322,6 @@ function online(message, callback, { duration = 8000, reside = false } = {}) {
   new Msg(opt, callback);
 }
 
-const _playSound = debounce(playSound, 1000, true);
 const _msg = {
   success,
   error,

@@ -340,22 +340,21 @@ export async function onlineMsg(res, pass) {
       if (list.length === 0) return false;
 
       const fArr = await db('friends')
-        .select('des,account')
-        .where({ account: { in: list }, friend: account, des: { '!=': '' } })
+        .select('des,account,notify')
+        .where({ account: { in: list }, friend: account })
         .find();
 
       list.forEach((key) => {
-        let des = '';
         const f = fArr.find((item) => item.account === key);
-        if (f) {
-          des = f.des;
-        }
+        if (f && f.notify === 0) return;
+        const des = f?.des || username;
+
         _connect.send(
           key,
           res.locals.hello.temid,
           {
             type: 'online',
-            data: { text: `${des || username} 已上线`, account },
+            data: { text: `${des} 已上线`, account },
           },
           'all',
         );
