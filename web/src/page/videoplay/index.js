@@ -33,8 +33,9 @@ if (!isIframe()) {
 async function copyLink() {
   let path = url;
   const ourl = url.slice(_d.getFileURL.length);
-  const p = ourl.split('?')[0];
-  if (!queryURLParams(ourl).token && isLogin()) {
+  let { token, p } = queryURLParams(ourl);
+  p = p || ourl.split('?')[0];
+  if (!token && isLogin()) {
     let token = '';
     try {
       const res = await reqUserFileToken({ p });

@@ -439,7 +439,7 @@ app.use(
     const path = res.locals.hello.path;
     const routePath = '/api/f/';
     if (path.startsWith(routePath)) {
-      const filePath = path.slice(routePath.length);
+      const filePath = req.query.p || path.slice(routePath.length);
       res.locals.hello.path = routePath;
       await getFile(req, res, filePath);
     } else {
