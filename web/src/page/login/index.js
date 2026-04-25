@@ -269,12 +269,12 @@ function closeRatify() {
 }
 window.addEventListener('load', async function () {
   $box.addClass('open');
-  const url = `/api/bg/r/${isBigScreen() ? 'd' : 'm'}`;
 
   try {
-    await loadImg(url);
+    const url = `/api/bg/r/${isBigScreen() ? 'd' : 'm'}`;
+    const imgBlob = await (await fetch(url)).blob();
     $bg.css({
-      backgroundImage: `url(${url})`,
+      backgroundImage: `url(${URL.createObjectURL(imgBlob)})`,
       opacity: 0.8,
     });
   } catch {}
