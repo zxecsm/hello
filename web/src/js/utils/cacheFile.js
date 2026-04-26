@@ -35,6 +35,11 @@ const cacheFile = {
   getDirectory() {
     return navigator.storage.getDirectory();
   },
+  isExternalLink(url) {
+    return (
+      (url.startsWith('http://') || url.startsWith('https://')) && !url.startsWith(_d.originURL)
+    );
+  },
   // 文件标识
   getHash(key, type) {
     const side = _d.originURL;
@@ -72,12 +77,14 @@ const cacheFile = {
   },
   // 判断url对象缓存是否存在
   hasUrl(url, type) {
+    if (this.isExternalLink(url)) return url;
     const hash = this.getHash(url, type);
     return this.urlCache.get(hash);
   },
   // 读取文件
   async read(url, type = _d.appName) {
     try {
+      if (this.isExternalLink(url)) return url;
       const hash = this.getHash(url, type);
 
       const cache = this.urlCache.get(hash);
@@ -113,6 +120,7 @@ const cacheFile = {
   // 添加文件
   async add(url, type = _d.appName, file) {
     try {
+      if (this.isExternalLink(url)) return url;
       const hash = this.getHash(url, type);
 
       const cachedFileHandle = await this.read(url, type);

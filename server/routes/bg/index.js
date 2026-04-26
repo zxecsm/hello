@@ -30,14 +30,13 @@ import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
 import getFile from '../getfile/index.js';
 import resp from '../../utils/response.js';
-import { asyncHandler, openCors, validate } from '../../utils/customMiddleware.js';
+import { asyncHandler, validate } from '../../utils/customMiddleware.js';
 
 const route = express.Router();
 
 // 获取随机一张壁纸
 route.get(
   '/r/:type',
-  openCors,
   validate(
     [
       'params',

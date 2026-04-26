@@ -2,12 +2,11 @@ import express from 'express';
 import { formatDate } from '../../utils/utils.js';
 import { _d } from '../../data/data.js';
 import resp from '../../utils/response.js';
-import { asyncHandler, openCors } from '../../utils/customMiddleware.js';
+import { asyncHandler } from '../../utils/customMiddleware.js';
 const route = express.Router();
 
 route.all(
   '/',
-  openCors,
   asyncHandler((req, res) => {
     if (!_d.pubApi.echoApi && !res.locals.hello.userinfo.account) {
       return resp.forbidden(res, '接口未开放')();

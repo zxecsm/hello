@@ -67,6 +67,8 @@ const __dirname = getDirname(import.meta);
 const app = express();
 app.disable('x-powered-by');
 
+app.use(openCors);
+
 //  Cookie 解析
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
@@ -247,7 +249,6 @@ app.use('/api/ssh', sshRoute);
 // 收信接口
 app.all(
   '/api/s/:chat_id',
-  openCors,
   validate(
     'params',
     V.object({
@@ -294,7 +295,6 @@ app.all(
 // 获取页面信息
 app.get(
   '/api/site-info',
-  openCors,
   validate(
     'query',
     V.object({
@@ -393,7 +393,6 @@ app.get(
 // ip地理位置
 app.get(
   '/api/ip-location',
-  openCors,
   validate(
     'query',
     V.object({
@@ -417,7 +416,6 @@ app.get(
 // 随机音乐
 app.get(
   '/api/music',
-  openCors,
   asyncHandler(async (req, res) => {
     if (!_d.pubApi.randomMusicApi && !res.locals.hello.userinfo.account) {
       return resp.forbidden(res, '接口未开放')();

@@ -21,7 +21,7 @@ import { fieldLength } from '../config.js';
 import V from '../../utils/validRules.js';
 import request from '../../utils/request.js';
 import resp from '../../utils/response.js';
-import { asyncHandler, openCors, validate } from '../../utils/customMiddleware.js';
+import { asyncHandler, validate } from '../../utils/customMiddleware.js';
 
 const route = express.Router();
 
@@ -112,7 +112,6 @@ function extractIconUrl($, baseUrl) {
 
 route.get(
   '/',
-  openCors,
   validate(
     'query',
     V.object({
