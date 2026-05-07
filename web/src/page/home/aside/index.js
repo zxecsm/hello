@@ -327,7 +327,7 @@ function renderAsideList(p, delayScroll = 0) {
       const $listItems = $listTitle.next();
       const titleTop = _position($listTitle[0]).top;
       if (
-        $listTitle.outerHeight() + $listItems.outerHeight() >= $aside.outerHeight() ||
+        $listTitle.outerHeight() + $listItems.outerHeight() + titleTop >= $aside.outerHeight() ||
         titleTop <= 0
       ) {
         _setTimeout(() => {
