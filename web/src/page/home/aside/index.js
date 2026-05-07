@@ -323,15 +323,22 @@ function renderAsideList(p, delayScroll = 0) {
   if (p) {
     const curIdx = bookmark.list.findIndex((item) => item.id === activeBmListId);
     if (curIdx >= 0) {
-      _setTimeout(() => {
-        const $listTitle = $aList.find('.list_title').eq(curIdx);
-        $aList.stop().animate(
-          {
-            scrollTop: _position($listTitle[0]).top + $aList[0].scrollTop,
-          },
-          _d.speed,
-        );
-      }, delayScroll);
+      const $listTitle = $aList.find('.list_title').eq(curIdx);
+      const $listItems = $listTitle.next();
+      const titleTop = _position($listTitle[0]).top;
+      if (
+        $listTitle.outerHeight() + $listItems.outerHeight() >= $aside.outerHeight() ||
+        titleTop <= 0
+      ) {
+        _setTimeout(() => {
+          $aList.stop().animate(
+            {
+              scrollTop: titleTop + $aList[0].scrollTop,
+            },
+            _d.speed,
+          );
+        }, delayScroll);
+      }
     }
   }
   hdAsideListItemLogo();
