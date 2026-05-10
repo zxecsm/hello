@@ -1,12 +1,10 @@
-import { resolve } from 'path';
-
 import express from 'express';
 
 import * as cheerio from 'cheerio';
 
 import { isICO } from 'icojs';
 
-import { extractFullHead, getDirname, isurl, tplReplace, writelog } from '../../utils/utils.js';
+import { extractFullHead, isurl, tplReplace, writelog } from '../../utils/utils.js';
 
 import appConfig from '../../data/config.js';
 
@@ -24,10 +22,6 @@ import resp from '../../utils/response.js';
 import { asyncHandler, validate } from '../../utils/customMiddleware.js';
 
 const route = express.Router();
-
-const __dirname = getDirname(import.meta);
-
-const defaultIcon = resolve(__dirname, '../../img/default-icon.png');
 
 // 定期清理图标缓存
 timedTask.add(async (flag) => {
@@ -154,7 +148,7 @@ route.get(
         if (Date.now() - stat.mtimeMs > 60 * 1000) {
           await _f.del(missFlagPath);
         } else {
-          res.sendFile(defaultIcon, { dotfiles: 'allow' });
+          resp.forbidden(res, '获取图标失败')('miss', 1);
           return;
         }
       }
@@ -240,9 +234,7 @@ route.get(
         }
       }
 
-      await writelog(res, error, 403);
-
-      res.sendFile(defaultIcon, { dotfiles: 'allow' });
+      resp.forbidden(res, '获取图标失败')(error, 1);
     }
   }),
 );
