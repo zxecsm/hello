@@ -74,8 +74,8 @@ http://localhost:55555/addbmk/#{{https://google.com}}
 接收推送消息
 
 ```
-GET： http://localhost:55556/api/s/<key>?text=消息内容
-POST：http://localhost:55556/api/s/<key> body：{"text": "消息内容"}
+GET： http://localhost:55555/api/s/<key>?text=消息内容
+POST：http://localhost:55555/api/s/<key> body：{"text": "消息内容"}
 ```
 
 ![hello](https://raw.githubusercontent.com/zxecsm/hello/main/hello.png)
