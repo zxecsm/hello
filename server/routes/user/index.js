@@ -1292,6 +1292,7 @@ route.post(
           'updatedata',
           'chat',
           'playmode',
+          'playspeed',
           'play',
           'vol',
           'progress',
@@ -1460,6 +1461,24 @@ route.post(
     else if (type === 'vol') {
       try {
         data.value = await V.parse(data.value, V.number().toNumber().min(0).max(1), 'data.value');
+      } catch (error) {
+        return resp.badRequest(res)(error, 1);
+      }
+
+      data.to = account;
+
+      _connect.send(data.to, temid, { type, data }, 'other');
+
+      resp.success(res)();
+    }
+    // 控制播放速度
+    else if (type === 'playspeed') {
+      try {
+        data.value = await V.parse(
+          data.value,
+          V.number().toNumber().enum([2, 1.75, 1.5, 1.25, 1, 0.75, 0.25]),
+          'data.value',
+        );
       } catch (error) {
         return resp.badRequest(res)(error, 1);
       }

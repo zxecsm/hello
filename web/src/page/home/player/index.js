@@ -2401,14 +2401,14 @@ function closeMusicTitleScroll() {
   closeLrcHeadContentScrollName();
 }
 // 更新歌曲信息
-export async function updateSongInfo() {
+export async function updateSongInfo(isNext = true) {
   if (!musicPlayerIsHide()) {
     initMusicTitleScroll();
   }
   const songInfo = setPlayingSongInfo();
   const id = songInfo.id;
   await setAudioSrc(songInfo.uurl);
-  $playingSongLogo.css('background-image', `url(${loadSvg})`).removeClass('load');
+  if (isNext) $playingSongLogo.css('background-image', `url(${loadSvg})`).removeClass('load');
   imgjz(songInfo.ppic)
     .then((cache) => {
       if (setPlayingSongInfo().id !== id) return;

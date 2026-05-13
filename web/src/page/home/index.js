@@ -92,6 +92,7 @@ import {
   getVolumeIcon,
 } from './player/index.js';
 import {
+  changePlaySpeed,
   changePlayState,
   getPlaytimer,
   hdSongInfo,
@@ -861,7 +862,7 @@ function hdUpdatedataType(resData) {
               const { currentTime = 0, duration = 0, lastplay } = _musicinfo;
               if (!lastplay || (setRemotePlayState() && getPlaytimer())) return;
               setPlayingSongInfo(hdSongInfo(lastplay));
-              updateSongInfo();
+              updateSongInfo(false);
               initMusicLrc();
               setSongCurrentTime(parseFloat(currentTime) || 0);
               updateSongProgress();
@@ -911,6 +912,9 @@ realtime.init('home').add((res) => {
         message: parseInt(value * 100) + '%',
         icon: `iconfont ${getVolumeIcon(value)}`,
       });
+    } else if (type === 'playspeed') {
+      const { value } = data;
+      changePlaySpeed([`x${value}`, value]);
     } else if (type === 'progress') {
       const { value } = data;
       setSongCurrentTime(setPlayingSongInfo().duration * value);

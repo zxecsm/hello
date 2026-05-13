@@ -935,19 +935,18 @@ $lrcMenuWrap
       ({ id, resetMenu, param }) => {
         if (id) {
           const { a, b } = param;
-          $lrcMenuWrap.find('.play_speed_btn').text(a);
-          $myAudio[0].playbackRate = b;
-          curPlaySpeed = [a, b];
           data.forEach((item) => {
-            if (item.param.b === curPlaySpeed[1]) {
-              item.active = true;
-            } else {
-              item.active = false;
-            }
+            item.active = item.param.b === b;
           });
           resetMenu(data);
-          localData.set('songPlaySpeed', curPlaySpeed);
-          _msg.msg({ message: b + 'X', icon: 'iconfont icon-sudu' });
+          changePlaySpeed([a, b]);
+
+          if (remotePlayState) {
+            realtime.send({
+              type: 'playspeed',
+              data: { value: b },
+            });
+          }
         }
       },
       '歌曲播放速度',
@@ -955,6 +954,14 @@ $lrcMenuWrap
   })
   .find('.play_speed_btn')
   .text(curPlaySpeed[0]);
+export function changePlaySpeed(speedArr) {
+  const [a, b] = speedArr;
+  $lrcMenuWrap.find('.play_speed_btn').text(a);
+  $myAudio[0].playbackRate = b;
+  curPlaySpeed = speedArr;
+  localData.set('songPlaySpeed', curPlaySpeed);
+  _msg.msg({ message: b + 'X', icon: 'iconfont icon-sudu' });
+}
 _mySlide({
   el: '.music_lrc_wrap',
   right(e) {
