@@ -127,7 +127,7 @@ function getPlugins(isDev) {
           }`,
         },
       },
-      favicon: './src/images/img/icon.svg',
+      favicon: './src/images/img/icon-visible.svg',
       inject: 'head',
     };
     if (isDev) {

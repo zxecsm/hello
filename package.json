@@ -7,7 +7,8 @@
     "server": "cd ./server && npm run dev",
     "web": "cd ./web && npm run dev",
     "build": "cd ./web && npm run build",
-    "format": "prettier expand monkey server web --write"
+    "format": "prettier expand monkey server web --write",
+    "icon": "cd ./server/icon && node gicon.js"
   },
   "keywords": [],
   "author": "ecan",
