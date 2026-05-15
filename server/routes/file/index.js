@@ -912,6 +912,8 @@ route.post(
 
         const f = appConfig.userRootDir(account, `${path}/${name}`);
 
+        if (f === appConfig.configDir(account)) return;
+
         let t = _path.normalizeNoSlash(p, name);
 
         if (_path.isPathWithin(f, t, true)) return;
@@ -1119,6 +1121,8 @@ route.post(
 
         const p = appConfig.userRootDir(account, `${path}/${name}`);
 
+        if (p === appConfig.configDir(account)) return;
+
         if (
           force === 1 ||
           _path.isPathWithin(p, trashDir, true) ||
@@ -1285,7 +1289,7 @@ route.post(
       return resp.forbidden(res, '已存在重名文件')();
     }
 
-    await _f.rename(p, t);
+    if (p !== appConfig.configDir(account)) await _f.rename(p, t);
 
     syncUpdateData(res, 'file');
 

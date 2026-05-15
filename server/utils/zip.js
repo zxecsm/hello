@@ -1,4 +1,4 @@
-import archiver from 'archiver';
+import { ZipArchive } from 'archiver';
 import unzipper from 'unzipper';
 import _f from './f.js';
 import _path from './path.js';
@@ -7,7 +7,7 @@ import { concurrencyTasks } from './utils.js';
 // 压缩文件
 async function zip(froms, to, { signal, progress } = {}) {
   const output = await _f.createWriteStream(to, { flags: 'w' });
-  const archive = archiver('zip', { zlib: { level: 9 } });
+  const archive = new ZipArchive({ zlib: { level: 9 } });
 
   const progressInfo = {
     size: 0,

@@ -265,13 +265,24 @@ function closeSearch() {
 }
 // 生成列表
 async function renderList(top) {
+  for (const item of fileListData.data) {
+    const { path, name, type } = item;
+
+    const p = _path.normalizeNoSlash(path, name);
+    if (p === _d.trashDir && type !== 'dir') {
+      _msg.error(`回收站目录被占用：${p}`);
+    }
+    if (name === _d.fileHistoryDirName && type !== 'dir') {
+      _msg.error(`文件历史记录目录被占用：${p}`);
+    }
+  }
   closeCheck();
   const html = _tpl(
     `
     <template v-if="total > 0">
-      <ul v-for="{type, fileType, name, size, time, id, mode, gid, uid, favorite, linkTarget, linkTargetTypeName} in list" class="file_item" :data-id="id">
+      <ul v-for="{type, fileType, name, path, size, time, id, mode, gid, uid, favorite, linkTarget, linkTargetTypeName} in list" class="file_item" :data-id="id">
         <li class="check_state" check="n"></li>
-        <li cursor="y" class="logo {{logoColor(type,fileType)}} iconfont {{hdLogo(name,type,size) || 'is_img'}}"></li>
+        <li cursor="y" class="logo {{logoColor(type,fileType,name,path)}} iconfont {{hdLogo(name,type,size) || 'is_img'}}"></li>
         <li v-if="favorite" class='favorite iconfont icon-shoucang'></li>
         <li cursor="y" class="name">
           <span class="text">{{getText(name,type).a}}
@@ -291,8 +302,15 @@ async function renderList(top) {
       total: fileListData.total,
       getDateDiff,
       list: fileListData.data,
-      logoColor(type, fileType) {
-        if (type === 'dir') return type;
+      logoColor(type, fileType, name, path) {
+        if (type === 'dir') {
+          if (
+            [_d.userConfigDir, _d.trashDir].includes(_path.normalizeNoSlash(path, name)) ||
+            name === _d.fileHistoryDirName
+          )
+            return 'other';
+          return type;
+        }
         if (type === 'file' && (fileType === 'symlink' || fileType === 'file')) return '';
         return 'other';
       },
@@ -1995,26 +2013,34 @@ async function hdCopy(e, data, cb) {
 }
 // 移动
 async function hdCut(e, data, cb, toPath = curFileDirPath, text = '确认粘贴？') {
+  for (const item of data) {
+    const path = _path.normalizeNoSlash(item.path, item.name);
+    if (path === _d.userConfigDir) {
+      _msg.error(`不能移动用户配置目录：${path}`);
+      return;
+    }
+  }
+
+  if (getDuplicates(data, ['name']).length > 0) {
+    _msg.error('剪切项中存在同名文件或文件夹');
+    return;
+  }
+
+  if (
+    !data.every((item) => {
+      const { path, name } = item;
+      const f = _path.normalizeNoSlash(path, name);
+      const t = _path.normalizeNoSlash(toPath, name);
+      return f !== t && !_path.isPathWithin(f, t);
+    })
+  ) {
+    _msg.error('发现错误，不能剪切到子目录和当前目录中');
+    return;
+  }
+
   const type = await rMenu.pop.p({ e, text });
   if (type === 'confirm') {
     try {
-      if (getDuplicates(data, ['name']).length > 0) {
-        _msg.error('剪切项中存在同名文件或文件夹');
-        return;
-      }
-
-      if (
-        !data.every((item) => {
-          const { path, name } = item;
-          const f = _path.normalizeNoSlash(path, name);
-          const t = _path.normalizeNoSlash(toPath, name);
-          return f !== t && !_path.isPathWithin(f, t);
-        })
-      ) {
-        _msg.error('发现错误，不能剪切到子目录和当前目录中');
-        return;
-      }
-
       const same = await reqFileSameName({ data, path: toPath });
 
       if (same.code === 1) {
@@ -2254,10 +2280,18 @@ $footer
   });
 // 删除
 function hdDel(e, arr, cb, loading = { start() {}, end() {} }) {
-  if (arr.some((item) => _path.normalizeNoSlash(item.path, item.name) === _d.trashDir)) {
-    _msg.error(`不能删除回收站目录：${_d.trashDir}`);
-    return;
+  let includeTrashDir = false;
+  for (const item of arr) {
+    const path = _path.normalizeNoSlash(item.path, item.name);
+    if (path === _d.userConfigDir) {
+      _msg.error(`不能删除用户配置目录：${path}`);
+      return;
+    }
+    if (path === _d.trashDir) {
+      includeTrashDir = true;
+    }
   }
+
   let text = '确认删除？';
   if (arr.length === 1) {
     text = `确认删除：${arr[0].name}？`;
@@ -2268,7 +2302,11 @@ function hdDel(e, arr, cb, loading = { start() {}, end() {} }) {
     confirm: { type: 'danger', text: '删除' },
   };
   // 不是回收站目录
-  if (curFileDirPath !== _d.trashDir && !_path.isPathWithin(_d.trashDir, curFileDirPath)) {
+  if (
+    curFileDirPath !== _d.trashDir &&
+    !_path.isPathWithin(_d.trashDir, curFileDirPath) &&
+    !includeTrashDir
+  ) {
     opt.cancel = { text: '放入回收站', type: 'primary' };
     opt.confirm.text = '直接删除';
   }
@@ -2295,6 +2333,14 @@ function hdDel(e, arr, cb, loading = { start() {}, end() {} }) {
 }
 // 重命名
 function hdRename(e, obj, cb) {
+  for (const item of [obj]) {
+    const path = _path.normalizeNoSlash(item.path, item.name);
+    if (path === _d.userConfigDir) {
+      _msg.error(`不能重命名用户配置目录：${path}`);
+      return;
+    }
+  }
+
   rMenu.inpMenu(
     e,
     {

@@ -2,7 +2,7 @@ import express from 'express';
 
 import * as cheerio from 'cheerio';
 
-import { isICO } from 'icojs';
+import { isIco } from 'icojs';
 
 import { extractFullHead, isurl, tplReplace, writelog } from '../../utils/utils.js';
 
@@ -203,7 +203,7 @@ route.get(
 
       if (iconBuf) {
         try {
-          if (isICO(iconBuf)) {
+          if (isIco(iconBuf)) {
             iconBuf = await iconToPng(iconBuf);
           }
           const buf = await convertImageFormat(iconBuf, {
