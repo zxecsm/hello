@@ -81,6 +81,7 @@ class Progress {
       clearTimeout(this.timer);
       this.timer = null;
     }
+    this.upProgress.updateCount(1);
     this.timer = setTimeout(() => {
       clearTimeout(this.timer);
       this.timer = null;
@@ -98,6 +99,7 @@ class Progress {
       clearTimeout(this.timer);
       this.timer = null;
     }
+    this.upProgress.updateCount(1);
     this.timer = setTimeout(() => {
       clearTimeout(this.timer);
       this.timer = null;
@@ -120,21 +122,33 @@ class Progress {
   }
 }
 export class UpProgress {
-  constructor(cb) {
+  constructor(cb, total = 0) {
     this.cb = cb;
+    this.total = total;
+    this.count = 0;
     this.create();
     this.bindEvent();
+  }
+  updateCount(add = 1) {
+    this.count += add;
+    this.countBox.textContent = this.count + ' / ' + this.total;
   }
   create() {
     this.item = document.createElement('div');
     this.item.className = 'item';
     this.proList = document.createElement('div');
     this.proList.className = 'pro_list';
+    this.countBox = document.createElement('div');
+    this.countBox.className = 'count_box';
     this.closeBtn = document.createElement('div');
     this.closeBtn.className = `close_btn iconfont icon-shibai`;
     this.closeBtn.setAttribute('cursor', 'y');
 
     this.item.appendChild(this.closeBtn);
+    if (this.total > 1) {
+      this.item.appendChild(this.countBox);
+      this.updateCount(0);
+    }
     this.item.appendChild(this.proList);
     oList.appendChild(this.item);
   }
@@ -155,5 +169,5 @@ export class UpProgress {
     return new Progress(name, iconfont, this);
   }
 }
-// const test = new UpProgress();
+// const test = new UpProgress(null, 2);
 // test.add('test');

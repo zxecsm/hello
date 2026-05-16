@@ -1276,7 +1276,7 @@ async function hdUp(files) {
 
   const upPro = new UpProgress(() => {
     controller.abort();
-  });
+  }, files.length);
 
   const skip = skipUpSameNameFiles;
   await concurrencyTasks(files, 3, async (file) => {

@@ -459,7 +459,7 @@ async function hdUpFile(files) {
 
   const upPro = new UpProgress(() => {
     controller.abort();
-  });
+  }, files.length);
   await concurrencyTasks(files, 3, async (file) => {
     if (signal.aborted) return;
     const { name, size } = file;

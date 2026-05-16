@@ -1189,7 +1189,7 @@ export async function downloadFiles(tasks) {
 
   const upPro = new UpProgress(() => {
     controller.abort();
-  });
+  }, tasks.length);
   return concurrencyTasks(tasks, 3, async (task) => {
     if (signal.aborted) return;
 

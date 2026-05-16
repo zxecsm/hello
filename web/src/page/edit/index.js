@@ -528,7 +528,7 @@ async function hdUpFile(files) {
 
   const upPro = new UpProgress(() => {
     controller.abort();
-  });
+  }, files.length);
   const fData = [];
   await concurrencyTasks(files, 3, async (file) => {
     if (signal.aborted) return;
