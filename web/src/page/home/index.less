@@ -161,15 +161,16 @@ body {
       -webkit-backdrop-filter: blur(4px);
       width: 100%;
       z-index: 6;
+      overflow: hidden;
 
       div {
         display: flex;
-        flex-flow: row wrap;
         margin: 0 auto;
         width: 95%;
         max-width: var(--max-width);
         padding: 0.5rem 0;
         align-items: center;
+        overflow-x: auto;
 
         span {
           flex: none;
@@ -1913,11 +1914,12 @@ body {
         width: 100%;
         padding: 0.5rem 0;
         background-color: var(--bg-color-o4);
+        overflow: hidden;
         z-index: 5;
         .flex_wrap {
+          overflow-x: auto;
           width: 100%;
           display: flex;
-          flex-flow: row wrap;
           align-items: center;
           div {
             flex: none;
@@ -2378,15 +2380,29 @@ body {
       .home_foot_menu {
         display: none;
         flex: none;
-        width: 100%;
+        width: 98%;
+        margin: 0 auto;
         padding: 0.5rem 0;
         background-color: var(--bg-color-o1);
+        border-radius: var(--border-radius2);
+        overflow: hidden;
+        @media (max-width: 800px) {
+          & {
+            border-radius: 0;
+            width: 100%;
+          }
+        }
         .flex_wrap {
           display: flex;
-          width: 100%;
+          width: 72%;
           align-items: center;
-          flex-flow: row wrap;
-          justify-content: center;
+          overflow-x: auto;
+          margin: 0 auto;
+          @media (max-width: 800px) {
+            & {
+              width: 100%;
+            }
+          }
           div {
             flex: none;
             font-size: 2rem;

@@ -2193,7 +2193,7 @@ function renderFoot() {
   if (isSelecting()) {
     _msg.botMsg(`选中：${len}项`);
   }
-  $footer.find('.container').html(html);
+  $footer.find('.container div').html(html);
 }
 function switchCheckAll(el) {
   const $this = $(el);
