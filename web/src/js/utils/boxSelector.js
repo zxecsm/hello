@@ -128,7 +128,7 @@ export class BoxSelector {
     let isStop = false;
 
     if (typeof this.options.onSelectStart === 'function') {
-      isStop = this.options.onSelectStart({ e });
+      isStop = this.options.onSelectStart({ e, container: this.container });
     }
 
     // if (e.type.startsWith('touch')) e.preventDefault();
@@ -222,6 +222,7 @@ export class BoxSelector {
       rect: boxRect,
       allItems,
       isKeepOld: this.isKeepOld(),
+      container: this.container,
     };
 
     if (isEnd) {

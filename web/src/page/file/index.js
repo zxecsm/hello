@@ -2095,11 +2095,11 @@ function getCheckDatas() {
   });
   return arr;
 }
+const allowSelectEls = [$contentWrap[0], $contentWrap.find('.container')[0]];
 const boxSelector = new BoxSelector(document, {
   selectables: '.content_wrap .file_item',
   onSelectStart({ e }) {
-    const item = _getTarget($contentWrap[0], e, '.content_wrap .file_item');
-    if (item) return true;
+    return !allowSelectEls.includes(e.target);
   },
   onSelectEnd() {
     renderFoot();

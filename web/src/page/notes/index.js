@@ -26,7 +26,6 @@ import {
   getFileReader,
   getFiles,
   concurrencyTasks,
-  _getTarget,
   LazyLoad,
   imgjz,
   isTextFile,
@@ -59,7 +58,8 @@ import imgPreview from '../../js/plugins/imgPreview';
 import cacheFile from '../../js/utils/cacheFile';
 import loadingSvg from '../../images/img/loading.svg';
 import localData from '../../js/common/localData';
-const $headWrap = $('.head_wrap'),
+const $app = $('#app'),
+  $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
   $categoryTag = $('.category_tag'),
   $footer = $('.footer');
@@ -203,8 +203,7 @@ let noteList = [];
 const noteBoxSelector = new BoxSelector(document, {
   selectables: '.item_box',
   onSelectStart({ e }) {
-    if (_getTarget($contentWrap[0], e, '.item_box') || _getTarget($contentWrap[0], e, '.item_info'))
-      return true;
+    return e.target !== $app[0];
   },
   onSelectEnd() {
     updateSelectInfo();

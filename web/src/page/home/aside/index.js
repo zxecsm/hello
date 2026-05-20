@@ -202,8 +202,8 @@ function switchCheckState() {
 }
 const bmListBoxSelector = new BoxSelector($aside.find('.list')[0], {
   selectables: '.list_title',
-  onSelectStart({ e }) {
-    const item = _getTarget($aside[0], e, '.list_title');
+  onSelectStart({ e, container }) {
+    const item = _getTarget(container, e, '.list_title');
     if (item) return true;
   },
   onSelectEnd() {
@@ -233,8 +233,8 @@ const bmListBoxSelector = new BoxSelector($aside.find('.list')[0], {
 bmListBoxSelector.stop();
 const bmBoxSelector = new BoxSelector($aside.find('.list')[0], {
   selectables: '.bm_item',
-  onSelectStart({ e }) {
-    const item = _getTarget($aside[0], e, '.bm_item');
+  onSelectStart({ e, container }) {
+    const item = _getTarget(container, e, '.bm_item');
     if (item) return true;
   },
   onSelectEnd() {

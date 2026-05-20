@@ -198,8 +198,8 @@ if (!isRoot()) {
 }
 const picBoxSelector = new BoxSelector($imgList[0], {
   selectables: '.img_item',
-  onSelectStart({ e }) {
-    const item = _getTarget($imgList[0], e, '.img_item');
+  onSelectStart({ e, container }) {
+    const item = _getTarget(container, e, '.img_item');
     if (item) return true;
   },
   onSelectEnd() {

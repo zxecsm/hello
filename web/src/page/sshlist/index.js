@@ -18,7 +18,6 @@ import {
   isMobile,
   hdTitleHighlight,
   isLogin,
-  _getTarget,
   getTextSize,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
@@ -44,7 +43,8 @@ import {
   reqSSHSetCategory,
   reqSSHTop,
 } from '../../api/ssh';
-const $headWrap = $('.head_wrap'),
+const $app = $('#app'),
+  $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
   $categoryTag = $('.category_tag'),
   $footer = $('.footer');
@@ -165,8 +165,7 @@ let sshList = [];
 const sshBoxSelector = new BoxSelector(document, {
   selectables: '.item_box',
   onSelectStart({ e }) {
-    if (_getTarget($contentWrap[0], e, '.item_box') || _getTarget($contentWrap[0], e, '.item_info'))
-      return true;
+    return e.target !== $app[0];
   },
   onSelectEnd() {
     updateSelectInfo();

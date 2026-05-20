@@ -22,7 +22,6 @@ import {
   hdTitleHighlight,
   copyText,
   isLogin,
-  _getTarget,
   LazyLoad,
   imgjz,
   getFaviconPath,
@@ -68,7 +67,8 @@ realtime.init().add((res) => {
     otherWindowMsg(item);
   });
 });
-const $headWrap = $('.head_wrap'),
+const $app = $('#app'),
+  $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
   $footer = $('.footer');
 let { HASH } = queryURLParams(myOpen());
@@ -114,8 +114,7 @@ function getListItem(id) {
 const trashBoxSelector = new BoxSelector(document, {
   selectables: '.item_box',
   onSelectStart({ e }) {
-    if (_getTarget($contentWrap[0], e, '.item_box') || _getTarget($contentWrap[0], e, '.item_info'))
-      return true;
+    return e.target !== $app[0];
   },
   onSelectEnd() {
     updateSelectInfo();

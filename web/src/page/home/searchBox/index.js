@@ -193,8 +193,8 @@ function getHomeCheckBmItem() {
 
 const homeBmBoxSelector = new BoxSelector($homeBmWrap[0], {
   selectables: '.home_bm_item',
-  onSelectStart({ e }) {
-    const item = _getTarget($homeBmWrap[0], e, '.home_bm_item');
+  onSelectStart({ e, container }) {
+    const item = _getTarget(container, e, '.home_bm_item');
     if (item) return true;
   },
   onSelectEnd() {

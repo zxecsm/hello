@@ -21,7 +21,6 @@ import {
   isMobile,
   hdTitleHighlight,
   isLogin,
-  _getTarget,
   LazyLoad,
   imgjz,
   getFaviconPath,
@@ -54,7 +53,8 @@ import cacheFile from '../../js/utils/cacheFile';
 import localData from '../../js/common/localData';
 import { isHideCategoryBox, renderCategoryList, showCategoryBox } from './category';
 
-const $headWrap = $('.head_wrap'),
+const $app = $('#app'),
+  $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
   $categoryTag = $('.category_tag'),
   $footer = $('.footer');
@@ -833,11 +833,7 @@ function hdBmkMoveList(e) {
 const boxSelector = new BoxSelector(document, {
   selectables: '.content_wrap .item_box',
   onSelectStart({ e }) {
-    if (
-      _getTarget($contentWrap[0], e, '.content_wrap .item_box') ||
-      _getTarget($contentWrap[0], e, '.content_wrap .item_info')
-    )
-      return true;
+    return e.target !== $app[0];
   },
   onSelectEnd() {
     updateSelectInfo();

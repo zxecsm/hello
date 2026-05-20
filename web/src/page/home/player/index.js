@@ -930,8 +930,8 @@ export async function hdLoadedSong(list) {
 }
 const songsBoxSelector = new BoxSelector($msuicContentBox.find('.list_items_wrap')[0], {
   selectables: '.song_item',
-  onSelectStart({ e }) {
-    const item = _getTarget($msuicContentBox[0], e, '.song_item');
+  onSelectStart({ e, container }) {
+    const item = _getTarget(container, e, '.song_item');
     if (item) return true;
   },
   onSelectEnd() {

@@ -4256,11 +4256,12 @@ body {
               backdrop-filter: blur(8px);
               -webkit-backdrop-filter: blur(8px);
               z-index: 5;
+              overflow: hidden;
               .flex_wrap {
                 width: 100%;
                 display: flex;
                 align-items: center;
-                flex-flow: row wrap;
+                overflow-x: auto;
                 div {
                   flex: none;
                   font-size: 2rem;

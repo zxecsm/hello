@@ -96,8 +96,8 @@ export function showPlayingList() {
 }
 const playListBoxSelector = new BoxSelector($pMusicListBox.find('.p_foot')[0], {
   selectables: '.song_item',
-  onSelectStart({ e }) {
-    const item = _getTarget($pMusicListBox[0], e, '.song_item');
+  onSelectStart({ e, container }) {
+    const item = _getTarget(container, e, '.song_item');
     if (item) return true;
   },
   onSelectEnd() {

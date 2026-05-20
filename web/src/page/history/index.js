@@ -18,7 +18,6 @@ import {
   copyText,
   isLogin,
   pageScrollTop,
-  _getTarget,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -36,7 +35,8 @@ import { _tpl } from '../../js/utils/template';
 import { BoxSelector } from '../../js/utils/boxSelector';
 import { otherWindowMsg } from '../home/home';
 import localData from '../../js/common/localData';
-const $headWrap = $('.head_wrap'),
+const $app = $('#app'),
+  $headWrap = $('.head_wrap'),
   $contentWrap = $('.content_wrap'),
   $footer = $('.footer');
 if (!isLogin()) {
@@ -274,8 +274,7 @@ if (isIframe()) {
 const boxSelector = new BoxSelector(document, {
   selectables: '.content_wrap .item_box',
   onSelectStart({ e }) {
-    const item = _getTarget($contentWrap[0], e, '.content_wrap .item_box');
-    if (item) return true;
+    return e.target !== $app[0];
   },
   onSelectEnd() {
     updateSelectInfo();

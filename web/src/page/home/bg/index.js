@@ -335,8 +335,8 @@ function stopSelect() {
 }
 const bgBoxSelector = new BoxSelector($bgList[0], {
   selectables: '.bg_item',
-  onSelectStart({ e }) {
-    const item = _getTarget($bgList[0], e, '.bg_item');
+  onSelectStart({ e, container }) {
+    const item = _getTarget(container, e, '.bg_item');
     if (item) return true;
   },
   onSelectEnd() {
