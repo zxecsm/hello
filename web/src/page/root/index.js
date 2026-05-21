@@ -1084,6 +1084,16 @@ $footer
     const list = getCheckItems(1);
     if (list.length === 0) return;
     deleteAccount(e, list);
+  })
+  .on('click', '.f_close', function () {
+    const $itemBox = $list.find('tr');
+    $itemBox.each((_, el) => {
+      $(el).find('td').eq(0).attr({
+        check: 'n',
+        class: 'iconfont icon-xuanzeweixuanze',
+      });
+    });
+    updateSelectInfo(false);
   });
 // 创建帐号
 $userBtns
