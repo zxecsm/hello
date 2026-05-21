@@ -57,7 +57,9 @@ const $contentWrap = $('.content_wrap'),
   $headBtns = $contentWrap.find('.head_btns'),
   $userBtns = $contentWrap.find('.user_btns'),
   $tableBox = $contentWrap.find('.table_box'),
-  $list = $tableBox.find('tbody');
+  $checkAllBtn = $tableBox.find('thead tr th').eq(0),
+  $list = $tableBox.find('tbody'),
+  $selectBtn = $userBtns.find('.select_btn');
 let dataObj = {};
 let pageNo = 1;
 let userList = [];
@@ -103,6 +105,7 @@ function renderUserList(pageNo, total, top) {
   const html = _tpl(
     `
     <tr v-for="{account,username,update_at,email,state,online,hide} in userList" :data-acc="account">
+      <td cursor="y" check="n" class="iconfont icon-xuanzeweixuanze"></td>
       <td>{{formatDate({template: '{0}-{1}-{2} {3}:{4}',timestamp: update_at})}}</td>
       <td class="online_status" :cursor="online === 1 ? 'y' : ''" style="color:{{online === 1 ? 'green' : 'var(--color6)'}};">{{online === 1 ? (hide === 1 ? '隐身' : '在线') : '离线'}}</td>
       <td>{{username}}</td>
@@ -128,6 +131,7 @@ function renderUserList(pageNo, total, top) {
     small: getScreenSize().w <= _d.screen,
   });
   $list.html(html);
+  updateSelectInfo(false);
   if (top) {
     pageScrollTop(0);
   }
@@ -185,11 +189,10 @@ function getUserInfo(acc) {
   return userList.find((item) => item.account === acc) || {};
 }
 // 修改用户状态
-function changeUserState(obj) {
-  const { state, account } = obj;
+function changeUserState(accounts, state) {
   reqRootAccountState({
-    account,
-    state: state === 1 ? 0 : 1,
+    accounts,
+    state,
   })
     .then((result) => {
       if (result.code === 1) {
@@ -200,38 +203,113 @@ function changeUserState(obj) {
     .catch(() => {});
 }
 // 删除
-function deleteAccount(e, obj) {
-  const { username, account } = obj;
+function deleteAccount(e, accs, text = '') {
   rMenu.pop(
     {
       e,
-      text: `确认删除：${username}(${account})？`,
+      text: `确认删除：${text || '选中用户'}？`,
       confirm: { type: 'danger', text: '删除' },
     },
-    (type) => {
+    async (type) => {
       if (type === 'confirm') {
-        reqRootDeleteAccount({ account })
-          .then((result) => {
+        for (const acc of accs) {
+          const { account, username } = getUserInfo(acc);
+          try {
+            const result = await reqRootDeleteAccount({ account });
             if (result.code === 1) {
-              _msg.success(result.codeText);
-              getUserList();
+              _msg.success(`删除用户 ${username}(${account}) 成功`);
+            } else {
+              throw new Error(result.codeText);
             }
-          })
-          .catch(() => {});
+          } catch {
+            _msg.error(`删除用户 ${username}(${account}) 失败`);
+          }
+        }
+        getUserList();
       }
     },
   );
 }
+function checkedItem(el) {
+  const $this = $(el),
+    check = $this.attr('check');
+  if (check === 'n') {
+    $this.attr({ class: 'iconfont icon-xuanzeyixuanze', check: 'y' });
+  } else {
+    $this.attr({ class: 'iconfont icon-xuanzeweixuanze', check: 'n' });
+  }
+  updateSelectInfo();
+}
+function getCheckItems(ignoreRoot = false) {
+  const $itemBox = $list.find('tr'),
+    $checkArr = $itemBox.filter((_, item) => $(item).find('td').eq(0).attr('check') === 'y');
+  const arr = [];
+  $checkArr.each((i, v) => {
+    arr.push(v.getAttribute('data-acc'));
+  });
+  if (ignoreRoot) {
+    return arr.filter((v) => !isRoot(v));
+  }
+  return arr;
+}
+function updateSelectBtn() {
+  if (getCheckItems().length > 0) {
+    $selectBtn.show();
+  } else {
+    $selectBtn.hide();
+  }
+}
+function updateSelectInfo(msg = true) {
+  const $itemBox = $list.find('tr'),
+    $checkArr = $itemBox.filter((_, item) => $(item).find('td').eq(0).attr('check') === 'y');
+  if (msg) _msg.botMsg(`选中：${$checkArr.length}项`);
+  if ($checkArr.length === $itemBox.length) {
+    $checkAllBtn.attr({
+      class: 'iconfont icon-xuanzeyixuanze',
+      check: 'y',
+    });
+  } else {
+    $checkAllBtn.attr({
+      class: 'iconfont icon-xuanzeweixuanze',
+      check: 'n',
+    });
+  }
+  updateSelectBtn();
+}
+$checkAllBtn.on('click', function () {
+  let che = $checkAllBtn.attr('check');
+  che === 'y' ? (che = 'n') : (che = 'y');
+  $checkAllBtn.attr({
+    class: che === 'y' ? 'iconfont icon-xuanzeyixuanze' : 'iconfont icon-xuanzeweixuanze',
+    check: che,
+  });
+
+  const $itemBox = $list.find('tr');
+  $itemBox.each((_, el) => {
+    $(el)
+      .find('td')
+      .eq(0)
+      .attr({
+        check: che,
+        class: che === 'y' ? 'iconfont icon-xuanzeyixuanze' : 'iconfont icon-xuanzeweixuanze',
+      });
+  });
+  updateSelectBtn();
+  _msg.botMsg(`选中：${che === 'y' ? $itemBox.length : 0}项`);
+});
 $list
+  .on('click', '.iconfont', function () {
+    checkedItem(this);
+  })
   .on('click', '.user_state', function () {
     const $this = $(this).parent().parent();
     const uInfo = getUserInfo($this.attr('data-acc'));
-    changeUserState(uInfo);
+    changeUserState([uInfo.account], uInfo.state === 1 ? 0 : 1);
   })
   .on('click', '.del_account', function (e) {
     const $this = $(this).parent().parent();
     const obj = getUserInfo($this.attr('data-acc'));
-    deleteAccount(e, obj);
+    deleteAccount(e, [obj.account], `${obj.username}(${obj.account})`);
   })
   .on('mouseenter', '.online_status', function () {
     const { os, online } = getUserInfo($(this).parent().attr('data-acc'));
@@ -994,6 +1072,21 @@ $headBtns
 
 // 创建帐号
 $userBtns
+  .on('click', '.select_btn .u_on', function () {
+    const list = getCheckItems(1);
+    if (list.length === 0) return;
+    changeUserState(list, 1);
+  })
+  .on('click', '.select_btn .u_off', function () {
+    const list = getCheckItems(1);
+    if (list.length === 0) return;
+    changeUserState(list, 0);
+  })
+  .on('click', '.select_btn .u_delete', function (e) {
+    const list = getCheckItems(1);
+    if (list.length === 0) return;
+    deleteAccount(e, list);
+  })
   .on('click', '.create_account', (e) => {
     rMenu.inpMenu(
       e,

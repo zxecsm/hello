@@ -18,5 +18,5 @@ export function reqTodoEdit(data) {
 }
 // 修改状态
 export function reqTodoState(data) {
-  return _getAjax('/todo/state', data);
+  return _postAjax('/todo/state', data);
 }

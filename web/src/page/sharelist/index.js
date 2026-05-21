@@ -14,6 +14,7 @@ import {
   getExpState,
   copyText,
   isLogin,
+  _getTarget,
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
@@ -24,6 +25,7 @@ import { reqUserDeleteShare, reqUserEditShare, reqUserShareList } from '../../ap
 import { _tpl } from '../../js/utils/template';
 import { otherWindowMsg } from '../home/home';
 import rMenu from '../../js/plugins/rightMenu';
+import { BoxSelector } from '../../js/utils/boxSelector';
 if (!isLogin()) {
   toLogin();
 }
@@ -42,7 +44,8 @@ realtime.init().add((res) => {
 });
 const $contentWrap = $('.content_wrap'),
   $headBtns = $contentWrap.find('.head_btns'),
-  $shareList = $contentWrap.find('.share_list');
+  $shareList = $contentWrap.find('.share_list'),
+  $footer = $('.footer');
 let pageNo = 1;
 let sList = [];
 let sPageSize = 20;
@@ -59,6 +62,96 @@ function getState(exp_time) {
   }
   return v;
 }
+function checkedItem(el) {
+  const $this = $(el),
+    check = $this.attr('check');
+  if (check === 'n') {
+    $this.attr('check', 'y').css('background-color', _d.checkColor);
+  } else {
+    $this.attr('check', 'n').css('background-color', 'transparent');
+  }
+  updateSelectInfo();
+}
+function updateSelectInfo() {
+  const $itemBox = $shareList.find('li'),
+    $checkArr = $itemBox.filter((_, item) => $(item).find('.check_state').attr('check') === 'y');
+  _msg.botMsg(`选中：${$checkArr.length}项`);
+  if ($checkArr.length === $itemBox.length) {
+    $footer.find('span').attr({
+      class: 'iconfont icon-xuanzeyixuanze',
+      check: 'y',
+    });
+  } else {
+    $footer.find('span').attr({
+      class: 'iconfont icon-xuanzeweixuanze',
+      check: 'n',
+    });
+  }
+}
+const shareBoxSelector = new BoxSelector($shareList[0], {
+  selectables: 'li',
+  onSelectStart({ e, container }) {
+    const item = _getTarget(container, e, 'li');
+    if (item) return true;
+  },
+  onSelectEnd() {
+    updateSelectInfo();
+  },
+  onSelectUpdate({ selectedItems, allItems, isKeepOld }) {
+    allItems.forEach((item) => {
+      const needCheck = selectedItems.includes(item);
+      const $cItem = $(item).find('.check_state');
+      const isChecked = $cItem.attr('check') === 'y';
+      if (needCheck && !isChecked) {
+        $cItem
+          .css({
+            'background-color': _d.checkColor,
+          })
+          .attr('check', 'y');
+      } else if (!needCheck && isChecked && !isKeepOld) {
+        $cItem
+          .css({
+            'background-color': 'transparent',
+          })
+          .attr('check', 'n');
+      }
+    });
+  },
+});
+shareBoxSelector.stop();
+function isSelecting() {
+  return !$footer.is(':hidden');
+}
+function startSelect() {
+  $shareList.find('li .check_state').css('display', 'block');
+  $footer
+    .stop()
+    .slideDown(_d.speed, () => {
+      shareBoxSelector.start();
+    })
+    .find('span')
+    .attr({
+      class: 'iconfont icon-xuanzeweixuanze',
+      check: 'n',
+    });
+}
+function stopSelect() {
+  $shareList
+    .find('li .check_state')
+    .css('display', 'none')
+    .attr('check', 'n')
+    .css('background-color', 'transparent');
+  $footer
+    .stop()
+    .slideUp(_d.speed, () => {
+      shareBoxSelector.stop();
+    })
+    .find('span')
+    .attr({
+      class: 'iconfont icon-xuanzeweixuanze',
+      check: 'n',
+    });
+}
 // 生成列表
 function renderShareList(total, pageNo, top) {
   const html = _tpl(
@@ -66,6 +159,7 @@ function renderShareList(total, pageNo, top) {
     <p v-if="total === 0">{{_d.emptyList}}</p>
     <template v-else>
       <li v-for="{id,type,title,pass,exp_time} in sList" :data-id="id" :data-url="getUrlAndLogo(type,id).url">
+        <div cursor="y" check="n" class="check_state"></div>
         <div cursor="y" class="item_type_logo iconfont {{getUrlAndLogo(type,id).logo}}"></div>
         <div title="点击复制分享链接" class="title">名称：<span>{{title}}</span> ； 提取码：<span>{{pass || '无'}}</span> ； 有效期：<span :style="getExpState(exp_time) < 0 ? 'color:red;' : ''">{{getState(exp_time)}}</span> ； </div>
         <div cursor="y" class="copy_link iconfont icon-erweima"></div>
@@ -109,6 +203,7 @@ function renderShareList(total, pageNo, top) {
       },
     },
   );
+  stopSelect();
   $shareList.html(html).addClass('open');
   $headBtns.addClass('open');
   if (top) {
@@ -151,16 +246,16 @@ function getShareItem(id) {
 }
 getShareList(1);
 // 删除
-function deleteShare(e, obj) {
+function deleteShare(e, ids, text = '') {
   rMenu.pop(
     {
       e,
-      text: `确认删除：${obj.title}？`,
+      text: `确认删除：${text || '选中分享'}？`,
       confirm: { type: 'danger', text: '删除' },
     },
     (type) => {
       if (type === 'confirm') {
-        reqUserDeleteShare({ ids: [obj.id] })
+        reqUserDeleteShare({ ids })
           .then((res) => {
             if (res.code === 1) {
               _msg.success(res.codeText);
@@ -200,9 +295,12 @@ function editShare(e, obj) {
   );
 }
 $shareList
+  .on('click', '.check_state', function () {
+    checkedItem(this);
+  })
   .on('click', '.delete', function (e) {
     const obj = getShareItem($(this).parent().attr('data-id'));
-    deleteShare(e, obj);
+    deleteShare(e, [obj.id], obj.title);
   })
   .on('click', '.edit', function (e) {
     const obj = getShareItem($(this).parent().attr('data-id'));
@@ -229,28 +327,48 @@ if (isIframe()) {
   $headBtns.find('.h_go_home').remove();
 }
 $headBtns
-  .on('click', '.clear_share_list_btn', function (e) {
-    if (sList.length === 0) return;
-    rMenu.pop(
-      {
-        e,
-        text: `确认清空：当页分享？`,
-        confirm: { type: 'danger', text: '清空' },
-      },
-      (type) => {
-        if (type === 'confirm') {
-          reqUserDeleteShare({ ids: sList.map((item) => item.id) })
-            .then((res) => {
-              if (res.code === 1) {
-                _msg.success(res.codeText);
-                getShareList();
-              }
-            })
-            .catch(() => {});
-        }
-      },
-    );
+  .on('click', '.select', function () {
+    if (isSelecting()) {
+      stopSelect();
+    } else {
+      startSelect();
+    }
   })
   .on('click', '.h_go_home', function () {
     myOpen('/');
   });
+// 获取选中项
+function getCheckItems() {
+  const $itemBox = $shareList.find('li'),
+    $checkArr = $itemBox.filter((_, item) => $(item).find('.check_state').attr('check') === 'y');
+  const arr = [];
+  $checkArr.each((i, v) => {
+    arr.push(v.getAttribute('data-id'));
+  });
+  return arr;
+}
+$footer
+  .on('click', '.f_delete', function (e) {
+    const ids = getCheckItems();
+    if (ids.length === 0) return;
+    deleteShare(e, ids);
+  })
+  .on('click', '.f_close', function () {
+    stopSelect();
+  })
+  .on('click', 'span', switchCheckAll);
+function switchCheckAll() {
+  const $checkBtn = $footer.find('span');
+  let che = $checkBtn.attr('check');
+  che === 'y' ? (che = 'n') : (che = 'y');
+  $checkBtn.attr({
+    class: che === 'y' ? 'iconfont icon-xuanzeyixuanze' : 'iconfont icon-xuanzeweixuanze',
+    check: che,
+  });
+  const $itemBox = $shareList.find('li');
+  $itemBox
+    .find('.check_state')
+    .attr('check', che)
+    .css('background-color', che === 'y' ? _d.checkColor : 'transparent');
+  _msg.botMsg(`选中：${che === 'y' ? $itemBox.length : 0}项`);
+}

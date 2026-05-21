@@ -37,9 +37,11 @@ import { hideIframeMask, showIframeMask } from '../iframe.js';
 import { changeLogoAlertStatus } from '../index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import localData from '../../../js/common/localData.js';
+import { BoxSelector } from '../../../js/utils/boxSelector.js';
 const $todoBox = $('.todo_box'),
   $theadBtns = $todoBox.find('.t_head_btns'),
   $todoListWrap = $todoBox.find('.todo_list_wrap'),
+  $todoFooter = $todoBox.find('.todo_footer'),
   $todoList = $todoListWrap.find('.todo_list');
 let todoList = [],
   todoPageNo = 1,
@@ -60,6 +62,32 @@ function setTop() {
   } else {
     $theadBtns.find('.top').attr('class', 'top iconfont icon-zhiding');
   }
+}
+function isSelecting() {
+  return !$todoFooter.is(':hidden');
+}
+function startSelect() {
+  $todoList.find('ul .check_level').css('display', 'block');
+  $todoFooter
+    .stop()
+    .slideDown(_d.speed, () => {
+      todoBoxSelector.start();
+    })
+    .find('span')
+    .attr({
+      class: 'iconfont icon-xuanzeweixuanze',
+      check: 'n',
+    });
+}
+function stopSelect() {
+  $todoList
+    .find('ul .check_level')
+    .css('display', 'none')
+    .attr('check', 'n')
+    .css('background-color', 'transparent');
+  $todoFooter.stop().slideUp(_d.speed, () => {
+    todoBoxSelector.stop();
+  });
 }
 // 设置待办列表
 export function setTodoUndone(val) {
@@ -118,6 +146,37 @@ export function getTodoList(toTop) {
     }
   });
 }
+const todoBoxSelector = new BoxSelector($todoListWrap[0], {
+  selectables: 'ul',
+  onSelectStart({ e, container }) {
+    const item = _getTarget(container, e, 'ul');
+    if (item) return true;
+  },
+  onSelectEnd() {
+    updateSelectInfo();
+  },
+  onSelectUpdate({ selectedItems, allItems, isKeepOld }) {
+    allItems.forEach((item) => {
+      const needCheck = selectedItems.includes(item);
+      const $cItem = $(item).find('.check_level');
+      const isChecked = $cItem.attr('check') === 'y';
+      if (needCheck && !isChecked) {
+        $cItem
+          .css({
+            'background-color': _d.checkColor,
+          })
+          .attr('check', 'y');
+      } else if (!needCheck && isChecked && !isKeepOld) {
+        $cItem
+          .css({
+            'background-color': 'transparent',
+          })
+          .attr('check', 'n');
+      }
+    });
+  },
+});
+todoBoxSelector.stop();
 // 生成列表
 function renderTodoList(total, toTop) {
   if ($todoBox.is(':hidden')) return;
@@ -126,11 +185,12 @@ function renderTodoList(total, toTop) {
     <div style="padding-bottom: 1rem;">
       <button cursor="y" class="add_btn btn btn_primary">添加</button>
       <button v-if="hasFinish()" cursor="y" class="clear_btn btn btn_danger">清除已完成</button>
-      <button v-if="todoList.length > 0" cursor="y" class="clear_all_btn btn btn_danger">清空</button>
+      <button v-if="todoList.length > 0" cursor="y" class="clear_all_btn btn btn_primary">多选</button>
     </div>
     <p v-if="total === 0" style="padding: 2rem 0;pointer-events: none;text-align: center;">暂无待办事项</p>
     <template v-else>
       <ul v-for="{id, content, state, update_at} in todoList" :data-id="id">
+        <div check="n" class="check_level"></div>
         <li cursor="y" class="todo_state iconfont {{state === 1 ? 'icon-xuanzeweixuanze' : 'icon-xuanzeyixuanze'}}"></li>
         <li class="todo_text">
           <div v-html="hdTextMsg(content)" class="text {{state === 1 ? '' : 'del'}}"></div>
@@ -159,6 +219,7 @@ function renderTodoList(total, toTop) {
       },
     },
   );
+  stopSelect();
   $todoList.html(html);
   if (toTop) {
     $todoListWrap.scrollTop(0);
@@ -284,7 +345,7 @@ function addTodo(e) {
   );
 }
 // 删除事项
-function delTodo(e, id, cb, loading = { start() {}, end() {} }) {
+function delTodo(e, ids, cb, loading = { start() {}, end() {} }) {
   let opt = {
       e,
       text: '确认清除：当页已完成事项？',
@@ -293,22 +354,13 @@ function delTodo(e, id, cb, loading = { start() {}, end() {} }) {
     param = {
       ids: todoList.filter((item) => item.state === 0).map((item) => item.id),
     };
-  if (id) {
-    param = { ids: [id] };
-    if (id === 'all') {
-      param = { ids: todoList.map((item) => item.id) };
-      opt = {
-        e,
-        text: '确认清空：当页事项？',
-        confirm: { type: 'danger', text: '清空' },
-      };
-    } else {
-      opt = {
-        e,
-        text: '确认删除：事项？',
-        confirm: { type: 'danger', text: '删除' },
-      };
-    }
+  if (ids) {
+    opt = {
+      e,
+      text: '确认删除：事项？',
+      confirm: { type: 'danger', text: '删除' },
+    };
+    param.ids = ids;
   }
   rMenu.pop(opt, (type) => {
     if (type === 'confirm') {
@@ -398,7 +450,7 @@ function todoMenu(e) {
       } else if (id === 'del') {
         delTodo(
           e,
-          todo.id,
+          [todo.id],
           () => {
             close();
           },
@@ -412,11 +464,86 @@ function todoMenu(e) {
     todo.content,
   );
 }
+// 选中
+function checkedTodo(el) {
+  const $this = $(el);
+  const check = $this.attr('check');
+  if (check === 'n') {
+    $this.attr('check', 'y').css('background-color', _d.checkColor);
+  } else {
+    $this.attr('check', 'n').css('background-color', 'transparent');
+  }
+  updateSelectInfo();
+}
+function updateSelectInfo() {
+  const $todoItems = $todoList.find('ul'),
+    $checkList = $todoItems.filter((_, item) => $(item).find('.check_level').attr('check') === 'y');
+  _msg.botMsg(`选中：${$checkList.length}项`);
+  if ($checkList.length === $todoItems.length) {
+    $todoFooter.find('span').attr({
+      class: 'iconfont icon-xuanzeyixuanze',
+      check: 'y',
+    });
+  } else {
+    $todoFooter.find('span').attr({
+      class: 'iconfont icon-xuanzeweixuanze',
+      check: 'n',
+    });
+  }
+}
+function getCheckTodoIds() {
+  const $todoItems = $todoList.find('ul'),
+    $checkArr = $todoItems.filter((_, item) => $(item).find('.check_level').attr('check') === 'y');
+  if ($checkArr.length === 0) return [];
+  const arr = [];
+  $checkArr.each((_, v) => {
+    arr.push(v.getAttribute('data-id'));
+  });
+  return arr;
+}
+$todoFooter
+  .on('click', '.f_delete', function (e) {
+    const list = getCheckTodoIds();
+    if (list.length === 0) return;
+    delTodo(e, list);
+  })
+  .on('click', '.f_finish', function () {
+    const list = getCheckTodoIds();
+    if (list.length === 0) return;
+    changeTodosState(list, 0);
+  })
+  .on('click', '.f_unfinish', function () {
+    const list = getCheckTodoIds();
+    if (list.length === 0) return;
+    changeTodosState(list, 1);
+  })
+  .on('click', '.f_close', stopSelect)
+  .on('click', 'span', function () {
+    let che = $(this).attr('check');
+    che === 'y' ? (che = 'n') : (che = 'y');
+    $todoFooter.find('span').attr({
+      class: che === 'y' ? 'iconfont icon-xuanzeyixuanze' : 'iconfont icon-xuanzeweixuanze',
+      check: che,
+    });
+    const $todoItems = $todoList.find('ul');
+    $todoItems
+      .find('.check_level')
+      .attr('check', che)
+      .css('background-color', che === 'y' ? _d.checkColor : 'transparent');
+    _msg.botMsg(`选中：${che === 'y' ? $todoItems.length : 0}项`);
+  });
 $todoList
   .on('click', '.add_btn', addTodo)
   .on('click', '.clear_btn', delTodo)
-  .on('click', '.clear_all_btn', function (e) {
-    delTodo(e, 'all');
+  .on('click', '.check_level', function () {
+    checkedTodo(this);
+  })
+  .on('click', '.clear_all_btn', function () {
+    if (isSelecting()) {
+      stopSelect();
+    } else {
+      startSelect();
+    }
   })
   .on('click', '.set_btn', todoMenu)
   .on('click', '.todo_state', function () {
@@ -425,12 +552,10 @@ $todoList
 
 function changeTodoState(id) {
   const todo = getTodo(id);
-  let obj = { id: todo.id, state: 1 };
-  if (todo.state === 1) {
-    obj.state = 0;
-  }
-
-  reqTodoState(obj)
+  changeTodosState([id], todo.state === 1 ? 0 : 1);
+}
+function changeTodosState(ids, state) {
+  reqTodoState({ ids, state })
     .then((res) => {
       if (res.code === 1) {
         _msg.success(res.codeText);
@@ -511,7 +636,7 @@ myResize({
 _mySlide({
   el: $todoListWrap[0],
   right(e) {
-    if (_getTarget(this, e, '.todo_list .todo_paging_box')) return;
+    if (isSelecting() || _getTarget(this, e, '.todo_list .todo_paging_box')) return;
     closeTodoBox();
   },
 });

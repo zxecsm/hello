@@ -42,9 +42,11 @@ import { hideIframeMask, showIframeMask } from '../iframe.js';
 import { changeLogoAlertStatus } from '../index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import localData from '../../../js/common/localData.js';
+import { BoxSelector } from '../../../js/utils/boxSelector.js';
 const $countBox = $('.count_box'),
   $cheadBtns = $countBox.find('.c_head_btns'),
   $countListWrap = $countBox.find('.count_list_wrap'),
+  $countFooter = $countBox.find('.count_footer'),
   $countList = $countListWrap.find('.count_list');
 let countList = [],
   countPageNo = 1,
@@ -65,6 +67,32 @@ function setTop() {
   } else {
     $cheadBtns.find('.top').attr('class', 'top iconfont icon-zhiding');
   }
+}
+function isSelecting() {
+  return !$countFooter.is(':hidden');
+}
+function startSelect() {
+  $countList.find('.item_box .check_level').css('display', 'block');
+  $countFooter
+    .stop()
+    .slideDown(_d.speed, () => {
+      countBoxSelector.start();
+    })
+    .find('span')
+    .attr({
+      class: 'iconfont icon-xuanzeweixuanze',
+      check: 'n',
+    });
+}
+function stopSelect() {
+  $countList
+    .find('.item_box .check_level')
+    .css('display', 'none')
+    .attr('check', 'n')
+    .css('background-color', 'transparent');
+  $countFooter.stop().slideUp(_d.speed, () => {
+    countBoxSelector.stop();
+  });
 }
 // 提醒消息
 export function countMsg() {
@@ -122,6 +150,37 @@ export function getCountList(toTop) {
     }
   });
 }
+const countBoxSelector = new BoxSelector($countListWrap[0], {
+  selectables: '.item_box',
+  onSelectStart({ e, container }) {
+    const item = _getTarget(container, e, '.item_box');
+    if (item) return true;
+  },
+  onSelectEnd() {
+    updateSelectInfo();
+  },
+  onSelectUpdate({ selectedItems, allItems, isKeepOld }) {
+    allItems.forEach((item) => {
+      const needCheck = selectedItems.includes(item);
+      const $cItem = $(item).find('.check_level');
+      const isChecked = $cItem.attr('check') === 'y';
+      if (needCheck && !isChecked) {
+        $cItem
+          .css({
+            'background-color': _d.checkColor,
+          })
+          .attr('check', 'y');
+      } else if (!needCheck && isChecked && !isKeepOld) {
+        $cItem
+          .css({
+            'background-color': 'transparent',
+          })
+          .attr('check', 'n');
+      }
+    });
+  },
+});
+countBoxSelector.stop();
 // 生成列表
 function renderCountList(total, toTop) {
   if ($countBox.is(':hidden')) return;
@@ -130,11 +189,12 @@ function renderCountList(total, toTop) {
     <div style="padding-bottom: 1rem;">
       <button cursor="y" class="add_btn btn btn_primary">添加</button>
       <button v-if="hasRemain(countList)" cursor="y" class="clear_btn btn btn_danger">清除已到期</button>
-      <button v-if="countList.length > 0" cursor="y" class="clear_all_btn btn btn_danger">清空</button>
+      <button v-if="countList.length > 0" cursor="y" class="clear_all_btn btn btn_primary">多选</button>
     </div>
     <p v-if="total <= 0" style="padding: 2rem 0;pointer-events: none;text-align: center;">暂无倒计时项</p>
     <template v-else>
       <div v-for="{id, title, total:tt, past, remain, link, state, top} in countList" :data-id="id" class="item_box {{state === 0 ? 'close' : ''}}">
+        <div check="n" class="check_level"></div>
         <div class="title">
           <span :cursor="link?'y':''" class="iconfont {{link?'icon-link1':'icon-shalou'}} icon"></span>
           <span class="text">{{title}}</span>
@@ -168,6 +228,7 @@ function renderCountList(total, toTop) {
       },
     },
   );
+  stopSelect();
   $countList.html(html);
   if (toTop) {
     $countListWrap.scrollTop(0);
@@ -350,7 +411,7 @@ function addCount(e) {
   );
 }
 // 删除
-function delCount(e, id, cb, loading = { start() {}, end() {} }) {
+function delCount(e, ids, cb, loading = { start() {}, end() {} }) {
   let opt = {
       e,
       text: '确认清除：当页已到期倒计时？',
@@ -359,22 +420,13 @@ function delCount(e, id, cb, loading = { start() {}, end() {} }) {
     param = {
       ids: countList.filter((item) => item.remain <= 0).map((item) => item.id),
     };
-  if (id) {
-    param = { ids: [id] };
-    if (id === 'all') {
-      param = { ids: countList.map((item) => item.id) };
-      opt = {
-        e,
-        text: '确认清空：当页倒计时？',
-        confirm: { type: 'danger', text: '清空' },
-      };
-    } else {
-      opt = {
-        e,
-        text: '确认删除：倒计时？',
-        confirm: { type: 'danger', text: '删除' },
-      };
-    }
+  if (ids) {
+    opt = {
+      e,
+      text: '确认删除：倒计时？',
+      confirm: { type: 'danger', text: '删除' },
+    };
+    param.ids = ids;
   }
   rMenu.pop(opt, (type) => {
     if (type === 'confirm') {
@@ -394,6 +446,21 @@ function delCount(e, id, cb, loading = { start() {}, end() {} }) {
         });
     }
   });
+}
+function changeCountState(ids, state, cb, loading = { start() {}, end() {} }) {
+  loading.start();
+  reqCountState({ ids, state })
+    .then((res) => {
+      loading.end();
+      if (res.code === 1) {
+        getCountList();
+        _msg.success(res.codeText);
+        cb && cb();
+      }
+    })
+    .catch(() => {
+      loading.end();
+    });
 }
 // 编辑
 function editCount(e, count) {
@@ -508,7 +575,7 @@ function countMenu(e) {
       } else if (id === 'del') {
         delCount(
           e,
-          count.id,
+          [count.id],
           () => {
             close();
           },
@@ -517,19 +584,14 @@ function countMenu(e) {
       } else if (id === 'top') {
         toTop(e, count);
       } else if (id === 'state') {
-        loading.start();
-        reqCountState({ id: count.id, state: count.state === 0 ? 1 : 0 })
-          .then((res) => {
-            loading.end();
-            if (res.code === 1) {
-              close(1);
-              getCountList();
-              _msg.success(res.codeText);
-            }
-          })
-          .catch(() => {
-            loading.end();
-          });
+        changeCountState(
+          [count.id],
+          count.state === 0 ? 1 : 0,
+          () => {
+            close(1);
+          },
+          loading,
+        );
       }
     },
     count.title,
@@ -573,11 +635,86 @@ function toTop(e, obj) {
     '置顶',
   );
 }
+// 选中
+function checkedCount(el) {
+  const $this = $(el);
+  const check = $this.attr('check');
+  if (check === 'n') {
+    $this.attr('check', 'y').css('background-color', _d.checkColor);
+  } else {
+    $this.attr('check', 'n').css('background-color', 'transparent');
+  }
+  updateSelectInfo();
+}
+function updateSelectInfo() {
+  const $todoItems = $countList.find('.item_box'),
+    $checkList = $todoItems.filter((_, item) => $(item).find('.check_level').attr('check') === 'y');
+  _msg.botMsg(`选中：${$checkList.length}项`);
+  if ($checkList.length === $todoItems.length) {
+    $countFooter.find('span').attr({
+      class: 'iconfont icon-xuanzeyixuanze',
+      check: 'y',
+    });
+  } else {
+    $countFooter.find('span').attr({
+      class: 'iconfont icon-xuanzeweixuanze',
+      check: 'n',
+    });
+  }
+}
+function getCheckCountIds() {
+  const $todoItems = $countList.find('.item_box'),
+    $checkArr = $todoItems.filter((_, item) => $(item).find('.check_level').attr('check') === 'y');
+  if ($checkArr.length === 0) return [];
+  const arr = [];
+  $checkArr.each((_, v) => {
+    arr.push(v.getAttribute('data-id'));
+  });
+  return arr;
+}
+$countFooter
+  .on('click', '.f_delete', function (e) {
+    const list = getCheckCountIds();
+    if (list.length === 0) return;
+    delCount(e, list);
+  })
+  .on('click', '.f_on', function () {
+    const list = getCheckCountIds();
+    if (list.length === 0) return;
+    changeCountState(list, 1);
+  })
+  .on('click', '.f_off', function () {
+    const list = getCheckCountIds();
+    if (list.length === 0) return;
+    changeCountState(list, 0);
+  })
+  .on('click', '.f_close', stopSelect)
+  .on('click', 'span', function () {
+    let che = $(this).attr('check');
+    che === 'y' ? (che = 'n') : (che = 'y');
+    $countFooter.find('span').attr({
+      class: che === 'y' ? 'iconfont icon-xuanzeyixuanze' : 'iconfont icon-xuanzeweixuanze',
+      check: che,
+    });
+    const $todoItems = $countList.find('.item_box');
+    $todoItems
+      .find('.check_level')
+      .attr('check', che)
+      .css('background-color', che === 'y' ? _d.checkColor : 'transparent');
+    _msg.botMsg(`选中：${che === 'y' ? $todoItems.length : 0}项`);
+  });
 $countList
   .on('click', '.add_btn', addCount)
   .on('click', '.clear_btn', delCount)
-  .on('click', '.clear_all_btn', function (e) {
-    delCount(e, 'all');
+  .on('click', '.check_level', function () {
+    checkedCount(this);
+  })
+  .on('click', '.clear_all_btn', function () {
+    if (isSelecting()) {
+      stopSelect();
+    } else {
+      startSelect();
+    }
   })
   .on('mouseenter', '.pro', function () {
     const $this = $(this).parent();
@@ -684,7 +821,7 @@ myResize({
 _mySlide({
   el: $countListWrap[0],
   right(e) {
-    if (_getTarget(this, e, '.count_list .count_paging_box')) return;
+    if (isSelecting() || _getTarget(this, e, '.count_list .count_paging_box')) return;
     closeCountBox();
   },
 });

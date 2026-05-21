@@ -332,16 +332,20 @@ route.post(
   validate(
     'body',
     V.object({
-      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
+        .min(1)
+        .max(fieldLength.maxPagesize),
       state: V.number().toInt().enum([0, 1]),
     }),
   ),
   asyncHandler(async (_, res) => {
-    const { id, state } = res.locals.ctx;
+    const { ids, state } = res.locals.ctx;
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('count_down').where({ id, account }).update({ state });
+    await db('count_down')
+      .where({ id: { in: ids }, account })
+      .update({ state });
 
     syncUpdateData(res, 'countlist');
 

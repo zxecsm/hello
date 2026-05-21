@@ -155,19 +155,25 @@ route.post(
   validate(
     'body',
     V.object({
-      account: V.string()
-        .trim()
+      accounts: V.array(
+        V.string()
+          .trim()
+          .min(1)
+          .max(fieldLength.id)
+          .alphanumeric()
+          .notEnum([appConfig.notifyAccount, appConfig.adminAccount]),
+      )
         .min(1)
-        .max(fieldLength.id)
-        .alphanumeric()
-        .notEnum([appConfig.notifyAccount, appConfig.adminAccount]),
+        .max(fieldLength.userPageSize),
       state: V.number().toInt().default(1).enum([1, 0]),
     }),
   ),
   asyncHandler(async (_, res) => {
-    const { account, state } = res.locals.ctx;
+    const { accounts, state } = res.locals.ctx;
 
-    await db('user').where({ account }).update({ state });
+    await db('user')
+      .where({ account: { in: accounts } })
+      .update({ state });
 
     if (state === 1) {
       resp.success(res, '激活账号成功')();

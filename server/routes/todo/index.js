@@ -125,21 +125,25 @@ route.post(
 );
 
 // 待办状态
-route.get(
+route.post(
   '/state',
   validate(
-    'query',
+    'body',
     V.object({
-      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
+        .min(1)
+        .max(fieldLength.maxPagesize),
       state: V.number().toInt().enum([0, 1]),
     }),
   ),
   asyncHandler(async (_, res) => {
-    const { id, state } = res.locals.ctx;
+    const { ids, state } = res.locals.ctx;
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('todo').where({ id, account }).update({ state, update_at: Date.now() });
+    await db('todo')
+      .where({ id: { in: ids }, account })
+      .update({ state, update_at: Date.now() });
 
     syncUpdateData(res, 'todolist');
 
