@@ -122,4 +122,30 @@ html {
       }
     }
   }
+  .footer {
+    position: fixed;
+    display: none;
+    background-color: var(--bg-color-o2);
+    bottom: 0;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    width: 100%;
+    z-index: 7;
+    border-top: 0.1rem solid var(--color9);
+    overflow: hidden;
+
+    div {
+      display: flex;
+      width: 100%;
+      max-width: 140rem;
+      margin: 0 auto;
+      padding: 0.5rem;
+      align-items: center;
+      overflow-x: auto;
+
+      button {
+        flex: none;
+      }
+    }
+  }
 }

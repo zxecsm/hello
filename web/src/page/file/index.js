@@ -281,7 +281,7 @@ async function renderList(top) {
     `
     <template v-if="total > 0">
       <ul v-for="{type, fileType, name, path, size, time, id, mode, gid, uid, favorite, linkTarget, linkTargetTypeName} in list" class="file_item" :data-id="id">
-        <li class="check_state" check="n"></li>
+        <li cursor="y" class="check_state" check="n"></li>
         <li cursor="y" class="logo {{logoColor(type,fileType,name,path)}} iconfont {{hdLogo(name,type,size) || 'is_img'}}"></li>
         <li v-if="favorite" class='favorite iconfont icon-shoucang'></li>
         <li cursor="y" class="name">

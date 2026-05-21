@@ -190,7 +190,7 @@ function renderTodoList(total, toTop) {
     <p v-if="total === 0" style="padding: 2rem 0;pointer-events: none;text-align: center;">暂无待办事项</p>
     <template v-else>
       <ul v-for="{id, content, state, update_at} in todoList" :data-id="id">
-        <div check="n" class="check_level"></div>
+        <div cursor="y" check="n" class="check_level"></div>
         <li cursor="y" class="todo_state iconfont {{state === 1 ? 'icon-xuanzeweixuanze' : 'icon-xuanzeyixuanze'}}"></li>
         <li class="todo_text">
           <div v-html="hdTextMsg(content)" class="text {{state === 1 ? '' : 'del'}}"></div>

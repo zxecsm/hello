@@ -59,7 +59,7 @@ const $contentWrap = $('.content_wrap'),
   $tableBox = $contentWrap.find('.table_box'),
   $checkAllBtn = $tableBox.find('thead tr th').eq(0),
   $list = $tableBox.find('tbody'),
-  $selectBtn = $userBtns.find('.select_btn');
+  $footer = $('.footer');
 let dataObj = {};
 let pageNo = 1;
 let userList = [];
@@ -254,9 +254,9 @@ function getCheckItems(ignoreRoot = false) {
 }
 function updateSelectBtn() {
   if (getCheckItems().length > 0) {
-    $selectBtn.show();
+    $footer.stop().slideDown(_d.speed);
   } else {
-    $selectBtn.hide();
+    $footer.stop().slideUp(_d.speed);
   }
 }
 function updateSelectInfo(msg = true) {
@@ -1069,24 +1069,24 @@ $headBtns
   .on('click', '.custom_btn', customHtmlCode)
   .on('click', '.test_btn', handleTest)
   .on('click', '.clean_database', cleanDatabase);
-
-// 创建帐号
-$userBtns
-  .on('click', '.select_btn .u_on', function () {
+$footer
+  .on('click', '.f_on', function () {
     const list = getCheckItems(1);
     if (list.length === 0) return;
     changeUserState(list, 1);
   })
-  .on('click', '.select_btn .u_off', function () {
+  .on('click', '.f_off', function () {
     const list = getCheckItems(1);
     if (list.length === 0) return;
     changeUserState(list, 0);
   })
-  .on('click', '.select_btn .u_delete', function (e) {
+  .on('click', '.f_delete', function (e) {
     const list = getCheckItems(1);
     if (list.length === 0) return;
     deleteAccount(e, list);
-  })
+  });
+// 创建帐号
+$userBtns
   .on('click', '.create_account', (e) => {
     rMenu.inpMenu(
       e,

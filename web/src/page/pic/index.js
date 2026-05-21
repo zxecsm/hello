@@ -269,7 +269,7 @@ function renderImgList(y) {
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
             <div v-for="{id} in data" class="img_item" :data-id="id">
-              <div check="n" class="check_level"></div>
+              <div cursor="y" check="n" class="check_level"></div>
               <i cursor="y" class="menu_btn iconfont icon-maohao"></i>
               <div class="img"></div>
             </div>
