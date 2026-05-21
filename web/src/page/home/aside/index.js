@@ -530,8 +530,8 @@ function hdCheckAll() {
 }
 
 export function tooltipBookmark(obj) {
-  const { title, link, des } = obj;
-  const str = `名称：${title || '--'}\n链接：${link || '--'}\n描述：${des || '--'}`;
+  const { title, link, des, num } = obj;
+  const str = `序号：${num + 1}\n名称：${title || '--'}\n链接：${link || '--'}\n描述：${des || '--'}`;
   toolTip.setTip(str).show();
 }
 
