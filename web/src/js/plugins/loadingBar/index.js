@@ -1,5 +1,6 @@
 import _d from '../../common/config';
 import loadingSvg from '../../../images/img/loading.svg';
+import loadingSpinnerSvg from '../../../images/img/loading-spinner.svg';
 // 页面加载进度条效果
 class LoadingBar {
   constructor(options) {
@@ -31,12 +32,29 @@ class LoadingBar {
     pointer-events: none;
     z-index: ${zIndex};
     background-image: linear-gradient(to right,Orange 90%, red);`;
+    this.spinner = document.createElement('div');
+    this.spinner.style.cssText = `
+    display: none;
+    position: fixed;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    z-index: ${zIndex};
+    pointer-events: none;
+    background-image: url(${loadingSpinnerSvg});
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    `;
+    document.body.appendChild(this.spinner);
     document.body.appendChild(this.el);
   }
   start() {
     this.num++;
     if (this.num === 1) {
       this.el.style.animation = `loadingEffect 10s cubic-bezier(0.4, 0, 0.2, 1) forwards`;
+      this.spinner.style.display = 'block';
       this.options.setStart && this.options.setStart();
     }
   }
@@ -45,6 +63,7 @@ class LoadingBar {
     this.num <= 0 ? (this.num = 0) : null;
     if (this.num === 0) {
       this.el.style.animation = 'none';
+      this.spinner.style.display = 'none';
       this.options.setEnd && this.options.setEnd();
     }
   }
