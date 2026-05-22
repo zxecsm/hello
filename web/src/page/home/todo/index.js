@@ -184,8 +184,8 @@ function renderTodoList(total, toTop) {
     `
     <div style="padding-bottom: 1rem;">
       <button cursor="y" class="add_btn btn btn_primary">添加</button>
-      <button v-if="hasFinish()" cursor="y" class="clear_btn btn btn_danger">清除已完成</button>
       <button v-if="todoList.length > 0" cursor="y" class="clear_all_btn btn btn_primary">多选</button>
+      <button v-if="hasFinish()" cursor="y" class="clear_btn btn btn_danger">清除已完成</button>
     </div>
     <p v-if="total === 0" style="padding: 2rem 0;pointer-events: none;text-align: center;">暂无待办事项</p>
     <template v-else>

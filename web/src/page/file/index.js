@@ -34,6 +34,7 @@ import {
   _mySlide,
   getDateDiff,
   getTextSize,
+  showQcode,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
@@ -756,8 +757,8 @@ function rightList(e, obj, el) {
   if (obj.type === 'file') {
     data.push({
       id: 'copyLink',
-      text: '复制链接',
-      beforeIcon: 'iconfont icon-link1',
+      text: '文件链接',
+      beforeIcon: 'iconfont icon-erweima',
     });
   }
   if (obj.type === 'dir') {
@@ -891,7 +892,7 @@ function rightList(e, obj, el) {
             localData.get('account'),
             `${obj.path}/${obj.name}`.slice(_d.pubDir.length),
           );
-          copyText(getFilePath(p, {}, 1));
+          showQcode(e, getFilePath(p, {}, 1), '文件链接（永久有效）');
           return;
         }
         loading.start();
@@ -901,14 +902,10 @@ function rightList(e, obj, el) {
             if (res.code === 1) {
               loading.end();
               close();
-              copyText(
-                getFilePath(
-                  p,
-                  {
-                    token: res.data,
-                  },
-                  1,
-                ),
+              showQcode(
+                e,
+                getFilePath(p, { token: res.data }, 1),
+                `文件链接（${_d.fieldLength.shareTokenExp}小时内有效）`,
               );
             }
           })

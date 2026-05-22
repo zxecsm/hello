@@ -9,7 +9,6 @@ import {
   LazyLoad,
   _myOpen,
   formatBytes,
-  copyText,
   downloadFiles,
   enterPassCode,
   fileLogoType,
@@ -32,6 +31,7 @@ import {
   _mySlide,
   isIframe,
   getDateDiff,
+  showQcode,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
@@ -81,7 +81,7 @@ if (!isIframe()) {
     });
   });
 }
-let passCode = localData.session.get('passCode', shareId) || '';
+let passCode = localData.session.get('passCode', shareId) || urlparmes.p || '';
 let shareToken = '';
 let shareObj = {};
 let uObj = {};
@@ -628,8 +628,8 @@ function rightList(e, obj) {
       },
       {
         id: 'copy',
-        text: '复制链接',
-        beforeIcon: 'iconfont icon-link1',
+        text: '文件链接',
+        beforeIcon: 'iconfont icon-erweima',
       },
     );
   }
@@ -644,7 +644,8 @@ function rightList(e, obj) {
     ({ e, id, close }) => {
       if (id === 'copy') {
         close();
-        copyText(
+        showQcode(
+          e,
           getFilePath(
             `/sharefile/${obj.path}/${obj.name}`,
             {
@@ -652,6 +653,7 @@ function rightList(e, obj) {
             },
             1,
           ),
+          `文件链接（${_d.fieldLength.shareTokenExp}小时内有效）`,
         );
       } else if (id === 'download') {
         close();

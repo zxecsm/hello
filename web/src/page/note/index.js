@@ -140,7 +140,7 @@ $setBtnsWrap
     hdNoteDirPosition && hdNoteDirPosition();
   })
   .on('click', '.show_erweima_btn', (e) => {
-    showQcode(e, myOpen()).catch(() => {});
+    showQcode(e, myOpen(), '笔记链接').catch(() => {});
   })
   .on('click', '.copy_md_btn', (e) => {
     const data = [

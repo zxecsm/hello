@@ -3,12 +3,12 @@ import './index.less';
 import '../../font/iconfont.css';
 import '../../js/common/common';
 import {
-  copyText,
   debounce,
   isIframe,
   isLogin,
   myOpen,
   queryURLParams,
+  showQcode,
 } from '../../js/utils/utils';
 import { reqUserFileToken } from '../../api/user';
 import toolTip from '../../js/plugins/tooltip';
@@ -30,7 +30,7 @@ if (!isIframe()) {
     });
   });
 }
-async function copyLink() {
+async function copyLink(e) {
   let path = url;
   const ourl = url.slice(_d.getFileURL.length);
   let { token, p } = queryURLParams(ourl);
@@ -47,11 +47,11 @@ async function copyLink() {
     path = url + (url.includes('?') ? '&' : '?') + `token=${token}`;
   }
   path = `${_d.originURL}${path}`;
-  copyText(path);
+  showQcode(e, path, `视频链接（${_d.fieldLength.shareTokenExp}小时内有效）`);
 }
 playLink.addEventListener('click', copyLink);
 playLink.addEventListener('mouseenter', () => {
-  toolTip.setTip('复制直链').show();
+  toolTip.setTip('视频链接').show();
 });
 playLink.addEventListener('mouseleave', () => {
   toolTip.hide();

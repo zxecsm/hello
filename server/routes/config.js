@@ -4,7 +4,7 @@ export const fieldLength = {
   url: 2000, // 网址路径
   filename: 255, // 文件名
   sharePass: 20, // 分享提取码
-  shareTokenExp: 60 * 60 * 5, // 分享token
+  shareTokenExp: 60 * 60 * 10, // 分享token
   searchWord: 100, // 搜索长度
   searchHistory: 200, // 搜索历史文本
   des: 500, // 备注

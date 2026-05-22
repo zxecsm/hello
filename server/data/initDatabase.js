@@ -222,6 +222,7 @@ const dbSchema = {
       columns: [
         { name: 'serial', type: 'INTEGER', primary: true, autoincrement: true },
         { name: 'create_at', type: 'INTEGER', notNull: true },
+        { name: 'update_at', type: 'INTEGER', notNull: true, default: 0 },
         { name: 'id', type: 'TEXT', unique: true, notNull: true },
         { name: 'type', type: 'TEXT', notNull: true },
         { name: 'account', type: 'TEXT', notNull: true },

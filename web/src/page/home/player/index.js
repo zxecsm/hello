@@ -1066,10 +1066,10 @@ async function renderSongs(gao) {
       <div cursor="y" class="add_song_btn">添加到</div>
       <div v-if="ind > 2" cursor="y" class="move_song_btn">移动到</div>
       <div cursor="y" class="download_song_btn">下载</div>
-      <div v-if="ind != 2" cursor="y" class="remove_song_btn">移除</div>
-      <div v-if="isRoot()" cursor="y" class="del_songs_btn">删除</div>
-      <div v-if="ind < 2" cursor="y" class="clear_all_song_btn">清空</div>
       <div cursor="y" class="del_cache_file">清缓存</div>
+      <div v-if="ind != 2" cursor="y" class="remove_song_btn">移除</div>
+      <div v-if="ind < 2" cursor="y" class="clear_all_song_btn">清空</div>
+      <div v-if="isRoot()" cursor="y" class="del_songs_btn">删除</div>
       <div cursor="y" class="cancel_btn">取消</div>
     </div>
     `,

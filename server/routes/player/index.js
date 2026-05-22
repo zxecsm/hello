@@ -224,7 +224,7 @@ route.post(
       return resp.ok(res, share.text)();
     }
 
-    let { username, logo, email, exp_time, title, account: acc, data } = share.data;
+    let { username, logo, email, exp_time, title, account: acc, data, update_at } = share.data;
 
     // 通过id分批读取音乐信息并策略化
     const mObj = await batchGetMusics(data);
@@ -260,7 +260,7 @@ route.post(
       data,
       title,
       token: await jwt.set(
-        { type: 'share', data: { id, types: ['music'] } },
+        { type: 'share', data: { id, types: ['music'] }, update_at },
         fieldLength.shareTokenExp,
       ),
     })();

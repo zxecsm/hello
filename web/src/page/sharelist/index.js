@@ -21,7 +21,12 @@ import _msg from '../../js/plugins/message';
 import pagination from '../../js/plugins/pagination';
 import _d from '../../js/common/config';
 import realtime from '../../js/plugins/realtime';
-import { reqUserDeleteShare, reqUserEditShare, reqUserShareList } from '../../api/user';
+import {
+  reqUserDeleteShare,
+  reqUserEditShare,
+  reqUserShareList,
+  reqUserShareState,
+} from '../../api/user';
 import { _tpl } from '../../js/utils/template';
 import { otherWindowMsg } from '../home/home';
 import rMenu from '../../js/plugins/rightMenu';
@@ -158,10 +163,11 @@ function renderShareList(total, pageNo, top) {
     `
     <p v-if="total === 0">{{_d.emptyList}}</p>
     <template v-else>
-      <li v-for="{id,type,title,pass,exp_time} in sList" :data-id="id" :data-url="getUrlAndLogo(type,id).url">
+      <li v-for="{id,type,title,pass,exp_time,state} in sList" :data-id="id" :data-url="getUrlAndLogo(type,id,pass).url">
         <div cursor="y" check="n" class="check_state"></div>
-        <div cursor="y" class="item_type_logo iconfont {{getUrlAndLogo(type,id).logo}}"></div>
+        <div cursor="y" class="item_type_logo iconfont {{getUrlAndLogo(type,id,pass).logo}}"></div>
         <div title="点击复制分享链接" class="title">名称：<span>{{title}}</span> ； 提取码：<span>{{pass || '无'}}</span> ； 有效期：<span :style="getExpState(exp_time) < 0 ? 'color:red;' : ''">{{getState(exp_time)}}</span> ； </div>
+        <div cursor="y" class="state iconfont {{state === 1 ? 'icon-kaiguan-kai1 active' : 'icon-kaiguan-guan'}}"></div>
         <div cursor="y" class="copy_link iconfont icon-erweima"></div>
         <div cursor="y" class="edit iconfont icon-bianji"></div>
         <div cursor="y" class="delete iconfont icon-shanchu"></div>
@@ -173,7 +179,7 @@ function renderShareList(total, pageNo, top) {
       total,
       _d,
       sList,
-      getUrlAndLogo(type, id) {
+      getUrlAndLogo(type, id, pass) {
         let logo = 'icon-cat_full_foot',
           url = _d.originURL;
         if (type === 'music') {
@@ -189,6 +195,7 @@ function renderShareList(total, pageNo, top) {
           logo = `icon-gl-folder`;
           url += `/sharefile?s=${id}`;
         }
+        if (pass) url += `&p=${pass}`;
         return { logo, url };
       },
       getExpState,
@@ -294,6 +301,16 @@ function editShare(e, obj) {
     },
   );
 }
+function changeShareState(ids, state) {
+  reqUserShareState({ ids, state })
+    .then((res) => {
+      if (res.code === 1) {
+        _msg.success(res.codeText);
+        getShareList();
+      }
+    })
+    .catch(() => {});
+}
 $shareList
   .on('click', '.check_state', function () {
     checkedItem(this);
@@ -305,6 +322,10 @@ $shareList
   .on('click', '.edit', function (e) {
     const obj = getShareItem($(this).parent().attr('data-id'));
     editShare(e, obj);
+  })
+  .on('click', '.state', function () {
+    const obj = getShareItem($(this).parent().attr('data-id'));
+    changeShareState([obj.id], obj.state === 1 ? 0 : 1);
   })
   .on('click', '.copy_link', function (e) {
     const $this = $(this);
@@ -355,6 +376,16 @@ $footer
   })
   .on('click', '.f_close', function () {
     stopSelect();
+  })
+  .on('click', '.f_on', function () {
+    const ids = getCheckItems();
+    if (ids.length === 0) return;
+    changeShareState(ids, 1);
+  })
+  .on('click', '.f_off', function () {
+    const ids = getCheckItems();
+    if (ids.length === 0) return;
+    changeShareState(ids, 0);
   })
   .on('click', 'span', switchCheckAll);
 function switchCheckAll() {

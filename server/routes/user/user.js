@@ -8,7 +8,7 @@ import _f from '../../utils/f.js';
 import { _delDir } from '../file/file.js';
 
 import shareVerify from '../../utils/shareVerify.js';
-import { isValidShare, getDirname, writelog } from '../../utils/utils.js';
+import { isValidShare, getDirname } from '../../utils/utils.js';
 import jwt from '../../utils/jwt.js';
 import captcha from '../../utils/captcha.js';
 
@@ -84,6 +84,7 @@ export async function validShareState(shareToken, t) {
   const {
     data: { id, types },
     type,
+    update_at,
   } = jwtData.data;
 
   if (type !== 'share' || !id || !types || !types.includes(t)) {
@@ -94,14 +95,20 @@ export async function validShareState(shareToken, t) {
   }
 
   const share = await db('share')
-    .select('id,exp_time,data,account')
-    .where({ id, type: { in: types } })
+    .select('id,exp_time,data,account,update_at')
+    .where({ id, state: 1, type: { in: types } })
     .findOne();
 
   if (!share)
     return {
       state: 0,
       text: '分享已取消',
+    };
+
+  if (share.update_at !== update_at)
+    return {
+      state: 0,
+      text: '访问令牌失效',
     };
 
   if (isValidShare(share.exp_time))
@@ -132,8 +139,8 @@ export async function validShareAddUserState(res, types, id, pass, captchaId) {
 
   const share = await db('share AS s')
     .join('user AS u', { 'u.account': { value: 's.account', raw: true } }, { type: 'LEFT' })
-    .select('u.username,u.logo,u.email,s.exp_time,s.title,s.account,s.data,s.pass')
-    .where({ 's.id': id, 's.type': { in: types } })
+    .select('u.username,u.logo,u.email,s.exp_time,s.title,s.account,s.data,s.pass,s.update_at')
+    .where({ 's.id': id, 's.state': 1, 's.type': { in: types } })
     .findOne();
 
   if (!share)
@@ -152,7 +159,6 @@ export async function validShareAddUserState(res, types, id, pass, captchaId) {
     // 进入页面第一次空提取码不计算
     if (pass) {
       shareVerify.add(id);
-      await writelog(res, `提取码错误`, 403);
     }
 
     return {

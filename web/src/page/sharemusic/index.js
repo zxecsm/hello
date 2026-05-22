@@ -102,7 +102,7 @@ let playingList = null,
   lrcState = localData.get('lrcState'),
   mediaVolume = localData.get('mediaVolume'),
   userInfo = null,
-  passCode = localData.session.get('passCode', shareId) || '',
+  passCode = localData.session.get('passCode', shareId) || urlparmes.p || '',
   shareToken = '';
 let defaultShareTitle = '';
 function adjustVolume(e) {

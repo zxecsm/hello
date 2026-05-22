@@ -46,7 +46,7 @@ if (!shareId) {
 let pageNo = 1;
 let bmList = [];
 let bmPageSize = 12;
-let passCode = localData.session.get('passCode', shareId) || '';
+let passCode = localData.session.get('passCode', shareId) || urlparmes.p || '';
 let shareToken = '';
 
 const bmLoadImg = new LazyLoad();

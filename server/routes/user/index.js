@@ -1606,6 +1606,33 @@ route.post(
   }),
 );
 
+// 修改分享状态
+route.post(
+  '/share-state',
+  validate(
+    'body',
+    V.object({
+      ids: V.array(V.string().min(1).max(fieldLength.id).alphanumeric())
+        .min(1)
+        .max(fieldLength.maxPagesize),
+      state: V.number().toInt().enum([0, 1]),
+    }),
+  ),
+  asyncHandler(async (_, res) => {
+    const { ids, state } = res.locals.ctx;
+
+    const { account } = res.locals.hello.userinfo;
+
+    await db('share')
+      .where({ id: { in: ids }, account })
+      .update({ state });
+
+    syncUpdateData(res, 'sharelist');
+
+    resp.success(res, '修改分享状态成功')();
+  }),
+);
+
 // 获取分享列表
 route.get(
   '/share-list',
@@ -1631,7 +1658,7 @@ route.get(
 
     if (total > 0) {
       data = await db('share')
-        .select('id,type,title,pass,exp_time')
+        .select('id,type,title,pass,exp_time,state')
         .where({
           account,
         })
@@ -1667,6 +1694,7 @@ route.post(
       exp_time: expireTime === 0 ? 0 : Date.now() + expireTime * 24 * 60 * 60 * 1000,
       title,
       pass,
+      update_at: Date.now(),
     };
 
     const { account } = res.locals.hello.userinfo;
