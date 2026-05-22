@@ -21,6 +21,7 @@ import {
   savePopLocationInfo,
   switchFullScreenStateStyle,
   removeFullScreenStateStyle,
+  longPress,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
@@ -545,10 +546,20 @@ export function verifyDate(obj) {
   }
   return true;
 }
+longPress($countList[0], '.item_box', function () {
+  if (isSelecting()) return;
+  startSelect();
+  checkedCount(this.querySelector('.check_level'));
+});
 // 菜单
 function countMenu(e) {
   const count = getCount($(this).parent().parent().attr('data-id'));
   const data = [
+    {
+      id: 'check',
+      text: '选中',
+      beforeIcon: 'iconfont icon-duoxuan',
+    },
     { id: 'top', text: '置顶', beforeIcon: 'iconfont icon-zhiding' },
     {
       id: 'state',
@@ -569,7 +580,7 @@ function countMenu(e) {
   rMenu.selectMenu(
     e,
     data,
-    function ({ e, close, id, loading }) {
+    ({ e, close, id, loading }) => {
       if (id === 'edit') {
         editCount(e, count);
       } else if (id === 'del') {
@@ -592,6 +603,10 @@ function countMenu(e) {
           },
           loading,
         );
+      } else if (id === 'check') {
+        close();
+        startSelect();
+        checkedCount(this.parentNode.parentNode.querySelector('.check_level'));
       }
     },
     count.title,
@@ -738,6 +753,12 @@ $countList
     const { link } = getCount(id);
     if (!link) return;
     myOpen(link, '_blank');
+  })
+  .on('contextmenu', '.item_box', function (e) {
+    e.preventDefault();
+    if (isMobile() || isSelecting()) return;
+    startSelect();
+    checkedCount(this.querySelector('.check_level'));
   })
   .on('click', '.set_btn', countMenu)
   .on('click', '.top_btn', function (e) {

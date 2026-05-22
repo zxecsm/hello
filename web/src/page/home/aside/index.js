@@ -982,14 +982,14 @@ function changeBmListState(share, arr, cb, loading = { start() {}, end() {} }) {
 function asideListMenu(e, obj, el) {
   let data = [
     {
-      id: 'share',
-      text: obj.share === 1 ? '锁定' : '公开',
-      beforeIcon: 'iconfont icon-suo',
-    },
-    {
       id: 'check',
       text: '选中',
       beforeIcon: 'iconfont icon-duoxuan',
+    },
+    {
+      id: 'share',
+      text: obj.share === 1 ? '锁定' : '公开',
+      beforeIcon: 'iconfont icon-suo',
     },
   ];
   data = [
@@ -1216,6 +1216,11 @@ function setBmLogo(e, obj, isHome) {
 export function bookMarkSetting(e, obj, isHome, el) {
   let data = [
     {
+      id: '3',
+      text: '选中',
+      beforeIcon: 'iconfont icon-duoxuan',
+    },
+    {
       id: '1',
       text: '弹窗打开',
       beforeIcon: 'iconfont icon-minimize',
@@ -1224,11 +1229,6 @@ export function bookMarkSetting(e, obj, isHome, el) {
       id: '2',
       text: '书签图标',
       beforeIcon: 'iconfont icon-tupian',
-    },
-    {
-      id: '3',
-      text: '选中',
-      beforeIcon: 'iconfont icon-duoxuan',
     },
   ];
   data = [

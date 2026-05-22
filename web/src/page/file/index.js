@@ -749,6 +749,11 @@ longPress($contentWrap[0], function (e) {
 function rightList(e, obj, el) {
   const data = [
     {
+      id: 'check',
+      text: '选中',
+      beforeIcon: 'iconfont icon-duoxuan',
+    },
+    {
       id: 'copyPath',
       text: '复制路径',
       beforeIcon: 'iconfont icon-fuzhi',
@@ -795,11 +800,6 @@ function rightList(e, obj, el) {
     });
   }
   data.push(
-    {
-      id: 'check',
-      text: '选中',
-      beforeIcon: 'iconfont icon-duoxuan',
-    },
     {
       id: 'rename',
       text: '重命名',

@@ -15,6 +15,8 @@ import {
   copyText,
   isLogin,
   _getTarget,
+  isMobile,
+  longPress,
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
@@ -311,6 +313,11 @@ function changeShareState(ids, state) {
     })
     .catch(() => {});
 }
+longPress($shareList[0], 'li', function () {
+  if (isSelecting()) return;
+  startSelect();
+  checkedItem(this.querySelector('.check_state'));
+});
 $shareList
   .on('click', '.check_state', function () {
     checkedItem(this);
@@ -333,6 +340,12 @@ $shareList
     const id = $this.parent().attr('data-id');
     const obj = getShareItem(id);
     showQcode(e, url, obj.title).catch(() => {});
+  })
+  .on('contextmenu', 'li', function (e) {
+    e.preventDefault();
+    if (isMobile() || isSelecting()) return;
+    startSelect();
+    checkedItem(this.querySelector('.check_state'));
   })
   .on('click', '.item_type_logo', function () {
     const $this = $(this);

@@ -1655,7 +1655,7 @@ export function addSongToPlayList(e, arr) {
   updatePlayingList();
 }
 // 歌曲菜单
-function songMenu(e, idx, sobj) {
+function songMenu(e, idx, sobj, el) {
   const data = [
     {
       id: '1',
@@ -1695,6 +1695,11 @@ function songMenu(e, idx, sobj) {
       beforeIcon: 'iconfont icon-zhiding',
     });
   }
+  data.unshift({
+    id: 'check',
+    text: '选中',
+    beforeIcon: 'iconfont icon-duoxuan',
+  });
   if (idx > 2) {
     data.push({
       id: '11',
@@ -1847,6 +1852,10 @@ function songMenu(e, idx, sobj) {
             }
           })
           .catch(() => {});
+      } else if (id === 'check') {
+        close();
+        startSelectSongs();
+        checkedSong(el);
       }
     },
     `${sobj.artist} - ${sobj.title}`,
@@ -2122,7 +2131,7 @@ $msuicContentBox
     const sobj = hdSongInfo(getSongInfo($this.attr('data-id')));
     const idx = musicList.findIndex((item) => item.id === curOpenSongListId);
     if (idx < 0) return;
-    songMenu(e, idx, sobj);
+    songMenu(e, idx, sobj, this.parentNode.querySelector('.check_state'));
   })
   .on('mouseenter', '.song_item .song_logo_box', function () {
     if (curOpenSongListId) {

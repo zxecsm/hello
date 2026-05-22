@@ -463,7 +463,13 @@ function bmMenu(e) {
   const $this = $(this);
   const id = $this.parent().attr('data-id'),
     obj = getItemObj(id);
-  const data = [];
+  const data = [
+    {
+      id: 'check',
+      text: '选中',
+      beforeIcon: 'iconfont icon-duoxuan',
+    },
+  ];
   if (runState === 'own') {
     data.push({
       id: '1',
@@ -566,6 +572,10 @@ function bmMenu(e) {
           .catch(() => {
             loading.end();
           });
+      } else if (id === 'check') {
+        close();
+        checkedItemBtn();
+        checkItem(this.parentNode.querySelector('.check_state'));
       }
     },
     obj.title,

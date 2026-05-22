@@ -564,7 +564,13 @@ $contentWrap
     const id = $this.parent().attr('data-id');
     const obj = getListItem(id);
     const t = $this.parent().attr('data-type');
-    let data = [];
+    let data = [
+      {
+        id: 'check',
+        text: '选中',
+        beforeIcon: 'iconfont icon-duoxuan',
+      },
+    ];
     if (t === 'note') {
       data.push(
         {
@@ -618,6 +624,10 @@ $contentWrap
           close();
           e.stopPropagation();
           _myOpen(`/file#${_d.noteHistoryDir}/${obj.id}`, '文件管理', 'file');
+        } else if (flag === 'check') {
+          close();
+          startSelect();
+          checkedItem(this.parentNode.querySelector('.check_state'));
         }
       },
       obj.title || obj.content,

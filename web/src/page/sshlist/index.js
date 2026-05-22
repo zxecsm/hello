@@ -564,6 +564,7 @@ $contentWrap
     const obj = getSSHInfo($this.attr('data-id'));
     const { id: sshid, title, top } = obj;
     const data = [
+      { id: 'check', text: '选中', beforeIcon: 'iconfont icon-duoxuan' },
       { id: '1', text: '置顶', beforeIcon: 'iconfont icon-zhiding' },
       { id: '2', text: '分类', beforeIcon: 'iconfont icon-liebiao1' },
       { id: '4', text: '编辑', beforeIcon: 'iconfont icon-bianji' },
@@ -581,6 +582,10 @@ $contentWrap
           editSSHInfo(e, obj);
         } else if (id === '6') {
           deleteSSH([sshid], close, loading);
+        } else if (id === 'check') {
+          close();
+          startSelect();
+          checkedItem(this.parentNode.querySelector('.check_state'));
         }
       },
       title,

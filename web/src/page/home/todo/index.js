@@ -19,6 +19,7 @@ import {
   savePopLocationInfo,
   switchFullScreenStateStyle,
   removeFullScreenStateStyle,
+  longPress,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
@@ -419,10 +420,20 @@ function editTodo(e, todo) {
     '编辑待办事项',
   );
 }
+longPress($todoList[0], 'ul', function () {
+  if (isSelecting()) return;
+  startSelect();
+  checkedTodo(this.querySelector('.check_level'));
+});
 // 菜单
 function todoMenu(e) {
   const todo = getTodo($(this).parent().attr('data-id'));
   const data = [
+    {
+      id: 'check',
+      text: '选中',
+      beforeIcon: 'iconfont icon-duoxuan',
+    },
     {
       id: 'copy',
       text: '复制',
@@ -444,7 +455,7 @@ function todoMenu(e) {
   rMenu.selectMenu(
     e,
     data,
-    function ({ e, close, id, loading }) {
+    ({ e, close, id, loading }) => {
       if (id === 'edit') {
         editTodo(e, todo);
       } else if (id === 'del') {
@@ -459,6 +470,10 @@ function todoMenu(e) {
       } else if (id === 'copy') {
         copyText(todo.content);
         close();
+      } else if (id === 'check') {
+        close();
+        startSelect();
+        checkedTodo(this.parentNode.parentNode.querySelector('.check_level'));
       }
     },
     todo.content,
@@ -537,6 +552,12 @@ $todoList
   .on('click', '.clear_btn', delTodo)
   .on('click', '.check_level', function () {
     checkedTodo(this);
+  })
+  .on('contextmenu', 'ul', function (e) {
+    e.preventDefault();
+    if (isMobile() || isSelecting()) return;
+    startSelect();
+    checkedTodo(this.querySelector('.check_level'));
   })
   .on('click', '.clear_all_btn', function () {
     if (isSelecting()) {

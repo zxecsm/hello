@@ -217,6 +217,11 @@ export function collectBg(ids, cb, loading = { start() {}, end() {} }) {
 function bgItemMenu(e, obj, el) {
   const data = [
     {
+      id: '3',
+      text: '选中',
+      beforeIcon: 'iconfont icon-duoxuan',
+    },
+    {
       id: '1',
       text: '设为壁纸',
       beforeIcon: 'iconfont icon-tupian',
@@ -225,11 +230,6 @@ function bgItemMenu(e, obj, el) {
       id: '2',
       text: '下载',
       beforeIcon: 'iconfont icon-download',
-    },
-    {
-      id: '3',
-      text: '选中',
-      beforeIcon: 'iconfont icon-duoxuan',
     },
   ];
   if (isCollectState) {
@@ -493,8 +493,8 @@ $bgList
   .on('contextmenu', '.bg_img', function (e) {
     e.preventDefault();
     if (isMobile() || isSelecting()) return;
-    const obj = getBgItem($(this).parent().data('id'));
-    bgItemMenu(e, obj, this.parentNode.querySelector('.check_level'));
+    startSelect();
+    checkedBg(this.parentNode.querySelector('.check_level'));
   })
   .on('click', '.menu_btn', function (e) {
     const obj = getBgItem($(this).parent().data('id'));
@@ -512,11 +512,10 @@ $bgList
   .on('click', '.check_level', function () {
     checkedBg(this);
   });
-longPress($bgList[0], '.bg_img', function (e) {
+longPress($bgList[0], '.bg_img', function () {
   if (isSelecting()) return;
-  const ev = e.changedTouches[0];
-  const obj = getBgItem($(this).parent().data('id'));
-  bgItemMenu(ev, obj, this.parentNode.querySelector('.check_level'));
+  startSelect();
+  checkedBg(this.parentNode.querySelector('.check_level'));
 });
 // 选中
 function checkedBg(el) {

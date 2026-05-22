@@ -644,6 +644,7 @@ $contentWrap
     const obj = getNoteInfo($this.attr('data-id'));
     const { id: noteid, title, top } = obj;
     const data = [
+      { id: 'check', text: '选中', beforeIcon: 'iconfont icon-duoxuan' },
       { id: '1', text: '置顶', beforeIcon: 'iconfont icon-zhiding' },
       { id: '2', text: '分类', beforeIcon: 'iconfont icon-liebiao1' },
       { id: '3', text: '二维码', beforeIcon: 'iconfont icon-erweima' },
@@ -678,6 +679,10 @@ $contentWrap
           close();
           e.stopPropagation();
           _myOpen(`/file#${_d.noteHistoryDir}/${noteid}`, '文件管理', 'file');
+        } else if (id === 'check') {
+          close();
+          hdCheckItemBtn();
+          checkedItem(this.parentNode.querySelector('.check_state'));
         }
       },
       title,

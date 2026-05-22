@@ -241,6 +241,7 @@ function stopSelect() {
   });
 }
 function startSelect() {
+  $imgList.find('.img_item .check_level').css('display', 'block');
   $footer
     .stop()
     .slideDown(_d.speed, () => {
@@ -415,8 +416,8 @@ function deletePic(e, ids, cb, isCheck, loading = { start() {}, end() {} }) {
 // 菜单
 function picMenu(e, picId, el) {
   const data = [
-    { id: '1', text: '复制链接', beforeIcon: 'iconfont icon-fuzhi' },
     { id: '2', text: '选中', beforeIcon: 'iconfont icon-duoxuan' },
+    { id: '1', text: '复制链接', beforeIcon: 'iconfont icon-fuzhi' },
     {
       id: '3',
       text: '删除',
@@ -433,7 +434,6 @@ function picMenu(e, picId, el) {
         deletePic(e, [picId], close, false, loading);
       } else if (id === '2') {
         close();
-        $imgList.find('.check_level').css('display', 'block');
         startSelect();
         checkedImg(el);
       }
@@ -461,7 +461,8 @@ $imgList
   .on('contextmenu', '.img', function (e) {
     e.preventDefault();
     if (isMobile() || isSelecting()) return;
-    picMenu(e, $(this).parent().data('id'), this.parentNode.querySelector('.check_level'));
+    startSelect();
+    checkedImg(this.parentNode.querySelector('.check_level'));
   })
   .on('click', '.menu_btn', function (e) {
     e.preventDefault();
@@ -497,10 +498,10 @@ function updateSelectInfo() {
     });
   }
 }
-longPress($imgList[0], '.img', function (e) {
+longPress($imgList[0], '.img', function () {
   if (isSelecting()) return;
-  const ev = e.changedTouches[0];
-  picMenu(ev, $(this).parent().data('id'), this.parentNode.querySelector('.check_level'));
+  startSelect();
+  checkedImg(this.parentNode.querySelector('.check_level'));
 });
 // url模板
 const typeTemplateArr = [
