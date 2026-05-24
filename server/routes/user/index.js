@@ -662,7 +662,7 @@ route.get(
 route.get(
   '/font-list',
   asyncHandler(async (_, res) => {
-    resp.success(res, 'ok', await getFontList());
+    resp.success(res, 'ok', await getFontList())();
   }),
 );
 
