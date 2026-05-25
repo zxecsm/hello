@@ -60,11 +60,10 @@ export function openFile(text, path) {
   document.documentElement.classList.add('notScroll');
   renderTitle(path);
   aceEditor.setMode(editor, path);
-  originText = oText = text;
   editor.setValue(text);
+  originText = oText = editor.getValue();
   editor.gotoLine(1);
   aceEditor.reset(editor);
-  switchUndoState();
   if (text === '') {
     editor.focus();
   }
@@ -74,12 +73,6 @@ function renderTitle(path) {
   editTitleContentScroll.init(path);
 }
 
-// 初始化
-function init() {
-  editor.setValue('');
-  oText = '';
-  saveState();
-}
 $editFile.on('keydown', function (e) {
   let key = e.key,
     ctrl = e.ctrlKey || e.metaKey;
@@ -89,15 +82,15 @@ $editFile.on('keydown', function (e) {
   }
 });
 // 切换保存状态
-function saveState() {
+const saveState = debounce(function () {
   if (readOnly) return;
   if (oText === editor.getValue()) {
     $editFile.find('.head_btn .save').css('display', 'none');
   } else {
     $editFile.find('.head_btn .save').css('display', 'block');
   }
-}
-function switchUndoState() {
+}, 500);
+const switchUndoState = debounce(function () {
   if (aceEditor.hasUndo(editor)) {
     $editFile.find('.head_btn .undo').removeClass('deactive');
   } else {
@@ -108,9 +101,11 @@ function switchUndoState() {
   } else {
     $editFile.find('.head_btn .redo').addClass('deactive');
   }
-}
-editor.getSession().on('change', saveState);
-editor.getSession().on('change', debounce(switchUndoState, 1000));
+}, 500);
+editor.getSession().on('change', () => {
+  saveState();
+  switchUndoState();
+});
 $editFile.find('.editor').css({
   'font-size': percentToValue(12, 30, fileFontSize),
 });
@@ -289,5 +284,7 @@ function hdClose() {
   }
   $editFile.hide();
   document.documentElement.classList.remove('notScroll');
-  init();
+  $editFile.find('.head_btn .undo').addClass('deactive');
+  $editFile.find('.head_btn .redo').addClass('deactive');
+  $editFile.find('.head_btn .save').css('display', 'none');
 }

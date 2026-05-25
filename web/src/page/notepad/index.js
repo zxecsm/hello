@@ -90,7 +90,7 @@ window.changeTheme = changeTheme;
 const editor = aceEditor.createEditor($editBox[0]);
 aceEditor.setMode(editor, 'x.md');
 changeTheme(localData.get('dark'));
-function switchUndoState() {
+const switchUndoState = debounce(function () {
   if (aceEditor.hasUndo(editor)) {
     $headBtns.find('.undo_btn').removeClass('deactive');
   } else {
@@ -101,15 +101,10 @@ function switchUndoState() {
   } else {
     $headBtns.find('.redo_btn').addClass('deactive');
   }
-}
+}, 500);
 // 快捷键
-editor.getSession().on(
-  'change',
-  debounce(function () {
-    switchUndoState();
-    rende();
-  }, 1000),
-);
+editor.getSession().on('change', debounce(rende, 1000));
+editor.getSession().on('change', switchUndoState);
 // 1. 获取当前的VSCode键盘处理器
 const vscodeHandler = editor.keyBinding.getKeyboardHandler();
 
@@ -245,7 +240,6 @@ function initValue(obj) {
   editor.setValue(obj.data);
   editor.gotoLine(1);
   aceEditor.reset(editor);
-  switchUndoState();
   if (obj.data === '') {
     editor.focus();
   }

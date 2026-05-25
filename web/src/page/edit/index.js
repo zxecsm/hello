@@ -98,14 +98,8 @@ const editor = aceEditor.createEditor($editBox[0]);
 aceEditor.setMode(editor, 'x.md');
 changeTheme(localData.get('dark'));
 // 快捷键
-editor.getSession().on(
-  'change',
-  debounce(function () {
-    switchUndoState();
-    rende();
-  }, 1000),
-);
-function switchUndoState() {
+editor.getSession().on('change', debounce(rende, 1000));
+const switchUndoState = debounce(function () {
   if (aceEditor.hasUndo(editor)) {
     $headBtns.find('.undo_btn').removeClass('deactive');
   } else {
@@ -116,8 +110,22 @@ function switchUndoState() {
   } else {
     $headBtns.find('.redo_btn').addClass('deactive');
   }
-}
-editor.getSession().on('change', handleSave);
+}, 500);
+// 处理保存按钮
+const handleSave = debounce(function () {
+  const title = wInput.getValue().trim(),
+    content = editor.getValue();
+  // 对比内容
+  if (orginData.title + orginData.content === title + content) {
+    $headBtns.find('.save_btn').removeClass('active');
+    return;
+  }
+  $headBtns.find('.save_btn').addClass('active');
+}, 500);
+editor.getSession().on('change', () => {
+  handleSave();
+  switchUndoState();
+});
 // 1. 获取当前的VSCode键盘处理器
 const vscodeHandler = editor.keyBinding.getKeyboardHandler();
 
@@ -271,7 +279,6 @@ function initValue(obj) {
   wInput.setValue(obj.title);
   editor.gotoLine(1);
   aceEditor.reset(editor);
-  switchUndoState();
   if (obj.content === '') {
     editor.focus();
   }
@@ -313,8 +320,11 @@ if (HASH === 'new') {
     reqNoteRead({ v: HASH })
       .then(async (result) => {
         if (result.code === 1) {
-          orginData = result.data;
           initValue(result.data);
+          orginData = {
+            content: editor.getValue(),
+            title: wInput.getValue(),
+          };
           _setTimeout(() => {
             updateIframeTitle(result.data.title);
           }, 1000);
@@ -386,17 +396,6 @@ mdWorker.addEventListener('message', (event) => {
   syncScrollFromEditor(1);
 });
 const imgLazy = new LazyLoad();
-// 处理保存按钮
-function handleSave() {
-  const title = wInput.getValue().trim(),
-    content = editor.getValue();
-  // 对比内容
-  if (orginData.title + orginData.content === title + content) {
-    $headBtns.find('.save_btn').removeClass('active');
-    return;
-  }
-  $headBtns.find('.save_btn').addClass('active');
-}
 // 查看图片
 $previewBox
   .on('click', 'img', function (e) {
