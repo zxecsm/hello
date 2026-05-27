@@ -570,6 +570,13 @@ $lrcHead
                 beforeIcon: 'iconfont icon-yuanchengguanli',
               });
             });
+            if (data.length === 1) {
+              _msg.error('暂无其他在线设备');
+              return;
+            }
+            if (data.length === 2) {
+              data.splice(0, 1);
+            }
             rMenu.selectMenu(
               e,
               data,
