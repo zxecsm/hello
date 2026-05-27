@@ -13,12 +13,11 @@ import {
   getDarkIcon,
   _getTarget,
   throttle,
+  switchPageIcon,
 } from '../utils/utils';
 import _d from './config';
 import _msg from '../plugins/message';
 import { _loadingBar } from '../plugins/loadingBar';
-import hiddenIcon from '../../images/img/icon-hidden.svg';
-import visibleIcon from '../../images/img/icon-visible.svg';
 import imgHechang from '../../images/img/hechang.png';
 import loadingPage from '../plugins/loading';
 import { reqUserCustomCode, reqUserError } from '../../api/user';
@@ -301,15 +300,14 @@ darkMode(localData.get('dark'));
 changeHeadBtnSort(localData.get('headBtnToRight'));
 // 图标处理
 ~(function () {
-  const icon = document.querySelector("link[rel*='icon']");
   document.addEventListener('visibilitychange', function () {
     // 页面变为不可见时触发
     if (document.visibilityState === 'hidden') {
-      icon.href = hiddenIcon;
+      switchPageIcon('hidden');
     }
     // 页面变为可见时触发
     if (document.visibilityState === 'visible') {
-      icon.href = visibleIcon;
+      switchPageIcon('visible');
       timeMsg();
     }
   });

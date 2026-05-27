@@ -48,6 +48,7 @@ function send(account, temid, data, to = 'all') {
 
   const now = Date.now();
   const flag = nanoid();
+  data.fromID = temid;
   const message = { id: temid, flag, data, time: now, to };
 
   // 更新 flag 并存入消息
@@ -81,6 +82,7 @@ function getMessages(account, temid, flag) {
     if (to === 'all') return true;
     if (to === 'self' && id === temid) return true;
     if (to === 'other' && id !== temid) return true;
+    if (to === temid) return true;
   });
 
   return msgs.map((item) => item.data);

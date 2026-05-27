@@ -104,6 +104,7 @@ import {
   setLrcBg,
   setPlayingSongInfo,
   setRemotePlayState,
+  setRemoteTargetID,
   setSongCurrentTime,
   setSongPlayVolume,
   showLrcBox,
@@ -404,7 +405,7 @@ const handleRemoteVol = debounce(function () {
   if (setRemotePlayState()) {
     realtime.send({
       type: 'vol',
-      data: { value: mediaVolume },
+      data: { value: mediaVolume, targetID: setRemoteTargetID() },
     });
   }
 }, 500);
@@ -702,7 +703,7 @@ export function delMv(e, id, cb, text, loading = { start() {}, end() {} }) {
 export const remoteVol = debounce(function () {
   realtime.send({
     type: 'vol',
-    data: { value: mediaVolume },
+    data: { value: mediaVolume, targetID: setRemoteTargetID() },
   });
 }, 500);
 // 设置音量

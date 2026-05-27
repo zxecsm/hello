@@ -161,3 +161,7 @@ export function reqUserShareState(data) {
 export function reqUserIpLocation() {
   return _getAjax('/ip-location', {}, { load: 0, stopErrorMsg: 1 });
 }
+// 获取在线的客户端
+export function reqUserOnlineClients() {
+  return _getAjax('/user/online-clients');
+}

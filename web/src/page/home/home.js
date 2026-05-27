@@ -3,7 +3,16 @@ import _d from '../../js/common/config';
 import localData from '../../js/common/localData';
 import _msg from '../../js/plugins/message';
 import rMenu from '../../js/plugins/rightMenu';
-import { _setTimeout, debounce, isIframe, isLogin, myOpen } from '../../js/utils/utils';
+import {
+  _setTimeout,
+  debounce,
+  isIframe,
+  isLogin,
+  myOpen,
+  playSound,
+  switchPageIcon,
+} from '../../js/utils/utils';
+import msgMp3 from '../../images/img/msg.mp3';
 
 let allowLoginPop = null,
   isLoding = false;
@@ -16,6 +25,10 @@ export function handleAllowLoginMsg(data) {
     3,
   )} ${code.slice(3)}\n\n请求允许登录。`;
 
+  playSound(msgMp3);
+  if (document.visibilityState === 'hidden') {
+    switchPageIcon('notify');
+  }
   if (allowLoginPop) {
     allowLoginPop.close();
   }
@@ -68,10 +81,14 @@ export function shakeChat() {
   target.classList.add('shake');
   closeShake(target);
 }
+function isNotify(from, notify, fromID) {
+  const acc = localData.get('account');
+  return (from !== acc || (from === acc && fromID !== from + _d.temid)) && notify === 1;
+}
 
 export function otherWindowMsg(msg) {
   if (isIframe()) return;
-  const { type, data, notify } = msg;
+  const { type, data, notify, fromID } = msg;
   if (type === 'online') {
     _msg.online(data.text, (type) => {
       if (type === 'click') {
@@ -82,7 +99,7 @@ export function otherWindowMsg(msg) {
     handleAllowLoginMsg(data);
   } else if (type === 'chat') {
     const { flag, from, msgData } = data;
-    if (from.account === localData.get('account') || notify === 0) return;
+    if (!isNotify(from, notify, fromID)) return;
     let text = '';
     // 新消息处理
     if (flag === 'addmsg') {

@@ -5,6 +5,9 @@ import { _loadingBar } from '../plugins/loadingBar';
 import _msg from '../plugins/message';
 import qs from 'qs';
 import loadSvg from '../../images/img/loading.svg';
+import notifyIcon from '../../images/img/icon-notify.svg';
+import hiddenIcon from '../../images/img/icon-hidden.svg';
+import visibleIcon from '../../images/img/icon-visible.svg';
 import { reqSearchSplitWord } from '../../api/search';
 import rMenu from '../plugins/rightMenu';
 import { _tpl } from './template';
@@ -112,6 +115,16 @@ export function playSound(src) {
       sound.onended = null;
       sound = null;
     };
+  }
+}
+const pageIcon = document.querySelector("link[rel*='icon']");
+export function switchPageIcon(type) {
+  if (type === 'notify') {
+    pageIcon.href = notifyIcon;
+  } else if (type === 'visible') {
+    pageIcon.href = visibleIcon;
+  } else if (type === 'hidden') {
+    pageIcon.href = hiddenIcon;
   }
 }
 // 随机数

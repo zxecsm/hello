@@ -66,6 +66,8 @@ import { getSearchSongs } from './search.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
 import localData from '../../../js/common/localData.js';
+import { reqUserOnlineClients } from '../../../api/user.js';
+import { setUserInfo } from '../index.js';
 const $myAudio = $(new Audio()),
   $musicLrcWrap = $('.music_player_box .music_lrc_wrap'),
   $lrcBg = $musicLrcWrap.find('.lrc_bg'),
@@ -80,6 +82,7 @@ let curPlaySpeed = localData.get('songPlaySpeed'),
   lrcState = localData.get('lrcState');
 let activeLrcIndex = 0,
   remotePlayState = false,
+  remoteTargetID = '',
   lrcList = [],
   playingSongInfo = {}, // 正在播放的歌曲信息
   songPlayMode = 'order';
@@ -89,6 +92,12 @@ export function setPlayingSongInfo(val) {
     return playingSongInfo;
   }
   playingSongInfo = val;
+}
+export function setRemoteTargetID(val) {
+  if (val === undefined) {
+    return remoteTargetID;
+  }
+  remoteTargetID = val;
 }
 // 获取播放速度
 export function setCurPlaySpeed(val) {
@@ -166,7 +175,7 @@ export function switchPlayMode() {
   if (remotePlayState) {
     realtime.send({
       type: 'playmode',
-      data: { state: songPlayMode },
+      data: { state: songPlayMode, targetID: remoteTargetID },
     });
   }
   let text = '';
@@ -278,7 +287,7 @@ function playSong() {
     //远程播放
     realtime.send({
       type: 'play',
-      data: { state: 1, obj: playingSongInfo },
+      data: { state: 1, obj: playingSongInfo, targetID: remoteTargetID },
     });
   } else {
     document.title = `\xa0\xa0\xa0♪正在播放：${playingSongInfo.artist} - ${playingSongInfo.title}`;
@@ -534,7 +543,7 @@ export function playerRemoteBtnState(flag) {
 }
 // 远程播放
 $lrcHead
-  .on('click', '.remote_play', function () {
+  .on('click', '.remote_play', function (e) {
     initMusicLrc();
     if (remotePlayState) {
       remotePlayState = !remotePlayState;
@@ -542,19 +551,49 @@ $lrcHead
       playerRemoteBtnState();
       realtime.send({
         type: 'play',
-        data: { state: 0 },
+        data: { state: 0, targetID: remoteTargetID },
       });
     } else {
       if (!playingSongInfo.id) return;
-      remotePlayState = !remotePlayState;
-      _msg.success('开启远程播放');
-      lrcList = [];
-      pauseSong();
-      playerRemoteBtnState(1);
-      realtime.send({
-        type: 'play',
-        data: { state: 1, obj: playingSongInfo },
-      });
+      reqUserOnlineClients()
+        .then((res) => {
+          if (res.code === 1) {
+            const data = [
+              { id: 'other', text: '其他所有', beforeIcon: 'iconfont icon-yuanchengguanli' },
+            ];
+            res.data.forEach((item) => {
+              const { page, temid, os } = item;
+              if (page !== 'home' || temid === setUserInfo().account + _d.temid) return;
+              data.push({
+                id: temid,
+                text: os,
+                beforeIcon: 'iconfont icon-yuanchengguanli',
+              });
+            });
+            rMenu.selectMenu(
+              e,
+              data,
+              ({ close, id }) => {
+                if (id) {
+                  id = id === 'other' ? '' : id;
+                  close();
+                  remoteTargetID = id;
+                  remotePlayState = !remotePlayState;
+                  _msg.success('开启远程播放');
+                  lrcList = [];
+                  pauseSong();
+                  playerRemoteBtnState(1);
+                  realtime.send({
+                    type: 'play',
+                    data: { state: 1, obj: playingSongInfo, targetID: remoteTargetID },
+                  });
+                }
+              },
+              '选择远程播放客户端',
+            );
+          }
+        })
+        .catch(() => {});
     }
   })
   .on('click', '.close', hideLrcBox)
@@ -692,7 +731,7 @@ probox.addEventListener('touchstart', function (e) {
     if (remotePlayState) {
       realtime.send({
         type: 'progress',
-        data: { value: percent },
+        data: { value: percent, targetID: remoteTargetID },
       });
     }
     computeLrcIndex();
@@ -719,7 +758,7 @@ probox.addEventListener('mousedown', function (e) {
     if (remotePlayState) {
       realtime.send({
         type: 'progress',
-        data: { value: percent },
+        data: { value: percent, targetID: remoteTargetID },
       });
     }
     computeLrcIndex();
@@ -944,7 +983,7 @@ $lrcMenuWrap
           if (remotePlayState) {
             realtime.send({
               type: 'playspeed',
-              data: { value: b },
+              data: { value: b, targetID: remoteTargetID },
             });
           }
         }

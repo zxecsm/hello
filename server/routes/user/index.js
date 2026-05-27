@@ -1421,6 +1421,11 @@ route.post(
     else if (type === 'play') {
       try {
         data.state = await V.parse(data.state, V.number().toInt().enum([1, 0]), 'data.state');
+        data.targetID = await V.parse(
+          data.targetID,
+          V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+          'data.targetID',
+        );
       } catch (error) {
         return resp.badRequest(res)(error, 1);
       }
@@ -1433,9 +1438,7 @@ route.post(
         }
       }
 
-      data.to = account;
-
-      _connect.send(data.to, temid, { type, data }, 'other');
+      _connect.send(account, temid, { type, data }, data.targetID || 'other');
 
       resp.success(res)();
     }
@@ -1447,13 +1450,16 @@ route.post(
           V.string().trim().enum(['random', 'loop', 'order']),
           'data.state',
         );
+        data.targetID = await V.parse(
+          data.targetID,
+          V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+          'data.targetID',
+        );
       } catch (error) {
         return resp.badRequest(res)(error, 1);
       }
 
-      data.to = account;
-
-      _connect.send(data.to, temid, { type, data }, 'other');
+      _connect.send(account, temid, { type, data }, data.targetID || 'other');
 
       resp.success(res)();
     }
@@ -1461,13 +1467,16 @@ route.post(
     else if (type === 'vol') {
       try {
         data.value = await V.parse(data.value, V.number().toNumber().min(0).max(1), 'data.value');
+        data.targetID = await V.parse(
+          data.targetID,
+          V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+          'data.targetID',
+        );
       } catch (error) {
         return resp.badRequest(res)(error, 1);
       }
 
-      data.to = account;
-
-      _connect.send(data.to, temid, { type, data }, 'other');
+      _connect.send(account, temid, { type, data }, data.targetID || 'other');
 
       resp.success(res)();
     }
@@ -1479,13 +1488,16 @@ route.post(
           V.number().toNumber().enum([2, 1.75, 1.5, 1.25, 1, 0.75, 0.25]),
           'data.value',
         );
+        data.targetID = await V.parse(
+          data.targetID,
+          V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+          'data.targetID',
+        );
       } catch (error) {
         return resp.badRequest(res)(error, 1);
       }
 
-      data.to = account;
-
-      _connect.send(data.to, temid, { type, data }, 'other');
+      _connect.send(account, temid, { type, data }, data.targetID || 'other');
 
       resp.success(res)();
     }
@@ -1493,13 +1505,16 @@ route.post(
     else if (type === 'progress') {
       try {
         data.value = await V.parse(data.value, V.number().toNumber().min(0).max(1), 'data.value');
+        data.targetID = await V.parse(
+          data.targetID,
+          V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+          'data.targetID',
+        );
       } catch (error) {
         return resp.badRequest(res)(error, 1);
       }
 
-      data.to = account;
-
-      _connect.send(data.to, temid, { type, data }, 'other');
+      _connect.send(account, temid, { type, data }, data.targetID || 'other');
 
       resp.success(res)();
     }
@@ -1969,6 +1984,14 @@ route.post(
     syncUpdateData(res, type);
 
     resp.success(res, '恢复成功')();
+  }),
+);
+
+// 获取在线的客户端
+route.get(
+  '/online-clients',
+  asyncHandler(async (_, res) => {
+    resp.success(res, 'ok', _connect.get(res.locals.hello.userinfo.account)?.onlines || [])();
   }),
 );
 

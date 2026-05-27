@@ -1,7 +1,6 @@
 import _d from '../../common/config';
-import { _mySlide, playSound } from '../../utils/utils';
+import { _mySlide, playSound, switchPageIcon } from '../../utils/utils';
 import imgMsg from '../../../images/img/msg.mp3';
-import notifyIcon from '../../../images/img/icon-notify.svg';
 import onlineMsg from '../../../images/img/online.mp3';
 import './index.less';
 import { initRainCodeSleep } from '../../common/codeRain';
@@ -297,13 +296,12 @@ function info(message, callback, { duration = 3000, reside = false } = {}) {
   }
   new Msg(opt, callback);
 }
-const icon = document.querySelector("link[rel*='icon']");
 function msg(opt, callback, sound) {
   if (sound) {
     playSound(imgMsg);
   }
   if (document.visibilityState === 'hidden') {
-    icon.href = notifyIcon;
+    switchPageIcon('notify');
     addCache({ opt, callback });
     return;
   }

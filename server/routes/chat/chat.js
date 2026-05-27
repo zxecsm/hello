@@ -191,6 +191,7 @@ export async function sendNotifyMsg(res, to, flag, msgData) {
 
     if (notifyObj.data.to === account) {
       // 推送给自己所有在线终端
+      notifyObj.data.from.des = appConfig.ownAccountDes;
       _connect.send(account, temid, notifyObj, 'all');
     } else {
       notifyObj.data.from.des =
