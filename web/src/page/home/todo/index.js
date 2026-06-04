@@ -439,19 +439,17 @@ function todoMenu(e) {
       text: '复制',
       beforeIcon: 'iconfont icon-fuzhi',
     },
-  ];
-  if (todo.state === 1) {
-    data.push({
+    {
       id: 'edit',
       text: '编辑',
       beforeIcon: 'iconfont icon-bianji',
-    });
-  }
-  data.push({
-    id: 'del',
-    text: '删除',
-    beforeIcon: 'iconfont icon-shanchu',
-  });
+    },
+    {
+      id: 'del',
+      text: '删除',
+      beforeIcon: 'iconfont icon-shanchu',
+    },
+  ];
   rMenu.selectMenu(
     e,
     data,
