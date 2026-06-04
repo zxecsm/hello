@@ -665,7 +665,7 @@ function updateSelectInfo() {
   const $todoItems = $countList.find('.item_box'),
     $checkList = $todoItems.filter((_, item) => $(item).find('.check_level').attr('check') === 'y');
   _msg.botMsg(`选中：${$checkList.length}项`);
-  if ($checkList.length === $todoItems.length) {
+  if ($todoItems.length > 0 && $checkList.length === $todoItems.length) {
     $countFooter.find('span').attr({
       class: 'iconfont icon-xuanzeyixuanze',
       check: 'y',

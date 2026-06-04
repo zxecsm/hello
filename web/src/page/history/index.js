@@ -256,7 +256,7 @@ function updateSelectInfo() {
   const $itemBox = $contentWrap.find('.item_box'),
     $checkArr = $itemBox.filter((_, item) => $(item).find('.check_state').attr('check') === 'y');
   _msg.botMsg(`选中：${$checkArr.length}项`);
-  if ($checkArr.length === $itemBox.length) {
+  if ($itemBox.length > 0 && $checkArr.length === $itemBox.length) {
     $footer.find('span').attr({
       class: 'iconfont icon-xuanzeyixuanze',
       check: 'y',

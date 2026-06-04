@@ -2158,7 +2158,7 @@ function renderFoot() {
   const len = checkData.length;
   const html = _tpl(
     `
-    <span cursor="y" :data-check="items.length === len ? 'y' : 'n'" class="iconfont {{items.length === len ? 'icon-xuanzeyixuanze' : 'icon-xuanzeweixuanze'}}"></span>
+    <span cursor="y" :data-check="items.length > 0 && items.length === len ? 'y' : 'n'" class="iconfont {{items.length > 0 && items.length === len ? 'icon-xuanzeyixuanze' : 'icon-xuanzeweixuanze'}}"></span>
     <template v-if="len > 0">
       <button cursor="y" class="f_copy btn btn_primary">复制</button>
       <button cursor="y" class="f_cut btn btn_primary">剪切</button>

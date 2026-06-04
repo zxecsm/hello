@@ -486,7 +486,7 @@ function updateSelectInfo() {
   const $imgItem = $imgList.find('.img_item'),
     $checkArr = $imgItem.filter((_, item) => $(item).find('.check_level').attr('check') === 'y');
   _msg.botMsg(`选中：${$checkArr.length}项`);
-  if ($checkArr.length === $imgItem.length) {
+  if ($imgItem.length > 0 && $checkArr.length === $imgItem.length) {
     $footer.find('span').attr({
       class: 'iconfont icon-xuanzeyixuanze',
       check: 'y',

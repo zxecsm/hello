@@ -341,7 +341,7 @@ function updateSelectInfo() {
     return $item.attr('data-id') && $item.find('.check_state').attr('check') === 'y';
   });
   _msg.botMsg(`选中：${$checkArr.length}项`);
-  if ($checkArr.length === $item.length) {
+  if ($item.length > 0 && $checkArr.length === $item.length) {
     $pMusicListBox.find('.p_foot_menu .flex_wrap div').attr({
       class: 'iconfont icon-xuanzeyixuanze',
       check: 'y',
