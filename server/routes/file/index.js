@@ -1594,41 +1594,37 @@ route.post(
       return resp.success(res, 'ok', normalizePath)();
     }
 
-    let best = null;
+    const best = { name: '', type: 'file' };
 
     for (const item of dirList) {
       if (!item.startsWith(name)) continue;
 
-      if (type !== 'all') {
-        const targetPath = _path.normalizeNoSlash(dir, item);
-        let t = await _f.getType(targetPath);
+      const targetPath = _path.normalizeNoSlash(dir, item);
+      let t = await _f.getType(targetPath);
 
-        // 只补全目录，获取链接的真实类型
-        if (type === 'dir' && t === 'symlink') {
-          try {
-            const rPath = await _f.fsp.realpath(targetPath);
-            t = await _f.getType(rPath);
-          } catch {}
-        }
-
-        t = t === 'dir' ? 'dir' : 'file';
-        if (t !== type) continue;
+      // 只补全目录，获取链接的真实类型
+      if (type === 'dir' && t === 'symlink') {
+        try {
+          const rPath = await _f.fsp.realpath(targetPath);
+          t = await _f.getType(rPath);
+        } catch {}
       }
 
-      if (!best || item.length < best.length) {
-        best = item;
+      t = t === 'dir' ? 'dir' : 'file';
+
+      if (type !== 'all' && t !== type) continue;
+
+      if (!best.name || item.length < best.name.length) {
+        best.name = item;
+        best.type = t;
       }
     }
 
-    const result = best || name;
-
-    const base = _path.dirname(path);
-    let resultPath = _path.normalizeNoSlash(base, result);
-
-    const resultType = await _f.getType(_path.normalizeNoSlash(dir, result));
-    if (resultType === 'dir') {
-      resultPath += '/';
+    if (!best.name) {
+      best.name = name;
     }
+
+    const resultPath = `${_path.normalizeNoSlash(_path.dirname(path), best.name)}${best.type === 'dir' ? '/' : ''}`;
 
     resp.success(res, 'ok', resultPath)();
   }),
