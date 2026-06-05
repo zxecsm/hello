@@ -1600,7 +1600,18 @@ route.post(
       if (!item.startsWith(name)) continue;
 
       if (type !== 'all') {
-        const t = await _f.getType(_path.normalizeNoSlash(dir, item));
+        const targetPath = _path.normalizeNoSlash(dir, item);
+        let t = await _f.getType(targetPath);
+
+        // 只补全目录，获取链接的真实类型
+        if (type === 'dir' && t === 'symlink') {
+          try {
+            const rPath = await _f.fsp.realpath(targetPath);
+            t = await _f.getType(rPath);
+          } catch {}
+        }
+
+        t = t === 'dir' ? 'dir' : 'file';
         if (t !== type) continue;
       }
 
