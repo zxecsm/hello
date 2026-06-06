@@ -130,23 +130,23 @@ export function createTerminal(account, temid, config, defaultPath = '') {
         stream.write(`cd ${defaultPath}\r`);
         stream.write('clear\r');
       }
-    });
 
-    // 2. 启动 SFTP (独立错误处理，不影响 Shell)
-    sshClient.sftp((err, sftp) => {
-      if (sshObj._closed) {
-        if (sftp) sftp.destroy?.();
-        return;
-      }
+      // 2. 启动 SFTP (独立错误处理，不影响 Shell)
+      sshClient.sftp((err, sftp) => {
+        if (sshObj._closed) {
+          if (sftp) sftp.destroy?.();
+          return;
+        }
 
-      if (err) {
-        devLog(`SFTP Init Error for ${temid}:`, err);
-        return cleanup();
-      }
+        if (err) {
+          devLog(`SFTP Init Error for ${temid}:`, err);
+          return cleanup();
+        }
 
-      sshObj.sftp = sftp;
-      sftp.on('close', cleanup);
-      sftp.on('error', cleanup);
+        sshObj.sftp = sftp;
+        sftp.on('close', cleanup);
+        sftp.on('error', cleanup);
+      });
     });
   });
 
