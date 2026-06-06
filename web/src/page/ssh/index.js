@@ -884,9 +884,9 @@ async function hdUp(files, path) {
   });
 }
 updateFullWidthState(sshInfo.isFullWidth);
-function selectDir(e, path = '/', state = 'up', loading) {
+function selectDir(e, path = '/', loading) {
   loading && loading.start();
-  reqSSHSftpList({ path, state })
+  reqSSHSftpList({ path })
     .then((res) => {
       if (res.code === 1) {
         loading && loading.end();
@@ -896,42 +896,35 @@ function selectDir(e, path = '/', state = 'up', loading) {
           e,
           list.map((item, i) => {
             const { type, name } = item;
-            const base = {
+            return {
               id: `${i + 1}`,
               text: name,
               beforeIcon: type === 'dir' ? 'iconfont icon-gl-folder' : 'iconfont icon-gl-fileText',
+              afterIcon: type === 'dir' ? 'iconfont icon-upload' : '',
               param: { value: item },
             };
-            if (state === 'up') {
-              base.afterIcon = 'iconfont icon-upload';
-            } else if (state === 'down') {
-              if (type === 'file') {
-                base.afterIcon = 'iconfont icon-download';
-              }
-            }
-            return base;
           }),
           ({ e, id, box, close, loading, param }) => {
             if (!box || !id) return;
             const icon = _getTarget(box, e, '.item .icon-upload');
+            const { name } = param.value;
+            const tPath = _path.normalizeNoSlash(path, name);
             if (icon) {
-              if (state === 'up') {
-                getFiles({ multiple: true })
-                  .then((files) => {
-                    if (files.length === 0) return;
-                    close(1);
-                    hdUp(files, _path.normalizeNoSlash(path, param.value.name));
-                  })
-                  .catch(() => {});
-              }
+              getFiles({ multiple: true })
+                .then((files) => {
+                  if (files.length === 0) return;
+                  close(1);
+                  hdUp(files, tPath);
+                })
+                .catch(() => {});
             } else {
               if (param.value.type === 'dir') {
-                selectDir(e, _path.normalizeNoSlash(path, param.value.name), state, loading);
+                selectDir(e, tPath, loading);
               } else {
                 downloadFiles([
                   {
-                    fileUrl: `${_d.apiPath}/ssh/sftp-down?path=${decodeURIComponent(_path.normalizeNoSlash(path, param.value.name))}&id=${_d.temid}`,
-                    filename: param.value.name,
+                    fileUrl: `${_d.apiPath}/ssh/sftp-down?path=${decodeURIComponent(tPath)}&id=${_d.temid}`,
+                    filename: name,
                   },
                 ]);
               }
@@ -958,10 +951,7 @@ $sshBox
     updateFullWidthState(sshInfo.isFullWidth);
     updateTermSize();
   })
-  .on('click', '.btns .up_btn', selectDir)
-  .on('click', '.btns .down_btn', function (e) {
-    selectDir(e, '/', 'down');
-  })
+  .on('click', '.btns .file_transfer_btn', selectDir)
   .on('click', '.btns .log_btn', function () {
     if ($logText.css('display') === 'none') {
       this.className = 'iconfont icon-terminal log_btn';

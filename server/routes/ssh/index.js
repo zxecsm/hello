@@ -719,7 +719,6 @@ route.get(
     'query',
     V.object({
       path: V.string().min(1).notEmpty().max(fieldLength.url),
-      state: V.string().trim().default('up').enum(['up', 'down']),
     }),
   ),
   asyncHandler(async (_, res) => {
@@ -733,12 +732,10 @@ route.get(
     const ssh = getSSH(temid);
     if (!ssh || !ssh.sftp) return resp.forbidden(res, '已断开SSH连接')();
 
-    const { path, state } = res.locals.ctx;
+    const { path } = res.locals.ctx;
     const p = _path.normalizeNoSlash('/', path);
 
-    const list = (await readSftpDir(ssh.sftp, p)).filter(
-      (item) => (state === 'up' && item.type === 'dir') || state === 'down',
-    );
+    const list = await readSftpDir(ssh.sftp, p);
 
     resp.success(res, 'ok', list)();
   }),

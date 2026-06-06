@@ -6,6 +6,13 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "10906396",
+      "name": "IDP-文件传输",
+      "font_class": "IDP-wenjianchuanshu",
+      "unicode": "e6c6",
+      "unicode_decimal": 59078
+    },
+    {
       "icon_id": "10376579",
       "name": "cat_full_foot",
       "font_class": "cat_full_foot",
