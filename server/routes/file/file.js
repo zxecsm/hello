@@ -47,49 +47,6 @@ export async function _delDir(path) {
   }
 }
 
-// 获取所有文件
-export async function getAllFile(path) {
-  try {
-    const result = [];
-    const stack = [path];
-
-    while (stack.length > 0) {
-      const currentPath = stack.pop();
-
-      try {
-        const s = await _f.lstat(currentPath);
-
-        if (s.isDirectory()) {
-          const list = await _f.fsp.readdir(currentPath);
-          for (const name of list) {
-            stack.push(_path.normalizeNoSlash(currentPath, name));
-          }
-        } else {
-          const name = _path.basename(currentPath)[0];
-
-          if (name) {
-            result.push({
-              name,
-              path: _path.dirname(currentPath),
-              size: s.size,
-              atime: s.atimeMs, //最近一次访问文件的时间戳
-              ctime: s.ctimeMs, //最近一次文件状态的修改的时间戳
-              birthtime: s.birthtimeMs, //文件创建时间的时间戳
-            });
-          }
-        }
-      } catch (error) {
-        await writelog(false, `[ getAllFile ] - ${error}`, 500);
-      }
-    }
-
-    return result;
-  } catch (error) {
-    await writelog(false, `[ getAllFile ] - ${error}`, 500);
-    return [];
-  }
-}
-
 // 文件列表排序
 export function sortFileList(list, type, isDesc) {
   list.sort((a, b) => {
