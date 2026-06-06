@@ -22,12 +22,17 @@ import {
   reqSSHMoveQuickGroup,
   reqSSHMoveToGroup,
   reqSSHQuickList,
+  reqSSHSftpList,
+  reqSSHSftpUp,
 } from '../../api/ssh.js';
 import {
   _getTarget,
   _myOpen,
   _setTimeout,
+  concurrencyTasks,
   debounce,
+  downloadFiles,
+  getFiles,
   getTextSize,
   isDarkMode,
   isIframe,
@@ -45,6 +50,8 @@ import _d from '../../js/common/config.js';
 import _msg from '../../js/plugins/message/index.js';
 import { MouseElementTracker } from '../../js/utils/boxSelector.js';
 import toolTip from '../../js/plugins/tooltip/index.js';
+import _path from '../../js/utils/path.js';
+import { UpProgress } from '../../js/plugins/UpProgress/index.js';
 const $app = $('#app'),
   $sshBox = $app.find('.ssh_box'),
   $logText = $sshBox.find('.log_text'),
@@ -843,7 +850,101 @@ function updateFullWidthState(state) {
     fullWidth.className = 'iconfont icon-kuandukuoda full_width';
   }
 }
+async function hdUp(files, path) {
+  const controller = new AbortController();
+  const signal = controller.signal;
+
+  const upPro = new UpProgress(() => {
+    controller.abort();
+  }, files.length);
+  await concurrencyTasks(files, 3, async (file) => {
+    if (signal.aborted) return;
+    const { name } = file;
+    const pro = upPro.add(name);
+
+    try {
+      const result = await reqSSHSftpUp(
+        { path, name },
+        file,
+        (percent) => {
+          pro.update(percent);
+        },
+        signal,
+      );
+      if (result.code === 1) {
+        pro.close();
+      } else {
+        pro.fail();
+        _msg.error(`上传失败：${name}`, null, { reside: true });
+      }
+    } catch {
+      pro.fail();
+      _msg.error(`上传失败：${name}`, null, { reside: true });
+    }
+  });
+}
 updateFullWidthState(sshInfo.isFullWidth);
+function selectDir(e, path = '/', state = 'up', loading) {
+  loading && loading.start();
+  reqSSHSftpList({ path, state })
+    .then((res) => {
+      if (res.code === 1) {
+        loading && loading.end();
+        const list = res.data;
+        if (list.length === 0) return _msg.error(`${path} 为空目录`);
+        rMenu.selectMenu(
+          e,
+          list.map((item, i) => {
+            const { type, name } = item;
+            const base = {
+              id: `${i + 1}`,
+              text: name,
+              beforeIcon: type === 'dir' ? 'iconfont icon-gl-folder' : 'iconfont icon-gl-fileText',
+              param: { value: item },
+            };
+            if (state === 'up') {
+              base.afterIcon = 'iconfont icon-upload';
+            } else if (state === 'down') {
+              if (type === 'file') {
+                base.afterIcon = 'iconfont icon-download';
+              }
+            }
+            return base;
+          }),
+          ({ e, id, box, close, loading, param }) => {
+            if (!box || !id) return;
+            const icon = _getTarget(box, e, '.item .icon-upload');
+            if (icon) {
+              if (state === 'up') {
+                getFiles({ multiple: true })
+                  .then((files) => {
+                    if (files.length === 0) return;
+                    close(1);
+                    hdUp(files, _path.normalizeNoSlash(path, param.value.name));
+                  })
+                  .catch(() => {});
+              }
+            } else {
+              if (param.value.type === 'dir') {
+                selectDir(e, _path.normalizeNoSlash(path, param.value.name), state, loading);
+              } else {
+                downloadFiles([
+                  {
+                    fileUrl: `${_d.apiPath}/ssh/sftp-down?path=${decodeURIComponent(_path.normalizeNoSlash(path, param.value.name))}&id=${_d.temid}`,
+                    filename: param.value.name,
+                  },
+                ]);
+              }
+            }
+          },
+          path,
+        );
+      }
+    })
+    .catch(() => {
+      loading && loading.end();
+    });
+}
 $sshBox
   .on('click', '.btns .full_height', function () {
     sshInfo.isFullHeight = !sshInfo.isFullHeight;
@@ -856,6 +957,10 @@ $sshBox
     localData.set('sshInfo', sshInfo);
     updateFullWidthState(sshInfo.isFullWidth);
     updateTermSize();
+  })
+  .on('click', '.btns .up_btn', selectDir)
+  .on('click', '.btns .down_btn', function (e) {
+    selectDir(e, '/', 'down');
   })
   .on('click', '.btns .log_btn', function () {
     if ($logText.css('display') === 'none') {

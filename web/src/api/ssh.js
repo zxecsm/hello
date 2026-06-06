@@ -1,4 +1,4 @@
-import { _getAjax, _postAjax } from '../js/utils/utils';
+import { _getAjax, _postAjax, _upFile } from '../js/utils/utils';
 
 // 连接SSH
 export function reqSSHConnect(data) {
@@ -87,4 +87,12 @@ export function reqSSHMoveToGroup(data) {
 // 获取SSH配置
 export function reqSSHInfo(data) {
   return _getAjax(`/ssh/info`, data);
+}
+// 获取sftp列表
+export function reqSSHSftpList(data) {
+  return _getAjax(`/ssh/sftp-list`, data);
+}
+// sftp上传
+export function reqSSHSftpUp(data, file, cb, signal) {
+  return _upFile(`/ssh/sftp-up`, data, file, cb, signal);
 }

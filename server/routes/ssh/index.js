@@ -1,8 +1,9 @@
 import express from 'express';
+import Busboy from 'busboy';
 import { createPagingData, getSplitWord, syncUpdateData } from '../../utils/utils.js';
 import { fieldLength } from '../config.js';
 import V from '../../utils/validRules.js';
-import { createTerminal } from './terminal.js';
+import { createTerminal, getSSH, readSftpDir } from './terminal.js';
 import { db } from '../../utils/sqlite.js';
 import _f from '../../utils/f.js';
 import nanoid from '../../utils/nanoid.js';
@@ -708,6 +709,124 @@ route.post(
 
     syncUpdateData(res, 'quickCommand');
     resp.success(res, '删除快捷命令成功')();
+  }),
+);
+
+// 获取sftp列表
+route.get(
+  '/sftp-list',
+  validate(
+    'query',
+    V.object({
+      path: V.string().min(1).notEmpty().max(fieldLength.url),
+      state: V.string().trim().default('up').enum(['up', 'down']),
+    }),
+  ),
+  asyncHandler(async (_, res) => {
+    let temid = res.locals.hello.temid;
+    try {
+      temid = await V.parse(temid, V.string().trim().min(1), 'temid');
+    } catch (error) {
+      return resp.badRequest(res)(error, 1);
+    }
+
+    const ssh = getSSH(temid);
+    if (!ssh || !ssh.sftp) return resp.forbidden(res, '已断开SSH连接')();
+
+    const { path, state } = res.locals.ctx;
+    const p = _path.normalizeNoSlash('/', path);
+
+    const list = (await readSftpDir(ssh.sftp, p)).filter(
+      (item) => (state === 'up' && item.type === 'dir') || state === 'down',
+    );
+
+    resp.success(res, 'ok', list)();
+  }),
+);
+
+// 上传sftp
+route.post(
+  '/sftp-up',
+  validate(
+    'query',
+    V.object({
+      path: V.string().min(1).notEmpty().max(fieldLength.url),
+      name: V.string()
+        .trim()
+        .preprocess((v) => (typeof v === 'string' ? _path.sanitizeFilename(v) : v))
+        .min(1)
+        .max(fieldLength.filename),
+    }),
+  ),
+  asyncHandler(async (req, res) => {
+    let temid = res.locals.hello.temid;
+    try {
+      temid = await V.parse(temid, V.string().trim().min(1), 'temid');
+    } catch (error) {
+      return resp.badRequest(res)(error, 1);
+    }
+
+    const ssh = getSSH(temid);
+    if (!ssh || !ssh.sftp) return resp.forbidden(res, '已断开SSH连接')();
+
+    const { path, name } = res.locals.ctx;
+    const p = _path.normalizeNoSlash('/', path, name);
+
+    const busboy = Busboy({ headers: req.headers });
+
+    await new Promise((resolve, reject) => {
+      busboy.on('file', async (_, fileStream) => {
+        const remoteWritableStream = ssh.sftp.createWriteStream(p);
+
+        try {
+          await _f.streamp.pipeline(fileStream, remoteWritableStream);
+        } catch (err) {
+          reject(err);
+        }
+      });
+
+      busboy.on('finish', () => {
+        resolve();
+      });
+
+      busboy.on('error', (err) => {
+        reject(err);
+      });
+
+      // 将请求体接入 busboy
+      req.pipe(busboy);
+    });
+
+    resp.success(res, '上传文件成功')();
+  }),
+);
+
+// 下载sftp
+route.get(
+  '/sftp-down',
+  validate(
+    'query',
+    V.object({
+      path: V.string().min(1).notEmpty().max(fieldLength.url),
+      id: V.string().trim().min(1),
+    }),
+  ),
+  asyncHandler(async (req, res) => {
+    const { path, id } = res.locals.ctx;
+    const ssh = getSSH(res.locals.hello.userinfo.account + id);
+    if (!ssh || !ssh.sftp) return resp.forbidden(res, '已断开SSH连接')();
+
+    const p = _path.normalizeNoSlash('/', path);
+
+    const remoteReadableStream = ssh.sftp.createReadStream(p);
+
+    res.setHeader(
+      'Content-Disposition',
+      "attachment; filename*=UTF-8''" + encodeURIComponent(_path.basename(path)[0]),
+    );
+    res.setHeader('Content-Type', 'application/octet-stream');
+
+    await _f.streamp.pipeline(remoteReadableStream, res);
   }),
 );
 

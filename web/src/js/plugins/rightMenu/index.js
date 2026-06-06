@@ -696,7 +696,8 @@ function selectMenu(e, data, callback, title = '') {
       if (item) {
         const id = item.dataset.id;
         const d = data.find((item) => item.id === id);
-        callback && callback({ e, close, resetMenu, id, param: d.param || {}, loading });
+        callback &&
+          callback({ e, close, resetMenu, box: this.content, id, param: d.param || {}, loading });
       }
     },
   };
