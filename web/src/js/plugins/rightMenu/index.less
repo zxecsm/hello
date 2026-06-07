@@ -278,12 +278,17 @@
             margin: 0 auto;
             width: 96%;
             position: relative;
+            border: 0.1rem solid var(--btn-primary-border-color);
+            border-radius: var(--border-radius1);
+            overflow: hidden;
+            &.focus {
+              border: 0.1rem solid var(--btn-primary-color);
+            }
             .texta {
               display: block;
-              border: 0.1rem solid var(--btn-primary-border-color);
               background-color: transparent;
-              border-radius: var(--border-radius1);
               box-shadow: none;
+              border: none;
               font-size: 1.8rem;
               outline: none;
               padding: 1rem 0.8rem;
@@ -295,10 +300,6 @@
               line-height: 1.5;
               padding: 0.8rem 0.8rem 3rem 0.8rem;
               text-align: left;
-
-              &:focus {
-                border: 0.1rem solid var(--btn-primary-color);
-              }
             }
             .clean_btn {
               display: none;
