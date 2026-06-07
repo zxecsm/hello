@@ -283,8 +283,7 @@ async function renderList(top) {
     <template v-if="total > 0">
       <ul v-for="{type, fileType, name, path, size, time, id, mode, gid, uid, favorite, linkTarget, linkTargetTypeName} in list" class="file_item" :data-id="id">
         <li cursor="y" class="check_state" check="n"></li>
-        <li cursor="y" class="logo {{logoColor(type,fileType,name,path)}} iconfont {{hdLogo(name,type,size) || 'is_img'}}"></li>
-        <li v-if="favorite" class='favorite iconfont icon-shoucang'></li>
+        <li cursor="y" class="logo {{logoColor(type,fileType,name,path)}} iconfont {{hdLogo(name,type,size,favorite) || 'is_img'}}"></li>
         <li cursor="y" class="name">
           <span class="text">{{getText(name,type).a}}
             <span class="suffix">{{getText(name,type).b}}</span>
@@ -315,13 +314,13 @@ async function renderList(top) {
         if (type === 'file' && (fileType === 'symlink' || fileType === 'file')) return '';
         return 'other';
       },
-      hdLogo(name, type, size) {
+      hdLogo(name, type, size, favorite) {
         let logo = '';
         if (!isImgFile(name)) {
           if (type === 'file') {
             logo = fileLogoType(name, size);
           } else {
-            logo = 'icon-gl-folder';
+            logo = favorite ? 'icon-folderStar' : 'icon-gl-folder';
           }
           return logo;
         }

@@ -6,6 +6,13 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "7594811",
+      "name": "folderStar",
+      "font_class": "folderStar",
+      "unicode": "eac2",
+      "unicode_decimal": 60098
+    },
+    {
       "icon_id": "10906396",
       "name": "IDP-文件传输",
       "font_class": "IDP-wenjianchuanshu",
