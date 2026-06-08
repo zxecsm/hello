@@ -42,6 +42,7 @@ import {
   pageErr,
   queryURLParams,
   toggleUserSelect,
+  wrapInput,
 } from '../../js/utils/utils.js';
 import localData from '../../js/common/localData.js';
 import { _tpl } from '../../js/utils/template.js';
@@ -136,6 +137,27 @@ function getAllText(term) {
 
   return result;
 }
+const wInput = wrapInput($sshBox.find('.t_menu .inp_box input')[0], {
+  update(val) {
+    if (val === '') {
+      $sshBox.find('.t_menu .inp_box i').css('display', 'none');
+    } else {
+      $sshBox.find('.t_menu .inp_box i').css('display', 'block');
+    }
+  },
+  focus(e) {
+    $(e.target).parent().addClass('focus');
+  },
+  blur(e) {
+    $(e.target).parent().removeClass('focus');
+  },
+  keyup(e) {
+    if (e.key === 'Enter') {
+      sendSSH(wInput.getValue(), 1);
+      wInput.setValue('').focus();
+    }
+  },
+});
 reqSSHConnect({ id: HASH, defaultPath: p })
   .then((res) => {
     if (res.code === 1) {
@@ -830,24 +852,24 @@ function handleTermInput(text) {
   sendSSH(out);
 }
 function updateFullHeightState(state) {
-  const fullHeight = $sshBox.find('.btns .full_height')[0];
+  const fullHeight = $sshBox.find('.t_menu .full_height')[0];
   if (state) {
     $app.addClass('full_height');
-    fullHeight.className = 'iconfont icon-shang full_height';
+    fullHeight.className = 'btn btn_info iconfont icon-shang full_height';
   } else {
     $app.removeClass('full_height');
-    fullHeight.className = 'iconfont icon-xiala full_height';
+    fullHeight.className = 'btn btn_info iconfont icon-xiala full_height';
   }
 }
 updateFullHeightState(sshInfo.isFullHeight);
 function updateFullWidthState(state) {
-  const fullWidth = $sshBox.find('.btns .full_width')[0];
+  const fullWidth = $sshBox.find('.t_menu .full_width')[0];
   if (state) {
     $app.addClass('full_width');
-    fullWidth.className = 'iconfont icon-zuoyoushousuo full_width';
+    fullWidth.className = 'btn btn_info iconfont icon-zuoyoushousuo full_width';
   } else {
     $app.removeClass('full_width');
-    fullWidth.className = 'iconfont icon-kuandukuoda full_width';
+    fullWidth.className = 'btn btn_info iconfont icon-kuandukuoda full_width';
   }
 }
 async function hdUp(files, path) {
@@ -939,27 +961,34 @@ function selectDir(e, path = '/', loading) {
     });
 }
 $sshBox
-  .on('click', '.btns .full_height', function () {
+  .on('click', '.t_menu .full_height', function () {
     sshInfo.isFullHeight = !sshInfo.isFullHeight;
     localData.set('sshInfo', sshInfo);
     updateFullHeightState(sshInfo.isFullHeight);
     updateTermSize();
   })
-  .on('click', '.btns .full_width', function () {
+  .on('click', '.t_menu .full_width', function () {
     sshInfo.isFullWidth = !sshInfo.isFullWidth;
     localData.set('sshInfo', sshInfo);
     updateFullWidthState(sshInfo.isFullWidth);
     updateTermSize();
   })
-  .on('click', '.btns .file_transfer_btn', selectDir)
-  .on('click', '.btns .log_btn', function () {
+  .on('click', '.t_menu .file_transfer_btn', selectDir)
+  .on('click', '.t_menu .send_btn', function () {
+    sendSSH(wInput.getValue(), 1);
+    wInput.setValue('').focus();
+  })
+  .on('click', '.t_menu .clear', function () {
+    wInput.setValue('').focus();
+  })
+  .on('click', '.t_menu .log_btn', function () {
     if ($logText.css('display') === 'none') {
-      this.className = 'iconfont icon-terminal log_btn';
+      this.className = 'btn btn_info iconfont icon-terminal log_btn';
       $logText.show();
       $logText.text(getAllText(term)).scrollTop($logText[0].scrollHeight);
     } else {
       $logText.hide();
-      this.className = 'iconfont icon-fuzhi log_btn';
+      this.className = 'btn btn_info iconfont icon-fuzhi log_btn';
       $logText.text('');
     }
   });
@@ -967,11 +996,11 @@ document.addEventListener('click', function (e) {
   if (
     $logText.css('display') === 'none' ||
     e.target === $logText[0] ||
-    _getTarget($sshBox[0], e, '.btns')
+    _getTarget($sshBox[0], e, '.t_menu .log_btn')
   )
     return;
   $logText.hide();
-  $sshBox.find('.btns .log_btn').removeClass('icon-terminal').addClass('icon-fuzhi');
+  $sshBox.find('.t_menu .log_btn').removeClass('icon-terminal').addClass('icon-fuzhi');
 });
 ~(function () {
   function updateHeigth(footerPercent) {

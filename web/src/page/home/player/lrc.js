@@ -544,7 +544,6 @@ export function playerRemoteBtnState(flag) {
 // 远程播放
 $lrcHead
   .on('click', '.remote_play', function (e) {
-    initMusicLrc();
     if (remotePlayState) {
       remotePlayState = !remotePlayState;
       _msg.success('关闭远程播放');
@@ -553,6 +552,7 @@ $lrcHead
         type: 'play',
         data: { state: 0, targetID: remoteTargetID },
       });
+      initMusicLrc();
     } else {
       if (!playingSongInfo.id) return;
       reqUserOnlineClients()
@@ -587,13 +587,13 @@ $lrcHead
                   remoteTargetID = id;
                   remotePlayState = !remotePlayState;
                   _msg.success('开启远程播放');
-                  lrcList = [];
                   pauseSong();
                   playerRemoteBtnState(1);
                   realtime.send({
                     type: 'play',
                     data: { state: 1, obj: playingSongInfo, targetID: remoteTargetID },
                   });
+                  initMusicLrc();
                 }
               },
               '选择远程播放客户端',

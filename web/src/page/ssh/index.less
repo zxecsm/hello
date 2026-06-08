@@ -43,13 +43,19 @@ body {
     flex: auto;
     height: 60%;
     overflow: hidden;
+    padding-bottom: 5rem;
+    #terminal {
+      width: 100%;
+      height: 100%;
+    }
     .log_text {
       display: none;
       position: absolute;
       width: 100%;
-      height: 100%;
       top: 0;
       left: 0;
+      right: 0;
+      bottom: 5rem;
       z-index: 1;
       background-color: var(--color10);
       font-family: var(--code-font-family);
@@ -57,30 +63,44 @@ body {
       font-size: 1.4rem;
       line-height: 1.2;
     }
-    .btns {
-      display: flex;
-      flex-flow: row nowrap;
-      align-items: center;
-      flex: none;
+    .t_menu {
+      width: 100%;
       position: absolute;
-      right: 0;
       bottom: 0;
+      left: 0;
+      flex: none;
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 0;
+      background-color: var(--color10);
       z-index: 2;
-      opacity: 0.6;
-      &:hover {
-        opacity: 1;
+      .inp_box {
+        flex: auto;
+        display: flex;
+        align-items: center;
+        height: 4rem;
+        border: 0.1rem solid var(--color9);
+        &.focus {
+          border-color: var(--text-hover-color);
+        }
+        input {
+          flex: auto;
+          outline: none;
+          border: none;
+          background-color: transparent;
+        }
+        i {
+          flex: none;
+          display: none;
+        }
+      }
+      button {
+        flex: none;
+        margin: 0 0 0 0.5rem;
+        font-size: 1.8rem;
       }
       .log_btn {
         display: none;
-      }
-      span {
-        padding: 0.5rem;
-        font-size: 1.8rem;
-        margin: 0 0.2rem;
-        &:hover {
-          color: var(--text-hover-color);
-          transform: scale(1.1);
-        }
       }
       @media (max-width: 800px) {
         .full_width {
@@ -90,10 +110,6 @@ body {
           display: block;
         }
       }
-    }
-    #terminal {
-      width: 100%;
-      height: 100%;
     }
   }
   .footer {
