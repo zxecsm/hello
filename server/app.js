@@ -62,6 +62,8 @@ import request from './utils/request.js';
 import resp from './utils/response.js';
 import { asyncHandler, openCors, validate } from './utils/customMiddleware.js';
 
+process.title = appConfig.appName;
+
 const __dirname = getDirname(import.meta);
 
 const app = express();
