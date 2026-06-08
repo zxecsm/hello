@@ -622,7 +622,7 @@ function toTranslator() {
 // 选中搜索结果
 function selectSearchItem(e) {
   const key = e.key,
-    listlength = $searchInpWrap.find('.search_list_box ul').children('li').length - 1;
+    listlength = $searchInpWrap.find('.search_list_box .s_list ul').children('li').length - 1;
   if (key !== 'ArrowDown' && key !== 'ArrowUp') {
     searchResultIdx = -1;
     return;
@@ -638,13 +638,13 @@ function selectSearchItem(e) {
       searchResultIdx = listlength;
     }
   }
-  const $searchItem = $searchInpWrap.find('.search_list_box ul .search_item');
+  const $searchItem = $searchInpWrap.find('.search_list_box .s_list ul .search_item');
   $searchItem.removeClass('active').eq(searchResultIdx).addClass('active');
   const $activeItem = $searchItem.eq(searchResultIdx);
   if ($activeItem.length > 0) {
     const value = $activeItem.text().trim();
     searchInput.setValue(value);
-    $searchInpWrap.find('.search_list_box').scrollTop(_position($activeItem[0]).top);
+    $searchInpWrap.find('.search_list_box .s_list').scrollTop(_position($activeItem[0]).top);
   }
 }
 // 点击搜索项
@@ -738,12 +738,12 @@ function renderSearchList() {
       },
     );
   }
-  $searchInpWrap.find('.search_list_box ul').html(searchstr);
+  $searchInpWrap.find('.search_list_box .s_list ul').html(searchstr);
   searchResultIdx = -1;
 }
 // 获取搜索列表
 function getSearchList(val) {
-  const $sList = $searchInpWrap.find('.search_list_box ul');
+  const $sList = $searchInpWrap.find('.search_list_box .s_list ul');
   if (val.length > 100) {
     $sList.html('');
     return;
@@ -817,7 +817,7 @@ function hdSearchWord(res) {
   searchList.sort((a, b) => b.sNum - a.sNum);
   renderSearchList();
 }
-longPress($searchInpWrap.find('.search_list_box')[0], 'li', function () {
+longPress($searchInpWrap.find('.search_list_box .s_list')[0], 'li', function () {
   const text = $(this).text().trim();
   searchInput.setValue(text).focus();
 });
