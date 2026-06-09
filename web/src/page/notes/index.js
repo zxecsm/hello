@@ -70,6 +70,7 @@ let { HASH } = urlParams;
 if (urlParams.acc && urlParams.acc !== localData.get('account')) {
   runState = 'other';
   $headWrap.find('.h_add_item_btn').remove();
+  $headWrap.find('.h_trash_btn').remove();
   $headWrap.find('.h_check_item_btn').remove();
   $categoryTag.find('.setting_category').remove();
 } else {
@@ -871,6 +872,9 @@ async function upNote() {
 $headWrap
   .on('click', '.h_go_home', function () {
     myOpen('/');
+  })
+  .on('click', '.h_trash_btn', () => {
+    _myOpen('/trash#note', '回收站', 'trash');
   })
   .on('click', '.h_add_item_btn', function (e) {
     if (runState !== 'own') return;

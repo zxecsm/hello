@@ -18,6 +18,7 @@ import {
   copyText,
   isLogin,
   pageScrollTop,
+  _myOpen,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -387,6 +388,9 @@ $headWrap
   .on('click', '.h_check_item_btn', hdCheckItemBtn)
   .on('click', '.h_go_home', function () {
     myOpen('/');
+  })
+  .on('click', '.h_trash_btn', () => {
+    _myOpen('/trash#history', '回收站', 'trash');
   })
   .on('click', '.h_add_item_btn', addHistory)
   .on('click', '.inp_box .clean_btn', function () {

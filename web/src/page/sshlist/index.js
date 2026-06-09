@@ -672,6 +672,9 @@ $headWrap
   .on('click', '.h_go_home', function () {
     myOpen('/');
   })
+  .on('click', '.h_trash_btn', () => {
+    _myOpen('/trash#ssh', '回收站', 'trash');
+  })
   .on('click', '.h_add_item_btn', function (e) {
     rMenu.inpMenu(
       e,

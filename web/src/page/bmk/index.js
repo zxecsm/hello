@@ -25,6 +25,7 @@ import {
   imgjz,
   getFaviconPath,
   getFilePath,
+  _myOpen,
 } from '../../js/utils/utils';
 
 import _d from '../../js/common/config';
@@ -66,6 +67,7 @@ let { HASH } = urlParams;
 if (urlParams.acc && urlParams.acc !== localData.get('account')) {
   runState = 'other';
   $headWrap.find('.h_add_item_btn').remove();
+  $headWrap.find('.h_trash_btn').remove();
   $categoryTag.find('.setting_category').remove();
   $footer.find('.f_move_to').text('添加到');
   $footer.find('.f_delete').remove();
@@ -800,6 +802,9 @@ $headWrap
     );
   })
   .on('click', '.h_go_home', hdGoHome)
+  .on('click', '.h_trash_btn', () => {
+    _myOpen('/trash#bmk', '回收站', 'trash');
+  })
   .on('click', '.inp_box .clean_btn', hdClearSearch)
   .on('click', '.inp_box .search_btn', () => {
     bmksPageNo = 1;
