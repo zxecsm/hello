@@ -140,9 +140,9 @@ function getAllText(term) {
 const wInput = wrapInput($sshBox.find('.t_menu .inp_box input')[0], {
   update(val) {
     if (val === '') {
-      $sshBox.find('.t_menu .inp_box i').css('display', 'none');
+      $sshBox.find('.t_menu .inp_box .clear').css('display', 'none');
     } else {
-      $sshBox.find('.t_menu .inp_box i').css('display', 'block');
+      $sshBox.find('.t_menu .inp_box .clear').css('display', 'block');
     }
   },
   focus(e) {
@@ -194,7 +194,6 @@ realtime.init().add((res) => {
 
 term.onData((d) => handleTermInput(d));
 function sendSSH(text, enter = false) {
-  if (!text) return;
   if (enter) text += '\r';
   realtime.send({ type: 'ssh', data: { type: 'cmd', text } });
 }
