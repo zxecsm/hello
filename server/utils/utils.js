@@ -77,7 +77,7 @@ export async function writelog(res, str = '', code = 200) {
     }
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.error(err);
+    console.error('writelog error: ' + err);
   }
 }
 // 开发打印

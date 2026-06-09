@@ -1,3 +1,5 @@
+import { writelog } from './utils.js';
+
 function send(res, options = {}, status = 200) {
   const result = {
     code: 1,
@@ -6,17 +8,26 @@ function send(res, options = {}, status = 200) {
     ...options,
   };
 
+  // 返回最终执行的回调函数
   return function (txt, concat) {
-    if (txt !== undefined) {
-      if (concat) {
-        txt = `${result.codeText}(${txt})`;
-      }
-    } else {
-      txt = result.codeText;
-    }
+    // 安全检查 1：防止 res 对象丢失或已经被关闭
+    if (!res || res.headersSent) return;
 
-    res.locals.codeText = txt;
-    res.status(status).json(result);
+    try {
+      if (txt !== undefined) {
+        if (concat) {
+          txt = `${result.codeText}(${txt})`;
+        }
+      } else {
+        txt = result.codeText;
+      }
+
+      res.locals.codeText = txt;
+      res.status(status).json(result);
+    } catch (err) {
+      // 安全检查 2：兜底未知错误
+      writelog(res, `响应发送失败: ${err}`, 500);
+    }
   };
 }
 
