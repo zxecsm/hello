@@ -18,7 +18,7 @@ import nanoid from '../../utils/nanoid.js';
 import appConfig from '../../data/config.js';
 import V from '../../utils/validRules.js';
 import resp from '../../utils/response.js';
-import { asyncHandler, validate } from '../../utils/customMiddleware.js';
+import { asyncHandler, setDownloadHeader, validate } from '../../utils/customMiddleware.js';
 
 const route = express.Router();
 
@@ -73,6 +73,7 @@ route.get(
         }
 
         if (download === 1) {
+          setDownloadHeader(res, `${title}.md`);
           res.send(content);
         } else {
           resp.success(res, '读取笔记成功', {

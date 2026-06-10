@@ -13,6 +13,7 @@ import _path from '../../utils/path.js';
 import jwt from '../../utils/jwt.js';
 import V from '../../utils/validRules.js';
 import resp from '../../utils/response.js';
+import { setDownloadHeader } from '../../utils/customMiddleware.js';
 
 export default async function getFile(req, res, originalPath, verifyLogin = true) {
   const params = { ...req.query, p: originalPath };
@@ -110,11 +111,7 @@ export default async function getFile(req, res, originalPath, verifyLogin = true
         ? n
         : n + (n.includes('.') ? '' : '.') + suffix
       : oFileName;
-    res.setHeader(
-      'Content-Disposition',
-      "attachment; filename*=UTF-8''" + encodeURIComponent(fileName),
-    );
-    res.setHeader('Content-Type', 'application/octet-stream');
+    setDownloadHeader(res, fileName);
   }
 
   res.sendFile(tObj.path, { dotfiles: 'allow' });

@@ -16,7 +16,7 @@ import {
 } from './ssh.js';
 import _path from '../../utils/path.js';
 import resp from '../../utils/response.js';
-import { asyncHandler, validate } from '../../utils/customMiddleware.js';
+import { asyncHandler, setDownloadHeader, validate } from '../../utils/customMiddleware.js';
 
 const route = express.Router();
 
@@ -794,11 +794,7 @@ route.get(
 
     const remoteReadableStream = ssh.sftp.createReadStream(p);
 
-    res.setHeader(
-      'Content-Disposition',
-      "attachment; filename*=UTF-8''" + encodeURIComponent(_path.basename(path)[0]),
-    );
-    res.setHeader('Content-Type', 'application/octet-stream');
+    setDownloadHeader(res, _path.basename(path)[0]);
 
     await _f.streamp.pipeline(remoteReadableStream, res);
   }),
