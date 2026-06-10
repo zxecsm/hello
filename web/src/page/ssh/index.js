@@ -33,7 +33,6 @@ import {
   debounce,
   downloadFiles,
   getFiles,
-  getTextSize,
   isDarkMode,
   isIframe,
   isMobile,
@@ -561,10 +560,7 @@ function addCommand(e) {
           value: '',
           type: 'textarea',
           verify(val) {
-            return (
-              rMenu.validString(val, 1) ||
-              (getTextSize(val) > _d.fieldLength.customCodeSize ? '命令过长' : '')
-            );
+            return rMenu.validString(val, 1, _d.fieldLength.sshQuickLength);
           },
         },
       },
@@ -699,10 +695,7 @@ function hdComandEdit(e, obj) {
           value: obj.command,
           type: 'textarea',
           verify(val) {
-            return (
-              rMenu.validString(val, 1) ||
-              (getTextSize(val) > _d.fieldLength.customCodeSize ? '命令过长' : '')
-            );
+            return rMenu.validString(val, 1, _d.fieldLength.sshQuickLength);
           },
         },
       },

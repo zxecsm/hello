@@ -17,7 +17,7 @@ export const fieldLength = {
   email: 255, // 邮箱
   todoContent: 500, // 代办内容
   noteCategoryTitle: 30, // 笔记分类标题
-  noteSize: 300 * 1024, // 笔记大小
+  noteSize: 100 * 1024, // 笔记大小
   maxNoteCategory: 200, // 笔记分类个数
   maxPagesize: 200, // 分页条数
   bmkGroup: 200, // 书签分组
@@ -38,7 +38,9 @@ export const fieldLength = {
   maxMvSize: 200, // 最大MV大小MB
   maxLogoSize: 5, // 最大logo大小MB
   textFileSize: 10 * 1024 * 1024, // 文本文件编辑大小
-  jsonConfigSize: 1024 * 1024, // JSON配置文件大小
+  jsonConfigSize: 5 * 1024 * 1024, // JSON配置文件大小
+  sshQuickLength: 5000, // 快捷命令长度
+  sshKeyLength: 5000, // sshKey长度
   lrcSize: 20 * 1024, // 歌词大小
   customCodeSize: 100 * 1024, // 自定义代码大小
   notePreviewLength: 200, // 笔记预览长度

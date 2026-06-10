@@ -81,10 +81,12 @@ const fieldLength = {
   maxMvSize: 200, // 最大视频大小MB
   maxLogoSize: 5, // 最大logo大小MB
   textFileSize: 10 * 1024 * 1024, // 文本文件编辑大小
-  noteSize: 300 * 1024, // 笔记大小
+  noteSize: 100 * 1024, // 笔记大小
   lrcSize: 20 * 1024, // 歌词大小
   chatPageSize: 50, // 消息分页
   customCodeSize: 100 * 1024, // 自定义代码大小
+  sshQuickLength: 5000, // 快捷命令长度
+  sshKeyLength: 5000, // sshKey长度
   cdHistoryLength: 50, // 文件操作历史记录个数
   sshCommandHistoryLength: 50, // 执行命令历史记录个数
   shareTokenExp: 10, // 分享token过期时间（天）

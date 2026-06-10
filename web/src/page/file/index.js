@@ -33,7 +33,6 @@ import {
   getDuplicates,
   _mySlide,
   getDateDiff,
-  getTextSize,
   showQcode,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
@@ -1627,7 +1626,7 @@ function editSSHInfo(e) {
               value: obj.private_key || '',
               type: 'textarea',
               verify(val) {
-                return getTextSize(val) > _d.fieldLength.customCodeSize ? '密钥过长' : '';
+                return rMenu.validString(val, 0, _d.fieldLength.sshKeyLength);
               },
             },
             passphrase: {

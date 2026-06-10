@@ -1322,13 +1322,7 @@ route.post(
           data,
           V.object({
             type: V.string().trim().enum(['cmd', 'size']),
-            text: V.string()
-              .default('')
-              .allowEmpty()
-              .custom(
-                (v) => _f.getTextSize(v) <= fieldLength.customCodeSize,
-                `text 不能超过: ${fieldLength.customCodeSize} 字节`,
-              ),
+            text: V.string().default('').allowEmpty().max(fieldLength.sshQuickLength),
             cols: V.number().toNumber().default(0).min(0),
             rows: V.number().toNumber().default(0).min(0),
           }),

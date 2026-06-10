@@ -18,7 +18,6 @@ import {
   isMobile,
   hdTitleHighlight,
   isLogin,
-  getTextSize,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -517,7 +516,7 @@ function editSSHInfo(e, obj) {
           value: obj.private_key,
           type: 'textarea',
           verify(val) {
-            return getTextSize(val) > _d.fieldLength.customCodeSize ? '密钥过长' : '';
+            return rMenu.validString(val, 0, _d.fieldLength.sshKeyLength);
           },
         },
         passphrase: {
@@ -731,7 +730,7 @@ $headWrap
             value: '',
             type: 'textarea',
             verify(val) {
-              return getTextSize(val) > _d.fieldLength.customCodeSize ? '密钥过长' : '';
+              return rMenu.validString(val, 0, _d.fieldLength.sshKeyLength);
             },
           },
           passphrase: {

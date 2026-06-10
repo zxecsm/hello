@@ -164,14 +164,7 @@ route.post(
       password: V.string().trim().default('').allowEmpty().max(fieldLength.filename),
       passphrase: V.string().trim().default('').allowEmpty().max(fieldLength.filename),
       host: V.string().trim().min(1).max(fieldLength.filename),
-      private_key: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .custom(
-          (v) => _f.getTextSize(v) <= fieldLength.customCodeSize,
-          `ssh key不能超过: ${fieldLength.customCodeSize} 字节`,
-        ),
+      private_key: V.string().trim().default('').allowEmpty().max(fieldLength.sshKeyLength),
       auth_type: V.string().trim().enum(['password', 'key']),
     }),
   ),
@@ -206,14 +199,7 @@ route.post(
       password: V.string().trim().default('').allowEmpty().max(fieldLength.filename),
       passphrase: V.string().trim().default('').allowEmpty().max(fieldLength.filename),
       host: V.string().trim().min(1).max(fieldLength.filename),
-      private_key: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .custom(
-          (v) => _f.getTextSize(v) <= fieldLength.customCodeSize,
-          `ssh key不能超过: ${fieldLength.customCodeSize} 字节`,
-        ),
+      private_key: V.string().trim().default('').allowEmpty().max(fieldLength.sshKeyLength),
       auth_type: V.string().trim().enum(['password', 'key']),
     }),
   ),
@@ -475,13 +461,7 @@ route.post(
     V.object({
       id: V.string().trim().default('default').min(1).max(fieldLength.id).alphanumeric(),
       title: V.string().trim().min(1).max(fieldLength.title),
-      command: V.string()
-        .notEmpty()
-        .min(1)
-        .custom(
-          (v) => _f.getTextSize(v) <= fieldLength.customCodeSize,
-          `command 不能超过: ${fieldLength.customCodeSize} 字节`,
-        ),
+      command: V.string().notEmpty().min(1).max(fieldLength.sshQuickLength),
       enter: V.number().toInt().default(0).enum([0, 1]),
     }),
   ),
@@ -519,13 +499,7 @@ route.post(
       groupId: V.string().trim().default('default').min(1).max(fieldLength.id).alphanumeric(),
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       title: V.string().trim().min(1).max(fieldLength.title),
-      command: V.string()
-        .notEmpty()
-        .min(1)
-        .custom(
-          (v) => _f.getTextSize(v) <= fieldLength.customCodeSize,
-          `command 不能超过: ${fieldLength.customCodeSize} 字节`,
-        ),
+      command: V.string().notEmpty().min(1).max(fieldLength.sshQuickLength),
       enter: V.number().toInt().default(0).enum([0, 1]),
     }),
   ),
