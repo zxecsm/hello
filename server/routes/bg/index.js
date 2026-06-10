@@ -160,10 +160,10 @@ route.post(
     const ids = res.locals.ctx;
     const { account } = res.locals.hello.userinfo;
 
-    const list = unique([...(await getCollectBgList(account)), ...ids]).slice(
-      0,
-      fieldLength.collectBg,
-    );
+    const list = unique([...(await getCollectBgList(account)), ...ids]);
+
+    if (list.length > fieldLength.collectBg)
+      return resp.forbidden(res, `收藏壁纸限制${fieldLength.collectBg}`)();
 
     await updateCollecBgtList(account, list);
 

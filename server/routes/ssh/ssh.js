@@ -1,6 +1,7 @@
 import appConfig from '../../data/config.js';
 import _f from '../../utils/f.js';
 import { parseArrayJson } from '../../utils/utils.js';
+import { fieldLength } from '../config.js';
 // 读取SSH配置
 export async function readQuickCommands(account) {
   const configPath = appConfig.sshConfigDir(account, 'quick.json');
@@ -52,4 +53,11 @@ export async function quickMoveLocation(account, groupId, fromId, toId) {
 
     await writeQuickCommands(account, list);
   }
+}
+
+// 配置文件超出限制
+export async function quickProfileOutOfLimit(account) {
+  const stat = await _f.lstat(appConfig.sshConfigDir(account, 'quick.json'));
+  if (!stat) return false;
+  return stat.size > fieldLength.jsonConfigSize;
 }

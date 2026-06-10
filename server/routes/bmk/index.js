@@ -697,8 +697,8 @@ route.post(
 
     const total = await db('bmk_group').where({ account, state: 1 }).count();
 
-    if (total >= 200) {
-      return resp.forbidden(res, '分组限制200个')();
+    if (total >= fieldLength.bmkGroup) {
+      return resp.forbidden(res, `分组限制${fieldLength.bmkGroup}个`)();
     }
 
     const pid = nanoid();

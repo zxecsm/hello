@@ -10,6 +10,7 @@ import nanoid from '../../utils/nanoid.js';
 import {
   quickGroupMoveLocation,
   quickMoveLocation,
+  quickProfileOutOfLimit,
   readQuickCommands,
   writeQuickCommands,
 } from './ssh.js';
@@ -487,6 +488,7 @@ route.post(
   asyncHandler(async (_, res) => {
     const { command, id, title, enter } = res.locals.ctx;
     const { account } = res.locals.hello.userinfo;
+    if (await quickProfileOutOfLimit(account)) return resp.forbidden(res, '配置文件超出限制')();
     const quickGroupList = await readQuickCommands(account);
     const quickGroup = quickGroupList.find((item) => item.id === id);
 
@@ -637,6 +639,7 @@ route.post(
   asyncHandler(async (_, res) => {
     const { title } = res.locals.ctx;
     const { account } = res.locals.hello.userinfo;
+    if (await quickProfileOutOfLimit(account)) return resp.forbidden(res, '配置文件超出限制')();
     const quickGroupList = await readQuickCommands(account);
 
     quickGroupList.push({ id: nanoid(), title, commands: [] });

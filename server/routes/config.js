@@ -22,7 +22,7 @@ export const fieldLength = {
   maxPagesize: 200, // 分页条数
   bmkGroup: 200, // 书签分组
   bmk: 300, // 分组书签个数
-  songList: 100, // 歌单数
+  songList: 50, // 歌单数
   bgPageSize: 100, // 壁纸分页
   collectBg: 2000, // 收藏壁纸
   chatPageSize: 50, // 消息分页
@@ -38,6 +38,7 @@ export const fieldLength = {
   maxMvSize: 200, // 最大MV大小MB
   maxLogoSize: 5, // 最大logo大小MB
   textFileSize: 10 * 1024 * 1024, // 文本文件编辑大小
+  jsonConfigSize: 1024 * 1024, // JSON配置文件大小
   lrcSize: 20 * 1024, // 歌词大小
   customCodeSize: 100 * 1024, // 自定义代码大小
   notePreviewLength: 200, // 笔记预览长度

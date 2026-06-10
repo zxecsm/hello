@@ -11,7 +11,7 @@ import {
 } from '../../utils/utils.js';
 
 import { fieldLength } from '../config.js';
-import { readSearchConfig, writeSearchConfig } from './search.js';
+import { readSearchConfig, searchProfileOutOfLimit, writeSearchConfig } from './search.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
 import resp from '../../utils/response.js';
@@ -57,6 +57,7 @@ route.post(
   asyncHandler(async (_, res) => {
     const { title, link, color } = res.locals.ctx;
     const { account } = res.locals.hello.userinfo;
+    if (await searchProfileOutOfLimit(account)) return resp.forbidden(res, '配置文件超出限制')();
     const config = await readSearchConfig(account);
 
     const item = {
@@ -216,6 +217,7 @@ route.post(
     const { title, link } = res.locals.ctx;
 
     const { account } = res.locals.hello.userinfo;
+    if (await searchProfileOutOfLimit(account)) return resp.forbidden(res, '配置文件超出限制')();
     const config = await readSearchConfig(account);
 
     const item = {
