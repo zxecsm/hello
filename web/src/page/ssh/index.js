@@ -137,6 +137,15 @@ function getAllText(term) {
 
   return result;
 }
+function saveCommandHistory(command) {
+  if (!command) return;
+  const list = localData.get('sshCommandHistory').filter((item) => item && item !== command);
+  list.push(command);
+  if (list.length > _d.fieldLength.sshCommandHistoryLength) {
+    list.slice(-_d.fieldLength.sshCommandHistoryLength);
+  }
+  localData.set('sshCommandHistory', list);
+}
 const wInput = wrapInput($sshBox.find('.t_menu .inp_box input')[0], {
   update(val) {
     if (val === '') {
@@ -152,9 +161,34 @@ const wInput = wrapInput($sshBox.find('.t_menu .inp_box input')[0], {
     $(e.target).parent().removeClass('focus');
   },
   keyup(e) {
-    if (e.key === 'Enter') {
-      sendSSH(wInput.getValue(), 1);
+    const key = e.key;
+    if (key === 'Enter') {
+      const command = wInput.getValue();
+      saveCommandHistory(command);
+      sendSSH(command, 1);
       wInput.setValue('').focus();
+    } else if (['ArrowDown', 'ArrowUp'].includes(key)) {
+      let command = '';
+      const list = localData.get('sshCommandHistory');
+      if (list.length === 0) return;
+
+      let idx = list.findIndex((item) => item === wInput.getValue());
+
+      if (key === 'ArrowUp') {
+        if (--idx < 0) {
+          command = list[list.length - 1];
+        } else {
+          command = list[idx];
+        }
+      } else if (key === 'ArrowDown') {
+        if (++idx >= list.length) {
+          command = list[0];
+        } else {
+          command = list[idx];
+        }
+      }
+
+      wInput.setValue(command);
     }
   },
 });
@@ -974,11 +1008,34 @@ $sshBox
   })
   .on('click', '.t_menu .file_transfer_btn', selectDir)
   .on('click', '.t_menu .send_btn', function () {
-    sendSSH(wInput.getValue(), 1);
+    const command = wInput.getValue();
+    saveCommandHistory(command);
+    sendSSH(command, 1);
     wInput.setValue('').focus();
   })
   .on('click', '.t_menu .clear', function () {
     wInput.setValue('').focus();
+  })
+  .on('click', '.t_menu .history_btn', function (e) {
+    const list = localData.get('sshCommandHistory');
+    if (list.length === 0) return;
+    const data = list.map((item, idx) => ({
+      id: idx + 1 + '',
+      text: item,
+      beforeIcon: 'iconfont icon-history',
+      param: { value: item },
+    }));
+    rMenu.selectMenu(
+      e,
+      data.reverse(),
+      ({ close, id, param }) => {
+        if (id) {
+          wInput.setValue(param.value).focus();
+          close();
+        }
+      },
+      '历史命令',
+    );
   })
   .on('click', '.t_menu .log_btn', function () {
     if ($logText.css('display') === 'none') {

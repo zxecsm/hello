@@ -85,7 +85,8 @@ const fieldLength = {
   lrcSize: 20 * 1024, // 歌词大小
   chatPageSize: 50, // 消息分页
   customCodeSize: 100 * 1024, // 自定义代码大小
-  cdHistoryLength: 100, // 文件操作历史记录个数
+  cdHistoryLength: 50, // 文件操作历史记录个数
+  sshCommandHistoryLength: 50, // 执行命令历史记录个数
   shareTokenExp: 10, // 分享token过期时间（天）
 };
 const _d = {
