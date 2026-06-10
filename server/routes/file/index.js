@@ -482,6 +482,8 @@ route.post(
 
     if (type === 'add') {
       list.push(path);
+      if (list.length > fieldLength.cdHistoryLength)
+        return resp.forbidden(res, `收藏目录限制${fieldLength.cdHistoryLength}个`)();
     }
 
     await writeFavorites(account, list);

@@ -64,3 +64,7 @@ export function reqSearchChangeTranslator(data) {
 export function reqSearchDeleteTranslatorLogo(data) {
   return _postAjax('/search/delete-translator-logo', data);
 }
+// 切换搜索提示词
+export function reqSearchChangeSearchWord(data) {
+  return _postAjax('/search/change-search-word', data);
+}

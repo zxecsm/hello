@@ -11,7 +11,7 @@ import {
 } from '../../utils/utils.js';
 
 import { fieldLength } from '../config.js';
-import { readSearchConfig, searchProfileOutOfLimit, writeSearchConfig } from './search.js';
+import { readSearchConfig, writeSearchConfig } from './search.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
 import resp from '../../utils/response.js';
@@ -57,7 +57,6 @@ route.post(
   asyncHandler(async (_, res) => {
     const { title, link, color } = res.locals.ctx;
     const { account } = res.locals.hello.userinfo;
-    if (await searchProfileOutOfLimit(account)) return resp.forbidden(res, '配置文件超出限制')();
     const config = await readSearchConfig(account);
 
     const item = {
@@ -69,6 +68,8 @@ route.post(
     };
 
     if (Array.isArray(config.searchEngineData)) {
+      if (config.searchEngineData.length >= fieldLength.searchEngineLength)
+        return resp.forbidden(res, `搜索引擎限制${fieldLength.searchEngineLength}个`)();
       config.searchEngineData.push(item);
     } else {
       config.searchEngineData = [item];
@@ -168,6 +169,29 @@ route.post(
   }),
 );
 
+// 切换搜索提示词
+route.post(
+  '/change-search-word',
+  validate(
+    'body',
+    V.object({
+      idx: V.number().toInt().min(0).max(100),
+    }),
+  ),
+  asyncHandler(async (_, res) => {
+    const { idx } = res.locals.ctx;
+    const { account } = res.locals.hello.userinfo;
+    const config = await readSearchConfig(account);
+
+    config.searchWordIdx = idx;
+
+    await writeSearchConfig(account, config);
+    syncUpdateData(res, 'searchConfig');
+
+    resp.success(res, '切换搜索提示词成功')();
+  }),
+);
+
 // 清除搜索引擎LOGO
 route.post(
   '/delete-engine-logo',
@@ -217,7 +241,6 @@ route.post(
     const { title, link } = res.locals.ctx;
 
     const { account } = res.locals.hello.userinfo;
-    if (await searchProfileOutOfLimit(account)) return resp.forbidden(res, '配置文件超出限制')();
     const config = await readSearchConfig(account);
 
     const item = {
@@ -228,6 +251,8 @@ route.post(
     };
 
     if (Array.isArray(config.translatorData)) {
+      if (config.translatorData.length >= fieldLength.searchEngineLength)
+        return resp.forbidden(res, `翻译接口限制${fieldLength.searchEngineLength}个`)();
       config.translatorData.push(item);
     } else {
       config.translatorData = [item];

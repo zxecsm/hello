@@ -1397,6 +1397,7 @@ route.post(
                 'file',
                 'searchConfig',
                 'quickCommand',
+                'historyCommands',
               ]),
             id: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
           }),

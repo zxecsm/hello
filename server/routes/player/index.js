@@ -971,7 +971,7 @@ route.post(
     const list = await getMusicList(account);
 
     if (list.length >= fieldLength.songList + 2) {
-      return resp.forbidden(res, `歌单限制${fieldLength.songList}`)();
+      return resp.forbidden(res, `歌单限制${fieldLength.songList}个`)();
     }
 
     const id = nanoid();

@@ -163,7 +163,7 @@ route.post(
     const list = unique([...(await getCollectBgList(account)), ...ids]);
 
     if (list.length > fieldLength.collectBg)
-      return resp.forbidden(res, `收藏壁纸限制${fieldLength.collectBg}`)();
+      return resp.forbidden(res, `收藏壁纸限制${fieldLength.collectBg}个`)();
 
     await updateCollecBgtList(account, list);
 

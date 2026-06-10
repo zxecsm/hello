@@ -18,6 +18,8 @@ import {
   reqSSHDeleteQuickGroup,
   reqSSHEditQuick,
   reqSSHEditQuickGroup,
+  reqSSHGetHistoryCommands,
+  reqSSHHistoryCommands,
   reqSSHMoveQuick,
   reqSSHMoveQuickGroup,
   reqSSHMoveToGroup,
@@ -66,6 +68,7 @@ const sshInfo = localData.get('sshInfo');
 if (!HASH) {
   pageErr();
 }
+let historyCommands = [];
 // xterm.js
 // 现代深色主题 (类似 VS Code Default Dark+)
 const darkTheme = {
@@ -136,14 +139,23 @@ function getAllText(term) {
 
   return result;
 }
+function updateHistoryCommands() {
+  reqSSHGetHistoryCommands()
+    .then((res) => {
+      if (res.code === 1) {
+        historyCommands = res.data;
+      }
+    })
+    .catch(() => {});
+}
+updateHistoryCommands();
 function saveCommandHistory(command) {
   if (!command) return;
-  const list = localData.get('sshCommandHistory').filter((item) => item && item !== command);
-  list.push(command);
-  if (list.length > _d.fieldLength.sshCommandHistoryLength) {
-    list.slice(-_d.fieldLength.sshCommandHistoryLength);
-  }
-  localData.set('sshCommandHistory', list);
+  reqSSHHistoryCommands({ command })
+    .then(() => {
+      updateHistoryCommands();
+    })
+    .catch(() => {});
 }
 const wInput = wrapInput($sshBox.find('.t_menu .inp_box input')[0], {
   update(val) {
@@ -168,22 +180,21 @@ const wInput = wrapInput($sshBox.find('.t_menu .inp_box input')[0], {
       wInput.setValue('').focus();
     } else if (['ArrowDown', 'ArrowUp'].includes(key)) {
       let command = '';
-      const list = localData.get('sshCommandHistory');
-      if (list.length === 0) return;
+      if (historyCommands.length === 0) return;
 
-      let idx = list.findIndex((item) => item === wInput.getValue());
+      let idx = historyCommands.findIndex((item) => item === wInput.getValue());
 
       if (key === 'ArrowUp') {
         if (--idx < 0) {
-          command = list[list.length - 1];
+          command = historyCommands[historyCommands.length - 1];
         } else {
-          command = list[idx];
+          command = historyCommands[idx];
         }
       } else if (key === 'ArrowDown') {
-        if (++idx >= list.length) {
-          command = list[0];
+        if (++idx >= historyCommands.length) {
+          command = historyCommands[0];
         } else {
-          command = list[idx];
+          command = historyCommands[idx];
         }
       }
 
@@ -218,8 +229,12 @@ realtime.init().add((res) => {
         updateTermSize();
       }
       term.write(data);
-    } else if (type === 'updatedata' && data.flag === 'quickCommand') {
-      renderList();
+    } else if (type === 'updatedata') {
+      if (data.flag === 'quickCommand') {
+        renderList();
+      } else if (data.flag === 'historyCommands') {
+        updateHistoryCommands();
+      }
     }
     otherWindowMsg(item);
   });
@@ -1010,9 +1025,8 @@ $sshBox
     wInput.setValue('').focus();
   })
   .on('click', '.t_menu .history_btn', function (e) {
-    const list = localData.get('sshCommandHistory');
-    if (list.length === 0) return;
-    const data = list.map((item, idx) => ({
+    if (historyCommands.length === 0) return;
+    const data = historyCommands.map((item, idx) => ({
       id: idx + 1 + '',
       text: item,
       beforeIcon: 'iconfont icon-history',

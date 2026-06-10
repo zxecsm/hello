@@ -11,7 +11,9 @@ import {
   quickGroupMoveLocation,
   quickMoveLocation,
   quickProfileOutOfLimit,
+  readHistoryCommands,
   readQuickCommands,
+  writeHistoryCommands,
   writeQuickCommands,
 } from './ssh.js';
 import _path from '../../utils/path.js';
@@ -360,7 +362,7 @@ route.post(
     const total = await db('ssh_category').count();
 
     if (total >= fieldLength.maxNoteCategory) {
-      return resp.forbidden(res, `类型限制${fieldLength.maxNoteCategory}`)();
+      return resp.forbidden(res, `类型限制${fieldLength.maxNoteCategory}个`)();
     }
     await db('ssh_category').insert({
       id: nanoid(),
@@ -797,6 +799,44 @@ route.get(
     setDownloadHeader(res, _path.basename(path)[0]);
 
     await _f.streamp.pipeline(remoteReadableStream, res);
+  }),
+);
+
+// 获取历史命令
+route.get(
+  '/history-commands',
+  asyncHandler(async (_, res) => {
+    const { account } = res.locals.hello.userinfo;
+    resp.success(res, 'ok', await readHistoryCommands(account))();
+  }),
+);
+
+// 保存历史命令
+route.post(
+  '/history-commands',
+  validate(
+    'body',
+    V.object({
+      command: V.string().trim().min(1).max(fieldLength.sshQuickLength),
+    }),
+  ),
+  asyncHandler(async (_, res) => {
+    const { command } = res.locals.ctx;
+
+    const { account } = res.locals.hello.userinfo;
+    let list = (await readHistoryCommands(account)).filter((item) => item !== command);
+
+    list.push(command);
+
+    if (list.length > fieldLength.sshHistoryCommandsLength) {
+      list.slice(-fieldLength.sshHistoryCommandsLength);
+    }
+
+    await writeHistoryCommands(account, list);
+
+    syncUpdateData(res, 'historyCommands');
+
+    resp.success(res, `保存历史命令成功`)();
   }),
 );
 

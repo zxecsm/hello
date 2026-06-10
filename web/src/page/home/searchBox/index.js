@@ -40,6 +40,7 @@ import {
   reqSearchAddEngine,
   reqSearchAddTranslator,
   reqSearchChangeEngine,
+  reqSearchChangeSearchWord,
   reqSearchChangeTranslator,
   reqSearchConfig,
   reqSearchDelete,
@@ -544,6 +545,14 @@ export async function updateSearchConfig(loading) {
         curtranslatorID = res.data.translatorid;
         localData.set('translator', res.data.translatorid);
       }
+      if (res.data.hasOwnProperty('searchWordIdx')) {
+        try {
+          if (_d.searchWord[res.data.searchWordIdx]) {
+            searchWordIdx = res.data.searchWordIdx;
+            localData.set('searchWordIdx', searchWordIdx);
+          }
+        } catch {}
+      }
       await switchSearchEngine();
     }
     loading?.end();
@@ -839,6 +848,9 @@ function switchSearchCallWord(e) {
     ({ close, id }) => {
       if (id) {
         searchWordIdx = id - 1;
+        reqSearchChangeSearchWord({ idx: searchWordIdx })
+          .then(() => {})
+          .catch(() => {});
         localData.set('searchWordIdx', searchWordIdx);
         close(1);
         _msg.success();

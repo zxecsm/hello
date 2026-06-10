@@ -20,6 +20,19 @@ export async function writeQuickCommands(account, config) {
   return _f.writeFile(configPath, JSON.stringify(config, null, 2));
 }
 
+// 读取历史命令
+export async function readHistoryCommands(account) {
+  return (await _f.readFile(appConfig.sshConfigDir(account, 'history_commands'), null, ''))
+    .toString()
+    .split('\n')
+    .filter(Boolean);
+}
+
+// 写入历史命令
+export async function writeHistoryCommands(account, list) {
+  await _f.writeFile(appConfig.sshConfigDir(account, 'history_commands'), list.join('\n'));
+}
+
 // 分组移动位置
 export async function quickGroupMoveLocation(account, fId, tId) {
   if (fId === tId) return;

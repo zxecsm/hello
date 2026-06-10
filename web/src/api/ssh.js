@@ -92,6 +92,14 @@ export function reqSSHInfo(data) {
 export function reqSSHSftpList(data) {
   return _getAjax(`/ssh/sftp-list`, data);
 }
+// 获取历史命令
+export function reqSSHGetHistoryCommands() {
+  return _getAjax(`/ssh/history-commands`);
+}
+// 保存历史命令
+export function reqSSHHistoryCommands(data) {
+  return _postAjax(`/ssh/history-commands`, data);
+}
 // sftp上传
 export function reqSSHSftpUp(data, file, cb, signal) {
   return _upFile(`/ssh/sftp-up`, data, file, cb, signal);

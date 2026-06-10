@@ -41,8 +41,10 @@ export const fieldLength = {
   jsonConfigSize: 5 * 1024 * 1024, // JSON配置文件大小
   sshQuickLength: 5000, // 快捷命令长度
   sshKeyLength: 5000, // sshKey长度
+  sshHistoryCommandsLength: 100, // 保存历史命令个数
   lrcSize: 20 * 1024, // 歌词大小
   customCodeSize: 100 * 1024, // 自定义代码大小
   notePreviewLength: 200, // 笔记预览长度
   cdHistoryLength: 100, // 文件操作历史记录个数
+  searchEngineLength: 100, // 搜索引擎个数
 };

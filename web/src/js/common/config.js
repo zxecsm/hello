@@ -88,7 +88,6 @@ const fieldLength = {
   sshQuickLength: 5000, // 快捷命令长度
   sshKeyLength: 5000, // sshKey长度
   cdHistoryLength: 50, // 文件操作历史记录个数
-  sshCommandHistoryLength: 50, // 执行命令历史记录个数
   shareTokenExp: 10, // 分享token过期时间（天）
 };
 const _d = {

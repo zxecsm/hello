@@ -635,7 +635,7 @@ route.post(
     const total = await db('note_category').count();
 
     if (total >= fieldLength.maxNoteCategory) {
-      return resp.forbidden(res, `类型限制${fieldLength.maxNoteCategory}`)();
+      return resp.forbidden(res, `类型限制${fieldLength.maxNoteCategory}个`)();
     }
     await db('note_category').insert({
       id: nanoid(),
