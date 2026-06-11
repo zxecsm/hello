@@ -94,11 +94,11 @@ export function reqSSHSftpList(data) {
 }
 // 获取历史命令
 export function reqSSHGetHistoryCommands() {
-  return _getAjax(`/ssh/history-commands`);
+  return _getAjax(`/ssh/history-commands`, {}, { load: false, stopErrorMsg: true });
 }
 // 保存历史命令
 export function reqSSHHistoryCommands(data) {
-  return _postAjax(`/ssh/history-commands`, data);
+  return _postAjax(`/ssh/history-commands`, data, { load: false, stopErrorMsg: true });
 }
 // sftp上传
 export function reqSSHSftpUp(data, file, cb, signal) {

@@ -845,15 +845,23 @@ function switchSearchCallWord(e) {
   rMenu.selectMenu(
     e,
     data,
-    ({ close, id }) => {
+    ({ close, id, loading }) => {
       if (id) {
-        searchWordIdx = id - 1;
-        reqSearchChangeSearchWord({ idx: searchWordIdx })
-          .then(() => {})
-          .catch(() => {});
-        localData.set('searchWordIdx', searchWordIdx);
-        close(1);
-        _msg.success();
+        const idx = id - 1;
+        loading.start();
+        reqSearchChangeSearchWord({ idx })
+          .then((res) => {
+            if (res.code === 1) {
+              loading.end();
+              searchWordIdx = idx;
+              localData.set('searchWordIdx', searchWordIdx);
+              close(1);
+              _msg.success();
+            }
+          })
+          .catch(() => {
+            loading.end();
+          });
       }
     },
     '选择提示词服务',
