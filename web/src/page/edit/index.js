@@ -6,7 +6,6 @@ import '../note/md.less';
 import {
   queryURLParams,
   myOpen,
-  throttle,
   debounce,
   formatDate,
   isImgFile,
@@ -439,7 +438,7 @@ $editBox
       ctrl = e.ctrlKey || e.metaKey;
     if (ctrl && key === 's') {
       if (HASH) {
-        hdClickSaveBtn();
+        saveNote();
         e.preventDefault();
       }
     }
@@ -677,8 +676,8 @@ async function settingEdit(e) {
         loading.start();
         reqNoteHistoryState({ state: param.value ? 0 : 1 })
           .then((res) => {
+            loading.end();
             if (res.code === 1) {
-              loading.end();
               if (param.value) {
                 curItem.afterIcon = 'iconfont icon-kaiguan-guan';
                 curItem.param.value = false;
@@ -724,7 +723,6 @@ function previewState() {
   }
   $editBox.css('display', 'block');
 }
-const hdClickSaveBtn = throttle(saveNote, 1000);
 $headBtns
   .on('click', '.setting_btn', settingEdit)
   .on('click', '.history_btn', () => {
@@ -759,7 +757,7 @@ $headBtns
   .on('click', '.h_go_home', function () {
     myOpen('/');
   })
-  .on('click', '.save_btn', hdClickSaveBtn)
+  .on('click', '.save_btn', saveNote)
   .on('click', '.undo_btn', function () {
     editor.undo();
   })

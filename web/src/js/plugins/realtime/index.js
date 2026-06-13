@@ -10,7 +10,7 @@ const realtime = {
     return this;
   },
   read() {
-    reqUserGetRealTime({ flag: this.flag, page: this.title })
+    reqUserGetRealTime({ flag: this.flag, page: this.title || window._pageName })
       .then((res) => {
         this.flag = res.data.flag; // 更新标识
         if (res.code === 1) {

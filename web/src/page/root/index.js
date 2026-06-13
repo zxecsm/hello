@@ -876,8 +876,8 @@ function handleFileCacheExp(e) {
       loading.start();
       reqRootChangeCacheTime(inp)
         .then((res) => {
+          loading.end();
           if (res.code === 1) {
-            loading.end();
             close();
             dataObj.cacheExp = res.data;
             _msg.success(res.codeText);
@@ -999,8 +999,8 @@ function handlePubApi(e) {
             loading.start();
             reqRootPubApiState(obj)
               .then((res) => {
+                loading.end();
                 if (res.code === 1) {
-                  loading.end();
                   close();
                   dataObj.pubApi = res.data;
                   _msg.success(res.codeText);
@@ -1037,8 +1037,8 @@ function handlePubApi(e) {
             loading.start();
             reqRootFaviconSpareApi({ link })
               .then((res) => {
+                loading.end();
                 if (res.code === 1) {
-                  loading.end();
                   close();
                   dataObj.faviconSpareApi = link;
                   _msg.success(res.codeText);
@@ -1131,8 +1131,8 @@ $userBtns
         loading.start();
         reqRootCreateAccount({ username, password: md5.getStringHash(password) })
           .then((res) => {
+            loading.end();
             if (res.code === 1) {
-              loading.end();
               close();
               _msg.success(res.codeText);
               getUserList();

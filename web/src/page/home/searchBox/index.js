@@ -851,8 +851,8 @@ function switchSearchCallWord(e) {
         loading.start();
         reqSearchChangeSearchWord({ idx })
           .then((res) => {
+            loading.end();
             if (res.code === 1) {
-              loading.end();
               searchWordIdx = idx;
               localData.set('searchWordIdx', searchWordIdx);
               close(1);
@@ -1011,8 +1011,8 @@ function editEngine(e, obj, resetMenu, preClose) {
       inp.id = engineid;
       reqSearchEditEngine(inp)
         .then(async (res) => {
+          loading.end();
           if (res.code === 1) {
-            loading.end();
             await updateSearchConfig(loading);
             _msg.success(res.codeText);
             close();
@@ -1069,8 +1069,8 @@ function handleEngineLogo(e, obj, resetMenu, preClose) {
               loading.start();
               reqSearchDeleteEngineLogo({ id: engineid })
                 .then(async (res) => {
+                  loading.end();
                   if (res.code === 1) {
-                    loading.end();
                     await updateSearchConfig(loading);
                     _msg.success(res.codeText);
                     resetMenu(getSearchEngineList());
@@ -1095,8 +1095,8 @@ function deleteEngine(e, obj, loading, resetMenu, close) {
       loading.start();
       reqSearchDeleteEngine({ id: obj.id })
         .then(async (res) => {
+          loading.end();
           if (res.code === 1) {
-            loading.end();
             await updateSearchConfig(loading);
             _msg.success(res.codeText);
             resetMenu(getSearchEngineList());
@@ -1145,8 +1145,8 @@ function addEngine(e, resetMenu) {
       loading.start();
       reqSearchAddEngine(inp)
         .then(async (res) => {
+          loading.end();
           if (res.code === 1) {
-            loading.end();
             await updateSearchConfig(loading);
             _msg.success(res.codeText);
             close();
@@ -1215,8 +1215,8 @@ function selectSearch(e) {
         loading.start();
         reqSearchChangeEngine({ id })
           .then(async (res) => {
+            loading.end();
             if (res.code === 1) {
-              loading.end();
               await updateSearchConfig(loading);
               _msg.success('切换成功');
               close(true);
@@ -1289,8 +1289,8 @@ function editTranslator(e, obj, resetMenu, preClose) {
       inp.id = tid;
       reqSearchEditTranslator(inp)
         .then(async (res) => {
+          loading.end();
           if (res.code === 1) {
-            loading.end();
             await updateSearchConfig(loading);
             _msg.success(res.codeText);
             close();
@@ -1347,8 +1347,8 @@ function handleTranslatorLogo(e, obj, resetMenu, preClose) {
               loading.start();
               reqSearchDeleteTranslatorLogo({ id: tid })
                 .then(async (res) => {
+                  loading.end();
                   if (res.code === 1) {
-                    loading.end();
                     await updateSearchConfig(loading);
                     _msg.success(res.codeText);
                     resetMenu(getTranslatorList());
@@ -1373,8 +1373,8 @@ function deleteTranslator(e, obj, loading, resetMenu, close) {
       loading.start();
       reqSearchDeleteTranslator({ id: obj.id })
         .then(async (res) => {
+          loading.end();
           if (res.code === 1) {
-            loading.end();
             await updateSearchConfig(loading);
             _msg.success(res.codeText);
             resetMenu(getTranslatorList());
@@ -1415,8 +1415,8 @@ function addTranslator(e, resetMenu) {
       loading.start();
       reqSearchAddTranslator(inp)
         .then(async (res) => {
+          loading.end();
           if (res.code === 1) {
-            loading.end();
             await updateSearchConfig(loading);
             _msg.success(res.codeText);
             close();
@@ -1485,8 +1485,8 @@ function selectTranslator(e) {
         loading.start();
         reqSearchChangeTranslator({ id })
           .then(async (res) => {
+            loading.end();
             if (res.code === 1) {
-              loading.end();
               await updateSearchConfig(loading);
               _msg.success('切换成功');
               close(true);

@@ -951,8 +951,8 @@ function selectDir(e, path = '/', loading) {
   loading && loading.start();
   reqSSHSftpList({ path })
     .then((res) => {
+      loading && loading.end();
       if (res.code === 1) {
-        loading && loading.end();
         const list = res.data;
         if (list.length === 0) return _msg.error(`${path} 为空目录`);
         rMenu.selectMenu(

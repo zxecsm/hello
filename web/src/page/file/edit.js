@@ -192,8 +192,8 @@ async function settingMenu(e) {
         loading.start();
         reqFileHistoryState({ state: param.value ? 0 : 1 })
           .then((res) => {
+            loading.end();
             if (res.code === 1) {
-              loading.end();
               if (param.value) {
                 curItem.afterIcon = 'iconfont icon-kaiguan-guan';
                 curItem.param.value = false;

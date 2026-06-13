@@ -1276,7 +1276,7 @@ route.get(
     }
 
     // 保活SSH连接
-    resetSSHExpireTime(temid);
+    if (page === 'ssh') resetSSHExpireTime(temid);
   }),
 );
 

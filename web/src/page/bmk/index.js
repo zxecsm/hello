@@ -815,7 +815,7 @@ $headWrap
 function getSelectItem() {
   const $itemBox = $contentWrap.find('.item_box'),
     $checkArr = $itemBox.filter((_, item) => $(item).find('.check_state').attr('check') === 'y');
-  if ($checkArr.length === 0) return;
+  if ($checkArr.length === 0) return [];
   let arr = [];
   $checkArr.each((i, v) => {
     arr.push(v.getAttribute('data-id'));
@@ -830,6 +830,7 @@ function getSelectItem() {
 function hdDeleteCheck() {
   if (runState !== 'own') return;
   const arr = getSelectItem();
+  if (arr.length === 0) return;
   reqBmkDeleteBmk({ ids: arr.map((item) => item.id) })
     .then((result) => {
       if (result.code === 1) {
@@ -843,6 +844,7 @@ function hdDeleteCheck() {
 
 function hdBmkMoveList(e) {
   const arr = getSelectItem();
+  if (arr.length === 0) return;
   movebmk(e, arr);
 }
 const boxSelector = new BoxSelector(document, {

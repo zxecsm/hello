@@ -897,8 +897,8 @@ function rightList(e, obj, el) {
         const p = _path.normalizeNoSlash('/file', obj.path, obj.name);
         reqUserFileToken({ p })
           .then((res) => {
+            loading.end();
             if (res.code === 1) {
-              loading.end();
               close();
               showQcode(
                 e,
@@ -919,8 +919,8 @@ function rightList(e, obj, el) {
           type: obj.favorite ? 'del' : 'add',
         })
           .then((res) => {
+            loading.end();
             if (res.code === 1) {
-              loading.end();
               close();
               updateCurPage();
             }
