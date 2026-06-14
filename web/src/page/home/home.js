@@ -81,9 +81,9 @@ export function shakeChat() {
   target.classList.add('shake');
   closeShake(target);
 }
-function isNotify(from, notify, fromID) {
+function isNotify(from, to, notify, fromID) {
   const acc = localData.get('account');
-  return (from !== acc || (from === acc && fromID !== from + _d.temid)) && notify === 1;
+  return (from !== acc || (from === to && fromID !== from + _d.temid)) && notify === 1;
 }
 
 export function otherWindowMsg(msg) {
@@ -98,8 +98,8 @@ export function otherWindowMsg(msg) {
   } else if (type === 'allowLogin') {
     handleAllowLoginMsg(data);
   } else if (type === 'chat') {
-    const { flag, from, msgData } = data;
-    if (!isNotify(from, notify, fromID)) return;
+    const { flag, from, to, msgData } = data;
+    if (!isNotify(from.account, to, notify, fromID)) return;
     let text = '';
     // 新消息处理
     if (flag === 'addmsg') {

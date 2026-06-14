@@ -675,11 +675,8 @@ function isCurChatRoom(chatAccount, from, to) {
     (from === userInfo.account && to === chatAccount)
   );
 }
-function isNotify(from, notify, fromID) {
-  return (
-    (from !== userInfo.account || (from === userInfo.account && fromID !== from + _d.temid)) &&
-    notify === 1
-  );
+function isNotify(from, to, notify, fromID) {
+  return (from !== userInfo.account || (from === to && fromID !== from + _d.temid)) && notify === 1;
 }
 function isAlert(from) {
   return from !== userInfo.account;
@@ -690,7 +687,7 @@ function hdChatType(resData, notify, fromID) {
   const chatAccount = setCurChatAccount(); //当前聊天框
   // 新消息处理
   if (flag === 'addmsg') {
-    if (isNotify(from.account, notify, fromID)) {
+    if (isNotify(from.account, to, notify, fromID)) {
       chatMessageNotification(
         from.des || from.username,
         msgData.content,
@@ -767,7 +764,7 @@ function hdChatType(resData, notify, fromID) {
     }
     // 撤回消息
   } else if (flag === 'del') {
-    if (isNotify(from.account, notify, fromID)) {
+    if (isNotify(from.account, to, notify, fromID)) {
       chatMessageNotification(from.des || from.username, '撤回消息', from.account, to, from.logo);
     }
     if (!chatRoomWrapIsHide()) {
@@ -784,7 +781,7 @@ function hdChatType(resData, notify, fromID) {
     }
     // 清空聊天框
   } else if (flag === 'clear') {
-    if (isNotify(from.account, notify, fromID)) {
+    if (isNotify(from.account, to, notify, fromID)) {
       chatMessageNotification(
         from.des || from.username,
         '清空聊天记录',
@@ -801,7 +798,7 @@ function hdChatType(resData, notify, fromID) {
       }
     }
   } else if (flag === 'shake') {
-    if (isNotify(from.account, notify, fromID) && to !== _d.chatRoomAccount) {
+    if (isNotify(from.account, to, notify, fromID) && to !== _d.chatRoomAccount) {
       chatMessageNotification(
         from.des || from.username,
         '抖了一下窗口',
