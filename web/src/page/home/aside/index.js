@@ -54,7 +54,7 @@ import toolTip from '../../../js/plugins/tooltip/index.js';
 import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
-import { BoxSelector, MouseElementTracker } from '../../../js/utils/boxSelector.js';
+import { BoxSelector, isKeyDown, MouseElementTracker } from '../../../js/utils/boxSelector.js';
 import localData from '../../../js/common/localData.js';
 
 const $asideBtn = $('.aside_btn'),
@@ -593,10 +593,18 @@ $asideWrap
   .on('click', '.foot_menu .flex_wrap div', hdCheckAll)
   .on('click', '.check_bm', function (e) {
     e.stopPropagation();
-    checkAsideBm(this);
+    if ((isKeyDown('control') || isKeyDown('shift')) && getAsideCheckBmItem().length > 0) {
+      shiftCheckBm(this);
+    } else {
+      checkAsideBm(this);
+    }
   })
   .on('click', '.check_bmlist', function () {
-    checkAsideBmList(this);
+    if ((isKeyDown('control') || isKeyDown('shift')) && getAsideCheckBmList().length > 0) {
+      shiftCheckBmList(this);
+    } else {
+      checkAsideBmList(this);
+    }
   })
   .on('click', '.delete_bm', function () {
     if (isSelectingBm) {
@@ -633,9 +641,23 @@ $asideWrap
       hideAside();
     }
   });
-
+function shiftCheckBm(el) {
+  const list = [...$aside[0].querySelectorAll('.bm_item .check_bm')];
+  const sidx = list.findIndex((item) => item === el);
+  const cidx = list.findIndex((item) => item.getAttribute('check') === 'y');
+  if (sidx === cidx) checkAsideBm(el);
+  list.forEach((item, idx) => {
+    if (
+      ((cidx > sidx && idx >= sidx && idx <= cidx) ||
+        (cidx < sidx && (idx >= cidx) & (idx <= sidx))) &&
+      item.getAttribute('check') === 'n'
+    )
+      checkAsideBm(item, false);
+  });
+  updateBmSelectInfo();
+}
 // 选中书签
-function checkAsideBm(el) {
+function checkAsideBm(el, updateSelect = true) {
   const $this = $(el),
     check = $this.attr('check');
   if (check === 'n') {
@@ -643,7 +665,7 @@ function checkAsideBm(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
-  updateBmSelectInfo();
+  if (updateSelect) updateBmSelectInfo();
 }
 function updateBmSelectInfo() {
   const $sidenav = $aside.find('.bm_item'),
@@ -661,9 +683,23 @@ function updateBmSelectInfo() {
     });
   }
 }
-
+function shiftCheckBmList(el) {
+  const list = [...$aside[0].querySelectorAll('.list_title .check_bmlist')];
+  const sidx = list.findIndex((item) => item === el);
+  const cidx = list.findIndex((item) => item.getAttribute('check') === 'y');
+  if (sidx === cidx) checkAsideBmList(el);
+  list.forEach((item, idx) => {
+    if (
+      ((cidx > sidx && idx >= sidx && idx <= cidx) ||
+        (cidx < sidx && (idx >= cidx) & (idx <= sidx))) &&
+      item.getAttribute('check') === 'n'
+    )
+      checkAsideBmList(item, false);
+  });
+  updateBmListSelectInfo();
+}
 // 选中分组
-function checkAsideBmList(el) {
+function checkAsideBmList(el, updateSelect = true) {
   const $this = $(el),
     check = $this.attr('check');
   if (check === 'n') {
@@ -671,7 +707,7 @@ function checkAsideBmList(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
-  updateBmListSelectInfo();
+  if (updateSelect) updateBmListSelectInfo();
 }
 function updateBmListSelectInfo() {
   const $sidenav = $aside.find('.list_title'),

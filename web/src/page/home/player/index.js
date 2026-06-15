@@ -142,7 +142,7 @@ import notifyMusicControlPanel from './notifyMusicControlPanel.js';
 import md5 from '../../../js/utils/md5.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
-import { BoxSelector, MouseElementTracker } from '../../../js/utils/boxSelector.js';
+import { BoxSelector, isKeyDown, MouseElementTracker } from '../../../js/utils/boxSelector.js';
 import localData from '../../../js/common/localData.js';
 const $musicPlayerBox = $('.music_player_box'),
   $musicFootProgress = $musicPlayerBox.find('.music_foot_progress'),
@@ -441,7 +441,7 @@ const musicSearchInput = wrapInput($musicHeadWrap.find('.search_music_inp input'
     }
   },
   keyup(e) {
-    if (e.key === 'Enter') {
+    if (e.key.toLowerCase() === 'enter') {
       getSearchSongs(1, 1);
     }
   },
@@ -2196,10 +2196,29 @@ $msuicContentBox
     });
   })
   .on('click', '.check_state', function () {
-    checkedSong(this);
+    if ((isKeyDown('control') || isKeyDown('shift')) && getCheckSongs().length > 0) {
+      shiftCheck(this);
+    } else {
+      checkedSong(this);
+    }
   });
+function shiftCheck(el) {
+  const list = [...$msuicContentBox[0].querySelectorAll('.list_items_wrap .check_state')];
+  const sidx = list.findIndex((item) => item === el);
+  const cidx = list.findIndex((item) => item.getAttribute('check') === 'y');
+  if (sidx === cidx) checkedSong(el);
+  list.forEach((item, idx) => {
+    if (
+      ((cidx > sidx && idx >= sidx && idx <= cidx) ||
+        (cidx < sidx && (idx >= cidx) & (idx <= sidx))) &&
+      item.getAttribute('check') === 'n'
+    )
+      checkedSong(item, false);
+  });
+  updateSelectSongsInfo();
+}
 // 选中歌曲
-function checkedSong(el) {
+function checkedSong(el, updateSelect = true) {
   const $this = $(el),
     check = $this.attr('check');
   if (check === 'n') {
@@ -2207,7 +2226,7 @@ function checkedSong(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
-  updateSelectSongsInfo();
+  if (updateSelect) updateSelectSongsInfo();
 }
 function updateSelectSongsInfo() {
   const $checks = $msuicContentBox.find('.list_items_wrap .check_state'),

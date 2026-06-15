@@ -82,7 +82,12 @@ import _path from '../../js/utils/path';
 import { reqTaskList } from '../../api/task';
 import cacheFile from '../../js/utils/cacheFile';
 import imgPreview from '../../js/plugins/imgPreview';
-import { BoxSelector, getEventPoints, MouseElementTracker } from '../../js/utils/boxSelector';
+import {
+  BoxSelector,
+  getEventPoints,
+  isKeyDown,
+  MouseElementTracker,
+} from '../../js/utils/boxSelector';
 import { otherWindowMsg } from '../home/home';
 import localData from '../../js/common/localData';
 import { reqUserFileToken } from '../../api/user';
@@ -230,7 +235,7 @@ const wInput = wrapInput($search.find('.inp_box input')[0], {
     $(e.target).parent().removeClass('focus');
   },
   keyup(e) {
-    if (e.key === 'Enter') {
+    if (e.key.toLowerCase() === 'enter') {
       curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
     }
   },
@@ -601,7 +606,11 @@ $contentWrap
   })
   .on('click', '.check_state', function (e) {
     e.stopPropagation();
-    hdCheckItem(this);
+    if ((isKeyDown('control') || isKeyDown('shift')) && getCheckItem().length > 0) {
+      shiftCheck(this);
+    } else {
+      hdCheckItem(this);
+    }
   })
   .on('mouseenter', '.file_item .name', function () {
     const {
@@ -1248,15 +1257,30 @@ async function hdCompress(obj, cb, loading = { start() {}, end() {} }) {
     cb && cb();
   }
 }
+function shiftCheck(el) {
+  const list = [...$contentWrap[0].querySelectorAll('.file_item .check_state')];
+  const sidx = list.findIndex((item) => item === el);
+  const cidx = list.findIndex((item) => item.getAttribute('check') === 'y');
+  if (sidx === cidx) hdCheckItem(el);
+  list.forEach((item, idx) => {
+    if (
+      ((cidx > sidx && idx >= sidx && idx <= cidx) ||
+        (cidx < sidx && (idx >= cidx) & (idx <= sidx))) &&
+      item.getAttribute('check') === 'n'
+    )
+      hdCheckItem(item, false);
+  });
+  renderFoot();
+}
 // 选中
-function hdCheckItem(el) {
+function hdCheckItem(el, updateSelect = true) {
   const $el = $(el);
   if ($el.attr('check') === 'y') {
     $el.css('background-color', 'transparent').attr('check', 'n');
   } else {
     $el.css('background-color', _d.checkColor).attr('check', 'y');
   }
-  renderFoot();
+  if (updateSelect) renderFoot();
 }
 if (isIframe()) {
   $header.find('.h_go_home').remove();
@@ -2389,7 +2413,7 @@ function hidePaste() {
 }
 document.addEventListener('keydown', function (e) {
   if (!editFileIsHiden()) return;
-  const key = e.key,
+  const key = e.key.toLowerCase(),
     ctrl = e.ctrlKey || e.metaKey;
   const isFocus = $('input').is(':focus') || $('textarea').is(':focus');
   if (isFocus) return;

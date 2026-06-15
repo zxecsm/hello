@@ -122,14 +122,14 @@ function hdInputBlur() {
 }
 
 function hdInputKeyup(e) {
-  if (e.key === 'Enter') {
+  if (e.key.toLowerCase() === 'enter') {
     this.blur();
   }
 }
 
 function hdInputKeyDown(e) {
   if (!isLogin() || window._pageName !== 'file' || this.value.trim() === '') return;
-  if (e.key === 'Tab') {
+  if (e.key.toLowerCase() === 'tab') {
     e.preventDefault();
     reqFileComplete({ path: this.value, type: 'dir' })
       .then((res) => {

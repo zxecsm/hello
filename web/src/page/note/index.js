@@ -388,8 +388,8 @@ const searchInp = wrapInput($pageSearchWrap.find('.inp_box .search_inp')[0], {
     hdSearchWord();
   },
   keydown(e) {
-    const key = e.key;
-    if (key === 'Enter') {
+    const key = e.key.toLowerCase();
+    if (key === 'enter') {
       nextPrevSearch(1);
       e.preventDefault();
     }

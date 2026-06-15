@@ -590,11 +590,9 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
     },
     keyup({ e }) {
       const tag = e.target.tagName.toLowerCase();
+      const key = e.key.toLowerCase();
       const ctrl = e.ctrlKey || e.metaKey;
-      if (
-        (tag === 'input' && e.key === 'Enter') ||
-        (tag === 'textarea' && ctrl && e.key === 'Enter')
-      ) {
+      if ((tag === 'input' && key === 'enter') || (tag === 'textarea' && ctrl && key === 'enter')) {
         e.preventDefault();
         this.rightMask.querySelector('button').click();
       }

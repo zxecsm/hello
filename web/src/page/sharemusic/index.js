@@ -741,10 +741,10 @@ probox.addEventListener('mousedown', function (e) {
   document.addEventListener('mouseup', mup);
 });
 document.onkeydown = function (e) {
-  let key = e.key,
+  const key = e.key.toLowerCase(),
     ctrl = e.ctrlKey || e.metaKey;
-  if (ctrl && key === 'ArrowLeft') playPrevSong();
-  if (ctrl && key === 'ArrowRight') playNextSong();
+  if (ctrl && key === 'arrowleft') playPrevSong();
+  if (ctrl && key === 'arrowright') playNextSong();
   //暂停/播放
   if (key === ' ') {
     if ($musicMvWrap.is(':hidden')) {

@@ -247,7 +247,7 @@ const wInput = wrapInput($search.find('.inp_box input')[0], {
     $(e.target).parent().removeClass('focus');
   },
   keyup(e) {
-    if (e.key === 'Enter') {
+    if (e.key.toLowerCase() === 'enter') {
       curmb.toGo(curFileDirPath, { pageNo: 1, top: 0 });
     }
   },

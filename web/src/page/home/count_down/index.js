@@ -43,7 +43,7 @@ import { hideIframeMask, showIframeMask } from '../iframe.js';
 import { changeLogoAlertStatus } from '../index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import localData from '../../../js/common/localData.js';
-import { BoxSelector } from '../../../js/utils/boxSelector.js';
+import { BoxSelector, isKeyDown } from '../../../js/utils/boxSelector.js';
 const $countBox = $('.count_box'),
   $cheadBtns = $countBox.find('.c_head_btns'),
   $countListWrap = $countBox.find('.count_list_wrap'),
@@ -650,8 +650,23 @@ function toTop(e, obj) {
     '置顶',
   );
 }
+function shiftCheck(el) {
+  const list = [...$countList[0].querySelectorAll('.item_box .check_level')];
+  const sidx = list.findIndex((item) => item === el);
+  const cidx = list.findIndex((item) => item.getAttribute('check') === 'y');
+  if (sidx === cidx) checkedCount(el);
+  list.forEach((item, idx) => {
+    if (
+      ((cidx > sidx && idx >= sidx && idx <= cidx) ||
+        (cidx < sidx && (idx >= cidx) & (idx <= sidx))) &&
+      item.getAttribute('check') === 'n'
+    )
+      checkedCount(item, false);
+  });
+  updateSelectInfo();
+}
 // 选中
-function checkedCount(el) {
+function checkedCount(el, updateSelect = true) {
   const $this = $(el);
   const check = $this.attr('check');
   if (check === 'n') {
@@ -659,7 +674,7 @@ function checkedCount(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
-  updateSelectInfo();
+  if (updateSelect) updateSelectInfo();
 }
 function updateSelectInfo() {
   const $todoItems = $countList.find('.item_box'),
@@ -722,7 +737,11 @@ $countList
   .on('click', '.add_btn', addCount)
   .on('click', '.clear_btn', delCount)
   .on('click', '.check_level', function () {
-    checkedCount(this);
+    if ((isKeyDown('control') || isKeyDown('shift')) && getCheckCountIds().length > 0) {
+      shiftCheck(this);
+    } else {
+      checkedCount(this);
+    }
   })
   .on('click', '.clear_all_btn', function () {
     if (isSelecting()) {

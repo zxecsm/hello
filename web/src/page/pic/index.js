@@ -35,7 +35,7 @@ import md5 from '../../js/utils/md5';
 import _path from '../../js/utils/path';
 import cacheFile from '../../js/utils/cacheFile';
 import imgPreview from '../../js/plugins/imgPreview';
-import { BoxSelector } from '../../js/utils/boxSelector';
+import { BoxSelector, isKeyDown } from '../../js/utils/boxSelector';
 import realtime from '../../js/plugins/realtime';
 import { otherWindowMsg } from '../home/home';
 import localData from '../../js/common/localData';
@@ -469,10 +469,29 @@ $imgList
     picMenu(e, $(this).parent().data('id'), this.parentNode.querySelector('.check_level'));
   })
   .on('click', '.check_level', function () {
-    checkedImg(this);
+    if ((isKeyDown('control') || isKeyDown('shift')) && getCheckPicIds().length > 0) {
+      shiftCheck(this);
+    } else {
+      checkedImg(this);
+    }
   });
+function shiftCheck(el) {
+  const list = [...$imgList[0].querySelectorAll('.img_item .check_level')];
+  const sidx = list.findIndex((item) => item === el);
+  const cidx = list.findIndex((item) => item.getAttribute('check') === 'y');
+  if (sidx === cidx) checkedImg(el);
+  list.forEach((item, idx) => {
+    if (
+      ((cidx > sidx && idx >= sidx && idx <= cidx) ||
+        (cidx < sidx && (idx >= cidx) & (idx <= sidx))) &&
+      item.getAttribute('check') === 'n'
+    )
+      checkedImg(item, false);
+  });
+  updateSelectInfo();
+}
 // 选中
-function checkedImg(el) {
+function checkedImg(el, updateSelect = true) {
   const $this = $(el);
   const check = $this.attr('check');
   if (check === 'n') {
@@ -480,7 +499,7 @@ function checkedImg(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
-  updateSelectInfo();
+  if (updateSelect) updateSelectInfo();
 }
 function updateSelectInfo() {
   const $imgItem = $imgList.find('.img_item'),
@@ -586,16 +605,19 @@ const showLink = (function () {
   });
   return render;
 })();
+function getCheckPicIds() {
+  const $imgItem = $imgList.find('.img_item'),
+    $checkArr = $imgItem.filter((_, item) => $(item).find('.check_level').attr('check') === 'y');
+  if ($checkArr.length === 0) return [];
+  const arr = [];
+  $checkArr.each((i, v) => {
+    arr.push(v.getAttribute('data-id'));
+  });
+  return arr;
+}
 $footer
   .on('click', '.f_delete', function (e) {
-    const $imgItem = $imgList.find('.img_item'),
-      $checkArr = $imgItem.filter((_, item) => $(item).find('.check_level').attr('check') === 'y');
-    if ($checkArr.length === 0) return;
-    const arr = [];
-    $checkArr.each((i, v) => {
-      arr.push(v.getAttribute('data-id'));
-    });
-    deletePic(e, arr, false, 1);
+    deletePic(e, getCheckPicIds(), false, 1);
   })
   .on('click', '.f_close', stopSelect)
   .on('click', 'span', function () {

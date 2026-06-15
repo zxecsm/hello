@@ -32,7 +32,7 @@ import {
 import { _tpl } from '../../js/utils/template';
 import { otherWindowMsg } from '../home/home';
 import rMenu from '../../js/plugins/rightMenu';
-import { BoxSelector } from '../../js/utils/boxSelector';
+import { BoxSelector, isKeyDown } from '../../js/utils/boxSelector';
 if (!isLogin()) {
   toLogin();
 }
@@ -69,7 +69,22 @@ function getState(exp_time) {
   }
   return v;
 }
-function checkedItem(el) {
+function shiftCheck(el) {
+  const list = [...$shareList[0].querySelectorAll('li .check_state')];
+  const sidx = list.findIndex((item) => item === el);
+  const cidx = list.findIndex((item) => item.getAttribute('check') === 'y');
+  if (sidx === cidx) checkedItem(el);
+  list.forEach((item, idx) => {
+    if (
+      ((cidx > sidx && idx >= sidx && idx <= cidx) ||
+        (cidx < sidx && (idx >= cidx) & (idx <= sidx))) &&
+      item.getAttribute('check') === 'n'
+    )
+      checkedItem(item, false);
+  });
+  updateSelectInfo();
+}
+function checkedItem(el, updateSelect = true) {
   const $this = $(el),
     check = $this.attr('check');
   if (check === 'n') {
@@ -77,7 +92,7 @@ function checkedItem(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
-  updateSelectInfo();
+  if (updateSelect) updateSelectInfo();
 }
 function updateSelectInfo() {
   const $itemBox = $shareList.find('li'),
@@ -320,7 +335,11 @@ longPress($shareList[0], 'li', function () {
 });
 $shareList
   .on('click', '.check_state', function () {
-    checkedItem(this);
+    if ((isKeyDown('control') || isKeyDown('shift')) && getCheckItems().length > 0) {
+      shiftCheck(this);
+    } else {
+      checkedItem(this);
+    }
   })
   .on('click', '.delete', function (e) {
     const obj = getShareItem($(this).parent().attr('data-id'));

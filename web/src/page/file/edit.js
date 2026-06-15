@@ -74,7 +74,7 @@ function renderTitle(path) {
 }
 
 $editFile.on('keydown', function (e) {
-  let key = e.key,
+  const key = e.key.toLowerCase(),
     ctrl = e.ctrlKey || e.metaKey;
   if (ctrl && key === 's') {
     e.preventDefault();

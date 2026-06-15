@@ -55,7 +55,7 @@ const wInput = wrapInput($head.find('.inp_box input')[0], {
     $(e.target).parent().removeClass('focus');
   },
   keyup(e) {
-    if (e.key === 'Enter') {
+    if (e.key.toLowerCase() === 'enter') {
       logPageNo = 1;
       hdRender();
     }

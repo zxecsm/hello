@@ -172,25 +172,25 @@ const wInput = wrapInput($sshBox.find('.t_menu .inp_box input')[0], {
     $(e.target).parent().removeClass('focus');
   },
   keyup(e) {
-    const key = e.key;
-    if (key === 'Enter') {
+    const key = e.key.toLowerCase();
+    if (key === 'enter') {
       const command = wInput.getValue();
       saveCommandHistory(command);
       sendSSH(command, 1);
       wInput.setValue('').focus();
-    } else if (['ArrowDown', 'ArrowUp'].includes(key)) {
+    } else if (['arrowdown', 'arrowup'].includes(key)) {
       let command = '';
       if (historyCommands.length === 0) return;
 
       let idx = historyCommands.findIndex((item) => item === wInput.getValue());
 
-      if (key === 'ArrowUp') {
+      if (key === 'arrowup') {
         if (--idx < 0) {
           command = historyCommands[historyCommands.length - 1];
         } else {
           command = historyCommands[idx];
         }
-      } else if (key === 'ArrowDown') {
+      } else if (key === 'arrowdown') {
         if (++idx >= historyCommands.length) {
           command = historyCommands[0];
         } else {

@@ -30,7 +30,7 @@ import toolTip from '../../js/plugins/tooltip';
 import rMenu from '../../js/plugins/rightMenu';
 import { showSSHInfo } from '../../js/utils/showinfo';
 import { _tpl } from '../../js/utils/template';
-import { BoxSelector } from '../../js/utils/boxSelector';
+import { BoxSelector, isKeyDown } from '../../js/utils/boxSelector';
 import { otherWindowMsg } from '../home/home';
 import localData from '../../js/common/localData';
 import {
@@ -90,7 +90,7 @@ const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
     $(e.target).parent().removeClass('focus');
   },
   keyup(e) {
-    if (e.key === 'Enter') {
+    if (e.key.toLowerCase() === 'enter') {
       sshPageNo = 1;
       renderList(true);
     }
@@ -622,7 +622,11 @@ $contentWrap
     showSSHInfo(e, obj);
   })
   .on('click', '.check_state', function () {
-    checkedItem(this);
+    if ((isKeyDown('control') || isKeyDown('shift')) && getCheckItems().length > 0) {
+      shiftCheck(this);
+    } else {
+      checkedItem(this);
+    }
   });
 if (isIframe()) {
   $headWrap.find('.h_go_home').remove();
@@ -632,8 +636,23 @@ longPress($contentWrap[0], '.item_box', function () {
   hdCheckItemBtn();
   checkedItem(this.querySelector('.check_state'));
 });
+function shiftCheck(el) {
+  const list = [...$contentWrap[0].querySelectorAll('.item_box .check_state')];
+  const sidx = list.findIndex((item) => item === el);
+  const cidx = list.findIndex((item) => item.getAttribute('check') === 'y');
+  if (sidx === cidx) checkedItem(el);
+  list.forEach((item, idx) => {
+    if (
+      ((cidx > sidx && idx >= sidx && idx <= cidx) ||
+        (cidx < sidx && (idx >= cidx) & (idx <= sidx))) &&
+      item.getAttribute('check') === 'n'
+    )
+      checkedItem(item, false);
+  });
+  updateSelectInfo();
+}
 // 选中
-function checkedItem(el) {
+function checkedItem(el, updateSelect = true) {
   const $this = $(el),
     check = $this.attr('check');
   if (check === 'n') {
@@ -641,7 +660,7 @@ function checkedItem(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
-  updateSelectInfo();
+  if (updateSelect) updateSelectInfo();
 }
 function updateSelectInfo() {
   const $itemBox = $contentWrap.find('.item_box'),
@@ -821,7 +840,7 @@ scrollState(
 );
 document.addEventListener('keydown', function (e) {
   if (!isHideCategoryBox()) return;
-  const key = e.key,
+  const key = e.key.toLowerCase(),
     ctrl = e.ctrlKey || e.metaKey;
   const isFocus = $('input').is(':focus') || $('textarea').is(':focus');
   if (isFocus) return;

@@ -59,7 +59,7 @@ import rMenu from '../../../js/plugins/rightMenu/index.js';
 import { showBmk, showHistory, upLogo } from '../rightSetting/index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
-import { BoxSelector, MouseElementTracker } from '../../../js/utils/boxSelector.js';
+import { BoxSelector, isKeyDown, MouseElementTracker } from '../../../js/utils/boxSelector.js';
 import localData from '../../../js/common/localData.js';
 import { setUserInfo } from '../index.js';
 const $searchBoxMask = $('.search_box_mask'),
@@ -384,7 +384,11 @@ $searchBoxMask
   })
   .on('click', '.check_home_bm', function (e) {
     e.stopPropagation();
-    checkedHomeBm(this);
+    if ((isKeyDown('control') || isKeyDown('shift')) && getHomeCheckBmItem().length > 0) {
+      shiftCheck(this);
+    } else {
+      checkedHomeBm(this);
+    }
   })
   .on('click', '.delete_bm', function () {
     const arr = getHomeCheckBmItem();
@@ -419,8 +423,23 @@ export function hideSearchBox() {
 export function openCheckState() {
   $homeBmWrap.find('.home_bm_item .check_home_bm').css('display', 'block');
 }
+function shiftCheck(el) {
+  const list = [...$homeBmWrap[0].querySelectorAll('.home_bm_item .check_home_bm')];
+  const sidx = list.findIndex((item) => item === el);
+  const cidx = list.findIndex((item) => item.getAttribute('check') === 'y');
+  if (sidx === cidx) checkedHomeBm(el);
+  list.forEach((item, idx) => {
+    if (
+      ((cidx > sidx && idx >= sidx && idx <= cidx) ||
+        (cidx < sidx && (idx >= cidx) & (idx <= sidx))) &&
+      item.getAttribute('check') === 'n'
+    )
+      checkedHomeBm(item, false);
+  });
+  updateSelectingInfo();
+}
 // 选中书签
-export function checkedHomeBm(el) {
+export function checkedHomeBm(el, updateSelect = true) {
   const $this = $(el),
     check = $this.attr('check');
   if (check === 'n') {
@@ -428,7 +447,7 @@ export function checkedHomeBm(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
-  updateSelectingInfo();
+  if (updateSelect) updateSelectingInfo();
 }
 function updateSelectingInfo() {
   const $bms = $homeBmWrap.find('.home_bm_item'),
@@ -499,8 +518,8 @@ const searchInput = wrapInput($searchInpWrap.find('.inp_box input')[0], {
   keyup(e) {
     e.stopPropagation();
     e.preventDefault();
-    const key = e.key;
-    if (key === 'Enter') {
+    const key = e.key.toLowerCase();
+    if (key === 'enter') {
       toSearch(searchInput.getValue().trim());
     }
   },
@@ -630,18 +649,18 @@ function toTranslator() {
 }
 // 选中搜索结果
 function selectSearchItem(e) {
-  const key = e.key,
+  const key = e.key.toLowerCase(),
     listlength = $searchInpWrap.find('.search_list_box .s_list ul').children('li').length - 1;
-  if (key !== 'ArrowDown' && key !== 'ArrowUp') {
+  if (key !== 'arrowdown' && key !== 'arrowup') {
     searchResultIdx = -1;
     return;
   }
-  if (key === 'ArrowDown') {
+  if (key === 'arrowdown') {
     searchResultIdx++;
     if (searchResultIdx > listlength) {
       searchResultIdx = 0;
     }
-  } else if (key === 'ArrowUp') {
+  } else if (key === 'arrowup') {
     searchResultIdx--;
     if (searchResultIdx < 0) {
       searchResultIdx = listlength;

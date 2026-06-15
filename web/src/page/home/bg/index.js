@@ -32,7 +32,7 @@ import { _tpl } from '../../../js/utils/template.js';
 import md5 from '../../../js/utils/md5.js';
 import cacheFile from '../../../js/utils/cacheFile.js';
 import imgPreview from '../../../js/plugins/imgPreview/index.js';
-import { BoxSelector } from '../../../js/utils/boxSelector.js';
+import { BoxSelector, isKeyDown } from '../../../js/utils/boxSelector.js';
 import localData from '../../../js/common/localData.js';
 const $allBgWrap = $('.all_bg_wrap'),
   $bgList = $allBgWrap.find('.bg_list'),
@@ -510,15 +510,34 @@ $bgList
   })
   .on('click', '.bg_img', hdPreview)
   .on('click', '.check_level', function () {
-    checkedBg(this);
+    if ((isKeyDown('control') || isKeyDown('shift')) && getCheckBgIds().length > 0) {
+      shiftCheck(this);
+    } else {
+      checkedBg(this);
+    }
   });
 longPress($bgList[0], '.bg_img', function () {
   if (isSelecting()) return;
   startSelect();
   checkedBg(this.parentNode.querySelector('.check_level'));
 });
+function shiftCheck(el) {
+  const list = [...$bgList[0].querySelectorAll('.bg_item .check_level')];
+  const sidx = list.findIndex((item) => item === el);
+  const cidx = list.findIndex((item) => item.getAttribute('check') === 'y');
+  if (sidx === cidx) checkedBg(el);
+  list.forEach((item, idx) => {
+    if (
+      ((cidx > sidx && idx >= sidx && idx <= cidx) ||
+        (cidx < sidx && (idx >= cidx) & (idx <= sidx))) &&
+      item.getAttribute('check') === 'n'
+    )
+      checkedBg(item, false);
+  });
+  updateSelectInfo();
+}
 // 选中
-function checkedBg(el) {
+function checkedBg(el, updateSelect = true) {
   const $this = $(el);
   const check = $this.attr('check');
   if (check === 'n') {
@@ -526,7 +545,7 @@ function checkedBg(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
-  updateSelectInfo();
+  if (updateSelect) updateSelectInfo();
 }
 function updateSelectInfo() {
   const $bgItems = $bgList.find('.bg_item'),

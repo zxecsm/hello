@@ -521,14 +521,14 @@ function hdHomeBgBtn(e, bgId) {
 }
 // 快捷键
 function keyboard(e) {
-  const key = e.key,
+  const key = e.key.toLowerCase(),
     ctrl = e.ctrlKey || e.metaKey;
   const isFocus = $('input').is(':focus') || $('textarea').is(':focus');
   if (!isFocus) {
-    if (ctrl && key === 'ArrowLeft') playPrevSong();
-    if (ctrl && key === 'ArrowRight') playNextSong();
+    if (ctrl && key === 'arrowleft') playPrevSong();
+    if (ctrl && key === 'arrowright') playNextSong();
     //音量+
-    if (ctrl && key === 'ArrowUp') {
+    if (ctrl && key === 'arrowup') {
       e.preventDefault();
       let vol = setMediaVolume();
       vol += 0.1;
@@ -546,7 +546,7 @@ function keyboard(e) {
       });
     }
     //音量-
-    else if (ctrl && key === 'ArrowDown') {
+    else if (ctrl && key === 'arrowdown') {
       e.preventDefault();
       let vol = setMediaVolume();
       vol -= 0.1;

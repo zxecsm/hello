@@ -51,6 +51,7 @@ import { otherWindowMsg } from '../home/home.js';
 import localData from '../../js/common/localData.js';
 import { addTask } from '../../js/plugins/task/index.js';
 import { reqTaskList } from '../../api/task.js';
+import { isKeyDown } from '../../js/utils/boxSelector.js';
 
 const $contentWrap = $('.content_wrap'),
   $paginationBox = $('.pagination_box'),
@@ -82,7 +83,7 @@ const wInput = wrapInput($userBtns.find('.inp_box input')[0], {
     $(e.target).parent().removeClass('focus');
   },
   keyup(e) {
-    if (e.key === 'Enter') {
+    if (e.key.toLowerCase() === 'enter') {
       pageNo = 1;
       getUserList(1);
     }
@@ -105,7 +106,7 @@ function renderUserList(pageNo, total, top) {
   const html = _tpl(
     `
     <tr v-for="{account,username,update_at,email,state,online,hide} in userList" :data-acc="account">
-      <td cursor="y" check="n" class="iconfont icon-xuanzeweixuanze"></td>
+      <td cursor="y" check="n" class="check_state iconfont icon-xuanzeweixuanze"></td>
       <td>{{formatDate({template: '{0}-{1}-{2} {3}:{4}',timestamp: update_at})}}</td>
       <td class="online_status" :cursor="online === 1 ? 'y' : ''" style="color:{{online === 1 ? 'green' : 'var(--color6)'}};">{{online === 1 ? (hide === 1 ? '隐身' : '在线') : '离线'}}</td>
       <td>{{username}}</td>
@@ -230,19 +231,34 @@ function deleteAccount(e, accs, text = '') {
     },
   );
 }
-function checkedItem(el) {
+function shiftCheck(el) {
+  const list = [...$list[0].querySelectorAll('tr .check_state')];
+  const sidx = list.findIndex((item) => item === el);
+  const cidx = list.findIndex((item) => item.getAttribute('check') === 'y');
+  if (sidx === cidx) checkedItem(el);
+  list.forEach((item, idx) => {
+    if (
+      ((cidx > sidx && idx >= sidx && idx <= cidx) ||
+        (cidx < sidx && (idx >= cidx) & (idx <= sidx))) &&
+      item.getAttribute('check') === 'n'
+    )
+      checkedItem(item, false);
+  });
+  updateSelectInfo();
+}
+function checkedItem(el, updateSelect = true) {
   const $this = $(el),
     check = $this.attr('check');
   if (check === 'n') {
-    $this.attr({ class: 'iconfont icon-xuanzeyixuanze', check: 'y' });
+    $this.attr({ class: 'check_state iconfont icon-xuanzeyixuanze', check: 'y' });
   } else {
-    $this.attr({ class: 'iconfont icon-xuanzeweixuanze', check: 'n' });
+    $this.attr({ class: 'check_state iconfont icon-xuanzeweixuanze', check: 'n' });
   }
-  updateSelectInfo();
+  if (updateSelect) updateSelectInfo();
 }
 function getCheckItems(ignoreRoot = false) {
   const $itemBox = $list.find('tr'),
-    $checkArr = $itemBox.filter((_, item) => $(item).find('td').eq(0).attr('check') === 'y');
+    $checkArr = $itemBox.filter((_, item) => $(item).find('.check_state').attr('check') === 'y');
   const arr = [];
   $checkArr.each((i, v) => {
     arr.push(v.getAttribute('data-acc'));
@@ -261,7 +277,7 @@ function updateSelectBtn() {
 }
 function updateSelectInfo(msg = true) {
   const $itemBox = $list.find('tr'),
-    $checkArr = $itemBox.filter((_, item) => $(item).find('td').eq(0).attr('check') === 'y');
+    $checkArr = $itemBox.filter((_, item) => $(item).find('.check_state').attr('check') === 'y');
   if (msg) _msg.botMsg(`选中：${$checkArr.length}项`);
   if ($checkArr.length === $itemBox.length) {
     $checkAllBtn.attr({
@@ -284,22 +300,23 @@ $checkAllBtn.on('click', function () {
     check: che,
   });
 
-  const $itemBox = $list.find('tr');
-  $itemBox.each((_, el) => {
-    $(el)
-      .find('td')
-      .eq(0)
-      .attr({
-        check: che,
-        class: che === 'y' ? 'iconfont icon-xuanzeyixuanze' : 'iconfont icon-xuanzeweixuanze',
-      });
+  const $itemBox = $list.find('tr .check_state').attr({
+    check: che,
+    class:
+      che === 'y'
+        ? 'check_state iconfont icon-xuanzeyixuanze'
+        : 'check_state iconfont icon-xuanzeweixuanze',
   });
   updateSelectBtn();
   _msg.botMsg(`选中：${che === 'y' ? $itemBox.length : 0}项`);
 });
 $list
-  .on('click', '.iconfont', function () {
-    checkedItem(this);
+  .on('click', '.check_state', function () {
+    if ((isKeyDown('control') || isKeyDown('shift')) && getCheckItems().length > 0) {
+      shiftCheck(this);
+    } else {
+      checkedItem(this);
+    }
   })
   .on('click', '.user_state', function () {
     const $this = $(this).parent().parent();
@@ -1086,12 +1103,9 @@ $footer
     deleteAccount(e, list);
   })
   .on('click', '.f_close', function () {
-    const $itemBox = $list.find('tr');
-    $itemBox.each((_, el) => {
-      $(el).find('td').eq(0).attr({
-        check: 'n',
-        class: 'iconfont icon-xuanzeweixuanze',
-      });
+    $list.find('tr .check_state').attr({
+      check: 'n',
+      class: 'iconfont icon-xuanzeweixuanze',
     });
     updateSelectInfo(false);
   });

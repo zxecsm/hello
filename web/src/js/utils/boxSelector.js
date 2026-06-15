@@ -1,5 +1,19 @@
 import { toggleUserSelect } from './utils';
 
+const pressedKeys = new Set();
+
+window.addEventListener('keydown', (e) => {
+  pressedKeys.add(e.key.toLowerCase());
+});
+
+window.addEventListener('keyup', (e) => {
+  pressedKeys.delete(e.key.toLowerCase());
+});
+
+export function isKeyDown(key) {
+  return pressedKeys.has(key.toLowerCase());
+}
+
 export function getEventPoints(e) {
   const event = e.originalEvent || e;
 
@@ -27,7 +41,6 @@ export class BoxSelector {
     this.startX = 0;
     this.startY = 0;
     this.animationFrameRequested = false;
-    this.keyDownMap = {};
     this.isWorking = true;
     this.scroller = new AutoScroller(this.container, {
       scrollSpeed: options.scrollSpeed || 10,
@@ -41,8 +54,6 @@ export class BoxSelector {
     this.onStart = this.onStart.bind(this);
     this.onMove = this.onMove.bind(this);
     this.onEnd = this.onEnd.bind(this);
-    this.onKeyDown = this.onKeyDown.bind(this);
-    this.onKeyUp = this.onKeyUp.bind(this);
 
     this.container.addEventListener('mousedown', this.onStart);
     this.container.addEventListener('touchstart', this.onStart, {
@@ -54,20 +65,10 @@ export class BoxSelector {
       passive: false,
     });
     document.addEventListener('touchend', this.onEnd);
-    window.addEventListener('keydown', this.onKeyDown);
-    window.addEventListener('keyup', this.onKeyUp);
-  }
-
-  onKeyDown(e) {
-    this.keyDownMap[e.key] = true;
-  }
-
-  onKeyUp(e) {
-    this.keyDownMap[e.key] = false;
   }
 
   isKeepOld() {
-    return this.keyDownMap['Shift'] || this.keyDownMap['Control'] || this.keyDownMap['Meta'];
+    return isKeyDown('control') || isKeyDown('shift');
   }
 
   destroy() {
@@ -77,8 +78,6 @@ export class BoxSelector {
     document.removeEventListener('mouseup', this.onEnd);
     document.removeEventListener('touchmove', this.onMove);
     document.removeEventListener('touchend', this.onEnd);
-    window.removeEventListener('keydown', this.onKeyDown);
-    window.removeEventListener('keyup', this.onKeyUp);
   }
 
   stop() {

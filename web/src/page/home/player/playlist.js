@@ -35,7 +35,7 @@ import toolTip from '../../../js/plugins/tooltip/index.js';
 import { showSongInfo } from '../../../js/utils/showinfo.js';
 import { _tpl, deepClone } from '../../../js/utils/template.js';
 import { getSearchSongs } from './search.js';
-import { BoxSelector } from '../../../js/utils/boxSelector.js';
+import { BoxSelector, isKeyDown } from '../../../js/utils/boxSelector.js';
 const $playingListWrap = $('.music_player_box .playing_list_mask'),
   $pMusicListBox = $playingListWrap.find('.p_music_list_wrap');
 let playingList = [];
@@ -323,8 +323,23 @@ function playPlayingList(id, e) {
   changePlayingAnimate(e);
   musicPlay(obj);
 }
+function shiftCheck(el) {
+  const list = [...$pMusicListBox[0].querySelectorAll('.song_item .check_state')];
+  const sidx = list.findIndex((item) => item === el);
+  const cidx = list.findIndex((item) => item.getAttribute('check') === 'y');
+  if (sidx === cidx) checkedPlayingListItem(el);
+  list.forEach((item, idx) => {
+    if (
+      ((cidx > sidx && idx >= sidx && idx <= cidx) ||
+        (cidx < sidx && (idx >= cidx) & (idx <= sidx))) &&
+      item.getAttribute('check') === 'n'
+    )
+      checkedPlayingListItem(item, false);
+  });
+  updateSelectInfo();
+}
 // 选中播放列表歌曲
-function checkedPlayingListItem(el) {
+function checkedPlayingListItem(el, updateSelect = true) {
   const $this = $(el),
     check = $this.attr('check');
   if (check === 'n') {
@@ -332,7 +347,7 @@ function checkedPlayingListItem(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
-  updateSelectInfo();
+  if (updateSelect) updateSelectInfo();
 }
 function updateSelectInfo() {
   const $item = $pMusicListBox.find('.song_item');
@@ -366,7 +381,11 @@ function getPlayingListCheck() {
 $pMusicListBox
   .find('.p_foot')
   .on('click', '.check_state', function () {
-    checkedPlayingListItem(this);
+    if ((isKeyDown('control') || isKeyDown('shift')) && getPlayingListCheck().length > 0) {
+      shiftCheck(this);
+    } else {
+      checkedPlayingListItem(this);
+    }
   })
   .on('contextmenu', '.song_item', function (e) {
     e.preventDefault();

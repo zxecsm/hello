@@ -10,7 +10,6 @@ import {
   _setTimeout,
   debounce,
   throttle,
-  loadImg,
   isBigScreen,
   isLogin,
   getDarkIcon,
@@ -55,7 +54,7 @@ if (isLogin()) {
   myOpen('/');
 }
 function hdKeyUp(e) {
-  if (e.key === 'Enter') {
+  if (e.key.toLowerCase() === 'enter') {
     hdSubmit();
   }
 }

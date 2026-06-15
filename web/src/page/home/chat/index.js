@@ -147,7 +147,7 @@ const chatSearchInput = wrapInput($searchMsgInp.find('input')[0], {
     }
   },
   keyup(e) {
-    if (e.key === 'Enter') {
+    if (e.key.toLowerCase() === 'enter') {
       openFriend(curChatAccount);
     }
   },
@@ -177,7 +177,7 @@ const chatSearchUserInput = wrapInput($searchUserInp.find('input')[0], {
     }
   },
   keyup(e) {
-    if (e.key === 'Enter') {
+    if (e.key.toLowerCase() === 'enter') {
       userPageNo = 1;
       getUserList(true);
     }
@@ -1520,9 +1520,9 @@ $chatFootBox
     }
   })
   .on('keyup', '.c_text_content', function (e) {
-    let key = e.key,
+    const key = e.key.toLowerCase(),
       ctrl = e.ctrlKey || e.metaKey;
-    if (ctrl && key === 'Enter') {
+    if (ctrl && key === 'enter') {
       sendTextMsg();
       e.preventDefault();
     }

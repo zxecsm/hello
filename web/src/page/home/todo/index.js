@@ -38,7 +38,7 @@ import { hideIframeMask, showIframeMask } from '../iframe.js';
 import { changeLogoAlertStatus } from '../index.js';
 import { _tpl } from '../../../js/utils/template.js';
 import localData from '../../../js/common/localData.js';
-import { BoxSelector } from '../../../js/utils/boxSelector.js';
+import { BoxSelector, isKeyDown } from '../../../js/utils/boxSelector.js';
 const $todoBox = $('.todo_box'),
   $theadBtns = $todoBox.find('.t_head_btns'),
   $todoListWrap = $todoBox.find('.todo_list_wrap'),
@@ -477,8 +477,23 @@ function todoMenu(e) {
     todo.content,
   );
 }
+function shiftCheck(el) {
+  const list = [...$todoList[0].querySelectorAll('ul .check_level')];
+  const sidx = list.findIndex((item) => item === el);
+  const cidx = list.findIndex((item) => item.getAttribute('check') === 'y');
+  if (sidx === cidx) checkedTodo(el);
+  list.forEach((item, idx) => {
+    if (
+      ((cidx > sidx && idx >= sidx && idx <= cidx) ||
+        (cidx < sidx && (idx >= cidx) & (idx <= sidx))) &&
+      item.getAttribute('check') === 'n'
+    )
+      checkedTodo(item, false);
+  });
+  updateSelectInfo();
+}
 // 选中
-function checkedTodo(el) {
+function checkedTodo(el, updateSelect = true) {
   const $this = $(el);
   const check = $this.attr('check');
   if (check === 'n') {
@@ -486,7 +501,7 @@ function checkedTodo(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
-  updateSelectInfo();
+  if (updateSelect) updateSelectInfo();
 }
 function updateSelectInfo() {
   const $todoItems = $todoList.find('ul'),
@@ -549,7 +564,11 @@ $todoList
   .on('click', '.add_btn', addTodo)
   .on('click', '.clear_btn', delTodo)
   .on('click', '.check_level', function () {
-    checkedTodo(this);
+    if ((isKeyDown('control') || isKeyDown('shift')) && getCheckTodoIds().length > 0) {
+      shiftCheck(this);
+    } else {
+      checkedTodo(this);
+    }
   })
   .on('contextmenu', 'ul', function (e) {
     e.preventDefault();

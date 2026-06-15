@@ -231,7 +231,7 @@ export function initMiniLrc() {
   $miniLrcWrap.find('.lrcbot').find('.tow').text('');
 }
 $editLrcWrap.find('textarea').on('keydown', function (e) {
-  let key = e.key,
+  const key = e.key.toLowerCase(),
     ctrl = e.ctrlKey || e.metaKey;
   if (ctrl && key === 's') {
     saveLrc();

@@ -434,7 +434,7 @@ $previewBox
   });
 $editBox
   .on('keydown', function (e) {
-    const key = e.key,
+    const key = e.key.toLowerCase(),
       ctrl = e.ctrlKey || e.metaKey;
     if (ctrl && key === 's') {
       if (HASH) {

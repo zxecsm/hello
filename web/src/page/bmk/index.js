@@ -48,7 +48,7 @@ import { showBmkInfo } from '../../js/utils/showinfo';
 import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';
 import { CreateTabs } from '../notes/tabs';
-import { BoxSelector } from '../../js/utils/boxSelector';
+import { BoxSelector, isKeyDown } from '../../js/utils/boxSelector';
 import { otherWindowMsg, waitLogin } from '../home/home';
 import cacheFile from '../../js/utils/cacheFile';
 import localData from '../../js/common/localData';
@@ -109,7 +109,7 @@ const wInput = wrapInput($headWrap.find('.inp_box input')[0], {
     $(e.target).parent().removeClass('focus');
   },
   keyup(e) {
-    if (e.key === 'Enter') {
+    if (e.key.toLowerCase() === 'enter') {
       bmksPageNo = 1;
       renderList(true);
     }
@@ -600,10 +600,6 @@ function bmkContextMenu(e) {
   checkItem(this.querySelector('.check_state'));
 }
 
-function hdCheckItem() {
-  checkItem(this);
-}
-
 $contentWrap
   .on('click', '.set_btn', bmMenu)
   .on('click', '.item_title', openBmk)
@@ -616,7 +612,13 @@ $contentWrap
     const id = $this.attr('data-id');
     showBmkInfo(e, getItemObj(id));
   })
-  .on('click', '.check_state', hdCheckItem);
+  .on('click', '.check_state', function () {
+    if ((isKeyDown('control') || isKeyDown('shift')) && getSelectItem().length > 0) {
+      shiftCheck(this);
+    } else {
+      checkItem(this);
+    }
+  });
 
 // 长按选中
 function bmkLongPress() {
@@ -647,8 +649,23 @@ function startSelect() {
   });
   footerCheckIocnState('n');
 }
+function shiftCheck(el) {
+  const list = [...$contentWrap[0].querySelectorAll('.item_box .check_state')];
+  const sidx = list.findIndex((item) => item === el);
+  const cidx = list.findIndex((item) => item.getAttribute('check') === 'y');
+  if (sidx === cidx) checkItem(el);
+  list.forEach((item, idx) => {
+    if (
+      ((cidx > sidx && idx >= sidx && idx <= cidx) ||
+        (cidx < sidx && (idx >= cidx) & (idx <= sidx))) &&
+      item.getAttribute('check') === 'n'
+    )
+      checkItem(item, false);
+  });
+  updateSelectInfo();
+}
 // 选中
-function checkItem(el) {
+function checkItem(el, updateSelect = true) {
   const $this = $(el),
     check = $this.attr('check');
   if (check === 'n') {
@@ -656,7 +673,7 @@ function checkItem(el) {
   } else {
     $this.attr('check', 'n').css('background-color', 'transparent');
   }
-  updateSelectInfo();
+  if (updateSelect) updateSelectInfo();
 }
 
 function updateSelectInfo() {
@@ -919,7 +936,7 @@ scrollState(
 
 document.addEventListener('keydown', function (e) {
   if (!isHideCategoryBox()) return;
-  const key = e.key,
+  const key = e.key.toLowerCase(),
     ctrl = e.ctrlKey || e.metaKey;
   const isFocus = $('input').is(':focus') || $('textarea').is(':focus');
   if (isFocus) return;
