@@ -739,6 +739,7 @@ export function chatMessageNotification(name, data, from, to, logo) {
       }
     },
     1,
+    1,
   );
   if (logo) {
     logo = getFilePath(`/logo/${from}/${logo}`);

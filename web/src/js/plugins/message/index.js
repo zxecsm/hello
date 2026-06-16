@@ -296,12 +296,12 @@ function info(message, callback, { duration = 3000, reside = false } = {}) {
   }
   new Msg(opt, callback);
 }
-function msg(opt, callback, sound) {
+function msg(opt, callback, sound, icon) {
   if (sound) {
     playSound(imgMsg);
   }
   if (document.visibilityState === 'hidden') {
-    switchPageIcon('notify');
+    if (icon) switchPageIcon('notify');
     addCache({ opt, callback });
     return;
   }
@@ -317,6 +317,7 @@ function online(message, callback, { duration = 8000, reside = false } = {}) {
     reside,
   };
   if (document.visibilityState === 'hidden') {
+    switchPageIcon('notify');
     addCache({ opt, callback });
     return;
   }
