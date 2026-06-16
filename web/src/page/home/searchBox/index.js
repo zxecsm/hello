@@ -1237,6 +1237,7 @@ function selectSearch(e) {
             loading.end();
             if (res.code === 1) {
               await updateSearchConfig(loading);
+              searchInput.focus();
               _msg.success('切换成功');
               close(true);
             }
