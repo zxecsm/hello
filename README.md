@@ -1,8 +1,9 @@
+![hello](https://raw.githubusercontent.com/zxecsm/hello/main/hello.png)
+
 ```
 services:
   hello:
     image: 'ghcr.io/zxecsm/hello:latest'
-    # image: 'zxecsm/hello:latest'
     container_name: hello
     restart: unless-stopped
     environment:
@@ -15,7 +16,7 @@ services:
 ```
 
 ```
-sudo docker run -d \
+docker run -d \
   --name hello \
   --restart unless-stopped \
   -e TZ=Asia/Shanghai \
@@ -23,7 +24,6 @@ sudo docker run -d \
   -v /:/app/app_data \
   -p 55555:55555 \
   ghcr.io/zxecsm/hello:latest
-  # zxecsm/hello:latest
 ```
 
 歌词格式：`[00:00.00]歌词<=>翻译`
@@ -77,5 +77,3 @@ http://localhost:55555/addbmk/#{{https://google.com}}
 GET： http://localhost:55555/api/s/<key>?text=消息内容
 POST：http://localhost:55555/api/s/<key> body：{"text": "消息内容"}
 ```
-
-![hello](https://raw.githubusercontent.com/zxecsm/hello/main/hello.png)
