@@ -851,8 +851,7 @@ export async function copyText(
     }
   } catch {
     // 回退到 execCommand 方法
-    if (typeof document.execCommand === 'function') {
-      fallbackCopyText(content);
+    if (fallbackCopyText(content)) {
       if (!stopMsg) {
         _msg.success(success);
       }
@@ -865,24 +864,30 @@ export async function copyText(
 }
 
 function fallbackCopyText(content) {
-  const tempDiv = document.createElement('div');
-  const selection = window.getSelection();
-  const range = document.createRange();
+  try {
+    const tempDiv = document.createElement('div');
+    const selection = window.getSelection();
+    const range = document.createRange();
 
-  // 设置临时 div 样式
-  tempDiv.textContent = content;
-  tempDiv.style.position = 'fixed';
-  tempDiv.style.opacity = '0';
-  tempDiv.style.pointerEvents = 'none';
+    // 设置临时 div 样式
+    tempDiv.textContent = content;
+    tempDiv.style.position = 'fixed';
+    tempDiv.style.opacity = '0';
+    tempDiv.style.pointerEvents = 'none';
 
-  document.body.appendChild(tempDiv);
-  range.selectNode(tempDiv);
-  selection.removeAllRanges();
-  selection.addRange(range);
+    document.body.appendChild(tempDiv);
+    range.selectNode(tempDiv);
+    selection.removeAllRanges();
+    selection.addRange(range);
 
-  document.execCommand('copy');
-  selection.removeAllRanges();
-  tempDiv.remove();
+    const success = document.execCommand('copy');
+    selection.removeAllRanges();
+    tempDiv.remove();
+
+    return success;
+  } catch {
+    return false;
+  }
 }
 // 格式化字节大小
 export function formatBytes(size) {
