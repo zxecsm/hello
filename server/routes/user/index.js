@@ -1215,8 +1215,8 @@ route.get(
   validate(
     'query',
     V.object({
-      flag: V.string().trim().default('').allowEmpty().max(10).alphanumeric(),
-      page: V.string().trim().default('').allowEmpty().max(20),
+      flag: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+      page: V.string().trim().default('').allowEmpty().max(30),
     }),
   ),
   asyncHandler(async (_, res) => {
