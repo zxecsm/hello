@@ -52,7 +52,7 @@ import jwt from '../../utils/jwt.js';
 import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
 import resp from '../../utils/response.js';
-import { asyncHandler, validate } from '../../utils/customMiddleware.js';
+import { asyncHandler, setDownloadHeader, validate } from '../../utils/customMiddleware.js';
 import { getImgInfo } from '../../utils/img.js';
 const maxSonglistCount = 2000;
 
@@ -543,16 +543,8 @@ route.get(
       return resp.notFound(res, '歌单不存在')();
     }
 
-    const musicsObj = await batchGetMusics(songListObj.item.map((m) => m.id));
-
-    const list = songListObj.item.reduce((pre, cur) => {
-      if (!musicsObj.hasOwnProperty(cur.id)) return pre;
-
-      pre.push(musicsObj[cur.id]);
-      return pre;
-    }, []);
-
-    res.send(JSON.stringify(list));
+    setDownloadHeader(res, `${songListObj.name}.json`);
+    res.send(JSON.stringify(songListObj.item.map((m) => m.id)));
   }),
 );
 
@@ -581,10 +573,7 @@ route.post(
       return resp.forbidden(res, '歌单不存在')();
     }
 
-    const newSongList = unique(
-      [...list.map((item) => ({ id: item.id })), ...songLists[idx].item],
-      ['id'],
-    );
+    const newSongList = unique([...list.map((id) => ({ id })), ...songLists[idx].item], ['id']);
 
     if (newSongList.length > maxSonglistCount) {
       return resp.forbidden(res, `歌单限制${maxSonglistCount}首`)();
@@ -818,6 +807,7 @@ route.post(
 
     // 过滤默认歌单
     if (idx > 1) {
+      list.splice(idx, 1);
       await updateSongList(account, list);
 
       syncUpdateData(res, 'music');
