@@ -122,7 +122,7 @@ const _d = {
   speed: 300,
   defaultTranslatorData,
   translatorData: [defaultTranslatorData], // 翻译接口
-  temid: nanoid(true), // 临时id
+  temid: nanoid(), // 临时id
   screen: 800, // 区分大屏小屏
   defaultSearchEngineData,
   searchEngineData: [defaultSearchEngineData], // 搜索引擎

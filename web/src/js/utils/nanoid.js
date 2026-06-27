@@ -1,26 +1,16 @@
 // id生成
 const nanoid = (() => {
-  const SERVICE_ID = Math.floor(Math.random() * 36 ** 2);
+  const to36 = (num) => num.toString(36).padStart(2, '0');
+  const SERVICE_ID = to36(Math.floor(Math.random() * 1296)); // 36**2 = 1296
 
-  let lastMs = 0;
-  let counter = 0;
+  let lastMs = 0,
+    counter = 0;
 
-  return (withService) => {
+  return () => {
     const now = Date.now();
+    counter = now === lastMs ? counter + 1 : ((lastMs = now), 0);
 
-    if (now === lastMs) {
-      counter++;
-    } else {
-      lastMs = now;
-      counter = 0;
-    }
-
-    return (
-      'h' +
-      now.toString(36) +
-      (withService ? SERVICE_ID.toString(36).padStart(2, '0') : '') +
-      (counter > 0 ? counter.toString(36) : '')
-    );
+    return `h${now.toString(36)}${SERVICE_ID}${to36(counter)}${to36(Math.floor(Math.random() * 1296))}`;
   };
 })();
 

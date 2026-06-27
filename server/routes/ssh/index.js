@@ -378,10 +378,10 @@ route.post(
 );
 
 // 删除分类
-route.get(
+route.post(
   '/delete-category',
   validate(
-    'query',
+    'body',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
