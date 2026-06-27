@@ -263,6 +263,9 @@ export class AutoScroller {
     this.scrollTimer = null;
     this.inactiveTimer = null;
     this.inactiveDelay = options.inactiveDelay || 1000;
+
+    this.currentClientX = 0;
+    this.currentClientY = 0;
   }
 
   isDocument() {
@@ -312,30 +315,32 @@ export class AutoScroller {
   }
 
   check(clientX, clientY) {
+    this.currentClientX = clientX;
+    this.currentClientY = clientY;
+
     clearTimeout(this.inactiveTimer);
     this.inactiveTimer = setTimeout(() => {
       this.clear(); // 无操作后自动停止
     }, this.inactiveDelay);
 
     const direction = this.getDirection(clientX, clientY);
-
-    const { scrollTop, scrollLeft, clientHeight, clientWidth, scrollHeight, scrollWidth } =
-      this.getContainerInfo();
-
     const canScroll = direction.top || direction.bottom || direction.left || direction.right;
 
     if (canScroll) {
       if (!this.scrollTimer) {
         this.scrollTimer = setInterval(() => {
-          if (direction.top && scrollTop > 0) {
+          const currentDir = this.getDirection(this.currentClientX, this.currentClientY);
+          const info = this.getContainerInfo();
+
+          if (currentDir.top && info.scrollTop > 0) {
             this.scrollBy(0, -this.scrollSpeed);
-          } else if (direction.bottom && scrollTop + clientHeight < scrollHeight) {
+          } else if (currentDir.bottom && info.scrollTop + info.clientHeight < info.scrollHeight) {
             this.scrollBy(0, this.scrollSpeed);
           }
 
-          if (direction.left && scrollLeft > 0) {
+          if (currentDir.left && info.scrollLeft > 0) {
             this.scrollBy(-this.scrollSpeed, 0);
-          } else if (direction.right && scrollLeft + clientWidth < scrollWidth) {
+          } else if (currentDir.right && info.scrollLeft + info.clientWidth < info.scrollWidth) {
             this.scrollBy(this.scrollSpeed, 0);
           }
         }, 16);
@@ -363,8 +368,9 @@ export class AutoScroller {
 }
 
 export class MouseElementTracker {
-  constructor(container, options = {}) {
+  constructor(container, options = {}, scrollContainer) {
     this.container = container;
+    this.scrollContainer = scrollContainer || container;
     options.delay = options.delay || 0;
     this.options = options;
     this.infoBox = null;
@@ -373,7 +379,7 @@ export class MouseElementTracker {
     this.timer = null;
     this.currentX = 0;
     this.currentY = 0;
-    this.scroller = new AutoScroller(this.container, {
+    this.scroller = new AutoScroller(this.scrollContainer, {
       scrollSpeed: options.scrollSpeed || 10,
       scrollThreshold: options.scrollThreshold || 30,
     });
@@ -414,14 +420,6 @@ export class MouseElementTracker {
 
   start() {
     this.isWorking = true;
-  }
-
-  isDocument() {
-    return (
-      this.container === document ||
-      this.container === document.body ||
-      this.container === document.documentElement
-    );
   }
 
   clear() {

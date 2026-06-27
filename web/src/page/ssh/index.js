@@ -736,51 +736,55 @@ function hdComandEdit(e, obj) {
   );
 }
 let mouseQuickFromDom = null;
-const quickMouseElementTracker = new MouseElementTracker($footer[0], {
-  delay: 300,
-  onStart({ e }) {
-    const item = _getTarget($footer[0], e, '.command_item');
-    if (!item) return true;
-    mouseQuickFromDom = item;
-    const obj = getCommandInfo(curQuickGroupId, item.dataset.id);
-    quickMouseElementTracker.changeInfo(obj.title);
-  },
-  onEnd({ dropElement }) {
-    if (mouseQuickFromDom) {
-      if (dropElement) {
-        const to =
-          _getTarget($footer[0], { target: dropElement }, '.command_item') ||
-          _getTarget($footer[0], { target: dropElement }, '.quick_item');
-        if (to) {
-          const isToCommand = to.className.includes('command_item');
-          const fromId = mouseQuickFromDom.dataset.id;
-          const toId = to.dataset.id;
-          if (isToCommand) {
-            if (fromId !== toId) {
-              moveQuickCommand(fromId, toId);
-            }
-          } else {
-            if (curQuickGroupId !== toId) {
-              reqSSHMoveToGroup({
-                id: fromId,
-                fromId: curQuickGroupId,
-                toId,
-              })
-                .then((result) => {
-                  if (result.code === 1) {
-                    _msg.success(result.codeText);
-                    renderList();
-                  }
+const quickMouseElementTracker = new MouseElementTracker(
+  $footer[0],
+  {
+    delay: 300,
+    onStart({ e }) {
+      const item = _getTarget($footer[0], e, '.command_item');
+      if (!item) return true;
+      mouseQuickFromDom = item;
+      const obj = getCommandInfo(curQuickGroupId, item.dataset.id);
+      quickMouseElementTracker.changeInfo(obj.title);
+    },
+    onEnd({ dropElement }) {
+      if (mouseQuickFromDom) {
+        if (dropElement) {
+          const to =
+            _getTarget($footer[0], { target: dropElement }, '.command_item') ||
+            _getTarget($footer[0], { target: dropElement }, '.quick_item');
+          if (to) {
+            const isToCommand = to.className.includes('command_item');
+            const fromId = mouseQuickFromDom.dataset.id;
+            const toId = to.dataset.id;
+            if (isToCommand) {
+              if (fromId !== toId) {
+                moveQuickCommand(fromId, toId);
+              }
+            } else {
+              if (curQuickGroupId !== toId) {
+                reqSSHMoveToGroup({
+                  id: fromId,
+                  fromId: curQuickGroupId,
+                  toId,
                 })
-                .catch(() => {});
+                  .then((result) => {
+                    if (result.code === 1) {
+                      _msg.success(result.codeText);
+                      renderList();
+                    }
+                  })
+                  .catch(() => {});
+              }
             }
           }
         }
       }
-    }
-    mouseQuickFromDom = null;
+      mouseQuickFromDom = null;
+    },
   },
-});
+  $quickCommands[0],
+);
 function moveQuickCommand(fromId, toId) {
   reqSSHMoveQuick({ groupId: curQuickGroupId, fromId, toId })
     .then((res) => {
