@@ -411,6 +411,56 @@ $headWrap
     myOpen('/');
   })
   .on('click', '.h_check_item_btn', hdCheckItemBtn)
+  .on('click', '.h_clear_btn', (e) => {
+    rMenu.pop(
+      {
+        e,
+        text: `确认清空：所有${getTypeText(HASH)}？`,
+        confirm: { type: 'danger', text: '清空' },
+      },
+      (type) => {
+        if (type === 'confirm') {
+          reqUserDeleteTrash({
+            ids: [],
+            type: HASH,
+          })
+            .then((result) => {
+              if (result.code === 1) {
+                _msg.success(result.codeText);
+                renderList();
+                return;
+              }
+            })
+            .catch(() => {});
+        }
+      },
+    );
+  })
+  .on('click', '.h_recover_btn', (e) => {
+    rMenu.pop(
+      {
+        e,
+        text: `确认恢复：所有${getTypeText(HASH)}？`,
+        confirm: { type: 'primary', text: '恢复' },
+      },
+      (type) => {
+        if (type === 'confirm') {
+          reqUserRecoverTrash({
+            ids: [],
+            type: HASH,
+          })
+            .then((result) => {
+              if (result.code === 1) {
+                _msg.success(result.codeText);
+                renderList();
+                return;
+              }
+            })
+            .catch(() => {});
+        }
+      },
+    );
+  })
   .on('click', '.select_btn', function (e) {
     const data = [
       {

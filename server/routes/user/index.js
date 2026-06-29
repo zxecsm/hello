@@ -14,7 +14,6 @@ import {
   isImgFile,
   createPagingData,
   getSplitWord,
-  batchTask,
   concurrencyTasks,
   getWordContent,
 } from '../../utils/utils.js';
@@ -45,7 +44,7 @@ import jwt from '../../utils/jwt.js';
 import { fieldLength } from '../config.js';
 import _path from '../../utils/path.js';
 import { parseMarkDown } from '../note/note.js';
-import { _delDir, readMenu } from '../file/file.js';
+import { _delDir, getUniqueFilename, readMenu } from '../file/file.js';
 import _crypto from '../../utils/crypto.js';
 import getCity from '../../utils/getCity.js';
 import nanoid from '../../utils/nanoid.js';
@@ -1902,7 +1901,7 @@ route.post(
     V.object({
       type: V.string().trim().enum(['bmk_group', 'bmk', 'note', 'history', 'ssh']),
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
-        .min(1)
+        .min(0)
         .max(fieldLength.maxPagesize),
     }),
   ),
@@ -1911,36 +1910,43 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db(type)
-      .where({ id: { in: ids }, account, state: 0 })
-      .delete();
-
-    // 删除分组，则删除分组下的所有书签
-    if (type === 'bmk_group') {
-      await batchTask(async (offset, limit) => {
-        const list = ids.slice(offset, offset + limit);
-
-        if (list.length === 0) return false;
-
+    const deleteAssociated = async (ids) => {
+      // 删除分组，则删除分组下的所有书签
+      if (type === 'bmk_group') {
         await db('bmk')
-          .where({ group_id: { in: list }, account })
-          .delete();
+          .where({ group_id: { in: ids }, account })
+          .batchDelete();
+      }
 
-        return true;
-      }, 3);
-    }
+      // 移动笔记历史到文件回收站
+      if (type === 'note') {
+        const trashDir = appConfig.trashDir(account);
 
-    // 移动笔记历史到文件回收站
-    if (type === 'note') {
-      const trashDir = appConfig.trashDir(account);
+        await concurrencyTasks(ids, 5, async (id) => {
+          const noteHistoryDir = appConfig.noteHistoryDir(account, id);
 
-      await concurrencyTasks(ids, 5, async (id) => {
-        const noteHistoryDir = appConfig.noteHistoryDir(account, id);
+          if (await _f.exists(noteHistoryDir)) {
+            let targetPath = _path.normalizeNoSlash(trashDir, id);
+            if (await _f.exists(targetPath)) {
+              targetPath = await getUniqueFilename(targetPath);
+            }
+            await _f.rename(noteHistoryDir, targetPath);
+          }
+        });
+      }
+    };
 
-        if (await _f.exists(noteHistoryDir)) {
-          await _f.rename(noteHistoryDir, _path.normalizeNoSlash(trashDir, id));
-        }
-      });
+    if (ids.length > 0) {
+      await db(type)
+        .where({ id: { in: ids }, account, state: 0 })
+        .delete();
+      await deleteAssociated(ids);
+    } else {
+      await db(type)
+        .where({ account, state: 0 })
+        .batchDelete({}, 'id', async (list) => {
+          await deleteAssociated(list.map((item) => item.id));
+        });
     }
 
     syncUpdateData(res, 'trash');
@@ -1957,7 +1963,7 @@ route.post(
     V.object({
       type: V.string().trim().enum(['bmk_group', 'bmk', 'note', 'history', 'ssh']),
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
-        .min(1)
+        .min(0)
         .max(fieldLength.maxPagesize),
     }),
   ),
@@ -1966,9 +1972,13 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db(type)
-      .where({ id: { in: ids }, account, state: 0 })
-      .update({ state: 1 });
+    if (ids.length > 0) {
+      await db(type)
+        .where({ id: { in: ids }, account, state: 0 })
+        .update({ state: 1 });
+    } else {
+      await db(type).where({ account, state: 0 }).batchUpdate({ state: 1 });
+    }
 
     syncUpdateData(res, 'trash');
 

@@ -411,6 +411,16 @@ $headWrap
   .on('click', '.h_trash_btn', () => {
     _myOpen('/trash#history', '回收站', 'trash');
   })
+  .on('click', '.h_clear_btn', (e) => {
+    rMenu.pop(
+      { e, text: '确认清空：所有搜索历史？', confirm: { type: 'danger', text: '清空' } },
+      (type) => {
+        if (type === 'confirm') {
+          deleteHistory([]);
+        }
+      },
+    );
+  })
   .on('click', '.h_add_item_btn', addHistory)
   .on('click', '.inp_box .clean_btn', function () {
     wInput.setValue('').focus();

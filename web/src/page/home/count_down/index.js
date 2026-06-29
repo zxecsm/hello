@@ -189,8 +189,10 @@ function renderCountList(total, toTop) {
     `
     <div style="padding-bottom: 1rem;">
       <button cursor="y" class="add_btn btn btn_primary">添加</button>
-      <button v-if="countList.length > 0" cursor="y" class="clear_all_btn btn btn_primary">多选</button>
-      <button v-if="hasRemain(countList)" cursor="y" class="clear_btn btn btn_danger">清除已到期</button>
+      <template v-if="countList.length > 0">
+        <button cursor="y" class="clear_all_btn btn btn_primary">多选</button>
+        <button cursor="y" class="clear_btn btn btn_danger">清空</button>
+      </template>
     </div>
     <p v-if="total <= 0" style="padding: 2rem 0;pointer-events: none;text-align: center;">暂无倒计时项</p>
     <template v-else>
@@ -216,9 +218,6 @@ function renderCountList(total, toTop) {
       total,
       readableTime,
       countList,
-      hasRemain(countList) {
-        return countList.some((item) => item.remain <= 0 && item.state === 1);
-      },
       getPaging() {
         return countPgnt.getHTML({
           pageNo: countPageNo,
@@ -412,27 +411,20 @@ function addCount(e) {
   );
 }
 // 删除
-function delCount(e, ids, cb, loading = { start() {}, end() {} }) {
-  let opt = {
-      e,
-      text: '确认清除：当页已到期倒计时？',
-      confirm: { type: 'danger', text: '清除' },
-    },
-    param = {
-      ids: countList.filter((item) => item.remain <= 0).map((item) => item.id),
-    };
-  if (ids) {
-    opt = {
-      e,
-      text: '确认删除：倒计时？',
-      confirm: { type: 'danger', text: '删除' },
-    };
-    param.ids = ids;
+function delCount(e, ids = [], cb, loading = { start() {}, end() {} }) {
+  const opt = {
+    e,
+    text: '确认清空：所有倒计时？',
+    confirm: { type: 'danger', text: '清空' },
+  };
+  if (ids.length > 0) {
+    opt.text = '确认删除：倒计时？';
+    opt.confirm = { type: 'danger', text: '删除' };
   }
   rMenu.pop(opt, (type) => {
     if (type === 'confirm') {
       loading.start();
-      reqCountDelete(param)
+      reqCountDelete({ ids })
         .then((result) => {
           loading.end();
           if (result.code === 1) {

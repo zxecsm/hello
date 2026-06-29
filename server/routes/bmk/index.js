@@ -607,7 +607,7 @@ route.post(
     'body',
     V.object({
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
-        .min(1)
+        .min(0)
         .max(fieldLength.maxPagesize),
     }),
   ),
@@ -616,14 +616,18 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('bmk')
-      .where({ id: { in: ids }, state: 1, account })
-      .update({ state: 0 });
+    if (ids.length > 0) {
+      await db('bmk')
+        .where({ id: { in: ids }, state: 1, account })
+        .update({ state: 0 });
+    } else {
+      await db('bmk').where({ state: 1, account }).batchUpdate({ state: 0 });
+    }
 
     syncUpdateData(res, 'bookmark');
     syncUpdateData(res, 'trash');
 
-    resp.success(res, '删除书签成功')();
+    resp.success(res, `${ids.length > 0 ? '删除' : '清空'}书签成功`)();
   }),
 );
 

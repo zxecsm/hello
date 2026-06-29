@@ -693,6 +693,16 @@ $headWrap
   .on('click', '.h_trash_btn', () => {
     _myOpen('/trash#ssh', '回收站', 'trash');
   })
+  .on('click', '.h_clear_btn', (e) => {
+    rMenu.pop(
+      { e, text: '确认清空：所有SSH配置？', confirm: { type: 'danger', text: '清空' } },
+      (type) => {
+        if (type === 'confirm') {
+          deleteSSH([]);
+        }
+      },
+    );
+  })
   .on('click', '.h_add_item_btn', function (e) {
     rMenu.inpMenu(
       e,

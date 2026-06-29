@@ -134,7 +134,7 @@ route.post(
     'body',
     V.object({
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
-        .min(1)
+        .min(0)
         .max(fieldLength.maxPagesize),
     }),
   ),
@@ -143,14 +143,18 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('ssh')
-      .where({ id: { in: ids }, account, state: 1 })
-      .update({ state: 0 });
+    if (ids.length > 0) {
+      await db('ssh')
+        .where({ id: { in: ids }, account, state: 1 })
+        .update({ state: 0 });
+    } else {
+      await db('ssh').where({ account, state: 1 }).batchUpdate({ state: 0 });
+    }
 
     syncUpdateData(res, 'ssh');
     syncUpdateData(res, 'trash');
 
-    resp.success(res, '删除SSH配置成功')();
+    resp.success(res, `${ids.length > 0 ? '删除' : '清空'}SSH配置成功`)();
   }),
 );
 

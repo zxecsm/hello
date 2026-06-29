@@ -246,7 +246,7 @@ route.post(
     'body',
     V.object({
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
-        .min(1)
+        .min(0)
         .max(fieldLength.maxPagesize),
     }),
   ),
@@ -255,13 +255,17 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('count_down')
-      .where({ id: { in: ids }, account })
-      .delete();
+    if (ids.length > 0) {
+      await db('count_down')
+        .where({ id: { in: ids }, account })
+        .delete();
+    } else {
+      await db('count_down').where({ account }).batchDelete();
+    }
 
     syncUpdateData(res, 'countlist');
 
-    resp.success(res, `删除倒计时成功`)();
+    resp.success(res, `${ids.length > 0 ? '删除' : '清空'}倒计时成功`)();
   }),
 );
 

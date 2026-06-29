@@ -105,7 +105,7 @@ route.post(
     'body',
     V.object({
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
-        .min(1)
+        .min(0)
         .max(fieldLength.maxPagesize),
     }),
   ),
@@ -114,13 +114,17 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('todo')
-      .where({ id: { in: ids }, account })
-      .delete();
+    if (ids.length > 0) {
+      await db('todo')
+        .where({ id: { in: ids }, account })
+        .delete();
+    } else {
+      await db('todo').where({ account }).batchDelete();
+    }
 
     syncUpdateData(res, 'todolist');
 
-    resp.success(res, `删除待办成功`)();
+    resp.success(res, `${ids.length > 0 ? '删除' : '清空'}待办成功`)();
   }),
 );
 

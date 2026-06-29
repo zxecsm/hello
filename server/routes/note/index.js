@@ -383,28 +383,34 @@ route.post(
     'body',
     V.object({
       ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
-        .min(1)
+        .min(0)
         .max(fieldLength.maxPagesize),
     }),
   ),
   asyncHandler(async (_, res) => {
-    let { ids } = res.locals.ctx;
+    const { ids } = res.locals.ctx;
 
-    ids = ids.filter((item) => ![appConfig.aboutid, appConfig.tipsid].includes(item)); // 过滤关于和tips
+    const skips = [appConfig.aboutid, appConfig.tipsid];
 
     const { account } = res.locals.hello.userinfo;
 
     if (ids.length > 0) {
+      const list = ids.filter((item) => !skips.includes(item)); // 过滤关于和tips
+      if (list.length > 0) {
+        await db('note')
+          .where({ id: { in: list }, account, state: 1 })
+          .update({ state: 0 });
+      }
+    } else {
       await db('note')
-        .where({ id: { in: ids }, account, state: 1 })
-        .update({ state: 0 });
-
-      syncUpdateData(res, 'note');
-
-      syncUpdateData(res, 'trash');
+        .where({ id: { not: skips }, account, state: 1 })
+        .batchUpdate({ state: 0 });
     }
 
-    resp.success(res, '删除笔记成功')();
+    syncUpdateData(res, 'note');
+    syncUpdateData(res, 'trash');
+
+    resp.success(res, `${ids.length > 0 ? '删除' : '清空'}笔记成功`)();
   }),
 );
 

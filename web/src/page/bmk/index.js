@@ -68,6 +68,7 @@ if (urlParams.acc && urlParams.acc !== localData.get('account')) {
   runState = 'other';
   $headWrap.find('.h_add_item_btn').remove();
   $headWrap.find('.h_trash_btn').remove();
+  $headWrap.find('.h_clear_btn').remove();
   $categoryTag.find('.setting_category').remove();
   $footer.find('.f_move_to').text('添加到');
   $footer.find('.f_delete').remove();
@@ -821,6 +822,24 @@ $headWrap
   .on('click', '.h_go_home', hdGoHome)
   .on('click', '.h_trash_btn', () => {
     _myOpen('/trash#bmk', '回收站', 'trash');
+  })
+  .on('click', '.h_clear_btn', (e) => {
+    rMenu.pop(
+      { e, text: '确认清空：所有书签？', confirm: { type: 'danger', text: '清空' } },
+      (type) => {
+        if (type === 'confirm') {
+          reqBmkDeleteBmk({ ids: [] })
+            .then((result) => {
+              if (result.code === 1) {
+                _msg.success(result.codeText);
+                renderList();
+                return;
+              }
+            })
+            .catch(() => {});
+        }
+      },
+    );
   })
   .on('click', '.inp_box .clean_btn', hdClearSearch)
   .on('click', '.inp_box .search_btn', () => {

@@ -71,6 +71,7 @@ if (urlParams.acc && urlParams.acc !== localData.get('account')) {
   runState = 'other';
   $headWrap.find('.h_add_item_btn').remove();
   $headWrap.find('.h_trash_btn').remove();
+  $headWrap.find('.h_clear_btn').remove();
   $headWrap.find('.h_check_item_btn').remove();
   $categoryTag.find('.setting_category').remove();
 } else {
@@ -894,6 +895,16 @@ $headWrap
   })
   .on('click', '.h_trash_btn', () => {
     _myOpen('/trash#note', '回收站', 'trash');
+  })
+  .on('click', '.h_clear_btn', (e) => {
+    rMenu.pop(
+      { e, text: '确认清空：所有笔记？', confirm: { type: 'danger', text: '清空' } },
+      (type) => {
+        if (type === 'confirm') {
+          deleteNote([]);
+        }
+      },
+    );
   })
   .on('click', '.h_add_item_btn', function (e) {
     if (runState !== 'own') return;

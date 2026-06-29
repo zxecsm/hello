@@ -185,8 +185,10 @@ function renderTodoList(total, toTop) {
     `
     <div style="padding-bottom: 1rem;">
       <button cursor="y" class="add_btn btn btn_primary">添加</button>
-      <button v-if="todoList.length > 0" cursor="y" class="clear_all_btn btn btn_primary">多选</button>
-      <button v-if="hasFinish()" cursor="y" class="clear_btn btn btn_danger">清除已完成</button>
+      <template v-if="todoList.length > 0">
+        <button cursor="y" class="clear_all_btn btn btn_primary">多选</button>
+        <button cursor="y" class="clear_btn btn btn_danger">清空</button>
+      </template>
     </div>
     <p v-if="total === 0" style="padding: 2rem 0;pointer-events: none;text-align: center;">暂无待办事项</p>
     <template v-else>
@@ -205,9 +207,6 @@ function renderTodoList(total, toTop) {
     {
       total,
       todoList,
-      hasFinish() {
-        return todoList.some((item) => item.state === 0);
-      },
       hdTextMsg,
       formatDate,
       getPaging() {
@@ -346,27 +345,20 @@ function addTodo(e) {
   );
 }
 // 删除事项
-function delTodo(e, ids, cb, loading = { start() {}, end() {} }) {
-  let opt = {
-      e,
-      text: '确认清除：当页已完成事项？',
-      confirm: { type: 'danger', text: '清除' },
-    },
-    param = {
-      ids: todoList.filter((item) => item.state === 0).map((item) => item.id),
-    };
-  if (ids) {
-    opt = {
-      e,
-      text: '确认删除：事项？',
-      confirm: { type: 'danger', text: '删除' },
-    };
-    param.ids = ids;
+function delTodo(e, ids = [], cb, loading = { start() {}, end() {} }) {
+  const opt = {
+    e,
+    text: '确认清空：所有待办事项？',
+    confirm: { type: 'danger', text: '清空' },
+  };
+  if (ids.length > 0) {
+    opt.text = '确认删除：事项？';
+    opt.confirm = { type: 'danger', text: '删除' };
   }
   rMenu.pop(opt, (type) => {
     if (type === 'confirm') {
       loading.start();
-      reqTodoDelete(param)
+      reqTodoDelete({ ids })
         .then((result) => {
           loading.end();
           if (result.code === 1) {
