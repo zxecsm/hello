@@ -2277,7 +2277,7 @@ const songsMouseElementTracker = new MouseElementTracker(
       if (
         !item ||
         isSelectingSongs() ||
-        curOpenSongListId === 'all' ||
+        ['history', 'all'].includes(curOpenSongListId) ||
         curSongListSort !== 'default' ||
         onlyShowMv === 1 ||
         !e.target.className.includes('logo')
@@ -2294,7 +2294,7 @@ const songsMouseElementTracker = new MouseElementTracker(
       if (
         !isSelectingSongs() &&
         mouseSongsFromDom &&
-        curOpenSongListId !== 'all' &&
+        !['history', 'all'].includes(curOpenSongListId) &&
         curSongListSort === 'default' &&
         onlyShowMv === 0
       ) {
