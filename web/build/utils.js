@@ -169,6 +169,7 @@ function getPlugins(isDev) {
         swDest: 'sw.js',
         clientsClaim: true,
         skipWaiting: true,
+        exclude: [/\.html$/],
       }),
     ];
   } else {
