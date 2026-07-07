@@ -10,7 +10,7 @@ const nanoid = (() => {
     const now = Date.now();
     counter = now === lastMs ? counter + 1 : ((lastMs = now), 0);
 
-    return `h${now.toString(36)}${SERVICE_ID}${to36(counter)}${to36(Math.floor(Math.random() * 1296))}`;
+    return `h${now.toString(36)}${SERVICE_ID}${to36(counter)}${to36(Math.floor(Math.random() * 1296))}`.toUpperCase();
   };
 })();
 
