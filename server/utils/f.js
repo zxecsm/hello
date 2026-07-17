@@ -96,6 +96,23 @@ async function lstat(path) {
   }
 }
 
+async function stat(path) {
+  try {
+    return await fsp.stat(path);
+  } catch {
+    return null;
+  }
+}
+
+// 获取真实路径
+async function realpath(path, ...arg) {
+  try {
+    return await fsp.realpath(path, ...arg);
+  } catch {
+    return null;
+  }
+}
+
 // 读取目录
 async function readdir(path, ...arg) {
   try {
@@ -167,16 +184,16 @@ async function chown(path, uid, gid, { signal, progress, recursive = false } = {
   );
 }
 
-async function getType(stat) {
-  if (typeof stat === 'string') stat = await lstat(stat);
-  if (!stat) return '';
-  if (stat.isFile()) return 'file';
-  if (stat.isDirectory()) return 'dir';
-  if (stat.isSymbolicLink()) return 'symlink';
-  if (stat.isSocket()) return 'socket';
-  if (stat.isFIFO()) return 'fifo';
-  if (stat.isCharacterDevice()) return 'chardev';
-  if (stat.isBlockDevice()) return 'blockdev';
+async function getType(s, real = false) {
+  if (typeof s === 'string') s = real ? await stat(s) : await lstat(s);
+  if (!s) return '';
+  if (s.isFile()) return 'file';
+  if (s.isDirectory()) return 'dir';
+  if (s.isSymbolicLink()) return 'symlink';
+  if (s.isSocket()) return 'socket';
+  if (s.isFIFO()) return 'fifo';
+  if (s.isCharacterDevice()) return 'chardev';
+  if (s.isBlockDevice()) return 'blockdev';
   return 'unknown';
 }
 
@@ -434,8 +451,10 @@ const _f = {
   rename,
   del,
   mkdir,
+  realpath,
   getType,
   lstat,
+  stat,
   getFileTypeName,
   symlink,
   link,

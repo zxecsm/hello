@@ -35,6 +35,7 @@ import {
   writeFavorites,
   fileToMusic,
   fileToBg,
+  isPathSafe,
 } from './file.js';
 
 import { fieldLength } from '../config.js';
@@ -169,6 +170,7 @@ route.post(
     let p = '';
     let rootP = '';
     let accFlag = '';
+    let baseP = '';
 
     if (token) {
       const share = await validShareState(token, 'file');
@@ -179,16 +181,15 @@ route.post(
 
       const { data, account, id: shareID } = share.data;
 
-      const { name } = data;
-
       // 用户根目录
-      rootP = appConfig.userRootDir(account, data.path, name);
+      baseP = appConfig.userRootDir(account);
+      rootP = appConfig.userRootDir(account, data.path, data.name);
 
-      p = _path.normalizeNoSlash(rootP, path);
+      p = appConfig.userRootDir(account, data.path, data.name, path);
       accFlag = shareID + account || temid;
     } else {
       p = appConfig.userRootDir(account, path);
-      rootP = appConfig.userRootDir(account);
+      rootP = baseP = appConfig.userRootDir(account);
       accFlag = account;
     }
 
@@ -210,6 +211,18 @@ route.post(
       } catch (error) {
         await writelog(res, error, 500);
       }
+    }
+
+    if (!(await isPathSafe(baseP, p, true))) {
+      return resp.success(
+        res,
+        'ok',
+        createPagingData(
+          fileListSortAndCacheSize([], rootP, sortType, isDesc, hidden),
+          pageSize,
+          pageNo,
+        ),
+      )();
     }
 
     const controller = new AbortController();
@@ -244,10 +257,11 @@ route.post(
     }, 1000);
 
     try {
+      const appDir = appConfig.userRootDir(appConfig.adminAccount);
       let arr = [];
       let count = 0;
 
-      if (await _f.getType(p)) {
+      if ((await _f.getType(p, true)) === 'dir') {
         const stack = [p];
 
         while (stack.length > 0 && !signal.aborted) {
@@ -274,12 +288,12 @@ route.post(
               path,
             };
 
-            if (
-              obj.type === 'file' &&
-              obj.fileType === 'symlink' &&
-              _path.isPathWithin(rootP, obj.linkTarget, 1)
-            ) {
-              obj.linkTarget = _path.normalizeNoSlash('/' + item.linkTarget.slice(rootP.length));
+            if (obj.type === 'file' && obj.fileType === 'symlink') {
+              if (_path.isPathWithin(rootP, obj.linkTarget, 1)) {
+                obj.linkTarget = _path.normalizeNoSlash('/' + item.linkTarget.slice(rootP.length));
+              } else if (_path.isPathWithin(appDir, obj.linkTarget, 1)) {
+                obj.linkTarget = _path.normalizeNoSlash('/' + item.linkTarget.slice(appDir.length));
+              }
             }
 
             if (favorites && item.type === 'dir') {
@@ -358,6 +372,7 @@ route.post(
     }
 
     let p = '';
+    let baseP = '';
 
     if (token) {
       const share = await validShareState(token, 'file');
@@ -370,20 +385,25 @@ route.post(
 
       const { name, type } = data;
 
-      const rootP = appConfig.userRootDir(account, data.path, name);
+      baseP = appConfig.userRootDir(account);
 
       if (type === 'file') {
-        p = rootP;
+        p = appConfig.userRootDir(account, data.path, name);
       } else if (type === 'dir') {
-        p = _path.normalizeNoSlash(rootP, path);
+        p = appConfig.userRootDir(account, data.path, name, path);
       }
     } else {
+      baseP = appConfig.userRootDir(account);
       p = appConfig.userRootDir(account, path);
     }
 
-    const stat = await _f.lstat(p);
+    if (!(await isPathSafe(baseP, p))) {
+      return resp.forbidden(res, '文件不存在')();
+    }
 
-    if (!stat || (await _f.getType(stat)) === 'dir') {
+    const stat = await _f.stat(p);
+
+    if (!stat || (await _f.getType(stat, true)) === 'dir') {
       return resp.forbidden(res, '文件不存在')();
     }
 
@@ -512,6 +532,10 @@ route.get(
 
     const p = appConfig.userRootDir(account, path);
 
+    if (!(await isPathSafe(appConfig.userRootDir(account), p))) {
+      return resp.forbidden(res, '文件夹不存在')();
+    }
+
     const controller = new AbortController();
     const signal = controller.signal;
     const taskKey = taskState.add(account, `读取文件夹大小...`, controller);
@@ -564,7 +588,17 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    const fpath = appConfig.userRootDir(account, `${path}/${name}`);
+    if (
+      !(await isPathSafe(
+        appConfig.userRootDir(account),
+        appConfig.userRootDir(account, path),
+        true,
+      ))
+    ) {
+      return resp.forbidden(res, '当前文件夹不存在')();
+    }
+
+    const fpath = appConfig.userRootDir(account, path, name);
 
     // 过滤回收站
     if ((await _f.exists(fpath)) || appConfig.trashDir(account) === fpath) {
@@ -602,8 +636,17 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    const curPath = appConfig.userRootDir(account, `${path}/${name}`);
+    const baseP = appConfig.userRootDir(account);
+
+    if (!(await isPathSafe(baseP, appConfig.userRootDir(account, path), true))) {
+      return resp.forbidden(res, '当前文件夹不存在')();
+    }
+
     const tPath = appConfig.userRootDir(account, targetPath);
+
+    if (!(await isPathSafe(baseP, tPath))) {
+      return resp.forbidden(res, '目标路径不存在')();
+    }
 
     const tType = await _f.getType(tPath);
 
@@ -612,6 +655,7 @@ route.post(
     }
 
     // 过滤回收站
+    const curPath = appConfig.userRootDir(account, path, name);
     if ((await _f.exists(curPath)) || appConfig.trashDir(account) === curPath) {
       return resp.forbidden(res, '已存在重名文件')();
     }
@@ -695,6 +739,10 @@ route.post(
 
     const fpath = appConfig.userRootDir(account, path);
 
+    if (!(await isPathSafe(appConfig.userRootDir(account), fpath))) {
+      return resp.forbidden(res, '文件不存在')();
+    }
+
     const stat = await _f.lstat(fpath);
     const type = await _f.getType(stat);
 
@@ -773,7 +821,10 @@ route.post(
 
     const p = appConfig.userRootDir(account, path);
 
-    if ((await _f.getType(p)) !== 'dir') {
+    if (
+      !(await isPathSafe(appConfig.userRootDir(account), p, true)) ||
+      (await _f.getType(p, true)) !== 'dir'
+    ) {
       return resp.forbidden(res, '目标文件夹不存在')();
     }
 
@@ -855,7 +906,10 @@ route.post(
 
     const p = appConfig.userRootDir(account, path);
 
-    if ((await _f.getType(p)) !== 'dir') {
+    if (
+      !(await isPathSafe(appConfig.userRootDir(account), p, true)) ||
+      (await _f.getType(p, true)) !== 'dir'
+    ) {
       return resp.forbidden(res, '目标文件夹不存在')();
     }
 
@@ -889,7 +943,10 @@ route.post(
 
     const p = appConfig.userRootDir(account, path);
 
-    if ((await _f.getType(p)) !== 'dir') {
+    if (
+      !(await isPathSafe(appConfig.userRootDir(account), p, true)) ||
+      (await _f.getType(p, true)) !== 'dir'
+    ) {
       return resp.forbidden(res, '目标文件夹不存在')();
     }
 
@@ -1237,6 +1294,16 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
+    if (
+      !(await isPathSafe(
+        appConfig.userRootDir(account),
+        appConfig.userRootDir(account, path),
+        true,
+      ))
+    ) {
+      return resp.forbidden(res, '当前文件夹不存在')();
+    }
+
     const fpath = appConfig.userRootDir(account, `${path}/${name}`);
 
     if (await _f.exists(fpath)) {
@@ -1487,6 +1554,16 @@ route.post(
 
       const { account } = res.locals.hello.userinfo;
 
+      if (
+        !(await isPathSafe(
+          appConfig.userRootDir(account),
+          appConfig.userRootDir(account, _path.dirname(path)),
+          true,
+        ))
+      ) {
+        return resp.forbidden(res, '当前文件夹不存在')();
+      }
+
       let targetPath = appConfig.userRootDir(
         account,
         `${_path.dirname(path)}/${_path.sanitizeFilename(_path.basename(path)[0] || 'unknown')}`,
@@ -1582,12 +1659,13 @@ route.post(
   asyncHandler(async (_, res) => {
     const { path, type } = res.locals.ctx;
 
+    const { account } = res.locals.hello.userinfo;
     const normalizePath = _path.normalize(path);
     if (normalizePath.endsWith('/')) {
       return resp.success(res, 'ok', normalizePath)();
     }
 
-    const p = appConfig.userRootDir(res.locals.hello.userinfo.account, path);
+    const p = appConfig.userRootDir(account, path);
     const name = _path.basename(p)[0];
     const dir = _path.dirname(p);
 
@@ -1606,10 +1684,9 @@ route.post(
 
       // 只补全目录，获取链接的真实类型
       if (type === 'dir' && t === 'symlink') {
-        try {
-          const rPath = await _f.fsp.realpath(targetPath);
-          t = await _f.getType(rPath);
-        } catch {}
+        if (await isPathSafe(appConfig.userRootDir(account), targetPath)) {
+          t = await _f.getType(targetPath, true);
+        }
       }
 
       t = t === 'dir' ? 'dir' : 'file';
@@ -1649,7 +1726,10 @@ route.post(
 
     const targetPath = appConfig.userRootDir(account, path);
 
-    if ((await _f.getType(targetPath)) !== 'dir') {
+    if (
+      !(await isPathSafe(appConfig.userRootDir(account), targetPath, true)) ||
+      (await _f.getType(targetPath, true)) !== 'dir'
+    ) {
       return resp.forbidden(res, '目标文件夹不存在')();
     }
 

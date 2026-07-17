@@ -14,6 +14,7 @@ import jwt from '../../utils/jwt.js';
 import V from '../../utils/validRules.js';
 import resp from '../../utils/response.js';
 import { setDownloadHeader } from '../../utils/customMiddleware.js';
+import { isPathSafe } from '../file/file.js';
 
 export default async function getFile(req, res, originalPath, verifyLogin = true) {
   const params = { ...req.query, p: originalPath };
@@ -78,7 +79,7 @@ export default async function getFile(req, res, originalPath, verifyLogin = true
   } else if (dir === 'upload') {
     path = await getUploadPath(res, pArr[0], account);
   } else if (dir === 'file') {
-    path = getFilePath(account, pArr);
+    path = await getFilePath(account, pArr);
   } else if (dir === 'sharefile') {
     path = await getShareFilePath(res, token, pArr);
   } else if (dir === 'music') {
@@ -92,7 +93,7 @@ export default async function getFile(req, res, originalPath, verifyLogin = true
   }
 
   if (path === null) return;
-  const stat = await _f.lstat(path);
+  const stat = await _f.stat(path);
 
   if (!path || !stat || stat.isDirectory()) {
     return resp.notFound(res, '文件不存在')();
@@ -125,7 +126,8 @@ async function getPicPath(res, id) {
   }
   const pic = await db('pic').select('url').where({ id }).findOne();
   if (pic && pic.url) {
-    return appConfig.picDir(pic.url);
+    const p = appConfig.picDir(pic.url);
+    if (await isPathSafe(appConfig.picDir(), p)) return p;
   }
   return '';
 }
@@ -139,7 +141,8 @@ async function getBgPath(res, id) {
   }
   const bg = await db('bg').select('url').where({ id }).findOne();
   if (bg && bg.url) {
-    return appConfig.bgDir(bg.url);
+    const p = appConfig.bgDir(bg.url);
+    if (await isPathSafe(appConfig.bgDir(), p)) return p;
   }
   return '';
 }
@@ -156,7 +159,9 @@ async function getLogoPath(res, pArr) {
     resp.badRequest(res)(error, 1);
     return null;
   }
-  return appConfig.logoDir(acc, pArr.slice(1).join('/'));
+  const p = appConfig.logoDir(acc, pArr.slice(1).join('/'));
+  if (await isPathSafe(appConfig.logoDir(acc), p)) return p;
+  return '';
 }
 
 async function getUploadPath(res, id, account) {
@@ -175,7 +180,9 @@ async function getUploadPath(res, id, account) {
 
   if (msg && msg.url && (msg.flag === appConfig.chatRoomAccount || msg.flag.includes(account))) {
     // 消息文件存在，并且是群和自己发送或收到的消息
-    return appConfig.uploadDir(msg.url);
+    const p = appConfig.uploadDir(msg.url);
+    if (await isPathSafe(appConfig.uploadDir(), p)) return p;
+    return '';
   } else {
     resp.forbidden(res, '无权访问')();
     return null;
@@ -193,15 +200,14 @@ async function getShareFilePath(res, token, pArr) {
   if (share.state === 1) {
     const obj = share.data.data;
 
-    const { name, type } = obj;
-
-    const rootP = appConfig.userRootDir(share.data.account, obj.path, name);
-
+    const { name, type, path } = obj;
+    const pathArr = `${path}/${name}`.split('/').filter(Boolean);
     if (type === 'file') {
-      return rootP;
+      return await getFilePath(share.data.account, pathArr);
     } else if (type === 'dir') {
-      return _path.normalizeNoSlash(rootP, pArr.join('/'));
+      return await getFilePath(share.data.account, [...pathArr, ...pArr]);
     }
+    return '';
   }
   return '';
 }
@@ -228,8 +234,10 @@ async function getShareMusicPath(res, token, pArr, account) {
   }
 }
 
-function getFilePath(account, pArr) {
-  return appConfig.userRootDir(account, pArr.join('/'));
+async function getFilePath(account, pArr) {
+  const p = appConfig.userRootDir(account, pArr.join('/'));
+  if (await isPathSafe(appConfig.userRootDir(account), p)) return p;
+  return '';
 }
 
 async function getPubPath(res, pArr) {
@@ -244,7 +252,9 @@ async function getPubPath(res, pArr) {
     resp.badRequest(res)(error, 1);
     return null;
   }
-  return appConfig.pubDir(acc, pArr.slice(1).join('/'));
+  const p = appConfig.pubDir(acc, pArr.slice(1).join('/'));
+  if (await isPathSafe(appConfig.pubDir(acc), p)) return p;
+  return '';
 }
 
 async function getMusicPath(res, pArr) {
@@ -258,7 +268,8 @@ async function getMusicPath(res, pArr) {
   }
   const song = await db('songs').select(type).where({ id }).findOne();
   if (song && song[type]) {
-    return appConfig.musicDir(song[type]);
+    const p = appConfig.musicDir(song[type]);
+    if (await isPathSafe(appConfig.musicDir(), p)) return p;
   }
   return '';
 }

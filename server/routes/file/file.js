@@ -266,3 +266,9 @@ export async function fileToBg(p) {
 
   return true;
 }
+
+// 路径安全
+export async function isPathSafe(base, target, allowEqual = false) {
+  const realp = await _f.realpath(target);
+  return realp && _path.isPathWithin(base, realp, allowEqual);
+}
