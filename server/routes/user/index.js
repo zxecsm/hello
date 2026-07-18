@@ -101,27 +101,29 @@ timedTask.add(async (flag) => {
   if (flag === '000000') {
     registerCount = 0;
   } else if (flag === '004000') {
-    const now = Date.now();
+    if ((await _f.getType(appConfig.temDir())) === 'dir') {
+      const now = Date.now();
 
-    const threshold = now - 10 * 24 * 60 * 60 * 1000;
+      const threshold = now - 10 * 24 * 60 * 60 * 1000;
 
-    const sList = await readMenu(appConfig.temDir());
+      const sList = await readMenu(appConfig.temDir());
 
-    let num = 0;
+      let num = 0;
 
-    await concurrencyTasks(sList, 5, async (item) => {
-      const { name, path, time } = item;
+      await concurrencyTasks(sList, 5, async (item) => {
+        const { name, path, time } = item;
 
-      if (time < threshold) {
-        await _delDir(_path.normalizeNoSlash(path, name));
-        num++;
+        if (time < threshold) {
+          await _delDir(_path.normalizeNoSlash(path, name));
+          num++;
+        }
+      });
+
+      if (num) {
+        const text = `清理过期临时缓存文件：${num}`;
+        await writelog(false, text);
+        await heperMsgAndForward(null, appConfig.adminAccount, text);
       }
-    });
-
-    if (num) {
-      const text = `清理过期临时缓存文件：${num}`;
-      await writelog(false, text);
-      await heperMsgAndForward(null, appConfig.adminAccount, text);
     }
   }
 });
@@ -132,7 +134,7 @@ route.post(
   validate(
     'body',
     V.object({
-      username: V.string().trim().min(1).max(fieldLength.username),
+      username: V.string().trim().min(1).max(fieldLength.username).alphanumeric(),
       password: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
     }),
@@ -196,7 +198,7 @@ route.post(
     'body',
     V.object({
       code: V.string().trim().min(6).max(6).alphanumeric(),
-      username: V.string().trim().min(1).max(fieldLength.username),
+      username: V.string().trim().min(1).max(fieldLength.username).alphanumeric(),
     }),
   ),
   asyncHandler(async (_, res) => {
@@ -252,7 +254,7 @@ route.post(
     'body',
     V.object({
       code: V.string().trim().min(6).max(6).alphanumeric(),
-      username: V.string().trim().min(1).max(fieldLength.username),
+      username: V.string().trim().min(1).max(fieldLength.username).alphanumeric(),
     }),
   ),
   asyncHandler(async (_, res) => {
@@ -374,7 +376,7 @@ route.post(
   validate(
     'body',
     V.object({
-      username: V.string().trim().min(1).max(fieldLength.username),
+      username: V.string().trim().min(1).max(fieldLength.username).alphanumeric(),
       password: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
     }),
@@ -504,7 +506,7 @@ route.get(
   validate(
     'query',
     V.object({
-      username: V.string().trim().min(1).max(fieldLength.username),
+      username: V.string().trim().min(1).max(fieldLength.username).alphanumeric(),
       captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
     }),
   ),
@@ -914,7 +916,10 @@ route.get(
 // 修改用户名
 route.post(
   '/changename',
-  validate('body', V.object({ username: V.string().trim().min(1).max(fieldLength.username) })),
+  validate(
+    'body',
+    V.object({ username: V.string().trim().min(1).max(fieldLength.username).alphanumeric() }),
+  ),
   asyncHandler(async (_, res) => {
     const { username } = res.locals.ctx;
 

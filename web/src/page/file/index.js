@@ -766,7 +766,7 @@ function rightList(e, obj, el) {
       beforeIcon: 'iconfont icon-fuzhi',
     },
   ];
-  if (obj.type === 'file') {
+  if (obj.type === 'file' && !['dir', 'unknown'].includes(obj.linkTargetType)) {
     data.push({
       id: 'copyLink',
       text: '文件链接',
@@ -794,12 +794,14 @@ function rightList(e, obj, el) {
       });
     }
   }
-  data.push({
-    id: 'share',
-    text: '分享',
-    beforeIcon: 'iconfont icon-fenxiang_2',
-  });
-  if (obj.type === 'file') {
+  if (obj.fileType !== 'symlink') {
+    data.push({
+      id: 'share',
+      text: '分享',
+      beforeIcon: 'iconfont icon-fenxiang_2',
+    });
+  }
+  if (obj.type === 'file' && !['dir', 'unknown'].includes(obj.linkTargetType)) {
     data.push({
       id: 'download',
       text: '下载',
@@ -2204,7 +2206,9 @@ function renderFoot() {
         return _path.extname(checkData[0].name)[2].toLowerCase() === 'zip';
       },
       checkIsFile() {
-        return checkData.every((item) => item.type === 'file');
+        return checkData.every(
+          (item) => item.type === 'file' && !['dir', 'unknown'].includes(item.linkTargetType),
+        );
       },
       isRoot,
     },

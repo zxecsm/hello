@@ -525,8 +525,13 @@ function checkPassword() {
 // 验证用户名
 function checkUserName() {
   const username = accInp.getValue().trim();
-  if (username.length < 1 || username.length > 20) {
-    $accountErr.text('请输入1-20位用户名');
+  if (username.length < 1 || username.length > _d.fieldLength.username) {
+    $accountErr.text(`请输入1-${_d.fieldLength.username}位用户名`);
+    return false;
+  }
+  const errText = rMenu.validAlphanumeric(username);
+  if (errText) {
+    $accountErr.text(errText);
     return false;
   }
   $accountErr.text('');

@@ -1473,7 +1473,7 @@ route.post(
       const tName = `${_path.basename(url)[1]}.${_path.extname(name)[2]}`;
 
       // 删除缩略图封面
-      _f.del(
+      await _f.del(
         appConfig.thumbDir(
           `${_path.extname(_path.normalizeNoSlash(tDir, tName).slice(appConfig.appFilesDir().length))[0]}_256.webp`,
         ),

@@ -519,10 +519,8 @@ export function getChatUserList(account, pageSize, offset, word = '') {
 
 // 清理到期聊天文件
 export async function cleanUpload(res = false) {
-  if (_d.cacheExp.uploadSaveDay > 0) {
+  if (_d.cacheExp.uploadSaveDay > 0 && (await _f.getType(appConfig.uploadDir())) === 'dir') {
     const uploadDir = appConfig.uploadDir();
-
-    if ((await _f.getType(uploadDir)) !== 'dir') return;
 
     const now = Date.now();
     const exp = now - _d.cacheExp.uploadSaveDay * 24 * 60 * 60 * 1000;

@@ -1,5 +1,6 @@
 import appConfig from '../../data/config.js';
 import { _d } from '../../data/data.js';
+import _f from '../../utils/f.js';
 import _path from '../../utils/path.js';
 import { db } from '../../utils/sqlite.js';
 import { concurrencyTasks, writelog } from '../../utils/utils.js';
@@ -116,7 +117,7 @@ export async function bmkGroupExist(account, groupId) {
 
 // 清理缓存siteInfo
 export async function cleanSiteInfo(res = false) {
-  if (_d.cacheExp.siteInfoCache > 0) {
+  if (_d.cacheExp.siteInfoCache > 0 && (await _f.getType(appConfig.siteinfoDir())) === 'dir') {
     const now = Date.now();
 
     const threshold = now - _d.cacheExp.siteInfoCache * 24 * 60 * 60 * 1000;
@@ -146,7 +147,7 @@ export async function cleanSiteInfo(res = false) {
 
 // 清理缓存favicon
 export async function cleanFavicon(res = false) {
-  if (_d.cacheExp.faviconCache > 0) {
+  if (_d.cacheExp.faviconCache > 0 && (await _f.getType(appConfig.faviconDir() === 'dir'))) {
     const now = Date.now();
 
     const threshold = now - _d.cacheExp.faviconCache * 24 * 60 * 60 * 1000;

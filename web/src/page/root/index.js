@@ -1121,7 +1121,9 @@ $userBtns
             beforeText: '用户名：',
             value: '',
             verify(val) {
-              return rMenu.validString(val, 1, _d.fieldLength.username);
+              return (
+                rMenu.validString(val, 1, _d.fieldLength.username) || rMenu.validAlphanumeric(val)
+              );
             },
           },
           password: {

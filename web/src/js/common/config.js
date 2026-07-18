@@ -67,7 +67,7 @@ const fieldLength = {
   chatContent: 3000, // 消息文本
   countTitle: 300, // 倒计时标题
   top: 99999, // 置顶
-  username: 20, // 用户名
+  username: 40, // 用户名
   email: 255, // 邮箱
   todoContent: 500, // 代办内容
   noteCategoryTitle: 30, // 笔记分类标题

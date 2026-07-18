@@ -619,7 +619,7 @@ longPress($contentWrap[0], '.file_item', function (e) {
 // 菜单
 function rightList(e, obj) {
   let data = [];
-  if (obj.type === 'file') {
+  if (obj.type === 'file' && !['dir', 'unknown'].includes(obj.linkTargetType)) {
     data.push(
       {
         id: 'download',

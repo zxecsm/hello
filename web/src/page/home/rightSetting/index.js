@@ -210,7 +210,9 @@ function changeUsername(e) {
           beforeText: '用户名：',
           value: setUserInfo().username,
           verify(val) {
-            return rMenu.validString(val, 1, _d.fieldLength.username);
+            return (
+              rMenu.validString(val, 1, _d.fieldLength.username) || rMenu.validAlphanumeric(val)
+            );
           },
         },
       },

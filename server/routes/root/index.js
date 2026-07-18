@@ -874,7 +874,7 @@ route.post(
   validate(
     'body',
     V.object({
-      username: V.string().trim().min(1).max(fieldLength.username),
+      username: V.string().trim().min(1).max(fieldLength.username).alphanumeric(),
       password: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
@@ -918,21 +918,23 @@ timedTask.add(async (flag) => {
   if (flag.slice(-6) === '003000') {
     await cleanUpload();
 
-    // 定期清理LOG文件
-    const list = (await readMenu(appConfig.logDir())).filter((f) => f.type === 'file');
+    if ((await _f.getType(appConfig.logDir())) === 'dir') {
+      // 定期清理LOG文件
+      const list = (await readMenu(appConfig.logDir())).filter((f) => f.type === 'file');
 
-    if (list.length > 200) {
-      let count = 0;
-      list.sort((a, b) => b.time - a.time);
-      for (const item of list.slice(200)) {
-        const { name, path } = item;
-        const p = _path.normalizeNoSlash(path, name);
-        await _delDir(p);
-        count++;
+      if (list.length > 200) {
+        let count = 0;
+        list.sort((a, b) => b.time - a.time);
+        for (const item of list.slice(200)) {
+          const { name, path } = item;
+          const p = _path.normalizeNoSlash(path, name);
+          await _delDir(p);
+          count++;
+        }
+        const text = `日志文件超出200个，已清理：${count}`;
+        await writelog(false, text);
+        await heperMsgAndForward(null, appConfig.adminAccount, text);
       }
-      const text = `日志文件超出200个，已清理：${count}`;
-      await writelog(false, text);
-      await heperMsgAndForward(null, appConfig.adminAccount, text);
     }
   }
 });
