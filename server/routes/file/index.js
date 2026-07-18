@@ -1031,7 +1031,7 @@ route.post(
 
     const f = _path.normalizeNoSlash(p, name);
 
-    if (!(await _f.exists(f))) {
+    if (!(await isPathSafe(appConfig.userRootDir(account), f))) {
       return resp.forbidden(res, `${flag}不存在`)();
     }
 
@@ -1097,7 +1097,10 @@ route.post(
     const p = appConfig.userRootDir(account, path);
     const f = _path.normalizeNoSlash(p, name);
 
-    if ((await _f.getType(f)) !== 'file') {
+    if (
+      !(await isPathSafe(appConfig.userRootDir(account), f)) ||
+      (await _f.getType(f)) !== 'file'
+    ) {
       return resp.forbidden(res, '解压文件不存在')();
     }
 

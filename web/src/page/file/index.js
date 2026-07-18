@@ -752,6 +752,15 @@ longPress($contentWrap[0], function (e) {
     hdContextMenu(ev);
   }
 });
+function isFileType(obj) {
+  return obj.type === 'file' && !['dir', 'unknown'].includes(obj.linkTargetType);
+}
+function isZipType(obj) {
+  return obj.type === 'file' && _path.extname(obj.name)[2].toLowerCase() === 'zip';
+}
+function isSymlinkType(obj) {
+  return obj.fileType === 'symlink';
+}
 // 操作菜单
 function rightList(e, obj, el) {
   const data = [
@@ -766,7 +775,7 @@ function rightList(e, obj, el) {
       beforeIcon: 'iconfont icon-fuzhi',
     },
   ];
-  if (obj.type === 'file' && !['dir', 'unknown'].includes(obj.linkTargetType)) {
+  if (isFileType(obj)) {
     data.push({
       id: 'copyLink',
       text: '文件链接',
@@ -794,14 +803,14 @@ function rightList(e, obj, el) {
       });
     }
   }
-  if (obj.fileType !== 'symlink') {
+  if (!isSymlinkType(obj)) {
     data.push({
       id: 'share',
       text: '分享',
       beforeIcon: 'iconfont icon-fenxiang_2',
     });
   }
-  if (obj.type === 'file' && !['dir', 'unknown'].includes(obj.linkTargetType)) {
+  if (isFileType(obj)) {
     data.push({
       id: 'download',
       text: '下载',
@@ -825,19 +834,18 @@ function rightList(e, obj, el) {
       beforeIcon: 'iconfont icon-jiandao',
     },
   );
-  if (_path.extname(obj.name)[2].toLowerCase() === 'zip') {
+  if (isZipType(obj)) {
     data.push({
       id: 'decompress',
       text: '解压',
       beforeIcon: 'iconfont icon-yasuobao1',
     });
-  } else {
-    data.push({
-      id: 'compress',
-      text: '压缩',
-      beforeIcon: 'iconfont icon-yasuobao1',
-    });
   }
+  data.push({
+    id: 'compress',
+    text: '压缩',
+    beforeIcon: 'iconfont icon-yasuobao1',
+  });
   data.push({
     id: 'info',
     text: '属性',
@@ -2187,10 +2195,10 @@ function renderFoot() {
       <button cursor="y" class="f_copy btn btn_primary">复制</button>
       <button cursor="y" class="f_cut btn btn_primary">剪切</button>
       <template v-if="len === 1">
-        <button cursor="y" class="f_share btn btn_primary">分享</button>
+        <button v-if="canShare()" cursor="y" class="f_share btn btn_primary">分享</button>
         <button cursor="y" class="f_rename btn btn_primary">重命名</button>
         <button v-if="isZip()" cursor="y" class="f_decompress btn btn_primary">解压缩</button>
-        <button v-else cursor="y" class="f_compress btn btn_primary">压缩</button>
+        <button cursor="y" class="f_compress btn btn_primary">压缩</button>
       </template>
       <button v-if="isRoot()" cursor="y" class="f_mode btn btn_primary">权限</button>
       <button v-if="isRoot()" cursor="y" class="f_user btn btn_primary">用户组</button>
@@ -2202,13 +2210,16 @@ function renderFoot() {
     {
       items,
       len,
+      canShare() {
+        return !isSymlinkType(checkData[0]);
+      },
       isZip() {
-        return _path.extname(checkData[0].name)[2].toLowerCase() === 'zip';
+        return isZipType(checkData[0]);
       },
       checkIsFile() {
-        return checkData.every(
-          (item) => item.type === 'file' && !['dir', 'unknown'].includes(item.linkTargetType),
-        );
+        return checkData.every((obj) => {
+          return isFileType(obj);
+        });
       },
       isRoot,
     },
