@@ -644,7 +644,7 @@ route.post(
 
     const tPath = appConfig.userRootDir(account, targetPath);
 
-    if (!(await isPathSafe(baseP, tPath))) {
+    if (!(await isPathSafe(baseP, tPath, true))) {
       return resp.forbidden(res, '目标路径不存在')();
     }
 
