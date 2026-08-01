@@ -11,6 +11,7 @@ import {
   getScreenSize,
   hdTextMsg,
   imgjz,
+  isBlobUrl,
   isEmail,
   isInteger,
   isValidColor,
@@ -730,10 +731,11 @@ function rightMenu(e, html, callback, title = '') {
         const url = item.getAttribute('data-src');
         if (!url) return false;
         const cache = cacheFile.hasUrl(url, 'image');
-        if (cache) {
+        if (cache && isBlobUrl(cache)) {
           item.src = cache;
+          return false;
         }
-        return !cache;
+        return true;
       });
       loadImg.bind(imgs, async (item) => {
         imgjz(item.getAttribute('data-src'))

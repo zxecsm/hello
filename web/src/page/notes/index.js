@@ -29,6 +29,7 @@ import {
   LazyLoad,
   imgjz,
   isTextFile,
+  isBlobUrl,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -355,11 +356,12 @@ export function renderList(y) {
           [...$contentWrap[0].querySelectorAll('img')].filter((item) => {
             const url = item.getAttribute('data-src');
             const cache = cacheFile.hasUrl(url, 'image');
-            if (cache) {
+            if (cache && isBlobUrl(cache)) {
               item.src = cache;
               item.classList.remove('default_size');
+              return false;
             }
-            return !cache;
+            return true;
           }),
           (item) => {
             const url = item.getAttribute('data-src');

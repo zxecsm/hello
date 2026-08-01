@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import imgGqImg from '../../../images/img/gqimg.png';
+import loadfailImg from '../../../images/img/loadfail.png';
 import imgHelloLogo from '../../../images/img/hello-msg-logo.png';
 import {
   throttle,
@@ -42,6 +42,7 @@ import {
   savePopLocationInfo,
   switchFullScreenStateStyle,
   removeFullScreenStateStyle,
+  isBlobUrl,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -302,14 +303,15 @@ function lazyLoadChatLogo() {
       logo = imgHelloLogo;
     }
     const cache = logo ? cacheFile.hasUrl(logo, 'image') : getTextImg(des || username);
-    if (cache) {
+    if (cache && (!logo || isBlobUrl(cache))) {
       $item
         .css({
           'background-image': `url(${cache})`,
         })
         .addClass('load');
+      return false;
     }
-    return !cache;
+    return true;
   });
   cUserListLoad.bind(userLogos, (item) => {
     const $item = $(item);
@@ -680,7 +682,7 @@ function chatimgLoad() {
       })
       .catch(() => {
         $v.css({
-          'background-image': `url(${imgGqImg})`,
+          'background-image': `url(${loadfailImg})`,
         }).addClass('load');
       });
   });

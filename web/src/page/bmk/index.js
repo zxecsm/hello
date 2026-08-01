@@ -26,6 +26,7 @@ import {
   getFaviconPath,
   getFilePath,
   _myOpen,
+  isBlobUrl,
 } from '../../js/utils/utils';
 
 import _d from '../../js/common/config';
@@ -354,10 +355,11 @@ export function renderList(y) {
               logo = getFaviconPath(link);
             }
             const cache = cacheFile.hasUrl(logo, 'image');
-            if (cache) {
+            if (cache && isBlobUrl(cache)) {
               $item.css('background-image', `url(${cache})`).addClass('load');
+              return false;
             }
-            return !cache;
+            return true;
           }),
           (item) => {
             const $item = $(item);

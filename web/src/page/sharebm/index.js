@@ -19,6 +19,7 @@ import {
   isIframe,
   getFaviconPath,
   getFilePath,
+  isBlobUrl,
 } from '../../js/utils/utils';
 
 import defaultIcon from '../../images/img/default-icon.png';
@@ -98,15 +99,16 @@ function renderList() {
       url = getFaviconPath(link);
 
     const cache = cacheFile.hasUrl(url, 'image');
-    if (cache) {
+    if (cache && isBlobUrl(cache)) {
       const $img = $item.find('.logo');
       $img
         .css({
           'background-image': `url(${cache})`,
         })
         .addClass('load');
+      return false;
     }
-    return !cache;
+    return true;
   });
   bmLoadImg.bind(bmItems, (item) => {
     const $item = $(item),

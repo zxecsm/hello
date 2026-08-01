@@ -16,6 +16,7 @@ import {
   _setTimeout,
   getFaviconPath,
   getFilePath,
+  isBlobUrl,
 } from '../../../js/utils/utils.js';
 
 import _d from '../../../js/common/config';
@@ -377,10 +378,11 @@ function hdAsideListItemLogo() {
     }
     let $bm_logo = $item.find('.bm_logo');
     const cache = cacheFile.hasUrl(logo, 'image');
-    if (cache) {
+    if (cache && isBlobUrl(cache)) {
       $bm_logo.css('background-image', `url(${cache})`).addClass('load');
+      return false;
     }
-    return !cache;
+    return true;
   });
   asideLoadImg.bind(bmLogos, (item) => {
     const $item = $(item);

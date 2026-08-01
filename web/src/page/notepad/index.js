@@ -27,12 +27,13 @@ import {
   toggleUserSelect,
   getFilePath,
   getImgInfo,
+  isBlobUrl,
 } from '../../js/utils/utils';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
 import { UpProgress } from '../../js/plugins/UpProgress';
 import aceEditor from '../../js/utils/editor';
-import gqImg from '../../images/img/gqimg.png';
+import loadfailImg from '../../images/img/loadfail.png';
 import { reqGetNotePad, reqNotePad } from '../../api/notepad';
 import { reqPicRepeat, reqPicUp } from '../../api/pic';
 import rMenu from '../../js/plugins/rightMenu';
@@ -316,10 +317,11 @@ mdWorker.addEventListener('message', (event) => {
   const imgs = [...$previewBox.find('.content')[0].querySelectorAll('img')].filter((item) => {
     const url = item.getAttribute('data-src');
     const cache = cacheFile.hasUrl(url, 'image');
-    if (cache) {
+    if (cache && isBlobUrl(cache)) {
       item.src = cache;
+      return false;
     }
-    return !cache;
+    return true;
   });
   imgLazy.bind(imgs, async (item) => {
     const url = item.getAttribute('data-src');
@@ -328,7 +330,7 @@ mdWorker.addEventListener('message', (event) => {
         item.src = cache;
       })
       .catch(() => {
-        item.src = gqImg;
+        item.src = loadfailImg;
       });
   });
   syncScrollFromEditor(1);

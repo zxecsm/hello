@@ -595,7 +595,9 @@ async function insertInitialData() {
           account: appConfig.adminAccount,
           title: 'Tips',
           share: 1,
-          content: '',
+          content: (
+            await _f.readFile(resolve(__dirname, './default_tips.md'), null, '')
+          ).toString(),
         },
       ]);
     }

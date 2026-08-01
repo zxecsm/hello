@@ -2838,3 +2838,13 @@ export function getDarkIcon(dark) {
     return 'icon-xianshiqi';
   }
 }
+export function isBlobUrl(url) {
+  if (typeof url !== 'string') return false;
+
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.protocol === 'blob:';
+  } catch {
+    return false;
+  }
+}

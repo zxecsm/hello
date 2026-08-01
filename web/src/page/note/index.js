@@ -35,7 +35,7 @@ import '../../js/common/common';
 import _msg from '../../js/plugins/message';
 import HighlightWord from './highlightWord';
 import realtime from '../../js/plugins/realtime';
-import gqImg from '../../images/img/gqimg.png';
+import loadfailImg from '../../images/img/loadfail.png';
 import { reqNoteCategory, reqNoteRead } from '../../api/note';
 import { createNoteDir, toggleNoteDir } from './noteDir';
 import rMenu from '../../js/plugins/rightMenu';
@@ -314,7 +314,7 @@ mdWorker.addEventListener('message', (event) => {
         item.src = cache;
       })
       .catch(() => {
-        item.src = gqImg;
+        item.src = loadfailImg;
       });
   });
 });

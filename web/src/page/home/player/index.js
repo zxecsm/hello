@@ -48,6 +48,7 @@ import {
   switchFullScreenStateStyle,
   removeFullScreenStateStyle,
   getImgInfo,
+  isBlobUrl,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import { UpProgress } from '../../../js/plugins/UpProgress';
@@ -230,10 +231,11 @@ export function hdMusicImgCache(list) {
     const $img = $(item);
     const u = $img.attr('data-src');
     const cache = cacheFile.hasUrl(u, 'image');
-    if (cache) {
+    if (cache && isBlobUrl(cache)) {
       $img.css('background-image', `url(${cache})`).addClass('load');
+      return false;
     }
-    return !cache;
+    return true;
   });
 }
 export function musicLoadImg(item) {

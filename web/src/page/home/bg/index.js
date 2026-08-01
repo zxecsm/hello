@@ -17,6 +17,7 @@ import {
   isRoot,
   concurrencyTasks,
   getImgInfo,
+  isBlobUrl,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import pagination from '../../../js/plugins/pagination';
@@ -418,14 +419,15 @@ export function renderBgList(y) {
             w: type === 'bg' ? 512 : 256,
           });
           const cache = cacheFile.hasUrl(url, 'image');
-          if (cache) {
+          if (cache && isBlobUrl(cache)) {
             $img
               .css({
                 'background-image': `url(${cache})`,
               })
               .addClass('load');
+            return false;
           }
-          return !cache;
+          return true;
         });
         bglazyImg.bind(bgImgs, async (item) => {
           const $img = $(item);

@@ -22,6 +22,7 @@ import {
   _position,
   getFaviconPath,
   getFilePath,
+  isBlobUrl,
 } from '../../../js/utils/utils.js';
 import _d from '../../../js/common/config';
 import _msg from '../../../js/plugins/message';
@@ -264,14 +265,15 @@ function lazyLoadHomeBmLogo() {
       logo = getFaviconPath(link);
     }
     const cache = cacheFile.hasUrl(logo, 'image');
-    if (cache) {
+    if (cache && isBlobUrl(cache)) {
       $homeBmLogo
         .css({
           'background-image': `url(${cache})`,
         })
         .addClass('load');
+      return false;
     }
-    return !cache;
+    return true;
   });
   homeLoadImg.bind(logos, (item) => {
     const $item = $(item);

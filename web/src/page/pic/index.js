@@ -21,6 +21,7 @@ import {
   concurrencyTasks,
   _getTarget,
   getImgInfo,
+  isBlobUrl,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
 import '../../js/common/common';
@@ -302,14 +303,15 @@ function renderImgList(y) {
           if (!picId) return;
           const url = getFilePath(`/pic/${picId}`, { w: 512 });
           const cache = cacheFile.hasUrl(url, 'image');
-          if (cache) {
+          if (cache && isBlobUrl(cache)) {
             $img
               .css({
                 'background-image': `url(${cache})`,
               })
               .addClass('load');
+            return false;
           }
-          return !cache;
+          return true;
         });
         bglazyImg.bind(imgs, async (item) => {
           const $img = $(item);

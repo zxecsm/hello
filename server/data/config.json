@@ -2,7 +2,7 @@
   "registerState": true,
   "trashState": true,
   "tokenKey": "xxxxxxxxxxxxxxxxxx",
-  "tipsFlag": 0,
+  "tipsFlag": 1,
   "pubApi": {
     "randomBgApi": true,
     "randomMusicApi": true,

@@ -34,6 +34,7 @@ import {
   _mySlide,
   getDateDiff,
   showQcode,
+  isBlobUrl,
 } from '../../js/utils/utils';
 import pagination from '../../js/plugins/pagination';
 import _msg from '../../js/plugins/message';
@@ -368,10 +369,11 @@ async function renderList(top) {
     if (isImgFile(name)) {
       const url = getFilePath(`/file/${path}/${name}`, { w: 256 }) + `#${size}`;
       const cache = cacheFile.hasUrl(url, 'image');
-      if (cache) {
+      if (cache && isBlobUrl(cache)) {
         $item.css('background-image', `url(${cache})`);
+        return false;
       }
-      return !cache;
+      return true;
     }
     return false;
   });
