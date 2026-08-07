@@ -89,6 +89,7 @@ const fieldLength = {
   sshKeyLength: 5000, // sshKey长度
   cdHistoryLength: 50, // 文件操作历史记录个数
   shareTokenExp: 10, // 分享token过期时间（天）
+  bgHistoryLength: 100, // 壁纸历史长度
 };
 const _d = {
   appName: 'hello',

@@ -36,10 +36,29 @@ import imgPreview from '../../../js/plugins/imgPreview/index.js';
 import { BoxSelector, isKeyDown } from '../../../js/utils/boxSelector.js';
 import localData from '../../../js/common/localData.js';
 const $allBgWrap = $('.all_bg_wrap'),
+  $collectBg = $allBgWrap.find('.collect_bg'),
+  $historyBg = $allBgWrap.find('.history_bg'),
   $bgList = $allBgWrap.find('.bg_list'),
   $bgFooter = $allBgWrap.find('.bg_footer');
 let bgList = [];
 let isCollectState = false;
+let isHistoryState = false;
+async function getBgHistoryList() {
+  return await cacheFile.getData('bgHistory');
+}
+export async function addBgHistory(obj) {
+  let list = (await getBgHistoryList()).filter((item) => item.id !== obj.id);
+  list.push(obj);
+  if (list.length > _d.fieldLength.bgHistoryLength) {
+    list = list.slice(-_d.fieldLength.bgHistoryLength);
+  }
+  await cacheFile.setData('bgHistory', list);
+}
+async function delBgHistory(ids = []) {
+  const list = (await getBgHistoryList()).filter((item) => !ids.includes(item.id));
+  await cacheFile.setData('bgHistory', list);
+  renderBgList();
+}
 // 上传壁纸
 async function hdUpBg(files) {
   const controller = new AbortController();
@@ -116,6 +135,18 @@ export function closeBgBox() {
     $bgList.html('');
   });
 }
+function changeIconsState() {
+  if (isCollectState) {
+    $collectBg[0].className = 'collect_bg iconfont icon-hear-full active';
+  } else {
+    $collectBg[0].className = 'collect_bg iconfont icon-hear';
+  }
+  if (isHistoryState) {
+    $historyBg[0].className = 'history_bg iconfont icon-history active';
+  } else {
+    $historyBg[0].className = 'history_bg iconfont icon-history';
+  }
+}
 $allBgWrap
   .on('click', '.upload_bg', async function () {
     const files = await getFiles({
@@ -128,11 +159,15 @@ $allBgWrap
   .on('click', '.b_close_btn', closeBgBox)
   .on('click', '.collect_bg', function () {
     isCollectState = !isCollectState;
-    if (isCollectState) {
-      this.className = 'collect_bg iconfont icon-hear-full active';
-    } else {
-      this.className = 'collect_bg iconfont icon-hear';
-    }
+    isHistoryState = false;
+    changeIconsState();
+    bgpage = 1;
+    renderBgList(true);
+  })
+  .on('click', '.history_bg', function () {
+    isHistoryState = !isHistoryState;
+    isCollectState = false;
+    changeIconsState();
     bgpage = 1;
     renderBgList(true);
   });
@@ -169,7 +204,7 @@ export function delBg(e, ids, cb, isCheck, loading = { start() {}, end() {} }) {
             if (result.code === 1) {
               cb && cb();
               _msg.success(result.codeText);
-              renderBgList();
+              delBgHistory(ids);
               return;
             }
           })
@@ -233,7 +268,7 @@ function bgItemMenu(e, obj, el) {
       beforeIcon: 'iconfont icon-download',
     },
   ];
-  if (isCollectState) {
+  if (isCollectState || isHistoryState) {
     data.push({
       id: '5',
       text: '移除',
@@ -279,7 +314,13 @@ function bgItemMenu(e, obj, el) {
         startSelect();
         checkedBg(el);
       } else if (id === '5') {
-        delCollectBg([obj.id], close, loading);
+        if (isCollectState) {
+          delCollectBg([obj.id], close, loading);
+        }
+        if (isHistoryState) {
+          close(1);
+          delBgHistory([obj.id]);
+        }
       }
     },
     '壁纸选项',
@@ -320,9 +361,9 @@ function startSelect() {
       class: 'iconfont icon-xuanzeweixuanze',
       check: 'n',
     });
-  $bgFooter.find('.f_collect').css('display', isCollectState ? 'none' : 'block');
+  $bgFooter.find('.f_collect').css('display', isCollectState || isHistoryState ? 'none' : 'block');
   $bgFooter.find('.f_delete').css('display', isRoot() ? 'block' : 'none');
-  $bgFooter.find('.f_remove').css('display', isCollectState ? 'block' : 'none');
+  $bgFooter.find('.f_remove').css('display', isCollectState || isHistoryState ? 'block' : 'none');
 }
 function stopSelect() {
   $bgList
@@ -365,93 +406,104 @@ const bgBoxSelector = new BoxSelector($bgList[0], {
   },
 });
 bgBoxSelector.stop();
+function hdRender(result, showpage, type, y) {
+  if (bgBoxIsHide()) return;
+  let { total, data, pageNo } = result;
+  bgpage = pageNo;
+  bgList = data;
+  const html = _tpl(
+    `
+          <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
+          <template v-else>
+            <div v-for="{id, isCollect} in data" class="bg_item" :data-id="id">
+              <div cursor="y" check="n" class="check_level"></div>
+              <i cursor="y" class="menu_btn iconfont icon-maohao"></i>
+              <i v-if="!isCollectState && !isHistoryState" cursor="y" class="collect_btn iconfont icon-{{isCollect ? 'hear-full active' : 'hear'}}"></i>
+              <div class="bg_img"></div>
+            </div>
+            <div v-html="getPaging()" class="bg_paging_box"></div>
+          </template>
+          `,
+    {
+      isCollectState,
+      isHistoryState,
+      total,
+      data,
+      _d,
+      getPaging() {
+        return bgPgnt.getHTML({
+          pageNo,
+          pageSize: showpage,
+          total,
+          small: getScreenSize().w <= _d.screen,
+        });
+      },
+    },
+  );
+  stopSelect();
+  $bgList.html(html);
+  if (y) {
+    $bgList.scrollTop(0);
+  }
+  const bgImgs = [...$bgList[0].querySelectorAll('.bg_img')].filter((item) => {
+    const $img = $(item);
+    const url = getFilePath(`/bg/${$img.parent().data('id')}`, {
+      w: type === 'bg' ? 512 : 256,
+    });
+    const cache = cacheFile.hasUrl(url, 'image');
+    if (cache && isBlobUrl(cache)) {
+      $img
+        .css({
+          'background-image': `url(${cache})`,
+        })
+        .addClass('load');
+      return false;
+    }
+    return true;
+  });
+  bglazyImg.bind(bgImgs, async (item) => {
+    const $img = $(item);
+    const url = getFilePath(`/bg/${$img.parent().data('id')}`, {
+      w: type === 'bg' ? 512 : 256,
+    });
+    imgjz(url)
+      .then((cache) => {
+        $img
+          .css({
+            'background-image': `url(${cache})`,
+          })
+          .addClass('load');
+      })
+      .catch(() => {
+        $img.css({
+          'background-image': `url(${loadfailImg})`,
+        });
+      });
+  });
+}
 // 获取壁纸列表
-export function renderBgList(y) {
+export async function renderBgList(y) {
   if (bgBoxIsHide()) return;
   if (y) {
     bgLoading();
   }
   let type = isBigScreen() ? 'bg' : 'bgxs',
     showpage = localData.get('bgPageSize');
-  reqBgList({ type, pageNo: bgpage, pageSize: showpage, collect: isCollectState ? 1 : 0 })
-    .then((result) => {
-      if (result.code === 1) {
-        if (bgBoxIsHide()) return;
-        let { total, data, pageNo } = result.data;
-        bgpage = pageNo;
-        bgList = data;
-        const html = _tpl(
-          `
-          <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
-          <template v-else>
-            <div v-for="{id, isCollect} in data" class="bg_item" :data-id="id">
-              <div cursor="y" check="n" class="check_level"></div>
-              <i cursor="y" class="menu_btn iconfont icon-maohao"></i>
-              <i v-if="!isCollectState" cursor="y" class="collect_btn iconfont icon-{{isCollect ? 'hear-full active' : 'hear'}}"></i>
-              <div class="bg_img"></div>
-            </div>
-            <div v-html="getPaging()" class="bg_paging_box"></div>
-          </template>
-          `,
-          {
-            isCollectState,
-            total,
-            data,
-            _d,
-            getPaging() {
-              return bgPgnt.getHTML({
-                pageNo,
-                pageSize: showpage,
-                total,
-                small: getScreenSize().w <= _d.screen,
-              });
-            },
-          },
-        );
-        stopSelect();
-        $bgList.html(html);
-        if (y) {
-          $bgList.scrollTop(0);
+  if (isHistoryState) {
+    const data = (await getBgHistoryList()).reverse().filter((item) => item.type === type);
+    const total = Math.ceil(data.length / showpage);
+    const pageNo = bgpage < 1 ? total : bgpage > total ? 1 : bgpage;
+    hdRender({ total, data, pageNo }, showpage, type, y);
+  } else {
+    reqBgList({ type, pageNo: bgpage, pageSize: showpage, collect: isCollectState ? 1 : 0 })
+      .then((result) => {
+        if (result.code === 1) {
+          hdRender(result.data, showpage, type, y);
+          return;
         }
-        const bgImgs = [...$bgList[0].querySelectorAll('.bg_img')].filter((item) => {
-          const $img = $(item);
-          const url = getFilePath(`/bg/${$img.parent().data('id')}`, {
-            w: type === 'bg' ? 512 : 256,
-          });
-          const cache = cacheFile.hasUrl(url, 'image');
-          if (cache && isBlobUrl(cache)) {
-            $img
-              .css({
-                'background-image': `url(${cache})`,
-              })
-              .addClass('load');
-            return false;
-          }
-          return true;
-        });
-        bglazyImg.bind(bgImgs, async (item) => {
-          const $img = $(item);
-          const url = getFilePath(`/bg/${$img.parent().data('id')}`, {
-            w: type === 'bg' ? 512 : 256,
-          });
-          imgjz(url)
-            .then((cache) => {
-              $img
-                .css({
-                  'background-image': `url(${cache})`,
-                })
-                .addClass('load');
-            })
-            .catch(() => {
-              $img.css({
-                'background-image': `url(${loadfailImg})`,
-              });
-            });
-        });
-        return;
-      }
-    })
-    .catch(() => {});
+      })
+      .catch(() => {});
+  }
 }
 // 懒加载
 const bglazyImg = new LazyLoad();
@@ -593,7 +645,12 @@ $bgFooter
   .on('click', '.f_remove', function () {
     const list = getCheckBgIds();
     if (list.length === 0) return;
-    delCollectBg(list);
+    if (isCollectState) {
+      delCollectBg(list);
+    }
+    if (isHistoryState) {
+      delBgHistory(list);
+    }
   })
   .on('click', '.f_collect', collectCheckBg)
   .on('click', '.f_close', stopSelect)

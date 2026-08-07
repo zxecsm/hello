@@ -56,7 +56,7 @@ import {
   updateTipsFlag,
 } from './rightSetting/index.js';
 import { closeTodoBox, getTodoList, setTodoUndone, todoMsg } from './todo/index.js';
-import { closeBgBox, collectBg, delBg, renderBgList, showBgBox } from './bg/index.js';
+import { addBgHistory, closeBgBox, collectBg, delBg, renderBgList, showBgBox } from './bg/index.js';
 import { getBookMarkList, showAside, toggleAside } from './aside/index.js';
 import {
   getHomeBmList,
@@ -350,9 +350,11 @@ export function updateUserInfo(cb) {
 
         const isBig = isBigScreen();
         if ((isBig && !bg) || (!isBig && !bgxs)) return;
-        imgjz(getFilePath(`/bg/${isBig ? bg : bgxs}`))
+        const bgID = isBig ? bg : bgxs;
+        imgjz(getFilePath(`/bg/${bgID}`))
           .then((cache) => {
             $pageBg.css('background-image', `url(${cache})`);
+            addBgHistory({ id: bgID, type: isBig ? 'bg' : 'bgxs' });
           })
           .catch(() => {});
       }

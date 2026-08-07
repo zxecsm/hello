@@ -193,7 +193,8 @@ body {
 
     .upload_bg,
     .b_close_btn,
-    .collect_bg {
+    .collect_bg,
+    .history_bg {
       width: 3rem;
       height: 3rem;
       line-height: 3rem;
@@ -226,6 +227,13 @@ body {
     .collect_bg {
       top: 1rem;
       left: 10rem;
+      &.active {
+        color: var(--hear-color);
+      }
+    }
+    .history_bg {
+      top: 1rem;
+      left: 14rem;
       &.active {
         color: var(--hear-color);
       }
@@ -5053,6 +5061,10 @@ html.head_btn_to_right {
     .collect_bg {
       left: auto !important;
       right: 10rem;
+    }
+    .history_bg {
+      left: auto !important;
+      right: 14rem;
     }
     .b_close_btn {
       left: auto !important;

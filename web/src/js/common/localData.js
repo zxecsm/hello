@@ -60,6 +60,7 @@ const defaultData = {
   filterbg: 0, // 壁纸模糊度
   songListSort: 'default', // 歌曲排序
   bgPageSize: 20, // 壁纸、图床每页显示
+  bgHistory: [], // 更换壁纸历史
   trashPageSize: 20, // 回收站每页显示
   songPlaySpeed: ['x1', 1], // 歌曲播放速度
   showSongTranslation: false, // 显示歌词翻译
