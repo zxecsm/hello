@@ -701,7 +701,7 @@ route.post(
     const tDir = appConfig.uploadDir(timePath);
     const tName = `${HASH}.${_path.extname(name)[2]}`;
 
-    await receiveFiles(req, tDir, tName, fieldLength.maxVoiceSize, HASH);
+    await receiveFiles(req, tDir, tName, fieldLength.maxVoiceSize, HASH, true);
 
     const fobj = {
       id: HASH,
@@ -782,7 +782,7 @@ route.post(
 
     const targetPath = _path.normalizeNoSlash(tDir, tName);
 
-    await mergefile(count, appConfig.temDir(`${account}_${HASH}`), targetPath, HASH);
+    await mergefile(count, appConfig.temDir(`${account}_${HASH}`), targetPath, HASH, true);
 
     const fobj = {
       id: HASH,

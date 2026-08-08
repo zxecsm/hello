@@ -144,6 +144,9 @@ function updatePromptText(path) {
   } else if (_path.isPathWithin(_d.pubDir, path, 1)) {
     color = 'var(--message-success-color)';
     text = '公开文件目录，复制链接为永久访问链接';
+  } else if (_path.isPathWithin(_d.backupDir, path, 1)) {
+    color = 'var(--message-success-color)';
+    text = '备份数据目录';
   } else if (_path.isPathWithin(_d.userLogoDir, path, 1)) {
     color = 'var(--message-success-color)';
     text = '用户书签/头像图标目录';
@@ -1801,12 +1804,14 @@ function createFileAndDir(e) {
       text: '新建文件夹',
       beforeIcon: 'iconfont icon-folderPlus',
     },
-    {
+  ];
+  if (isRoot()) {
+    data.push({
       id: '3',
       text: '新建符号链接',
       beforeIcon: 'iconfont icon-link1',
-    },
-  ];
+    });
+  }
   rMenu.selectMenu(
     e,
     data,

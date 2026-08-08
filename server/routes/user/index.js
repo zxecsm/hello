@@ -1076,6 +1076,7 @@ route.post(
       `${HASH}.${_path.extname(name)[2]}`,
       fieldLength.maxLogoSize,
       HASH,
+      true,
     );
 
     try {

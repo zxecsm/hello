@@ -105,6 +105,7 @@ const _d = {
   thumbDir: `${userConfigDir}/appFiles/thumb`,
   notepadDir: `${userConfigDir}/appFiles/notepad`,
   pubDir: `${userConfigDir}/pub`,
+  backupDir: `${userConfigDir}/backup`,
   fileConfigDir: `${userConfigDir}/file_config`,
   appFilesDir: `${userConfigDir}/appFiles`,
   userLogoDir: `${userConfigDir}/logo`,

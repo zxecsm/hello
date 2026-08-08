@@ -332,7 +332,7 @@ route.post(
     const tDir = appConfig.bgDir(timePath);
     const tName = `${HASH}.${suffix}`;
 
-    await receiveFiles(req, tDir, tName, fieldLength.maxBgSize, HASH);
+    await receiveFiles(req, tDir, tName, fieldLength.maxBgSize, HASH, true);
 
     // 获取壁纸尺寸进行分类
     let imgInfo = {};

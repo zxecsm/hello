@@ -12,7 +12,11 @@ import {
   concurrencyTasks,
 } from '../../utils/utils.js';
 
-import { helloHelperMsg, sendNotificationsToCustomAddresses } from '../chat/chat.js';
+import {
+  helloHelperMsg,
+  saveBackupData,
+  sendNotificationsToCustomAddresses,
+} from '../chat/chat.js';
 
 import { fieldLength } from '../config.js';
 import { computerDay } from './count.js';
@@ -223,7 +227,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('count_down').insert({
+    const data = {
       id: nanoid(),
       create_at: Date.now(),
       account,
@@ -231,7 +235,10 @@ route.post(
       start,
       end,
       link,
-    });
+    };
+    await db('count_down').insert(data);
+
+    await saveBackupData(account, 'count', data);
 
     syncUpdateData(res, 'countlist');
 

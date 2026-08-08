@@ -9,6 +9,7 @@ import nanoid from '../../utils/nanoid.js';
 import V from '../../utils/validRules.js';
 import resp from '../../utils/response.js';
 import { asyncHandler, validate } from '../../utils/customMiddleware.js';
+import { saveBackupData } from '../chat/chat.js';
 
 const route = express.Router();
 
@@ -84,13 +85,16 @@ route.post(
     const { account } = res.locals.hello.userinfo;
 
     const create_at = Date.now();
-    await db('todo').insert({
+    const data = {
       id: nanoid(),
       create_at,
       account,
       content,
       update_at: create_at,
-    });
+    };
+    await db('todo').insert(data);
+
+    await saveBackupData(account, 'todo', data);
 
     syncUpdateData(res, 'todolist');
 

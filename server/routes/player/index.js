@@ -1403,7 +1403,7 @@ route.post(
       const tDir = appConfig.musicDir(timePath, songId);
       const tName = `${songId}.${suffix}`;
 
-      await receiveFiles(req, tDir, tName, fieldLength.maxSongSize, HASH);
+      await receiveFiles(req, tDir, tName, fieldLength.maxSongSize, HASH, true);
 
       // 读取歌曲元数据
       const songInfo = await getSongInfo(_path.normalizeNoSlash(tDir, tName));
@@ -1479,7 +1479,7 @@ route.post(
         ),
       );
 
-      await receiveFiles(req, tDir, tName, fieldLength.maxSongPicSize, HASH);
+      await receiveFiles(req, tDir, tName, fieldLength.maxSongPicSize, HASH, true);
 
       try {
         await getImgInfo(_path.normalizeNoSlash(tDir, tName));
@@ -1554,7 +1554,7 @@ route.post(
       const tDir = appConfig.musicDir(_path.dirname(url));
       const tName = `${_path.basename(url)[1]}.${_path.extname(name)[2]}`;
 
-      await receiveFiles(req, tDir, tName, fieldLength.maxMvSize, HASH);
+      await receiveFiles(req, tDir, tName, fieldLength.maxMvSize, HASH, true);
 
       if (_path.basename(mv)[0] != tName) {
         // 上传和现有文件名不同上传现有的

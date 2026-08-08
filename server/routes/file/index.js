@@ -628,6 +628,10 @@ route.post(
     }),
   ),
   asyncHandler(async (_, res) => {
+    if (!res.locals.hello.isRoot) {
+      return resp.forbidden(res, '无权操作')();
+    }
+
     const { path, name, targetPath, isSymlink } = res.locals.ctx;
 
     if (!_path.isFilename(name)) {
@@ -1123,6 +1127,7 @@ route.post(
 
       await zipper.unzip(f, t, {
         signal,
+        ignoreLink: !res.locals.hello.isRoot,
         progress({ size, count }) {
           taskState.update(taskKey, `解压文件...${count} (${_f.formatBytes(size)})`);
         },
@@ -1581,7 +1586,13 @@ route.post(
         await _f.del(targetPath);
       }
 
-      await mergefile(count, appConfig.temDir(`${account}_${HASH}`), targetPath, HASH);
+      await mergefile(
+        count,
+        appConfig.temDir(`${account}_${HASH}`),
+        targetPath,
+        HASH,
+        !res.locals.hello.isRoot,
+      );
 
       if (timer) {
         clearTimeout(timer);

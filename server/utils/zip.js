@@ -47,7 +47,7 @@ async function zip(froms, to, { signal, progress } = {}) {
 }
 
 // 解压文件
-async function unzip(from, to, { signal, progress } = {}) {
+async function unzip(from, to, { signal, progress, ignoreLink } = {}) {
   const directory = await unzipper.Open.file(from);
 
   const progressInfo = {
@@ -77,6 +77,9 @@ async function unzip(from, to, { signal, progress } = {}) {
       );
       progressInfo.count += 1;
       progress && progress(progressInfo);
+      if (ignoreLink && (await _f.getType(outputPath)) === 'symlink') {
+        await _f.del(outputPath);
+      }
     }
   });
 }

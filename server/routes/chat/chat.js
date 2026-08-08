@@ -22,6 +22,7 @@ import { _delDir } from '../file/file.js';
 import _path from '../../utils/path.js';
 import nanoid from '../../utils/nanoid.js';
 import request from '../../utils/request.js';
+import { fieldLength } from '../config.js';
 
 // 获取好友信息
 export async function getFriendInfo(mAcc, fAcc, fields = '*') {
@@ -80,6 +81,10 @@ export async function saveChatMsg(account, obj) {
   if (!obj.id) obj.id = nanoid();
   if (!obj.create_at) obj.create_at = Date.now();
   await db('chat').insert(obj);
+
+  if (account !== appConfig.notifyAccount) {
+    await saveBackupData(account, 'chat', obj);
+  }
 
   return obj;
 }
@@ -559,4 +564,20 @@ export async function cleanUpload(res = false) {
       await heperMsgAndForward(null, appConfig.adminAccount, text);
     }
   }
+}
+
+// 保持备份数据
+export async function saveBackupData(account, type, item) {
+  const filePath = appConfig.backupDir(account, type);
+  let list = (await _f.readFile(filePath, null, ''))
+    .toString()
+    .split('\n')
+    .filter(Boolean)
+    .reverse();
+
+  list.push(JSON.stringify(item));
+  if (list > fieldLength.backupDataLength) {
+    list = list.slice(-fieldLength.backupDataLength);
+  }
+  await _f.writeFile(filePath, list.reverse().join('\n'));
 }

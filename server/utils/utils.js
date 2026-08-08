@@ -14,6 +14,7 @@ import _f from './f.js';
 import _path from './path.js';
 import nanoid from './nanoid.js';
 import _crypto from './crypto.js';
+import { fieldLength } from '../routes/config.js';
 
 // 获取模块目录
 export function getDirname(meta) {
@@ -65,7 +66,7 @@ export async function writelog(res, str = '', code = 200) {
 
     const s = await _f.lstat(targetPath);
 
-    if (s && s.size > 9 * 1024 * 1024) {
+    if (s && s.size > fieldLength.logFileSize) {
       await _f.rename(
         targetPath,
         appConfig.logDir(
@@ -135,7 +136,7 @@ export function _setTimeout(callback, time) {
 }
 
 //接收文件
-export async function receiveFiles(req, uploadDir, filename, maxFileSizeMB = 5, HASH) {
+export async function receiveFiles(req, uploadDir, filename, maxFileSizeMB = 5, HASH, ignoreLink) {
   req.setTimeout(1000 * 60 * 10); // 10分钟超时
 
   const maxFileSize = maxFileSizeMB * 1024 * 1024;
@@ -160,18 +161,23 @@ export async function receiveFiles(req, uploadDir, filename, maxFileSizeMB = 5, 
   }
 
   const uploadedFile = Array.isArray(files[fileKey]) ? files[fileKey][0] : files[fileKey];
-  const newPath = _path.normalizeNoSlash(uploadDir, uploadedFile.newFilename);
-  const originalPath = _path.normalizeNoSlash(uploadDir, filename);
+  const temFile = _path.normalizeNoSlash(uploadDir, uploadedFile.newFilename);
+  const to = _path.normalizeNoSlash(uploadDir, filename);
 
-  await _f.fsp.rename(newPath, originalPath);
-  if (HASH && HASH !== (await _crypto.sampleHash(originalPath))) {
-    await _f.del(originalPath);
+  if (ignoreLink && (await _f.getType(temFile)) === 'symlink') {
+    await _f.del(temFile);
+    throw new Error('Ignore the symlink');
+  }
+
+  await _f.rename(temFile, to);
+  if (HASH && HASH !== (await _crypto.sampleHash(to))) {
+    await _f.del(to);
     throw new Error('hash error');
   }
 }
 
 // 合并切片
-export async function mergefile(count, from, to, HASH) {
+export async function mergefile(count, from, to, HASH, ignoreLink) {
   const list = await _f.fsp.readdir(from);
 
   if (list.length < count) throw new Error('file chunks error');
@@ -202,6 +208,11 @@ export async function mergefile(count, from, to, HASH) {
   }
 
   await _f.del(from);
+
+  if (ignoreLink && (await _f.getType(temFile)) === 'symlink') {
+    await _f.del(temFile);
+    throw new Error('Ignore the symlink');
+  }
 
   await _f.rename(temFile, to);
 

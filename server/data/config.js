@@ -100,6 +100,9 @@ const appConfig = {
   pubDir(account, ...arg) {
     return _path.normalizeNoSlash(this.configDir(account, 'pub'), ...arg);
   },
+  backupDir(account, ...arg) {
+    return _path.normalizeNoSlash(this.configDir(account, 'backup'), ...arg);
+  },
 };
 
 export default appConfig;

@@ -47,4 +47,7 @@ export const fieldLength = {
   notePreviewLength: 200, // 笔记预览长度
   cdHistoryLength: 100, // 文件操作历史记录个数
   searchEngineLength: 100, // 搜索引擎个数
+  backupDataLength: 200, // 备份数据条数
+  logLength: 200, // 日志保存文件个数
+  logFileSize: 9 * 1024 * 1024, // 日志文件大小
 };

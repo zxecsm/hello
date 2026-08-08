@@ -70,7 +70,7 @@ route.post(
     const tDir = appConfig.picDir(timePath);
     const tName = `${HASH}.${suffix}`;
 
-    await receiveFiles(req, tDir, tName, fieldLength.maxPicSize, HASH);
+    await receiveFiles(req, tDir, tName, fieldLength.maxPicSize, HASH, true);
 
     try {
       await getImgInfo(_path.normalizeNoSlash(tDir, tName));

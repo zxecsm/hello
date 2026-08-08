@@ -922,16 +922,16 @@ timedTask.add(async (flag) => {
       // 定期清理LOG文件
       const list = (await readMenu(appConfig.logDir())).filter((f) => f.type === 'file');
 
-      if (list.length > 200) {
+      if (list.length > fieldLength.logLength) {
         let count = 0;
         list.sort((a, b) => b.time - a.time);
-        for (const item of list.slice(200)) {
+        for (const item of list.slice(fieldLength.logLength)) {
           const { name, path } = item;
           const p = _path.normalizeNoSlash(path, name);
           await _delDir(p);
           count++;
         }
-        const text = `日志文件超出200个，已清理：${count}`;
+        const text = `日志文件超出${fieldLength.logLength}个，已清理：${count}`;
         await writelog(false, text);
         await heperMsgAndForward(null, appConfig.adminAccount, text);
       }
