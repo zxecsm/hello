@@ -491,9 +491,14 @@ export async function renderBgList(y) {
     showpage = localData.get('bgPageSize');
   if (isHistoryState) {
     const data = (await getBgHistoryList()).reverse().filter((item) => item.type === type);
-    const total = Math.ceil(data.length / showpage);
-    const pageNo = bgpage < 1 ? total : bgpage > total ? 1 : bgpage;
-    hdRender({ total, data, pageNo }, showpage, type, y);
+    const pageTotal = Math.ceil(data.length / showpage);
+    const pageNo = bgpage < 1 ? pageTotal : bgpage > pageTotal ? 1 : bgpage;
+    hdRender(
+      { total: data.length, data: data.slice((pageNo - 1) * showpage, pageNo * showpage), pageNo },
+      showpage,
+      type,
+      y,
+    );
   } else {
     reqBgList({ type, pageNo: bgpage, pageSize: showpage, collect: isCollectState ? 1 : 0 })
       .then((result) => {
