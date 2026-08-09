@@ -43,6 +43,27 @@ if (isIframe() && window._pageName !== '404') {
     }
   }
 }
+if ('serviceWorker' in navigator) {
+  let refreshing = false;
+
+  // 监听 Service Worker 控制权变更事件
+  // 当新 SW 执行 skipWaiting + clientsClaim 成功接管页面时，该事件会触发
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      // 自动刷新页面，载入最新 SW 提供的最新 index.html 和静态资源
+      window.location.reload();
+    }
+  });
+
+  // 页面加载完成后注册 Service Worker
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error('ServiceWorker 注册失败:', err);
+    });
+  });
+}
 if (isLogin()) {
   // 君子锁
   ~(function getGentlemanLock() {

@@ -89,9 +89,18 @@ app.use((_, res, next) => {
 
 const staticOptions = {
   dotfiles: 'allow', // 允许访问 .xxx 文件
-  maxAge: '7d', // 强缓存
-  etag: true, // 文件指纹缓存
-  lastModified: true, // 修改时间缓存
+  // maxAge: '7d', // 强缓存
+  etag: true, // 开启 ETag 指纹验证
+  lastModified: true, // 开启 Last-Modified 时间验证
+  setHeaders: (res, filePath) => {
+    // 1. 入口/控制文件：绝不开启强缓存，走协商缓存
+    if (filePath.endsWith('sw.js') || filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+    } else {
+      // 2. 带 Hash 指纹的静态资源：直接给 1 年强缓存 + immutable(告诉浏览器：“这个文件永远不会改变”)
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  },
 };
 app.use(express.static(resolve(__dirname, 'static'), staticOptions));
 

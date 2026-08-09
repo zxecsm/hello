@@ -167,9 +167,14 @@ function getPlugins(isDev) {
       }),
       new GenerateSW({
         swDest: 'sw.js',
-        clientsClaim: true,
-        skipWaiting: true,
-        exclude: [/\.html$/],
+        clientsClaim: true, // 新 SW 激活后立即接管当前所有页面
+        skipWaiting: true, // 新 SW 安装完成后跳过等待，立即激活
+        cleanupOutdatedCaches: true, // 自动清理旧版本的 Workbox 预缓存文件
+
+        // 预缓存规则配置
+        navigationPreload: false, // 通常保持默认即可
+        // 如果静态资源较多，可以限制单文件预缓存的最大体积 (默认 2MB)
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 放大到 4MB
       }),
     ];
   } else {
