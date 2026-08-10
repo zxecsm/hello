@@ -269,6 +269,20 @@ export async function fileToBg(p) {
 
 // 路径安全
 export async function isPathSafe(base, target, allowEqual = false) {
-  const realp = await _f.realpath(target);
+  let current = target;
+  let realp = null;
+
+  while (current) {
+    try {
+      realp = await _f.realpath(current);
+      if (realp) break;
+    } catch {}
+
+    const parent = _path.dirname(current);
+    if (parent === current) break;
+
+    current = parent;
+  }
+
   return realp && _path.isPathWithin(base, realp, allowEqual);
 }
