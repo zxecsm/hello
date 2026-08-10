@@ -1035,7 +1035,7 @@ route.post(
 
     const f = _path.normalizeNoSlash(p, name);
 
-    if (!(await isPathSafe(appConfig.userRootDir(account), f))) {
+    if (!(await isPathSafe(appConfig.userRootDir(account), f)) || !(await _f.exists(f))) {
       return resp.forbidden(res, `${flag}不存在`)();
     }
 
