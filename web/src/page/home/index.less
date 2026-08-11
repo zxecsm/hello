@@ -62,7 +62,7 @@ body {
     background-image: url(../../images/img/grass.png);
     background-size: 20rem 2rem;
     pointer-events: none;
-    opacity: 0.8;
+    opacity: 0.6;
   }
 
   /* 随机壁纸 */
@@ -76,11 +76,16 @@ body {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
+    opacity: 0.6;
+    &:hover {
+      opacity: 1;
+    }
 
     &.open {
       width: 4rem;
       height: 4rem;
       left: 2rem;
+      opacity: 1;
     }
 
     div {
@@ -574,11 +579,14 @@ body {
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
+    opacity: 0.6;
     &.alert {
+      opacity: 1;
       animation: breathe 2s ease-in-out infinite;
     }
     &:hover {
       transform: scale(1.1);
+      opacity: 1;
     }
   }
 
@@ -885,15 +893,18 @@ body {
     font-size: 4rem;
     color: #49a923;
     animation: shakeY 20s infinite;
+    opacity: 0.6;
 
     &.run {
       font-size: 6rem;
       animation: tada 2s ease-in-out infinite;
+      opacity: 1;
     }
     &:hover {
       animation: none;
       color: var(--text-hover-color);
       transform: scale(1.1);
+      opacity: 1;
     }
   }
 
@@ -1721,10 +1732,12 @@ body {
     color: var(--icon-color);
     padding: 0.5rem;
     animation: rotate360 6s infinite alternate;
+    opacity: 0.6;
     &:hover {
       animation: none;
       color: var(--text-hover-color);
       transform: scale(1.1);
+      opacity: 1;
     }
   }
 
@@ -1982,7 +1995,7 @@ body {
     background-repeat: no-repeat;
     background-position: center;
     background-size: cover;
-    opacity: 0.9;
+    opacity: 0.6;
     &:hover {
       opacity: 1;
       animation: none;
