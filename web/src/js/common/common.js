@@ -28,6 +28,7 @@ import { timeMsg, welcomeMsg } from '../../page/home/home';
 import bear from '../plugins/bear';
 import ScreenWakeLock from './screenWakeLock';
 import _path from '../utils/path';
+import rMenu from '../plugins/rightMenu';
 window._pageName =
   myOpen().split(/[?#]/)[0].replace(_d.originURL, '').split('/').filter(Boolean)[0] || 'home';
 if (isIframe() && window._pageName !== '404') {
@@ -52,7 +53,20 @@ if ('serviceWorker' in navigator) {
     if (!refreshing) {
       refreshing = true;
       // 自动刷新页面，载入最新 SW 提供的最新 index.html 和静态资源
-      window.location.reload();
+      rMenu.pop(
+        {
+          text: '检测到新版本，刷新页面生效!',
+          confirm: {
+            text: '立即刷新',
+          },
+          cancel: {
+            text: '暂不刷新',
+          },
+        },
+        (type) => {
+          if (type === 'confirm') window.location.reload();
+        },
+      );
     }
   });
 
