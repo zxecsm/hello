@@ -854,8 +854,8 @@ document.addEventListener('keydown', function (e) {
     ctrl = e.ctrlKey || e.metaKey;
   const isFocus = $('input').is(':focus') || $('textarea').is(':focus');
   if (isFocus) return;
-  e.preventDefault();
   if (ctrl && key === 'a') {
+    e.preventDefault();
     if (!isSelecting()) {
       hdCheckItemBtn();
     }

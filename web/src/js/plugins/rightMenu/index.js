@@ -801,6 +801,7 @@ class Pop {
   }
   init() {
     this.mask = document.createElement('div');
+    this.mask.setAttribute('tabindex', '-1');
     this.mask.className = 'pop_confirm_mask';
     this.mask.style.zIndex = this.top ? 9999 : _d.levelObj.popConfirm;
     this.box = document.createElement('div');
@@ -819,12 +820,14 @@ class Pop {
     this.confirmBtn.className = `btn btn_${this.confirm.type}`;
     this.confirmBtn.setAttribute('cursor', '');
     this.confirmBtn.textContent = this.confirm.text;
+    this.box.title = `快捷键：\nEnter：${this.confirm.text}\nBack：${this.cancel.text}\nEsc：关闭`;
     this.btns.appendChild(this.cancelBtn);
     this.btns.appendChild(this.confirmBtn);
     this.box.appendChild(this.textBox);
     this.box.appendChild(this.btns);
     this.mask.appendChild(this.box);
     document.body.appendChild(this.mask);
+    this.mask.focus();
     this.dragClose = myDrag({
       trigger: this.box,
       border: true,
@@ -840,10 +843,26 @@ class Pop {
   }
   bindEvent() {
     this.hdClick = this.hdClick.bind(this);
+    this.hdKeydown = this.hdKeydown.bind(this);
     this.mask.addEventListener('click', this.hdClick);
+    this.mask.addEventListener('keydown', this.hdKeydown);
   }
   unBindEvent() {
     this.mask.removeEventListener('click', this.hdClick);
+    this.mask.removeEventListener('keydown', this.hdKeydown);
+  }
+  hdKeydown(e) {
+    const key = e.key.toLowerCase();
+    if (key === 'enter') {
+      this.close();
+      this.callback && this.callback('confirm');
+    } else if (key === 'escape') {
+      this.close();
+      this.callback && this.callback('close');
+    } else if (key === 'backspace') {
+      this.close();
+      this.callback && this.callback('cancel');
+    }
   }
   hdClick(e) {
     const target = e.target;

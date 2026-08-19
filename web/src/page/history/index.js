@@ -443,7 +443,9 @@ function getCheckItems() {
 }
 $footer
   .on('click', '.f_delete', function () {
-    deleteHistory(getCheckItems());
+    const data = getCheckItems();
+    if (data.length === 0) return;
+    deleteHistory(data);
   })
   .on('click', '.f_close', stopSelect)
   .on('click', 'span', switchCheckAll);
@@ -478,8 +480,8 @@ document.addEventListener('keydown', function (e) {
     ctrl = e.ctrlKey || e.metaKey;
   const isFocus = $('input').is(':focus') || $('textarea').is(':focus');
   if (isFocus) return;
-  e.preventDefault();
   if (ctrl && key === 'a') {
+    e.preventDefault();
     if (!isSelecting()) {
       hdCheckItemBtn();
     }

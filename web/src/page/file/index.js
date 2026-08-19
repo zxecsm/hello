@@ -2352,6 +2352,7 @@ function hdDel(e, arr, cb, loading = { start() {}, end() {} }) {
     opt.confirm.text = '直接删除';
   }
   rMenu.pop(opt, async (type) => {
+    if (type === 'cancel' && !opt.cancel) return;
     if (type === 'confirm' || type === 'cancel') {
       try {
         const force = type === 'confirm' ? 1 : 0;
@@ -2453,8 +2454,8 @@ document.addEventListener('keydown', function (e) {
       hdCut(false, data);
     }
   }
+  if (!isSelecting()) return;
   const data = getCheckDatas();
-  if (data.length === 0) return;
   if (ctrl && key === 'c') {
     waitObj = {
       type: 'copy',
@@ -2471,6 +2472,8 @@ document.addEventListener('keydown', function (e) {
     realtime.send({ type: 'pastefiledata', data: waitObj });
     showPaste();
     closeCheck();
+  } else if (key === 'delete') {
+    hdDel(null, data);
   }
 });
 // 手势右划后退
