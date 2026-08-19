@@ -502,7 +502,7 @@ export async function renderBgList(y) {
   } else {
     reqBgList({ type, pageNo: bgpage, pageSize: showpage, collect: isCollectState ? 1 : 0 })
       .then((result) => {
-        if (result.code === 1) {
+        if (result.code === 1 && !isHistoryState) {
           hdRender(result.data, showpage, type, y);
           return;
         }
