@@ -26,21 +26,52 @@ export function handleMusicList(arr) {
 
 // 解析歌词
 export function parseLrc(lrc) {
-  const reg = /\[(\d+\:\d+(\.\d+)?)\]([^\[\n\r]+)/gi,
-    res = [];
+  // 非字符串或空值直接返回空数组
+  if (!lrc || typeof lrc !== 'string') return [];
 
-  lrc.replace(reg, (...[, $1, , $2]) => {
-    const parr = $2.split('<=>'),
-      tarr = $1.split(':');
+  // 时间标签 + 后面的内容（内容到下一个 [ 或行尾为止）
+  // 兼容格式：[00:18.63] [00:18.6] [00:18] [00:18:63] [0:18.63]
+  // 捕获组：1=分 2=秒 3=毫秒(可选) 4=该标签后的内容
+  const LINE = /\[(\d{1,3}):(\d{1,2})(?:[.:](\d{1,3}))?\]([^\[]*)/g;
 
-    res.push({
-      t: parseInt(tarr[0] * 60) + Math.round(tarr[1]),
-      p: parr[0].trim(),
-      fy: parr[1] ? parr[1].trim() : '',
-    });
-  });
-  res.sort((a, b) => a.t - b.t);
-  return res;
+  // key -> { time, lines }，相同时间标签的内容归到同一组
+  const groups = new Map();
+  let m;
+  while ((m = LINE.exec(lrc)) !== null) {
+    const [, min, sec, ms, raw] = m;
+
+    // 去掉内容首尾空白；为空说明这个时间标签后面紧跟另一个标签，跳过
+    const content = raw.trim();
+    if (!content) continue;
+
+    // 用原始时间字符串做 key，避免毫秒精度被数值转换抹掉
+    const key = `${min}:${sec}${ms != null ? '.' + ms : ''}`;
+
+    // 首次遇到该时间标签，计算时间（秒）并建组
+    if (!groups.has(key)) {
+      // 毫秒位数兼容：1 位=百毫秒，2 位=十毫秒，3 位=毫秒
+      const milliseconds = ms != null ? parseInt(ms.padEnd(3, '0').slice(0, 3), 10) : 0;
+      groups.set(key, {
+        time: parseInt(min, 10) * 60 + parseInt(sec, 10) + milliseconds / 1000,
+        lines: [],
+      });
+    }
+
+    // 相同时间标签再次出现时，作为该组的后续行（翻译）
+    groups.get(key).lines.push(content);
+  }
+
+  // 同时间标签多行 → 第一行原文，后续行翻译；单行则为纯原文
+  const result = [];
+  for (const { time, lines } of groups.values()) {
+    if (lines.length) {
+      result.push({ t: Math.round(time), p: lines[0], fy: lines.slice(1).join('\n') });
+    }
+  }
+
+  // 按时间升序排序
+  result.sort((a, b) => a.t - b.t);
+  return result;
 }
 
 // 分批读取音乐信息
