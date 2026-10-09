@@ -33,7 +33,7 @@ module.exports = merge(require('./webpack.base'), {
     allowedHosts: 'all',
     proxy: [
       {
-        context: ['/api'],
+        pathFilter: ['/api'],
         target: 'http://127.0.0.1:55555',
       },
     ],

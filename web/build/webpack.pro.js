@@ -7,6 +7,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { merge } = require('webpack-merge');
 const { getPlugins } = require('./utils');
+const corejsVersion = require('core-js/package.json').version.split('.').slice(0, 2).join('.');
 // css兼容前缀
 const postcssConfig = {
   loader: 'postcss-loader',
@@ -55,12 +56,11 @@ module.exports = merge(require('./webpack.base'), {
                       chrome: '55',
                       ie: '11',
                     },
-                    // 指定corejs版本
-                    corejs: '3',
-                    // usage 按需加载corejs
-                    useBuiltIns: 'usage',
                   },
                 ],
+              ],
+              plugins: [
+                ['babel-plugin-polyfill-corejs3', { method: 'usage-global', version: corejsVersion }],
               ],
             },
           },
