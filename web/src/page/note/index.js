@@ -129,7 +129,7 @@ $setBtnsWrap
   .on('click', '.font_size_btn', (e) => {
     rMenu.percentBar(e, noteFontSize, (percent) => {
       $contentWrap.css({
-        'font-size': percentToValue(12, 30, percent),
+        'font-size': percentToValue(12, 30, percent) + 'px',
       });
       noteFontSize = percent;
       localData.set('noteFontSize', noteFontSize, 200);
@@ -462,7 +462,7 @@ function highlightPosition(num) {
   }
 }
 $contentWrap.css({
-  'font-size': percentToValue(12, 30, noteFontSize),
+  'font-size': percentToValue(12, 30, noteFontSize) + 'px',
 });
 // 黑暗模式
 function changeTheme(dark) {

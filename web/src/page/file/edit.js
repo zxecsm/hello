@@ -107,7 +107,7 @@ editor.getSession().on('change', () => {
   switchUndoState();
 });
 $editFile.find('.editor').css({
-  'font-size': percentToValue(12, 30, fileFontSize),
+  'font-size': percentToValue(12, 30, fileFontSize) + 'px',
 });
 // 文件列表显示/隐藏
 function hideContainer() {
@@ -154,7 +154,7 @@ async function settingMenu(e) {
       if (id === 'size') {
         rMenu.percentBar(e, fileFontSize, (percent) => {
           $editFile.find('.editor').css({
-            'font-size': percentToValue(12, 30, percent),
+            'font-size': percentToValue(12, 30, percent) + 'px',
           });
           fileFontSize = percent;
           localData.set('fileFontSize', fileFontSize, 200);

@@ -361,7 +361,7 @@ async function renderLrc() {
     .find('.lrc_items')
     .css({
       'text-align': lrcState.position,
-      'font-size': percentToValue(14, 30, lrcState.size),
+      'font-size': percentToValue(14, 30, lrcState.size) + 'px',
     })
     .html(html);
   computeLrcIndex();

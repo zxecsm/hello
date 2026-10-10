@@ -1549,7 +1549,7 @@ function setCatSize() {
     $cat = $content.find('.cat');
   let fontSize = (($content.width() - 200) / 2) * (100 / 150);
   fontSize = fontSize > 150 ? 150 : fontSize < 50 ? 50 : fontSize;
-  $cat.css('font-size', parseInt(fontSize));
+  $cat.css('font-size', parseInt(fontSize) + 'px');
 }
 localData.onChange(({ key }) => {
   if (!key || key === 'htmlFontSize') {

@@ -623,7 +623,7 @@ async function hdUpFile(files) {
 
 function setNoteFontSize() {
   $editWrap.css({
-    'font-size': percentToValue(12, 40, editNoteFontSize),
+    'font-size': percentToValue(12, 40, editNoteFontSize) + 'px',
   });
 }
 setNoteFontSize();

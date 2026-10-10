@@ -546,7 +546,7 @@ async function hdUpFile(files) {
   });
 })();
 $editWrap.css({
-  'font-size': percentToValue(12, 40, editNoteFontSize),
+  'font-size': percentToValue(12, 40, editNoteFontSize) + 'px',
 });
 // 设置
 function settingEdit(e) {
@@ -565,7 +565,7 @@ function settingEdit(e) {
       if (id === 'size') {
         rMenu.percentBar(e, editNoteFontSize, (percent) => {
           $editWrap.css({
-            'font-size': percentToValue(12, 30, percent),
+            'font-size': percentToValue(12, 30, percent) + 'px',
           });
           editNoteFontSize = percent;
           localData.set('editNoteFontSize', editNoteFontSize, 200);

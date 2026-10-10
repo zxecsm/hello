@@ -549,7 +549,7 @@ window.addEventListener('resize', throttle(setCatSize, 1000));
 function setCatSize() {
   const $cat = $box.find('.cat');
   const fontSize = ($box.width() / 2) * (100 / 150);
-  $cat.css('font-size', parseInt(fontSize));
+  $cat.css('font-size', parseInt(fontSize) + 'px');
 }
 setCatSize();
 localData.onChange(({ key }) => {

@@ -537,7 +537,7 @@ function musiclrc() {
           .find('.lrc_items')
           .css({
             'text-align': lrcState.position,
-            'font-size': percentToValue(14, 30, lrcState.size),
+            'font-size': percentToValue(14, 30, lrcState.size) + 'px',
           })
           .html(html);
         setActionLrcIndex();
@@ -1231,7 +1231,7 @@ _mySlide({
   el: '.video_box',
   right(e) {
     if (_getTarget(this, e, '.video_box', 1)) {
-      $musicMvWrap.find('.m_close').click();
+      $musicMvWrap.find('.m_close').trigger('click');
     }
   },
 });

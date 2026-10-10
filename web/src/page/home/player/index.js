@@ -1105,7 +1105,7 @@ async function renderSongs(gao) {
   } else {
     highlightPlayingSong(1);
   }
-  $msuicContentBox.find('.list_items_wrap').scroll();
+  $msuicContentBox.find('.list_items_wrap').trigger('scroll');
   songsLazyImg.bind(
     hdMusicImgCache($msuicContentBox.find('.list_items_wrap')[0].querySelectorAll('.logo')),
     musicLoadImg,
