@@ -9,7 +9,7 @@ services:
     environment:
       - TZ=Asia/Shanghai
       # http 访问时设为 false，否则默认的 Secure 属性会导致无法登录；HTTPS 访问时不设置或设为 true
-      #- COOKIE_SECURE=true
+      #- COOKIE_SECURE=false
     volumes:
       - /proc:/app/proc:ro
       - /:/app/app_data
