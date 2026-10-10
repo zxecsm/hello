@@ -886,9 +886,9 @@ route.post(
 );
 
 // 退出登录
-route.get(
+route.post(
   '/logout',
-  validate('query', V.object({ other: V.number().toInt().enum([0, 1]) })),
+  validate('body', V.object({ other: V.number().toInt().enum([0, 1]) })),
   asyncHandler(async (_, res) => {
     const { other } = res.locals.ctx;
 
@@ -1028,7 +1028,7 @@ route.get(
 );
 
 // 删除头像
-route.get(
+route.post(
   '/delete-logo',
   asyncHandler(async (_, res) => {
     const { account } = res.locals.hello.userinfo;
@@ -1136,7 +1136,7 @@ route.post(
 );
 
 // 每日更换壁纸
-route.get(
+route.post(
   '/daily-change-bg',
   asyncHandler(async (_, res) => {
     const { account, daily_change_bg } = res.locals.hello.userinfo;
@@ -1161,7 +1161,7 @@ route.get(
 );
 
 // 隐身状态
-route.get(
+route.post(
   '/hide-state',
   asyncHandler(async (_, res) => {
     const { account, hide } = res.locals.hello.userinfo;
@@ -1189,7 +1189,7 @@ route.get(
 );
 
 // 免密登录状态
-route.get(
+route.post(
   '/remote-login-state',
   asyncHandler(async (_, res) => {
     const { account, remote_login } = res.locals.hello.userinfo;

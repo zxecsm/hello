@@ -25,19 +25,19 @@ export function reqRootDeleteAccount(data) {
 }
 // 清理音乐文件
 export function reqRootCleanMusicFile() {
-  return _getAjax('/root/clean-music-file');
+  return _postAjax('/root/clean-music-file');
 }
 // 清理壁纸文件
 export function reqRootCleanBgFile() {
-  return _getAjax('/root/clean-bg-file');
+  return _postAjax('/root/clean-bg-file');
 }
 // 清理pic文件
 export function reqRootCleanPicFile() {
-  return _getAjax('/root/clean-pic-file');
+  return _postAjax('/root/clean-pic-file');
 }
 // 清理聊天室文件
 export function reqRootCleanChatFile() {
-  return _getAjax('/root/clean-chat-file');
+  return _postAjax('/root/clean-chat-file');
 }
 // 注册状态
 export function reqRootRegisterState() {

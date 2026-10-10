@@ -41,7 +41,7 @@ export function reqNoteCategory(data) {
 }
 // 删除分类
 export function reqNoteDeleteCategory(data) {
-  return _getAjax('/note/delete-category', data);
+  return _postAjax('/note/delete-category', data);
 }
 // 编辑分类
 export function reqNoteEditCategory(data) {

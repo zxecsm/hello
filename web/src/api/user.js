@@ -9,19 +9,19 @@ export function reqUerChangename(data) {
 }
 // 每日更新壁纸
 export function reqUserDailyChangeBg() {
-  return _getAjax('/user/daily-change-bg');
+  return _postAjax('/user/daily-change-bg');
 }
 // 隐身
 export function reqUserHideState() {
-  return _getAjax('/user/hide-state');
+  return _postAjax('/user/hide-state');
 }
 // 免密登录状态
 export function reqUserRemoteLoginState() {
-  return _getAjax('/user/remote-login-state');
+  return _postAjax('/user/remote-login-state');
 }
 // 删除头像
 export function reqUserDeleteLogo() {
-  return _getAjax('/user/delete-logo');
+  return _postAjax('/user/delete-logo');
 }
 // 字体列表
 export function reqUserFontList() {
@@ -44,8 +44,8 @@ export function reqUserAllowLoginReq(data) {
   return _postAjax('/user/allow-login-req', data);
 }
 // 退出
-export function reqUserLogout(param) {
-  return _getAjax('/user/logout', param);
+export function reqUserLogout(data) {
+  return _postAjax('/user/logout', data);
 }
 // 上传logo
 export function reqUserUpLogo(data, file, cb, signal) {

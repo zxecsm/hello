@@ -1234,7 +1234,7 @@ route.post(
 );
 
 // 清空回收站
-route.get(
+route.post(
   '/clear-trash',
   asyncHandler(async (_, res) => {
     const { account } = res.locals.hello.userinfo;

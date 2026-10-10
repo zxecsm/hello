@@ -85,7 +85,7 @@ export function reqFileDelete(data) {
 }
 // 清空回收站
 export function reqFileClearTrash() {
-  return _getAjax('/file/clear-trash');
+  return _postAjax('/file/clear-trash');
 }
 // 重命名
 export function reqFileRename(data) {

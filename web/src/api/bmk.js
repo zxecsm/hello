@@ -58,7 +58,7 @@ export function reqBmkGroupShareState(data) {
 }
 // 删除书签logo
 export function reqBmkDeleteLogo(data) {
-  return _getAjax('/bmk/delete-logo', data);
+  return _postAjax('/bmk/delete-logo', data);
 }
 // 书签移动位置
 export function reqBmkEditBmk(data) {

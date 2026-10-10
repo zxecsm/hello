@@ -207,7 +207,7 @@ route.post(
 );
 
 // 清理歌曲文件
-route.get(
+route.post(
   '/clean-music-file',
   asyncHandler(async (_, res) => {
     const { account } = res.locals.hello.userinfo;
@@ -300,7 +300,7 @@ route.get(
 );
 
 // 清理壁纸文件
-route.get(
+route.post(
   '/clean-bg-file',
   asyncHandler(async (_, res) => {
     const { account } = res.locals.hello.userinfo;
@@ -393,7 +393,7 @@ route.get(
 );
 
 // 清理图床文件
-route.get(
+route.post(
   '/clean-pic-file',
   asyncHandler(async (_, res) => {
     const { account } = res.locals.hello.userinfo;
@@ -486,7 +486,7 @@ route.get(
 );
 
 // 清理聊天文件
-route.get(
+route.post(
   '/clean-chat-file',
   asyncHandler(async (_, res) => {
     const { account } = res.locals.hello.userinfo;

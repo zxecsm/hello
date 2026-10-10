@@ -395,10 +395,10 @@ route.post(
 );
 
 // 删除自定义书签logo
-route.get(
+route.post(
   '/delete-logo',
   validate(
-    'query',
+    'body',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
