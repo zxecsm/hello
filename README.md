@@ -8,22 +8,13 @@ services:
     restart: unless-stopped
     environment:
       - TZ=Asia/Shanghai
+      # http 访问时设为 false，否则默认的 Secure 属性会导致无法登录；HTTPS 访问时不设置或设为 true
+      #- COOKIE_SECURE=true
     volumes:
       - /proc:/app/proc:ro
       - /:/app/app_data
     ports:
       - '55555:55555'
-```
-
-```
-docker run -d \
-  --name hello \
-  --restart unless-stopped \
-  -e TZ=Asia/Shanghai \
-  -v /proc:/app/proc:ro \
-  -v /:/app/app_data \
-  -p 55555:55555 \
-  ghcr.io/zxecsm/hello:latest
 ```
 
 歌词格式：
