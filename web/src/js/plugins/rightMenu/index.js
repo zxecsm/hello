@@ -85,6 +85,7 @@ class RightM {
     this.searchBox = document.createElement('div');
     this.searchBox.className = 'search_box inp_box';
     this.searchInp = document.createElement('input');
+    this.searchInp.setAttribute('name', 'search');
     this.searchInp.setAttribute('placeholder', '搜索');
     this.searchInp.setAttribute('autocomplete', 'off');
     this.searchBox.appendChild(this.searchInp);
@@ -393,7 +394,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       <div v-if="type === 'input'" class="inp_item">
           <div v-if="beforeText" class="title">{{beforeText}}</div>
           <div class="inp_box">
-            <input class='inp' :data-flag="key" :autocomplete="autocomplete" :placeholder="placeholder" :value="value" :type="inputType"/>
+            <input class='inp' :name="key" :data-flag="key" :autocomplete="autocomplete" :placeholder="placeholder" :value="value" :type="inputType"/>
             <i v-if="inputType === 'password'" v-show="value !== ''" cursor="y" class="show_pass_btn iconfont icon-kejian"></i>
             <i cursor="y" class="clean_btn iconfont icon-shibai {{value === '' ? '' : 'show'}}"></i>
           </div>
@@ -402,7 +403,7 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       <div v-else-if="type === 'textarea'" class='texta_item'>
         <div v-if="beforeText" class="title">{{beforeText}}</div>
         <div class='texta_box'>
-          <textarea title='Ctrl+Enter {{subText}}' class='texta' :data-flag="key" :autocomplete="autocomplete" :placeholder="placeholder">{{value}}</textarea>
+          <textarea title='Ctrl+Enter {{subText}}' class='texta' :name="key" :data-flag="key" :autocomplete="autocomplete" :placeholder="placeholder">{{value}}</textarea>
           <i cursor="y" class="clean_btn iconfont icon-qingkong-1 {{value === '' ? '' : 'show'}}"></i>
         </div>
         <p class='err'></p>

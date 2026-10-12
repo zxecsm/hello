@@ -142,6 +142,7 @@ function hdInputKeyDown(e) {
 }
 
 const oInp = document.createElement('input');
+oInp.name = 'path';
 oInp.addEventListener('blur', hdInputBlur);
 oInp.addEventListener('keyup', hdInputKeyup);
 oInp.addEventListener('keydown', hdInputKeyDown);

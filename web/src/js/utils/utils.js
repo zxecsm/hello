@@ -727,6 +727,7 @@ export function getFiles(opt = {}) {
     const { multiple, accept, webkitdirectory } = opt;
     const oInp = document.createElement('input');
     oInp.type = 'file';
+    oInp.name = 'file';
     if (multiple) {
       oInp.multiple = 'multiple';
     }

@@ -165,7 +165,7 @@ class Pagination {
         <button v-if="pageNo < totalPage" data-type="paging" cursor="y" data-flag="next" class="iconfont icon-you"></button>
         <button v-if="select.length > 0" data-type="paging" cursor="y" data-flag="select">{{pageSize}}/页</button>
         <span v-if="showTotal">共 {{total}} 条,</span>
-        <input autocomplete="off" :value="pageNo" type="number"/>
+        <input name="pageNo" autocomplete="off" :value="pageNo" type="number"/>
         <button data-type="paging" cursor="y" data-flag="go" class="iconfont icon-huaban"></button>
         <button v-if="toTop" data-type="paging" cursor="y" data-flag="top" class="iconfont icon-shang"></button>
       </div>
