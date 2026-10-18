@@ -7,16 +7,12 @@ services:
     container_name: hello
     restart: unless-stopped
     environment:
-      - TZ=Asia/Shanghai
-      # 文件处理并发：libuv 线程池大小，不设置时默认为 4，上限 128
-      # 影响 fs / dns.lookup / zlib / crypto 等异步操作，密集处理文件、压缩、图片时可调大
-      # 建议不要超过 CPU 核数的 4 倍，避免线程争抢 CPU 和内存
-      - UV_THREADPOOL_SIZE=12
-      # http 访问时设为 false，否则默认的 Secure 属性会导致无法登录；HTTPS 访问时不设置或设为 true
-      # - COOKIE_SECURE=false
+      - TZ=Asia/Shanghai          # 时区
+      # - UV_THREADPOOL_SIZE=12   # 文件处理并发 libuv 线程池大小，默认4
+      # - COOKIE_SECURE=false     # HTTP 设为 false，否则无法登录；HTTPS 不设或设 true
     volumes:
-      - /proc:/app/proc:ro
-      - /:/app/app_data
+      - /proc:/app/proc:ro        # 读取宿主机系统信息（CPU、内存、负载等）
+      - /:/app/app_data           # 应用数据和文件管理目录
     ports:
       - '55555:55555'
 ```
