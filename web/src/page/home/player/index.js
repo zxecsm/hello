@@ -1305,13 +1305,30 @@ function songListMenu(e, sid) {
           _msg.error();
         }
       } else if (id === '3') {
-        downloadFiles([
-          {
-            fileUrl: `/api/player/export?id=${sid}`,
-            filename: `${name}.json`,
+        rMenu.selectMenu(
+          e,
+          [
+            { id: 'default', text: '默认格式' },
+            { id: 'navidrome', text: 'Navidrome格式' },
+          ],
+          ({ close, id }) => {
+            if (!id) return;
+            let type = 'default';
+            let suffix = 'json';
+            if (id === 'navidrome') {
+              type = 'navidrome';
+              suffix = 'm3u';
+            }
+            downloadFiles([
+              {
+                fileUrl: `/api/player/export?id=${sid}&type=${type}`,
+                filename: `${name}.${suffix}`,
+              },
+            ]);
+            close(1);
           },
-        ]);
-        close();
+          '选择导出格式',
+        );
       } else if (id === '4') {
         deleteSongList(e, name, sid, close, loading);
       }

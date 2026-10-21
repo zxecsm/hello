@@ -39,6 +39,7 @@ import {
   songlistMoveLocation,
   songMoveLocation,
   nodeID3,
+  toNavidromeM3U,
 } from './player.js';
 
 import { getFriendInfo } from '../chat/chat.js';
@@ -530,10 +531,11 @@ route.get(
     'query',
     V.object({
       id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      type: V.string().trim().default('default').enum(['default', 'navidrome']),
     }),
   ),
   asyncHandler(async (_, res) => {
-    const { id } = res.locals.ctx;
+    const { id, type } = res.locals.ctx;
 
     const { account } = res.locals.hello.userinfo;
 
@@ -543,8 +545,17 @@ route.get(
       return resp.notFound(res, '歌单不存在')();
     }
 
-    setDownloadHeader(res, `${songListObj.name}.json`);
-    res.send(JSON.stringify(songListObj.item.map((m) => m.id)));
+    const ids = songListObj.item.map((m) => m.id);
+    let result = JSON.stringify(ids);
+    let suffix = 'json';
+
+    if (type === 'navidrome') {
+      result = await toNavidromeM3U(ids, songListObj.name);
+      suffix = 'm3u';
+    }
+
+    setDownloadHeader(res, `${songListObj.name}.${suffix}`);
+    res.send(result);
   }),
 );
 

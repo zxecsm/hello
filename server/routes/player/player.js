@@ -168,3 +168,47 @@ export async function songMoveLocation(account, listId, fromId, toId) {
     await updateSongList(account, list);
   }
 }
+
+// 转换为Navidrome m3u
+export async function toNavidromeM3U(ids, playlist) {
+  ids = unique(ids);
+
+  // 音乐目录占位符，导出后替换为 Navidrome 的 MusicFolder 实际路径
+  const musicFolder = '<Navidrome MusicFolder>';
+
+  const m3u = [
+    '#EXTM3U',
+    '# 注意：下方每首歌曲路径开头的占位目录必须替换为 Navidrome 的 MusicFolder 实际路径，',
+    '# 例如 /music，替换后应形如 /music/2026/10/21/xxx/xxx.mp3。',
+    `#PLAYLIST:${String(playlist).replace(/[\r\n]+/g, ' ')}`,
+  ];
+  if (ids.length === 0) return m3u.join('\n');
+
+  const obj = {};
+
+  await batchTask(async (offset, limit) => {
+    const arr = ids.slice(offset, offset + limit);
+
+    if (arr.length === 0) return false;
+
+    const list = await db('songs')
+      .select('id,url,title,artist,duration')
+      .where({ id: { in: arr } })
+      .find();
+
+    list.forEach((item) => {
+      obj[item.id] = item;
+    });
+
+    return true;
+  }, 800);
+
+  ids.forEach((id) => {
+    const item = obj[id];
+    if (!item) return;
+    const { url, title, artist, duration } = item;
+    m3u.push(`#EXTINF:${Math.floor(duration)},${artist} - ${title}`, `${musicFolder}/${url}`);
+  });
+
+  return m3u.join('\n');
+}
