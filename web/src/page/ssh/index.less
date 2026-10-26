@@ -47,6 +47,8 @@ body {
     #terminal {
       width: 100%;
       height: 100%;
+      // 移动端：交由 js 处理滑动，避免浏览器接管手势（橡皮筋/下拉刷新）
+      touch-action: none;
     }
     .log_text {
       display: none;

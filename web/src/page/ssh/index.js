@@ -32,6 +32,7 @@ import {
   _myOpen,
   _setTimeout,
   concurrencyTasks,
+  copyText,
   debounce,
   downloadFiles,
   getFiles,
@@ -127,6 +128,126 @@ const updateTermSize = debounce(() => {
 window.addEventListener('resize', () => {
   updateTermSize();
 });
+// ================= 移动端：终端滑动滚动 =================
+// xterm.js 的滚动条是自绘的，手机上也没有可原生滚动的区域，
+// 所以默认滑不动，这里把手指的纵向位移换算成 term.scrollLines() 并补上惯性。
+(function initTerminalTouch() {
+  const el = document.getElementById('terminal');
+  if (!el) return;
+  const MOVE_THRESHOLD = 6; // 判定为滑动的位移(px)
+  let moved = false; // 本次触摸是否已判定为滑动
+  let startX = 0;
+  let startY = 0;
+  let lastY = 0;
+  let lastMoveTime = 0;
+  let velocity = 0; // 惯性滚动速度 px/ms
+  let scrollAcc = 0;
+  let scrollCellH = 20; // 本次手势的行高缓存，避免惯性滚动时反复触发重排
+  let momentumId = 0;
+
+  function screenRect() {
+    const screen = el.querySelector('.xterm-screen');
+    return screen ? screen.getBoundingClientRect() : null;
+  }
+  // 行高 = 实际渲染高度 / 行数，避免依赖私有 API
+  function cellHeight() {
+    const rect = screenRect();
+    if (rect && term.rows) return rect.height / term.rows;
+    return (term.options.fontSize || 14) * 1.2;
+  }
+  function scrollByPixels(dy) {
+    scrollAcc += dy;
+    const lines = Math.trunc(scrollAcc / scrollCellH);
+    if (lines) {
+      // 手指向下滑 => 查看更早的内容
+      term.scrollLines(-lines);
+      scrollAcc -= lines * scrollCellH;
+    }
+  }
+  function stopMomentum() {
+    if (momentumId) {
+      cancelAnimationFrame(momentumId);
+      momentumId = 0;
+    }
+  }
+  function startMomentum(v) {
+    if (Math.abs(v) < 0.05) return;
+    stopMomentum();
+    let last = performance.now();
+    const step = (now) => {
+      const dt = Math.min(now - last, 50);
+      last = now;
+      scrollByPixels(v * dt);
+      v *= Math.exp(-0.004 * dt); // 指数衰减
+      const buffer = term.buffer.active;
+      const atTop = buffer.viewportY <= 0;
+      const atBottom = buffer.viewportY >= buffer.baseY;
+      if (Math.abs(v) > 0.01 && !(atTop && v > 0) && !(atBottom && v < 0)) {
+        momentumId = requestAnimationFrame(step);
+      } else {
+        momentumId = 0;
+      }
+    };
+    momentumId = requestAnimationFrame(step);
+  }
+  el.addEventListener(
+    'touchstart',
+    (e) => {
+      if (e.touches.length !== 1) return;
+      const t = e.touches[0];
+      stopMomentum();
+      scrollAcc = 0;
+      velocity = 0;
+      scrollCellH = cellHeight();
+      moved = false;
+      startX = t.clientX;
+      startY = lastY = t.clientY;
+      lastMoveTime = performance.now();
+    },
+    { passive: false },
+  );
+
+  el.addEventListener(
+    'touchmove',
+    (e) => {
+      if (e.touches.length !== 1) return;
+      const t = e.touches[0];
+      if (
+        Math.abs(t.clientY - startY) > MOVE_THRESHOLD ||
+        Math.abs(t.clientX - startX) > MOVE_THRESHOLD
+      ) {
+        moved = true;
+      }
+      if (!moved) {
+        lastY = t.clientY;
+        return;
+      }
+      e.preventDefault(); // 阻止浏览器接管手势（橡皮筋、下拉刷新等）
+      const dy = t.clientY - lastY;
+      lastY = t.clientY;
+      const now = performance.now();
+      const dt = now - lastMoveTime;
+      if (dt > 0) velocity = velocity * 0.5 + (dy / dt) * 0.5;
+      lastMoveTime = now;
+      scrollByPixels(dy);
+    },
+    { passive: false },
+  );
+
+  function hdTouchEnd(e) {
+    if (moved) {
+      if (e.cancelable) e.preventDefault(); // 防止滚动后触发 click 弹出键盘
+      // 手指停顿后再抬起就不做惯性滚动
+      startMomentum(performance.now() - lastMoveTime > 100 ? 0 : velocity);
+    }
+    moved = false;
+  }
+  el.addEventListener('touchend', hdTouchEnd, { passive: false });
+  el.addEventListener('touchcancel', () => {
+    stopMomentum();
+    moved = false;
+  });
+})();
 function getAllText(term) {
   const buffer = term.buffer.active;
   let result = '';
@@ -241,6 +362,20 @@ realtime.init().add((res) => {
 });
 
 term.onData((d) => handleTermInput(d));
+// Ctrl+Shift+C 复制选中文本
+// （Windows/Linux 上这个组合默认是打开浏览器开发者工具，这里接管掉，返回 false 表示不再发给远程终端）
+term.attachCustomKeyEventHandler((e) => {
+  if (e.type !== 'keydown') return true;
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.code === 'KeyC') {
+    e.preventDefault();
+    const text = term.getSelection();
+    if (text) {
+      copyText(text, { success: '已复制选中的内容' });
+    }
+    return false;
+  }
+  return true;
+});
 function sendSSH(text, enter = false) {
   if (enter) text += '\r';
   realtime.send({ type: 'ssh', data: { type: 'cmd', text } });
@@ -335,7 +470,19 @@ $quickGroup
     hdGroupMenu(e, getCurQuickGroup(e.target.parentNode.dataset.id));
   });
 function hdGroupMenu(e, obj) {
-  const data = [{ id: 'edit', text: '编辑', beforeIcon: 'iconfont icon-bianji' }];
+  const data = [
+    { id: 'edit', text: '编辑', beforeIcon: 'iconfont icon-bianji' },
+    {
+      id: 'add',
+      text: '添加命令',
+      beforeIcon: 'iconfont icon-tianjia',
+    },
+    {
+      id: 'manage',
+      text: '管理命令',
+      beforeIcon: 'iconfont icon-shezhi',
+    },
+  ];
   if (obj.id !== 'default') {
     data.push({
       id: 'delete',
@@ -358,6 +505,11 @@ function hdGroupMenu(e, obj) {
           },
           loading,
         );
+      } else if (id === 'add') {
+        addCommand(e, obj.id);
+      } else if (id === 'manage') {
+        close();
+        _myOpen(`/file#${_d.sshConfigDir}`, '文件管理', 'file');
       }
     },
     obj.title,
@@ -548,7 +700,7 @@ $quickCommands
   .on('click', '.close', (e) => {
     hdCommandDelete(e, getCommandInfo(curQuickGroupId, e.target.parentNode.dataset.id));
   });
-function addCommand(e) {
+function addCommand(e, groupId = '') {
   rMenu.inpMenu(
     e,
     {
@@ -583,7 +735,7 @@ function addCommand(e) {
     function ({ close, inp, loading, isDiff }) {
       if (!isDiff()) return;
       loading.start();
-      reqSSHAddQuick({ ...inp, id: curQuickGroupId })
+      reqSSHAddQuick({ ...inp, id: groupId || curQuickGroupId })
         .then((result) => {
           loading.end();
           if (result.code === 1) {
