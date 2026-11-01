@@ -57,7 +57,6 @@ import _crypto from './utils/crypto.js';
 import _f from './utils/f.js';
 import { db } from './utils/sqlite.js';
 import V from './utils/validRules.js';
-import getCity from './utils/getCity.js';
 import request from './utils/request.js';
 import resp from './utils/response.js';
 import { asyncHandler, openCors, validate } from './utils/customMiddleware.js';
@@ -156,7 +155,6 @@ app.use(async (req, res, next) => {
       path: decodeURIComponent(req.path),
       temid: '',
       ip,
-      ipLocation: getCity(ip),
       os: formatClientInfo(req.headers['user-agent']),
       method,
       jwtData,
@@ -398,29 +396,6 @@ app.get(
       await writelog(res, error, 403);
       resp.success(res, '获取网站信息成功', obj)();
     }
-  }),
-);
-
-// ip地理位置
-app.get(
-  '/api/ip-location',
-  validate(
-    'query',
-    V.object({
-      ip: V.string().trim().default('').allowEmpty().min(1).custom(getClientIp.isIp, 'ip 格式错误'),
-    }),
-  ),
-  asyncHandler(async (_, res) => {
-    const { ip } = res.locals.ctx;
-    const hello = res.locals.hello;
-
-    // 检查接口是否开启
-    if (!_d.pubApi.ipLocationApi && !hello.userinfo.account) {
-      return resp.forbidden(res, '接口未开放')();
-    }
-
-    const result = ip ? { ...getCity(ip), ip } : { ...hello.ipLocation, ip: hello.ip };
-    resp.success(res, '获取ip地理位置成功', result)();
   }),
 );
 

@@ -113,7 +113,7 @@ const defaultData = {
   sysInfoSize: {},
   userInfoSize: {},
   timeMsg: '',
-  ip: '',
+  lastVisit: 0, // 上次访问时间
 };
 function encode(obj) {
   return encodeURIComponent(JSON.stringify(obj));

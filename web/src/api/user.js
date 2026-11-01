@@ -157,10 +157,6 @@ export function reqUserCaptcha(data) {
 export function reqUserShareState(data) {
   return _postAjax('/user/share-state', data);
 }
-// 获取地理位置
-export function reqUserIpLocation() {
-  return _getAjax('/ip-location', {}, { load: 0, stopErrorMsg: 1 });
-}
 // 获取在线的客户端
 export function reqUserOnlineClients() {
   return _getAjax('/user/online-clients');

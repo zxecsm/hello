@@ -38,8 +38,7 @@ export async function writelog(res, str = '', code = 200) {
     const date = formatDate({ template: '{0}-{1}-{2} {3}:{4}:{5}' });
 
     if (res?.locals?.hello) {
-      const { ip, os, userinfo = {}, path, method, ipLocation } = res.locals.hello;
-      const { country, province, city, isp } = ipLocation;
+      const { ip, os, userinfo = {}, path, method } = res.locals.hello;
       const { username, account } = userinfo;
       str =
         [
@@ -48,7 +47,7 @@ export async function writelog(res, str = '', code = 200) {
           (username || '') + (account ? `(${account})` : ''),
           `${method}(${path})`,
           str,
-          `[${country} ${province} ${city} ${isp}](${ip})`,
+          `[${ip}]`,
           os,
         ]
           .filter(Boolean)

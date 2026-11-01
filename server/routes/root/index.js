@@ -706,12 +706,10 @@ route.post(
       siteInfoApi: V.number().toInt().enum([0, 1]),
       faviconApi: V.number().toInt().enum([0, 1]),
       echoApi: V.number().toInt().enum([0, 1]),
-      ipLocationApi: V.number().toInt().enum([0, 1]),
     }),
   ),
   asyncHandler(async (_, res) => {
-    const { randomBgApi, randomMusicApi, siteInfoApi, faviconApi, echoApi, ipLocationApi } =
-      res.locals.ctx;
+    const { randomBgApi, randomMusicApi, siteInfoApi, faviconApi, echoApi } = res.locals.ctx;
 
     _d.pubApi = {
       randomBgApi: !!randomBgApi,
@@ -719,7 +717,6 @@ route.post(
       siteInfoApi: !!siteInfoApi,
       faviconApi: !!faviconApi,
       echoApi: !!echoApi,
-      ipLocationApi: !!ipLocationApi,
     };
 
     resp.success(res, `修改接口状态成功`, _d.pubApi)();

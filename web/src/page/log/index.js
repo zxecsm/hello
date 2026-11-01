@@ -167,19 +167,17 @@ let statPageNo = 1;
 let statList = [];
 // 访问统计
 function getStatData(list) {
-  const reg = /\[([^\[\]]+)\]\(([0-9A-Fa-f.:]+)\)/,
+  const reg = /\[([0-9A-Fa-f.:]+)\]|\[[^\[\]]*\]\(([0-9A-Fa-f.:]+)\)/,
     ipObj = {};
   list.forEach((item) => {
     const ip = item.match(reg);
     if (ip) {
-      const key = 'h' + ip[2],
-        addr = ip[1];
+      const key = 'h' + (ip[1] || ip[2]);
       if (ipObj.hasOwnProperty(key)) {
         ipObj[key]['total']++;
       } else {
         ipObj[key] = {
           total: 1,
-          addr: addr,
         };
       }
     }
@@ -189,7 +187,6 @@ function getStatData(list) {
     ipArr.push({
       ip: item.slice(1),
       total: ipObj[item]['total'],
-      addr: ipObj[item]['addr'],
     });
   });
   ipArr.sort((a, b) => b.total - a.total);
@@ -217,8 +214,8 @@ function renderStat() {
   const html = _tpl(
     `
     <template v-if="arr.length > 0">
-      <p v-for="{ip, total, addr} in list">
-        <span cursor="y" class='ip'>{{ip}}</span>({{addr}})<span>：{{total}}</span>
+      <p v-for="{ip, total} in list">
+        <span cursor="y" class='ip'>{{ip}}</span><span>：{{total}}</span>
       </p>
       <div v-html="getPaging()"></div>
     </template>

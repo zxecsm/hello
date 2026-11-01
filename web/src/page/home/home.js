@@ -1,4 +1,4 @@
-import { reqUserAllowLogin, reqUserIpLocation } from '../../api/user';
+import { reqUserAllowLogin } from '../../api/user';
 import _d from '../../js/common/config';
 import localData from '../../js/common/localData';
 import _msg from '../../js/plugins/message';
@@ -18,9 +18,9 @@ let allowLoginPop = null,
   isLoding = false;
 // 批准登录
 export function handleAllowLoginMsg(data) {
-  const { ip, code, addr, os } = data;
+  const { ip, code, os } = data;
 
-  const msg = `设备：${os}\nIP：${ip}\n位置：${addr}\n验证码：${code.slice(
+  const msg = `设备：${os}\nIP：${ip}\n验证码：${code.slice(
     0,
     3,
   )} ${code.slice(3)}\n\n请求允许登录。`;
@@ -190,24 +190,25 @@ export function timeMsg() {
   localData.set('timeMsg', msg);
   _msg.msg({ message: msg, icon, duration: 5000 });
 }
+const WELCOME_INTERVAL = 7 * 24 * 60 * 60 * 1000; // 一周
 export function welcomeMsg() {
   if (isIframe()) return;
-  reqUserIpLocation()
-    .then((res) => {
-      if (res.code === 1) {
-        const { ip, province, country } = res.data;
-        if (localData.get('ip') === ip) return;
-        localData.set('ip', ip);
-        _msg.msg({
-          type: 'success',
-          message: `✨ 欢迎来自 ${country} ${province} 的朋友！🎈`,
-          icon: 'iconfont icon-cat',
-          duration: 5000,
-        });
-        fireworks(10);
-      }
-    })
-    .catch(() => {});
+
+  const now = Date.now();
+  const lastVisit = localData.get('lastVisit');
+  const shouldWelcome = !lastVisit || now - lastVisit >= WELCOME_INTERVAL;
+
+  localData.set('lastVisit', now);
+
+  if (!shouldWelcome) return;
+
+  _msg.msg({
+    type: 'success',
+    message: lastVisit ? '✨ 哇哦～失踪人口回归！想死你啦！🎈' : '👀 逮到一只新朋友！欢迎欢迎！🎈',
+    icon: 'iconfont icon-cat',
+    duration: 5000,
+  });
+  fireworks(10);
 }
 export function fireworks(count = 6) {
   const colors = ['#ff4d4f', '#40a9ff', '#73d13d', '#faad14', '#9254de'];

@@ -46,7 +46,6 @@ import _path from '../../utils/path.js';
 import { parseMarkDown } from '../note/note.js';
 import { _delDir, getUniqueFilename, readMenu } from '../file/file.js';
 import _crypto from '../../utils/crypto.js';
-import getCity from '../../utils/getCity.js';
 import nanoid from '../../utils/nanoid.js';
 import { readSearchConfig, writeSearchConfig } from '../search/search.js';
 import V from '../../utils/validRules.js';
@@ -225,8 +224,6 @@ route.post(
 
     const { ip, os } = res.locals.hello;
 
-    const { country, province, city, isp } = getCity(ip);
-
     // 发送允许登录消息
     _connect.send(
       userinfo.account,
@@ -236,7 +233,6 @@ route.post(
         data: {
           ip,
           os,
-          addr: `${country} ${province} ${city} ${isp}`,
           code,
         },
       },

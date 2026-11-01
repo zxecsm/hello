@@ -8,8 +8,7 @@
     "randomMusicApi": true,
     "siteInfoApi": true,
     "faviconApi": true,
-    "echoApi": true,
-    "ipLocationApi": true
+    "echoApi": true
   },
   "faviconSpareApi": "",
   "cacheExp": {
