@@ -174,7 +174,7 @@ if (urlparmes.v) {
   reqNoteRead({ v: urlparmes.v })
     .then((result) => {
       if (result.code === 1) {
-        const { title, content, account, username, logo, category, email } = result.data;
+        const { title, content, account, username, logo, category } = result.data;
         noteInfo = result.data;
         noteObj.md = content;
         titleName = title;
@@ -189,7 +189,6 @@ if (urlparmes.v) {
         userInfoObj = {
           account,
           username,
-          email,
         };
         waitLogin(() => {
           realtime.init().add((res) => {
@@ -320,8 +319,8 @@ mdWorker.addEventListener('message', (event) => {
 });
 const imgLazy = new LazyLoad();
 $authorInfo.on('click', '.logo', function (e) {
-  const { account, username, email } = userInfoObj;
-  userLogoMenu(e, account, username, email);
+  const { account, username } = userInfoObj;
+  userLogoMenu(e, account, username);
 });
 $noteInfo.on('click', '.category', function () {
   const id = $(this).data('id');

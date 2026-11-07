@@ -33,7 +33,7 @@ export async function getImgInfo(path) {
 */
 export async function convertImageFormat(
   path,
-  { format, width, height, quality, fit = 'inside' } = {},
+  { format, width, height, quality, fit = 'inside', background } = {},
 ) {
   const img = sharp(path);
   const metadata = await img.metadata();
@@ -94,6 +94,11 @@ export async function convertImageFormat(
     }
   }
 
+  // 指定背景色时拍平图像，移除 alpha 通道
+  if (background !== undefined) {
+    img.flatten({ background });
+  }
+
   // 应用格式转换和压缩选项
   const processedImg = handler(img, compressionOptions);
 
@@ -104,9 +109,9 @@ export async function convertImageFormat(
   }
 }
 
-export async function svgToBase64Png(svg) {
+export async function svgToBase64Png(svg, background) {
   return (
     'data:image/png;base64,' +
-    (await convertImageFormat(Buffer.from(svg), { format: 'png' })).toString('base64')
+    (await convertImageFormat(Buffer.from(svg), { format: 'png', background })).toString('base64')
   );
 }

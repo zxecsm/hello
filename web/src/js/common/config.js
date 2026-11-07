@@ -103,7 +103,6 @@ const _d = {
   noteHistoryDir: `${userConfigDir}/note_history`,
   fontDir: `${userConfigDir}/appFiles/font`,
   thumbDir: `${userConfigDir}/appFiles/thumb`,
-  notepadDir: `${userConfigDir}/appFiles/notepad`,
   pubDir: `${userConfigDir}/pub`,
   backupDir: `${userConfigDir}/backup`,
   fileConfigDir: `${userConfigDir}/file_config`,

@@ -1,3 +1,19 @@
+// 生成安全随机文件后缀
+function randomSuffix() {
+  if (globalThis.crypto?.getRandomValues) {
+    const bytes = new Uint8Array(3);
+    globalThis.crypto.getRandomValues(bytes);
+
+    let str = '';
+    for (let i = 0; i < bytes.length; i++) {
+      str += bytes[i].toString(16).padStart(2, '0');
+    }
+    return str;
+  }
+
+  return Math.random().toString().slice(-6);
+}
+
 // 转换为 Unix 风格的路径
 function toUnixPath(path) {
   if (typeof path !== 'string') return '';
@@ -113,7 +129,7 @@ function extname(path) {
 }
 
 // 获取随机后缀文件名
-function randomFilenameSuffix(filename, r = Math.random().toString().slice(-6)) {
+function randomFilenameSuffix(filename, r = randomSuffix()) {
   r = '_' + r;
   const [a, b, c] = extname(filename);
 

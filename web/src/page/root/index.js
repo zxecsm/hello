@@ -800,11 +800,6 @@ function handleClearFile(e) {
       beforeIcon: 'iconfont icon-shezhi',
     },
     {
-      id: 'notepad',
-      text: '管理便条',
-      beforeIcon: 'iconfont icon-shezhi',
-    },
-    {
       id: 'bg',
       text: '清理壁纸文件',
       beforeIcon: 'iconfont icon-tupian',
@@ -834,9 +829,6 @@ function handleClearFile(e) {
         close();
       } else if (id === 'logo') {
         _myOpen(`/file#${_d.userLogoDir}`, '文件管理', 'file');
-        close();
-      } else if (id === 'notepad') {
-        _myOpen(`/file#${_d.notepadDir}`, '文件管理', 'file');
         close();
       } else if (id === 'bg') {
         cleanBgFile(e, loading);

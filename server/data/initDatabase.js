@@ -1,4 +1,5 @@
 import { resolve } from 'path';
+import { randomBytes } from 'node:crypto';
 import _f from '../utils/f.js';
 
 import { allSql, db, runSql } from '../utils/sqlite.js';
@@ -548,7 +549,7 @@ async function insertInitialData() {
       })
       .find();
     if (userList.length === 0) {
-      initPassword = Math.random().toString(36).slice(2, 12);
+      initPassword = randomBytes(12).toString('hex');
       await db('user').insertMany([
         {
           create_at: nowTime,

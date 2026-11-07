@@ -38,7 +38,7 @@ route.get(
     const note = await db('note AS n')
       .join('user AS u', { 'n.account': { value: 'u.account', raw: true } }, { type: 'LEFT' })
       .select(
-        'u.account,u.username,u.logo,u.email,n.create_at,n.update_at,n.title,n.state,n.share,n.content,n.visit_count,n.category',
+        'u.account,u.username,u.logo,n.create_at,n.update_at,n.title,n.state,n.share,n.content,n.visit_count,n.category',
       )
       .where({ 'n.id': id })
       .findOne();
@@ -55,16 +55,14 @@ route.get(
         visit_count,
         state,
         logo,
-        email,
         category,
       } = note;
-
-      await db('note').where({ id }).increment({ visit_count: 1 });
 
       const { account } = res.locals.hello.userinfo;
 
       // 公开并且未删除 或 是自己的
       if ((share === 1 && state === 1) || acc === account) {
+        await db('note').where({ id }).increment({ visit_count: 1 });
         if (account && note.account !== account) {
           const f = await getFriendInfo(account, acc, 'des');
           const des = f ? f.des : '';
@@ -85,7 +83,6 @@ route.get(
             create_at,
             update_at,
             logo,
-            email,
             category,
           })();
         }
@@ -301,9 +298,27 @@ route.get(
 
     const { account } = res.locals.hello.userinfo;
 
+    const target = acc || account;
+
+    if (!target) {
+      return resp.unauthorized(res)();
+    }
+
+    // 非本人只能读取存在公开笔记的账号分类
+    if (acc && acc !== account) {
+      const shared = await db('note')
+        .select('id')
+        .where({ account: acc, share: 1, state: 1 })
+        .findOne();
+
+      if (!shared) {
+        return resp.forbidden(res, '分类未公开')();
+      }
+    }
+
     const list = await db('note_category')
       .select('id,title')
-      .where({ account: acc || account })
+      .where({ account: target })
       .orderBy('serial', 'DESC')
       .find();
 

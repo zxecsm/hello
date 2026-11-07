@@ -95,7 +95,7 @@ enterPassCode(({ close, val, loading, submit }) => {
   reqFileGetShare({ id: shareId, pass: passCode, captchaId })
     .then((res) => {
       if (res.code === 1) {
-        const { username, logo, account, data, exp_time, title, email, token, needCaptcha, id } =
+        const { username, logo, account, data, exp_time, title, token, needCaptcha, id } =
           res.data;
         if (needCaptcha) {
           isCaptcha = true;
@@ -112,7 +112,7 @@ enterPassCode(({ close, val, loading, submit }) => {
           localData.session.set('passCode', passCode, shareId); // 缓存
           close && close();
           shareToken = token;
-          uObj = { username, account, email };
+          uObj = { username, account };
           shareObj = data;
           if (logo) {
             imgjz(getFilePath(`/logo/${account}/${logo}`))
@@ -673,8 +673,8 @@ function rightList(e, obj) {
   );
 }
 $shareInfo.on('click', '.logo', function (e) {
-  const { account, username, email } = uObj;
-  userLogoMenu(e, account, username, email);
+  const { account, username } = uObj;
+  userLogoMenu(e, account, username);
 });
 // 排序
 function hdFileSort(e) {

@@ -58,7 +58,7 @@ route.post(
       return resp.ok(res, share.text)();
     }
 
-    let { username, logo, email, exp_time, title, account: acc, data, update_at } = share.data;
+    let { username, logo, exp_time, title, account: acc, data, update_at } = share.data;
 
     const { account } = res.locals.hello.userinfo;
 
@@ -73,7 +73,6 @@ route.post(
     resp.success(res, '获取书签分享成功', {
       username,
       logo,
-      email,
       exp_time,
       account: acc,
       data,
@@ -188,45 +187,65 @@ route.get(
       return resp.unauthorized(res)();
     }
 
+    // 目标账号：未指定 account 时就是当前登录账号
+    const target = acc || account;
+    // 只有「已登录且目标就是自己」才是所有者
+    const isOwner = !!account && target === account;
+
     let home = [];
+
+    // 非所有者只能看到公开分组
     let list = await db('bmk_group')
       .select('id,title,share')
-      .where({ account: acc || account, state: 1 })
+      .where({ account: target, state: 1, ...(isOwner ? {} : { share: 1 }) })
       .orderBy('num', 'ASC')
       .find();
 
-    if (acc && acc !== account) {
-      list = list
-        .filter((item) => item.share === 1)
-        .map((item) => ({ id: item.id, title: item.title }));
+    if (!isOwner) {
+      list = list.map((item) => ({ id: item.id, title: item.title }));
     }
 
+    // 未登录只能看公开分组列表，不能看具体书签
     if (!id || !account) {
       return resp.success(res, 'ok', { list, home })();
     }
 
-    let bms = await db('bmk')
-      .select('id,title,link,logo,des,group_id')
-      .where({
-        account: acc || account,
-        state: 1,
-        group_id: id,
-      })
-      .orderBy('num', 'ASC')
-      .find();
-
-    bms = bms.map((item, idx) => ({ ...item, num: idx }));
     list = list.map((item, idx) => ({ ...item, num: idx }));
 
     if (id === 'home') {
-      home = bms;
+      // home 分组只允许所有者查看
+      if (isOwner) {
+        home = (
+          await db('bmk')
+            .select('id,title,link,logo,des,group_id')
+            .where({ account: target, state: 1, group_id: 'home' })
+            .orderBy('num', 'ASC')
+            .find()
+        ).map((item, idx) => ({ ...item, num: idx }));
+      }
     } else {
-      list = list.map((item) => {
-        if (item.id === id) {
-          item.item = bms;
-        }
-        return item;
-      });
+      // 非所有者必须校验分组是否为公开（g.share = 1）
+      const group = await db('bmk_group')
+        .select('id,share')
+        .where({ id, account: target, state: 1 })
+        .findOne();
+
+      if (group && (isOwner || group.share === 1)) {
+        const bms = await db('bmk')
+          .select('id,title,link,logo,des,group_id')
+          .where({ account: target, state: 1, group_id: id })
+          .orderBy('num', 'ASC')
+          .find();
+
+        const items = bms.map((item, idx) => ({ ...item, num: idx }));
+
+        list = list.map((item) => {
+          if (item.id === id) {
+            item.item = items;
+          }
+          return item;
+        });
+      }
     }
 
     resp.success(res, 'ok', { list, home })();

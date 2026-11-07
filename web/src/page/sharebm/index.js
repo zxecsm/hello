@@ -169,7 +169,7 @@ enterPassCode(({ close, val, loading, submit }) => {
   reqBmkGetShare({ id: shareId, pass: passCode, captchaId })
     .then((res) => {
       if (res.code === 1) {
-        const { username, logo, account, data, title, exp_time, email, token, needCaptcha, id } =
+        const { username, logo, account, data, title, exp_time, token, needCaptcha, id } =
           res.data;
         if (needCaptcha) {
           isCaptcha = true;
@@ -187,7 +187,7 @@ enterPassCode(({ close, val, loading, submit }) => {
           close && close();
 
           shareToken = token;
-          userInfoObj = { username, account, email };
+          userInfoObj = { username, account };
           defaultTitle = title;
           if (logo) {
             imgjz(getFilePath(`/logo/${account}/${logo}`))
@@ -261,8 +261,8 @@ function saveBm(e) {
 
 $head
   .on('click', '.logo', function (e) {
-    const { account, username, email } = userInfoObj;
-    userLogoMenu(e, account, username, email);
+    const { account, username } = userInfoObj;
+    userLogoMenu(e, account, username);
   })
   .on('click', '.save_to_list', saveBm);
 

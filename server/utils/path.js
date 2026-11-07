@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto';
+
 // 转换为 Unix 风格的路径
 function toUnixPath(path) {
   if (typeof path !== 'string') return '';
@@ -113,7 +115,7 @@ function extname(path) {
 }
 
 // 获取随机后缀文件名
-function randomFilenameSuffix(filename, r = Math.random().toString().slice(-6)) {
+function randomFilenameSuffix(filename, r = randomBytes(3).toString('hex')) {
   r = '_' + r;
   const [a, b, c] = extname(filename);
 

@@ -1,12 +1,43 @@
 import axios from 'axios';
+import net from 'node:net';
 import appConfig from '../data/config.js';
+import { isBlockedIp, safeHttpAgent, safeHttpsAgent } from './ssrf.js';
 
 const request = axios.create({
   timeout: 10000,
+  // 禁用环境代理，避免代理绕过 SSRF 校验；如需代理，请确保代理自身禁止访问内网
+  proxy: false,
+  httpAgent: safeHttpAgent,
+  httpsAgent: safeHttpsAgent,
 });
 
 request.interceptors.request.use((config) => {
   config.headers = config.headers || {};
+
+  try {
+    const target = new URL(config.url, config.baseURL || undefined);
+
+    if (!['http:', 'https:'].includes(target.protocol)) {
+      const error = new Error('仅支持 http/https 协议');
+      error.code = 'ESSRF';
+      throw error;
+    }
+
+    // IP 字面量不会走 DNS lookup，这里提前拦截
+    const hostname = target.hostname.replace(/^\[|\]$/g, '');
+
+    if (net.isIP(hostname) && isBlockedIp(hostname)) {
+      const error = new Error('SSRF blocked');
+      error.code = 'ESSRF';
+      throw error;
+    }
+  } catch (error) {
+    if (error.code === 'ESSRF') throw error;
+
+    const err = new Error('URL 格式错误');
+    err.code = 'ESSRF';
+    throw err;
+  }
 
   config.headers['x-source-service'] = appConfig.appFlag;
 
@@ -20,6 +51,15 @@ request.interceptors.response.use(
 
     // 检查是否需要重试
     if (!config || !config.retry) {
+      return Promise.reject(error);
+    }
+
+    // SSRF 拦截不重试
+    if (
+      error.code === 'ESSRF' ||
+      error.cause?.code === 'ESSRF' ||
+      /SSRF/.test(`${error.message || ''} ${error.cause?.message || ''}`)
+    ) {
       return Promise.reject(error);
     }
 

@@ -63,7 +63,6 @@ const titleMap = {
   log: '日志管理',
   login: '登录',
   note: '笔记',
-  notepad: '便条',
   notes: '笔记本',
   pic: '图床',
   root: '用户管理',

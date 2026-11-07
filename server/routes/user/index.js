@@ -1,4 +1,5 @@
 import express from 'express';
+import { randomInt } from 'node:crypto';
 
 import _connect from '../../utils/connect.js';
 
@@ -56,6 +57,11 @@ import { asyncHandler, validate } from '../../utils/customMiddleware.js';
 import { getImgInfo } from '../../utils/img.js';
 
 const verifyCode = new Map();
+
+// 6 位数字验证码（CSPRNG，避免 Math.random 可预测）
+function createMailCode() {
+  return randomInt(0, 1000000).toString().padStart(6, '0');
+}
 
 const route = express.Router();
 
@@ -307,6 +313,8 @@ route.post(
 
 // 获取验证码
 const captchaVerifyLimit = verifyLimit({ count: 10 });
+// 单个 IP 每分钟取图总量（不含 flag，防止用不同 flag 无限取图）
+const captchaGetLimit = verifyLimit({ space: 60, count: 20 }, false);
 route.get(
   '/captcha',
   validate(
@@ -319,11 +327,16 @@ route.get(
   asyncHandler(async (_, res) => {
     const { flag, theme } = res.locals.ctx;
     const { ip } = res.locals.hello;
-    if (!captchaVerifyLimit.verify(ip, flag)) {
+
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+
+    if (!captchaGetLimit.verify(ip) || !captchaVerifyLimit.verify(ip, flag)) {
       return resp.forbidden(res, '请稍后再试')();
     }
+
+    captchaGetLimit.add(ip);
     captchaVerifyLimit.add(ip, flag);
-    resp.success(res, 'ok', await captcha.get(flag, theme))();
+    resp.success(res, 'ok', await captcha.get(flag, { theme }))();
   }),
 );
 
@@ -346,6 +359,9 @@ route.post(
   asyncHandler(async (_, res) => {
     const { id, track } = res.locals.ctx;
     const { ip } = res.locals.hello;
+
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+
     const { flag } = captcha.getValue(id) || {};
     if (flag) {
       if (!captchaVerifyLimit.verify(ip, flag)) {
@@ -541,13 +557,13 @@ route.get(
 
     if (mailer.get(email)) {
       // 如果有缓存
-      return resp.success(res, '验证码已发送', { account, email })();
+      return resp.success(res, '验证码已发送', { account })();
     }
 
-    const code = Math.random().toFixed(6).slice(2);
+    const code = createMailCode();
 
     await mailer.sendCode(email, code);
-    resp.success(res, '验证码发送成功', { account, email })();
+    resp.success(res, '验证码发送成功', { account })();
   }),
 );
 
@@ -558,37 +574,36 @@ route.post(
   validate(
     'body',
     V.object({
-      email: V.string().trim().min(1).max(fieldLength.email).email(),
-      code: V.string().trim().min(6).max(6).alphanumeric(),
       account: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      code: V.string().trim().min(6).max(6).alphanumeric(),
       captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
     }),
   ),
   asyncHandler(async (_, res) => {
-    const { email, code, account, captchaId } = res.locals.ctx;
+    const { account, code, captchaId } = res.locals.ctx;
+
+    // 通过账号在服务端查邮箱，客户端不再接触明文邮箱
+    const userinfo = await db('user')
+      .select('username,email')
+      .where({
+        account: { '=': account, '!=': appConfig.notifyAccount },
+        state: 1,
+      })
+      .findOne();
+
+    if (!userinfo || !userinfo.email) {
+      return resp.forbidden(res, '用户无法重置密码')();
+    }
+
+    const { username, email } = userinfo;
     const needCaptcha = !emailVerify.verify(email);
+
     if (needCaptcha && !captcha.consume(captchaId, account)) {
       return resp.success(res, '需要验证验证码，请完成验证', {
         needCaptcha,
         account,
       })();
     }
-
-    const userinfo = await db('user')
-      .select('username')
-      .where({
-        email,
-        account: { '=': account, '!=': appConfig.notifyAccount },
-        state: 1,
-      })
-      .findOne();
-
-    if (!userinfo) {
-      emailVerify.add(email);
-      return resp.forbidden(res, '用户无法重置密码')();
-    }
-
-    const { username } = userinfo;
 
     if (mailer.get(email) === code) {
       // 清除密码和两部验证token
@@ -689,7 +704,7 @@ route.post(
       return resp.forbidden(res, '邮箱已绑定用户')();
     }
 
-    const code = Math.random().toFixed(6).slice(2);
+    const code = createMailCode();
 
     await mailer.sendCode(email, code);
 

@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { randomInt } from 'node:crypto';
 // 歌曲信息解析
 import { parseFile } from 'music-metadata';
 // 接收上传文件
@@ -646,7 +647,8 @@ export function myShuffle(arr) {
     t,
     i;
   while (m) {
-    i = Math.floor(Math.random() * m--);
+    i = randomInt(0, m);
+    m--;
     t = arr[m];
     arr[m] = arr[i];
     arr[i] = t;

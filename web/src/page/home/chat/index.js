@@ -30,7 +30,6 @@ import {
   getFiles,
   getFilePath,
   LazyLoad,
-  mailTo,
   isRoot,
   isFullScreen,
   isVideoFile,
@@ -852,7 +851,7 @@ $showChatRoomBtn.on(
 );
 // 用户菜单
 function userMenu(e, msgObj, isUserList) {
-  const { _from, username, des, logo, email } = msgObj;
+  const { _from, username, des, logo } = msgObj;
   if (_from === _d.notifyAccount) {
     rMenu.rightInfo(e, helperInfo, '助手功能');
     return;
@@ -916,13 +915,6 @@ function userMenu(e, msgObj, isUserList) {
             beforeText: '账号：',
           },
         ];
-        if (email) {
-          data.push({
-            id: '3',
-            text: email,
-            beforeText: '邮箱：',
-          });
-        }
         rMenu.selectMenu(
           e,
           data,
@@ -971,8 +963,6 @@ function userMenu(e, msgObj, isUserList) {
               );
             } else if (id === '2') {
               copyText(_from);
-            } else if (id === '3') {
-              mailTo(email);
             }
           },
           '用户信息',
@@ -1987,7 +1977,7 @@ $userListBox
   })
   .on('mouseenter', '.user_item .user_logo', function () {
     const obj = getUserItem($(this).parent().data('account'));
-    let { account, des, email, username, os, online } = obj;
+    let { account, des, username, os, online } = obj;
     if (account === _d.notifyAccount) {
       toolTip.setTip(helperInfo).show();
       return;
@@ -2001,7 +1991,7 @@ $userListBox
     }
     const str = `用户名：${username}\n备注：${
       des || '--'
-    }\n账号：${account}\n邮箱：${email || '--'}\n状态：${status}${
+    }\n账号：${account}\n状态：${status}${
       online === 1 ? `\n登录设备：\n${os.join('\n')}` : ''
     }`;
     toolTip.setTip(str).show();

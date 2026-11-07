@@ -47,9 +47,6 @@ const appConfig = {
   musicDir(...arg) {
     return _path.normalizeNoSlash(this.appFilesDir('music'), ...arg);
   },
-  notepadDir(...arg) {
-    return _path.normalizeNoSlash(this.appFilesDir('notepad'), ...arg);
-  },
   picDir(...arg) {
     return _path.normalizeNoSlash(this.appFilesDir('pic'), ...arg);
   },

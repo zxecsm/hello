@@ -18,6 +18,7 @@ import {
 } from './ssh.js';
 import _path from '../../utils/path.js';
 import resp from '../../utils/response.js';
+import { resolveSafeHost } from '../../utils/ssrf.js';
 import { asyncHandler, setDownloadHeader, validate } from '../../utils/customMiddleware.js';
 
 const route = express.Router();
@@ -179,6 +180,13 @@ route.post(
     const { account } = res.locals.hello.userinfo;
     const now = Date.now();
 
+    // SSRF 防护：非 root 不允许保存内网/回环/保留地址
+    try {
+      await resolveSafeHost(config.host, { allowPrivate: !!res.locals.hello.isRoot });
+    } catch (error) {
+      return resp.forbidden(res, error.message)(error, 1);
+    }
+
     await db('ssh').insert({
       ...config,
       id: nanoid(),
@@ -214,6 +222,13 @@ route.post(
       res.locals.ctx;
     if (id === 'local' && !res.locals.hello.isRoot) {
       return resp.forbidden(res, '无权操作')();
+    }
+
+    // SSRF 防护：非 root 不允许保存内网/回环/保留地址
+    try {
+      await resolveSafeHost(host, { allowPrivate: !!res.locals.hello.isRoot });
+    } catch (error) {
+      return resp.forbidden(res, error.message)(error, 1);
     }
 
     const { account } = res.locals.hello.userinfo;
@@ -435,10 +450,23 @@ route.post(
     if (!config) {
       return resp.forbidden(res, '获取配置信息失败')();
     }
+
+    // SSRF 防护：非 root 禁止连接内网/回环/保留地址；root 可跳过
+    let connectConfig = config;
+
+    try {
+      const host = await resolveSafeHost(config.host, {
+        allowPrivate: !!res.locals.hello.isRoot,
+      });
+      connectConfig = { ...config, host };
+    } catch (error) {
+      return resp.forbidden(res, error.message)(error, 1);
+    }
+
     createTerminal(
       account,
       temid,
-      config,
+      connectConfig,
       defaultPath ? _path.normalizeNoSlash('/', defaultPath) : '',
     );
     resp.success(res, '请求连接SSH成功', {

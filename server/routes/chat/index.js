@@ -248,7 +248,7 @@ route.get(
     const pageSize = fieldLength.chatPageSize;
     let list = [];
 
-    const fields = `u.logo,u.email,u.username,c._from,c._to,c.id,c.create_at,c.content,c.hash,c.size,c.type`;
+    const fields = `u.logo,u.username,c._from,c._to,c.id,c.create_at,c.content,c.hash,c.size,c.type`;
     chatdb.select(fields).limit(pageSize);
 
     if (type === 0 || !offsetMsg) {
@@ -593,7 +593,7 @@ route.get(
     const cons = _connect.getConnects();
 
     const list = users.map((u) => {
-      const { username, account: acc, update_at, logo, hide, email, des, read, msg } = u;
+      const { username, account: acc, update_at, logo, hide, des, read, msg } = u;
 
       const con = cons[acc];
 
@@ -603,7 +603,6 @@ route.get(
         logo,
         online: 1,
         des: des === null ? '' : des,
-        email,
         os: con ? con.onlines.map((item) => item.os) : [], // 展示登录设备信息
         read: read === null ? 1 : read,
         msg,

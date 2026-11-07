@@ -283,48 +283,52 @@ export async function hdForwardToLink(res, list = [], fArr, text, fList = []) {
     const { username, account: fromAccount } = res.locals.hello.userinfo;
 
     await concurrencyTasks(list, 3, async (item) => {
-      const { forward_msg_link, account } = item;
-      let { link, type, header, body, contentType } = parseForwardMsgLink(forward_msg_link);
+      try {
+        const { forward_msg_link, account } = item;
+        let { link, type, header, body, contentType } = parseForwardMsgLink(forward_msg_link);
 
-      if (!isurl(link)) return;
-      const fe = fArr.find((y) => y.account === account);
-      const fno = fList.find((y) => y.account === account);
-      if (fno && fno.notify === 0) return;
-      const des = fe ? fe.des : '';
-      const title =
-        fromAccount === appConfig.notifyAccount ? appConfig.notifyAccountDes : des || username;
+        if (!isurl(link)) return;
+        const fe = fArr.find((y) => y.account === account);
+        const fno = fList.find((y) => y.account === account);
+        if (fno && fno.notify === 0) return;
+        const des = fe ? fe.des : '';
+        const title =
+          fromAccount === appConfig.notifyAccount ? appConfig.notifyAccountDes : des || username;
 
-      link = tplReplace(link, {
-        text: encodeURIComponent(text),
-        title: encodeURIComponent(title),
-      });
-
-      if (type === 'get' || (type === 'post' && contentType === 'application/json')) {
-        body = replaceObjectValue(parseObjectJson(body) || parseArrayJson(body) || {}, {
-          text,
-          title,
+        link = tplReplace(link, {
+          text: encodeURIComponent(text),
+          title: encodeURIComponent(title),
         });
-      } else {
-        body = tplReplace(body, { title, text });
-      }
 
-      if (type === 'post') header['content-type'] = contentType;
-      if (type === 'get') {
-        await request({
-          method: type,
-          url: link,
-          headers: header,
-          params: body,
-          retry: 2,
-        });
-      } else if (type === 'post') {
-        await request({
-          method: type,
-          url: link,
-          headers: header,
-          data: body,
-          retry: 2,
-        });
+        if (type === 'get' || (type === 'post' && contentType === 'application/json')) {
+          body = replaceObjectValue(parseObjectJson(body) || parseArrayJson(body) || {}, {
+            text,
+            title,
+          });
+        } else {
+          body = tplReplace(body, { title, text });
+        }
+
+        if (type === 'post') header['content-type'] = contentType;
+        if (type === 'get') {
+          await request({
+            method: type,
+            url: link,
+            headers: header,
+            params: body,
+            retry: 2,
+          });
+        } else if (type === 'post') {
+          await request({
+            method: type,
+            url: link,
+            headers: header,
+            data: body,
+            retry: 2,
+          });
+        }
+      } catch (error) {
+        await writelog(res, `[ forward_msg_link ] - ${error}`, 500);
       }
     });
   }
@@ -505,7 +509,7 @@ export function parseForwardMsgLink(str) {
 // 获取成员列表
 export function getChatUserList(account, pageSize, offset, word = '') {
   const uDB = db('user AS u')
-    .select('f.des,f.read,f.msg,u.update_at,u.username,u.account,u.logo,u.email,u.hide')
+    .select('f.des,f.read,f.msg,u.update_at,u.username,u.account,u.logo,u.hide')
     .join(
       'friends AS f',
       { 'u.account': { value: 'f.friend', raw: true }, 'f.account': account },

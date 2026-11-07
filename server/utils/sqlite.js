@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3';
+import { randomInt } from 'node:crypto';
 import appConfig from '../data/config.js';
 import _f from './f.js';
 import _path from './path.js';
@@ -545,7 +546,7 @@ class DatabaseChain {
     if (total <= limit) return await this.clone().find();
 
     return await this.clone()
-      .page(limit, Math.floor(Math.random() * (total - limit) + 1))
+      .page(limit, randomInt(1, total - limit + 1))
       .find();
   }
 

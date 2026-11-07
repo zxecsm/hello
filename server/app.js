@@ -39,7 +39,6 @@ import countRoute from './routes/count/index.js';
 import fileRoute from './routes/file/index.js';
 import getfaviconRoute from './routes/getfavicon/index.js';
 import noteRoute from './routes/note/index.js';
-import notepadRoute from './routes/notepad/index.js';
 import picRoute from './routes/pic/index.js';
 import playerRoute from './routes/player/index.js';
 import rootRoute from './routes/root/index.js';
@@ -50,7 +49,7 @@ import taskRoute from './routes/task/index.js';
 import echoRoute from './routes/echo/index.js';
 import sshRoute from './routes/ssh/index.js';
 import { fieldLength } from './routes/config.js';
-import getClientIp from './utils/getClientIp.js';
+import getClientIp, { getTrustProxy } from './utils/getClientIp.js';
 import getFile from './routes/getfile/index.js';
 import { _d } from './data/data.js';
 import _crypto from './utils/crypto.js';
@@ -67,6 +66,15 @@ const __dirname = getDirname(import.meta);
 
 const app = express();
 app.disable('x-powered-by');
+
+// 真实客户端 IP 的信任策略：默认不信任任何代理头，避免 X-Forwarded-For 被伪造而绕过限流。
+// TRUST_PROXY 简化值：
+//   off（默认）     不信任任何代理头
+//   1 / proxy       信任直连的一层反向代理（应用端口只应对代理开放）
+//   2、3 ...        信任 N 层代理
+//   IP/CIDR,...     只信任指定代理（端口也可被直接访问时使用）
+// 兼容：true/all/on/yes 现在等价于 1；loopback 等价于 127.0.0.1,::1
+app.set('trust proxy', getTrustProxy());
 
 app.use(openCors);
 
@@ -249,7 +257,6 @@ app.use('/api/note', noteRoute);
 app.use('/api/todo', todoRoute);
 app.use('/api/count', countRoute);
 app.use('/api/file', fileRoute);
-app.use('/api/notepad', notepadRoute);
 app.use('/api/task', taskRoute);
 app.use('/api/icon', getfaviconRoute);
 app.use('/api/echo', echoRoute);

@@ -127,9 +127,26 @@ export function switchPageIcon(type) {
     pageIcon.href = hiddenIcon;
   }
 }
-// 随机数
+// 随机数（优先使用 CSPRNG）
 export function randomNum(min, max) {
-  return Math.floor(Math.random() * (max - min + 1) + min);
+  const range = max - min + 1;
+
+  if (range <= 0) return min;
+
+  if (globalThis.crypto?.getRandomValues) {
+    const buf = new Uint32Array(1);
+    const limit = Math.floor(0x100000000 / range) * range;
+    let value;
+
+    do {
+      globalThis.crypto.getRandomValues(buf);
+      value = buf[0];
+    } while (value >= limit);
+
+    return min + (value % range);
+  }
+
+  return Math.floor(Math.random() * range + min);
 }
 // 随机颜色
 export function randomColor() {
@@ -165,11 +182,34 @@ function getTriggerTarget(e, opt = {}, stopPropagation = false) {
 
   return oTarget;
 }
-// 随机排列数组
+// 随机排列数组（优先使用 CSPRNG）
 export function myShuffle(arr) {
   let m = arr.length,
     t,
     i;
+
+  if (arr.length > 1 && globalThis.crypto?.getRandomValues) {
+    // getRandomValues 单次最多 65536 字节，这里按需分批填充
+    const rand = new Uint32Array(Math.min(arr.length, 16384));
+    globalThis.crypto.getRandomValues(rand);
+
+    let k = 0;
+    while (m) {
+      if (k >= rand.length) {
+        globalThis.crypto.getRandomValues(rand);
+        k = 0;
+      }
+
+      i = rand[k++] % m;
+      m--;
+      t = arr[m];
+      arr[m] = arr[i];
+      arr[i] = t;
+    }
+
+    return arr;
+  }
+
   while (m) {
     i = Math.floor(Math.random() * m--);
     t = arr[m];
@@ -302,9 +342,6 @@ export function hdTextMsg(str) {
     `,
     { s, isSafeURL },
   );
-}
-export function mailTo(email) {
-  myOpen(`mailto:${email}`);
 }
 // 大屏
 export function isBigScreen() {
@@ -2525,7 +2562,7 @@ export function isLogin() {
   return localData.get('account');
 }
 // 用户选项
-export function userLogoMenu(e, account, username, email) {
+export function userLogoMenu(e, account, username) {
   const acc = localData.get('account');
   let data = [];
   if (!isIframe()) {
@@ -2541,13 +2578,6 @@ export function userLogoMenu(e, account, username, email) {
       text: '@ ' + username,
       beforeIcon: 'iconfont icon-zhanghao',
     });
-    if (email) {
-      data.push({
-        id: '6',
-        text: '邮箱',
-        beforeIcon: 'iconfont icon-youxiang',
-      });
-    }
   }
   data = [
     ...data,
@@ -2598,8 +2628,6 @@ export function userLogoMenu(e, account, username, email) {
         } else {
           myOpen(url);
         }
-      } else if (id === '6') {
-        mailTo(email);
       }
     },
     `来自于：${username}`,

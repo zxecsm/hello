@@ -225,7 +225,7 @@ route.post(
       return resp.ok(res, share.text)();
     }
 
-    let { username, logo, email, exp_time, title, account: acc, data, update_at } = share.data;
+    let { username, logo, exp_time, title, account: acc, data, update_at } = share.data;
 
     // 通过id分批读取音乐信息并策略化
     const mObj = await batchGetMusics(data);
@@ -255,7 +255,6 @@ route.post(
     resp.success(res, '读取歌曲分享成功', {
       username,
       logo,
-      email,
       exp_time,
       account: acc,
       data,

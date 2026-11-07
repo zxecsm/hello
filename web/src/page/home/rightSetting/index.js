@@ -1355,7 +1355,6 @@ function hdTools(e) {
       text: '公开文件目录',
       beforeIcon: 'iconfont icon-gl-folder',
     },
-    { id: '5', text: '便条', beforeIcon: 'iconfont icon-jilu' },
     {
       id: '7',
       text: '搜索历史',
@@ -1385,9 +1384,6 @@ function hdTools(e) {
         showPicture();
       } else if (id === '4') {
         createQrCode(e);
-      } else if (id === '5') {
-        close();
-        showNotepad();
       } else if (id === '6') {
         const data = [
           {
@@ -1896,10 +1892,6 @@ export function showBmk() {
 export function showFileManage() {
   hideRightMenu();
   openInIframe(`/file`, '文件管理', 'file');
-}
-export function showNotepad() {
-  hideRightMenu();
-  openInIframe(`/notepad`, '便条', 'note');
 }
 export function showPicture() {
   hideRightMenu();

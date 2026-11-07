@@ -10,6 +10,13 @@ services:
       - TZ=Asia/Shanghai          # 时区
       # - UV_THREADPOOL_SIZE=12   # 文件处理并发 libuv 线程池大小，默认4
       # - COOKIE_SECURE=false     # HTTP 设为 false，否则无法登录；HTTPS 不设或设 true
+      # - TRUST_PROXY=1           # 反向代理时解析真实客户端 IP，默认不信任任何代理头
+      #                           #   不设置：直接访问 55555 / 无反向代理
+      #                           #   1 或 proxy：信任直连的 1 层代理（端口只对 Nginx 开放）
+      #                           #   2、3：信任 N 层代理
+      #                           #   192.168.1.20 或 172.17.0.0/16：只信任指定代理（可逗号分隔）
+      #                           #   兼容：true/all/on/yes 等同 1；loopback 等同 127.0.0.1,::1
+      #                           # 注意：Nginx 需设置 X-Forwarded-For $proxy_add_x_forwarded_for
     volumes:
       - /proc:/app/proc:ro        # 读取宿主机系统信息（CPU、内存、负载等）
       - /:/app/app_data           # 应用数据和文件管理目录

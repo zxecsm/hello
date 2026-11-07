@@ -146,7 +146,7 @@ enterPassCode(({ close, val, loading, submit }) => {
   reqPlayerGetShare({ id: shareId, pass: passCode, captchaId })
     .then((resObj) => {
       if (resObj.code === 1) {
-        const { account, username, logo, title, exp_time, email, token, needCaptcha, id } =
+        const { account, username, logo, title, exp_time, token, needCaptcha, id } =
           resObj.data;
 
         if (needCaptcha) {
@@ -165,7 +165,7 @@ enterPassCode(({ close, val, loading, submit }) => {
           close && close();
           defaultShareTitle = title;
           shareToken = token;
-          userInfo = { account, username, email };
+          userInfo = { account, username };
           if (logo) {
             imgjz(getFilePath(`/logo/${account}/${logo}`))
               .then((cache) => {
@@ -214,8 +214,8 @@ enterPassCode(({ close, val, loading, submit }) => {
     });
 }, passCode)();
 $lrcHead.on('click', '.user_logo', (e) => {
-  const { account, username, email } = userInfo;
-  userLogoMenu(e, account, username, email);
+  const { account, username } = userInfo;
+  userLogoMenu(e, account, username);
 });
 // 更新mv按钮状态
 function toggleMvBtnState() {

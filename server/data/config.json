@@ -1,14 +1,14 @@
 {
-  "registerState": true,
+  "registerState": false,
   "trashState": true,
   "tokenKey": "xxxxxxxxxxxxxxxxxx",
   "tipsFlag": 1,
   "pubApi": {
-    "randomBgApi": true,
-    "randomMusicApi": true,
-    "siteInfoApi": true,
-    "faviconApi": true,
-    "echoApi": true
+    "randomBgApi": false,
+    "randomMusicApi": false,
+    "siteInfoApi": false,
+    "faviconApi": false,
+    "echoApi": false
   },
   "faviconSpareApi": "",
   "cacheExp": {

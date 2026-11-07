@@ -89,7 +89,7 @@ route.post(
       return resp.notFound(res, share.text)();
     }
 
-    let { username, logo, email, exp_time, title, account: acc, data, update_at } = share.data;
+    let { username, logo, exp_time, title, account: acc, data, update_at } = share.data;
 
     if (account && account != acc) {
       const f = await getFriendInfo(account, acc, 'des');
@@ -100,7 +100,6 @@ route.post(
     resp.success(res, '获取文件分享成功', {
       username,
       logo,
-      email,
       exp_time,
       account: acc,
       data,

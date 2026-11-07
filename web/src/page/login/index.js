@@ -140,9 +140,22 @@ function hdNopdLogin() {
       });
   }
 }
+// 6 位登录码（CSPRNG，避免 Math.random 可预测）
+function createLoginCode() {
+  const buf = new Uint32Array(1);
+  const max = Math.floor(0x100000000 / 1000000) * 1000000;
+  let value;
+
+  do {
+    globalThis.crypto.getRandomValues(buf);
+    value = buf[0];
+  } while (value >= max);
+
+  return String(value % 1000000).padStart(6, '0');
+}
 function changeCode() {
   // 显示登录码
-  code = Math.random().toFixed(6).slice(2);
+  code = createLoginCode();
   $ratify
     .css('display', 'flex')
     .find('.code_box')
@@ -168,11 +181,16 @@ function resetPassword() {
     shake();
     return;
   }
+
+  // 固定本次重置使用的用户名，避免弹窗期间输入框被修改
+  const username = accInp.getValue().trim();
+
   maskLoading.show();
-  reqUserEmailCode({ username: accInp.getValue().trim(), captchaId })
+  reqUserEmailCode({ username, captchaId })
     .then((res) => {
       if (res.code === 1) {
-        const { username, needCaptcha } = res.data;
+        const { needCaptcha } = res.data;
+
         if (needCaptcha) {
           captcha(username, {
             success({ id }) {
@@ -182,7 +200,10 @@ function resetPassword() {
           });
         } else {
           _msg.success(res.codeText);
-          const { account, email } = res.data;
+
+          // 不返回邮箱，只返回账号；邮箱由服务端根据账号查询
+          const { account } = res.data;
+
           rMenu.inpMenu(
             false,
             {
@@ -204,10 +225,12 @@ function resetPassword() {
               if (isCaptcha) return;
               const code = inp.pass;
               loading.start();
-              reqUserResetPass({ email, account, code, captchaId })
+              // 只提交账号 + 验证码，邮箱由服务端根据账号查询
+              reqUserResetPass({ account, code, captchaId })
                 .then((res) => {
                   if (res.code === 1) {
-                    const { username, account, needCaptcha } = res.data;
+                    const { username: resUsername, account, needCaptcha } = res.data;
+
                     if (needCaptcha) {
                       isCaptcha = true;
                       captcha(account, {
@@ -221,7 +244,7 @@ function resetPassword() {
                       });
                     } else {
                       close();
-                      localData.set('username', username);
+                      localData.set('username', resUsername);
                       localData.set('account', account);
                       _msg.success(res.codeText, () => {
                         myOpen(originurl);
