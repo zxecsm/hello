@@ -298,27 +298,9 @@ route.get(
 
     const { account } = res.locals.hello.userinfo;
 
-    const target = acc || account;
-
-    if (!target) {
-      return resp.unauthorized(res)();
-    }
-
-    // 非本人只能读取存在公开笔记的账号分类
-    if (acc && acc !== account) {
-      const shared = await db('note')
-        .select('id')
-        .where({ account: acc, share: 1, state: 1 })
-        .findOne();
-
-      if (!shared) {
-        return resp.forbidden(res, '分类未公开')();
-      }
-    }
-
     const list = await db('note_category')
       .select('id,title')
-      .where({ account: target })
+      .where({ account: acc || account })
       .orderBy('serial', 'DESC')
       .find();
 
