@@ -1,0 +1,7 @@
+# 本地账号配置与登录态，绝不提交
+.env
+.env.*
+!.env.example
+hello.config.json
+.hello-session.json
+cookie.txt

@@ -1,0 +1,6 @@
+{
+  "baseUrl": "https://hello.example.com",
+  "cookie": "token=在浏览器开发者工具里复制的 Cookie",
+  "username": "",
+  "password": ""
+}
