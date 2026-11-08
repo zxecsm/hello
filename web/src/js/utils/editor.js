@@ -1,12 +1,10 @@
 import ace from 'ace-builds';
-import 'ace-builds/webpack-resolver';
+// 只注册全部语言模式 + 实际用到的主题（见 aceResolver.js）
+import './aceResolver';
 import 'ace-builds/src-noconflict/ext-modelist';
 
 // 获取 modelist
 const modelist = ace.require('ace/ext/modelist');
-// 皮肤
-import 'ace-builds/src-noconflict/theme-chrome';
-import 'ace-builds/src-noconflict/theme-github_dark';
 // 自动补全
 import 'ace-builds/src-noconflict/ext-language_tools';
 // 搜索

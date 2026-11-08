@@ -17,9 +17,6 @@ const randomBase36 = () => {
 // 4 位 base36 随机串
 const random4 = () => to36(randomBase36()) + to36(randomBase36());
 
-// 8 位 base36 随机后缀
-const random8 = () => random4() + random4();
-
 // 每个页面初始化时生成一次服务 ID
 const SERVICE_ID = random4();
 
@@ -27,7 +24,7 @@ let lastMs = 0;
 
 // 生成 ID：
 // - lastMs 严格递增：同一页面内严格不重复（不需要额外计数器）
-// - 4 位 SERVICE_ID + 8 位随机后缀：跨页面/进程/重启防碰撞
+// - 4 位 SERVICE_ID + 4 位随机后缀：跨页面/进程/重启防碰撞
 const nanoid = () => {
   const now = Date.now();
 
@@ -37,7 +34,7 @@ const nanoid = () => {
     lastMs++;
   }
 
-  return `h${lastMs.toString(36)}${SERVICE_ID}${random8()}`.toUpperCase();
+  return `h${lastMs.toString(36)}${SERVICE_ID}${random4()}`.toUpperCase();
 };
 
 export default nanoid;

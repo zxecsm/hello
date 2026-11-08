@@ -24,6 +24,33 @@ services:
       - '55555:55555'
 ```
 
+Nginx 反向代理 SSH 上传下载注意事项
+
+SFTP 上传是流式转发，需关闭 Nginx 请求体缓冲，否则会等文件全部传到服务器后才开始写远端：
+
+```
+server {
+    listen 80;
+    server_name hello.example.com;
+    client_max_body_size 0;        # 不限制上传大小，按需改成 10g 等
+
+    location / {
+        proxy_pass http://127.0.0.1:55555;                            # 后端地址
+        proxy_http_version 1.1;                                       # 流式转发的前提，必须 1.1
+        proxy_set_header Host $host;                                  # 透传域名
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;  # 真实客户端 IP
+
+        proxy_request_buffering off;   # 关键：请求体不缓冲，边收边转发
+        proxy_buffering off;           # 响应不缓冲，下载立即开始
+        proxy_read_timeout 3600s;      # 读超时，大文件/慢网络需放宽
+        proxy_send_timeout 3600s;      # 写超时，上传大文件需放宽
+    }
+}
+```
+
+- `proxy_request_buffering off` 必须配合 `proxy_http_version 1.1`；前面还有 CDN / 多层代理时，那一层也要关缓冲。
+- 反向代理时按需设置 `TRUST_PROXY`（见上方 compose 配置）。
+
 歌词格式：
 ```
 [00:00.00]歌词

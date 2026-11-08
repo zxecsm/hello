@@ -780,30 +780,51 @@ route.post(
     const { path, name } = res.locals.ctx;
     const p = _path.normalizeNoSlash('/', path, name);
 
-    const busboy = Busboy({ headers: req.headers });
+    // 边收边写远端：请求体经 busboy 直接 pipeline 到 sftp 写流，
+    // 不落本地临时文件，也不等整个请求体接收完再开始上传
+    const jobs = [];
+    const remoteStreams = [];
+    let started = false;
 
-    await new Promise((resolve, reject) => {
-      busboy.on('file', async (_, fileStream) => {
-        const remoteWritableStream = ssh.sftp.createWriteStream(p);
+    try {
+      await new Promise((resolve, reject) => {
+        const busboy = Busboy({ headers: req.headers });
 
-        try {
-          await _f.streamp.pipeline(fileStream, remoteWritableStream);
-        } catch (err) {
-          reject(err);
-        }
+        busboy.on('file', (_, fileStream) => {
+          // 只处理第一个文件，多余的直接丢弃
+          if (remoteStreams.length) return fileStream.resume();
+
+          started = true;
+          const remoteStream = ssh.sftp.createWriteStream(p);
+          remoteStreams.push(remoteStream);
+          jobs.push(_f.streamp.pipeline(fileStream, remoteStream));
+        });
+
+        // close：所有内容解析完，且 file stream 已被消费完
+        busboy.on('close', resolve);
+        busboy.on('error', reject);
+        // 客户端中途断开
+        req.on('close', () => {
+          if (!req.complete) reject(new Error('客户端已取消上传'));
+        });
+
+        // 将请求体接入 busboy
+        req.pipe(busboy);
       });
 
-      busboy.on('finish', () => {
-        resolve();
-      });
+      // 等远端写流真正写完（sftp 侧 flush/close）
+      await Promise.all(jobs);
+    } catch (error) {
+      // 中止远端写入，等 pipeline 收尾后再清理写了一半的文件
+      remoteStreams.forEach((s) => s.destroy());
+      await Promise.allSettled(jobs);
+      if (started) {
+        await new Promise((resolve) => ssh.sftp.unlink(p, () => resolve()));
+      }
+      throw error;
+    }
 
-      busboy.on('error', (err) => {
-        reject(err);
-      });
-
-      // 将请求体接入 busboy
-      req.pipe(busboy);
-    });
+    if (!started) return resp.badRequest(res, '未接收到文件')();
 
     resp.success(res, '上传文件成功')();
   }),
@@ -819,7 +840,7 @@ route.get(
       id: V.string().trim().min(1),
     }),
   ),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_, res) => {
     const { path, id } = res.locals.ctx;
     const ssh = getSSH(res.locals.hello.userinfo.account + id);
     if (!ssh || !ssh.sftp) return resp.forbidden(res, '已断开SSH连接')();
