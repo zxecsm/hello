@@ -1,6 +1,6 @@
 # API 路由总表（源码自动提取）
 
-> 由 `server/routes/*/index.js` 中的 `route.<method>(...)` 与 `server/app.js` 汇总，共 245 条。
+> 由 `server/routes/*/index.js` 中的 `route.<method>(...)` 与 `server/app.js` 汇总，共 246 条。
 > 所有以 `/api` 开头的路径都需要拼上实例地址，例如 `http://localhost:55555/api/bmk/list`。
 
 ## app.js 中的顶层接口
@@ -12,7 +12,7 @@
 | `GET` | `/api/f/<path>` | 按路径读取用户文件/下载 |
 | `ALL` | `/api/s/:chat_id` | 收信接口（GET ?text= / POST {text}） |
 
-## user（39）
+## user（40）
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
@@ -36,6 +36,7 @@
 | `GET` | `/api/user/tips` | tips标识 |
 | `POST` | `/api/user/allow-code-login` | 批准登录 |
 | `POST` | `/api/user/change-pd` | 修改密码 |
+| `POST` | `/api/user/create-token` | 生成认证token（指定有效天数） |
 | `POST` | `/api/user/logout` | 退出登录 |
 | `POST` | `/api/user/changename` | 修改用户名 |
 | `POST` | `/api/user/delete-account` | 账号状态 |

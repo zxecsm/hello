@@ -44,6 +44,7 @@ import {
   reqUserBindEmail,
   reqUserBindEmailCode,
   reqUserChangPd,
+  reqUserCreateToken,
   reqUserDailyChangeBg,
   reqUserDeleteLogo,
   reqUserFontList,
@@ -1481,6 +1482,42 @@ function changeUserPd(e) {
     '修改密码',
   );
 }
+// 生成认证token
+function createAuthToken(e) {
+  const maxDays = _d.fieldLength.tokenExpDays;
+  rMenu.inpMenu(
+    e,
+    {
+      subText: '生成',
+      items: {
+        days: {
+          beforeText: '过期天数：',
+          inputType: 'number',
+          placeholder: `1-${maxDays}`,
+          verify(val) {
+            return rMenu.validInteger(val) || rMenu.validNumber(val, 1, maxDays);
+          },
+        },
+      },
+    },
+    function ({ close, inp, loading }) {
+      const days = Number(inp.days);
+      loading.start();
+      reqUserCreateToken({ days })
+        .then((result) => {
+          loading.end();
+          if (result.code === 1) {
+            close();
+            copyText(result.data, { success: `token已复制，有效期 ${days} 天` });
+          }
+        })
+        .catch(() => {
+          loading.end();
+        });
+    },
+    '生成认证token（退出其他设备会失效）',
+  );
+}
 // 注销账号
 function closeAccount(e) {
   if (isRoot()) {
@@ -1548,6 +1585,11 @@ function hdAccountManage(e) {
       beforeIcon: 'iconfont icon-suo',
     },
     {
+      id: '7',
+      text: '生成认证token',
+      beforeIcon: 'iconfont icon-yuechi_o',
+    },
+    {
       id: '4',
       text: `${verify ? '关闭' : '配置'}两步验证`,
       beforeIcon: 'iconfont icon-shoujiyanzheng',
@@ -1575,6 +1617,8 @@ function hdAccountManage(e) {
         close(true);
       } else if (id === '3') {
         changeUserPd(e);
+      } else if (id === '7') {
+        createAuthToken(e);
       } else if (id === '5') {
         closeAccount(e);
       } else if (id === '6') {

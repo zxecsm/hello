@@ -896,6 +896,32 @@ route.post(
   }),
 );
 
+// 生成认证token
+route.post(
+  '/create-token',
+  validate(
+    'body',
+    V.object({
+      days: V.number().toInt().min(1).max(fieldLength.tokenExpDays),
+    }),
+  ),
+  asyncHandler(async (_, res) => {
+    const { days } = res.locals.ctx;
+
+    const { account, username } = res.locals.hello.userinfo;
+
+    const token = await jwt.set(
+      {
+        type: 'authentication',
+        data: { account, username },
+      },
+      days * 24 * 60 * 60,
+    );
+
+    resp.success(res, '生成认证token成功', token)();
+  }),
+);
+
 // 退出登录
 route.post(
   '/logout',

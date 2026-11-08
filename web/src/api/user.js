@@ -43,6 +43,10 @@ export function reqUserAllowLogin(data) {
 export function reqUserAllowLoginReq(data) {
   return _postAjax('/user/allow-login-req', data);
 }
+// 生成认证token
+export function reqUserCreateToken(data) {
+  return _postAjax('/user/create-token', data);
+}
 // 退出
 export function reqUserLogout(data) {
   return _postAjax('/user/logout', data);

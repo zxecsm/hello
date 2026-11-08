@@ -1,6 +1,6 @@
 # hello 核心接口手册
 
-> 完整路由表见 [routes.md](./routes.md)（从源码自动提取，245 条）。
+> 完整路由表见 [routes.md](./routes.md)（从源码自动提取，246 条）。
 > 本文件只收录智能体最常用、参数已核实的数据接口。
 
 ## 1. 基础约定
@@ -64,6 +64,7 @@ HELLO_COOKIE=token=...
 | 方法 | 路径 | 参数 | 说明 |
 | --- | --- | --- | --- |
 | POST | `/api/user/login` | `username`, `password`, `captchaId?` | 可选；成功下发 Cookie；返回 `data.needCaptcha=true` 时需先完成验证码 |
+| POST | `/api/user/create-token` | `days`：`1`-`3650` 的整数 | 生成指定有效期的认证 token，可直接作为 Cookie 使用：`token=<返回值>` |
 | POST | `/api/user/logout` | `other`：`0` 退出当前，`1` 退出其他设备 | |
 | GET | `/api/user/userinfo` | - | 当前用户：`account`、`username`、`logo`、`bg`、`bgxs`、`email`、`verify` 等 |
 | GET | `/api/user/share-list` | `pageNo`(1), `pageSize`(20, ≤200) | 我创建的分享 |

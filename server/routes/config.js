@@ -12,6 +12,7 @@ export const fieldLength = {
   chatDes: 20, // 用户备注
   top: 99999, // 置顶
   expTime: 99999, // 过期时间天
+  tokenExpDays: 3650, // 认证token最长有效天数
   countTitle: 300, // 倒计时标题
   username: 40, // 用户名
   email: 255, // 邮箱

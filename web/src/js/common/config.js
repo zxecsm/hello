@@ -57,6 +57,7 @@ const searchWord = [
 const fieldLength = {
   title: 200, // 标题名称
   expTime: 99999, // 过期时间天
+  tokenExpDays: 3650, // 认证token最长有效天数
   sharePass: 20, // 分享提取码
   url: 2000, // 网址路径
   des: 500, // 备注

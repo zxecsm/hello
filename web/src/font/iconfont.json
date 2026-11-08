@@ -6,6 +6,13 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "5387834",
+      "name": "yaochi",
+      "font_class": "yuechi_o",
+      "unicode": "eb6a",
+      "unicode_decimal": 60266
+    },
+    {
       "icon_id": "7594811",
       "name": "folderStar",
       "font_class": "folderStar",
