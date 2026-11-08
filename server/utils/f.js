@@ -328,24 +328,25 @@ async function readDirSize(path, { signal, progress } = {}) {
   );
 }
 
+const PERMISSION_MAP = [
+  { bit: 0o400, char: 'r' },
+  { bit: 0o200, char: 'w' },
+  { bit: 0o100, char: 'x' },
+  { bit: 0o040, char: 'r' },
+  { bit: 0o020, char: 'w' },
+  { bit: 0o010, char: 'x' },
+  { bit: 0o004, char: 'r' },
+  { bit: 0o002, char: 'w' },
+  { bit: 0o001, char: 'x' },
+];
+
 function getPermissions(stats) {
   const mode = stats.mode.toString(8).slice(-3);
-  const permissionMap = [
-    { bit: 0o400, char: 'r' },
-    { bit: 0o200, char: 'w' },
-    { bit: 0o100, char: 'x' },
-    { bit: 0o040, char: 'r' },
-    { bit: 0o020, char: 'w' },
-    { bit: 0o010, char: 'x' },
-    { bit: 0o004, char: 'r' },
-    { bit: 0o002, char: 'w' },
-    { bit: 0o001, char: 'x' },
-  ];
 
   let permissionString = '';
   const numericMode = parseInt(mode, 8);
 
-  permissionMap.forEach(({ bit, char }) => {
+  PERMISSION_MAP.forEach(({ bit, char }) => {
     permissionString += numericMode & bit ? char : '-';
   });
 

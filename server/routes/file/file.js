@@ -82,12 +82,14 @@ export function sortFileList(list, type, isDesc) {
 // 读取目录文件
 export async function readMenu(path) {
   try {
-    const list = await _f.fsp.readdir(path);
+    const dirents = await _f.fsp.readdir(path, { withFileTypes: true });
 
     const arr = [];
 
-    await concurrencyTasks(list, 5, async (name) => {
+    // lstat 无法避免（需要时间、大小、权限），这里提高并发减少大目录等待
+    await concurrencyTasks(dirents, 5, async (dirent) => {
       try {
+        const name = dirent.name;
         const f = _path.normalizeNoSlash(path, name);
 
         const s = await _f.lstat(f);
@@ -151,8 +153,9 @@ export async function getUniqueFilename(path) {
 
 // 是否有同名文件
 export async function hasSameNameFile(targetPath, list) {
-  const targetList = await readMenu(targetPath);
-  return targetList.some(({ name }) => list.some((item) => item.name === name));
+  // 只比较文件名，不需要 lstat 每个目录项
+  const targetList = await _f.readdir(targetPath);
+  return targetList.some((name) => list.some((item) => item.name === name));
 }
 
 // 读取收藏目录

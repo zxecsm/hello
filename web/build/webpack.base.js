@@ -22,14 +22,6 @@ module.exports = {
         },
       },
       {
-        test: /\.html$/i,
-        include: resolve(__dirname, '..', 'src'),
-        loader: 'html-loader',
-        options: {
-          esModule: false,
-        },
-      },
-      {
         test: /\.worker\.js$/,
         include: resolve(__dirname, '..', 'src'),
         use: {

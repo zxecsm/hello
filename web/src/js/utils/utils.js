@@ -1328,15 +1328,33 @@ export function pageErr() {
 export function getDuration(file) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
-    const audioElement = new Audio(url);
-    audioElement.onloadeddata = function () {
+    const audio = new Audio();
+    let done = false;
+
+    function cleanup() {
+      if (done) return;
+      done = true;
+
+      audio.onloadeddata = null;
+      audio.onerror = null;
+      audio.removeAttribute('src');
+      audio.load();
       URL.revokeObjectURL(url);
-      resolve(audioElement.duration);
+    }
+
+    audio.preload = 'auto';
+    audio.onloadeddata = function () {
+      if (done) return;
+      const duration = audio.duration;
+      cleanup();
+      resolve(duration);
     };
-    audioElement.onerror = function () {
-      URL.revokeObjectURL(url);
-      reject();
+    audio.onerror = function () {
+      cleanup();
+      reject(new Error('音频加载失败'));
     };
+
+    audio.src = url;
   });
 }
 // 浏览器通知
@@ -1591,8 +1609,8 @@ export function myDrag(opt) {
       target.classList.remove('drag_opacity');
     }
     toggleUserSelect();
-    target.removeEventListener('touchmove', hdMove);
-    target.removeEventListener('touchend', hdUp);
+    trigger.removeEventListener('touchmove', hdMove);
+    trigger.removeEventListener('touchend', hdUp);
     document.removeEventListener('mousemove', hdMove);
     document.removeEventListener('mouseup', hdUp);
     up && up({ e, trigger, target, x, y, pointerX, pointerY });

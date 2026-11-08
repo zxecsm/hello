@@ -1,9 +1,5 @@
-import { exec } from 'child_process';
 import os from 'os';
-import util from 'util';
 import _f from './f.js';
-
-const execAsync = util.promisify(exec);
 
 // CPU
 const getRawCpuUsage = (() => {
@@ -105,39 +101,60 @@ async function getDiskUsage(path = '/') {
   const defaultRes = { total: 0, used: 0, available: 0, percent: 0 };
 
   try {
-    const { stdout } = await execAsync(`df -k '${path}'`);
-    const lines = stdout.trim().split('\n');
-    if (lines.length < 2) return defaultRes;
+    const stats = await _f.fsp.statfs(path);
+    const bsize = stats.bsize;
 
-    const parts = lines[1].split(/\s+/);
-    const total = parseInt(parts[1]) * 1024;
-    const used = parseInt(parts[2]) * 1024;
-    const available = parseInt(parts[3]) * 1024;
-    const percent = total ? (used / total) * 100 : 0;
+    const total = stats.blocks * bsize;
+    const free = stats.bfree * bsize;
+    const available = stats.bavail * bsize;
+    const used = total - free;
 
-    return { total, used, available, percent };
+    return {
+      total,
+      used,
+      available,
+      percent: total ? (used / total) * 100 : 0,
+    };
   } catch {
     return defaultRes;
   }
 }
 
+// 依次尝试读取 /proc 文件
+async function readProc(paths) {
+  for (const p of paths) {
+    const content = (await _f.readFile(p, null, '')).toString();
+    if (content) return content;
+  }
+  return '';
+}
+
 // 虚拟内存（Swap）
 async function getRawVirtualMemoryUsage() {
+  const defaultRes = { total: 0, used: 0, free: 0, percent: 0 };
+
   try {
-    const { stdout } = await execAsync('free -b');
-    const lines = stdout.trim().split('\n');
-    if (lines.length < 3) return { total: 0, used: 0, free: 0, percent: 0 };
+    const content = await readProc(['/app/proc/meminfo', '/proc/meminfo']);
 
-    const swapLine = lines[2];
-    const parts = swapLine.split(/\s+/).filter(Boolean);
-    const total = parseInt(parts[1]);
-    const used = parseInt(parts[2]);
-    const free = parseInt(parts[3]);
-    const percent = total ? (used / total) * 100 : 0;
+    if (!content) return defaultRes;
 
-    return { total, used, free, percent };
+    const get = (key) => {
+      const match = content.match(new RegExp(`^${key}:\\s+(\\d+)\\s+kB`, 'm'));
+      return match ? Number(match[1]) * 1024 : 0;
+    };
+
+    const total = get('SwapTotal');
+    const free = get('SwapFree');
+    const used = Math.max(0, total - free);
+
+    return {
+      total,
+      used,
+      free,
+      percent: total ? (used / total) * 100 : 0,
+    };
   } catch {
-    return { total: 0, used: 0, free: 0, percent: 0 };
+    return defaultRes;
   }
 }
 

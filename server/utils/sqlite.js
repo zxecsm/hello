@@ -9,9 +9,13 @@ const dbPath = appConfig.databaseDir('hello.db');
 _f.fs.mkdirSync(_path.dirname(dbPath), { recursive: true });
 
 // ===== SQLite 封装 =====
+// 预编译语句缓存上限，避免动态 SQL 无限增长
+const MAX_STATEMENT_CACHE = 200;
+
 class DB {
   constructor(path) {
     this.db = new Database(path);
+    this.statements = new Map();
 
     // 优化性能
     this.db.exec(`
@@ -23,11 +27,33 @@ class DB {
     `);
   }
 
+  // 复用预编译语句
+  _prepare(sql) {
+    let stmt = this.statements.get(sql);
+
+    if (stmt) return stmt;
+
+    stmt = this.db.prepare(sql);
+
+    if (this.statements.size >= MAX_STATEMENT_CACHE) {
+      const [oldSql, oldStmt] = this.statements.entries().next().value;
+
+      this.statements.delete(oldSql);
+
+      try {
+        oldStmt.finalize();
+      } catch {}
+    }
+
+    this.statements.set(sql, stmt);
+
+    return stmt;
+  }
+
   run(sql, params = []) {
     return new Promise((resolve, reject) => {
       try {
-        const stmt = this.db.prepare(sql);
-        const result = stmt.run(params);
+        const result = this._prepare(sql).run(params);
         resolve(result);
       } catch (err) {
         reject(err);
@@ -38,8 +64,7 @@ class DB {
   get(sql, params = []) {
     return new Promise((resolve, reject) => {
       try {
-        const stmt = this.db.prepare(sql);
-        const result = stmt.get(params);
+        const result = this._prepare(sql).get(params);
         resolve(result);
       } catch (err) {
         reject(err);
@@ -50,8 +75,7 @@ class DB {
   all(sql, params = []) {
     return new Promise((resolve, reject) => {
       try {
-        const stmt = this.db.prepare(sql);
-        const result = stmt.all(params);
+        const result = this._prepare(sql).all(params);
         resolve(result);
       } catch (err) {
         reject(err);
@@ -62,6 +86,13 @@ class DB {
   close() {
     return new Promise((resolve, reject) => {
       try {
+        for (const stmt of this.statements.values()) {
+          try {
+            stmt.finalize();
+          } catch {}
+        }
+
+        this.statements.clear();
         this.db.close();
         resolve();
       } catch (err) {

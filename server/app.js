@@ -94,6 +94,9 @@ app.use((_, res, next) => {
   next();
 });
 
+// 带 hash 的构建产物：js/xxx.abcd1234.js、css/xxx.abcd1234.css、images/img/xxx.abcd1234.png
+const HASHED_ASSET_RE = /[\\/](js|css|images[\\/]img)[\\/][^\\/]+\.[0-9a-f]{8}\.[^\\/.]+$/i;
+
 const staticOptions = {
   dotfiles: 'allow', // 允许访问 .xxx 文件
   // maxAge: '7d', // 强缓存
@@ -103,9 +106,12 @@ const staticOptions = {
     // 1. 入口/控制文件：绝不开启强缓存，走协商缓存
     if (filePath.endsWith('sw.js') || filePath.endsWith('.html')) {
       res.setHeader('Cache-Control', 'no-cache, must-revalidate');
-    } else {
-      // 2. 带 Hash 指纹的静态资源：直接给 1 年强缓存 + immutable(告诉浏览器：“这个文件永远不会改变”)
+    } else if (HASHED_ASSET_RE.test(filePath)) {
+      // 2. 带 Hash 指纹的构建产物：一年强缓存 + immutable
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else {
+      // 3. 字体、图标、manifest 等非指纹文件：短缓存 + 协商，更新后能及时生效
+      res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
     }
   },
 };

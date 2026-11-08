@@ -51,16 +51,21 @@ module.exports = merge(require('./webpack.base'), {
                   '@babel/preset-env',
                   // 配置信息
                   {
-                    // 兼容的目标浏览器
+                    // 兼容的目标浏览器（不再兼容 IE 等老设备）
                     targets: {
-                      chrome: '55',
-                      ie: '11',
+                      chrome: '87',
+                      edge: '88',
+                      firefox: '78',
+                      safari: '14',
                     },
                   },
                 ],
               ],
               plugins: [
-                ['babel-plugin-polyfill-corejs3', { method: 'usage-global', version: corejsVersion }],
+                [
+                  'babel-plugin-polyfill-corejs3',
+                  { method: 'usage-global', version: corejsVersion },
+                ],
               ],
             },
           },

@@ -49,33 +49,90 @@ function drawString() {
     drops[i]++;
   }
 }
-let timer = null;
-setInterval(() => {
-  if (isIframe()) return;
-  let sleep = localData.get('sleep');
-  sleep = sleep === null ? _d.fieldLength.rainCodeSleep : sleep;
-  if (sleep < 0) return;
-  sleep--;
+const DEFAULT_SLEEP = _d.fieldLength.rainCodeSleep;
+
+let sleep = localData.get('sleep');
+sleep = sleep === null ? DEFAULT_SLEEP : Number(sleep);
+if (!Number.isFinite(sleep)) sleep = DEFAULT_SLEEP;
+
+let active = false; // 本页是否已经进入代码雨状态
+let countdownTimer = null;
+let drawTimer = null;
+
+function persistSleep() {
   localData.set('sleep', sleep);
-  if (sleep === 0) {
-    canvas.style.display = 'block';
-    if (timer) {
-      clearInterval(timer);
-      timer = null;
-    }
-    timer = setInterval(drawString, 30);
-  } else if (sleep > 0) {
-    canvas.style.display = 'none';
-    if (timer) {
-      clearInterval(timer);
-      timer = null;
-    }
+}
+
+function stopDraw() {
+  if (drawTimer) {
+    clearInterval(drawTimer);
+    drawTimer = null;
   }
-}, 1000);
+  canvas.style.display = 'none';
+}
+
+function startDraw() {
+  if (drawTimer || isIframe() || document.visibilityState === 'hidden') return;
+  canvas.style.display = 'block';
+  drawTimer = setInterval(drawString, 30);
+}
+
+function stopCountdown() {
+  if (countdownTimer) {
+    clearInterval(countdownTimer);
+    countdownTimer = null;
+  }
+}
+
+function startCountdown() {
+  if (countdownTimer || sleep <= 0 || isIframe() || document.visibilityState === 'hidden') {
+    return;
+  }
+  countdownTimer = setInterval(tick, 1000);
+}
+
+function tick() {
+  if (sleep <= 0) {
+    stopCountdown();
+    return;
+  }
+
+  sleep--;
+
+  if (sleep === 0) {
+    active = true;
+    sleep = -1; // 与旧逻辑保持一致，激活后持久化为 -1
+    stopCountdown();
+    persistSleep();
+    startDraw();
+  }
+}
 
 export const initRainCodeSleep = throttle(() => {
-  localData.set('sleep', _d.fieldLength.rainCodeSleep);
+  sleep = DEFAULT_SLEEP;
+  active = false;
+  stopDraw();
+  persistSleep();
+  startCountdown();
 }, 2000);
+
+// 只在可见时倒计时/绘制，隐藏时持久化当前计数
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    stopCountdown();
+    stopDraw();
+    persistSleep();
+  } else if (active) {
+    startDraw();
+  } else {
+    startCountdown();
+  }
+});
+
+if (document.visibilityState === 'visible') {
+  startCountdown();
+}
+
 document.addEventListener('mousemove', initRainCodeSleep);
 document.addEventListener('touchstart', initRainCodeSleep);
 document.addEventListener('keydown', initRainCodeSleep);

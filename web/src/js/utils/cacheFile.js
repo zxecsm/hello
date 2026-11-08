@@ -155,13 +155,23 @@ const cacheFile = {
   // 写入文件缓存
   async writeCache(hash, data) {
     return withLock(hash, async () => {
+      let writable = null;
+
       try {
-        const fileHandle = await (await this.getDirectory()).getFileHandle(hash, { create: true });
-        const writable = await fileHandle.createWritable();
+        const dirHandle = await this.getDirectory();
+        const fileHandle = await dirHandle.getFileHandle(hash, { create: true });
+
+        writable = await fileHandle.createWritable();
         await writable.write(data);
         await writable.close();
+
         return true;
       } catch {
+        // 异常时中止写入，避免一直占用文件写锁
+        try {
+          await writable?.abort();
+        } catch {}
+
         return false;
       }
     });

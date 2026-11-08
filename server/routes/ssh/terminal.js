@@ -1,8 +1,8 @@
 import { Client } from 'ssh2';
+import { StringDecoder } from 'node:string_decoder';
 import { CacheByExpire } from '../../utils/cache.js';
-import { concurrencyTasks, writelog } from '../../utils/utils.js';
+import { writelog } from '../../utils/utils.js';
 import _connect from '../../utils/connect.js';
-import _path from '../../utils/path.js';
 
 // 清理 SSH 资源（修复竞态与未捕获的错误）
 function closeSSH(sshObj) {
@@ -77,9 +77,12 @@ export function createTerminal(account, temid, config, defaultPath = '') {
   sshCache.set(temid, sshObj);
 
   let cleaned = false;
+  // 停止 SSH 输出合并器（由 shell 回调赋值）
+  let stopSshOutput = null;
   const cleanup = () => {
     if (cleaned) return;
     cleaned = true;
+    stopSshOutput?.();
     sshCache.delete(temid);
   };
 
@@ -105,12 +108,58 @@ export function createTerminal(account, temid, config, defaultPath = '') {
 
       sshObj.stream = stream;
 
+      // 合并短时间内的终端输出，避免每个 chunk 都走一次推送与消息缓存
+      const decoder = new StringDecoder('utf8');
+      let sendTimer = null;
+      let pending = '';
+
+      const flush = () => {
+        if (sendTimer) {
+          clearTimeout(sendTimer);
+          sendTimer = null;
+        }
+
+        if (!pending) return;
+
+        const data = pending;
+        pending = '';
+
+        // 连接已关闭（如缓存过期）时直接丢弃未推送内容
+        if (sshObj._closed) return;
+
+        _connect.send(account, temid, { type: 'ssh', data }, 'self');
+      };
+
+      stopSshOutput = () => {
+        if (sendTimer) {
+          clearTimeout(sendTimer);
+          sendTimer = null;
+        }
+        pending = '';
+      };
+
       stream.on('data', (d) => {
-        _connect.send(account, temid, { type: 'ssh', data: d.toString() }, 'self');
+        pending += decoder.write(d);
+
+        // 单次积压过多时立即推送，避免内存和延迟继续增大
+        if (pending.length >= 64 * 1024) {
+          flush();
+        } else if (!sendTimer) {
+          // 40ms 内合并推送
+          sendTimer = setTimeout(flush, 40);
+        }
       });
 
-      stream.on('close', cleanup);
-      stream.on('error', cleanup);
+      stream.on('close', () => {
+        pending += decoder.end();
+        flush();
+        cleanup();
+      });
+
+      stream.on('error', () => {
+        stopSshOutput();
+        cleanup();
+      });
 
       if (defaultPath) {
         stream.write(`cd ${defaultPath}\r`);
@@ -164,37 +213,17 @@ export async function readSftpDir(sftp, dirPath) {
     });
   });
 
-  const result = [];
+  // readdir 已经返回 attrs，无需再对每个目录项单独 stat
+  const result = list.map((item) => {
+    const { filename: name, longname, attrs } = item;
 
-  await concurrencyTasks(list, 5, async (item) => {
-    const { filename: name, longname } = item;
-    const fullPath = _path.normalizeNoSlash(dirPath, name);
-
-    let type = 'file';
-    let mtime = 0;
-
-    try {
-      const st = await new Promise((resolve, reject) => {
-        sftp.stat(fullPath, (err, stat) => {
-          if (err) return reject(err);
-          resolve(stat);
-        });
-      });
-
-      if (st.isDirectory()) {
-        type = 'dir';
-      }
-
-      mtime = st.mtime || 0;
-    } catch {}
-
-    result.push({
-      type,
+    return {
+      type: attrs?.isDirectory?.() ? 'dir' : 'file',
       path: dirPath,
       name,
       longname,
-      mtime,
-    });
+      mtime: attrs?.mtime || 0,
+    };
   });
 
   result.sort((a, b) => b.mtime - a.mtime);

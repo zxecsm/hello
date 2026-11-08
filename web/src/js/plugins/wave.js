@@ -62,8 +62,14 @@ export default function wave(idx = 1) {
     _0x4d9451 = _0x319530['parseFromString'](_0x29074d, 'image/svg+xml')['querySelector']('svg');
   document['body']['appendChild'](_0x4d9451);
 
+  const bubbles = new Set();
+  let bubbleTimer = null;
+
   function createBubble() {
+    if (document.visibilityState === 'hidden') return;
+
     const bubble = document.createElement('div');
+    bubble.className = 'vh-bubble';
     bubble.style.cssText = `
     position: fixed;
     bottom: -60px;
@@ -81,19 +87,48 @@ export default function wave(idx = 1) {
     bubble.style.left = Math.random() * 100 + '%';
 
     // 随机动画持续时间
-    bubble.style.animationDuration = Math.random() * 10 + 30 + 's';
+    const duration = Math.random() * 10 + 30;
+    bubble.style.animationDuration = duration + 's';
 
+    bubbles.add(bubble);
     document.body.appendChild(bubble);
 
     // 在动画结束后删除泡泡
-    setTimeout(
-      () => {
-        bubble.remove();
-      },
-      parseFloat(bubble.style.animationDuration) * 1000,
-    );
+    setTimeout(() => {
+      bubbles.delete(bubble);
+      bubble.remove();
+    }, duration * 1000);
   }
+
+  function startBubbleTimer() {
+    if (bubbleTimer || document.visibilityState === 'hidden') return;
+    bubbleTimer = setInterval(createBubble, 3000);
+  }
+
+  function stopBubbleTimer() {
+    if (bubbleTimer) {
+      clearInterval(bubbleTimer);
+      bubbleTimer = null;
+    }
+  }
+
   createBubble();
   // 定时生成泡泡
-  setInterval(createBubble, 3000);
+  startBubbleTimer();
+
+  // 页面隐藏时暂停生成和动画，可见时恢复
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      stopBubbleTimer();
+      bubbles.forEach((bubble) => {
+        bubble.style.animationPlayState = 'paused';
+      });
+    } else {
+      bubbles.forEach((bubble) => {
+        bubble.style.animationPlayState = 'running';
+      });
+      if (bubbles.size === 0) createBubble();
+      startBubbleTimer();
+    }
+  });
 }

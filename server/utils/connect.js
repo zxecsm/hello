@@ -3,6 +3,9 @@ import nanoid from './nanoid.js';
 
 const cache = new CacheByExpire(60 * 1000, 60 * 1000);
 
+// 消息保留时间
+const MSG_TTL = 30 * 1000;
+
 // 添加连接信息并设置回调
 function add(account, cb, client) {
   const now = Date.now();
@@ -55,8 +58,12 @@ function send(account, temid, data, to = 'all') {
   connect.flag = flag;
   connect.msgs.push(message);
 
-  // 清理超过 60 秒的消息
-  connect.msgs = connect.msgs.filter((item) => now - item.time < 1000 * 60);
+  // 消息按时间顺序追加，从头部移除过期消息即可
+  const deadline = now - MSG_TTL;
+  while (connect.msgs.length && connect.msgs[0].time < deadline) {
+    connect.msgs.shift();
+  }
+
   // 执行所有回调函数
   connect.cbs.forEach((cb) => {
     cb && cb();
@@ -67,25 +74,26 @@ function getMessages(account, temid, flag) {
   const connect = get(account);
   if (!connect) return [];
 
-  // 获取未读取的消息
-  let msgs = connect.msgs.slice(0);
+  const msgs = connect.msgs;
+  const idx = flag ? msgs.findIndex((item) => item.flag === flag) : -1;
 
-  const idx = msgs.findIndex((item) => item.flag === flag);
+  // 从已读位置开始，一趟遍历完成过滤
+  const result = [];
 
-  if (idx >= 0) {
-    msgs = msgs.slice(idx + 1);
+  for (let i = idx + 1; i < msgs.length; i++) {
+    const { id, to, data } = msgs[i];
+
+    if (
+      to === 'all' ||
+      to === temid ||
+      (to === 'self' && id === temid) ||
+      (to === 'other' && id !== temid)
+    ) {
+      result.push(data);
+    }
   }
 
-  // 过滤掉发送者
-  msgs = msgs.filter((item) => {
-    const { id, to } = item;
-    if (to === 'all') return true;
-    if (to === 'self' && id === temid) return true;
-    if (to === 'other' && id !== temid) return true;
-    if (to === temid) return true;
-  });
-
-  return msgs.map((item) => item.data);
+  return result;
 }
 
 function get(account) {

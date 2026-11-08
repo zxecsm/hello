@@ -23,14 +23,34 @@ if (_f.fs.existsSync(dataConfigPath)) {
   config = { ...config, ...loadConfig(dataConfigPath) };
 }
 
-// 保存配置文件
-function saveConfig() {
+// 保存配置文件（异步 + 原子替换，避免阻塞事件循环）
+let saving = false;
+let savePending = false;
+
+async function saveConfig() {
+  // 正在写入时只做标记，等本轮写完后再写一次最新配置
+  if (saving) {
+    savePending = true;
+    return;
+  }
+
+  saving = true;
+
   try {
-    _f.fs.mkdirSync(_path.dirname(dataConfigPath), { recursive: true });
-    _f.fs.writeFileSync(dataConfigPath, JSON.stringify(_d, null, 2));
+    do {
+      savePending = false;
+
+      await _f.fsp.mkdir(_path.dirname(dataConfigPath), { recursive: true });
+
+      const tmpPath = `${dataConfigPath}.tmp`;
+      await _f.fsp.writeFile(tmpPath, JSON.stringify(_d, null, 2));
+      await _f.fsp.rename(tmpPath, dataConfigPath);
+    } while (savePending);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error(error);
+  } finally {
+    saving = false;
   }
 }
 

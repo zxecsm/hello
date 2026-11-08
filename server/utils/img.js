@@ -33,7 +33,7 @@ export async function getImgInfo(path) {
 */
 export async function convertImageFormat(
   path,
-  { format, width, height, quality, fit = 'inside', background } = {},
+  { format, width, height, quality, fit = 'inside', background, to } = {},
 ) {
   const img = sharp(path);
   const metadata = await img.metadata();
@@ -103,6 +103,11 @@ export async function convertImageFormat(
   const processedImg = handler(img, compressionOptions);
 
   try {
+    // 指定 to 时直接写入文件，避免把整张图读进内存
+    if (to) {
+      return await processedImg.toFile(to);
+    }
+
     return await processedImg.toBuffer();
   } catch (err) {
     throw new Error(`图片转换失败 (${originFormat} → ${targetFormat}): ${err.message}`);

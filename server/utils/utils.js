@@ -16,6 +16,10 @@ import _path from './path.js';
 import nanoid from './nanoid.js';
 import _crypto from './crypto.js';
 import { fieldLength } from '../routes/config.js';
+import { withLock } from './lock.js';
+
+// 日志文件大小缓存，避免每次写日志都 lstat
+const logFileSizes = new Map();
 
 // 获取模块目录
 export function getDirname(meta) {
@@ -62,20 +66,39 @@ export async function writelog(res, str = '', code = 200) {
     const flag = [...String(code)].fill('x', 1).join('');
 
     const targetPath = appConfig.logDir(`${flag}.log`);
-    await _f.appendFile(targetPath, str);
+    const bytes = Buffer.byteLength(str);
 
-    const s = await _f.lstat(targetPath);
+    // 同一日志文件的写入与轮转串行化，大小在内存中累加，只有首次写入才 stat
+    await withLock(targetPath, async () => {
+      await _f.mkdir(_path.dirname(targetPath));
+      await _f.fsp.appendFile(targetPath, str);
 
-    if (s && s.size > fieldLength.logFileSize) {
-      await _f.rename(
-        targetPath,
-        appConfig.logDir(
-          `${formatDate({
-            template: '{0}{1}{2}_{3}{4}{5}',
-          })}_${flag}.log`,
-        ),
-      );
-    }
+      let size = logFileSizes.get(targetPath);
+
+      if (size === undefined) {
+        const s = await _f.lstat(targetPath);
+        size = s ? s.size : bytes;
+      } else {
+        size += bytes;
+      }
+
+      if (size > fieldLength.logFileSize) {
+        try {
+          await _f.rename(
+            targetPath,
+            appConfig.logDir(
+              `${formatDate({
+                template: '{0}{1}{2}_{3}{4}{5}',
+              })}_${flag}.log`,
+            ),
+          );
+        } finally {
+          logFileSizes.delete(targetPath);
+        }
+      } else {
+        logFileSizes.set(targetPath, size);
+      }
+    });
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('writelog error: ' + err);
@@ -190,35 +213,52 @@ export async function mergefile(count, from, to, HASH, ignoreLink) {
 
   const temFile = `${to}_${nanoid()}`;
 
-  for (const filename of list) {
-    const filePath = _path.normalizeNoSlash(from, filename);
-    const readStream = _f.fs.createReadStream(filePath);
+  let writer = null;
+  let success = false;
 
-    await _f.streamp.pipeline(
-      readStream,
-      new _f.stream.Transform({
-        transform(chunk, _, callback) {
-          callback(null, chunk);
-        },
-      }),
-      await _f.createWriteStream(temFile, { flags: 'a' }), // 'a' 追加模式
-    );
+  try {
+    // 用一个写入流顺序追加，避免每个分片都 open/close 一次
+    writer = await _f.createWriteStream(temFile, { flags: 'w' });
 
-    await _f.del(filePath);
-  }
+    for (const filename of list) {
+      const filePath = _path.normalizeNoSlash(from, filename);
 
-  await _f.del(from);
+      await _f.streamp.pipeline(_f.fs.createReadStream(filePath), writer, { end: false });
 
-  if (ignoreLink && (await _f.getType(temFile)) === 'symlink') {
-    await _f.del(temFile);
-    throw new Error('Ignore the symlink');
-  }
+      await _f.del(filePath);
+    }
 
-  await _f.rename(temFile, to);
+    writer.end();
+    await _f.streamp.finished(writer);
+    writer = null;
 
-  if (HASH && HASH !== (await _crypto.sampleHash(to))) {
-    await _f.del(to);
-    throw new Error('hash error');
+    if (ignoreLink && (await _f.getType(temFile)) === 'symlink') {
+      throw new Error('Ignore the symlink');
+    }
+
+    await _f.rename(temFile, to);
+
+    if (HASH && HASH !== (await _crypto.sampleHash(to))) {
+      await _f.del(to);
+      throw new Error('hash error');
+    }
+
+    success = true;
+  } finally {
+    if (success) {
+      // 成功后清掉分片目录
+      await _f.del(from);
+    } else {
+      // 失败或取消时只清理半成品，剩余分片保留
+      if (writer) {
+        const w = writer;
+        writer = null;
+        w.destroy();
+        await _f.streamp.finished(w).catch(() => {});
+      }
+
+      await _f.del(temFile);
+    }
   }
 }
 

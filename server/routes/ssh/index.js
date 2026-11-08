@@ -882,7 +882,7 @@ route.post(
     list.push(command);
 
     if (list.length > fieldLength.sshHistoryCommandsLength) {
-      list.slice(-fieldLength.sshHistoryCommandsLength);
+      list = list.slice(-fieldLength.sshHistoryCommandsLength);
     }
 
     await writeHistoryCommands(account, list);

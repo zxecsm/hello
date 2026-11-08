@@ -15,6 +15,7 @@ import V from '../../utils/validRules.js';
 import resp from '../../utils/response.js';
 import { setDownloadHeader } from '../../utils/customMiddleware.js';
 import { isPathSafe } from '../file/file.js';
+import { withLock } from '../../utils/lock.js';
 
 export default async function getFile(req, res, originalPath, verifyLogin = true) {
   const params = { ...req.query, p: originalPath };
@@ -311,14 +312,22 @@ async function getThumbPath(res, w, dir, path, stat) {
 
       const thumbStat = await _f.lstat(thumbP);
       if (!thumbStat) {
-        const buf = await convertImageFormat(path, {
-          format: 'webp',
-          width: w,
-          height: 1024,
+        await _f.mkdir(_path.dirname(thumbP));
+
+        // 同一张缩略图并发请求时只生成一次，其余请求等锁后直接复用
+        const info = await withLock(thumbP, async () => {
+          const existed = await _f.lstat(thumbP);
+          if (existed) return existed;
+
+          return convertImageFormat(path, {
+            format: 'webp',
+            width: w,
+            height: 1024,
+            to: thumbP,
+          });
         });
 
-        size = buf.length;
-        await _f.writeFile(thumbP, buf);
+        size = info.size;
       } else {
         size = thumbStat.size;
       }
