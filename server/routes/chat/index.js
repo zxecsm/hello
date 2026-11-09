@@ -3,13 +3,13 @@ import express from 'express';
 import appConfig from '../../data/config.js';
 import _f from '../../utils/f.js';
 
-import { db } from '../../utils/sqlite.js';
+import { db, transaction } from '../../utils/sqlite.js';
 
 import {
   receiveFiles,
   mergefile,
   getTimePath,
-  createPagingData,
+  createPagingMeta,
   isurl,
   getSplitWord,
   unique,
@@ -23,15 +23,16 @@ import {
 import { fieldLength } from '../config.js';
 
 import { getUserInfo } from '../user/user.js';
+import { clearUserInfoCache } from '../../utils/userCache.js';
 
 import {
   getFriendInfo,
   markAsRead,
   hdHelloMsg,
-  saveChatMsg,
+  saveChatMsgAndNotify,
   sendNotifyMsg,
   sendNotificationsToCustomAddresses,
-  becomeFriends,
+  becomeFriendsSync,
   getChatUserList,
   hdForwardToLink,
 } from './chat.js';
@@ -72,8 +73,10 @@ route.post(
       return resp.badRequest(res)(`account 不能为: ${account}`, 1);
     }
 
-    await becomeFriends(account, acc);
-    await db('friends').where({ friend: acc, account }).update({ notify });
+    transaction(() => {
+      becomeFriendsSync(account, acc);
+      db('friends').where({ friend: acc, account }).update({ notify });
+    });
 
     resp.success(res, `${notify === 0 ? '开启' : '关闭'}免打扰成功`)();
   }),
@@ -103,8 +106,10 @@ route.post(
       return resp.badRequest(res)(`account 不能为: ${account}`, 1);
     }
 
-    await becomeFriends(account, acc);
-    await db('friends').where({ friend: acc, account }).update({ des });
+    transaction(() => {
+      becomeFriendsSync(account, acc);
+      db('friends').where({ friend: acc, account }).update({ des });
+    });
 
     resp.success(res, '设置备注成功')();
   }),
@@ -234,7 +239,7 @@ route.get(
     }
 
     // 获取游标消息
-    const offsetMsg = flag ? await db('chat').select('serial').where({ id: flag }).findOne() : null;
+    const offsetMsg = flag ? db('chat').select('serial').where({ id: flag }).findOne() : null;
 
     // 根据游标定位位置
     if (offsetMsg && type !== 0) {
@@ -253,22 +258,22 @@ route.get(
 
     if (type === 0 || !offsetMsg) {
       // 打开聊天框或没有游标
-      list = await chatdb.clone().orderBy('c.serial', 'desc').find();
+      list = chatdb.clone().orderBy('c.serial', 'desc').find();
       list.reverse();
     } else {
       // 向上截取
       if (type === 1) {
-        list = await chatdb.clone().orderBy('c.serial', 'desc').find();
+        list = chatdb.clone().orderBy('c.serial', 'desc').find();
         list.reverse();
       } else if (type === 2) {
         // 向下截取
-        list = await chatdb.clone().orderBy('c.serial', 'asc').find();
+        list = chatdb.clone().orderBy('c.serial', 'asc').find();
       }
     }
 
     // 添加备注信息
     const accIds = unique(list.map((item) => item._from));
-    const friends = await db('friends')
+    const friends = db('friends')
       .select('friend,des')
       .where({
         account,
@@ -301,7 +306,7 @@ route.get(
   asyncHandler(async (_, res) => {
     const { hash } = res.locals.ctx;
 
-    const file = await db('upload').select('url').where({ id: hash }).findOne();
+    const file = db('upload').select('url').where({ id: hash }).findOne();
 
     if (file) {
       const u = appConfig.uploadDir(file.url);
@@ -355,8 +360,7 @@ route.post(
     const { account } = res.locals.hello.userinfo;
 
     // 保存并推送消息
-    const msg = await saveChatMsg(account, obj);
-    await sendNotifyMsg(res, obj._to, 'addmsg', obj);
+    const msg = await saveChatMsgAndNotify(res, account, obj);
 
     if (to === appConfig.notifyAccount) {
       // 如果发送给助手，处理响应
@@ -392,7 +396,7 @@ route.post(
       }
     }
 
-    const chat = await db('chat').select('type,flag,content,size,hash').where({ id }).findOne();
+    const chat = db('chat').select('type,flag,content,size,hash').where({ id }).findOne();
 
     if (!chat) {
       return resp.forbidden(res, '转发的信息不存在')();
@@ -412,11 +416,10 @@ route.post(
 
     // 文件消息，更新时间，避免被清理
     if (hash) {
-      await db('upload').where({ id: hash }).update({ update_at: Date.now() });
+      db('upload').where({ id: hash }).update({ update_at: Date.now() });
     }
 
-    const msg = await saveChatMsg(account, chat);
-    await sendNotifyMsg(res, to, 'addmsg', chat);
+    const msg = await saveChatMsgAndNotify(res, account, chat);
 
     if (to === appConfig.notifyAccount) {
       await hdHelloMsg(req, res, chat.content, chat.type);
@@ -445,15 +448,15 @@ route.get(
     const { account } = res.locals.hello.userinfo;
 
     if (clear === 1) {
-      await db('friends').where({ account, read: 0 }).batchUpdate({ read: 1 });
+      db('friends').where({ account, read: 0 }).batchUpdate({ read: 1 });
       return resp.success(res, '消息标记已读成功')();
     }
 
-    const group = await db('friends')
+    const group = db('friends')
       .where({ account, read: 0, friend: appConfig.chatRoomAccount })
       .count();
 
-    const friend = await db('friends')
+    const friend = db('friends')
       .where({
         account,
         read: 0,
@@ -492,7 +495,7 @@ route.post(
     }
 
     if (id) {
-      await db('chat').where({ id, _from: account }).delete();
+      db('chat').where({ id, _from: account }).delete();
       await sendNotifyMsg(res, to, 'del', { msgId: id });
 
       resp.success(res, '撤回消息成功')();
@@ -500,7 +503,7 @@ route.post(
       if (to === appConfig.chatRoomAccount) {
         // 群消息只能管理员清空
         if (res.locals.hello.isRoot) {
-          await db('chat').where({ _to: appConfig.chatRoomAccount }).batchDelete();
+          db('chat').where({ _to: appConfig.chatRoomAccount }).batchDelete();
 
           await sendNotifyMsg(res, to, 'clear');
 
@@ -509,7 +512,7 @@ route.post(
           resp.forbidden(res, '无权清空消息')();
         }
       } else {
-        await db('chat')
+        db('chat')
           .where({
             $or: [{ flag: `${account}-${to}` }, { flag: `${to}-${account}` }],
           })
@@ -581,9 +584,9 @@ route.get(
     if (word) {
       userDB.where({ $or: [{ username: word }, { account: word }, { email: word }] });
     }
-    const total = await userDB.count();
+    const total = userDB.count();
 
-    const result = createPagingData(Array(total), pageSize, pageNo);
+    const result = createPagingMeta(total, pageSize, pageNo);
 
     const offset = (result.pageNo - 1) * pageSize;
 
@@ -688,7 +691,7 @@ route.post(
       }
     }
 
-    const upload = await db('upload').select('url').where({ id: HASH }).findOne();
+    const upload = db('upload').select('url').where({ id: HASH }).findOne();
 
     if (upload) {
       return resp.forbidden(res, '语音发送失败')();
@@ -719,10 +722,9 @@ route.post(
       size: duration,
     };
 
-    await db('upload').insert(fobj);
+    db('upload').insert(fobj);
 
-    const msg = await saveChatMsg(account, obj);
-    await sendNotifyMsg(res, obj._to, 'addmsg', obj);
+    const msg = await saveChatMsgAndNotify(res, account, obj);
 
     if (to === appConfig.notifyAccount) {
       await hdHelloMsg(req, res, obj.content, obj.type);
@@ -764,7 +766,7 @@ route.post(
       }
     }
 
-    const upload = await db('upload').select('url').where({ id: HASH }).findOne();
+    const upload = db('upload').select('url').where({ id: HASH }).findOne();
 
     if (upload) {
       return resp.forbidden(res, '文件发送失败')();
@@ -800,14 +802,13 @@ route.post(
       size: stat.size,
     };
 
-    await db('upload').insert(fobj);
+    db('upload').insert(fobj);
 
     if (type === 'image') {
       obj.content = tName;
     }
 
-    const msg = await saveChatMsg(account, obj);
-    await sendNotifyMsg(res, obj._to, 'addmsg', obj);
+    const msg = await saveChatMsgAndNotify(res, account, obj);
 
     if (to === appConfig.notifyAccount) {
       await hdHelloMsg(req, res, obj.content, type);
@@ -865,7 +866,7 @@ route.post(
   asyncHandler(async (req, res) => {
     const { HASH, type, name, to, size } = res.locals.ctx;
 
-    const upload = await db('upload').select('url').where({ id: HASH }).findOne();
+    const upload = db('upload').select('url').where({ id: HASH }).findOne();
 
     if (upload) {
       // 文件已存在则，跳过上传
@@ -882,7 +883,7 @@ route.post(
             }
           }
 
-          await db('upload').where({ id: HASH }).update({ update_at: Date.now() });
+          db('upload').where({ id: HASH }).update({ update_at: Date.now() });
 
           const suffix = _path.extname(name)[2];
 
@@ -902,8 +903,7 @@ route.post(
 
           const { account } = res.locals.hello.userinfo;
 
-          const msg = await saveChatMsg(account, obj);
-          await sendNotifyMsg(res, obj._to, 'addmsg', obj);
+          const msg = await saveChatMsgAndNotify(res, account, obj);
 
           if (to === appConfig.notifyAccount) {
             await hdHelloMsg(req, res, obj.content, type);
@@ -921,7 +921,7 @@ route.post(
         return;
       }
 
-      await db('upload').where({ id: HASH }).delete();
+      db('upload').where({ id: HASH }).delete();
     }
 
     resp.ok(res)();
@@ -990,10 +990,12 @@ route.post(
       }
     }
 
-    await db('user').where({ account, state: 1 }).update({
+    db('user').where({ account, state: 1 }).update({
       forward_msg_state: state,
       forward_msg_link,
     });
+
+    clearUserInfoCache(account);
 
     resp.success(res, `${state === 1 ? '配置' : '关闭'}转发消息接口成功`)();
   }),

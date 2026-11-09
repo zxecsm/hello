@@ -2,10 +2,12 @@ import express from 'express';
 
 import { db, searchSql } from '../../utils/sqlite.js';
 
+import { clearUserInfoCache } from '../../utils/userCache.js';
+
 import {
   getWordContent,
   syncUpdateData,
-  createPagingData,
+  createPagingMeta,
   isValidDate,
   getSplitWord,
 } from '../../utils/utils.js';
@@ -35,7 +37,7 @@ route.get(
   asyncHandler(async (_, res) => {
     const { v: id, download } = res.locals.ctx;
 
-    const note = await db('note AS n')
+    const note = db('note AS n')
       .join('user AS u', { 'n.account': { value: 'u.account', raw: true } }, { type: 'LEFT' })
       .select(
         'u.account,u.username,u.logo,n.create_at,n.update_at,n.title,n.state,n.share,n.content,n.visit_count,n.category',
@@ -62,7 +64,7 @@ route.get(
 
       // 公开并且未删除 或 是自己的
       if ((share === 1 && state === 1) || acc === account) {
-        await db('note').where({ id }).increment({ visit_count: 1 });
+        db('note').where({ id }).increment({ visit_count: 1 });
         if (account && note.account !== account) {
           const f = await getFriendInfo(account, acc, 'des');
           const des = f ? f.des : '';
@@ -190,9 +192,9 @@ route.post(
       notedb.orderBy('top', 'DESC').orderBy('create_at', 'DESC');
     }
 
-    const total = await notedb.count();
+    const total = notedb.count();
 
-    const result = createPagingData(Array(total), pageSize, pageNo);
+    const result = createPagingMeta(total, pageSize, pageNo);
 
     let list = [];
     if (total > 0) {
@@ -203,7 +205,7 @@ route.post(
         .page(pageSize, offset)
         .find();
 
-      const noteCategory = await db('note_category')
+      const noteCategory = db('note_category')
         .select('id,title')
         .where({ account: acc || account })
         .find();
@@ -298,7 +300,7 @@ route.get(
 
     const { account } = res.locals.hello.userinfo;
 
-    const list = await db('note_category')
+    const list = db('note_category')
       .select('id,title')
       .where({ account: acc || account })
       .orderBy('serial', 'DESC')
@@ -333,7 +335,9 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('user').where({ account, state: 1 }).update({ note_history: state });
+    db('user').where({ account, state: 1 }).update({ note_history: state });
+
+    clearUserInfoCache(account);
 
     resp.success(res, `${state === 0 ? '关闭' : '开启'}笔记历史记录成功`)();
   }),
@@ -363,7 +367,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('note')
+    db('note')
       .where({ id: { in: ids }, account, state: 1 })
       .update({ share });
 
@@ -394,12 +398,12 @@ route.post(
     if (ids.length > 0) {
       const list = ids.filter((item) => !skips.includes(item)); // 过滤关于和tips
       if (list.length > 0) {
-        await db('note')
+        db('note')
           .where({ id: { in: list }, account, state: 1 })
           .update({ state: 0 });
       }
     } else {
-      await db('note')
+      db('note')
         .where({ id: { not: skips }, account, state: 1 })
         .batchUpdate({ state: 0 });
     }
@@ -433,7 +437,7 @@ route.post(
     const { account } = res.locals.hello.userinfo;
 
     const create_at = Date.now();
-    await db('note').insert({
+    db('note').insert({
       id: nanoid(),
       create_at,
       title,
@@ -470,7 +474,7 @@ route.post(
 
     const { account, note_history } = res.locals.hello.userinfo;
 
-    const note = await db('note').select('content').where({ id, account }).findOne();
+    const note = db('note').select('content').where({ id, account }).findOne();
 
     if (note) {
       // 保存笔记历史版本
@@ -479,7 +483,7 @@ route.post(
         syncUpdateData(res, 'file');
       }
 
-      await db('note').where({ id, account }).update({
+      db('note').where({ id, account }).update({
         title,
         content,
         update_at: time,
@@ -493,7 +497,7 @@ route.post(
     } else {
       id = nanoid();
 
-      await db('note').insert({
+      db('note').insert({
         id,
         create_at: time,
         title,
@@ -534,7 +538,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('note').where({ id, account }).update({
+    db('note').where({ id, account }).update({
       title,
       create_at,
       update_at,
@@ -564,7 +568,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('note').where({ id, account }).update({ top });
+    db('note').where({ id, account }).update({ top });
 
     syncUpdateData(res, 'note');
 
@@ -590,7 +594,7 @@ route.post(
     const { account } = res.locals.hello.userinfo;
 
     const categoryStr = category.join('-');
-    await db('note').where({ id, account }).update({ category: categoryStr });
+    db('note').where({ id, account }).update({ category: categoryStr });
 
     syncUpdateData(res, 'note', id);
 
@@ -613,7 +617,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('note_category').where({ id, account }).update({ title });
+    db('note_category').where({ id, account }).update({ title });
 
     syncUpdateData(res, 'category', id);
 
@@ -635,12 +639,12 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    const total = await db('note_category').count();
+    const total = db('note_category').count();
 
     if (total >= fieldLength.maxNoteCategory) {
       return resp.forbidden(res, `类型限制${fieldLength.maxNoteCategory}个`)();
     }
-    await db('note_category').insert({
+    db('note_category').insert({
       id: nanoid(),
       create_at: Date.now(),
       title,
@@ -667,7 +671,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('note_category').where({ id, account }).delete();
+    db('note_category').where({ id, account }).delete();
 
     syncUpdateData(res, 'category', id);
 

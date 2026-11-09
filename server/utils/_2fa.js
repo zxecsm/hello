@@ -4,17 +4,10 @@ import { CacheByExpire } from './cache.js';
 const cache = new CacheByExpire(10 * 60 * 1000, 10 * 60 * 1000);
 
 function create(acc) {
-  const data = cache.get(acc);
-
-  if (data) {
-    return data.verify;
-  } else {
-    const verify = speakeasy.generateSecret().base32;
-
-    cache.set(acc, { verify });
-
-    return verify;
-  }
+  return cache.getOrSet(acc, () => speakeasy.generateSecret().base32, {
+    // 命中后续期：用户正在完成绑定流程时不至于 10 分钟后突然失效
+    refresh: true,
+  });
 }
 
 function getToken(verify) {

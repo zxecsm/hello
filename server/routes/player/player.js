@@ -85,7 +85,7 @@ export async function batchGetMusics(ids) {
 
     if (arr.length === 0) return false;
 
-    const list = await db('songs')
+    const list = db('songs')
       .select(
         'id,pic,lrc,url,mv,title,artist,duration,album,year,collect_count,play_count,create_at',
       )
@@ -108,14 +108,14 @@ export async function batchGetMusics(ids) {
 
 // 获取歌曲列表
 export async function getMusicList(account) {
-  let songListObj = await db('song_list').select('data').where({ account }).findOne();
+  let songListObj = db('song_list').select('data').where({ account }).findOne();
 
   const list = [
     { name: '播放历史', pic: 'img/history.jpg', item: [], id: 'history' },
     { name: '收藏', pic: 'img/music.jpg', item: [], id: 'favorites' },
   ];
   if (!songListObj) {
-    await db('song_list').insert({
+    db('song_list').insert({
       create_at: Date.now(),
       account,
       data: JSON.stringify(list),
@@ -191,7 +191,7 @@ export async function toNavidromeM3U(ids, playlist) {
 
     if (arr.length === 0) return false;
 
-    const list = await db('songs')
+    const list = db('songs')
       .select('id,url,title,artist,duration')
       .where({ id: { in: arr } })
       .find();

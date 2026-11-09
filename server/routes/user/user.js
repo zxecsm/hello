@@ -2,7 +2,7 @@ import appConfig from '../../data/config.js';
 
 import { resolve } from 'path';
 
-import { db } from '../../utils/sqlite.js';
+import { db, transaction } from '../../utils/sqlite.js';
 
 import _f from '../../utils/f.js';
 import { _delDir } from '../file/file.js';
@@ -11,6 +11,7 @@ import shareVerify from '../../utils/shareVerify.js';
 import { isValidShare, getDirname } from '../../utils/utils.js';
 import jwt from '../../utils/jwt.js';
 import captcha from '../../utils/captcha.js';
+import { getUserInfoCached, clearUserInfoCache } from '../../utils/userCache.js';
 
 const __dirname = getDirname(import.meta);
 
@@ -25,48 +26,54 @@ export async function getFontList() {
 
 // 获取用户信息
 export async function getUserInfo(account, fields = '*') {
+  // 全字段查询走缓存，其余按字段查询仍直接读库
+  if (fields === '*') return getUserInfoCached(account);
+
   return db('user').select(fields).where({ account, state: 1 }).findOne();
 }
 
 // 删除用户数据
 export async function deleteUser(account) {
-  await db('user').where({ account }).delete();
+  // 只按 account 过滤的表
+  const accountTables = [
+    'bmk',
+    'bmk_group',
+    'count_down',
+    'history',
+    'note',
+    'note_category',
+    'share',
+    'ssh',
+    'ssh_category',
+    'todo',
+  ];
 
-  await db('bmk').where({ account }).batchDelete();
+  // account 唯一、单条删除即可的表
+  const singleTables = ['last_play', 'playing_list', 'song_list', 'collect_bg'];
 
-  await db('bmk_group').where({ account }).batchDelete();
+  // 所有数据库删除一次提交；失败时整体回滚
+  transaction(() => {
+    db('user').where({ account }).delete();
 
-  await db('chat')
-    .where({ $or: [{ _from: account }, { _to: account }] })
-    .batchDelete();
+    for (const table of accountTables) {
+      db(table).where({ account }).batchDelete();
+    }
 
-  await db('count_down').where({ account }).batchDelete();
+    for (const table of singleTables) {
+      db(table).where({ account }).delete();
+    }
 
-  await db('friends')
-    .where({ $or: [{ account }, { friend: account }] })
-    .batchDelete();
+    db('chat')
+      .where({ $or: [{ _from: account }, { _to: account }] })
+      .batchDelete();
 
-  await db('history').where({ account }).batchDelete();
+    db('friends')
+      .where({ $or: [{ account }, { friend: account }] })
+      .batchDelete();
+  });
 
-  await db('last_play').where({ account }).delete();
-
-  await db('note').where({ account }).batchDelete();
-
-  await db('note_category').where({ account }).batchDelete();
-
-  await db('ssh').where({ account }).batchDelete();
-
-  await db('ssh_category').where({ account }).batchDelete();
-
-  await db('playing_list').where({ account }).delete();
-
-  await db('share').where({ account }).batchDelete();
-
-  await db('song_list').where({ account }).delete();
-
-  await db('collect_bg').where({ account }).delete();
-
-  await db('todo').where({ account }).batchDelete();
+  // 事务提交后再清缓存、删文件
+  clearUserInfoCache(account);
 
   await _delDir(appConfig.userRootDir(account));
 }
@@ -94,7 +101,7 @@ export async function validShareState(shareToken, t) {
     };
   }
 
-  const share = await db('share')
+  const share = db('share')
     .select('id,exp_time,data,account,update_at')
     .where({ id, state: 1, type: { in: types } })
     .findOne();
@@ -137,7 +144,7 @@ export async function validShareAddUserState(res, types, id, pass, captchaId) {
     };
   }
 
-  const share = await db('share AS s')
+  const share = db('share AS s')
     .join('user AS u', { 'u.account': { value: 's.account', raw: true } }, { type: 'LEFT' })
     .select('u.username,u.logo,s.exp_time,s.title,s.account,s.data,s.pass,s.update_at')
     .where({ 's.id': id, 's.state': 1, 's.type': { in: types } })

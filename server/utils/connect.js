@@ -10,19 +10,17 @@ const MSG_TTL = 30 * 1000;
 function add(account, cb, client) {
   const now = Date.now();
 
-  let connect = get(account);
-  // 初始化连接
-  if (connect) {
-    cache.resetExpireTime(account);
-  } else {
-    connect = {
+  // 命中则续期，未命中则初始化连接
+  const connect = cache.getOrSet(
+    account,
+    () => ({
       flag: nanoid(),
       msgs: [],
       cbs: [],
       onlines: [],
-    };
-    cache.set(account, connect);
-  }
+    }),
+    { refresh: true },
+  );
 
   connect.cbs.push(cb);
 

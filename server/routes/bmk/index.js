@@ -1,8 +1,8 @@
 import express from 'express';
 
-import { db } from '../../utils/sqlite.js';
+import { db, transaction } from '../../utils/sqlite.js';
 
-import { syncUpdateData, createPagingData, getSplitWord } from '../../utils/utils.js';
+import { syncUpdateData, createPagingMeta, getSplitWord } from '../../utils/utils.js';
 
 import timedTask from '../../utils/timedTask.js';
 
@@ -139,9 +139,9 @@ route.post(
     }
 
     // 匹配结果数
-    const total = await bmdb.count();
+    const total = bmdb.count();
 
-    const result = createPagingData(Array(total), pageSize, pageNo);
+    const result = createPagingMeta(total, pageSize, pageNo);
 
     const offset = (result.pageNo - 1) * pageSize;
 
@@ -195,7 +195,7 @@ route.get(
     let home = [];
 
     // 非所有者只能看到公开分组
-    let list = await db('bmk_group')
+    let list = db('bmk_group')
       .select('id,title,share')
       .where({ account: target, state: 1, ...(isOwner ? {} : { share: 1 }) })
       .orderBy('num', 'ASC')
@@ -215,23 +215,22 @@ route.get(
     if (id === 'home') {
       // home 分组只允许所有者查看
       if (isOwner) {
-        home = (
-          await db('bmk')
-            .select('id,title,link,logo,des,group_id')
-            .where({ account: target, state: 1, group_id: 'home' })
-            .orderBy('num', 'ASC')
-            .find()
-        ).map((item, idx) => ({ ...item, num: idx }));
+        home = db('bmk')
+          .select('id,title,link,logo,des,group_id')
+          .where({ account: target, state: 1, group_id: 'home' })
+          .orderBy('num', 'ASC')
+          .find()
+          .map((item, idx) => ({ ...item, num: idx }));
       }
     } else {
       // 非所有者必须校验分组是否为公开（g.share = 1）
-      const group = await db('bmk_group')
+      const group = db('bmk_group')
         .select('id,share')
         .where({ id, account: target, state: 1 })
         .findOne();
 
       if (group && (isOwner || group.share === 1)) {
-        const bms = await db('bmk')
+        const bms = db('bmk')
           .select('id,title,link,logo,des,group_id')
           .where({ account: target, state: 1, group_id: id })
           .orderBy('num', 'ASC')
@@ -285,7 +284,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await bookListMoveLocation(account, fromId, toId);
+    bookListMoveLocation(account, fromId, toId);
 
     syncUpdateData(res, 'bookmark');
 
@@ -309,7 +308,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await bookmarkMoveLocation(account, groupId, fromId, toId);
+    bookmarkMoveLocation(account, groupId, fromId, toId);
 
     syncUpdateData(res, 'bookmark');
 
@@ -331,7 +330,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    const total = await db('bmk_group')
+    const total = db('bmk_group')
       .where({
         account,
         state: 1,
@@ -342,14 +341,16 @@ route.post(
       return resp.forbidden(res, `分组限制${fieldLength.bmkGroup}个`)();
     }
 
-    await updateBmkGroupOrder(account);
+    transaction(() => {
+      updateBmkGroupOrder(account);
 
-    await db('bmk_group').insert({
-      id: nanoid(),
-      create_at: Date.now(),
-      title,
-      account,
-      num: total + 1,
+      db('bmk_group').insert({
+        id: nanoid(),
+        create_at: Date.now(),
+        title,
+        account,
+        num: total + 1,
+      });
     });
 
     syncUpdateData(res, 'bookmark');
@@ -375,7 +376,7 @@ route.post(
     const { account } = res.locals.hello.userinfo;
 
     // 放入回收站
-    await db('bmk_group')
+    db('bmk_group')
       .where({ id: { in: ids }, state: 1, account })
       .update({ state: 0 });
 
@@ -403,7 +404,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('bmk_group')
+    db('bmk_group')
       .where({ id: { in: ids }, state: 1, account })
       .update({ share });
 
@@ -427,7 +428,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('bmk').where({ account, id, state: 1 }).update({ logo: '' });
+    db('bmk').where({ account, id, state: 1 }).update({ logo: '' });
 
     syncUpdateData(res, 'bookmark');
 
@@ -451,11 +452,13 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('bmk_group').where({ account, state: 1, id }).update({ title });
+    transaction(() => {
+      db('bmk_group').where({ account, state: 1, id }).update({ title });
 
-    if (toId) {
-      await bookListMoveLocation(account, id, toId);
-    }
+      if (toId) {
+        bookListMoveLocation(account, id, toId);
+      }
+    });
 
     syncUpdateData(res, 'bookmark');
 
@@ -487,18 +490,17 @@ route.post(
     const { account } = res.locals.hello.userinfo;
 
     // 添加书签的分组必须存在
-    if (groupId !== 'home' && !(await bmkGroupExist(account, groupId))) {
+    if (groupId !== 'home' && !bmkGroupExist(account, groupId)) {
       return resp.badRequest(res)('书签分组不存在', 1);
     }
 
-    const total = await db('bmk').where({ account, state: 1, group_id: groupId }).count();
+    const total = db('bmk').where({ account, state: 1, group_id: groupId }).count();
 
     // 计算添加的书签和现有的书签
     if (total + bms.length > fieldLength.bmk) {
       return resp.forbidden(res, `分组书签限制${fieldLength.bmk}个`)();
     }
 
-    await updateBmkOrder(account, groupId);
     const create_at = Date.now();
 
     bms = bms.map((item, i) => ({
@@ -511,7 +513,11 @@ route.post(
       link: item.link,
       des: item.des,
     }));
-    await db('bmk').insertMany(bms);
+
+    transaction(() => {
+      updateBmkOrder(account, groupId);
+      db('bmk').insertMany(bms);
+    });
 
     syncUpdateData(res, 'bookmark');
 
@@ -538,13 +544,13 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('bmk')
-      .where({ account, state: 1, id, group_id: groupId })
-      .update({ title, link, des });
+    transaction(() => {
+      db('bmk').where({ account, state: 1, id, group_id: groupId }).update({ title, link, des });
 
-    if (toId) {
-      await bookmarkMoveLocation(account, groupId, id, toId);
-    }
+      if (toId) {
+        bookmarkMoveLocation(account, groupId, id, toId);
+      }
+    });
 
     syncUpdateData(res, 'bookmark');
 
@@ -570,47 +576,40 @@ route.post(
     const { account } = res.locals.hello.userinfo;
 
     // 移动到的分组需要存在
-    if (groupId !== 'home' && !(await bmkGroupExist(account, groupId))) {
+    if (groupId !== 'home' && !bmkGroupExist(account, groupId)) {
       return resp.badRequest(res)('书签分组不存在', 1);
     }
 
-    const total = await db('bmk').where({ group_id: groupId, account, state: 1 }).count();
+    const total = db('bmk').where({ group_id: groupId, account, state: 1 }).count();
 
     // 计算分组书签数量
     if (total + ids.length > fieldLength.bmk) {
       return resp.forbidden(res, `分组书签限制${fieldLength.bmk}个`)();
     }
 
-    await updateBmkOrder(account, groupId);
+    const items = ids.map((id, idx) => ({
+      id,
+      num: total + idx + 1,
+      group_id: groupId,
+    }));
 
-    const ob = [
-      {
-        field: 'num',
-        match: 'id',
-        items: [],
-      },
+    const rules = [
+      { field: 'num', match: 'id', items: items.map(({ id, num }) => ({ id, num })) },
       {
         field: 'group_id',
         match: 'id',
-        items: [],
+        items: items.map(({ id, group_id }) => ({ id, group_id })),
       },
     ];
 
-    ids.forEach((item, idx) => {
-      ob[0].items.push({
-        id: item,
-        num: total + idx + 1,
-      });
-      ob[1].items.push({
-        id: item,
-        group_id: groupId,
-      });
-    });
+    transaction(() => {
+      updateBmkOrder(account, groupId);
 
-    await db('bmk').batchDiffUpdate(ob, {
-      account,
-      state: 1,
-      id: { in: ids },
+      db('bmk').batchDiffUpdate(rules, {
+        account,
+        state: 1,
+        id: { in: ids },
+      });
     });
 
     syncUpdateData(res, 'bookmark');
@@ -636,11 +635,11 @@ route.post(
     const { account } = res.locals.hello.userinfo;
 
     if (ids.length > 0) {
-      await db('bmk')
+      db('bmk')
         .where({ id: { in: ids }, state: 1, account })
         .update({ state: 0 });
     } else {
-      await db('bmk').where({ state: 1, account }).batchUpdate({ state: 0 });
+      db('bmk').where({ state: 1, account }).batchUpdate({ state: 0 });
     }
 
     syncUpdateData(res, 'bookmark');
@@ -667,7 +666,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    const bms = await db('bmk')
+    const bms = db('bmk')
       .select('title,link,des')
       .where({ account, state: 1, group_id: id })
       .orderBy('num', 'asc')
@@ -687,7 +686,7 @@ route.post(
       account,
       type: 'bookmk',
     };
-    await db('share').insert(obj);
+    db('share').insert(obj);
 
     syncUpdateData(res, 'sharelist');
 
@@ -718,7 +717,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    const total = await db('bmk_group').where({ account, state: 1 }).count();
+    const total = db('bmk_group').where({ account, state: 1 }).count();
 
     if (total >= fieldLength.bmkGroup) {
       return resp.forbidden(res, `分组限制${fieldLength.bmkGroup}个`)();
@@ -727,15 +726,6 @@ route.post(
     const pid = nanoid();
     const create_at = Date.now();
 
-    await updateBmkGroupOrder(account);
-
-    await db('bmk_group').insert({
-      id: pid,
-      create_at,
-      title,
-      account,
-      num: total + 1,
-    });
     arr = arr.map((item, idx) => {
       const { title, link, des } = item;
       return {
@@ -749,7 +739,20 @@ route.post(
         account,
       };
     });
-    await db('bmk').insertMany(arr);
+
+    transaction(() => {
+      updateBmkGroupOrder(account);
+
+      db('bmk_group').insert({
+        id: pid,
+        create_at,
+        title,
+        account,
+        num: total + 1,
+      });
+
+      db('bmk').insertMany(arr);
+    });
 
     syncUpdateData(res, 'bookmark');
 
@@ -786,40 +789,43 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    const total = await db('bmk_group').where({ account, state: 1 }).count();
+    const total = db('bmk_group').where({ account, state: 1 }).count();
 
     if (total + list.length > fieldLength.bmkGroup) {
       return resp.forbidden(res, `分组限制${fieldLength.bmkGroup}个`)();
     }
 
-    await updateBmkGroupOrder(account);
-
     const create_at = Date.now();
-    for (let i = 0; i < list.length; i++) {
-      let { title, list: bms } = list[i];
 
-      const groupId = nanoid();
+    transaction(() => {
+      updateBmkGroupOrder(account);
 
-      await db('bmk_group').insert({
-        create_at,
-        id: groupId,
-        title,
-        account,
-        num: total + 1 + i,
-      });
-      bms = bms.map((item, i) => ({
-        id: nanoid(),
-        create_at,
-        account,
-        num: i + 1,
-        group_id: groupId,
-        title: item.title,
-        link: item.link,
-        des: item.des,
-      }));
+      for (let i = 0; i < list.length; i++) {
+        let { title, list: bms } = list[i];
 
-      await db('bmk').insertMany(bms);
-    }
+        const groupId = nanoid();
+
+        db('bmk_group').insert({
+          create_at,
+          id: groupId,
+          title,
+          account,
+          num: total + 1 + i,
+        });
+        bms = bms.map((item, idx) => ({
+          id: nanoid(),
+          create_at,
+          account,
+          num: idx + 1,
+          group_id: groupId,
+          title: item.title,
+          link: item.link,
+          des: item.des,
+        }));
+
+        db('bmk').insertMany(bms);
+      }
+    });
 
     syncUpdateData(res, 'bookmark');
 
@@ -833,12 +839,9 @@ route.get(
   asyncHandler(async (_, res) => {
     const { account } = res.locals.hello.userinfo;
 
-    const bms = await db('bmk')
-      .select('title,link,des,group_id')
-      .where({ account, state: 1 })
-      .find();
+    const bms = db('bmk').select('title,link,des,group_id').where({ account, state: 1 }).find();
 
-    let list = await db('bmk_group')
+    let list = db('bmk_group')
       .select('id,title')
       .where({ account, state: 1 })
       .orderBy('num', 'asc')

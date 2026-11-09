@@ -1,6 +1,6 @@
 import express from 'express';
 import Busboy from 'busboy';
-import { createPagingData, getSplitWord, syncUpdateData } from '../../utils/utils.js';
+import { createPagingMeta, getSplitWord, syncUpdateData } from '../../utils/utils.js';
 import { fieldLength } from '../config.js';
 import V from '../../utils/validRules.js';
 import { createTerminal, getSSH, readSftpDir } from './terminal.js';
@@ -77,9 +77,9 @@ route.post(
       sshdb.orderBy('top', 'DESC').orderBy('serial', 'DESC');
     }
 
-    const total = await sshdb.count();
+    const total = sshdb.count();
 
-    const result = createPagingData(Array(total), pageSize, pageNo);
+    const result = createPagingMeta(total, pageSize, pageNo);
 
     let list = [];
     if (total > 0) {
@@ -91,7 +91,7 @@ route.post(
         .page(pageSize, offset)
         .find();
 
-      const sshCategory = await db('ssh_category').select('id,title').where({ account }).find();
+      const sshCategory = db('ssh_category').select('id,title').where({ account }).find();
 
       list = list.map((item) => {
         const cArr = item.category.split('-').filter(Boolean);
@@ -118,7 +118,7 @@ route.get(
   asyncHandler(async (_, res) => {
     const { account } = res.locals.hello.userinfo;
 
-    const list = await db('ssh_category')
+    const list = db('ssh_category')
       .select('id,title')
       .where({ account })
       .orderBy('serial', 'DESC')
@@ -145,11 +145,11 @@ route.post(
     const { account } = res.locals.hello.userinfo;
 
     if (ids.length > 0) {
-      await db('ssh')
+      db('ssh')
         .where({ id: { in: ids }, account, state: 1 })
         .update({ state: 0 });
     } else {
-      await db('ssh').where({ account, state: 1 }).batchUpdate({ state: 0 });
+      db('ssh').where({ account, state: 1 }).batchUpdate({ state: 0 });
     }
 
     syncUpdateData(res, 'ssh');
@@ -187,7 +187,7 @@ route.post(
       return resp.forbidden(res, error.message)(error, 1);
     }
 
-    await db('ssh').insert({
+    db('ssh').insert({
       ...config,
       id: nanoid(),
       account,
@@ -235,9 +235,9 @@ route.post(
     const now = Date.now();
 
     if (id === 'local') {
-      const ssh = await db('ssh').where({ id, account }).findOne();
+      const ssh = db('ssh').where({ id, account }).findOne();
       if (!ssh) {
-        await db('ssh').insert({
+        db('ssh').insert({
           id,
           port,
           username,
@@ -255,7 +255,7 @@ route.post(
         return resp.success(res, '添加本机SSH配置成功')();
       }
     }
-    await db('ssh').where({ id, account }).update({
+    db('ssh').where({ id, account }).update({
       port,
       username,
       title,
@@ -284,7 +284,7 @@ route.get(
   asyncHandler(async (_, res) => {
     const { id } = res.locals.ctx;
     const { account } = res.locals.hello.userinfo;
-    const ssh = await db('ssh')
+    const ssh = db('ssh')
       .select('id,title,port,host,username,auth_type,passphrase,password,private_key')
       .where({ id, account })
       .findOne();
@@ -307,7 +307,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('ssh').where({ id, account }).update({ top });
+    db('ssh').where({ id, account }).update({ top });
 
     syncUpdateData(res, 'ssh');
 
@@ -333,7 +333,7 @@ route.post(
     const { account } = res.locals.hello.userinfo;
 
     const categoryStr = category.join('-');
-    await db('ssh').where({ id, account }).update({ category: categoryStr });
+    db('ssh').where({ id, account }).update({ category: categoryStr });
 
     syncUpdateData(res, 'ssh');
 
@@ -356,7 +356,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('ssh_category').where({ id, account }).update({ title });
+    db('ssh_category').where({ id, account }).update({ title });
 
     syncUpdateData(res, 'sshCategory');
 
@@ -378,12 +378,12 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    const total = await db('ssh_category').count();
+    const total = db('ssh_category').count();
 
     if (total >= fieldLength.maxNoteCategory) {
       return resp.forbidden(res, `类型限制${fieldLength.maxNoteCategory}个`)();
     }
-    await db('ssh_category').insert({
+    db('ssh_category').insert({
       id: nanoid(),
       create_at: Date.now(),
       title,
@@ -410,7 +410,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('ssh_category').where({ id, account }).delete();
+    db('ssh_category').where({ id, account }).delete();
 
     syncUpdateData(res, 'sshCategory');
 
@@ -442,7 +442,7 @@ route.post(
       return resp.badRequest(res)(error, 1);
     }
 
-    const config = await db('ssh')
+    const config = db('ssh')
       .select('title,port,username,password,host,private_key,passphrase,auth_type')
       .where({ id, account })
       .findOne();

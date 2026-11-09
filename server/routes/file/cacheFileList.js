@@ -17,12 +17,7 @@ const fileList = {
 
   // 清空缓存
   clear(account) {
-    this.cache.clearByValue((k) => {
-      return k.startsWith(`${account}_`);
-    });
-  },
-  resetExpireTime(account, key) {
-    this.cache.resetExpireTime(`${account}_${key}`);
+    this.cache.clearByPrefix(`${account}_`);
   },
 };
 

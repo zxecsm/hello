@@ -182,7 +182,7 @@ const cacheFile = {
       const hash = this.getHash(url, type);
       const cachedURL = this.urlCache.get(hash);
       if (cachedURL) {
-        this.urlCache.delete(hash, cachedURL);
+        this.urlCache.delete(hash);
       }
 
       if (!this.supported) return;
@@ -219,7 +219,7 @@ const cacheFile = {
         if (entry.kind === 'file' && (!type || entry.name.startsWith(`${type}_`))) {
           const cachedURL = this.urlCache.get(entry.name);
           if (cachedURL) {
-            this.urlCache.delete(entry.name, cachedURL);
+            this.urlCache.delete(entry.name);
           }
 
           _msg.botMsg(`清理缓存文件：${++count}`, 1);

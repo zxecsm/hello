@@ -1,6 +1,6 @@
 import _connect from '../../utils/connect.js';
 
-import { db } from '../../utils/sqlite.js';
+import { db, transaction } from '../../utils/sqlite.js';
 
 import {
   concurrencyTasks,
@@ -14,7 +14,7 @@ import {
   parseArrayJson,
 } from '../../utils/utils.js';
 
-import { getUserInfo } from '../user/user.js';
+import { clearUserInfoCache } from '../../utils/userCache.js';
 import { _d } from '../../data/data.js';
 import appConfig from '../../data/config.js';
 import _f from '../../utils/f.js';
@@ -26,17 +26,19 @@ import { fieldLength } from '../config.js';
 
 // 获取好友信息
 export async function getFriendInfo(mAcc, fAcc, fields = '*') {
-  return await db('friends').select(fields).where({ account: mAcc, friend: fAcc }).findOne();
+  return db('friends').select(fields).where({ account: mAcc, friend: fAcc }).findOne();
 }
 
 // 标记为已读
-export async function markAsRead(mAcc, fAcc) {
-  const change = await db('friends').where({ friend: fAcc, account: mAcc }).update({ read: 1 });
+export function markAsRead(mAcc, fAcc) {
+  transaction(() => {
+    const change = db('friends').where({ friend: fAcc, account: mAcc }).update({ read: 1 });
 
-  // 不是好友，变为好友
-  if (change.changes === 0) {
-    await becomeFriends(mAcc, fAcc);
-  }
+    // 不是好友，变为好友
+    if (change.changes === 0) {
+      becomeFriendsSync(mAcc, fAcc);
+    }
+  });
 }
 
 // 助手回复响应消息
@@ -53,15 +55,21 @@ export async function hdHelloMsg(req, res, data, type) {
   if (type === 'text' && text === 'update') {
     chat_id = nanoid();
 
-    await db('user').where({ account, state: 1 }).update({ receive_chat_state: 1, chat_id });
+    db('user').where({ account, state: 1 }).update({ receive_chat_state: 1, chat_id });
+
+    clearUserInfoCache(account);
 
     msgText = `收信接口：\nGET：${origin}/api/s/${chat_id}?text=消息内容\nPOST：${origin}/api/s/${chat_id} body：{"text": "消息内容"}\n\n回复 update 更新接口 回复 stop 关闭接口`;
   } else if (type === 'text' && text === 'stop') {
-    await db('user').where({ account, state: 1 }).update({ receive_chat_state: 0 });
+    db('user').where({ account, state: 1 }).update({ receive_chat_state: 0 });
+
+    clearUserInfoCache(account);
 
     msgText = stopMsgText;
   } else if (type === 'text' && text === 'start') {
-    await db('user').where({ account, state: 1 }).update({ receive_chat_state: 1 });
+    db('user').where({ account, state: 1 }).update({ receive_chat_state: 1 });
+
+    clearUserInfoCache(account);
   } else {
     if (receive_chat_state === 0) {
       msgText = stopMsgText;
@@ -71,8 +79,8 @@ export async function hdHelloMsg(req, res, data, type) {
   await helloHelperMsg(account, msgText);
 }
 
-// 保存聊天消息
-export async function saveChatMsg(account, obj) {
+// 准备聊天消息字段
+function prepareChatMessage(account, obj) {
   obj._from = account;
 
   obj.flag =
@@ -80,19 +88,11 @@ export async function saveChatMsg(account, obj) {
 
   if (!obj.id) obj.id = nanoid();
   if (!obj.create_at) obj.create_at = Date.now();
-  await db('chat').insert(obj);
-
-  if (account !== appConfig.notifyAccount) {
-    await saveBackupData(account, 'chat', obj);
-  }
-
-  return obj;
 }
 
-// 推送通知
-export async function sendNotifyMsg(res, to, flag, msgData) {
+// 构建通知对象
+function buildNotify(res, to, flag, msgData) {
   const { account, logo, username } = res.locals.hello.userinfo;
-  const temid = res.locals.hello.temid;
 
   const notifyObj = {
     type: 'chat',
@@ -111,17 +111,75 @@ export async function sendNotifyMsg(res, to, flag, msgData) {
   // flag === 'del'  msgData = { msgId: 'xxx' }
   notifyObj.data.msgData = msgData;
 
-  const t = Date.now();
+  return { notifyObj, t: Date.now() };
+}
 
-  // 群消息
-  if (notifyObj.data.to === appConfig.chatRoomAccount) {
+// 好友列表里的最后消息文本
+function notifyText(flag, msgData) {
+  if (flag === 'addmsg') {
+    if (msgData.type === 'image') return '图片';
+    if (msgData.type === 'file') return '文件';
+    return msgData.content;
+  }
+
+  if (flag === 'del') return '撤回消息';
+  if (flag === 'clear') return '清空消息';
+  if (flag === 'shake') return '抖了一下窗口';
+
+  return '';
+}
+
+// 更新好友未读、最后消息、补建好友关系（同步，需在事务内执行）
+function applyNotifyState(res, notifyObj, flag, msgText, t) {
+  const { account } = res.locals.hello.userinfo;
+  const to = notifyObj.data.to;
+
+  // 群消息：只标记新增消息为未读
+  if (to === appConfig.chatRoomAccount) {
     if (flag === 'addmsg') {
-      // 给所有人只标记新增消息为未读，忽略删除，清空，抖一下
-      await db('friends')
-        .where({ friend: appConfig.chatRoomAccount, read: 1 })
-        .batchUpdate({ read: 0 });
+      db('friends').where({ friend: appConfig.chatRoomAccount, read: 1 }).batchUpdate({ read: 0 });
     }
+    return;
+  }
 
+  const fInfo = db('friends')
+    .select('notify,des')
+    .where({ account: to, friend: account })
+    .findOne();
+
+  notifyObj.notify = fInfo ? fInfo.notify : 1;
+  notifyObj.data.from.des =
+    account === appConfig.notifyAccount ? appConfig.notifyAccountDes : fInfo ? fInfo.des : '';
+
+  let change = {};
+  let change2;
+
+  if (to !== account) {
+    const updateObj = { update_at: t, msg: msgText };
+    if (flag === 'addmsg') {
+      // 新增消息才标记未读
+      updateObj.read = 0;
+    }
+    change = db('friends').where({ account: to, friend: account }).update(updateObj);
+  }
+
+  change2 = db('friends')
+    .where({ account, friend: to })
+    .update({ update_at: t, msg: `您：${msgText}` });
+
+  // 如果不是好友，成为好友
+  if ((to !== account && change.changes === 0) || change2.changes === 0) {
+    becomeFriendsSync(account, to, 1, 0, msgText);
+  }
+}
+
+// 推送通知（内存 / WebSocket）
+async function pushNotify(res, notifyObj, flag) {
+  const { account } = res.locals.hello.userinfo;
+  const temid = res.locals.hello.temid;
+  const to = notifyObj.data.to;
+
+  if (to === appConfig.chatRoomAccount) {
     const accs = Object.keys(_connect.getConnects());
 
     // 分批推送正在线的用户通知消息
@@ -131,13 +189,13 @@ export async function sendNotifyMsg(res, to, flag, msgData) {
       if (list.length === 0) return false;
 
       // 获取我被好友设置的备注
-      const fArr = await db('friends')
+      const fArr = db('friends')
         .select('des,account')
         .where({ account: { in: list }, friend: account })
         .find();
 
       // 群消息是否勿扰
-      const fList = await db('friends')
+      const fList = db('friends')
         .select('notify,account')
         .where({ account: { in: list }, friend: appConfig.chatRoomAccount })
         .find();
@@ -154,62 +212,53 @@ export async function sendNotifyMsg(res, to, flag, msgData) {
 
       return true;
     }, 200);
-  } else {
-    let msgText = '';
-    if (flag === 'addmsg') {
-      if (msgData.type === 'image') {
-        msgText = '图片';
-      } else if (msgData.type === 'file') {
-        msgText = '文件';
-      } else {
-        msgText = msgData.content;
-      }
-    } else if (flag === 'del') {
-      msgText = '撤回消息';
-    } else if (flag === 'clear') {
-      msgText = '清空消息';
-    } else if (flag === 'shake') {
-      msgText = '抖了一下窗口';
-    }
-    const fInfo = await getFriendInfo(notifyObj.data.to, account, 'notify,des');
-    notifyObj.notify = fInfo ? fInfo.notify : 1;
-    // 标记消息为未读
-    let change = {};
-    if (notifyObj.data.to !== account) {
-      const updateObj = { update_at: t, msg: msgText };
-      if (flag === 'addmsg') {
-        // 新增消息才标记未读
-        updateObj.read = 0;
-      }
-      change = await db('friends')
-        .where({ account: notifyObj.data.to, friend: account })
-        .update(updateObj);
-    }
-
-    const change2 = await db('friends')
-      .where({ account, friend: notifyObj.data.to })
-      .update({ update_at: t, msg: `您：${msgText}` });
-    // 如果不是好友，成为好友
-    if ((notifyObj.data.to !== account && change.changes === 0) || change2.changes === 0) {
-      await becomeFriends(account, notifyObj.data.to, 1, 0, msgText);
-    }
-
-    if (notifyObj.data.to === account) {
-      // 推送给自己所有在线终端
-      notifyObj.data.from.des = appConfig.ownAccountDes;
-      _connect.send(account, temid, notifyObj, 'all');
-    } else {
-      notifyObj.data.from.des =
-        account === appConfig.notifyAccount ? appConfig.notifyAccountDes : fInfo ? fInfo.des : '';
-
-      _connect.send(notifyObj.data.to, temid, notifyObj, 'all');
-
-      // 如果是抖动，不推送给自己
-      if (flag !== 'shake') {
-        _connect.send(account, temid, notifyObj, 'all');
-      }
-    }
+    return;
   }
+
+  if (to === account) {
+    // 推送给自己所有在线终端
+    notifyObj.data.from.des = appConfig.ownAccountDes;
+    _connect.send(account, temid, notifyObj, 'all');
+    return;
+  }
+
+  _connect.send(to, temid, notifyObj, 'all');
+
+  // 如果是抖动，不推送给自己
+  if (flag !== 'shake') {
+    _connect.send(account, temid, notifyObj, 'all');
+  }
+}
+
+// 推送通知
+export async function sendNotifyMsg(res, to, flag, msgData) {
+  const { notifyObj, t } = buildNotify(res, to, flag, msgData);
+  const msgText = notifyText(flag, msgData);
+
+  transaction(() => applyNotifyState(res, notifyObj, flag, msgText, t));
+  await pushNotify(res, notifyObj, flag);
+}
+
+// 保存聊天消息并更新好友状态（同一个事务）
+export async function saveChatMsgAndNotify(res, account, obj) {
+  prepareChatMessage(account, obj);
+
+  const { notifyObj, t } = buildNotify(res, obj._to, 'addmsg', obj);
+  const msgText = notifyText('addmsg', obj);
+
+  transaction(() => {
+    db('chat').insert(obj);
+    applyNotifyState(res, notifyObj, 'addmsg', msgText, t);
+  });
+
+  // 事务提交后再做文件备份和推送
+  if (account !== appConfig.notifyAccount) {
+    await saveBackupData(account, 'chat', obj);
+  }
+
+  await pushNotify(res, notifyObj, 'addmsg');
+
+  return obj;
 }
 
 // 发送消息到自定义地址
@@ -221,7 +270,7 @@ export async function sendNotificationsToCustomAddresses(res, obj) {
     let lastSerial = 0;
 
     while (true) {
-      const list = await db('user')
+      const list = db('user')
         .select('forward_msg_link,account,serial')
         .where({
           forward_msg_state: 1,
@@ -237,7 +286,7 @@ export async function sendNotificationsToCustomAddresses(res, obj) {
 
       lastSerial = list[list.length - 1].serial;
 
-      const fArr = await db('friends')
+      const fArr = db('friends')
         .select('des,account')
         .where({
           account: { in: list.map((item) => item.account) },
@@ -245,7 +294,7 @@ export async function sendNotificationsToCustomAddresses(res, obj) {
         })
         .find();
 
-      const fList = await db('friends')
+      const fList = db('friends')
         .select('notify,account')
         .where({
           account: { in: list.map((item) => item.account) },
@@ -256,7 +305,7 @@ export async function sendNotificationsToCustomAddresses(res, obj) {
       await hdForwardToLink(res, list, fArr, obj.content, fList);
     }
   } else {
-    const list = await db('user')
+    const list = db('user')
       .select('forward_msg_link,account')
       .where({
         forward_msg_state: 1,
@@ -265,7 +314,7 @@ export async function sendNotificationsToCustomAddresses(res, obj) {
       })
       .find();
 
-    const fArr = await db('friends')
+    const fArr = db('friends')
       .select('des,notify,account')
       .where({
         account: obj._to,
@@ -341,7 +390,7 @@ export async function onlineMsg(res, pass) {
   const con = _connect.getConnects(); // 获取所有在线
 
   // 已经在线、隐身或跳过的不通知
-  if ((!con.hasOwnProperty(account) && hide === 0) || pass) {
+  if ((!Object.hasOwn(con, account) && hide === 0) || pass) {
     const accs = Object.keys(con).filter((acc) => acc !== account);
 
     await batchTask(async (offset, limit) => {
@@ -349,7 +398,7 @@ export async function onlineMsg(res, pass) {
 
       if (list.length === 0) return false;
 
-      const fArr = await db('friends')
+      const fArr = db('friends')
         .select('des,account,notify')
         .where({ account: { in: list }, friend: account })
         .find();
@@ -375,19 +424,19 @@ export async function onlineMsg(res, pass) {
   }
 }
 
-// 成为朋友
-export async function becomeFriends(me, friend, read1 = 1, read2 = 1, msg = '') {
+// 成为朋友（同步版本，调用方需要自己包事务）
+export function becomeFriendsSync(me, friend, read1 = 1, read2 = 1, msg = '') {
   if (
     friend !== appConfig.chatRoomAccount &&
     friend !== appConfig.notifyAccount &&
     me !== friend &&
-    !(await getUserInfo(friend, 'account'))
+    !db('user').select('account').where({ account: friend, state: 1 }).findOne()
   )
     // 朋友不存在
     return;
 
   // 检查是否已经互为朋友
-  const frs = await db('friends')
+  const frs = db('friends')
     .select('account,friend')
     .where({
       $or: [
@@ -406,7 +455,7 @@ export async function becomeFriends(me, friend, read1 = 1, read2 = 1, msg = '') 
     (friend === appConfig.chatRoomAccount || me === friend) &&
     !isFriend1
   ) {
-    await db('friends').insert({
+    db('friends').insert({
       id: `${me}_${friend}`,
       create_at,
       update_at: 0,
@@ -420,7 +469,7 @@ export async function becomeFriends(me, friend, read1 = 1, read2 = 1, msg = '') 
   }
 
   if (!isFriend1) {
-    await db('friends').insert({
+    db('friends').insert({
       id: `${me}_${friend}`,
       create_at,
       update_at: 0,
@@ -432,7 +481,7 @@ export async function becomeFriends(me, friend, read1 = 1, read2 = 1, msg = '') 
   }
 
   if (!isFriend2) {
-    await db('friends').insert({
+    db('friends').insert({
       id: `${friend}_${me}`,
       create_at,
       update_at: 0,
@@ -473,24 +522,20 @@ export async function helloHelperMsg(to, text) {
     type: 'text',
   };
 
-  const msg = await saveChatMsg(appConfig.notifyAccount, msgObj);
-
-  await sendNotifyMsg(
-    {
-      locals: {
-        hello: {
-          userinfo: {
-            account: appConfig.notifyAccount,
-            username: appConfig.notifyAccount,
-          },
+  const res = {
+    locals: {
+      hello: {
+        userinfo: {
+          account: appConfig.notifyAccount,
+          username: appConfig.notifyAccount,
+          logo: '',
         },
+        temid: '',
       },
     },
-    to,
-    'addmsg',
-    msgObj,
-  );
-  return msg;
+  };
+
+  return saveChatMsgAndNotify(res, appConfig.notifyAccount, msgObj);
 }
 
 // 解析forward_msg_link
@@ -538,7 +583,7 @@ export async function cleanUpload(res = false) {
     let lastSerial = 0;
 
     while (true) {
-      const list = await db('upload')
+      const list = db('upload')
         .select('url,serial')
         .where({ serial: { '>': lastSerial }, update_at: { '<': exp } })
         .orderBy('serial', 'ASC')
@@ -548,7 +593,7 @@ export async function cleanUpload(res = false) {
 
       lastSerial = list[list.length - 1].serial;
 
-      await db('upload')
+      db('upload')
         .where({ serial: { in: list.map((item) => item.serial) } })
         .delete();
 
@@ -580,7 +625,7 @@ export async function saveBackupData(account, type, item) {
     .reverse();
 
   list.push(JSON.stringify(item));
-  if (list > fieldLength.backupDataLength) {
+  if (list.length > fieldLength.backupDataLength) {
     list = list.slice(-fieldLength.backupDataLength);
   }
   await _f.writeFile(filePath, list.reverse().join('\n'));

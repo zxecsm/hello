@@ -11,7 +11,7 @@ import {
   unique,
   getTimePath,
   syncUpdateData,
-  createPagingData,
+  createPagingMeta,
   concurrencyTasks,
   getSplitWord,
   myShuffle,
@@ -107,10 +107,10 @@ route.post(
 
       if (token) {
         // 自增播放次数
-        await db('songs').where({ id }).increment({ play_count: 1 });
+        db('songs').where({ id }).increment({ play_count: 1 });
       }
 
-      const songInfo = await db('songs').select('lrc').where({ id }).findOne();
+      const songInfo = db('songs').select('lrc').where({ id }).findOne();
       if (!songInfo) {
         return resp.success(res, 'ok', errData)();
       }
@@ -175,7 +175,7 @@ route.post(
       }
     }
 
-    const info = await db('songs')
+    const info = db('songs')
       .select(
         'id,pic,lrc,url,mv,title,artist,duration,album,year,collect_count,play_count,create_at',
       )
@@ -305,22 +305,25 @@ route.get(
         sort: true,
       });
 
-    const total = await songdb.count();
+    const total = songdb.count();
 
-    const result = createPagingData(Array(total), pageSize, pageNo);
+    const result = createPagingMeta(total, pageSize, pageNo);
 
     let list = [];
 
     if (total > 0) {
       const offset = (result.pageNo - 1) * pageSize;
 
-      list = (await songdb.page(pageSize, offset).find()).map((m) => ({
-        ...m,
-        pic: !!m.pic,
-        lrc: !!m.lrc,
-        url: !!m.url,
-        mv: !!m.mv,
-      }));
+      list = songdb
+        .page(pageSize, offset)
+        .find()
+        .map((m) => ({
+          ...m,
+          pic: !!m.pic,
+          lrc: !!m.lrc,
+          url: !!m.url,
+          mv: !!m.mv,
+        }));
     }
 
     resp.success(res, 'ok', {
@@ -412,7 +415,7 @@ route.get(
     }
 
     // 所有歌曲歌单获取最新一首用来读取封面
-    const newSong = await db('songs').select('id,pic').orderBy('serial', 'DESC').limit(1).find();
+    const newSong = db('songs').select('id,pic').orderBy('serial', 'DESC').limit(1).find();
 
     songList.splice(2, 0, { id: 'all', item: newSong });
 
@@ -444,7 +447,7 @@ route.get(
           if (onlyMv === 1) {
             songDB.where({ mv: { '!=': '' } });
           }
-          const total = await songDB.count();
+          const total = songDB.count();
 
           pageNo = normalizePageNo(total, pageSize, pageNo);
 
@@ -464,7 +467,7 @@ route.get(
 
             if (playId) {
               // 定位到正则播放歌曲所在页
-              const row = await songDB.clone().select('serial').where({ id: playId }).findOne();
+              const row = songDB.clone().select('serial').where({ id: playId }).findOne();
               if (row) {
                 let count = 0;
                 if (sort === 'default') {
@@ -478,17 +481,15 @@ route.get(
                     .count();
                 } else {
                   count =
-                    (
-                      await allSql(
-                        `WITH OrderedSongs AS (
+                    allSql(
+                      `WITH OrderedSongs AS (
                                 SELECT id, ${orderField}, ROW_NUMBER() OVER (ORDER BY ${orderField} ${orderDir}) AS row_num
                                 FROM songs
                               )
                               SELECT row_num
                               FROM OrderedSongs
                               WHERE id = ?`,
-                        [playId],
-                      )
+                      [playId],
                     )[0]?.row_num || 0;
                 }
                 pageNo = Math.ceil(count / pageSize);
@@ -496,10 +497,10 @@ route.get(
               }
             }
 
-            list = await songDB.page(pageSize, offset).find();
+            list = songDB.page(pageSize, offset).find();
           }
 
-          const obj = createPagingData(Array(total), pageSize, pageNo);
+          const obj = createPagingMeta(total, pageSize, pageNo);
 
           item.item = list;
           item.totalPage = obj.totalPage;
@@ -618,25 +619,24 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    const change = await db('last_play').where({ account }).update({
-      song_id: lastplay.id,
-      play_current_time: currentTime,
-      duration,
-    });
-    if (change.changes === 0) {
-      await db('last_play').insert({
+    db('last_play').upsert(
+      {
         create_at: Date.now(),
         account,
         song_id: lastplay.id,
         play_current_time: currentTime,
         duration,
-      });
-    }
+      },
+      {
+        conflict: ['account'],
+        update: ['song_id', 'play_current_time', 'duration'],
+      },
+    );
 
     // 增加播放历史记录
     if (history === 1) {
       // 自增播放次数
-      await db('songs').where({ id: lastplay.id }).increment({ play_count: 1 });
+      db('songs').where({ id: lastplay.id }).increment({ play_count: 1 });
 
       const list = await getMusicList(account);
 
@@ -659,7 +659,7 @@ route.get(
   asyncHandler(async (_, res) => {
     const { account } = res.locals.hello.userinfo;
 
-    const lastm = await db('last_play')
+    const lastm = db('last_play')
       .select('song_id,play_current_time,duration')
       .where({ account })
       .findOne();
@@ -676,7 +676,7 @@ route.get(
       obj.currentTime = play_current_time;
       obj.duration = duration;
 
-      const lastplay = await db('songs')
+      const lastplay = db('songs')
         .select(
           'id,pic,lrc,url,mv,title,artist,duration,album,year,collect_count,play_count,create_at',
         )
@@ -700,7 +700,7 @@ route.get(
 route.get(
   '/random-list',
   asyncHandler(async (_, res) => {
-    const list = await db('songs').getRandom({ limit: maxSonglistCount });
+    const list = db('songs').getRandom({ limit: maxSonglistCount });
 
     if (list.length === 0) {
       return resp.notFound(res, '音乐库为空')();
@@ -726,19 +726,14 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    const change = await db('playing_list')
-      .where({ account })
-      .update({
-        data: JSON.stringify(data),
-      });
-
-    if (change.changes === 0) {
-      await db('playing_list').insert({
+    db('playing_list').upsert(
+      {
         create_at: Date.now(),
         account,
         data: JSON.stringify(data),
-      });
-    }
+      },
+      { conflict: ['account'], update: ['data'] },
+    );
 
     syncUpdateData(res, 'playinglist');
     resp.success(res, '更新播放列表成功')();
@@ -751,7 +746,7 @@ route.get(
   asyncHandler(async (_, res) => {
     const { account } = res.locals.hello.userinfo;
 
-    const playing = await db('playing_list').select('data').where({ account }).findOne();
+    const playing = db('playing_list').select('data').where({ account }).findOne();
 
     let list = [];
 
@@ -900,7 +895,7 @@ route.post(
       return resp.forbidden(res, '无权更新歌曲信息')();
     }
 
-    const songInfo = await db('songs').select('url,hash,artist,title').where({ id }).findOne();
+    const songInfo = db('songs').select('url,hash,artist,title').where({ id }).findOne();
 
     if (!songInfo) {
       return resp.forbidden(res, '歌曲不存在')();
@@ -932,7 +927,7 @@ route.post(
       );
     }
 
-    await db('songs')
+    db('songs')
       .where({ id })
       .update({
         title,
@@ -1045,7 +1040,7 @@ route.post(
     await updateSongList(account, list);
 
     // 更新歌曲收藏记录
-    await db('songs')
+    db('songs')
       .where({ id: { in: ids } })
       .increment({ collect_count: 1 });
 
@@ -1108,7 +1103,7 @@ route.post(
         return resp.forbidden(res, '无权删除歌曲')();
       }
 
-      const dels = await db('songs')
+      const dels = db('songs')
         .select('url,artist,title')
         .where({ id: { in: ids } })
         .find();
@@ -1119,7 +1114,7 @@ route.post(
         await _delDir(appConfig.musicDir(_path.dirname(url)));
       });
 
-      await db('songs')
+      db('songs')
         .where({ id: { in: ids } })
         .delete();
     } else {
@@ -1220,7 +1215,7 @@ route.post(
       return resp.forbidden(res, '无权操作')();
     }
 
-    const dels = await db('songs').select('mv,artist,title').where({ id }).find();
+    const dels = db('songs').select('mv,artist,title').where({ id }).find();
 
     for (let i = 0; i < dels.length; i++) {
       const { mv } = dels[i];
@@ -1229,7 +1224,7 @@ route.post(
       }
     }
 
-    await db('songs').where({ id }).update({ mv: '' });
+    db('songs').where({ id }).update({ mv: '' });
 
     syncUpdateData(res, 'music');
 
@@ -1249,7 +1244,7 @@ route.get(
   asyncHandler(async (_, res) => {
     const { id } = res.locals.ctx;
 
-    const musicinfo = await db('songs').select('lrc').where({ id }).findOne();
+    const musicinfo = db('songs').select('lrc').where({ id }).findOne();
 
     if (!musicinfo) {
       return resp.notFound(res, '歌曲不存在')();
@@ -1291,7 +1286,7 @@ route.post(
       return resp.forbidden(res, '无权操作')();
     }
 
-    const musicinfo = await db('songs').select('url,lrc,artist,title,hash').where({ id }).findOne();
+    const musicinfo = db('songs').select('url,lrc,artist,title,hash').where({ id }).findOne();
 
     if (!musicinfo) {
       return resp.forbidden(res, '歌曲不存在')();
@@ -1318,7 +1313,7 @@ route.post(
       const newHASH = await _crypto.sampleHash(songUrl);
 
       if (newHASH && newHASH !== musicinfo.hash) {
-        await db('songs').where({ id }).update({ hash: newHASH });
+        db('songs').where({ id }).update({ hash: newHASH });
       }
     } catch (err) {
       await writelog(
@@ -1364,7 +1359,7 @@ route.post(
       type: 'music',
     };
 
-    await db('share').insert(obj);
+    db('share').insert(obj);
 
     syncUpdateData(res, 'sharelist');
 
@@ -1396,7 +1391,7 @@ route.post(
         return resp.forbidden(res, '歌曲格式错误')();
       }
 
-      const song = await db('songs').select('id,artist,title').where({ hash: HASH }).findOne();
+      const song = db('songs').select('id,artist,title').where({ hash: HASH }).findOne();
 
       if (song) {
         return resp.forbidden(res, '歌曲已存在')();
@@ -1438,7 +1433,7 @@ route.post(
 
       await _f.writeFile(_path.normalizeNoSlash(tDir, `${songId}.lrc`), lrc);
 
-      await db('songs').insert({
+      db('songs').insert({
         id: songId,
         create_at,
         artist,
@@ -1468,10 +1463,7 @@ route.post(
         return resp.forbidden(res, '封面图片格式不支持')();
       }
 
-      const songInfo = await db('songs')
-        .select('url,pic,hash,title,artist')
-        .where({ id })
-        .findOne();
+      const songInfo = db('songs').select('url,pic,hash,title,artist').where({ id }).findOne();
 
       if (!songInfo) {
         return resp.forbidden(res, '歌曲不存在')();
@@ -1529,7 +1521,7 @@ route.post(
       }
 
       if (_path.basename(pic)[0] !== tName || (newHASH && newHASH !== hash)) {
-        await db('songs')
+        db('songs')
           .where({ id })
           .update({
             pic: `${_path.extname(url)[0]}.${_path.extname(name)[2]}`,
@@ -1553,7 +1545,7 @@ route.post(
         return resp.forbidden(res, 'MV格式错误')();
       }
 
-      const songInfo = await db('songs').select('url,mv,title,artist').where({ id }).findOne();
+      const songInfo = db('songs').select('url,mv,title,artist').where({ id }).findOne();
 
       if (!songInfo) {
         return resp.forbidden(res, '歌曲不存在')();
@@ -1572,7 +1564,7 @@ route.post(
           await _delDir(_path.normalizeNoSlash(tDir, _path.basename(mv)[0]));
         }
 
-        await db('songs')
+        db('songs')
           .where({ id })
           .update({
             mv: `${_path.extname(url)[0]}.${_path.extname(name)[2]}`,
@@ -1595,7 +1587,7 @@ route.post(
   asyncHandler(async (_, res) => {
     const { HASH } = res.locals.ctx;
 
-    const songInfo = await db('songs').select('url,id').where({ hash: HASH }).findOne();
+    const songInfo = db('songs').select('url,id').where({ hash: HASH }).findOne();
 
     if (songInfo) {
       const url = appConfig.musicDir(songInfo.url);
@@ -1605,7 +1597,7 @@ route.post(
       }
 
       // 歌曲不存在删除数据和歌曲目录，重新上传
-      await db('songs').where({ id: songInfo.id }).delete();
+      db('songs').where({ id: songInfo.id }).delete();
 
       await _delDir(_path.dirname(url));
     }

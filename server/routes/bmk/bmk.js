@@ -7,111 +7,57 @@ import { concurrencyTasks, writelog } from '../../utils/utils.js';
 import { heperMsgAndForward } from '../chat/chat.js';
 import { _delDir, readMenu } from '../file/file.js';
 
-// 更新顺序
-export async function updateBmkGroupOrder(account) {
-  const list = db('bmk_group')
-    .select('id')
-    .where({ account, state: 1 })
-    .orderBy('num', 'ASC')
-    .find();
-
+// 按 num 重新排序
+function reorderByNum(table, where) {
+  const list = db(table).select('id').where(where).orderBy('num', 'ASC').find();
   if (!list.length) return;
 
-  const data = [
-    {
-      match: 'id',
-      field: 'num',
-      items: list.map((item, i) => ({ id: item.id, num: i })),
-    },
-  ];
+  const ids = list.map((item) => item.id);
 
-  await db('bmk_group').batchDiffUpdate(data, {
-    id: { in: list.map((item) => item.id) },
-  });
+  db(table).batchDiffUpdate(
+    [{ match: 'id', field: 'num', items: ids.map((id, num) => ({ id, num })) }],
+    { id: { in: ids } },
+  );
 }
 
-export async function updateBmkOrder(account, groupId) {
-  const bms = await db('bmk')
-    .select('id')
-    .where({ account, state: 1, group_id: groupId })
-    .orderBy('num', 'ASC')
-    .find();
-
-  if (!bms.length) return;
-
-  const data = [
-    {
-      match: 'id',
-      field: 'num',
-      items: bms.map((item, i) => ({ id: item.id, num: i })),
-    },
-  ];
-
-  await db('bmk').batchDiffUpdate(data, {
-    id: { in: bms.map((item) => item.id) },
-  });
+export function updateBmkGroupOrder(account) {
+  reorderByNum('bmk_group', { account, state: 1 });
 }
 
-// 移动分组位置
-export async function bookListMoveLocation(account, fromId, toId) {
+export function updateBmkOrder(account, groupId) {
+  reorderByNum('bmk', { account, state: 1, group_id: groupId });
+}
+
+// 移动一条记录到目标位置，并重排 num
+function moveLocation(table, where, fromId, toId) {
   if (fromId === toId) return;
-  const list = await db('bmk_group')
-    .select('id')
-    .where({ account, state: 1 })
-    .orderBy('num', 'ASC')
-    .find();
 
-  const fIdx = list.findIndex((item) => item.id === fromId),
-    tIdx = list.findIndex((item) => item.id === toId);
+  const list = db(table).select('id').where(where).orderBy('num', 'ASC').find();
+  const fromIdx = list.findIndex((item) => item.id === fromId);
+  const toIdx = list.findIndex((item) => item.id === toId);
 
-  if (fIdx >= 0 && tIdx >= 0) {
-    list.splice(tIdx, 0, ...list.splice(fIdx, 1));
+  if (fromIdx < 0 || toIdx < 0) return;
 
-    const data = [
-      {
-        match: 'id',
-        field: 'num',
-        items: list.map((item, i) => ({ id: item.id, num: i })),
-      },
-    ];
+  list.splice(toIdx, 0, ...list.splice(fromIdx, 1));
 
-    // 批量更新对应的位置
-    await db('bmk_group').batchDiffUpdate(data, {
-      id: { in: list.map((item) => item.id) },
-    });
-  }
+  const ids = list.map((item) => item.id);
+
+  db(table).batchDiffUpdate(
+    [{ match: 'id', field: 'num', items: ids.map((id, num) => ({ id, num })) }],
+    { id: { in: ids } },
+  );
 }
 
-// 移动书签位置
-export async function bookmarkMoveLocation(account, groupId, fromId, toId) {
-  if (fromId === toId) return;
-  const bms = await db('bmk')
-    .select('id')
-    .where({ account, state: 1, group_id: groupId })
-    .orderBy('num', 'ASC')
-    .find();
+export function bookListMoveLocation(account, fromId, toId) {
+  moveLocation('bmk_group', { account, state: 1 }, fromId, toId);
+}
 
-  const fIdx = bms.findIndex((item) => item.id === fromId),
-    tIdx = bms.findIndex((item) => item.id === toId);
-
-  if (fIdx >= 0 && tIdx >= 0) {
-    bms.splice(tIdx, 0, ...bms.splice(fIdx, 1));
-    const data = [
-      {
-        match: 'id',
-        field: 'num',
-        items: bms.map((item, i) => ({ id: item.id, num: i })),
-      },
-    ];
-
-    await db('bmk').batchDiffUpdate(data, {
-      id: { in: bms.map((item) => item.id) },
-    });
-  }
+export function bookmarkMoveLocation(account, groupId, fromId, toId) {
+  moveLocation('bmk', { account, state: 1, group_id: groupId }, fromId, toId);
 }
 
 // 分组是否存在
-export async function bmkGroupExist(account, groupId) {
+export function bmkGroupExist(account, groupId) {
   return db('bmk_group').select('id').where({ account, state: 1, id: groupId }).findOne();
 }
 

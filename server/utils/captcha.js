@@ -3,7 +3,9 @@ import { CacheByExpire } from './cache.js';
 import { svgToBase64Png } from './img.js';
 import nanoid from './nanoid.js';
 
-const cache = new CacheByExpire(30 * 1000, 30 * 1000);
+// 60 秒：比 verifyTrack 允许的 30 秒最大耗时多留一倍余量，避免边界时刻提前过期
+// maxSize 兜底：单条约 20KB，限制条目数避免极端情况下内存无限增长
+const cache = new CacheByExpire(60 * 1000, 60 * 1000, { maxSize: 3000 });
 
 const THEMES = {
   light: {
@@ -233,13 +235,10 @@ const captcha = {
     return false;
   },
   consume(id, flag) {
-    const value = cache.get(id);
+    const value = cache.take(id);
     if (!value) return false;
 
-    const { status, flag: f } = value;
-    cache.delete(id);
-
-    return status === 'passed' && f === flag;
+    return value.status === 'passed' && value.flag === flag;
   },
   getValue(id) {
     return cache.get(id);

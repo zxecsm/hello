@@ -6,7 +6,7 @@ import {
   getWordCount,
   getSplitWord,
   syncUpdateData,
-  createPagingData,
+  createPagingMeta,
   isValidColor,
 } from '../../utils/utils.js';
 
@@ -430,15 +430,15 @@ route.get(
       historydb.orderBy('serial', 'desc');
     }
 
-    const total = await historydb.count();
+    const total = historydb.count();
 
-    const result = createPagingData(Array(total), pageSize, pageNo);
+    const result = createPagingMeta(total, pageSize, pageNo);
 
     const offset = (result.pageNo - 1) * pageSize;
 
     let data = [];
     if (total > 0) {
-      data = await historydb.select('id,content').page(pageSize, offset).find();
+      data = historydb.select('id,content').page(pageSize, offset).find();
     }
 
     resp.success(res, 'ok', {
@@ -464,9 +464,9 @@ route.post(
     const { account } = res.locals.hello.userinfo;
 
     // 删除重复历史记录
-    await db('history').where({ account, content }).delete();
+    db('history').where({ account, content }).delete();
 
-    await db('history').insert({
+    db('history').insert({
       id: nanoid(),
       create_at: Date.now(),
       content,
@@ -495,7 +495,7 @@ route.get(
 
     if (!word) {
       // 没有输入返回历史记录最新10条
-      const list = await db('history')
+      const list = db('history')
         .where({ account, state: 1 })
         .select('id,content')
         .orderBy('serial', 'desc')
@@ -513,7 +513,7 @@ route.get(
       })();
     }
 
-    const bmkGroup = await db('bmk_group')
+    const bmkGroup = db('bmk_group')
       .select('id,title')
       .where({
         account,
@@ -527,19 +527,19 @@ route.get(
 
     const curSplit = splitWord.slice(0, 10);
     curSplit[0] = { value: curSplit[0], weight: 10 };
-    const historyList = await db('history')
+    const historyList = db('history')
       .select('id,content')
       .where({ account, state: 1 })
       .search(curSplit, ['content'], { sort: true })
       .limit(100)
       .find();
-    const bmkList = await db('bmk')
+    const bmkList = db('bmk')
       .select('id,title,link,des,group_id')
       .where({ account, state: 1 })
       .search(curSplit, ['title', 'link', 'des'], { sort: true })
       .limit(100)
       .find();
-    const noteList = await db('note')
+    const noteList = db('note')
       .select('id,title')
       .where({ account, state: 1 })
       .search(curSplit, ['title'], { sort: true })
@@ -615,13 +615,13 @@ route.post(
     const { account } = res.locals.hello.userinfo;
 
     if (ids.length > 0) {
-      await db('history')
+      db('history')
         .where({ id: { in: ids }, account, state: 1 })
         .update({
           state: 0,
         });
     } else {
-      await db('history').where({ account, state: 1 }).batchUpdate({
+      db('history').where({ account, state: 1 }).batchUpdate({
         state: 0,
       });
     }

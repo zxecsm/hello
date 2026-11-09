@@ -6,7 +6,7 @@ import timedTask from '../../utils/timedTask.js';
 
 import {
   syncUpdateData,
-  createPagingData,
+  createPagingMeta,
   isValidDate,
   writelog,
   concurrencyTasks,
@@ -53,7 +53,7 @@ timedTask.add(async () => {
     let lastSerial = 0;
 
     while (true) {
-      const list = await db('count_down')
+      const list = db('count_down')
         .select('account,serial')
         .where({ state: 1, end: { '<': t }, serial: { '>': lastSerial } })
         .orderBy('serial', 'asc')
@@ -81,7 +81,7 @@ timedTask.add(async () => {
     lastSerial = 0;
 
     while (true) {
-      const list = await db('todo')
+      const list = db('todo')
         .select('account,serial')
         .where({ state: 1, serial: { '>': lastSerial } })
         .orderBy('serial', 'asc')
@@ -159,9 +159,9 @@ route.get(
 
     const { account } = res.locals.hello.userinfo;
 
-    const total = await db('count_down').where({ account }).count();
+    const total = db('count_down').where({ account }).count();
 
-    const result = createPagingData(Array(total), pageSize, pageNo);
+    const result = createPagingMeta(total, pageSize, pageNo);
 
     const offset = (result.pageNo - 1) * pageSize;
 
@@ -170,7 +170,7 @@ route.get(
 
     if (total > 0) {
       // 剩下不到两天的数量
-      expireCount = await db('count_down')
+      expireCount = db('count_down')
         .where({
           account,
           state: 1,
@@ -178,21 +178,20 @@ route.get(
         })
         .count();
 
-      list = (
-        await db('count_down')
-          .select('id,title,link,start,end,state,top')
-          .where({ account })
-          .orderBy('top', 'desc')
-          .orderBy('end', 'asc')
-          .page(pageSize, offset)
-          .find()
-      ).map((item) => {
-        const { start, end } = item;
-        return {
-          ...item,
-          ...computerDay(start, end),
-        };
-      });
+      list = db('count_down')
+        .select('id,title,link,start,end,state,top')
+        .where({ account })
+        .orderBy('top', 'desc')
+        .orderBy('end', 'asc')
+        .page(pageSize, offset)
+        .find()
+        .map((item) => {
+          const { start, end } = item;
+          return {
+            ...item,
+            ...computerDay(start, end),
+          };
+        });
     }
 
     resp.success(res, 'ok', {
@@ -236,7 +235,7 @@ route.post(
       end,
       link,
     };
-    await db('count_down').insert(data);
+    db('count_down').insert(data);
 
     await saveBackupData(account, 'count', data);
 
@@ -263,11 +262,11 @@ route.post(
     const { account } = res.locals.hello.userinfo;
 
     if (ids.length > 0) {
-      await db('count_down')
+      db('count_down')
         .where({ id: { in: ids }, account })
         .delete();
     } else {
-      await db('count_down').where({ account }).batchDelete();
+      db('count_down').where({ account }).batchDelete();
     }
 
     syncUpdateData(res, 'countlist');
@@ -301,7 +300,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('count_down').where({ id, account }).update({
+    db('count_down').where({ id, account }).update({
       title,
       start,
       end,
@@ -329,7 +328,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('count_down').where({ id, account }).update({ top });
+    db('count_down').where({ id, account }).update({ top });
 
     syncUpdateData(res, 'countlist');
 
@@ -354,7 +353,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('count_down')
+    db('count_down')
       .where({ id: { in: ids }, account })
       .update({ state });
 

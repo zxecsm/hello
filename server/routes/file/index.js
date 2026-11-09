@@ -18,6 +18,8 @@ import appConfig from '../../data/config.js';
 
 import { db } from '../../utils/sqlite.js';
 
+import { clearUserInfoCache } from '../../utils/userCache.js';
+
 import _f from '../../utils/f.js';
 
 import { getFriendInfo, heperMsgAndForward } from '../chat/chat.js';
@@ -231,9 +233,8 @@ route.post(
 
     const cacheList = fileList.get(accFlag, `${p}_${word}`);
 
-    // 有缓存则返回缓存
+    // 有缓存则返回缓存（不续期，到点后重新读取）
     if (update === 0 && cacheList) {
-      fileList.resetExpireTime(accFlag, `${p}_${word}`);
       taskState.delete(taskKey);
 
       return resp.success(
@@ -446,7 +447,9 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('user').where({ account, state: 1 }).update({ file_history: state });
+    db('user').where({ account, state: 1 }).update({ file_history: state });
+
+    clearUserInfoCache(account);
 
     resp.success(res, `${state === 0 ? '关闭' : '开启'}文件历史记录成功`)();
   }),
@@ -702,7 +705,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('share').insert({
+    db('share').insert({
       id: nanoid(),
       create_at: Date.now(),
       account,

@@ -14,11 +14,12 @@ import {
   getTimePath,
   syncUpdateData,
   concurrencyTasks,
-  createPagingData,
+  createPagingMeta,
   unique,
 } from '../../utils/utils.js';
 
 import { _delDir } from '../file/file.js';
+import { clearUserInfoCache } from '../../utils/userCache.js';
 
 import { batchGetCollectBgList, getCollectBgList, getRandomBg, updateCollecBgtList } from './bg.js';
 
@@ -55,7 +56,7 @@ route.get(
     }
 
     // 从数据库中随机选择一条数据
-    const bgData = await getRandomBg(type === 'd' ? 'bg' : 'bgxs', 'id');
+    const bgData = getRandomBg(type === 'd' ? 'bg' : 'bgxs', 'id');
 
     // 如果没有数据，返回错误
     if (!bgData) {
@@ -81,13 +82,15 @@ route.use(
 timedTask.add(async (flag) => {
   if (flag.slice(-6) === '000000') {
     // 从数据库中随机获取一张背景壁纸和一张背景小图
-    const bg = await getRandomBg('bg', 'id');
-    const bgxs = await getRandomBg('bgxs', 'id');
+    const bg = getRandomBg('bg', 'id');
+    const bgxs = getRandomBg('bgxs', 'id');
 
     // 更新用户数据
-    await db('user')
+    db('user')
       .where({ daily_change_bg: 1, state: 1 })
       .batchUpdate({ bg: bg ? bg.id : '', bgxs: bgxs ? bgxs.id : '' });
+
+    clearUserInfoCache();
 
     Object.keys(_connect.getConnects()).forEach((key) => {
       _connect.send(
@@ -112,7 +115,7 @@ route.get(
   asyncHandler(async (_, res) => {
     const { type } = res.locals.ctx;
 
-    const bgData = await getRandomBg(type, 'id,type');
+    const bgData = getRandomBg(type, 'id,type');
 
     if (!bgData) {
       return resp.notFound(res, '壁纸库为空，请先上传壁纸')();
@@ -136,9 +139,11 @@ route.post(
     const { type, id } = res.locals.ctx;
 
     const { account } = res.locals.hello.userinfo;
-    await db('user')
+    db('user')
       .where({ account, state: 1 })
       .update({ [type]: id });
+
+    clearUserInfoCache(account);
 
     syncUpdateData(res, 'userinfo');
 
@@ -212,11 +217,11 @@ route.get(
         if (isChange) {
           await updateCollecBgtList(account, list);
         }
-        result = createPagingData(Array(data.length), pageSize, pageNo);
+        result = createPagingMeta(data.length, pageSize, pageNo);
         const offset = (result.pageNo - 1) * pageSize;
         data = data.reverse().slice(offset, offset + pageSize);
       } else {
-        result = createPagingData(Array(0), pageSize, pageNo);
+        result = createPagingMeta(0, pageSize, pageNo);
       }
 
       return resp.success(res, 'ok', {
@@ -227,15 +232,15 @@ route.get(
 
     const bgdb = db('bg').where({ type });
 
-    const total = await bgdb.count();
+    const total = bgdb.count();
 
-    const result = createPagingData(Array(total), pageSize, pageNo);
+    const result = createPagingMeta(total, pageSize, pageNo);
 
     const offset = (result.pageNo - 1) * pageSize;
 
     let data = [];
     if (total > 0) {
-      data = await bgdb.select('id,type').page(pageSize, offset).orderBy('serial', 'DESC').find();
+      data = bgdb.select('id,type').page(pageSize, offset).orderBy('serial', 'DESC').find();
       data = data.map((item) => {
         if (collectList.includes(item.id)) {
           item.isCollect = true;
@@ -287,9 +292,9 @@ route.post(
       .select('url')
       .where({ id: { in: ids } });
 
-    const dels = await bgDb.find();
+    const dels = bgDb.find();
 
-    await bgDb.delete();
+    bgDb.delete();
 
     await concurrencyTasks(dels, 5, async (del) => {
       const { url } = del;
@@ -320,7 +325,7 @@ route.post(
   asyncHandler(async (req, res) => {
     const { HASH, name } = res.locals.ctx;
 
-    const bg = await db('bg').select('url').where({ hash: HASH }).findOne();
+    const bg = db('bg').select('url').where({ hash: HASH }).findOne();
     if (bg) {
       return resp.forbidden(res, '壁纸已存在')();
     }
@@ -347,7 +352,7 @@ route.post(
 
     const url = _path.normalizeNoSlash(timePath, tName);
 
-    await db('bg').insert({
+    db('bg').insert({
       create_at,
       id: nanoid(),
       hash: HASH,
@@ -372,7 +377,7 @@ route.post(
   asyncHandler(async (_, res) => {
     const { HASH } = res.locals.ctx;
 
-    const bg = await db('bg').select('url,id').where({ hash: HASH }).findOne();
+    const bg = db('bg').select('url,id').where({ hash: HASH }).findOne();
 
     if (bg) {
       if ((await _f.getType(appConfig.bgDir(bg.url))) === 'file') {
@@ -380,7 +385,7 @@ route.post(
       }
 
       // 壁纸文件丢失，删除数据，重新上传
-      await db('bg').where({ id: bg.id }).delete();
+      db('bg').where({ id: bg.id }).delete();
     }
 
     resp.ok(res)();

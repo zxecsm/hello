@@ -2,7 +2,7 @@ import express from 'express';
 
 import { db } from '../../utils/sqlite.js';
 
-import { syncUpdateData, createPagingData } from '../../utils/utils.js';
+import { syncUpdateData, createPagingMeta } from '../../utils/utils.js';
 
 import { fieldLength } from '../config.js';
 import nanoid from '../../utils/nanoid.js';
@@ -39,9 +39,9 @@ route.get(
 
     const { account } = res.locals.hello.userinfo;
 
-    const total = await db('todo').where({ account }).count();
+    const total = db('todo').where({ account }).count();
 
-    const result = createPagingData(Array(total), pageSize, pageNo);
+    const result = createPagingMeta(total, pageSize, pageNo);
 
     const offset = (result.pageNo - 1) * pageSize;
 
@@ -50,9 +50,9 @@ route.get(
 
     if (total > 0) {
       // 未完成代办数
-      undoneCount = await db('todo').where({ account, state: 1 }).count();
+      undoneCount = db('todo').where({ account, state: 1 }).count();
 
-      data = await db('todo')
+      data = db('todo')
         .select('id,content,state,update_at')
         .where({ account })
         .orderBy('state', 'desc')
@@ -92,7 +92,7 @@ route.post(
       content,
       update_at: create_at,
     };
-    await db('todo').insert(data);
+    db('todo').insert(data);
 
     await saveBackupData(account, 'todo', data);
 
@@ -119,11 +119,11 @@ route.post(
     const { account } = res.locals.hello.userinfo;
 
     if (ids.length > 0) {
-      await db('todo')
+      db('todo')
         .where({ id: { in: ids }, account })
         .delete();
     } else {
-      await db('todo').where({ account }).batchDelete();
+      db('todo').where({ account }).batchDelete();
     }
 
     syncUpdateData(res, 'todolist');
@@ -149,7 +149,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('todo')
+    db('todo')
       .where({ id: { in: ids }, account })
       .update({ state, update_at: Date.now() });
 
@@ -174,7 +174,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('todo').where({ id, account }).update({ content, update_at: Date.now() });
+    db('todo').where({ id, account }).update({ content, update_at: Date.now() });
 
     syncUpdateData(res, 'todolist');
 

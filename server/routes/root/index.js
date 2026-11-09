@@ -7,19 +7,20 @@ import mailer from '../../utils/email.js';
 import _f from '../../utils/f.js';
 import _2fa from '../../utils/_2fa.js';
 
-import { runSql, db } from '../../utils/sqlite.js';
+import { runSql, db, transaction } from '../../utils/sqlite.js';
 
 import timedTask from '../../utils/timedTask.js';
 
-import { createPagingData, isEmail, writelog } from '../../utils/utils.js';
+import { createPagingMeta, isEmail, writelog } from '../../utils/utils.js';
 
-import { becomeFriends, cleanUpload, heperMsgAndForward } from '../chat/chat.js';
+import { becomeFriendsSync, cleanUpload, heperMsgAndForward } from '../chat/chat.js';
 
 import { fieldLength } from '../config.js';
 
 import { _delDir, readMenu } from '../file/file.js';
 
 import { deleteUser } from '../user/user.js';
+import { clearUserInfoCache } from '../../utils/userCache.js';
 import _path from '../../utils/path.js';
 import _crypto from '../../utils/crypto.js';
 import { getSystemUsage } from '../../utils/sys.js';
@@ -95,9 +96,9 @@ route.get(
     if (word) {
       userDB.where({ $or: [{ username: word }, { account: word }, { email: word }] });
     }
-    const total = await userDB.clone().count();
+    const total = userDB.clone().count();
 
-    const result = createPagingData(Array(total), pageSize, pageNo);
+    const result = createPagingMeta(total, pageSize, pageNo);
 
     const offset = (result.pageNo - 1) * pageSize;
 
@@ -171,9 +172,11 @@ route.post(
   asyncHandler(async (_, res) => {
     const { accounts, state } = res.locals.ctx;
 
-    await db('user')
+    db('user')
       .where({ account: { in: accounts } })
       .update({ state });
+
+    accounts.forEach((acc) => clearUserInfoCache(acc));
 
     if (state === 1) {
       resp.success(res, '激活账号成功')();
@@ -229,7 +232,7 @@ route.post(
       while (true) {
         if (signal.aborted) throw new Error('Operation aborted');
 
-        const songs = await db('songs')
+        const songs = db('songs')
           .select('url,serial')
           .where({ serial: { '>': lastId } })
           .limit(500)
@@ -251,7 +254,7 @@ route.post(
         }
 
         if (delDatas.length) {
-          await db('songs')
+          db('songs')
             .where({ serial: { in: delDatas } })
             .delete();
           dataCount += delDatas.length;
@@ -322,7 +325,7 @@ route.post(
       while (true) {
         if (signal.aborted) throw new Error('Operation aborted');
 
-        const bgs = await db('bg')
+        const bgs = db('bg')
           .select('url,serial')
           .where({ serial: { '>': lastId } })
           .limit(500)
@@ -344,7 +347,7 @@ route.post(
         }
 
         if (delDatas.length) {
-          await db('bg')
+          db('bg')
             .where({ serial: { in: delDatas } })
             .delete();
           dataCount += delDatas.length;
@@ -415,7 +418,7 @@ route.post(
       while (true) {
         if (signal.aborted) throw new Error('Operation aborted');
 
-        const pics = await db('pic')
+        const pics = db('pic')
           .select('url,serial')
           .where({ serial: { '>': lastId } })
           .limit(500)
@@ -437,7 +440,7 @@ route.post(
         }
 
         if (delDatas.length) {
-          await db('pic')
+          db('pic')
             .where({ serial: { in: delDatas } })
             .delete();
           dataCount += delDatas.length;
@@ -508,7 +511,7 @@ route.post(
       while (true) {
         if (signal.aborted) throw new Error('Operation aborted');
 
-        const uploads = await db('upload AS u')
+        const uploads = db('upload AS u')
           .select('u.url,u.serial')
           .join(
             'chat AS c',
@@ -526,7 +529,7 @@ route.post(
         if (uploads.length === 0) break;
         lastId = uploads[uploads.length - 1].serial;
 
-        await db('upload')
+        db('upload')
           .where({ serial: { in: uploads.map((u) => u.serial) } })
           .delete();
         dataCount += uploads.length;
@@ -540,7 +543,7 @@ route.post(
       while (true) {
         if (signal.aborted) throw new Error('Operation aborted');
 
-        const uploads = await db('upload')
+        const uploads = db('upload')
           .select('url,serial')
           .where({ serial: { '>': lastId } })
           .limit(500)
@@ -562,7 +565,7 @@ route.post(
         }
 
         if (delDatas.length) {
-          await db('upload')
+          db('upload')
             .where({ serial: { in: delDatas } })
             .delete();
           dataCount += delDatas.length;
@@ -751,7 +754,7 @@ route.post(
 route.post(
   '/clean-database',
   asyncHandler(async (_, res) => {
-    await runSql('VACUUM;');
+    runSql('VACUUM;');
     resp.success(res, '清理数据库成功')();
   }),
 );
@@ -878,25 +881,28 @@ route.post(
   asyncHandler(async (_, res) => {
     const { username, password } = res.locals.ctx;
 
-    const userInfo = await db('user').select('account').where({ username }).findOne();
+    const userInfo = db('user').select('account').where({ username }).findOne();
     if (userInfo) {
       return resp.forbidden(res, '用户名已注册')();
     }
 
     // 写入用户数据
     const account = nanoid();
+    const passwordHash = await _crypto.hashPassword(password);
 
-    await db('user').insert({
-      create_at: Date.now(),
-      update_at: 0,
-      account,
-      username,
-      chat_id: nanoid(),
-      password: await _crypto.hashPassword(password),
+    transaction(() => {
+      db('user').insert({
+        create_at: Date.now(),
+        update_at: 0,
+        account,
+        username,
+        chat_id: nanoid(),
+        password: passwordHash,
+      });
+
+      becomeFriendsSync(account, appConfig.chatRoomAccount);
+      becomeFriendsSync(account, appConfig.notifyAccount);
     });
-
-    await becomeFriends(account, appConfig.chatRoomAccount);
-    await becomeFriends(account, appConfig.notifyAccount);
 
     resp.success(res, '创建账号成功', { account, username })();
   }),

@@ -13,13 +13,13 @@ import {
   getTimePath,
   syncUpdateData,
   isImgFile,
-  createPagingData,
+  createPagingMeta,
   getSplitWord,
   concurrencyTasks,
   getWordContent,
 } from '../../utils/utils.js';
 
-import { db } from '../../utils/sqlite.js';
+import { db, transaction } from '../../utils/sqlite.js';
 
 import timedTask from '../../utils/timedTask.js';
 
@@ -34,12 +34,14 @@ import mailer from '../../utils/email.js';
 import {
   sendNotifyMsg,
   onlineMsg,
-  becomeFriends,
+  becomeFriendsSync,
   heperMsgAndForward,
   parseForwardMsgLink,
 } from '../chat/chat.js';
 
 import { getUserInfo, deleteUser, getFontList } from './user.js';
+
+import { clearUserInfoCache, touchUserInfoCache } from '../../utils/userCache.js';
 
 import jwt from '../../utils/jwt.js';
 import { fieldLength } from '../config.js';
@@ -158,7 +160,7 @@ route.post(
       })();
     }
 
-    const userInfo = await db('user').select('account').where({ username }).findOne();
+    const userInfo = db('user').select('account').where({ username }).findOne();
 
     if (userInfo) {
       return resp.forbidden(res, '用户名无法使用')();
@@ -167,22 +169,27 @@ route.post(
     // 写入用户数据
     const account = nanoid();
     const create_at = Date.now();
-    await db('user').insert({
-      create_at,
-      update_at: create_at,
-      account,
-      username,
-      chat_id: nanoid(),
-      password: await _crypto.hashPassword(password),
+    const passwordHash = await _crypto.hashPassword(password);
+
+    // 用户和好友关系一次提交，避免出现「有用户没好友」的半成品
+    transaction(() => {
+      db('user').insert({
+        create_at,
+        update_at: create_at,
+        account,
+        username,
+        chat_id: nanoid(),
+        password: passwordHash,
+      });
+
+      becomeFriendsSync(account, appConfig.chatRoomAccount);
+      becomeFriendsSync(account, appConfig.notifyAccount);
     });
 
     // 种下Cookie
     await jwt.setCookie(res, { account, username });
 
     registerCount++;
-
-    await becomeFriends(account, appConfig.chatRoomAccount);
-    await becomeFriends(account, appConfig.notifyAccount);
 
     const { os, ip } = res.locals.hello;
 
@@ -209,7 +216,7 @@ route.post(
   asyncHandler(async (_, res) => {
     const { code, username } = res.locals.ctx;
 
-    const userinfo = await db('user')
+    const userinfo = db('user')
       .select('account, remote_login')
       .where({
         username,
@@ -261,7 +268,7 @@ route.post(
   ),
   asyncHandler(async (_, res) => {
     const { code, username } = res.locals.ctx;
-    const userinfo = await db('user')
+    const userinfo = db('user')
       .select('account, remote_login')
       .where({
         username,
@@ -404,7 +411,7 @@ route.post(
       })();
     }
 
-    const userinfo = await db('user')
+    const userinfo = db('user')
       .select('verify,account,password')
       .where({
         username,
@@ -536,7 +543,7 @@ route.get(
       return resp.forbidden(res, '邮箱验证功能已关闭')();
     }
 
-    const userinfo = await db('user')
+    const userinfo = db('user')
       .select('account,email')
       .where({
         username,
@@ -583,7 +590,7 @@ route.post(
     const { account, code, captchaId } = res.locals.ctx;
 
     // 通过账号在服务端查邮箱，客户端不再接触明文邮箱
-    const userinfo = await db('user')
+    const userinfo = db('user')
       .select('username,email')
       .where({
         account: { '=': account, '!=': appConfig.notifyAccount },
@@ -607,13 +614,15 @@ route.post(
 
     if (mailer.get(email) === code) {
       // 清除密码和两部验证token
-      await db('user')
+      db('user')
         .where({ account, state: 1 })
         .update({
           password: '',
           verify: '',
           exp_token_time: parseInt(Date.now() / 1000) - 2,
         });
+
+      clearUserInfoCache(account);
 
       await jwt.setCookie(res, {
         account,
@@ -678,7 +687,8 @@ route.get(
   }),
 );
 
-// 发送邮件验证码
+// 发送邮件验证码（按账号限制发送频率，避免用不同邮箱刷信）
+const bindMailLimit = verifyLimit({ space: 60 * 10, count: 5 }, false);
 route.post(
   '/bind-mail-code',
   validate(
@@ -689,6 +699,7 @@ route.post(
   ),
   asyncHandler(async (_, res) => {
     const { email } = res.locals.ctx;
+    const { account } = res.locals.hello.userinfo;
 
     if (!_d.email.state) {
       return resp.forbidden(res, '邮箱验证功能已关闭')();
@@ -698,7 +709,11 @@ route.post(
       return resp.success(res, '验证码已发送')();
     }
 
-    const userinfo = await db('user').select('account').where({ email }).findOne();
+    if (!bindMailLimit.verify(account)) {
+      return resp.forbidden(res, '发送次数过多，请稍后再试')();
+    }
+
+    const userinfo = db('user').select('account').where({ email }).findOne();
 
     if (userinfo) {
       return resp.forbidden(res, '邮箱已绑定用户')();
@@ -706,13 +721,22 @@ route.post(
 
     const code = createMailCode();
 
-    await mailer.sendCode(email, code);
+    // 先占用配额再发送：避免并发请求同时通过校验；发送失败则归还
+    bindMailLimit.add(account);
+
+    try {
+      await mailer.sendCode(email, code);
+    } catch (error) {
+      bindMailLimit.delete(account);
+      throw error;
+    }
 
     resp.success(res, '验证码发送成功')();
   }),
 );
 
-// 绑定邮箱
+// 绑定邮箱（限制验证码错误次数，防止暴力尝试 6 位验证码）
+const bindEmailVerifyLimit = verifyLimit({ space: 60 * 10, count: 5 });
 route.post(
   '/bind-email',
   validate(
@@ -733,7 +757,9 @@ route.post(
     }
 
     if (!code) {
-      await db('user').where({ account, state: 1 }).update({ email: '' });
+      db('user').where({ account, state: 1 }).update({ email: '' });
+
+      clearUserInfoCache(account);
 
       syncUpdateData(res, 'userinfo');
 
@@ -744,21 +770,30 @@ route.post(
       return resp.badRequest(res)('email 不能为空', 1);
     }
 
-    const userinfo = await db('user').select('account').where({ email }).findOne();
+    if (!bindEmailVerifyLimit.verify(account)) {
+      return resp.forbidden(res, '验证码错误次数过多，请稍后再试')();
+    }
+
+    const userinfo = db('user').select('account').where({ email }).findOne();
 
     if (userinfo) {
       return resp.forbidden(res, '邮箱已绑定用户')();
     }
 
     if (mailer.get(email) === code) {
-      await db('user').where({ account, state: 1 }).update({ email });
+      db('user').where({ account, state: 1 }).update({ email });
+
+      clearUserInfoCache(account);
 
       mailer.del(email);
+      // 成功后清空错误计数
+      bindEmailVerifyLimit.delete(account);
 
       syncUpdateData(res, 'userinfo');
 
       resp.success(res, '绑定邮箱成功')();
     } else {
+      bindEmailVerifyLimit.add(account);
       resp.forbidden(res, '验证码错误，请重新输入')();
     }
   }),
@@ -793,7 +828,9 @@ route.post(
     }
 
     if (!token) {
-      await db('user').where({ account, state: 1 }).update({ verify: '' });
+      db('user').where({ account, state: 1 }).update({ verify: '' });
+
+      clearUserInfoCache(account);
 
       syncUpdateData(res, 'userinfo');
 
@@ -804,7 +841,9 @@ route.post(
 
     // 验证token
     if (_2fa.verify(verify, token)) {
-      await db('user').where({ account, state: 1 }).update({ verify });
+      db('user').where({ account, state: 1 }).update({ verify });
+
+      clearUserInfoCache(account);
 
       syncUpdateData(res, 'userinfo');
 
@@ -882,12 +921,14 @@ route.post(
 
     //对比原密码
     if ((await _crypto.verifyPassword(oldpassword, password)) || !password) {
-      await db('user')
+      db('user')
         .where({ account, state: 1 })
         .update({
           password: await _crypto.hashPassword(newpassword),
           exp_token_time: parseInt(Date.now() / 1000),
         });
+
+      clearUserInfoCache(account);
 
       resp.success(res, '修改密码成功，请重新登录')();
     } else {
@@ -932,11 +973,13 @@ route.post(
     if (other === 1) {
       const { account, username } = res.locals.hello.userinfo;
       //退出其他登录设备
-      await db('user')
+      db('user')
         .where({ account, state: 1 })
         .update({
           exp_token_time: parseInt(Date.now() / 1000) - 2,
         });
+
+      clearUserInfoCache(account);
 
       await jwt.setCookie(res, {
         account,
@@ -960,7 +1003,7 @@ route.post(
   asyncHandler(async (_, res) => {
     const { username } = res.locals.ctx;
 
-    const userinfo = await db('user')
+    const userinfo = db('user')
       .select('account')
       .where({
         username,
@@ -973,7 +1016,9 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('user').where({ account, state: 1 }).update({ username });
+    db('user').where({ account, state: 1 }).update({ username });
+
+    clearUserInfoCache(account);
 
     await jwt.setCookie(res, {
       account,
@@ -1070,7 +1115,9 @@ route.post(
   asyncHandler(async (_, res) => {
     const { account } = res.locals.hello.userinfo;
 
-    await db('user').where({ account, state: 1 }).update({ logo: '' });
+    db('user').where({ account, state: 1 }).update({ logo: '' });
+
+    clearUserInfoCache(account);
 
     syncUpdateData(res, 'userinfo');
 
@@ -1125,7 +1172,7 @@ route.post(
     const logo = _path.normalizeNoSlash(timePath, `${HASH}.${_path.extname(name)[2]}`);
 
     if (type === 'bookmark') {
-      await db('bmk')
+      db('bmk')
         .where({ account, id, state: 1 })
         .update({ logo: _path.normalizeNoSlash('/logo', account, logo) });
 
@@ -1133,7 +1180,9 @@ route.post(
 
       resp.success(res, '更新书签LOGO成功')();
     } else if (type === 'userlogo') {
-      await db('user').where({ account, state: 1 }).update({ logo });
+      db('user').where({ account, state: 1 }).update({ logo });
+
+      clearUserInfoCache(account);
 
       syncUpdateData(res, 'userinfo');
 
@@ -1185,7 +1234,9 @@ route.post(
     } else {
       tem = 1;
     }
-    await db('user').where({ account, state: 1 }).update({ daily_change_bg: tem });
+    db('user').where({ account, state: 1 }).update({ daily_change_bg: tem });
+
+    clearUserInfoCache(account);
 
     syncUpdateData(res, 'userinfo');
 
@@ -1211,7 +1262,9 @@ route.post(
       tem = 1;
     }
 
-    await db('user').where({ account, state: 1 }).update({ hide: tem });
+    db('user').where({ account, state: 1 }).update({ hide: tem });
+
+    clearUserInfoCache(account);
 
     syncUpdateData(res, 'userinfo');
 
@@ -1239,7 +1292,9 @@ route.post(
       tem = 1;
     }
 
-    await db('user').where({ account, state: 1 }).update({ remote_login: tem });
+    db('user').where({ account, state: 1 }).update({ remote_login: tem });
+
+    clearUserInfoCache(account);
 
     syncUpdateData(res, 'userinfo');
 
@@ -1275,7 +1330,8 @@ route.get(
     let { flag, page } = res.locals.ctx; //标识和设备ID
 
     if (page === 'home') {
-      await db('user').where({ account, state: 1 }).update({ update_at: Date.now() });
+      db('user').where({ account, state: 1 }).update({ update_at: Date.now() });
+      touchUserInfoCache(account);
       // 主页才通知在线
       onlineMsg(res);
     }
@@ -1648,7 +1704,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('share')
+    db('share')
       .where({ id: { in: ids }, account })
       .delete();
 
@@ -1675,7 +1731,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('share')
+    db('share')
       .where({ id: { in: ids }, account })
       .update({ state });
 
@@ -1700,16 +1756,16 @@ route.get(
 
     const { account } = res.locals.hello.userinfo;
 
-    const total = await db('share').where({ account }).count();
+    const total = db('share').where({ account }).count();
 
-    const result = createPagingData(Array(total), pageSize, pageNo);
+    const result = createPagingMeta(total, pageSize, pageNo);
 
     const offset = (result.pageNo - 1) * pageSize;
 
     let data = [];
 
     if (total > 0) {
-      data = await db('share')
+      data = db('share')
         .select('id,type,title,pass,exp_time,state')
         .where({
           account,
@@ -1751,7 +1807,7 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    await db('share').where({ id, account }).update(obj);
+    db('share').where({ id, account }).update(obj);
 
     syncUpdateData(res, 'sharelist');
 
@@ -1830,19 +1886,19 @@ route.get(
       }
     }
 
-    const total = await trashdb.count();
+    const total = trashdb.count();
 
-    const result = createPagingData(Array(total), pageSize, pageNo);
+    const result = createPagingMeta(total, pageSize, pageNo);
 
     const offset = (result.pageNo - 1) * pageSize;
 
     let data = [];
 
     if (total > 0) {
-      data = await trashdb.page(pageSize, offset).find();
+      data = trashdb.page(pageSize, offset).find();
 
       if (type === 'note') {
-        const noteCategory = await db('note_category').select('id,title').where({ account }).find();
+        const noteCategory = db('note_category').select('id,title').where({ account }).find();
 
         data = data.map((item) => {
           let { title, content, id, create_at, update_at, visit_count, top, category } = item;
@@ -1915,7 +1971,7 @@ route.get(
           }
         });
       } else if (type === 'ssh') {
-        const sshCategory = await db('ssh_category').select('id,title').where({ account }).find();
+        const sshCategory = db('ssh_category').select('id,title').where({ account }).find();
         data = data.map((item) => {
           const cArr = item.category.split('-').filter(Boolean);
           const categoryArr = sshCategory.filter((item) => cArr.includes(item.id));
@@ -1953,43 +2009,46 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    const deleteAssociated = async (ids) => {
-      // 删除分组，则删除分组下的所有书签
+    const noteIds = [];
+
+    // 该回调在 batchDelete 的事务内同步执行
+    const handleDeleted = (list) => {
+      const deletedIds = list.map((item) => item.id);
+
+      // 删除分组时，同一事务内删除分组下的所有书签
       if (type === 'bmk_group') {
-        await db('bmk')
-          .where({ group_id: { in: ids }, account })
-          .batchDelete();
-      }
-
-      // 移动笔记历史到文件回收站
-      if (type === 'note') {
-        const trashDir = appConfig.trashDir(account);
-
-        await concurrencyTasks(ids, 5, async (id) => {
-          const noteHistoryDir = appConfig.noteHistoryDir(account, id);
-
-          if (await _f.exists(noteHistoryDir)) {
-            let targetPath = _path.normalizeNoSlash(trashDir, id);
-            if (await _f.exists(targetPath)) {
-              targetPath = await getUniqueFilename(targetPath);
-            }
-            await _f.rename(noteHistoryDir, targetPath);
-          }
-        });
+        db('bmk')
+          .where({ group_id: { in: deletedIds }, account })
+          .delete();
+      } else if (type === 'note') {
+        // 文件操作不能放在事务里，先收集 ID，提交后再移动
+        noteIds.push(...deletedIds);
       }
     };
 
     if (ids.length > 0) {
-      await db(type)
+      db(type)
         .where({ id: { in: ids }, account, state: 0 })
-        .delete();
-      await deleteAssociated(ids);
+        .batchDelete({}, 'id', handleDeleted);
     } else {
-      await db(type)
-        .where({ account, state: 0 })
-        .batchDelete({}, 'id', async (list) => {
-          await deleteAssociated(list.map((item) => item.id));
-        });
+      db(type).where({ account, state: 0 }).batchDelete({}, 'id', handleDeleted);
+    }
+
+    // 移动笔记历史到文件回收站（数据库事务已提交）
+    if (type === 'note' && noteIds.length > 0) {
+      const trashDir = appConfig.trashDir(account);
+
+      await concurrencyTasks(noteIds, 5, async (id) => {
+        const noteHistoryDir = appConfig.noteHistoryDir(account, id);
+
+        if (await _f.exists(noteHistoryDir)) {
+          let targetPath = _path.normalizeNoSlash(trashDir, id);
+          if (await _f.exists(targetPath)) {
+            targetPath = await getUniqueFilename(targetPath);
+          }
+          await _f.rename(noteHistoryDir, targetPath);
+        }
+      });
     }
 
     syncUpdateData(res, 'trash');
@@ -2016,11 +2075,11 @@ route.post(
     const { account } = res.locals.hello.userinfo;
 
     if (ids.length > 0) {
-      await db(type)
+      db(type)
         .where({ id: { in: ids }, account, state: 0 })
         .update({ state: 1 });
     } else {
-      await db(type).where({ account, state: 0 }).batchUpdate({ state: 1 });
+      db(type).where({ account, state: 0 }).batchUpdate({ state: 1 });
     }
 
     syncUpdateData(res, 'trash');

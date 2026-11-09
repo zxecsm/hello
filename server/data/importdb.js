@@ -13,8 +13,8 @@ import initDatabase from './initDatabase.js';
 
     // 插入数据
     for (const { name, data } of tables) {
-      await runSql(`DELETE FROM sqlite_sequence WHERE name=?;`, [name]); // 从头开始自增
-      await db(name).insertMany(
+      runSql(`DELETE FROM sqlite_sequence WHERE name=?;`, [name]); // 从头开始自增
+      db(name).insertMany(
         data.map((item) => {
           delete item.serial;
           return item;

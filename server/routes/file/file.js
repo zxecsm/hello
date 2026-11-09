@@ -186,7 +186,7 @@ export async function writeHistoryDirs(account, list) {
 
 export async function fileToMusic(p) {
   const HASH = await _crypto.sampleHash(p);
-  if (await db('songs').select('id').where({ hash: HASH }).findOne()) return false;
+  if (db('songs').select('id').where({ hash: HASH }).findOne()) return false;
 
   const songId = nanoid();
 
@@ -214,7 +214,7 @@ export async function fileToMusic(p) {
 
   await _f.writeFile(_path.normalizeNoSlash(tDir, `${songId}.lrc`), lrc);
 
-  await db('songs').insert({
+  db('songs').insert({
     id: songId,
     create_at,
     artist,
@@ -234,7 +234,7 @@ export async function fileToMusic(p) {
 
 export async function fileToBg(p) {
   const HASH = await _crypto.sampleHash(p);
-  if (await db('bg').select('url').where({ hash: HASH }).findOne()) return false;
+  if (db('bg').select('url').where({ hash: HASH }).findOne()) return false;
 
   const [, title, , suffix] = _path.basename(p);
   const create_at = Date.now();
@@ -258,7 +258,7 @@ export async function fileToBg(p) {
 
   const url = _path.normalizeNoSlash(timePath, tName);
 
-  await db('bg').insert({
+  db('bg').insert({
     create_at,
     id: nanoid(),
     hash: HASH,

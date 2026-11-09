@@ -8,11 +8,11 @@ export function getRandomBg(type, fields) {
 
 // 获取收藏列表
 export async function getCollectBgList(account) {
-  let obj = await db('collect_bg').select('data').where({ account }).findOne();
+  let obj = db('collect_bg').select('data').where({ account }).findOne();
 
   const list = [];
   if (!obj) {
-    await db('collect_bg').insert({
+    db('collect_bg').insert({
       create_at: Date.now(),
       account,
       data: JSON.stringify(list),
@@ -42,7 +42,7 @@ export async function batchGetCollectBgList(ids) {
 
     if (arr.length === 0) return false;
 
-    const list = await db('bg')
+    const list = db('bg')
       .select('id,type')
       .where({ id: { in: arr } })
       .find();

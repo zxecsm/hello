@@ -12,7 +12,7 @@ import {
   receiveFiles,
   isImgFile,
   getTimePath,
-  createPagingData,
+  createPagingMeta,
   concurrencyTasks,
 } from '../../utils/utils.js';
 
@@ -56,7 +56,7 @@ route.post(
   asyncHandler(async (req, res) => {
     const { HASH, name } = res.locals.ctx;
 
-    const pic = await db('pic').select('hash').where({ hash: HASH }).findOne();
+    const pic = db('pic').select('hash').where({ hash: HASH }).findOne();
 
     if (pic) {
       return resp.forbidden(res, '图片已存在')();
@@ -86,7 +86,7 @@ route.post(
       title,
     };
 
-    await db('pic').insert(obj);
+    db('pic').insert(obj);
 
     resp.success(res, '上传图片成功', { id: obj.id })();
   }),
@@ -104,14 +104,14 @@ route.post(
   asyncHandler(async (_, res) => {
     const { HASH } = res.locals.ctx;
 
-    const pic = await db('pic').select('id,url').where({ hash: HASH }).findOne();
+    const pic = db('pic').select('id,url').where({ hash: HASH }).findOne();
 
     if (pic) {
       if ((await _f.getType(appConfig.picDir(pic.url))) === 'file') {
         return resp.success(res, 'ok', { id: pic.id })();
       }
 
-      await db('pic').where({ id: pic.id }).delete();
+      db('pic').where({ id: pic.id }).delete();
     }
 
     resp.ok(res)();
@@ -141,15 +141,15 @@ route.get(
   asyncHandler(async (_, res) => {
     const { pageNo, pageSize } = res.locals.ctx;
 
-    const total = await db('pic').count();
+    const total = db('pic').count();
 
-    const result = createPagingData(Array(total), pageSize, pageNo);
+    const result = createPagingMeta(total, pageSize, pageNo);
 
     let list = [];
     if (total > 0) {
       const offset = (result.pageNo - 1) * pageSize;
 
-      list = await db('pic').select('id').orderBy('serial', 'desc').page(pageSize, offset).find();
+      list = db('pic').select('id').orderBy('serial', 'desc').page(pageSize, offset).find();
     }
 
     resp.success(res, 'ok', {
@@ -172,7 +172,7 @@ route.post(
   asyncHandler(async (_, res) => {
     const ids = res.locals.ctx;
 
-    const dels = await db('pic')
+    const dels = db('pic')
       .select('url')
       .where({ id: { in: ids } })
       .find();
@@ -183,7 +183,7 @@ route.post(
       await _delDir(appConfig.picDir(url));
     });
 
-    await db('pic')
+    db('pic')
       .where({ id: { in: ids } })
       .delete();
 

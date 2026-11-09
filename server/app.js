@@ -195,12 +195,10 @@ app.use(async (req, res, next) => {
     // 限制请求频率
     const flag = userinfo.account || '';
 
-    if (!reqLimit.verify(ip, flag)) {
+    if (!reqLimit.hit(ip, flag)) {
       informReqLimit(res);
       return resp.forbidden(res, '请求频率超过限制')();
     }
-
-    reqLimit.add(ip, flag);
 
     next();
   } catch (error) {
@@ -299,7 +297,7 @@ app.all(
       return resp.badRequest(res)(error, 1);
     }
 
-    const user = await db('user')
+    const user = db('user')
       .select('account')
       .where({ chat_id, state: 1, receive_chat_state: 1 })
       .findOne();
@@ -420,13 +418,13 @@ app.get(
       return resp.forbidden(res, '接口未开放')();
     }
 
-    const musicData = await db('songs').select('id').getRandomOne();
+    const musicData = db('songs').select('id').getRandomOne();
 
     if (!musicData) {
       return resp.notFound(res, '音乐库为空')();
     }
 
-    await db('songs').where({ id: musicData.id }).increment({ play_count: 1 });
+    db('songs').where({ id: musicData.id }).increment({ play_count: 1 });
     await getFile(req, res, `/music/url/${musicData.id}`, false);
   }),
 );

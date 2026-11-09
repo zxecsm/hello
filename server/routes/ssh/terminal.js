@@ -83,7 +83,8 @@ export function createTerminal(account, temid, config, defaultPath = '') {
     if (cleaned) return;
     cleaned = true;
     stopSshOutput?.();
-    sshCache.delete(temid);
+    // 仅当缓存里仍是当前会话时才删除，避免旧会话关闭时误删同 key 的新会话
+    sshCache.deleteIf(temid, sshObj);
   };
 
   sshClient.on('ready', () => {

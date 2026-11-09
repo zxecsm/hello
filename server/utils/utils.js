@@ -648,17 +648,26 @@ export function normalizePageNo(total, pageSize, pageNo) {
   return pageNo > totalPage ? totalPage : pageNo <= 0 ? 1 : pageNo;
 }
 
-// 处理分页
-export function createPagingData(list, pageSize, pageNo) {
-  const totalPage = Math.ceil(list.length / pageSize) || 1;
-  pageNo = normalizePageNo(list.length, pageSize, pageNo);
-  const data = list.slice(pageSize * (pageNo - 1), pageSize * pageNo);
+// 处理分页：只需要总数，不构造实际数组
+export function createPagingMeta(total, pageSize, pageNo) {
+  total = Math.max(0, Number(total) || 0);
+
+  const totalPage = Math.ceil(total / pageSize) || 1;
+  pageNo = normalizePageNo(total, pageSize, pageNo);
+
   return {
-    total: list.length,
+    total,
     totalPage,
     pageNo,
-    data,
+    data: [],
   };
+}
+
+// 处理分页：已有完整数组时使用
+export function createPagingData(list, pageSize, pageNo) {
+  const result = createPagingMeta(list.length, pageSize, pageNo);
+  result.data = list.slice(pageSize * (result.pageNo - 1), pageSize * result.pageNo);
+  return result;
 }
 
 // 验证邮箱

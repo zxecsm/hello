@@ -2,11 +2,11 @@ import { resolve } from 'path';
 import { randomBytes } from 'node:crypto';
 import _f from '../utils/f.js';
 
-import { allSql, db, runSql } from '../utils/sqlite.js';
+import { allSql, db, runSql, transaction } from '../utils/sqlite.js';
 
 import { writelog, getDirname, devLog } from '../utils/utils.js';
 
-import { becomeFriends } from '../routes/chat/chat.js';
+import { becomeFriendsSync } from '../routes/chat/chat.js';
 import nanoid from '../utils/nanoid.js';
 import appConfig from './config.js';
 import _crypto from '../utils/crypto.js';
@@ -26,7 +26,7 @@ const dbSchema = {
         { name: 'title', type: 'TEXT', notNull: true },
         { name: 'state', type: 'INTEGER', notNull: true, default: 1 },
       ],
-      indexes: [],
+      indexes: [{ name: 'idx_bg_type_serial', columns: ['type', 'serial'] }],
     },
     collect_bg: {
       columns: [
@@ -52,7 +52,12 @@ const dbSchema = {
         { name: 'logo', type: 'TEXT', notNull: true, default: '' },
         { name: 'des', type: 'TEXT', notNull: true, default: '' },
       ],
-      indexes: [],
+      indexes: [
+        {
+          name: 'idx_bmk_account_state_group_num',
+          columns: ['account', 'state', 'group_id', 'num'],
+        },
+      ],
     },
     bmk_group: {
       columns: [
@@ -65,7 +70,7 @@ const dbSchema = {
         { name: 'state', type: 'INTEGER', notNull: true, default: 1 },
         { name: 'share', type: 'INTEGER', notNull: true, default: 0 },
       ],
-      indexes: [],
+      indexes: [{ name: 'idx_bmk_group_account_state_num', columns: ['account', 'state', 'num'] }],
     },
     chat: {
       columns: [
@@ -81,7 +86,10 @@ const dbSchema = {
         { name: 'size', type: 'REAL', notNull: true, default: 0 },
         { name: 'hash', type: 'TEXT', notNull: true, default: '' },
       ],
-      indexes: [],
+      indexes: [
+        { name: 'idx_chat_flag_serial', columns: ['flag', 'serial'] },
+        { name: 'idx_chat_flag_create', columns: ['flag', 'create_at'] },
+      ],
     },
     count_down: {
       columns: [
@@ -96,7 +104,7 @@ const dbSchema = {
         { name: 'link', type: 'TEXT', notNull: true, default: '' },
         { name: 'top', type: 'INTEGER', notNull: true, default: 0 },
       ],
-      indexes: [],
+      indexes: [{ name: 'idx_count_down_account_top_end', columns: ['account', 'top', 'end'] }],
     },
     friends: {
       columns: [
@@ -112,7 +120,10 @@ const dbSchema = {
         { name: 'des', type: 'TEXT', notNull: true, default: '' },
         { name: 'msg', type: 'TEXT', notNull: true, default: '' },
       ],
-      indexes: [],
+      indexes: [
+        { name: 'idx_friends_account_friend', columns: ['account', 'friend'] },
+        { name: 'idx_friends_friend_account', columns: ['friend', 'account'] },
+      ],
     },
     history: {
       columns: [
@@ -123,7 +134,9 @@ const dbSchema = {
         { name: 'content', type: 'TEXT', notNull: true },
         { name: 'state', type: 'INTEGER', notNull: true, default: 1 },
       ],
-      indexes: [],
+      indexes: [
+        { name: 'idx_history_account_state_serial', columns: ['account', 'state', 'serial'] },
+      ],
     },
     last_play: {
       columns: [
@@ -156,7 +169,12 @@ const dbSchema = {
         { name: 'top', type: 'INTEGER', notNull: true, default: 0 },
         { name: 'category', type: 'TEXT', notNull: true, default: '' },
       ],
-      indexes: [],
+      indexes: [
+        {
+          name: 'idx_ssh_account_state_top_serial',
+          columns: ['account', 'state', 'top', 'serial'],
+        },
+      ],
     },
     ssh_category: {
       columns: [
@@ -167,7 +185,7 @@ const dbSchema = {
         { name: 'title', type: 'TEXT', notNull: true },
         { name: 'state', type: 'INTEGER', notNull: true, default: 1 },
       ],
-      indexes: [],
+      indexes: [{ name: 'idx_ssh_category_account_state', columns: ['account', 'state'] }],
     },
     note: {
       columns: [
@@ -184,7 +202,13 @@ const dbSchema = {
         { name: 'top', type: 'INTEGER', notNull: true, default: 0 },
         { name: 'category', type: 'TEXT', notNull: true, default: '' },
       ],
-      indexes: [],
+      indexes: [
+        {
+          name: 'idx_note_account_state_top_create',
+          columns: ['account', 'state', 'top', 'create_at'],
+        },
+        { name: 'idx_note_account_state_create', columns: ['account', 'state', 'create_at'] },
+      ],
     },
     note_category: {
       columns: [
@@ -195,7 +219,7 @@ const dbSchema = {
         { name: 'title', type: 'TEXT', notNull: true },
         { name: 'state', type: 'INTEGER', notNull: true, default: 1 },
       ],
-      indexes: [],
+      indexes: [{ name: 'idx_note_category_account_state', columns: ['account', 'state'] }],
     },
     pic: {
       columns: [
@@ -233,7 +257,7 @@ const dbSchema = {
         { name: 'exp_time', type: 'INTEGER', notNull: true, default: 0 },
         { name: 'pass', type: 'TEXT', notNull: true, default: '' },
       ],
-      indexes: [],
+      indexes: [{ name: 'idx_share_account_serial', columns: ['account', 'serial'] }],
     },
     song_list: {
       columns: [
@@ -278,7 +302,9 @@ const dbSchema = {
         { name: 'content', type: 'TEXT', notNull: true },
         { name: 'state', type: 'INTEGER', notNull: true, default: 1 },
       ],
-      indexes: [],
+      indexes: [
+        { name: 'idx_todo_account_state_update', columns: ['account', 'state', 'update_at'] },
+      ],
     },
     upload: {
       columns: [
@@ -289,7 +315,7 @@ const dbSchema = {
         { name: 'url', type: 'TEXT', notNull: true },
         { name: 'state', type: 'INTEGER', notNull: true, default: 1 },
       ],
-      indexes: [],
+      indexes: [{ name: 'idx_upload_update_at', columns: ['update_at'] }],
     },
     user: {
       columns: [
@@ -326,7 +352,10 @@ const dbSchema = {
         },
         { name: 'forward_msg_link', type: 'TEXT', notNull: true, default: '' },
       ],
-      indexes: [],
+      indexes: [
+        { name: 'idx_user_state_update', columns: ['state', 'update_at'] },
+        { name: 'idx_user_email', columns: ['email'] },
+      ],
     },
   },
 };
@@ -407,7 +436,7 @@ function getTableSql(tableName, columns) {
 
 // 同步索引
 async function syncIndexes(tableName, configIndexes) {
-  const dbIndexes = await allSql(`PRAGMA index_list('${tableName}')`);
+  const dbIndexes = allSql(`PRAGMA index_list('${tableName}')`);
   const dbIndexMap = Object.fromEntries(dbIndexes.map((i) => [i.name, i]));
 
   for (const idx of configIndexes) {
@@ -417,9 +446,9 @@ async function syncIndexes(tableName, configIndexes) {
     if (!dbIdx) {
       needCreate = true;
     } else {
-      const dbCols = (await allSql(`PRAGMA index_info('${idx.name}')`)).map((c) => c.name);
+      const dbCols = allSql(`PRAGMA index_info('${idx.name}')`).map((c) => c.name);
       if (dbCols.join(',') !== idx.columns.join(',')) {
-        await runSql(`DROP INDEX IF EXISTS "${idx.name}"`);
+        runSql(`DROP INDEX IF EXISTS "${idx.name}"`);
         devLog(`索引 ${idx.name} 删除`);
         needCreate = true;
       }
@@ -427,7 +456,7 @@ async function syncIndexes(tableName, configIndexes) {
 
     if (needCreate) {
       const unique = idx.unique ? 'UNIQUE' : '';
-      await runSql(
+      runSql(
         `CREATE ${unique} INDEX IF NOT EXISTS "${
           idx.name
         }" ON "${tableName}" (${idx.columns.join(',')});`,
@@ -442,7 +471,7 @@ async function syncIndexes(tableName, configIndexes) {
       !configIndexes.find((i) => i.name === dbIdx.name) &&
       dbIdx.origin === 'c' // c: 手动创建的索引
     ) {
-      await runSql(`DROP INDEX IF EXISTS "${dbIdx.name}"`);
+      runSql(`DROP INDEX IF EXISTS "${dbIdx.name}"`);
       devLog(`索引 ${dbIdx.name} 删除`);
     }
   }
@@ -456,16 +485,16 @@ async function createTables() {
       const { columns, indexes } = dbSchema.tables[tableName];
 
       // 查询现有字段
-      const existingColumns = await allSql(`PRAGMA table_info(${tableName})`);
+      const existingColumns = allSql(`PRAGMA table_info(${tableName})`);
 
       if (existingColumns.length === 0) {
         // 表不存在 → 直接创建
         const createSQL = getTableSql(tableName, columns);
-        await runSql(createSQL);
+        runSql(createSQL);
         devLog(`表 ${tableName} 创建成功`);
       } else {
         // 表已存在 → 获取原始建表语句（判断 AUTOINCREMENT）
-        const tableSqlRes = await allSql(
+        const tableSqlRes = allSql(
           `SELECT sql FROM sqlite_master WHERE type='table' AND name='${tableName}'`,
         );
         const tableSql = tableSqlRes[0]?.sql || '';
@@ -477,7 +506,6 @@ async function createTables() {
         if (toRemove.length > 0 || toChange.length > 0) {
           const tmpTable = tableName + '_tmp';
           const createTmpSQL = getTableSql(tmpTable, columns);
-          await runSql(createTmpSQL);
 
           // 保留共同字段，迁移数据
           const commonCols = existingColumns
@@ -485,42 +513,51 @@ async function createTables() {
             .filter(
               (n) => columns.some((col) => col.name === n) && n !== 'serial', // 过滤自增主键
             );
-          if (commonCols.length > 0) {
-            await runSql(
-              `INSERT INTO "${tmpTable}" (${commonCols.join(
-                ',',
-              )}) SELECT ${commonCols.join(',')} FROM "${tableName}";`,
-            );
-          }
 
-          await runSql(`DROP TABLE "${tableName}";`);
-          await runSql(`ALTER TABLE "${tmpTable}" RENAME TO "${tableName}";`);
+          // 建临时表、拷贝、删旧表、改名必须一次完成，失败时整体回滚
+          transaction(() => {
+            runSql(createTmpSQL);
+
+            if (commonCols.length > 0) {
+              runSql(
+                `INSERT INTO "${tmpTable}" (${commonCols.join(
+                  ',',
+                )}) SELECT ${commonCols.join(',')} FROM "${tableName}";`,
+              );
+            }
+
+            runSql(`DROP TABLE "${tableName}";`);
+            runSql(`ALTER TABLE "${tmpTable}" RENAME TO "${tableName}";`);
+          });
+
           devLog(`表 ${tableName} 字段迁移完成（修改/删除字段）`);
         } else if (toAdd.length > 0) {
           // 只新增字段 → ALTER TABLE
-          for (const col of toAdd) {
-            const { name, type, notNull, default: defaultVal } = col;
+          transaction(() => {
+            for (const col of toAdd) {
+              const { name, type, notNull, default: defaultVal } = col;
 
-            let sql = `ALTER TABLE "${tableName}" ADD COLUMN "${name}" ${type}`;
+              let sql = `ALTER TABLE "${tableName}" ADD COLUMN "${name}" ${type}`;
 
-            let finalDefault = defaultVal;
+              let finalDefault = defaultVal;
 
-            // 如果字段不允许为空 → 自动兜底一个默认值
-            if (notNull && finalDefault === undefined) {
-              if (/INT/i.test(type)) finalDefault = 0;
-              else if (/CHAR|TEXT|CLOB/i.test(type)) finalDefault = '';
-              else if (/REAL|FLOA|DOUB/i.test(type)) finalDefault = 0.0;
-              else finalDefault = null; // 兜不住你就会重建表
+              // 如果字段不允许为空 → 自动兜底一个默认值
+              if (notNull && finalDefault === undefined) {
+                if (/INT/i.test(type)) finalDefault = 0;
+                else if (/CHAR|TEXT|CLOB/i.test(type)) finalDefault = '';
+                else if (/REAL|FLOA|DOUB/i.test(type)) finalDefault = 0.0;
+                else finalDefault = null; // 兜不住你就会重建表
+              }
+
+              if (finalDefault !== undefined && finalDefault !== null) {
+                sql += ` DEFAULT ${JSON.stringify(finalDefault)}`;
+              }
+
+              if (notNull) sql += ' NOT NULL';
+
+              runSql(sql);
             }
-
-            if (finalDefault !== undefined && finalDefault !== null) {
-              sql += ` DEFAULT ${JSON.stringify(finalDefault)}`;
-            }
-
-            if (notNull) sql += ' NOT NULL';
-
-            await runSql(sql);
-          }
+          });
           devLog(`表 ${tableName} 字段迁移完成（新增字段）`);
         } else {
           devLog(`表 ${tableName} 字段一致，无需迁移`);
@@ -530,6 +567,9 @@ async function createTables() {
       // 同步索引
       await syncIndexes(tableName, indexes);
     }
+
+    // 更新查询规划器统计信息，索引变化后帮助其选择正确的索引
+    runSql('PRAGMA optimize');
   } catch (error) {
     await writelog(false, `[ createTables ] - ${error}`, 500);
     throw error;
@@ -542,7 +582,7 @@ async function insertInitialData() {
   let initPassword = '';
 
   try {
-    const userList = await db('user')
+    const userList = db('user')
       .select('account')
       .where({
         account: { in: [appConfig.adminAccount, appConfig.notifyAccount] },
@@ -550,34 +590,39 @@ async function insertInitialData() {
       .find();
     if (userList.length === 0) {
       initPassword = randomBytes(12).toString('hex');
-      await db('user').insertMany([
-        {
-          create_at: nowTime,
-          update_at: nowTime,
-          account: appConfig.adminAccount,
-          username: appConfig.adminUsername,
-          chat_id: nanoid(),
-          password: await _crypto.hashPassword(_crypto.getStringHash(initPassword)),
-        },
-        {
-          create_at: nowTime,
-          update_at: nowTime,
-          account: appConfig.notifyAccount,
-          username: appConfig.notifyAccount,
-          chat_id: nanoid(),
-          password: '',
-        },
-      ]);
-      await becomeFriends(appConfig.adminAccount, appConfig.chatRoomAccount);
-      await becomeFriends(appConfig.adminAccount, appConfig.notifyAccount);
+      const initHash = await _crypto.hashPassword(_crypto.getStringHash(initPassword));
+
+      transaction(() => {
+        db('user').insertMany([
+          {
+            create_at: nowTime,
+            update_at: nowTime,
+            account: appConfig.adminAccount,
+            username: appConfig.adminUsername,
+            chat_id: nanoid(),
+            password: initHash,
+          },
+          {
+            create_at: nowTime,
+            update_at: nowTime,
+            account: appConfig.notifyAccount,
+            username: appConfig.notifyAccount,
+            chat_id: nanoid(),
+            password: '',
+          },
+        ]);
+
+        becomeFriendsSync(appConfig.adminAccount, appConfig.chatRoomAccount);
+        becomeFriendsSync(appConfig.adminAccount, appConfig.notifyAccount);
+      });
     }
 
-    const noteList = await db('note')
+    const noteList = db('note')
       .select('id')
       .where({ id: { in: [appConfig.aboutid, appConfig.tipsid] } })
       .find();
     if (noteList.length === 0) {
-      await db('note').insertMany([
+      db('note').insertMany([
         {
           create_at: nowTime,
           update_at: nowTime,
@@ -612,10 +657,10 @@ async function insertInitialData() {
 
 // 删除视图
 async function dropViews() {
-  const views = await allSql(`SELECT name FROM sqlite_master WHERE type='view'`);
+  const views = allSql(`SELECT name FROM sqlite_master WHERE type='view'`);
 
   for (const row of views) {
-    await runSql(`DROP VIEW IF EXISTS "${row.name}"`);
+    runSql(`DROP VIEW IF EXISTS "${row.name}"`);
     devLog(`视图 ${row.name} 删除成功`);
   }
 }

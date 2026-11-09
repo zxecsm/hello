@@ -2,7 +2,13 @@ import nodemailer from 'nodemailer';
 import { _d } from '../data/data.js';
 import { CacheByExpire } from './cache.js';
 
-const cache = new CacheByExpire(10 * 60 * 1000, 10 * 60 * 1000);
+const cache = new CacheByExpire(10 * 60 * 1000, 10 * 60 * 1000, { maxSize: 5000 });
+
+// 邮箱统一转小写作为缓存 key，避免大小写造成验证码匹配失败或重复发送
+const normalizeEmail = (email) =>
+  String(email ?? '')
+    .trim()
+    .toLowerCase();
 
 // 复用 transporter，配置变化时重建
 let transporter = null;
@@ -60,16 +66,33 @@ async function sendMail(to, title, html) {
 
 async function sendCode(to, code) {
   const html = `验证码 <span style="font-size:40px;color:#409eff;">${code}</span> 十分钟内有效，请勿泄露与转发。如非本人操作，请忽略此邮件。`;
-  await sendMail(to, 'Hello账号验证邮件', html);
-  cache.set(to, code);
+  const key = normalizeEmail(to);
+  const previous = cache.get(key);
+
+  // 先写入缓存占位，避免发信期间并发请求绕过「验证码已发送」的校验
+  cache.set(key, code);
+
+  try {
+    await sendMail(to, 'Hello账号验证邮件', html);
+  } catch (error) {
+    // 发送失败：只在缓存里仍是本次验证码时恢复，避免覆盖并发写入的新验证码
+    if (cache.get(key) === code) {
+      if (previous !== null) {
+        cache.set(key, previous);
+      } else {
+        cache.delete(key);
+      }
+    }
+    throw error;
+  }
 }
 
 function get(email) {
-  return cache.get(email) || '';
+  return cache.get(normalizeEmail(email)) || '';
 }
 
 function del(email) {
-  cache.delete(email);
+  cache.delete(normalizeEmail(email));
 }
 
 const mailer = {

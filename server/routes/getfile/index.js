@@ -125,7 +125,7 @@ async function getPicPath(res, id) {
     resp.badRequest(res)(error, 1);
     return null;
   }
-  const pic = await db('pic').select('url').where({ id }).findOne();
+  const pic = db('pic').select('url').where({ id }).findOne();
   if (pic && pic.url) {
     const p = appConfig.picDir(pic.url);
     if (await isPathSafe(appConfig.picDir(), p)) return p;
@@ -140,7 +140,7 @@ async function getBgPath(res, id) {
     resp.badRequest(res)(error, 1);
     return null;
   }
-  const bg = await db('bg').select('url').where({ id }).findOne();
+  const bg = db('bg').select('url').where({ id }).findOne();
   if (bg && bg.url) {
     const p = appConfig.bgDir(bg.url);
     if (await isPathSafe(appConfig.bgDir(), p)) return p;
@@ -173,7 +173,7 @@ async function getUploadPath(res, id, account) {
     return null;
   }
 
-  const msg = await db('chat AS c')
+  const msg = db('chat AS c')
     .join('upload AS u', { 'c.hash': { value: 'u.id', raw: true } }, { type: 'LEFT' })
     .select('c.flag,u.url')
     .where({ 'c.id': id })
@@ -267,7 +267,7 @@ async function getMusicPath(res, pArr) {
     resp.badRequest(res)(error, 1);
     return null;
   }
-  const song = await db('songs').select(type).where({ id }).findOne();
+  const song = db('songs').select(type).where({ id }).findOne();
   if (song && song[type]) {
     const p = appConfig.musicDir(song[type]);
     if (await isPathSafe(appConfig.musicDir(), p)) return p;
