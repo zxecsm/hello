@@ -165,3 +165,11 @@ export function reqUserShareState(data) {
 export function reqUserOnlineClients() {
   return _getAjax('/user/online-clients');
 }
+// 发送剪切板
+export function reqUserSendClipboard(data) {
+  return _postAjax('/user/clipboard', data);
+}
+// 获取剪切板
+export function reqUserGetClipboard(opt) {
+  return _getAjax('/user/clipboard', {}, opt);
+}

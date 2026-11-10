@@ -1,6 +1,6 @@
 # API 路由总表（源码自动提取）
 
-> 由 `server/routes/*/index.js` 中的 `route.<method>(...)` 与 `server/app.js` 汇总，共 246 条。
+> 由 `server/routes/*/index.js` 中的 `route.<method>(...)` 与 `server/app.js` 汇总，共 248 条。
 > 所有以 `/api` 开头的路径都需要拼上实例地址，例如 `http://localhost:55555/api/bmk/list`。
 
 ## app.js 中的顶层接口
@@ -12,7 +12,7 @@
 | `GET` | `/api/f/<path>` | 按路径读取用户文件/下载 |
 | `ALL` | `/api/s/:chat_id` | 收信接口（GET ?text= / POST {text}） |
 
-## user（40）
+## user（42）
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
@@ -55,6 +55,8 @@
 | `GET` | `/api/user/trash-list` | 回收站列表 |
 | `POST` | `/api/user/delete-trash` | 删除回收站 |
 | `POST` | `/api/user/recover-trash` | 恢复回收站内容 |
+| `POST` | `/api/user/clipboard` | 保存剪切板内容 |
+| `GET` | `/api/user/clipboard` | 获取剪切板内容 |
 | `GET` | `/api/user/online-clients` | 获取在线的客户端 |
 
 ## bmk（18）

@@ -7,6 +7,7 @@ export const fieldLength = {
   shareTokenExp: 60 * 60 * 10, // 分享token
   searchWord: 100, // 搜索长度
   searchHistory: 200, // 搜索历史文本
+  clipboardContent: 1024 * 1024, // 剪切板文本内容（1MB）
   des: 500, // 备注
   chatContent: 3000, // 消息文本
   chatDes: 20, // 用户备注

@@ -64,6 +64,7 @@ const fieldLength = {
   searchWord: 100, // 搜索关键词
   filename: 255, // 文件名
   searchHistory: 200, // 搜索历史文本
+  clipboardContent: 1024 * 1024, // 剪切板文本内容（1MB）
   chatDes: 20, // 用户备注
   chatContent: 3000, // 消息文本
   countTitle: 300, // 倒计时标题

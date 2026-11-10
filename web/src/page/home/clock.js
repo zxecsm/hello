@@ -1,7 +1,9 @@
 import {
   _getTarget,
+  copyText,
   formatDate,
   getScreenSize,
+  getTextSize,
   isMobile,
   myDrag,
   percentToValue,
@@ -9,7 +11,10 @@ import {
 import { setZidx } from './popWindow';
 import { hideIframeMask, showIframeMask } from './iframe';
 import localData from '../../js/common/localData';
+import _d from '../../js/common/config';
 import rMenu from '../../js/plugins/rightMenu';
+import _msg from '../../js/plugins/message';
+import { reqUserGetClipboard, reqUserSendClipboard } from '../../api/user';
 const clock = document.querySelector('.clock');
 const domHour = clock.querySelector('.hour');
 const domMin = clock.querySelector('.min');
@@ -168,6 +173,87 @@ clockMove();
 setInterval(updateTime, 1000);
 updateTime(); // 初始化时间
 const clockData = localData.get('clockData');
+// 读取系统剪切板文字
+async function readClipboard() {
+  if (!navigator.clipboard?.readText) {
+    throw new Error('当前浏览器不支持读取剪切板');
+  }
+  return navigator.clipboard.readText();
+}
+// 剪切板菜单
+function clipboardMenu(e) {
+  // 菜单打开时预取，保证点击“复制剪切板”时仍处于用户手势内
+  let clipboardLoaded = false;
+  let clipboardContent = '';
+  const clipboardReady = reqUserGetClipboard({ load: false, stopErrorMsg: true })
+    .then((result) => {
+      if (result.code === 1) {
+        clipboardContent = result.data?.text || '';
+        clipboardLoaded = true;
+      }
+    })
+    .catch(() => {});
+
+  rMenu.selectMenu(
+    e,
+    [
+      { id: '1', text: '发送剪切板', beforeIcon: 'iconfont icon-huaban' },
+      { id: '2', text: '复制剪切板', beforeIcon: 'iconfont icon-fuzhi' },
+    ],
+    async ({ id, close, loading }) => {
+      if (id === '1') {
+        let text = '';
+        try {
+          text = await readClipboard();
+        } catch (error) {
+          _msg.error(error.message || '读取剪切板失败，请允许浏览器访问剪切板');
+          return;
+        }
+        if (!text.trim()) {
+          _msg.error('剪切板没有文字内容');
+          return;
+        }
+        if (getTextSize(text) > _d.fieldLength.clipboardContent) {
+          _msg.error(`剪切板内容不能超过 ${_d.fieldLength.clipboardContent / 1024 / 1024}MB`);
+          return;
+        }
+        loading.start();
+        reqUserSendClipboard({ text })
+          .then((result) => {
+            if (result.code === 1) {
+              loading.end();
+              close();
+              _msg.success(result.codeText);
+            }
+          })
+          .catch(() => {
+            loading.end();
+          });
+      } else if (id === '2') {
+        if (!clipboardLoaded) {
+          loading.start();
+          await clipboardReady;
+          loading.end();
+        }
+        if (!clipboardLoaded) {
+          _msg.error('读取剪切板失败，请重试');
+          return;
+        }
+        if (!clipboardContent) {
+          _msg.error('剪切板内容为空');
+          return;
+        }
+        close();
+        copyText(clipboardContent, { success: '复制剪切板成功' });
+      }
+    },
+    '剪切板',
+  );
+}
+let lastDragTime = 0;
+let isDragging = false;
+let dragStartX = 0;
+let dragStartY = 0;
 function hdClick(e) {
   clockMove();
   if (e.target.tagName.toLowerCase() === 'i') {
@@ -176,6 +262,9 @@ function hdClick(e) {
       clockData.size = percent;
       localData.set('clockData', clockData, 200);
     });
+  } else if (Date.now() - lastDragTime > 300) {
+    // 拖动结束时不弹出菜单
+    clipboardMenu(e);
   }
 }
 clock.addEventListener('click', hdClick);
@@ -201,10 +290,27 @@ myDrag({
     target.style.left = clockData.coord.left + 'px';
     target.style.top = clockData.coord.top + 'px';
   },
-  down() {
+  down({ pointerX, pointerY }) {
+    dragStartX = pointerX;
+    dragStartY = pointerY;
+    isDragging = false;
     showIframeMask();
   },
+  move({ pointerX, pointerY }) {
+    if (
+      !isDragging &&
+      (Math.abs(pointerX - dragStartX) > 5 || Math.abs(pointerY - dragStartY) > 5)
+    ) {
+      isDragging = true;
+    }
+    if (isDragging) {
+      lastDragTime = Date.now();
+    }
+  },
   up({ x, y }) {
+    if (isDragging) {
+      lastDragTime = Date.now();
+    }
     hideIframeMask();
     clockData.coord = {
       left: x,

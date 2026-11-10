@@ -2094,6 +2094,45 @@ route.post(
   }),
 );
 
+// 保存剪切板内容
+route.post(
+  '/clipboard',
+  validate(
+    'body',
+    V.object({
+      text: V.string()
+        .min(1)
+        .custom(
+          (v) => _f.getTextSize(v) <= fieldLength.clipboardContent,
+          `剪切板内容不能超过 ${fieldLength.clipboardContent / 1024 / 1024}MB`,
+        ),
+    }),
+  ),
+  asyncHandler(async (_, res) => {
+    const { text } = res.locals.ctx;
+
+    const { account } = res.locals.hello.userinfo;
+
+    await _f.writeFile(appConfig.backupDir(account, 'clipboard'), text);
+
+    resp.success(res, '发送剪切板成功')();
+  }),
+);
+
+// 获取剪切板内容
+route.get(
+  '/clipboard',
+  asyncHandler(async (_, res) => {
+    const { account } = res.locals.hello.userinfo;
+
+    const text = (
+      await _f.readFile(appConfig.backupDir(account, 'clipboard'), 'utf8', '')
+    ).toString();
+
+    resp.success(res, 'ok', { text })();
+  }),
+);
+
 // 获取在线的客户端
 route.get(
   '/online-clients',

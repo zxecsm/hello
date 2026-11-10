@@ -1378,6 +1378,8 @@ export function sendNotification(opt, callback) {
         body: obj.body,
       });
       notification.onclick = function () {
+        window.focus();
+        notification.close();
         callback && callback();
       };
     }

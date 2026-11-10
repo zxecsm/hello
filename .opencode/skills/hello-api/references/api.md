@@ -1,6 +1,6 @@
 # hello 核心接口手册
 
-> 完整路由表见 [routes.md](./routes.md)（从源码自动提取，246 条）。
+> 完整路由表见 [routes.md](./routes.md)（从源码自动提取，248 条）。
 > 本文件只收录智能体最常用、参数已核实的数据接口。
 
 ## 1. 基础约定
@@ -73,6 +73,10 @@ HELLO_COOKIE=token=...
 | POST | `/api/user/delete-trash` | `type`, `ids: string[]`（`[]` 表示清空） | 永久删除 |
 | GET | `/api/user/font-list` | - | 字体列表 |
 | GET | `/api/user/tips` | - | tips 标识 |
+| GET | `/api/user/clipboard` | - | 读取当前账号的剪切板文本：`data: {text}` |
+| POST | `/api/user/clipboard` | `text`（UTF-8，1 B–1 MB） | 保存/覆盖剪切板文本 |
+
+剪切板每个账号只保存一条，发送会覆盖旧内容；内容原样保存在用户配置目录的 `backup/clipboard`。
 
 `account` 是随机 ID（如 `V1StGXR8_Z5jdHi6B-myT`），`username` 才是登录名；两者不要混用。
 管理员账号固定为 `root`。

@@ -1,6 +1,6 @@
 ---
 name: hello-api
-description: 通过 HTTP API 操作 hello 自托管主页的数据：书签、笔记、待办、倒计时、文件、分享、壁纸、音乐、聊天、管理员只读状态等。支持远程实例：把地址和 Cookie 放在本地 .env 由脚本读取，智能体不接触明文。当用户要求「查/加/改/删书签」「写笔记」「管理待办」「看文件」「调用 hello 的接口」或需要用脚本访问本项目 /api 接口时使用。
+description: 通过 HTTP API 操作 hello 自托管主页的数据：书签、笔记、待办、倒计时、文件、分享、壁纸、音乐、聊天、剪切板、管理员只读状态等。支持远程实例：把地址和 Cookie 放在本地 .env 由脚本读取，智能体不接触明文。当用户要求「查/加/改/删书签」「写笔记」「管理待办」「看文件」「同步剪切板」「调用 hello 的接口」或需要用脚本访问本项目 /api 接口时使用。
 ---
 
 # hello 数据接口操作
@@ -85,9 +85,10 @@ node .opencode\skills\hello-api\scripts\hello.mjs note list --word 关键词
 node .opencode\skills\hello-api\scripts\hello.mjs todo list
 node .opencode\skills\hello-api\scripts\hello.mjs file ls --path /
 node .opencode\skills\hello-api\scripts\hello.mjs share list
+node .opencode\skills\hello-api\scripts\hello.mjs clipboard get
 ```
 
-完整命令用 `--help` 查看；接口细节见 [references/api.md](./references/api.md)，全部 245 条路由见 [references/routes.md](./references/routes.md)。
+完整命令用 `--help` 查看；接口细节见 [references/api.md](./references/api.md)，全部 248 条路由见 [references/routes.md](./references/routes.md)。
 
 ## 通用调用
 
@@ -141,6 +142,16 @@ node .opencode\skills\hello-api\scripts\hello.mjs file write --path /notes/b.md 
 ```
 
 文件路径是相对当前用户根目录的路径，必须以 `/` 开头。
+
+### 剪切板
+
+```powershell
+node .opencode\skills\hello-api\scripts\hello.mjs clipboard get
+node .opencode\skills\hello-api\scripts\hello.mjs clipboard send --text "要同步的文字"
+node .opencode\skills\hello-api\scripts\hello.mjs clipboard send --file .\snippet.txt
+```
+
+每个账号只保存一条剪切板文本，发送会**覆盖**旧内容；UTF-8 上限 1 MB。内容含引号/换行时优先 `--file`。
 
 ## 敏感信息隔离（必须遵守）
 

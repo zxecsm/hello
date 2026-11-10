@@ -914,6 +914,19 @@ const commands = {
     },
   },
 
+  clipboard: {
+    async get() {
+      requireLogin();
+      printResult(await request('GET', '/api/user/clipboard'));
+    },
+    async send() {
+      requireLogin();
+      const text = opts.file ? fs.readFileSync(opts.file, 'utf8') : opts.text;
+      if (text === undefined) fail('用法：clipboard send [--text 内容 | --file 本地文件]');
+      printResult(await request('POST', '/api/user/clipboard', { body: { text } }));
+    },
+  },
+
   bg: {
     async list() {
       requireLogin();
@@ -1095,6 +1108,9 @@ function help() {
   trash recover --type <类型> --id <id> [--id ...]
   trash rm --type <类型> [--id ...]   # 不传 --id 表示清空
   task list | task info --key <key> | task cancel --key <key>
+
+剪切板（单条，UTF-8 上限 1 MB）:
+  clipboard get | clipboard send [--text <内容> | --file <本地文件>]
 
 壁纸 / 音乐:
   bg list [--type bg|bgxs] [--collect] | bg set --type bg|bgxs --id <id>
