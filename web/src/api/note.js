@@ -15,6 +15,10 @@ export function reqNoteGetEditing(data) {
 export function reqNoteSaveEditing(data) {
   return _postAjax('/note/editing', data, { load: false, stopErrorMsg: true });
 }
+// 清除编辑草稿（静默请求）
+export function reqNoteClearEditing(data) {
+  return _postAjax('/note/editing', { ...data, clear: 1 }, { load: false, stopErrorMsg: true });
+}
 // 上传笔记
 export function reqNoteUpNote(data, callback, signal) {
   return _postAjax('/note/up-note', data, { signal, load: false, parallel: true }, callback);

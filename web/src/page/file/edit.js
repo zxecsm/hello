@@ -16,6 +16,7 @@ import {
   reqFileHistoryState,
   reqFileSaveFile,
   reqFileSaveEditing,
+  reqFileClearEditing,
 } from '../../api/file';
 import bus from '../../js/utils/bus';
 import rMenu from '../../js/plugins/rightMenu';
@@ -31,6 +32,8 @@ let originText = '';
 let readOnly = false;
 // 正在程序化设置编辑器内容（不触发草稿保存）
 let isLoadingFile = false;
+// 打开文件后用户是否修改过
+let hasEdited = false;
 const editor = aceEditor.createEditor($editFile.find('.editor')[0]);
 let fileFontSize = localData.get('fileFontSize');
 export function editFileIsHiden() {
@@ -67,6 +70,7 @@ export function openFile(text, path, editing) {
   document.documentElement.classList.add('notScroll');
   renderTitle(path);
   aceEditor.setMode(editor, path);
+  hasEdited = false;
   // 打开文件时填充内容属于程序化操作，不写草稿
   isLoadingFile = true;
   editor.setValue(text);
@@ -86,6 +90,9 @@ export function openFile(text, path, editing) {
         editor.setValue(editing);
         isLoadingFile = false;
         editor.gotoLine(1);
+      } else if (type === 'cancel') {
+        // 取消恢复：直接删除草稿
+        reqFileClearEditing({ path }).catch(() => {});
       }
     });
   }
@@ -127,17 +134,15 @@ const switchUndoState = debounce(function () {
 // 实时保存编辑草稿到服务器，防止断电或关闭页面丢失
 function doSaveEditingDraft() {
   if (readOnly || !isLogin() || !filePath) return;
-  const text = editor.getValue();
-  // 只有内容与已保存文件不同才写草稿；草稿只在正式保存文件时清除
-  if (text === oText) return;
-  reqFileSaveEditing({ path: filePath, text }).catch(() => {});
+  reqFileSaveEditing({ path: filePath, text: editor.getValue() }).catch(() => {});
 }
 const saveEditingDraft = debounce(doSaveEditingDraft, 2000);
 editor.getSession().on('change', () => {
   saveState();
   switchUndoState();
-  // 程序化设置内容不触发草稿保存
+  // 程序化设置内容不触发草稿保存，其余任何修改都保存
   if (!isLoadingFile) {
+    hasEdited = true;
     saveEditingDraft();
   }
 });
@@ -288,6 +293,7 @@ async function hdSave() {
     if (res.code === 1) {
       _msg.success(res.codeText);
       oText = text;
+      hasEdited = false;
       saveState();
     }
   } catch {}
@@ -296,7 +302,10 @@ async function hdSave() {
 function hdClose() {
   // 关闭前立即保存草稿，避免未执行的防抖保存丢失
   saveEditingDraft.cancel();
-  doSaveEditingDraft();
+  if (hasEdited) {
+    hasEdited = false;
+    doSaveEditingDraft();
+  }
   showContainer();
   editTitleContentScroll.close();
   if (originText != oText) {

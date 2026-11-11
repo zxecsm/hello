@@ -569,10 +569,11 @@ route.post(
           (v) => _f.getTextSize(v) <= fieldLength.noteSize,
           `笔记内容不能超过: ${fieldLength.noteSize} 字节`,
         ),
+      clear: V.number().toInt().default(0).enum([0, 1]),
     }),
   ),
   asyncHandler(async (_, res) => {
-    const { id, content } = res.locals.ctx;
+    const { id, content, clear } = res.locals.ctx;
 
     const { account } = res.locals.hello.userinfo;
 
@@ -584,9 +585,13 @@ route.post(
       }
     }
 
-    await saveNoteEditing(account, id, content);
+    if (clear === 1) {
+      await clearNoteEditing(account, id);
+    } else {
+      await saveNoteEditing(account, id, content);
+    }
 
-    resp.success(res, '保存编辑草稿成功')();
+    resp.success(res, clear === 1 ? '清除编辑草稿成功' : '保存编辑草稿成功')();
   }),
 );
 

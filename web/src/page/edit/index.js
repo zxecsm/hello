@@ -42,6 +42,7 @@ import {
   reqNoteRead,
   reqNoteGetEditing,
   reqNoteSaveEditing,
+  reqNoteClearEditing,
 } from '../../api/note';
 import { reqPicRepeat, reqPicUp } from '../../api/pic';
 import rMenu from '../../js/plugins/rightMenu';
@@ -327,6 +328,9 @@ function restoreEditing(editing, content) {
       editor.setValue(editing);
       isLoadingNote = false;
       editor.gotoLine(1);
+    } else if (type === 'cancel') {
+      // 取消恢复：直接删除草稿
+      reqNoteClearEditing({ id: HASH }).catch(() => {});
     }
   });
 }
@@ -377,8 +381,8 @@ if (HASH === 'new') {
 async function rende(skipDraftSave) {
   let text = editor.getValue();
   // 实时保存编辑草稿到服务器，防止断电或关闭页面丢失
-  // 只有用户输入的内容才写草稿；草稿只在正式保存笔记时清除
-  if (isLogin() && !skipDraftSave && (HASH === 'new' || text !== orginData.content)) {
+  // 第一次加载内容和恢复草稿不保存，其余任何修改都保存
+  if (isLogin() && !skipDraftSave) {
     reqNoteSaveEditing({ id: HASH, content: text }).catch(() => {});
   }
   if ($previewBox.is(':hidden')) return;

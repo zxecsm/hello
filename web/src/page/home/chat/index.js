@@ -97,6 +97,7 @@ const $document = $(document),
 let curChatAccount = _d.chatRoomAccount,
   curDraftAccount = '', // 当前编辑框里草稿所属的账号
   isLoadingDraft = false, // 正在程序化设置输入框内容（不触发草稿保存）
+  hasUserEditedDraft = false, // 拉取草稿期间用户已经开始输入
   userList = [],
   helperInfo = '用于接收提示信息和外部信息(回复任意信息查看收信接口API)',
   chatIsTop = localData.get('chatIsTop'),
@@ -1459,6 +1460,7 @@ const chatMsgInp = wrapInput($chatFootBox.find('.c_text_msg .c_text_content')[0]
     $chatFootBox.find('.c_text_msg .fill_height').text(val);
     // 程序化设置草稿时不触发保存，避免用旧草稿覆盖服务器上的新草稿
     if (!isLoadingDraft) {
+      hasUserEditedDraft = true;
       saveTemChatMsg(curDraftAccount, val);
     }
     switchShakeBtn();
@@ -1926,21 +1928,21 @@ async function openFriend(acc, noHideUserList, cb) {
   } else {
     $chatHeadBtns.find('.clear_msg_btn').stop().fadeIn(_d.speed);
   }
-  // 切换会话时加载草稿，并拉取服务器上的最新草稿（支持多端）
+  // 切换会话时直接获取服务器最新草稿，不使用缓存
   if (curDraftAccount !== acc) {
     curDraftAccount = acc;
-    const localDraft = getUserItem(acc).draft || '';
-    // 程序化填充草稿，不触发保存
+    hasUserEditedDraft = false;
+    // 先清空输入框，避免显示上一个会话的内容
     isLoadingDraft = true;
-    chatMsgInp.setValue(localDraft);
+    chatMsgInp.setValue('');
     isLoadingDraft = false;
     reqChatGetDraft({ account: acc })
       .then((res) => {
         if (curDraftAccount !== acc || res.code !== 1) return;
         const draft = res.data.draft || '';
-        // 只有用户还没开始输入时才用服务器草稿替换
-        if (chatMsgInp.getValue() === localDraft) {
-          updateUserListDraft(acc, draft);
+        updateUserListDraft(acc, draft);
+        // 用户已经开始输入时，不替换成服务器草稿
+        if (!hasUserEditedDraft) {
           isLoadingDraft = true;
           chatMsgInp.setValue(draft);
           isLoadingDraft = false;

@@ -16,6 +16,10 @@ export function reqFileSaveFile(data) {
 export function reqFileSaveEditing(data) {
   return _postAjax('/file/editing', data, { load: false, stopErrorMsg: true });
 }
+// 清除文件编辑草稿（静默请求）
+export function reqFileClearEditing(data) {
+  return _postAjax('/file/editing', { ...data, clear: 1 }, { load: false, stopErrorMsg: true });
+}
 // 权限
 export function reqFileMode(data) {
   return _postAjax('/file/mode', data);
