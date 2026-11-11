@@ -40,6 +40,8 @@ import {
   reqNoteGetHistoryState,
   reqNoteHistoryState,
   reqNoteRead,
+  reqNoteGetEditing,
+  reqNoteSaveEditing,
 } from '../../api/note';
 import { reqPicRepeat, reqPicUp } from '../../api/pic';
 import rMenu from '../../js/plugins/rightMenu';
@@ -97,8 +99,19 @@ window.changeTheme = changeTheme;
 const editor = aceEditor.createEditor($editBox[0]);
 aceEditor.setMode(editor, 'x.md');
 changeTheme(localData.get('dark'));
+// 程序化设置内容（打开笔记、恢复草稿）时不保存草稿
+let isLoadingNote = false;
+// 用户编辑过笔记后，清除文件/聊天转笔记的本地缓存
+let newNoteCleared = false;
 // 快捷键
-editor.getSession().on('change', debounce(rende, 1000));
+const rendeDebounce = debounce(rende, 1000);
+editor.getSession().on('change', () => {
+  if (HASH === 'new' && !isLoadingNote && !newNoteCleared) {
+    newNoteCleared = true;
+    cacheFile.setData('newNote', '').catch(() => {});
+  }
+  rendeDebounce(isLoadingNote);
+});
 const switchUndoState = debounce(function () {
   if (aceEditor.hasUndo(editor)) {
     $headBtns.find('.undo_btn').removeClass('deactive');
@@ -275,7 +288,9 @@ const wInput = wrapInput($headBtns.find('.note_title input')[0], {
   },
 });
 function initValue(obj) {
+  isLoadingNote = true;
   editor.setValue(obj.content);
+  isLoadingNote = false;
   wInput.setValue(obj.title);
   editor.gotoLine(1);
   aceEditor.reset(editor);
@@ -302,11 +317,33 @@ function updateIframeTitle(title) {
     } catch {}
   }
 }
+// 提示恢复服务器上未保存的编辑草稿（支持多端恢复）
+// 恢复与取消恢复都不会清除草稿，只有保存笔记时才清除
+function restoreEditing(editing, content) {
+  if (editing === null || editing === undefined || editing === content) return;
+  rMenu.pop({ text: '恢复：未保存的笔记？' }, (type) => {
+    if (type === 'confirm') {
+      isLoadingNote = true;
+      editor.setValue(editing);
+      isLoadingNote = false;
+      editor.gotoLine(1);
+    }
+  });
+}
 if (HASH === 'new') {
-  cacheFile.getData('newNote').then((text) => {
+  cacheFile.getData('newNote').then(async (text) => {
+    // 新笔记直接用服务器草稿替换，不需要询问
+    // 有本地转来的内容（文件/聊天转笔记）时优先使用
+    let content = text;
+    try {
+      const res = await reqNoteGetEditing({ id: 'new' });
+      if (res.code === 1 && res.data.editing !== null && !content) {
+        content = res.data.editing;
+      }
+    } catch {}
     initValue({
       title: formatDate({ template: '{0}-{1}-{2} {3}:{4}' }),
-      content: text,
+      content,
     });
   });
   //新增笔记
@@ -330,37 +367,19 @@ if (HASH === 'new') {
           }, 1000);
           $headBtns.addClass('open');
           $editWrap.addClass('open');
-          const temNoteObj = (await cacheFile.getData('temNote')) || {};
-          if (temNoteObj[HASH] && temNoteObj[HASH] != result.data.content) {
-            rMenu.pop({ text: '恢复：未保存的笔记？' }, (type) => {
-              if (type === 'confirm') {
-                editor.setValue(temNoteObj[HASH]);
-                editor.gotoLine(1);
-              } else if (type === 'cancel') {
-                delete temNoteObj[HASH];
-                cacheFile.setData('temNote', temNoteObj);
-              }
-            });
-          }
+          restoreEditing(result.data.editing, result.data.content);
         }
       })
       .catch(() => {});
   }
 }
 // 渲染转换显示
-let temNoteFlag = false;
-async function rende() {
+async function rende(skipDraftSave) {
   let text = editor.getValue();
-  if (HASH === 'new') {
-    // 新笔记未上传则保存在本地
-    await cacheFile.setData('newNote', text);
-  } else {
-    if (temNoteFlag) {
-      const temNoteObj = (await cacheFile.getData('temNote')) || {};
-      temNoteObj[HASH] = text;
-      await cacheFile.setData('temNote', temNoteObj);
-    }
-    temNoteFlag = true;
+  // 实时保存编辑草稿到服务器，防止断电或关闭页面丢失
+  // 只有用户输入的内容才写草稿；草稿只在正式保存笔记时清除
+  if (isLogin() && !skipDraftSave && (HASH === 'new' || text !== orginData.content)) {
+    reqNoteSaveEditing({ id: HASH, content: text }).catch(() => {});
   }
   if ($previewBox.is(':hidden')) return;
   if (text.trim() === '') {
@@ -721,7 +740,7 @@ function previewState() {
     $previewBox.css('display', 'block');
     $editBox.removeClass('open');
     $headBtns.find('.to_max_btn').css('display', 'block');
-    rende();
+    rende(true);
   }
   $editBox.css('display', 'block');
 }
@@ -790,6 +809,9 @@ function saveNote() {
     return;
   }
   if (title === orginData.title && content === orginData.content) return;
+  const draftId = HASH;
+  // 取消尚未执行的草稿保存，避免与正式保存相互覆盖
+  rendeDebounce.cancel();
   reqNoteEdit({ id: HASH, title, content })
     .then(async (result) => {
       if (result.code === 1) {
@@ -799,7 +821,7 @@ function saveNote() {
         $headBtns.find('.save_btn').removeClass('active');
         if (result.data) {
           // 新建笔记成功
-          if (HASH === 'new') {
+          if (draftId === 'new') {
             // 新笔记,则清除本地保存内容
             await cacheFile.setData('newNote', '');
           }
@@ -808,9 +830,6 @@ function saveNote() {
           _msg.success(result.codeText);
           return;
         }
-        const temNoteObj = (await cacheFile.getData('temNote')) || {};
-        delete temNoteObj[HASH];
-        await cacheFile.setData('temNote', temNoteObj);
         // 更新笔记成功
         _msg.success(result.codeText);
       }

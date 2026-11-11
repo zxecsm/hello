@@ -535,7 +535,7 @@ async function readFileAndDir(obj, e) {
       if (res.code === 1) {
         if (res.data.type === 'text') {
           // 文本
-          openFile(res.data.data, p);
+          openFile(res.data.data, p, res.data.editing);
         } else if (res.data.type === 'other') {
           const fPath = getFilePath(`/file/${p}`);
           // 图片

@@ -85,6 +85,9 @@ const appConfig = {
   fileConfigDir(account, ...arg) {
     return _path.normalizeNoSlash(this.configDir(account, 'file_config'), ...arg);
   },
+  fileEditingDir(account, ...arg) {
+    return _path.normalizeNoSlash(this.configDir(account, 'file_editing'), ...arg);
+  },
   sshConfigDir(account, ...arg) {
     return _path.normalizeNoSlash(this.configDir(account, 'ssh_config'), ...arg);
   },

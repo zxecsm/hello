@@ -93,7 +93,7 @@ export function hdOnce(cb) {
 export function debounce(callback, wait, immedia) {
   let timer = null,
     res = null;
-  return function (...args) {
+  function debounced(...args) {
     if (timer) clearTimeout(timer);
     if (!timer && immedia) {
       res = callback.apply(this, args);
@@ -103,7 +103,13 @@ export function debounce(callback, wait, immedia) {
       if (!immedia) res = callback.apply(this, args);
     }, wait);
     return res;
+  }
+  // 取消尚未执行的任务
+  debounced.cancel = function () {
+    if (timer) clearTimeout(timer);
+    timer = null;
   };
+  return debounced;
 }
 // 提示音
 export function playSound(src) {

@@ -14,7 +14,13 @@ import {
 
 import { getFriendInfo } from '../chat/chat.js';
 import { fieldLength } from '../config.js';
-import { parseMarkDown, saveNoteHistory } from './note.js';
+import {
+  parseMarkDown,
+  saveNoteHistory,
+  saveNoteEditing,
+  readNoteEditing,
+  clearNoteEditing,
+} from './note.js';
 import _f from '../../utils/f.js';
 import nanoid from '../../utils/nanoid.js';
 import appConfig from '../../data/config.js';
@@ -76,6 +82,10 @@ route.get(
           setDownloadHeader(res, `${title}.md`);
           res.send(content);
         } else {
+          let editing = null;
+          if (acc === account) {
+            editing = await readNoteEditing(account, id);
+          }
           resp.success(res, '读取笔记成功', {
             username,
             title,
@@ -86,6 +96,7 @@ route.get(
             update_at,
             logo,
             category,
+            editing,
           })();
         }
       } else {
@@ -470,6 +481,9 @@ route.post(
   asyncHandler(async (_, res) => {
     let { id, title, content } = res.locals.ctx;
 
+    // 记住草稿 id（新笔记为 new）
+    const draftId = id;
+
     const time = Date.now();
 
     const { account, note_history } = res.locals.hello.userinfo;
@@ -493,6 +507,11 @@ route.post(
 
       syncUpdateData(res, 'trash');
 
+      // 保存成功，清除编辑草稿
+      try {
+        await clearNoteEditing(account, draftId);
+      } catch {}
+
       resp.success(res, '更新笔记成功')();
     } else {
       id = nanoid();
@@ -508,8 +527,66 @@ route.post(
 
       syncUpdateData(res, 'note');
 
+      // 保存成功，清除编辑草稿
+      try {
+        await clearNoteEditing(account, draftId);
+      } catch {}
+
       resp.success(res, '新增笔记成功', { id })();
     }
+  }),
+);
+
+// 读取笔记编辑草稿
+route.get(
+  '/editing',
+  validate(
+    'query',
+    V.object({
+      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+    }),
+  ),
+  asyncHandler(async (_, res) => {
+    const { id } = res.locals.ctx;
+
+    const { account } = res.locals.hello.userinfo;
+
+    resp.success(res, 'ok', { editing: await readNoteEditing(account, id) })();
+  }),
+);
+
+// 保存笔记编辑草稿
+route.post(
+  '/editing',
+  validate(
+    'body',
+    V.object({
+      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      content: V.string()
+        .default('')
+        .allowEmpty()
+        .custom(
+          (v) => _f.getTextSize(v) <= fieldLength.noteSize,
+          `笔记内容不能超过: ${fieldLength.noteSize} 字节`,
+        ),
+    }),
+  ),
+  asyncHandler(async (_, res) => {
+    const { id, content } = res.locals.ctx;
+
+    const { account } = res.locals.hello.userinfo;
+
+    // 新笔记还没有 id，使用 new 占位
+    if (id !== 'new') {
+      const note = db('note').select('id').where({ id, account }).findOne();
+      if (!note) {
+        return resp.notFound(res, '笔记不存在')();
+      }
+    }
+
+    await saveNoteEditing(account, id, content);
+
+    resp.success(res, '保存编辑草稿成功')();
   }),
 );
 

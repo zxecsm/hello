@@ -7,6 +7,14 @@ export function reqNoteRead(data) {
 export function reqNoteEdit(data) {
   return _postAjax('/note/edit', data);
 }
+// 读取编辑草稿
+export function reqNoteGetEditing(data) {
+  return _getAjax('/note/editing', data, { load: false, stopErrorMsg: true });
+}
+// 保存编辑草稿（静默请求）
+export function reqNoteSaveEditing(data) {
+  return _postAjax('/note/editing', data, { load: false, stopErrorMsg: true });
+}
 // 上传笔记
 export function reqNoteUpNote(data, callback, signal) {
   return _postAjax('/note/up-note', data, { signal, load: false, parallel: true }, callback);

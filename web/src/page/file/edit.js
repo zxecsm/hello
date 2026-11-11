@@ -11,7 +11,12 @@ import {
   percentToValue,
 } from '../../js/utils/utils';
 import _msg from '../../js/plugins/message';
-import { reqFileGetHistoryState, reqFileHistoryState, reqFileSaveFile } from '../../api/file';
+import {
+  reqFileGetHistoryState,
+  reqFileHistoryState,
+  reqFileSaveFile,
+  reqFileSaveEditing,
+} from '../../api/file';
 import bus from '../../js/utils/bus';
 import rMenu from '../../js/plugins/rightMenu';
 import _path from '../../js/utils/path';
@@ -24,6 +29,8 @@ const $container = $('#app .container');
 let oText = '';
 let originText = '';
 let readOnly = false;
+// 正在程序化设置编辑器内容（不触发草稿保存）
+let isLoadingFile = false;
 const editor = aceEditor.createEditor($editFile.find('.editor')[0]);
 let fileFontSize = localData.get('fileFontSize');
 export function editFileIsHiden() {
@@ -52,7 +59,7 @@ export function setReadOnly(val) {
   // editor.setReadOnly(readOnly);
 }
 // 编辑文件
-export function openFile(text, path) {
+export function openFile(text, path, editing) {
   path = _path.normalizeNoSlash(path);
   hideContainer();
   filePath = path;
@@ -60,12 +67,27 @@ export function openFile(text, path) {
   document.documentElement.classList.add('notScroll');
   renderTitle(path);
   aceEditor.setMode(editor, path);
+  // 打开文件时填充内容属于程序化操作，不写草稿
+  isLoadingFile = true;
   editor.setValue(text);
   originText = oText = editor.getValue();
+  isLoadingFile = false;
   editor.gotoLine(1);
   aceEditor.reset(editor);
   if (text === '') {
     editor.focus();
+  }
+  // 提示恢复服务器上未保存的编辑草稿（支持多端恢复）
+  // 恢复与取消恢复都不会清除草稿，只有保存文件时才清除
+  if (!readOnly && editing !== null && editing !== undefined && editing !== text) {
+    rMenu.pop({ text: '恢复：未保存的文件？' }, (type) => {
+      if (type === 'confirm') {
+        isLoadingFile = true;
+        editor.setValue(editing);
+        isLoadingFile = false;
+        editor.gotoLine(1);
+      }
+    });
   }
 }
 // 生成标题
@@ -102,9 +124,22 @@ const switchUndoState = debounce(function () {
     $editFile.find('.head_btn .redo').addClass('deactive');
   }
 }, 500);
+// 实时保存编辑草稿到服务器，防止断电或关闭页面丢失
+function doSaveEditingDraft() {
+  if (readOnly || !isLogin() || !filePath) return;
+  const text = editor.getValue();
+  // 只有内容与已保存文件不同才写草稿；草稿只在正式保存文件时清除
+  if (text === oText) return;
+  reqFileSaveEditing({ path: filePath, text }).catch(() => {});
+}
+const saveEditingDraft = debounce(doSaveEditingDraft, 2000);
 editor.getSession().on('change', () => {
   saveState();
   switchUndoState();
+  // 程序化设置内容不触发草稿保存
+  if (!isLoadingFile) {
+    saveEditingDraft();
+  }
 });
 $editFile.find('.editor').css({
   'font-size': percentToValue(12, 30, fileFontSize) + 'px',
@@ -226,27 +261,7 @@ $editFile
     await cacheFile.setData('newNote', text);
     _myOpen('/edit#new', '新笔记', 'edit');
   })
-  .on('click', '.close', function (e) {
-    if (readOnly) {
-      hdClose();
-      return;
-    }
-    if (editor.getValue() != oText) {
-      rMenu.pop(
-        {
-          e,
-          text: '文件未保存，确认关闭吗？',
-        },
-        (type) => {
-          if (type === 'confirm') {
-            hdClose();
-          }
-        },
-      );
-    } else {
-      hdClose();
-    }
-  })
+  .on('click', '.close', hdClose)
   .on('click', '.save', hdSave)
   .on('click', '.undo', () => {
     editor.undo();
@@ -267,6 +282,8 @@ async function hdSave() {
       _msg.error('文本内容过长');
       return;
     }
+    // 取消尚未执行的草稿保存，避免与正式保存相互覆盖
+    saveEditingDraft.cancel();
     const res = await reqFileSaveFile({ path: filePath, text });
     if (res.code === 1) {
       _msg.success(res.codeText);
@@ -277,6 +294,9 @@ async function hdSave() {
 }
 
 function hdClose() {
+  // 关闭前立即保存草稿，避免未执行的防抖保存丢失
+  saveEditingDraft.cancel();
+  doSaveEditingDraft();
   showContainer();
   editTitleContentScroll.close();
   if (originText != oText) {

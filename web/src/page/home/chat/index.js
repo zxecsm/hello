@@ -54,10 +54,12 @@ import {
   reqChatExpired,
   reqChatforward,
   reqChatGetDes,
+  reqChatGetDraft,
   reqChatMerge,
   reqChatNews,
   reqChatReadMsg,
   reqChatRepeat,
+  reqChatSaveDraft,
   reqChatSendMsg,
   reqChatSetDes,
   reqChatShakeMsg,
@@ -93,6 +95,8 @@ const $document = $(document),
   $showChatRoomBtn = $('.show_chat_room_btn'),
   $chatAudio = $('.chat_ausio');
 let curChatAccount = _d.chatRoomAccount,
+  curDraftAccount = '', // 当前编辑框里草稿所属的账号
+  isLoadingDraft = false, // 正在程序化设置输入框内容（不触发草稿保存）
   userList = [],
   helperInfo = '用于接收提示信息和外部信息(回复任意信息查看收信接口API)',
   chatIsTop = localData.get('chatIsTop'),
@@ -208,6 +212,10 @@ function getUserList(top) {
         const { data, pageNo, totalPage, total } = result.data;
         userPageNo = pageNo;
         userList = data;
+        // 列表刷新时保留当前正在编辑的草稿
+        if (curDraftAccount) {
+          updateUserListDraft(curDraftAccount, chatMsgInp.getValue());
+        }
         renderUserList(pageNo, total, totalPage, top);
       }
     })
@@ -216,16 +224,15 @@ function getUserList(top) {
 // 展示用户列表
 async function renderUserList(pageNo, total, totalPage, top) {
   if (chatRoomWrapIsHide() || $userListWrap.is(':hidden')) return;
-  const temMsgs = await getTemMsgs();
   const html = _tpl(
     `
     <button v-if="hasNoRead" cursor="y" class="clear_msg btn btn_primary">标记为已读</button>
-    <ul v-for="{username, account, online, des = '', read, msg} in userList" :data-account="account" class="user_item">
+    <ul v-for="{username, account, online, des = '', read, msg, draft = ''} in userList" :data-account="account" class="user_item">
       <i :x="read === 1 ? 'y' : 'n'" class="msg_alert"></i>
       <li cursor="y" class="user_logo" style="{{online === 1 ? '' : 'filter: grayscale(1);'}}"></li>
       <li cursor="y" class="user_name">
         <span class="name">{{des || username}}</span>
-        <span v-if="hdMsg(msg,account)" class="msg">{{hdMsg(msg,account)}}</span>
+        <span v-if="hdMsg(msg,draft)" class="msg">{{hdMsg(msg,draft)}}</span>
       </li>
       <li v-if="account !== notifyAccount" :cursor="online === 1 ? 'y' : ''" :style=getStyle(account,online) class="online iconfont icon-tuichudenglu1"></li>
     </ul>
@@ -236,9 +243,8 @@ async function renderUserList(pageNo, total, totalPage, top) {
       hasNoRead: userList.some((item) => item.read === 0),
       userList,
       totalPage,
-      hdMsg(msg, account) {
-        const tem = temMsgs[account];
-        return tem ? `草稿：${tem}` : msg;
+      hdMsg(msg, draft) {
+        return draft ? `草稿：${draft}` : msg;
       },
       getStyle(account, online) {
         let color = 'var(--color6)';
@@ -340,6 +346,11 @@ function lazyLoadChatLogo() {
 }
 // 关闭聊天室
 export function closeChatRoom() {
+  // 关闭前保存当前会话草稿
+  if (curDraftAccount) {
+    saveTemChatMsg.cancel();
+    saveChatDraft(curDraftAccount, chatMsgInp.getValue());
+  }
   const chatRoom = $chatRoomWrap[0];
   const { x, y } = getCenterPointDistance(chatRoom, $showChatRoomBtn[0]);
   _animate(
@@ -1425,13 +1436,19 @@ function switchShakeBtn() {
     $shakeBtn.css('display', 'block');
   }
 }
-async function getTemMsgs() {
-  return (await cacheFile.getData('temChatMsg')) || {};
+// 更新用户列表里的草稿预览
+function updateUserListDraft(account, draft) {
+  const item = userList.find((item) => item.account === account);
+  if (item) item.draft = draft;
 }
-const saveTemChatMsg = debounce(async (val) => {
-  const temChatMsg = await getTemMsgs();
-  temChatMsg[curChatAccount] = val;
-  await cacheFile.setData('temChatMsg', temChatMsg);
+// 保存草稿到服务器（静默）
+function saveChatDraft(account, draft) {
+  if (!account) return;
+  updateUserListDraft(account, draft);
+  reqChatSaveDraft({ account, draft }).catch(() => {});
+}
+const saveTemChatMsg = debounce((account, val) => {
+  saveChatDraft(account, val);
 }, 1000);
 // 消息编辑框
 const chatMsgInp = wrapInput($chatFootBox.find('.c_text_msg .c_text_content')[0], {
@@ -1440,7 +1457,10 @@ const chatMsgInp = wrapInput($chatFootBox.find('.c_text_msg .c_text_content')[0]
       val = val.slice(0, _d.fieldLength.chatContent);
     }
     $chatFootBox.find('.c_text_msg .fill_height').text(val);
-    saveTemChatMsg(val);
+    // 程序化设置草稿时不触发保存，避免用旧草稿覆盖服务器上的新草稿
+    if (!isLoadingDraft) {
+      saveTemChatMsg(curDraftAccount, val);
+    }
     switchShakeBtn();
     if (val.trim() === '') {
       $chatFootBox
@@ -1882,6 +1902,11 @@ function setChatTitle(acc) {
 }
 // 打开消息
 async function openFriend(acc, noHideUserList, cb) {
+  // 切换会话前先保存上一个会话的草稿
+  if (curDraftAccount && curDraftAccount !== acc) {
+    saveTemChatMsg.cancel();
+    saveChatDraft(curDraftAccount, chatMsgInp.getValue());
+  }
   if (curChatAccount !== acc) {
     chatSearchInput.setValue('').focus();
     searchDateLimit = {};
@@ -1901,8 +1926,28 @@ async function openFriend(acc, noHideUserList, cb) {
   } else {
     $chatHeadBtns.find('.clear_msg_btn').stop().fadeIn(_d.speed);
   }
-  const temChatMsg = (await cacheFile.getData('temChatMsg')) || {};
-  chatMsgInp.setValue(temChatMsg[acc] || '');
+  // 切换会话时加载草稿，并拉取服务器上的最新草稿（支持多端）
+  if (curDraftAccount !== acc) {
+    curDraftAccount = acc;
+    const localDraft = getUserItem(acc).draft || '';
+    // 程序化填充草稿，不触发保存
+    isLoadingDraft = true;
+    chatMsgInp.setValue(localDraft);
+    isLoadingDraft = false;
+    reqChatGetDraft({ account: acc })
+      .then((res) => {
+        if (curDraftAccount !== acc || res.code !== 1) return;
+        const draft = res.data.draft || '';
+        // 只有用户还没开始输入时才用服务器草稿替换
+        if (chatMsgInp.getValue() === localDraft) {
+          updateUserListDraft(acc, draft);
+          isLoadingDraft = true;
+          chatMsgInp.setValue(draft);
+          isLoadingDraft = false;
+        }
+      })
+      .catch(() => {});
+  }
   if (!noHideUserList) {
     hideUserList();
   }

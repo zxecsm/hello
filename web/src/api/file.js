@@ -12,6 +12,10 @@ export function reqFileReadFile(data) {
 export function reqFileSaveFile(data) {
   return _postAjax('/file/save-file', data);
 }
+// 保存文件编辑草稿（静默请求）
+export function reqFileSaveEditing(data) {
+  return _postAjax('/file/editing', data, { load: false, stopErrorMsg: true });
+}
 // 权限
 export function reqFileMode(data) {
   return _postAjax('/file/mode', data);

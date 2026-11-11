@@ -554,7 +554,7 @@ export function parseForwardMsgLink(str) {
 // 获取成员列表
 export function getChatUserList(account, pageSize, offset, word = '') {
   const uDB = db('user AS u')
-    .select('f.des,f.read,f.msg,u.update_at,u.username,u.account,u.logo,u.hide')
+    .select('f.des,f.read,f.msg,f.draft,u.update_at,u.username,u.account,u.logo,u.hide')
     .join(
       'friends AS f',
       { 'u.account': { value: 'f.friend', raw: true }, 'f.account': account },

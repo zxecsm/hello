@@ -26,6 +26,28 @@ export async function saveNoteHistory(res, noteId, content) {
   }
 }
 
+// 笔记编辑草稿路径
+function noteEditingPath(account, noteId) {
+  return appConfig.noteHistoryDir(account, noteId, 'editing.md');
+}
+
+// 保存笔记编辑草稿
+export async function saveNoteEditing(account, noteId, content) {
+  await _f.writeFile(noteEditingPath(account, noteId), content);
+}
+
+// 读取笔记编辑草稿（不存在返回 null）
+export async function readNoteEditing(account, noteId) {
+  const notePath = noteEditingPath(account, noteId);
+  if (!(await _f.exists(notePath))) return null;
+  return (await _f.readFile(notePath, null, '')).toString();
+}
+
+// 清除笔记编辑草稿
+export async function clearNoteEditing(account, noteId) {
+  await _f.del(noteEditingPath(account, noteId));
+}
+
 const md = new MarkdownIt({
   html: false,
   linkify: false,

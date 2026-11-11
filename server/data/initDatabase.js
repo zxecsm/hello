@@ -119,6 +119,7 @@ const dbSchema = {
         { name: 'notify', type: 'INTEGER', notNull: true, default: 1 },
         { name: 'des', type: 'TEXT', notNull: true, default: '' },
         { name: 'msg', type: 'TEXT', notNull: true, default: '' },
+        { name: 'draft', type: 'TEXT', notNull: true, default: '' },
       ],
       indexes: [
         { name: 'idx_friends_account_friend', columns: ['account', 'friend'] },

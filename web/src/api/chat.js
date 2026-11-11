@@ -25,6 +25,14 @@ export function reqChatSetDes(data) {
 export function reqChatGetDes(data) {
   return _getAjax('/chat/getdes', data, { load: false, stopErrorMsg: true });
 }
+// 获取聊天草稿
+export function reqChatGetDraft(data) {
+  return _getAjax('/chat/draft', data, { load: false, stopErrorMsg: true });
+}
+// 保存聊天草稿（静默请求）
+export function reqChatSaveDraft(data) {
+  return _postAjax('/chat/draft', data, { load: false, stopErrorMsg: true });
+}
 // 文件过期
 export function reqChatExpired(data) {
   return _getAjax('/chat/expired', data);

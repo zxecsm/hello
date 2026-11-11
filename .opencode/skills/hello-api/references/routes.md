@@ -82,7 +82,7 @@
 | `POST` | `/api/bmk/import` | 导入 |
 | `GET` | `/api/bmk/export` | 导出 |
 
-## note（15）
+## note（17）
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
@@ -95,6 +95,8 @@
 | `POST` | `/api/note/delete` | 删除笔记 |
 | `POST` | `/api/note/up-note` | 上传笔记 |
 | `POST` | `/api/note/edit` | 编辑笔记 |
+| `GET` | `/api/note/editing` | 读取笔记编辑草稿 |
+| `POST` | `/api/note/editing` | 保存笔记编辑草稿 |
 | `POST` | `/api/note/edit-info` | 编辑笔记信息 |
 | `POST` | `/api/note/top` | 置顶权重 |
 | `POST` | `/api/note/set-category` | 编辑笔记分类 |
@@ -201,7 +203,7 @@
 | `GET` | `/api/search/list` | 搜索 历史、笔记、书签 |
 | `POST` | `/api/search/delete` | 删除历史记录 |
 
-## file（31）
+## file（32）
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
@@ -218,6 +220,7 @@
 | `POST` | `/api/file/create-link` | 创建符号链接 |
 | `POST` | `/api/file/share` | 分享 |
 | `POST` | `/api/file/save-file` | 保存文件 |
+| `POST` | `/api/file/editing` | 保存文件编辑草稿 |
 | `POST` | `/api/file/copy` | 复制 |
 | `POST` | `/api/file/same-name` | 是否存在同名文件 |
 | `POST` | `/api/file/move` | 移动 |
@@ -237,13 +240,15 @@
 | `POST` | `/api/file/download` | 离线下载 |
 | `POST` | `/api/file/add-file-to` | 添加到播放器和壁纸 |
 
-## chat（17）
+## chat（19）
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
 | `POST` | `/api/chat/dnd-mode` | 勿扰 |
 | `POST` | `/api/chat/setdes` | 设置备注 |
 | `GET` | `/api/chat/getdes` | 获取备注 |
+| `GET` | `/api/chat/draft` | 获取聊天草稿 |
+| `POST` | `/api/chat/draft` | 保存聊天草稿 |
 | `GET` | `/api/chat/read-msg` | 读取消息 |
 | `GET` | `/api/chat/expired` | 文件过期 |
 | `POST` | `/api/chat/send-msg` |  |

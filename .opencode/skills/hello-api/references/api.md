@@ -118,6 +118,8 @@ HELLO_COOKIE=token=...
 | POST | `/api/note/search` | `word?`, `pageNo`, `pageSize`, `category: string[]`, `account?` | 列笔记/搜索；返回预览 `con`，不含正文 |
 | GET | `/api/note/read` | `v`（笔记 ID）, `download`：`0`/`1` | 读正文；`data: {title, content, ...}` |
 | POST | `/api/note/edit` | `id`, `title`, `content` | **id 不存在则新建**；新建时客户端自行生成 ID |
+| GET | `/api/note/editing` | `id` | 读取编辑草稿（无草稿时 `editing: null`）；新笔记用 `id=new` |
+| POST | `/api/note/editing` | `id`, `content` | 实时保存编辑草稿（静默请求）；保存笔记正文时服务端自动清除；新笔记用 `id=new` |
 | POST | `/api/note/edit-info` | `id`, `title`, `create_at`, `update_at`（`YYYY-MM-DD`）, `visit_count` | 改元信息 |
 | POST | `/api/note/delete` | `ids: string[]`（`[]` = 清空，`about`/`tips` 不可删） | 进回收站 |
 | POST | `/api/note/state` | `share`: `0`/`1`, `ids: string[]` | 公开/私密 |
@@ -157,8 +159,9 @@ HELLO_COOKIE=token=...
 | 方法 | 路径 | 参数 | 说明 |
 | --- | --- | --- | --- |
 | POST | `/api/file/read-dir` | `path`, `pageNo`(1), `pageSize`(20), `sortType`: `name`\|`time`\|`size`\|`type`, `isDesc`: 0/1, `subDir`: 0/1, `word`, `update`: 0/1, `hidden`: 0/1 | 列目录/搜索；可能返回 `{key}` 走任务轮询 |
-| POST | `/api/file/read-file` | `path` | 文本文件返回 `{type:'text', data:'...'}`；二进制返回 `{type:'other'}` |
-| POST | `/api/file/save-file` | `path`, `text` | 写文本，上限 10 MB |
+| POST | `/api/file/read-file` | `path` | 文本文件返回 `{type:'text', data:'...', editing:'...'}`；`editing` 为本人未保存的编辑草稿（无草稿时为 `null`）；二进制返回 `{type:'other'}` |
+| POST | `/api/file/save-file` | `path`, `text` | 写文本，上限 10 MB；成功后清除该路径的编辑草稿 |
+| POST | `/api/file/editing` | `path`, `text` | 实时保存编辑草稿（静默请求；存于 `.h_config/file_editing/<path 的 md5>`） |
 | POST | `/api/file/create-file` | `path`（父目录）, `name` | 新建空文件 |
 | POST | `/api/file/create-dir` | `path`（父目录）, `name` | 新建目录 |
 | POST | `/api/file/rename` | `name`（新名）, `data: {name, path, type}` | 重命名 |
@@ -215,6 +218,8 @@ HELLO_COOKIE=token=...
 | GET | `/api/chat/news` | - | 未读消息 |
 | POST | `/api/chat/delete-msg` | 见源码 | 撤回消息 |
 | POST | `/api/chat/setdes` | `account`, `des` | 设置好友备注 |
+| GET | `/api/chat/draft` | `account`（对方） | 读取聊天草稿 `{draft}` |
+| POST | `/api/chat/draft` | `account`（对方）, `draft`（≤3000 字） | 保存聊天草稿到 `friends.draft`（静默请求） |
 
 群聊/助手账号是固定值（`chang` / `hello`），普通用户直接发消息基本用不到。
 

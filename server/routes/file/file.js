@@ -270,6 +270,29 @@ export async function fileToBg(p) {
   return true;
 }
 
+// 文件编辑草稿路径（使用文件路径的 hash 作为文件名）
+export function getFileEditingPath(account, path) {
+  const hash = _crypto.getStringHash(_path.normalizeNoSlash(path));
+  return appConfig.fileEditingDir(account, hash);
+}
+
+// 保存文件编辑草稿
+export async function saveFileEditing(account, path, text) {
+  await _f.writeFile(getFileEditingPath(account, path), text);
+}
+
+// 读取文件编辑草稿（不存在返回 null）
+export async function readFileEditing(account, path) {
+  const p = getFileEditingPath(account, path);
+  if (!(await _f.exists(p))) return null;
+  return (await _f.readFile(p, null, '')).toString();
+}
+
+// 清除文件编辑草稿
+export async function clearFileEditing(account, path) {
+  await _f.del(getFileEditingPath(account, path));
+}
+
 // 路径安全
 export async function isPathSafe(base, target, allowEqual = false) {
   let current = target;

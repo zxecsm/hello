@@ -182,6 +182,53 @@ route.get(
   }),
 );
 
+// 获取聊天草稿
+route.get(
+  '/draft',
+  validate(
+    'query',
+    V.object({
+      account: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+    }),
+  ),
+  asyncHandler(async (_, res) => {
+    const { account: acc } = res.locals.ctx;
+
+    const { account } = res.locals.hello.userinfo;
+
+    const friend = db('friends')
+      .select('draft')
+      .where({ account, friend: acc })
+      .findOne();
+
+    resp.success(res, 'ok', { draft: friend ? friend.draft : '' })();
+  }),
+);
+
+// 保存聊天草稿
+route.post(
+  '/draft',
+  validate(
+    'body',
+    V.object({
+      account: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      draft: V.string().default('').allowEmpty().max(fieldLength.chatContent),
+    }),
+  ),
+  asyncHandler(async (_, res) => {
+    const { account: acc, draft } = res.locals.ctx;
+
+    const { account } = res.locals.hello.userinfo;
+
+    transaction(() => {
+      becomeFriendsSync(account, acc);
+      db('friends').where({ account, friend: acc }).update({ draft });
+    });
+
+    resp.success(res, '保存聊天草稿成功')();
+  }),
+);
+
 // 读取消息
 route.get(
   '/read-msg',
@@ -596,7 +643,7 @@ route.get(
     const cons = _connect.getConnects();
 
     const list = users.map((u) => {
-      const { username, account: acc, update_at, logo, hide, des, read, msg } = u;
+      const { username, account: acc, update_at, logo, hide, des, read, msg, draft } = u;
 
       const con = cons[acc];
 
@@ -609,6 +656,7 @@ route.get(
         os: con ? con.onlines.map((item) => item.os) : [], // 展示登录设备信息
         read: read === null ? 1 : read,
         msg,
+        draft: draft === null ? '' : draft,
       };
       if (acc === account) {
         obj.des = appConfig.ownAccountDes;

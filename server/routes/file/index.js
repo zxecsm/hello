@@ -38,6 +38,9 @@ import {
   fileToMusic,
   fileToBg,
   isPathSafe,
+  readFileEditing,
+  saveFileEditing,
+  clearFileEditing,
 } from './file.js';
 
 import { fieldLength } from '../config.js';
@@ -409,10 +412,16 @@ route.post(
 
     // 文本文件并且小于等于10M直接返回
     if (stat.size <= fieldLength.textFileSize && (await _f.isTextFile(p))) {
+      // 登录用户自己查看时返回未保存的编辑草稿
+      let editing = null;
+      if (!token && account) {
+        editing = await readFileEditing(account, path);
+      }
       //文本文件
       resp.success(res, 'ok', {
         type: 'text',
         data: (await _f.readFile(p, null, '')).toString(),
+        editing,
       })();
     } else {
       resp.success(res, 'ok', {
@@ -782,6 +791,11 @@ route.post(
 
     await _f.writeFile(fpath, text);
 
+    // 文件已保存，清除编辑草稿
+    try {
+      await clearFileEditing(account, path);
+    } catch {}
+
     // 修改搜索引擎配置, 触发更新
     if (appConfig.searchConfigDir(account, 'config.json') === fpath) {
       syncUpdateData(res, 'searchConfig', '', 'all');
@@ -797,6 +811,39 @@ route.post(
     fileList.clear(account);
 
     resp.success(res, '保存文件成功')();
+  }),
+);
+
+// 保存文件编辑草稿
+route.post(
+  '/editing',
+  validate(
+    'body',
+    V.object({
+      path: V.string().notEmpty().min(1).max(fieldLength.url),
+      text: V.string()
+        .default('')
+        .allowEmpty()
+        .custom(
+          (v) => _f.getTextSize(v) <= fieldLength.textFileSize,
+          `编辑文本文件不能超过: ${fieldLength.textFileSize} 字节`,
+        ),
+    }),
+  ),
+  asyncHandler(async (_, res) => {
+    const { path, text } = res.locals.ctx;
+
+    const { account } = res.locals.hello.userinfo;
+
+    const fpath = appConfig.userRootDir(account, path);
+
+    if (!(await isPathSafe(appConfig.userRootDir(account), fpath))) {
+      return resp.forbidden(res, '文件不存在')();
+    }
+
+    await saveFileEditing(account, path, text);
+
+    resp.success(res, '保存编辑草稿成功')();
   }),
 );
 
