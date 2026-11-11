@@ -53,7 +53,6 @@ import toolTip from '../../js/plugins/tooltip';
 import { showSongInfo } from '../../js/utils/showinfo';
 import rMenu from '../../js/plugins/rightMenu';
 import { _tpl, deepClone } from '../../js/utils/template';
-import { initRainCodeSleep } from '../../js/common/codeRain';
 import notifyMusicControlPanel from '../home/player/notifyMusicControlPanel';
 import { imgCache } from '../../js/utils/imgCache';
 import imgPreview from '../../js/plugins/imgPreview';
@@ -447,11 +446,9 @@ function playMv(obj) {
   lrcInit();
   $myVideo[0].playbackRate = curPlaySpeed[1];
 }
-$myVideo
-  .on('error', function () {
-    _msg.error(`MV 加载失败`);
-  })
-  .on('timeupdate', initRainCodeSleep);
+$myVideo.on('error', function () {
+  _msg.error(`MV 加载失败`);
+});
 function pauseVideo() {
   $myVideo[0].pause();
 }

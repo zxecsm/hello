@@ -12,7 +12,6 @@ import {
 } from '../../js/utils/utils';
 import { reqUserFileToken } from '../../api/user';
 import toolTip from '../../js/plugins/tooltip';
-import { initRainCodeSleep } from '../../js/common/codeRain';
 import realtime from '../../js/plugins/realtime';
 import { otherWindowMsg, waitLogin } from '../home/home';
 import _d from '../../js/common/config';
@@ -74,4 +73,3 @@ vd.onerror = function () {
     }
   });
 };
-vd.ontimeupdate = initRainCodeSleep;

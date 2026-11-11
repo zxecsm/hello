@@ -3,12 +3,10 @@ import { _mySlide, playSound, switchPageIcon } from '../../utils/utils';
 import imgMsg from '../../../images/img/msg.mp3';
 import onlineMsg from '../../../images/img/online.mp3';
 import './index.less';
-import { initRainCodeSleep } from '../../common/codeRain';
 const msgArr = [];
 const zIndex = _d.levelObj.msg;
 class Msg {
   constructor(opt = {}, callback) {
-    initRainCodeSleep();
     const defaultOpt = {
       message: 'default text',
       type: 'info',

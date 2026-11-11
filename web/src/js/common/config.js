@@ -74,7 +74,6 @@ const fieldLength = {
   todoContent: 500, // 代办内容
   noteCategoryTitle: 30, // 笔记分类标题
   operationTimeout: 10000, // 操作超时时间
-  rainCodeSleep: 60 * 5, // 代码雨触发等待时间
   maxFileSize: 19.5, // 最大文件大小GB
   maxPicSize: 10, // 最大图片大小MB
   maxBgSize: 20, // 最大壁纸大小MB

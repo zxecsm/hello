@@ -21,7 +21,6 @@ import { _loadingBar } from '../plugins/loadingBar';
 import imgHechang from '../../images/img/hechang.png';
 import loadingPage from '../plugins/loading';
 import { reqUserCustomCode, reqUserError } from '../../api/user';
-import './codeRain';
 import localData from './localData';
 import wave from '../plugins/wave';
 import { timeMsg, welcomeMsg } from '../../page/home/home';

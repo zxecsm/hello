@@ -25,19 +25,6 @@ export default function wave(idx = 1) {
         animation-delay:-4s;
         animation-duration:3s
       }
-      @keyframes rise {
-        0% {
-          transform: translateY(0);
-          opacity: 0;
-        }
-        50% {
-          opacity: 1;
-        }
-        100% {
-          transform: translateY(-100vh);
-          opacity: 0;
-        }
-      }
       @keyframes vh-bolang-item-move{
         0%{
           transform:translate(-90px,0)
@@ -61,74 +48,4 @@ export default function wave(idx = 1) {
     _0x319530 = new DOMParser(),
     _0x4d9451 = _0x319530['parseFromString'](_0x29074d, 'image/svg+xml')['querySelector']('svg');
   document['body']['appendChild'](_0x4d9451);
-
-  const bubbles = new Set();
-  let bubbleTimer = null;
-
-  function createBubble() {
-    if (document.visibilityState === 'hidden') return;
-
-    const bubble = document.createElement('div');
-    bubble.className = 'vh-bubble';
-    bubble.style.cssText = `
-    position: fixed;
-    bottom: -60px;
-    background-color: rgb(153 205 239 / 30%);
-    border-radius: 50%;
-    animation: rise 5s infinite ease-in-out;
-    pointer-events: none;
-    z-index: ${idx};
-    `;
-
-    // 随机大小和位置
-    const size = Math.random() * 50 + 10 + 'px';
-    bubble.style.width = size;
-    bubble.style.height = size;
-    bubble.style.left = Math.random() * 100 + '%';
-
-    // 随机动画持续时间
-    const duration = Math.random() * 10 + 30;
-    bubble.style.animationDuration = duration + 's';
-
-    bubbles.add(bubble);
-    document.body.appendChild(bubble);
-
-    // 在动画结束后删除泡泡
-    setTimeout(() => {
-      bubbles.delete(bubble);
-      bubble.remove();
-    }, duration * 1000);
-  }
-
-  function startBubbleTimer() {
-    if (bubbleTimer || document.visibilityState === 'hidden') return;
-    bubbleTimer = setInterval(createBubble, 3000);
-  }
-
-  function stopBubbleTimer() {
-    if (bubbleTimer) {
-      clearInterval(bubbleTimer);
-      bubbleTimer = null;
-    }
-  }
-
-  createBubble();
-  // 定时生成泡泡
-  startBubbleTimer();
-
-  // 页面隐藏时暂停生成和动画，可见时恢复
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') {
-      stopBubbleTimer();
-      bubbles.forEach((bubble) => {
-        bubble.style.animationPlayState = 'paused';
-      });
-    } else {
-      bubbles.forEach((bubble) => {
-        bubble.style.animationPlayState = 'running';
-      });
-      if (bubbles.size === 0) createBubble();
-      startBubbleTimer();
-    }
-  });
 }
