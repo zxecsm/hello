@@ -1909,14 +1909,17 @@ async function openFriend(acc, noHideUserList, cb) {
     $chatHeadBtns.find('.clear_msg_btn').stop().fadeIn(_d.speed);
   }
   // 切换会话时直接获取服务器最新草稿，不使用缓存
-  // 同一会话重复打开时保留输入框内容，避免覆盖正在输入的内容
-  if (curDraftAccount !== acc) {
+  // 同一会话下输入框为空时也刷新草稿，有内容则保留正在输入的内容
+  const isSwitchAccount = curDraftAccount !== acc;
+  if (isSwitchAccount || !chatMsgInp.getValue()) {
     curDraftAccount = acc;
     hasUserEditedDraft = false;
-    // 先清空输入框，避免显示上一个会话的内容
-    isLoadingDraft = true;
-    chatMsgInp.setValue('');
-    isLoadingDraft = false;
+    if (isSwitchAccount) {
+      // 先清空输入框，避免显示上一个会话的内容
+      isLoadingDraft = true;
+      chatMsgInp.setValue('');
+      isLoadingDraft = false;
+    }
     reqChatGetDraft({ account: acc })
       .then((res) => {
         if (curDraftAccount !== acc || res.code !== 1) return;
