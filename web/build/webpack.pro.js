@@ -8,6 +8,13 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { merge } = require('webpack-merge');
 const { getPlugins } = require('./utils');
 const corejsVersion = require('core-js/package.json').version.split('.').slice(0, 2).join('.');
+// 目标浏览器：polyfill 注入和语法降级都以此为准，避免打包用不到的老浏览器垫片
+const TARGETS = {
+  chrome: '87',
+  edge: '88',
+  firefox: '78',
+  safari: '14',
+};
 // css兼容前缀
 const postcssConfig = {
   loader: 'postcss-loader',
@@ -52,18 +59,15 @@ module.exports = merge(require('./webpack.base'), {
                   // 配置信息
                   {
                     // 兼容的目标浏览器（不再兼容 IE 等老设备）
-                    targets: {
-                      chrome: '87',
-                      edge: '88',
-                      firefox: '78',
-                      safari: '14',
-                    },
+                    targets: TARGETS,
                   },
                 ],
               ],
               plugins: [
                 [
                   'babel-plugin-polyfill-corejs3',
+                  // targets 由上方 preset-env 提供（插件内部通过 api.targets() 读取），
+                  // 这里只需指定注入方式，避免按 browserslist 默认值注入多余的 core-js 垫片
                   { method: 'usage-global', version: corejsVersion },
                 ],
               ],
@@ -77,6 +81,8 @@ module.exports = merge(require('./webpack.base'), {
   // 关闭资源过大提示
   performance: { hints: false },
   optimization: {
+    // 把 webpack 运行时代码抽成单独文件，业务代码更新时运行时代码仍可复用缓存
+    runtimeChunk: 'single',
     // 模块分包
     splitChunks: {
       chunks: 'all',

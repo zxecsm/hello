@@ -1,4 +1,4 @@
-import JSZip from 'jszip';
+// jszip 体积较大且只在导入/导出缓存时用到，改为按需加载
 import { CacheByExpire } from './cache';
 import md5 from './md5';
 import { _setTimeout, downloadFile, getFiles, isTextFile } from './utils';
@@ -294,6 +294,7 @@ const cacheFile = {
       }
 
       // 分别压缩包并下载
+      const { default: JSZip } = await import('jszip');
       for await (const { size, num, pack } of packs) {
         const zip = new JSZip();
 
@@ -326,6 +327,7 @@ const cacheFile = {
 
       const cacheList = await this.getList();
       let count = 0;
+      const { default: JSZip } = await import('jszip');
 
       await Promise.all(
         files.map(async (file) => {

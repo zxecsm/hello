@@ -3,7 +3,6 @@ const webpack = require('webpack');
 const fs = require('fs');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const { GenerateSW } = require('workbox-webpack-plugin');
 // css link方式引入
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -94,12 +93,15 @@ class AutoTitlePlugin {
     });
   }
 }
+const srcDir = resolve(__dirname, '..', 'src');
+const pageDir = resolve(srcDir, 'page');
 const includePage = [];
-const pageFiles = includePage.length > 0 ? includePage : fs.readdirSync('./src/page');
+// 使用绝对路径，避免在非 web 目录执行构建时找不到页面
+const pageFiles = includePage.length > 0 ? includePage : fs.readdirSync(pageDir);
 function getEntry() {
   const entry = {};
   pageFiles.forEach((item) => {
-    entry[item] = `./src/page/${item}/index.js`;
+    entry[item] = resolve(pageDir, item, 'index.js');
   });
   return entry;
 }
@@ -107,7 +109,7 @@ function getPlugins(isDev) {
   let plugins = [];
   pageFiles.forEach((item) => {
     const opt = {
-      template: `./src/page/${item}/index.html`,
+      template: resolve(pageDir, item, 'index.html'),
       filename: `${item === 'home' ? '' : `${item}/`}index.html`,
       chunks: [item],
       minify: {
@@ -126,7 +128,7 @@ function getPlugins(isDev) {
           }`,
         },
       },
-      favicon: './src/images/img/icon-visible.svg',
+      favicon: resolve(srcDir, 'images/img/icon-visible.svg'),
       inject: 'head',
     };
     if (isDev) {
@@ -137,7 +139,6 @@ function getPlugins(isDev) {
   plugins.push(new AutoTitlePlugin());
   if (!isDev) {
     plugins = [
-      new CleanWebpackPlugin(),
       ...plugins,
       // 抽取css
       new MiniCssExtractPlugin({
@@ -172,8 +173,53 @@ function getPlugins(isDev) {
 
         // 预缓存规则配置
         navigationPreload: false, // 通常保持默认即可
-        // 如果静态资源较多，可以限制单文件预缓存的最大体积 (默认 2MB)
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 放大到 4MB
+        // 只预缓存 html/css/js 以及很小的 UI 音效；图片、字体、ace 语言包改为运行时缓存，
+        // 避免首次访问在后台下载全部资源（原来约 12MB，现在约 3.8MB）
+        // 音乐等接口流（/api/music、/api/f）不缓存，保持原来的流式播放行为
+        exclude: [
+          /^assets\//, // ace 编辑器语言包，按需加载
+          /\.(?:png|jpe?g|gif|webp|svg|ico|woff2?|ttf|eot)$/i,
+          /^(?:sw|workbox-[^/]+)\.js$/,
+          /\.LICENSE\.txt$/,
+        ],
+        // 入口/共享 chunk 必须预缓存，否则离线时整页打不开；
+        // 图片和 ace 已通过 exclude 排除，这里保持和原来一致的宽容度
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        runtimeCaching: [
+          {
+            // ace 语言包
+            urlPattern: /\/assets\/ace\/.*\.js$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'hello-ace',
+              expiration: { maxEntries: 120, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // 图片、字体等静态资源：命中缓存直接用，不阻塞页面。
+            // 只处理同源的构建产物，排除 /api/（文件、字体、音乐等接口
+            // 可能带鉴权或流式响应，不能进 SW 缓存）
+            urlPattern:
+              /^https?:\/\/[^/]+\/(?!api\/)[^?#]*\.(?:png|jpe?g|gif|webp|svg|ico|mp3|woff2?|ttf|eot)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'hello-static',
+              expiration: { maxEntries: 150, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // 体积较大的按需 chunk：首次使用后缓存，离线也能打开
+            urlPattern: /\/js\/.*\.js$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'hello-js',
+              expiration: { maxEntries: 100, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       }),
     ];
   } else {

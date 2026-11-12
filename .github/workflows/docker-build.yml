@@ -34,11 +34,23 @@ jobs:
           cache: 'npm' # 开启 npm 缓存
           cache-dependency-path: ./web/package-lock.json
 
+      # 复用上次构建的 webpack 文件系统缓存，增量构建更快。
+      # 注意：必须在 npm ci 之后恢复，因为 npm ci 会删除整个 node_modules
+      - name: Install frontend dependencies
+        working-directory: ./web
+        run: npm ci
+
+      - name: Restore webpack cache
+        uses: actions/cache@v4
+        with:
+          path: web/node_modules/.cache/webpack
+          key: webpack-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            webpack-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}-
+
       - name: Build frontend
         working-directory: ./web
-        run: |
-          npm ci
-          npm run build
+        run: npm run build
 
       # 4️⃣ 设置多架构环境
       - name: Set up QEMU

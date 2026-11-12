@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import QRCode from 'qrcode';
+// qrcode 体积较大且只在生成二维码时用到，改为按需加载
 import _d from '../common/config';
 import { _loadingBar } from '../plugins/loadingBar';
 import _msg from '../plugins/message';
@@ -2098,6 +2098,7 @@ export async function showQcode(e, text, title = '展示二维码') {
     if (text.trim() === '') {
       throw '请输入需要生成的内容';
     }
+    const { default: QRCode } = await import('qrcode');
     const url = await QRCode.toDataURL(text, { width: 500, height: 500 });
     const html = _tpl(
       `<img style="width:25rem;height:25rem" data-src="{{url}}"/>

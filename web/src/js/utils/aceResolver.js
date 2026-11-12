@@ -6,13 +6,14 @@ import 'ace-builds/src-noconflict/theme-github_dark';
 
 // 语言模式（语法高亮）与代码片段：保持全量注册，仍然按需懒加载
 // 用 require.context 代替 ace-builds/webpack-resolver，避免它把全部主题一起打进来
+// 产物统一放到 assets/ace/ 下：目录集中、带 hash，可长期强缓存
 const aceSrc = require.context(
-  'file-loader?esModule=false!../../../node_modules/ace-builds/src-noconflict',
+  'file-loader?esModule=false&name=assets/ace/[name].[contenthash:8].[ext]!../../../node_modules/ace-builds/src-noconflict',
   false,
   /^\.\/mode-.*\.js$/,
 );
 const aceSnippets = require.context(
-  'file-loader?esModule=false!../../../node_modules/ace-builds/src-noconflict/snippets',
+  'file-loader?esModule=false&name=assets/ace/snippets/[name].[contenthash:8].[ext]!../../../node_modules/ace-builds/src-noconflict/snippets',
   false,
   /^\.\/.*\.js$/,
 );

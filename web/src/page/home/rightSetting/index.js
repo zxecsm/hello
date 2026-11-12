@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import QRCode from 'qrcode';
+// qrcode 体积较大且只在两步验证时用到，改为按需加载
 import {
   myOpen,
   _setTimeout,
@@ -1688,6 +1688,7 @@ function hdAccountManage(e) {
 */
 async function hdVerifyLogin(e, verify, account) {
   const text = `otpauth://totp/${account}?issuer=Hello&secret=${verify}`;
+  const { default: QRCode } = await import('qrcode');
   const url = await QRCode.toDataURL(text, { width: 500, height: 500 });
   const html = _tpl(
     `

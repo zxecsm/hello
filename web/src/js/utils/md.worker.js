@@ -1,5 +1,44 @@
 import MarkdownIt from 'markdown-it';
-import hljs from 'highlight.js';
+// 常用语言（common）+ 一些笔记里高频出现、但 common 未包含的语言，
+// 兼顾体积与高亮覆盖率；未注册的语言会自动走 highlightAuto 兜底
+import hljs from 'highlight.js/lib/common';
+import clojure from 'highlight.js/lib/languages/clojure';
+import cmake from 'highlight.js/lib/languages/cmake';
+import coffeescript from 'highlight.js/lib/languages/coffeescript';
+import dart from 'highlight.js/lib/languages/dart';
+import dockerfile from 'highlight.js/lib/languages/dockerfile';
+import elixir from 'highlight.js/lib/languages/elixir';
+import groovy from 'highlight.js/lib/languages/groovy';
+import haskell from 'highlight.js/lib/languages/haskell';
+import http from 'highlight.js/lib/languages/http';
+import julia from 'highlight.js/lib/languages/julia';
+import nginx from 'highlight.js/lib/languages/nginx';
+import nix from 'highlight.js/lib/languages/nix';
+import powershell from 'highlight.js/lib/languages/powershell';
+import properties from 'highlight.js/lib/languages/properties';
+import protobuf from 'highlight.js/lib/languages/protobuf';
+import scala from 'highlight.js/lib/languages/scala';
+import vim from 'highlight.js/lib/languages/vim';
+
+[
+  ['clojure', clojure],
+  ['cmake', cmake],
+  ['coffeescript', coffeescript],
+  ['dart', dart],
+  ['dockerfile', dockerfile],
+  ['elixir', elixir],
+  ['groovy', groovy],
+  ['haskell', haskell],
+  ['http', http],
+  ['julia', julia],
+  ['nginx', nginx],
+  ['nix', nix],
+  ['powershell', powershell],
+  ['properties', properties],
+  ['protobuf', protobuf],
+  ['scala', scala],
+  ['vim', vim],
+].forEach(([name, lang]) => hljs.registerLanguage(name, lang));
 import markdownItSub from 'markdown-it-sub'; // 下标
 import markdownItSup from 'markdown-it-sup'; // 上标
 import markdownItMark from 'markdown-it-mark'; // 高亮

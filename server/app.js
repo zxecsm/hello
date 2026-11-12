@@ -3,6 +3,9 @@ import { resolve } from 'path';
 // Cookie
 import cookieParser from 'cookie-parser';
 
+// gzip / brotli 压缩
+import compression from 'compression';
+
 import express from 'express';
 
 import * as cheerio from 'cheerio';
@@ -78,6 +81,19 @@ app.set('trust proxy', getTrustProxy());
 
 app.use(openCors);
 
+// 文本资源压缩（js/css/html/json 等），首屏体积可降低 60%~80%
+app.use(
+  compression({
+    threshold: 1024, // 小于 1KB 不压缩，避免负收益
+    filter: (req, res) => {
+      if (req.headers['x-no-compression']) return false;
+      // 文件下载/音乐流：边收边发，压缩会占用 CPU 并增加首字节延迟
+      if (/^\/api\/(f|music)\b/.test(req.path)) return false;
+      return compression.filter(req, res);
+    },
+  }),
+);
+
 //  Cookie 解析
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
@@ -94,8 +110,10 @@ app.use((_, res, next) => {
   next();
 });
 
-// 带 hash 的构建产物：js/xxx.abcd1234.js、css/xxx.abcd1234.css、images/img/xxx.abcd1234.png
-const HASHED_ASSET_RE = /[\\/](js|css|images[\\/]img)[\\/][^\\/]+\.[0-9a-f]{8}\.[^\\/.]+$/i;
+// 带 hash 的构建产物：js/xxx.abcd1234.js、css/xxx.abcd1234.css、images/img/xxx.abcd1234.png、
+// assets/ace/xxx.abcd1234.js（ace 语言包）以及根目录下 webpack 资源模块产出的 xxx.<20~32位hash>.cur
+const HASHED_ASSET_RE =
+  /(?:[\\/](?:js|css|images[\\/]img)[\\/][^\\/]+\.[0-9a-f]{8}\.[^\\/.]+|[\\/]assets[\\/].+\.[0-9a-f]{8}\.[^\\/.]+|[\\/][0-9a-f]{20,32}\.[^\\/.]+)$/i;
 
 const staticOptions = {
   dotfiles: 'allow', // 允许访问 .xxx 文件
