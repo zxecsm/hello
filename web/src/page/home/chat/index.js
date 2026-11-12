@@ -213,10 +213,6 @@ function getUserList(top) {
         const { data, pageNo, totalPage, total } = result.data;
         userPageNo = pageNo;
         userList = data;
-        // 列表刷新时保留当前正在编辑的草稿
-        if (curDraftAccount) {
-          updateUserListDraft(curDraftAccount, chatMsgInp.getValue());
-        }
         renderUserList(pageNo, total, totalPage, top);
       }
     })
@@ -347,11 +343,6 @@ function lazyLoadChatLogo() {
 }
 // 关闭聊天室
 export function closeChatRoom() {
-  // 关闭前保存当前会话草稿
-  if (curDraftAccount) {
-    saveTemChatMsg.cancel();
-    saveChatDraft(curDraftAccount, chatMsgInp.getValue());
-  }
   const chatRoom = $chatRoomWrap[0];
   const { x, y } = getCenterPointDistance(chatRoom, $showChatRoomBtn[0]);
   _animate(
@@ -1437,15 +1428,9 @@ function switchShakeBtn() {
     $shakeBtn.css('display', 'block');
   }
 }
-// 更新用户列表里的草稿预览
-function updateUserListDraft(account, draft) {
-  const item = userList.find((item) => item.account === account);
-  if (item) item.draft = draft;
-}
 // 保存草稿到服务器（静默）
 function saveChatDraft(account, draft) {
   if (!account) return;
-  updateUserListDraft(account, draft);
   reqChatSaveDraft({ account, draft }).catch(() => {});
 }
 const saveTemChatMsg = debounce((account, val) => {
@@ -1904,11 +1889,6 @@ function setChatTitle(acc) {
 }
 // 打开消息
 async function openFriend(acc, noHideUserList, cb) {
-  // 切换会话前先保存上一个会话的草稿
-  if (curDraftAccount && curDraftAccount !== acc) {
-    saveTemChatMsg.cancel();
-    saveChatDraft(curDraftAccount, chatMsgInp.getValue());
-  }
   if (curChatAccount !== acc) {
     chatSearchInput.setValue('').focus();
     searchDateLimit = {};
@@ -1929,6 +1909,7 @@ async function openFriend(acc, noHideUserList, cb) {
     $chatHeadBtns.find('.clear_msg_btn').stop().fadeIn(_d.speed);
   }
   // 切换会话时直接获取服务器最新草稿，不使用缓存
+  // 同一会话重复打开时保留输入框内容，避免覆盖正在输入的内容
   if (curDraftAccount !== acc) {
     curDraftAccount = acc;
     hasUserEditedDraft = false;
@@ -1940,7 +1921,6 @@ async function openFriend(acc, noHideUserList, cb) {
       .then((res) => {
         if (curDraftAccount !== acc || res.code !== 1) return;
         const draft = res.data.draft || '';
-        updateUserListDraft(acc, draft);
         // 用户已经开始输入时，不替换成服务器草稿
         if (!hasUserEditedDraft) {
           isLoadingDraft = true;
@@ -2036,9 +2016,7 @@ $userListBox
     if (online === 0) {
       status = '离线';
     }
-    const str = `用户名：${username}\n备注：${
-      des || '--'
-    }\n账号：${account}\n状态：${status}${
+    const str = `用户名：${username}\n备注：${des || '--'}\n账号：${account}\n状态：${status}${
       online === 1 ? `\n登录设备：\n${os.join('\n')}` : ''
     }`;
     toolTip.setTip(str).show();
