@@ -100,7 +100,7 @@ window.changeTheme = changeTheme;
 const editor = aceEditor.createEditor($editBox[0]);
 aceEditor.setMode(editor, 'x.md');
 changeTheme(localData.get('dark'));
-// 程序化设置内容（打开笔记、恢复草稿）时不保存草稿
+// 只有第一次 setValue（初始化）不保存草稿
 let isLoadingNote = false;
 // 用户编辑过笔记后，清除文件/聊天转笔记的本地缓存
 let newNoteCleared = false;
@@ -319,14 +319,12 @@ function updateIframeTitle(title) {
   }
 }
 // 提示恢复服务器上未保存的编辑草稿（支持多端恢复）
-// 恢复与取消恢复都不会清除草稿，只有保存笔记时才清除
+// 确认恢复后继续编辑，取消恢复则删除草稿，保存笔记时也会清除
 function restoreEditing(editing, content) {
   if (editing === null || editing === undefined || editing === content) return;
   rMenu.pop({ text: '恢复：未保存的笔记？' }, (type) => {
     if (type === 'confirm') {
-      isLoadingNote = true;
       editor.setValue(editing);
-      isLoadingNote = false;
       editor.gotoLine(1);
     } else if (type === 'cancel') {
       // 取消恢复：直接删除草稿
@@ -335,9 +333,9 @@ function restoreEditing(editing, content) {
   });
 }
 if (HASH === 'new') {
+  // 先拿到本地内容和服务器草稿，再一次性初始化，避免草稿晚到覆盖用户输入
   cacheFile.getData('newNote').then(async (text) => {
-    // 新笔记直接用服务器草稿替换，不需要询问
-    // 有本地转来的内容（文件/聊天转笔记）时优先使用
+    if (HASH !== 'new') return;
     let content = text;
     try {
       const res = await reqNoteGetEditing({ id: 'new' });
@@ -349,10 +347,9 @@ if (HASH === 'new') {
       title: formatDate({ template: '{0}-{1}-{2} {3}:{4}' }),
       content,
     });
+    $headBtns.addClass('open');
+    $editWrap.addClass('open');
   });
-  //新增笔记
-  $headBtns.addClass('open');
-  $editWrap.addClass('open');
 } else {
   //获取内容编辑笔记
   if (!isLogin()) {

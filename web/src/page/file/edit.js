@@ -82,13 +82,11 @@ export function openFile(text, path, editing) {
     editor.focus();
   }
   // 提示恢复服务器上未保存的编辑草稿（支持多端恢复）
-  // 恢复与取消恢复都不会清除草稿，只有保存文件时才清除
+  // 确认恢复后继续编辑，取消恢复则删除草稿，保存文件时也会清除
   if (!readOnly && editing !== null && editing !== undefined && editing !== text) {
     rMenu.pop({ text: '恢复：未保存的文件？' }, (type) => {
       if (type === 'confirm') {
-        isLoadingFile = true;
         editor.setValue(editing);
-        isLoadingFile = false;
         editor.gotoLine(1);
       } else if (type === 'cancel') {
         // 取消恢复：直接删除草稿
