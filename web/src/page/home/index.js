@@ -126,7 +126,7 @@ import { closeCountBox, countMsg, getCountList, setExpireCount } from './count_d
 import { reqCountList } from '../../api/count.js';
 import { deepClone } from '../../js/utils/template.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
-import { handleAllowLoginMsg, shakeChat, timeMsg, welcomeMsg } from './home.js';
+import { handleAllowLoginMsg, handleClipboardMsg, shakeChat, timeMsg, welcomeMsg } from './home.js';
 import localData from '../../js/common/localData.js';
 const $pageBg = $('.page_bg'),
   $pageBgFilter = $('.page_bg_filter'),
@@ -928,6 +928,8 @@ realtime.init('home').add((res) => {
       handleOnlineMsg(data);
     } else if (type === 'allowLogin') {
       handleAllowLoginMsg(data);
+    } else if (type === 'clipboard') {
+      handleClipboardMsg(data);
     } else if (type === 'errMsg') {
       _msg.error(data.text, null, { reside: true });
     }

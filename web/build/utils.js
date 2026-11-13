@@ -159,6 +159,11 @@ function getPlugins(isDev) {
             from: resolve(__dirname, '..', 'src/assets/icons'),
             to: resolve(__dirname, '../../server/public/assets/icons'),
           },
+          {
+            // 通知点击处理脚本，由 sw.js 通过 importScripts 引入
+            from: resolve(__dirname, '..', 'src/sw-notify.js'),
+            to: resolve(__dirname, '../../server/public/sw-notify.js'),
+          },
         ],
       }),
       new GenerateSW({
@@ -166,6 +171,7 @@ function getPlugins(isDev) {
         clientsClaim: true, // 新 SW 激活后立即接管当前所有页面
         skipWaiting: true, // 新 SW 安装完成后跳过等待，立即激活
         cleanupOutdatedCaches: true, // 自动清理旧版本的 Workbox 预缓存文件
+        importScripts: ['/sw-notify.js'], // 注入系统通知点击处理
 
         // 预缓存规则配置
         navigationPreload: false, // 通常保持默认即可

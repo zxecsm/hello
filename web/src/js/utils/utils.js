@@ -1363,31 +1363,147 @@ export function getDuration(file) {
     audio.src = url;
   });
 }
+// 页面是否可见（可见时不触发系统通知）
+function isPageVisible() {
+  if (typeof document === 'undefined') return true;
+  if (typeof document.visibilityState === 'string') {
+    return document.visibilityState === 'visible';
+  }
+  return !document.hidden;
+}
+// 请求通知权限，兼容新旧 API（旧版 Safari 只支持回调式）
+function requestNotifyPermission() {
+  return new Promise((resolve) => {
+    try {
+      if (typeof Notification.requestPermission !== 'function') return resolve('denied');
+      const ret = Notification.requestPermission((permission) => resolve(permission));
+      // 新版浏览器返回 Promise，同时也兼容回调
+      if (ret && typeof ret.then === 'function') {
+        ret.then((permission) => resolve(permission)).catch(() => resolve(Notification.permission));
+      }
+    } catch {
+      resolve('denied');
+    }
+  });
+}
+// 获取已激活的 Service Worker 注册（超时兜底，避免 ready 永不返回）
+function getActiveSWRegister(timeout = 3000) {
+  if (!('serviceWorker' in navigator)) return Promise.resolve(null);
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise((resolve) => {
+      _setTimeout(() => resolve(null), timeout);
+    }),
+  ]).catch(() => null);
+}
+// Service Worker 通知的点击回调表
+const swNotifyCallbacks = new Map();
+let swNotifyId = 0;
+let swNotifyBound = false;
+// 绑定 Service Worker 消息（通知被点击后由 sw 通知页面）
+function bindSWNotifyMessage() {
+  if (swNotifyBound || !('serviceWorker' in navigator)) return;
+  swNotifyBound = true;
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    const data = event.data;
+    if (!data || data.type !== 'hello-notification-click') return;
+    const callback = swNotifyCallbacks.get(data.id);
+    if (typeof callback !== 'function') return;
+    swNotifyCallbacks.delete(data.id);
+    try {
+      callback();
+    } catch {}
+  });
+}
+// 通知图标：blob url 在 Service Worker 中不可用，转为 data url
+async function getNotifyIcon(icon) {
+  if (!icon || !/^blob:/i.test(icon)) return icon || '';
+  try {
+    const blob = await (await fetch(icon)).blob();
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return '';
+  }
+}
+// 通过 Service Worker 发送通知（移动端浏览器不支持 Notification 构造函数）
+async function showNotificationBySW(obj, callback) {
+  try {
+    const register = await getActiveSWRegister();
+    if (!register) return false;
+    const id = `${Date.now()}_${++swNotifyId}`;
+    bindSWNotifyMessage();
+    swNotifyCallbacks.set(id, callback);
+    _setTimeout(() => swNotifyCallbacks.delete(id), 10 * 60 * 1000);
+    const options = {
+      body: obj.body,
+      // 页面被关闭时，点击通知重新打开该页面
+      data: { id, url: location.href },
+    };
+    const icon = await getNotifyIcon(obj.icon);
+    if (icon) options.icon = icon;
+    if (obj.tag) options.tag = obj.tag;
+    await register.showNotification(obj.title, options);
+    return true;
+  } catch {
+    return false;
+  }
+}
 // 浏览器通知
 export function sendNotification(opt, callback) {
   try {
+    // 页面可见时不触发系统通知
+    if (isPageVisible()) return;
     // 检查是否支持 Notification API
-    if (!('Notification' in window) || Notification.permission === 'denied') {
-      return;
-    }
+    if (!('Notification' in window) || Notification.permission === 'denied') return;
+
+    const obj = {
+      title: '新通知',
+      body: '',
+      icon: '',
+      ...opt,
+    };
+
+    // 点击通知：关闭通知、聚焦页面、执行回调
+    const onClick = () => {
+      try {
+        window.focus();
+      } catch {}
+      if (typeof callback === 'function') {
+        try {
+          callback();
+        } catch {}
+      }
+    };
 
     // 创建通知的函数
     function notify() {
-      const obj = {
-        title: '新通知',
-        body: '',
-        icon: '',
-        ...opt,
-      };
-      const notification = new Notification(obj.title, {
-        icon: obj.icon,
-        body: obj.body,
-      });
-      notification.onclick = function () {
-        window.focus();
-        notification.close();
-        callback && callback();
-      };
+      // 桌面浏览器使用 Notification 构造函数
+      try {
+        const options = {};
+        if (obj.body) options.body = obj.body;
+        if (obj.icon) options.icon = obj.icon;
+        if (obj.tag) options.tag = obj.tag;
+        const notification = new Notification(obj.title, options);
+        notification.onclick = function () {
+          try {
+            notification.close();
+          } catch {}
+          onClick();
+        };
+        notification.onerror = function () {
+          try {
+            notification.close();
+          } catch {}
+        };
+        return;
+      } catch {}
+      // 移动端（安卓 Chrome、iOS Safari）不支持构造函数，回退到 Service Worker
+      showNotificationBySW(obj, onClick).catch(() => {});
     }
 
     // 根据权限状态发送通知
@@ -1395,11 +1511,9 @@ export function sendNotification(opt, callback) {
       // 用户已经授权，直接发送通知
       notify();
     } else if (Notification.permission !== 'denied') {
-      // 请求权限（使用 Promise 处理）
-      Notification.requestPermission().then((permission) => {
-        if (permission === 'granted') {
-          notify();
-        }
+      // 请求权限（兼容回调与 Promise 两种写法）
+      requestNotifyPermission().then((permission) => {
+        if (permission === 'granted') notify();
       });
     }
   } catch {}

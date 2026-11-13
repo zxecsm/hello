@@ -2113,7 +2113,12 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
+    const { temid, os } = res.locals.hello;
+
     await _f.writeFile(appConfig.backupDir(account, 'clipboard'), text);
+
+    // 通知该账号的其他设备（不通知发送设备）
+    _connect.send(account, temid, { type: 'clipboard', data: { text, os } }, 'other');
 
     resp.success(res, '发送剪切板成功')();
   }),

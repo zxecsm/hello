@@ -19,6 +19,8 @@ const apiPath = '/api';
 const getFileURL = apiPath + '/f';
 const faviconURL = apiPath + '/icon';
 const fontURL = apiPath + '/font';
+// 系统通知图标（网站图标）
+const notifyIcon = `${originURL}/assets/icons/icon-192.png`;
 const userConfigDir = '/.h_config';
 // 搜索引擎
 const bingLogo =
@@ -116,6 +118,7 @@ const _d = {
   apiPath,
   fontURL,
   originURL,
+  notifyIcon,
   getFileURL,
   faviconURL,
   defaultFontFamily: 'Roboto, Arial, sans-serif', // 默认字体

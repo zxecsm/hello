@@ -14,6 +14,7 @@ export default [
         Intl: 'readonly',
         openInIframe: 'readonly',
         handleFontType: 'readonly',
+        importScripts: 'readonly',
       },
     },
     rules: {

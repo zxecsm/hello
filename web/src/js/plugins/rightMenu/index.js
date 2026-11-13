@@ -611,7 +611,9 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       r.loadEnd();
     },
   };
-  return submit;
+  // 返回弹框实例（保留 submit 方法，兼容原有用法），方便外部主动关闭
+  r.submit = submit;
+  return r;
 }
 function render(data) {
   data = data.map((item) => {

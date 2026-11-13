@@ -5,32 +5,24 @@ import _msg from '../../js/plugins/message';
 import rMenu from '../../js/plugins/rightMenu';
 import {
   _setTimeout,
+  copyText,
   debounce,
   isIframe,
   isLogin,
   myOpen,
   playSound,
+  sendNotification,
   switchPageIcon,
 } from '../../js/utils/utils';
 import msgMp3 from '../../assets/media/msg.mp3';
 
+// 批准登录弹框（通知点击后可重新打开）
 let allowLoginPop = null,
   isLoding = false;
-// 批准登录
-export function handleAllowLoginMsg(data) {
-  const { ip, code, os } = data;
-
-  const msg = `设备：${os}\nIP：${ip}\n验证码：${code.slice(
-    0,
-    3,
-  )} ${code.slice(3)}\n\n请求允许登录。`;
-
-  playSound(msgMp3);
-  if (document.visibilityState === 'hidden') {
-    switchPageIcon('notify');
-  }
+function showAllowLoginPop(msg, code) {
   if (allowLoginPop) {
     allowLoginPop.close();
+    allowLoginPop = null;
   }
 
   allowLoginPop = rMenu.pop(
@@ -73,6 +65,83 @@ export function handleAllowLoginMsg(data) {
     },
   );
 }
+// 批准登录
+export function handleAllowLoginMsg(data) {
+  const { ip, code, os } = data;
+
+  const msg = `设备：${os}\nIP：${ip}\n验证码：${code.slice(
+    0,
+    3,
+  )} ${code.slice(3)}\n\n请求允许登录。`;
+
+  playSound(msgMp3);
+  if (document.visibilityState === 'hidden') {
+    switchPageIcon('notify');
+  }
+  // 系统通知（页面可见时不会触发），点击通知后重新弹出
+  sendNotification(
+    {
+      title: '登录请求',
+      body: msg,
+      icon: _d.notifyIcon,
+    },
+    () => showAllowLoginPop(msg, code),
+  );
+  showAllowLoginPop(msg, code);
+}
+// 剪切板弹框（通知点击后可重新打开）
+let clipboardPop = null;
+function showClipboardPop(data = {}) {
+  const { text = '', os = '' } = data;
+  if (!text) return;
+  // 重复收到时先关闭旧的，再打开新的
+  if (clipboardPop) {
+    clipboardPop.close();
+    clipboardPop = null;
+  }
+  clipboardPop = rMenu.inpMenu(
+    false,
+    {
+      subText: '复制',
+      items: {
+        text: {
+          type: 'textarea',
+          value: text,
+          trimValue: false,
+          placeholder: '剪切板内容',
+          verify(val) {
+            return val ? '' : '内容为空';
+          },
+        },
+      },
+    },
+    ({ inp, close }) => {
+      copyText(inp.text, { success: '复制剪切板成功' });
+      clipboardPop = null;
+      close();
+    },
+    os ? `剪切板（来自 ${os}）` : '剪切板',
+  );
+}
+// 剪切板消息
+export function handleClipboardMsg(data) {
+  const text = data?.text || '';
+  if (!text.trim()) return;
+  playSound(msgMp3);
+  if (document.visibilityState === 'hidden') {
+    switchPageIcon('notify');
+  }
+  // 系统通知（页面可见时不会触发），点击通知后重新弹出剪切板
+  sendNotification(
+    {
+      title: data.os ? `剪切板（${data.os}）` : '剪切板',
+      body: text.length > 300 ? `${text.slice(0, 300)}……` : text,
+      icon: _d.notifyIcon,
+    },
+    () => showClipboardPop(data),
+  );
+  showClipboardPop(data);
+}
 const closeShake = debounce((target) => {
   target.classList.remove('shake');
 }, 500);
@@ -97,6 +166,8 @@ export function otherWindowMsg(msg) {
     });
   } else if (type === 'allowLogin') {
     handleAllowLoginMsg(data);
+  } else if (type === 'clipboard') {
+    handleClipboardMsg(data);
   } else if (type === 'chat') {
     const { flag, from, to, msgData } = data;
     if (!isNotify(from.account, to, notify, fromID)) return;

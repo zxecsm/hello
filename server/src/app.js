@@ -117,7 +117,7 @@ const webStaticOptions = {
   lastModified: true, // 开启 Last-Modified 时间验证
   setHeaders: (res, filePath) => {
     // 入口和控制文件：不缓存，保证页面更新后能立即生效
-    if (/\.html?$/i.test(filePath) || /[\\/]sw\.js$/i.test(filePath)) {
+    if (/\.html?$/i.test(filePath) || /[\\/]sw(?:-[^\\/]+)?\.js$/i.test(filePath)) {
       res.setHeader('Cache-Control', 'no-cache, must-revalidate');
       return;
     }

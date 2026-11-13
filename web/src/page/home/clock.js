@@ -180,6 +180,57 @@ async function readClipboard() {
   }
   return navigator.clipboard.readText();
 }
+// 发送剪切板内容
+function sendClipboard(text, { loading, close }) {
+  text = text || '';
+  if (!text.trim()) {
+    _msg.error('剪切板内容为空');
+    return;
+  }
+  if (getTextSize(text) > _d.fieldLength.clipboardContent) {
+    _msg.error(`剪切板内容不能超过 ${_d.fieldLength.clipboardContent / 1024 / 1024}MB`);
+    return;
+  }
+  loading.start();
+  reqUserSendClipboard({ text })
+    .then((result) => {
+      if (result.code === 1) {
+        loading.end();
+        close(1);
+        _msg.success(result.codeText);
+      }
+    })
+    .catch(() => {
+      loading.end();
+    });
+}
+// 无法读取剪切板时，手动输入发送
+function clipboardInputMenu(e) {
+  rMenu.inpMenu(
+    e,
+    {
+      subText: '发送',
+      items: {
+        text: {
+          type: 'textarea',
+          trimValue: false,
+          placeholder: '请输入要发送的剪切板内容',
+          verify(val) {
+            if (!val.trim()) return '请输入内容';
+            if (getTextSize(val) > _d.fieldLength.clipboardContent) {
+              return `剪切板内容不能超过 ${_d.fieldLength.clipboardContent / 1024 / 1024}MB`;
+            }
+            return '';
+          },
+        },
+      },
+    },
+    ({ inp, loading, close }) => {
+      sendClipboard(inp.text, { loading, close });
+    },
+    '发送剪切板',
+  );
+}
 // 剪切板菜单
 function clipboardMenu(e) {
   // 菜单打开时预取，保证点击“复制剪切板”时仍处于用户手势内
@@ -200,35 +251,17 @@ function clipboardMenu(e) {
       { id: '1', text: '发送剪切板', beforeIcon: 'iconfont icon-huaban' },
       { id: '2', text: '复制剪切板', beforeIcon: 'iconfont icon-fuzhi' },
     ],
-    async ({ id, close, loading }) => {
+    async ({ e: clickEvent, id, close, loading }) => {
       if (id === '1') {
         let text = '';
         try {
           text = await readClipboard();
-        } catch (error) {
-          _msg.error(error.message || '读取剪切板失败，请允许浏览器访问剪切板');
+        } catch {
+          // 浏览器无法读取剪切板时，弹出手动输入框
+          clipboardInputMenu(clickEvent);
           return;
         }
-        if (!text.trim()) {
-          _msg.error('剪切板没有文字内容');
-          return;
-        }
-        if (getTextSize(text) > _d.fieldLength.clipboardContent) {
-          _msg.error(`剪切板内容不能超过 ${_d.fieldLength.clipboardContent / 1024 / 1024}MB`);
-          return;
-        }
-        loading.start();
-        reqUserSendClipboard({ text })
-          .then((result) => {
-            if (result.code === 1) {
-              loading.end();
-              close();
-              _msg.success(result.codeText);
-            }
-          })
-          .catch(() => {
-            loading.end();
-          });
+        sendClipboard(text, { loading, close });
       } else if (id === '2') {
         if (!clipboardLoaded) {
           loading.start();
