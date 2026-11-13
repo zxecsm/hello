@@ -451,19 +451,21 @@ export function becomeFriendsSync(me, friend, read1 = 1, read2 = 1, msg = '') {
 
   const create_at = Date.now();
   if (
-    // 如果是自己或群，并且没有
-    (friend === appConfig.chatRoomAccount || me === friend) &&
-    !isFriend1
+    // 如果是自己或群
+    friend === appConfig.chatRoomAccount ||
+    me === friend
   ) {
-    db('friends').insert({
-      id: `${me}_${friend}`,
-      create_at,
-      update_at: 0,
-      account: me,
-      friend,
-      read: read1,
-      msg,
-    });
+    if (!isFriend1) {
+      db('friends').insert({
+        id: `${me}_${friend}`,
+        create_at,
+        update_at: 0,
+        account: me,
+        friend,
+        read: read1,
+        msg,
+      });
+    }
 
     return;
   }
