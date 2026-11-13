@@ -1,6 +1,6 @@
 import ace from 'ace-builds';
-// 只注册全部语言模式 + 实际用到的主题（见 aceResolver.js）
-import './aceResolver';
+// 只注册常用语言模式 + 实际用到的主题（见 aceResolver.js）
+import { isModeSupported } from './aceResolver';
 import 'ace-builds/src-noconflict/ext-modelist';
 
 // 获取 modelist
@@ -144,10 +144,11 @@ const aceEditor = {
   setMode(editor, filePath) {
     const idx = filePath.lastIndexOf('.');
     const suffix = idx >= 0 ? filePath.slice(idx + 1) : '';
-    editor.session.setMode(
-      overrides[suffix.toLowerCase()] || modelist.getModeForPath(filePath).mode,
-    );
+    const mode = overrides[suffix.toLowerCase()] || modelist.getModeForPath(filePath).mode;
+    // 未打包的语言统一回退到纯文本，避免运行时去加载不存在的模式
+    editor.session.setMode(isModeSupported(mode) ? mode : 'ace/mode/plain_text');
   },
+  isModeSupported,
 };
 
 export default aceEditor;

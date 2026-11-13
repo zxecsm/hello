@@ -199,17 +199,19 @@ async function settingMenu(e) {
           saveState();
         });
       } else if (id === 'code') {
+        let curMode = editor.session.getMode().$id;
         function fn() {
-          const curMode = editor.session.getMode().$id;
           let data = [];
-          aceEditor.modelist.modes.forEach(({ caption, mode }, idx) => {
-            data.push({
-              id: idx + '',
-              text: caption,
-              active: curMode === mode,
-              param: { mode },
+          aceEditor.modelist.modes
+            .filter(({ mode }) => aceEditor.isModeSupported(mode))
+            .forEach(({ caption, mode }, idx) => {
+              data.push({
+                id: idx + '',
+                text: caption,
+                active: curMode === mode,
+                param: { mode },
+              });
             });
-          });
           return data;
         }
         rMenu.selectMenu(
@@ -218,6 +220,7 @@ async function settingMenu(e) {
           ({ resetMenu, id, param }) => {
             if (id) {
               editor.session.setMode(param.mode);
+              curMode = param.mode;
               resetMenu(fn());
             }
           },
