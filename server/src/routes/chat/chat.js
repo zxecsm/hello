@@ -450,26 +450,6 @@ export function becomeFriendsSync(me, friend, read1 = 1, read2 = 1, msg = '') {
   const isFriend2 = frs.some((item) => item.account === friend && item.friend === me);
 
   const create_at = Date.now();
-  if (
-    // 如果是自己或群
-    friend === appConfig.chatRoomAccount ||
-    me === friend
-  ) {
-    if (!isFriend1) {
-      db('friends').insert({
-        id: `${me}_${friend}`,
-        create_at,
-        update_at: 0,
-        account: me,
-        friend,
-        read: read1,
-        msg,
-      });
-    }
-
-    return;
-  }
-
   if (!isFriend1) {
     db('friends').insert({
       id: `${me}_${friend}`,
@@ -481,6 +461,9 @@ export function becomeFriendsSync(me, friend, read1 = 1, read2 = 1, msg = '') {
       msg,
     });
   }
+
+  // 如果是自己或群，只留单向记录，不再补反向记录
+  if (friend === appConfig.chatRoomAccount || me === friend) return;
 
   if (!isFriend2) {
     db('friends').insert({
