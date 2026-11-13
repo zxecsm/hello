@@ -80,17 +80,17 @@ if (!isIframe()) {
 // 更改主题
 function changeTheme(dark) {
   if (dark === 'y') {
-    $themeCss.attr('href', '/css/notethem/notecode1.css');
+    $themeCss.attr('href', '/assets/css/notethem/notecode1.css');
     editor.setTheme('ace/theme/github_dark');
   } else if (dark === 'n') {
-    $themeCss.attr('href', '/css/notethem/notecode.css');
+    $themeCss.attr('href', '/assets/css/notethem/notecode.css');
     editor.setTheme('ace/theme/github_light_default');
   } else if (dark === 's') {
     if (isDarkMode()) {
-      $themeCss.attr('href', '/css/notethem/notecode1.css');
+      $themeCss.attr('href', '/assets/css/notethem/notecode1.css');
       editor.setTheme('ace/theme/github_dark');
     } else {
-      $themeCss.attr('href', '/css/notethem/notecode.css');
+      $themeCss.attr('href', '/assets/css/notethem/notecode.css');
       editor.setTheme('ace/theme/github_light_default');
     }
   }

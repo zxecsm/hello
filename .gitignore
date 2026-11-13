@@ -1,5 +1,5 @@
 node_modules
-static
+public
 .history
 dist
 app_data

@@ -5,3 +5,6 @@
 !/monkey
 !/server
 !/web
+
+/server/public
+/web/dist

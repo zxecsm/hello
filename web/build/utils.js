@@ -142,26 +142,26 @@ function getPlugins(isDev) {
       ...plugins,
       // 抽取css
       new MiniCssExtractPlugin({
-        filename: 'css/[name].[contenthash:8].css',
+        filename: 'assets/css/[name].[contenthash:8].css',
         ignoreOrder: true, // 忽略css文件引入顺序
       }),
       new CopyWebpackPlugin({
         patterns: [
           {
             from: resolve(__dirname, '../src/css/notethem'),
-            to: resolve(__dirname, '../../server/static/css/notethem'),
+            to: resolve(__dirname, '../../server/public/assets/css/notethem'),
           },
           {
             from: resolve(__dirname, '..', 'src/favicon.ico'),
-            to: resolve(__dirname, '../../server/static'),
+            to: resolve(__dirname, '../../server/public'),
           },
           {
             from: resolve(__dirname, '..', 'src/manifest.json'),
-            to: resolve(__dirname, '../../server/static'),
+            to: resolve(__dirname, '../../server/public'),
           },
           {
             from: resolve(__dirname, '..', 'src/icons'),
-            to: resolve(__dirname, '../../server/static/icons'),
+            to: resolve(__dirname, '../../server/public/assets/icons'),
           },
         ],
       }),
@@ -177,8 +177,8 @@ function getPlugins(isDev) {
         // 避免首次访问在后台下载全部资源（原来约 12MB，现在约 3.8MB）
         // 音乐等接口流（/api/music、/api/f）不缓存，保持原来的流式播放行为
         exclude: [
-          /^assets\//, // ace 编辑器语言包，按需加载
-          /\.(?:png|jpe?g|gif|webp|svg|ico|woff2?|ttf|eot)$/i,
+          /^assets\/ace\//, // ace 编辑器语言包，按需加载
+          /\.(?:png|jpe?g|gif|webp|svg|ico|woff2?|ttf|eot|mp3|cur)$/i,
           /^(?:sw|workbox-[^/]+)\.js$/,
           /\.LICENSE\.txt$/,
         ],
@@ -201,7 +201,7 @@ function getPlugins(isDev) {
             // 只处理同源的构建产物，排除 /api/（文件、字体、音乐等接口
             // 可能带鉴权或流式响应，不能进 SW 缓存）
             urlPattern:
-              /^https?:\/\/[^/]+\/(?!api\/)[^?#]*\.(?:png|jpe?g|gif|webp|svg|ico|mp3|woff2?|ttf|eot)$/i,
+              /^https?:\/\/[^/]+\/(?!api\/)[^?#]*\.(?:png|jpe?g|gif|webp|svg|ico|mp3|cur|woff2?|ttf|eot)$/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'hello-static',
@@ -211,7 +211,7 @@ function getPlugins(isDev) {
           },
           {
             // 体积较大的按需 chunk：首次使用后缓存，离线也能打开
-            urlPattern: /\/js\/.*\.js$/i,
+            urlPattern: /\/assets\/js\/.*\.js$/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'hello-js',

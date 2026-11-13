@@ -1,6 +1,9 @@
 import globals from 'globals';
 export default [
   {
+    ignores: ['**/node_modules/**', 'server/public/**', 'web/dist/**'],
+  },
+  {
     languageOptions: {
       globals: {
         ...globals.browser,
