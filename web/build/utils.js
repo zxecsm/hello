@@ -173,53 +173,14 @@ function getPlugins(isDev) {
 
         // 预缓存规则配置
         navigationPreload: false, // 通常保持默认即可
-        // 只预缓存 html/css/js 以及很小的 UI 音效；图片、字体、ace 语言包改为运行时缓存，
-        // 避免首次访问在后台下载全部资源（原来约 12MB，现在约 3.8MB）
-        // 音乐等接口流（/api/music、/api/f）不缓存，保持原来的流式播放行为
+        // 构建产物总共约 5MB，直接全量预缓存：首次访问后台装好所有资源，
+        // 之后离线也能完整打开（音乐等 /api 流式接口不经过 SW，保持原行为）
         exclude: [
-          /^assets\/ace\//, // ace 编辑器语言包，按需加载
-          /\.(?:png|jpe?g|gif|webp|svg|ico|woff2?|ttf|eot|mp3|cur)$/i,
-          /^(?:sw|workbox-[^/]+)\.js$/,
+          /^(?:sw|workbox-[^/]+)\.js$/, // SW 自身与其运行时，不能进预缓存
           /\.LICENSE\.txt$/,
         ],
-        // 入口/共享 chunk 必须预缓存，否则离线时整页打不开；
-        // 图片和 ace 已通过 exclude 排除，这里保持和原来一致的宽容度
+        // 单文件上限；当前最大的 chunk 约 0.6MB，留足余量
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
-        runtimeCaching: [
-          {
-            // ace 语言包
-            urlPattern: /\/assets\/ace\/.*\.js$/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'hello-ace',
-              expiration: { maxEntries: 120, maxAgeSeconds: 30 * 24 * 60 * 60 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            // 图片、字体等静态资源：命中缓存直接用，不阻塞页面。
-            // 只处理同源的构建产物，排除 /api/（文件、字体、音乐等接口
-            // 可能带鉴权或流式响应，不能进 SW 缓存）
-            urlPattern:
-              /^https?:\/\/[^/]+\/(?!api\/)[^?#]*\.(?:png|jpe?g|gif|webp|svg|ico|mp3|cur|woff2?|ttf|eot)$/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'hello-static',
-              expiration: { maxEntries: 150, maxAgeSeconds: 30 * 24 * 60 * 60 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            // 体积较大的按需 chunk：首次使用后缓存，离线也能打开
-            urlPattern: /\/assets\/js\/.*\.js$/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'hello-js',
-              expiration: { maxEntries: 100, maxAgeSeconds: 30 * 24 * 60 * 60 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-        ],
       }),
     ];
   } else {
