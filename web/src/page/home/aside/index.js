@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import defaultIcon from '../../../images/img/default-icon.png';
+import defaultIcon from '../../../assets/images/default-icon.png';
 
 import {
   myOpen,

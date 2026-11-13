@@ -24,7 +24,7 @@ import {
   wrapInput,
 } from '../../utils/utils';
 import './index.less';
-import loadFailImg from '../../../images/img/loadfail.png';
+import loadFailImg from '../../../assets/images/loadfail.png';
 import { CreateTabs } from '../../../page/notes/tabs';
 import { _tpl, deepClone } from '../../utils/template';
 import cacheFile from '../../utils/cacheFile';

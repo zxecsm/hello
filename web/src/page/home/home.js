@@ -12,7 +12,7 @@ import {
   playSound,
   switchPageIcon,
 } from '../../js/utils/utils';
-import msgMp3 from '../../images/img/msg.mp3';
+import msgMp3 from '../../assets/media/msg.mp3';
 
 let allowLoginPop = null,
   isLoding = false;

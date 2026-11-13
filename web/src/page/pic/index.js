@@ -1,7 +1,7 @@
 import $ from 'jquery';
-import '../../css/common/reset.css';
-import '../../css/common/common.css';
-import '../../font/iconfont.css';
+import '../../assets/css/common/reset.css';
+import '../../assets/css/common/common.css';
+import '../../assets/fonts/iconfont.css';
 import './index.less';
 import {
   imgjz,
@@ -28,7 +28,7 @@ import '../../js/common/common';
 import pagination from '../../js/plugins/pagination';
 import { UpProgress } from '../../js/plugins/UpProgress';
 import _msg from '../../js/plugins/message';
-import loadfailImg from '../../images/img/loadfail.png';
+import loadfailImg from '../../assets/images/loadfail.png';
 import { reqPicDelete, reqPicList, reqPicRepeat, reqPicUp } from '../../api/pic';
 import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';

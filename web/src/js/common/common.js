@@ -18,7 +18,7 @@ import {
 import _d from './config';
 import _msg from '../plugins/message';
 import { _loadingBar } from '../plugins/loadingBar';
-import imgHechang from '../../images/img/hechang.png';
+import imgHechang from '../../assets/images/hechang.png';
 import loadingPage from '../plugins/loading';
 import { reqUserCustomCode, reqUserError } from '../../api/user';
 import localData from './localData';

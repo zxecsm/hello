@@ -1,7 +1,7 @@
 import $ from 'jquery';
-import '../../css/common/reset.css';
-import '../../css/common/common.css';
-import '../../font/iconfont.css';
+import '../../assets/css/common/reset.css';
+import '../../assets/css/common/common.css';
+import '../../assets/fonts/iconfont.css';
 import '../notes/index.less';
 import './index.less';
 import '../bmk/index.less';
@@ -44,8 +44,8 @@ import { BoxSelector, isKeyDown } from '../../js/utils/boxSelector';
 import { otherWindowMsg } from '../home/home';
 import imgPreview from '../../js/plugins/imgPreview';
 import cacheFile from '../../js/utils/cacheFile';
-import loadingSvg from '../../images/img/loading.svg';
-import defaultIcon from '../../images/img/default-icon.png';
+import loadingSvg from '../../assets/images/loading.svg';
+import defaultIcon from '../../assets/images/default-icon.png';
 import localData from '../../js/common/localData';
 import toolTip from '../../js/plugins/tooltip';
 if (!isLogin()) {

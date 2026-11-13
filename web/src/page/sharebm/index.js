@@ -1,7 +1,7 @@
 import $ from 'jquery';
-import '../../css/common/reset.css';
-import '../../css/common/common.css';
-import '../../font/iconfont.css';
+import '../../assets/css/common/reset.css';
+import '../../assets/css/common/common.css';
+import '../../assets/fonts/iconfont.css';
 import './index.less';
 
 import {
@@ -22,7 +22,7 @@ import {
   isBlobUrl,
 } from '../../js/utils/utils';
 
-import defaultIcon from '../../images/img/default-icon.png';
+import defaultIcon from '../../assets/images/default-icon.png';
 import '../../js/common/common';
 import _msg from '../../js/plugins/message';
 import { reqBmkGetShare, reqBmkSaveShare } from '../../api/bmk';

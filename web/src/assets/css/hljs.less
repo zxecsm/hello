@@ -1,0 +1,169 @@
+/*
+  highlight.js official GitHub themes, adapted to the app theme switch.
+
+  Palette source:
+  node_modules/highlight.js/styles/github.css
+  node_modules/highlight.js/styles/github-dark.css
+
+  Only the token palette is kept here; the code block itself still has no
+  background-color, so the page background shows through. The active palette
+  follows the global `html.dark` class, so no stylesheet swapping is needed.
+*/
+
+html {
+  --hljs-fg: #24292e;
+  --hljs-comment: #6a737d;
+  --hljs-keyword: #d73a49;
+  --hljs-entity: #6f42c1;
+  --hljs-constant: #005cc5;
+  --hljs-string: #032f62;
+  --hljs-built-in: #e36209;
+  --hljs-tag: #22863a;
+  --hljs-subst: #24292e;
+  --hljs-heading: #005cc5;
+  --hljs-bullet: #735c0f;
+  --hljs-default: #24292e;
+  --hljs-addition-color: #22863a;
+  --hljs-addition-bg: #f0fff4;
+  --hljs-deletion-color: #b31d28;
+  --hljs-deletion-bg: #ffeef0;
+}
+
+html.dark {
+  --hljs-fg: #c9d1d9;
+  --hljs-comment: #8b949e;
+  --hljs-keyword: #ff7b72;
+  --hljs-entity: #d2a8ff;
+  --hljs-constant: #79c0ff;
+  --hljs-string: #a5d6ff;
+  --hljs-built-in: #ffa657;
+  --hljs-tag: #7ee787;
+  --hljs-subst: #c9d1d9;
+  --hljs-heading: #1f6feb;
+  --hljs-bullet: #f2cc60;
+  --hljs-default: #c9d1d9;
+  --hljs-addition-color: #aff5b4;
+  --hljs-addition-bg: #033a16;
+  --hljs-deletion-color: #ffdcd7;
+  --hljs-deletion-bg: #67060c;
+}
+
+.hljs {
+  color: var(--hljs-fg);
+}
+
+/* Let the code block use the base .hljs color instead of the page theme color */
+.hljs code {
+  color: inherit;
+}
+
+/* prettylights-syntax-keyword */
+.hljs-doctag,
+.hljs-keyword,
+.hljs-meta .hljs-keyword,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-variable.language_ {
+  color: var(--hljs-keyword);
+}
+
+/* prettylights-syntax-entity */
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.class_.inherited__,
+.hljs-title.function_ {
+  color: var(--hljs-entity);
+}
+
+/* prettylights-syntax-constant */
+.hljs-attr,
+.hljs-attribute,
+.hljs-literal,
+.hljs-meta,
+.hljs-number,
+.hljs-operator,
+.hljs-variable,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id {
+  color: var(--hljs-constant);
+}
+
+/* prettylights-syntax-string */
+.hljs-regexp,
+.hljs-string,
+.hljs-meta .hljs-string {
+  color: var(--hljs-string);
+}
+
+/* prettylights-syntax-variable */
+.hljs-built_in,
+.hljs-symbol {
+  color: var(--hljs-built-in);
+}
+
+/* prettylights-syntax-comment */
+.hljs-comment,
+.hljs-code,
+.hljs-formula {
+  color: var(--hljs-comment);
+}
+
+/* prettylights-syntax-entity-tag */
+.hljs-name,
+.hljs-quote,
+.hljs-selector-tag,
+.hljs-selector-pseudo {
+  color: var(--hljs-tag);
+}
+
+/* prettylights-syntax-storage-modifier-import */
+.hljs-subst {
+  color: var(--hljs-subst);
+}
+
+/* prettylights-syntax-markup-heading */
+.hljs-section {
+  color: var(--hljs-heading);
+  font-weight: bold;
+}
+
+/* prettylights-syntax-markup-list */
+.hljs-bullet {
+  color: var(--hljs-bullet);
+}
+
+/* prettylights-syntax-markup-italic */
+.hljs-emphasis {
+  color: var(--hljs-subst);
+  font-style: italic;
+}
+
+/* prettylights-syntax-markup-bold */
+.hljs-strong {
+  color: var(--hljs-subst);
+  font-weight: bold;
+}
+
+/* prettylights-syntax-markup-inserted */
+.hljs-addition {
+  color: var(--hljs-addition-color);
+  background-color: var(--hljs-addition-bg);
+}
+
+/* prettylights-syntax-markup-deleted */
+.hljs-deletion {
+  color: var(--hljs-deletion-color);
+  background-color: var(--hljs-deletion-bg);
+}
+
+/* purposely ignored by the official theme, keep the base foreground */
+.hljs-char.escape_,
+.hljs-link,
+.hljs-params,
+.hljs-property,
+.hljs-punctuation,
+.hljs-tag {
+  color: var(--hljs-default);
+}

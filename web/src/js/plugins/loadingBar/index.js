@@ -1,6 +1,6 @@
 import _d from '../../common/config';
-import loadingSvg from '../../../images/img/loading.svg';
-import loadingSpinnerSvg from '../../../images/img/loading-spinner.svg';
+import loadingSvg from '../../../assets/images/loading.svg';
+import loadingSpinnerSvg from '../../../assets/images/loading-spinner.svg';
 // 页面加载进度条效果
 class LoadingBar {
   constructor(options) {

@@ -1,8 +1,8 @@
 import $ from 'jquery';
 import './cat.less';
-import defaultIcon from '../../../images/img/default-icon.png';
-import imgTianjia from '../../../images/img/tianjia.png';
-import loadSvg from '../../../images/img/loading.svg';
+import defaultIcon from '../../../assets/images/default-icon.png';
+import imgTianjia from '../../../assets/images/tianjia.png';
+import loadSvg from '../../../assets/images/loading.svg';
 import {
   myOpen,
   debounce,

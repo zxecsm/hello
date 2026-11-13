@@ -1,6 +1,6 @@
-import '../../css/common/common.css';
+import '../../assets/css/common/common.css';
 import './index.less';
-import '../../font/iconfont.css';
+import '../../assets/fonts/iconfont.css';
 import '../../js/common/common';
 import {
   debounce,

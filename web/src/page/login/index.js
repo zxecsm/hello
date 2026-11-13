@@ -1,6 +1,6 @@
-import '../../css/common/reset.css';
-import '../../css/common/common.css';
-import '../../font/iconfont.css';
+import '../../assets/css/common/reset.css';
+import '../../assets/css/common/common.css';
+import '../../assets/fonts/iconfont.css';
 import '../home/searchBox/cat.less';
 import './index.less';
 import $ from 'jquery';

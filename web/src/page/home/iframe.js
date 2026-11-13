@@ -23,7 +23,7 @@ import {
   toSetSize,
 } from '../../js/utils/utils';
 import { popWindow, setPos, setZidx } from './popWindow';
-import defaultIcon from '../../images/img/default-icon.png';
+import defaultIcon from '../../assets/images/default-icon.png';
 import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';
 import localData from '../../js/common/localData';

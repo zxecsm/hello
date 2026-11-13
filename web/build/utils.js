@@ -128,7 +128,7 @@ function getPlugins(isDev) {
           }`,
         },
       },
-      favicon: resolve(srcDir, 'images/img/icon-visible.svg'),
+      favicon: resolve(srcDir, 'assets/images/icon-visible.svg'),
       inject: 'head',
     };
     if (isDev) {
@@ -148,10 +148,6 @@ function getPlugins(isDev) {
       new CopyWebpackPlugin({
         patterns: [
           {
-            from: resolve(__dirname, '../src/css/notethem'),
-            to: resolve(__dirname, '../../server/public/assets/css/notethem'),
-          },
-          {
             from: resolve(__dirname, '..', 'src/favicon.ico'),
             to: resolve(__dirname, '../../server/public'),
           },
@@ -160,7 +156,7 @@ function getPlugins(isDev) {
             to: resolve(__dirname, '../../server/public'),
           },
           {
-            from: resolve(__dirname, '..', 'src/icons'),
+            from: resolve(__dirname, '..', 'src/assets/icons'),
             to: resolve(__dirname, '../../server/public/assets/icons'),
           },
         ],

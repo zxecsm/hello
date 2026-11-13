@@ -1,6 +1,6 @@
 import $ from 'jquery';
-import '../../font/iconfont.css';
-import '../../css/common/common.css';
+import '../../assets/fonts/iconfont.css';
+import '../../assets/css/common/common.css';
 import './index.less';
 import '../note/md.less';
 import {
@@ -34,7 +34,7 @@ import '../../js/common/common';
 import _msg from '../../js/plugins/message';
 import { UpProgress } from '../../js/plugins/UpProgress';
 import aceEditor from '../../js/utils/editor';
-import loadfailImg from '../../images/img/loadfail.png';
+import loadfailImg from '../../assets/images/loadfail.png';
 import {
   reqNoteEdit,
   reqNoteGetHistoryState,
@@ -62,10 +62,8 @@ const $contentWrap = $('.content_wrap'),
   $headBtns = $contentWrap.find('.head_btns'),
   $editWrap = $contentWrap.find('.edit_wrap'),
   $editBox = $editWrap.find('.edit_box'),
-  $themeCss = $('<link class="theme_css" rel="stylesheet" />'),
   $previewBox = $editWrap.find('.preview_box'),
   $resize = $previewBox.find('.resize');
-document.head.appendChild($themeCss[0]);
 let editNoteFontSize = localData.get('editNoteFontSize');
 if (!isIframe()) {
   waitLogin(() => {
@@ -80,17 +78,13 @@ if (!isIframe()) {
 // 更改主题
 function changeTheme(dark) {
   if (dark === 'y') {
-    $themeCss.attr('href', '/assets/css/notethem/notecode1.css');
     editor.setTheme('ace/theme/github_dark');
   } else if (dark === 'n') {
-    $themeCss.attr('href', '/assets/css/notethem/notecode.css');
     editor.setTheme('ace/theme/github_light_default');
   } else if (dark === 's') {
     if (isDarkMode()) {
-      $themeCss.attr('href', '/assets/css/notethem/notecode1.css');
       editor.setTheme('ace/theme/github_dark');
     } else {
-      $themeCss.attr('href', '/assets/css/notethem/notecode.css');
       editor.setTheme('ace/theme/github_light_default');
     }
   }

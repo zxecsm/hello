@@ -1,7 +1,7 @@
 import $ from 'jquery';
-import '../../css/common/reset.css';
-import '../../css/common/common.css';
-import '../../font/iconfont.css';
+import '../../assets/css/common/reset.css';
+import '../../assets/css/common/common.css';
+import '../../assets/fonts/iconfont.css';
 import './index.less';
 import {
   throttle,
@@ -57,7 +57,7 @@ import { BoxSelector, isKeyDown } from '../../js/utils/boxSelector';
 import { otherWindowMsg, waitLogin } from '../home/home';
 import imgPreview from '../../js/plugins/imgPreview';
 import cacheFile from '../../js/utils/cacheFile';
-import loadingSvg from '../../images/img/loading.svg';
+import loadingSvg from '../../assets/images/loading.svg';
 import localData from '../../js/common/localData';
 const $app = $('#app'),
   $headWrap = $('.head_wrap'),

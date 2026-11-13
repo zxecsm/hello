@@ -43,7 +43,7 @@ import markdownItSub from 'markdown-it-sub'; // 下标
 import markdownItSup from 'markdown-it-sup'; // 上标
 import markdownItMark from 'markdown-it-mark'; // 高亮
 import markdownItCheckbox from 'markdown-it-task-checkbox'; // 复选框
-import imgLoadImg from '../../images/img/loadImg.png';
+import imgLoadImg from '../../assets/images/loadImg.png';
 const md = new MarkdownIt({
   linkify: true,
   html: false,

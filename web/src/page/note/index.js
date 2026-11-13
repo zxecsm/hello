@@ -1,6 +1,6 @@
 import $ from 'jquery';
-import '../../font/iconfont.css';
-import '../../css/common/common.css';
+import '../../assets/fonts/iconfont.css';
+import '../../assets/css/common/common.css';
 import './index.less';
 import './md.less';
 import {
@@ -26,7 +26,6 @@ import {
   formatDate,
   imgjz,
   LazyLoad,
-  isDarkMode,
   getDarkIcon,
   getFilePath,
 } from '../../js/utils/utils';
@@ -35,7 +34,7 @@ import '../../js/common/common';
 import _msg from '../../js/plugins/message';
 import HighlightWord from './highlightWord';
 import realtime from '../../js/plugins/realtime';
-import loadfailImg from '../../images/img/loadfail.png';
+import loadfailImg from '../../assets/images/loadfail.png';
 import { reqNoteCategory, reqNoteRead } from '../../api/note';
 import { createNoteDir, toggleNoteDir } from './noteDir';
 import rMenu from '../../js/plugins/rightMenu';
@@ -51,13 +50,11 @@ let urlparmes = queryURLParams(myOpen()),
 let hdNoteDirPosition = () => {};
 const $setBtnsWrap = $('.set_btns_wrap'),
   $contentWrap = $('.content_wrap'),
-  $themeCss = $('<link class="theme_css" rel="stylesheet" />'),
   $noteInfo = $contentWrap.find('.note_info'),
   $noteBox = $contentWrap.find('.note_box'),
   $pageSearchWrap = $('.page_search_wrap'),
   $authorInfo = $contentWrap.find('.author_info'),
   $fillBox = $contentWrap.find('.fill_box');
-document.head.appendChild($themeCss[0]);
 let noteFontSize = localData.get('noteFontSize'),
   noteWiden = localData.get('noteWiden'),
   highlightnum = 0,
@@ -468,20 +465,6 @@ function changeTheme(dark) {
   $setBtnsWrap
     .find('.change_theme_btn')
     .attr('class', `change_theme_btn iconfont ${getDarkIcon(dark)}`);
-  hdTheme(dark);
-}
-function hdTheme(dark) {
-  if (dark === 'y') {
-    $themeCss.attr('href', '/css/notethem/notecode1.css');
-  } else if (dark === 'n') {
-    $themeCss.attr('href', '/css/notethem/notecode.css');
-  } else if (dark === 's') {
-    if (isDarkMode()) {
-      $themeCss.attr('href', '/css/notethem/notecode1.css');
-    } else {
-      $themeCss.attr('href', '/css/notethem/notecode.css');
-    }
-  }
 }
 window.changeTheme = changeTheme;
 changeTheme(localData.get('dark'));

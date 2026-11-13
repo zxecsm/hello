@@ -1,11 +1,11 @@
 import $ from 'jquery';
-import '../../css/common/reset.css';
-import '../../css/common/common.css';
-import '../../font/iconfont.css';
+import '../../assets/css/common/reset.css';
+import '../../assets/css/common/common.css';
+import '../../assets/fonts/iconfont.css';
 import '../notes/index.less';
 import './index.less';
-import loadingSvg from '../../images/img/loading.svg';
-import defaultIcon from '../../images/img/default-icon.png';
+import loadingSvg from '../../assets/images/loading.svg';
+import defaultIcon from '../../assets/images/default-icon.png';
 
 import {
   throttle,

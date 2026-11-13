@@ -1,7 +1,7 @@
 import _d from '../../common/config';
 import { _mySlide, playSound, switchPageIcon } from '../../utils/utils';
-import imgMsg from '../../../images/img/msg.mp3';
-import onlineMsg from '../../../images/img/online.mp3';
+import imgMsg from '../../../assets/media/msg.mp3';
+import onlineMsg from '../../../assets/media/online.mp3';
 import './index.less';
 const msgArr = [];
 const zIndex = _d.levelObj.msg;

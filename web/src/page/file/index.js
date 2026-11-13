@@ -1,7 +1,7 @@
 import $ from 'jquery';
-import '../../css/common/reset.css';
-import '../../css/common/common.css';
-import '../../font/iconfont.css';
+import '../../assets/css/common/reset.css';
+import '../../assets/css/common/common.css';
+import '../../assets/fonts/iconfont.css';
 import './index.less';
 import '../../js/common/common';
 import {
@@ -43,7 +43,7 @@ import curmb from './crumb/index';
 import { editFileIsHiden, openFile } from './edit';
 import { UpProgress } from '../../js/plugins/UpProgress';
 import bus from '../../js/utils/bus';
-import loadfailImg from '../../images/img/loadfail.png';
+import loadfailImg from '../../assets/images/loadfail.png';
 import {
   reqFileAddFileTo,
   reqFileBreakpoint,

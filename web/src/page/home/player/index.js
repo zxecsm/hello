@@ -1,8 +1,8 @@
 import $ from 'jquery';
-import imgTianjia from '../../../images/img/tianjia.png';
-import imgHistory from '../../../images/img/history.jpg';
-import imgMusic from '../../../images/img/music.jpg';
-import loadSvg from '../../../images/img/loading.svg';
+import imgTianjia from '../../../assets/images/tianjia.png';
+import imgHistory from '../../../assets/images/history.jpg';
+import imgMusic from '../../../assets/images/music.jpg';
+import loadSvg from '../../../assets/images/loading.svg';
 import {
   _setTimeout,
   throttle,

@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import loadfailImg from '../../../images/img/loadfail.png';
+import loadfailImg from '../../../assets/images/loadfail.png';
 import {
   debounce,
   _getTarget,

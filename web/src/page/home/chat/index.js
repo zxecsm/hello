@@ -1,6 +1,6 @@
 import $ from 'jquery';
-import loadfailImg from '../../../images/img/loadfail.png';
-import imgHelloLogo from '../../../images/img/hello-msg-logo.png';
+import loadfailImg from '../../../assets/images/loadfail.png';
+import imgHelloLogo from '../../../assets/images/hello-msg-logo.png';
 import {
   throttle,
   debounce,
