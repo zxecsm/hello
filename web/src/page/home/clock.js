@@ -228,7 +228,7 @@ function clipboardInputMenu(e) {
     ({ inp, loading, close }) => {
       sendClipboard(inp.text, { loading, close });
     },
-    '发送剪切板',
+    '无法读取剪切板或为空，手动发送',
   );
 }
 // 剪切板菜单
@@ -256,7 +256,8 @@ function clipboardMenu(e) {
         let text = '';
         try {
           text = await readClipboard();
-        } catch {
+        } catch {}
+        if (!text.trim()) {
           // 浏览器无法读取剪切板时，弹出手动输入框
           clipboardInputMenu(clickEvent);
           return;
