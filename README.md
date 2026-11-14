@@ -1,5 +1,7 @@
 ![hello](https://raw.githubusercontent.com/zxecsm/hello/main/hello.png)
 
+> 完整的接口文档见 [docs/API.md](docs/API.md)。
+
 ```
 services:
   hello:
