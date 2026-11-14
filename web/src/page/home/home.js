@@ -129,7 +129,7 @@ function showClipboardPop(data = {}) {
 // 剪切板消息
 export function handleClipboardMsg(data) {
   const text = data?.text || '';
-  if (!text.trim()) return;
+  if (!text) return;
   playSound(msgMp3);
   if (document.visibilityState === 'hidden') {
     switchPageIcon('notify');

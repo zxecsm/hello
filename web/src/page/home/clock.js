@@ -183,7 +183,7 @@ async function readClipboard() {
 // 发送剪切板内容
 function sendClipboard(text, { loading, close }) {
   text = text || '';
-  if (!text.trim()) {
+  if (!text) {
     _msg.error('剪切板内容为空');
     return;
   }
@@ -216,7 +216,7 @@ function clipboardInputMenu(e) {
           trimValue: false,
           placeholder: '请输入要发送的剪切板内容',
           verify(val) {
-            if (!val.trim()) return '请输入内容';
+            if (!val) return '请输入内容';
             if (getTextSize(val) > _d.fieldLength.clipboardContent) {
               return `剪切板内容不能超过 ${_d.fieldLength.clipboardContent / 1024 / 1024}MB`;
             }
@@ -257,7 +257,7 @@ function clipboardMenu(e) {
         try {
           text = await readClipboard();
         } catch {}
-        if (!text.trim()) {
+        if (!text) {
           // 浏览器无法读取剪切板时，弹出手动输入框
           clipboardInputMenu(clickEvent);
           return;
