@@ -211,10 +211,19 @@ route.post(
     V.object({
       code: V.string().trim().min(6).max(6).alphanumeric(),
       username: V.string().trim().min(1).max(fieldLength.username).alphanumeric(),
+      captchaId: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
     }),
   ),
   asyncHandler(async (_, res) => {
-    const { code, username } = res.locals.ctx;
+    const { code, username, captchaId } = res.locals.ctx;
+
+    // 未登录也能触发通知，必须完成验证码，避免被批量滥用
+    if (!captcha.consume(captchaId, username)) {
+      return resp.success(res, '需要验证验证码，请完成验证', {
+        needCaptcha: true,
+        username,
+      })();
+    }
 
     const userinfo = db('user')
       .select('account, remote_login')

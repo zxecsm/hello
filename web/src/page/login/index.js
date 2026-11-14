@@ -166,6 +166,7 @@ function changeCode() {
 }
 $nopd
   .on('click', '.nopd_login', function () {
+    if (isCaptcha) return;
     if (!checkUserName()) {
       shake();
       return;
@@ -236,6 +237,7 @@ function resetPassword() {
                       captcha(account, {
                         success({ id }) {
                           captchaId = id;
+                          isCaptcha = false;
                           submit();
                         },
                         close() {
@@ -270,19 +272,38 @@ function resetPassword() {
     });
 }
 $ratify.on('click', '.close', closeRatify).on('click', '.resend', () => {
+  if (isCaptcha) return;
   changeCode();
   sendLoginRequest();
 });
 // 发送登录请求
 function sendLoginRequest() {
-  if (code) {
-    reqUserAllowLoginReq({ code, username: accInp.getValue().trim() })
+  const username = accInp.getValue().trim();
+  if (code && username) {
+    reqUserAllowLoginReq({ code, username, captchaId })
       .then((res) => {
-        if (res.code === 1) {
-          _msg.success(res.codeText);
+        if (res.code !== 1) return;
+        const { needCaptcha } = res.data || {};
+        if (needCaptcha) {
+          isCaptcha = true;
+          captcha(username, {
+            success({ id }) {
+              captchaId = id;
+              isCaptcha = false;
+              sendLoginRequest();
+            },
+            close() {
+              isCaptcha = false;
+              closeRatify();
+            },
+          });
+          return;
         }
+        _msg.success(res.codeText);
       })
-      .catch(() => {});
+      .catch(() => {
+        closeRatify();
+      });
   }
 }
 function closeRatify() {
@@ -435,6 +456,7 @@ function hdLogin(obj) {
                       captcha(account, {
                         success({ id }) {
                           captchaId = id;
+                          isCaptcha = false;
                           submit();
                         },
                         close() {
@@ -462,6 +484,7 @@ function hdLogin(obj) {
           captcha(username, {
             success({ id }) {
               captchaId = id;
+              isCaptcha = false;
               hdSubmit();
             },
             close() {
@@ -497,6 +520,7 @@ function hdRegister(obj) {
           captcha(username, {
             success({ id }) {
               captchaId = id;
+              isCaptcha = false;
               hdSubmit();
             },
             close() {

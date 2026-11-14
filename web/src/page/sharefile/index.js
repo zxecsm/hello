@@ -102,6 +102,7 @@ enterPassCode(({ close, val, loading, submit }) => {
           captcha(id, {
             success({ id }) {
               captchaId = id;
+              isCaptcha = false;
               submit();
             },
             close() {

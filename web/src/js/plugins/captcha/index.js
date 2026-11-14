@@ -74,12 +74,14 @@ class SlideCaptcha {
   /* ================= 数据 ================= */
 
   async update() {
+    if (this.destroyed) return;
     this.maskLoading.show();
     try {
       const res = await reqUserGetCaptcha({
         flag: this.flag,
         theme: isDark() ? 'dark' : 'light',
       });
+      if (this.destroyed) return;
       if (res.code === 1) {
         this.captcha = res.data;
         this.reset();
@@ -87,6 +89,7 @@ class SlideCaptcha {
         this.close();
       }
     } catch {
+      if (this.destroyed) return;
       this.close();
     } finally {
       this.maskLoading.hide();
@@ -97,22 +100,26 @@ class SlideCaptcha {
     this.maskLoading.show();
     try {
       const res = await reqUserCaptcha({ id, track });
+      if (this.destroyed) return;
       if (res.code === 1) {
         _msg.success(res.codeText);
         this.sliderMask.classList.add('success');
         await delay(500);
+        if (this.destroyed) return;
         this.maskLoading.hide();
-        this.close();
+        this.destroy();
         this.opt.success?.({ id });
       } else {
         this.update();
       }
     } catch {
+      if (this.destroyed) return;
       this.sliderMask.classList.add('fail');
       this.update();
     }
   }
   reset() {
+    if (this.destroyed) return;
     if (this.timer) {
       clearTimeout(this.timer);
     }
@@ -218,6 +225,19 @@ class SlideCaptcha {
   }
 
   close() {
+    if (this.destroyed) return;
+    this.destroy();
+    this.opt.close?.();
+  }
+
+  // 仅销毁 DOM 与事件，不触发任何回调（验证成功时使用）
+  destroy() {
+    if (this.destroyed) return;
+    this.destroyed = true;
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
     this.removeDragEvents();
     this.slider.removeEventListener('mousedown', this.onDown);
     this.slider.removeEventListener('touchstart', this.onDown);
@@ -225,7 +245,6 @@ class SlideCaptcha {
     window.removeEventListener('resize', this.onRaset);
     this.maskLoading?.close();
     this.mask.remove();
-    this.opt.close?.();
   }
 }
 
