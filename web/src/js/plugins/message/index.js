@@ -1,8 +1,10 @@
 import _d from '../../common/config';
-import { _mySlide, playSound, switchPageIcon } from '../../utils/utils';
+import { _mySlide, playSound, preloadSound, switchPageIcon } from '../../utils/utils';
 import imgMsg from '../../../assets/media/msg.mp3';
 import onlineMsg from '../../../assets/media/online.mp3';
 import './index.less';
+// 提前加载提示音，保证收到消息时能立即播放
+preloadSound(imgMsg, onlineMsg);
 const msgArr = [];
 const zIndex = _d.levelObj.msg;
 class Msg {

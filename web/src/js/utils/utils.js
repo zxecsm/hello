@@ -111,17 +111,38 @@ export function debounce(callback, wait, immedia) {
   };
   return debounced;
 }
-// 提示音
-export function playSound(src) {
-  if (localData.get('pmsound')) {
-    let sound = document.createElement('audio');
+// 提示音：复用同一个 audio 元素并提前加载，避免每次播放都重新创建、请求、解码而延迟
+const soundCache = new Map();
+function getSoundEl(src) {
+  let sound = soundCache.get(src);
+  if (!sound) {
+    sound = document.createElement('audio');
+    sound.preload = 'auto';
     sound.src = src;
-    sound.play();
-    sound.onended = function () {
-      sound.onended = null;
-      sound = null;
-    };
+    soundCache.set(src, sound);
+    sound.load();
   }
+  return sound;
+}
+// 预加载提示音（在页面初始化时调用，首次播放可立即出声）
+export function preloadSound(...srcs) {
+  const list = srcs.filter(Boolean);
+  if (!list.length) return;
+  // 放到微任务里执行：本模块与 message 插件存在循环依赖，
+  // 模块初始化阶段同步访问 soundCache 会命中 TDZ（Cannot access before initialization）
+  Promise.resolve().then(() => list.forEach((src) => getSoundEl(src)));
+}
+export function playSound(src) {
+  if (!src || !localData.get('pmsound')) return;
+  const sound = getSoundEl(src);
+  try {
+    sound.currentTime = 0;
+  } catch {
+    /* 尚未加载完成时忽略 */
+  }
+  const playTask = sound.play();
+  // 浏览器自动播放策略拦截时静默忽略，避免未捕获的 Promise 异常
+  if (playTask && playTask.catch) playTask.catch(() => {});
 }
 const pageIcon = document.querySelector("link[rel*='icon']");
 export function switchPageIcon(type) {

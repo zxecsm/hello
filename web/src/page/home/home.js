@@ -11,10 +11,13 @@ import {
   isLogin,
   myOpen,
   playSound,
+  preloadSound,
   sendNotification,
   switchPageIcon,
 } from '../../js/utils/utils';
 import msgMp3 from '../../assets/media/msg.mp3';
+// 提前加载提示音，保证收到消息时能立即播放
+preloadSound(msgMp3);
 
 // 批准登录弹框（通知点击后可重新打开）
 let allowLoginPop = null,
