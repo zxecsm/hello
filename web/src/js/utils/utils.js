@@ -904,6 +904,7 @@ export async function copyText(
   content,
   { success = '复制成功', error = '复制失败', stopMsg = false } = {},
 ) {
+  content = content === undefined || content === null ? '' : String(content);
   try {
     // 使用 Clipboard API
     if (navigator.clipboard) {
@@ -929,29 +930,35 @@ export async function copyText(
 }
 
 function fallbackCopyText(content) {
+  let textarea;
+  const selection = document.getSelection();
+  // 记录原有选区，复制完成后还原，避免影响用户已选中的内容
+  const prevRange =
+    selection && selection.rangeCount > 0 ? selection.getRangeAt(0).cloneRange() : null;
   try {
-    const tempDiv = document.createElement('div');
-    const selection = window.getSelection();
-    const range = document.createRange();
-
-    // 设置临时 div 样式
-    tempDiv.textContent = content;
-    tempDiv.style.position = 'fixed';
-    tempDiv.style.opacity = '0';
-    tempDiv.style.pointerEvents = 'none';
-
-    document.body.appendChild(tempDiv);
-    range.selectNode(tempDiv);
-    selection.removeAllRanges();
-    selection.addRange(range);
-
-    const success = document.execCommand('copy');
-    selection.removeAllRanges();
-    tempDiv.remove();
-
-    return success;
+    // 用 textarea 而不是 div：div 里的文本会按 HTML 规则渲染，
+    // 连续空格被折叠成一个、首尾空格被丢弃、换行变成空格，
+    // 只有表单元素的 value 能原样保存空格与换行
+    textarea = document.createElement('textarea');
+    textarea.value = content;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.top = '0';
+    textarea.style.left = '-9999px';
+    textarea.style.opacity = '0';
+    textarea.style.fontSize = '12pt'; // 防止 iOS 聚焦时页面缩放
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, String(content).length); // iOS 需要显式设置范围
+    return document.execCommand('copy');
   } catch {
     return false;
+  } finally {
+    if (textarea) textarea.remove();
+    if (selection) {
+      selection.removeAllRanges();
+      if (prevRange) selection.addRange(prevRange);
+    }
   }
 }
 // 格式化字节大小
