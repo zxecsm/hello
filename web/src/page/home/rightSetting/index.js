@@ -1081,7 +1081,7 @@ export function settingMenu(e, isMain) {
         closeAllwindow(1);
       } else if (id === '7') {
         close();
-        openInIframe('/edit#new', '新笔记', 'edit');
+        openInIframe('/edit?v=new', '新笔记', 'edit');
       } else if (id === '6') {
         const cacheState = cacheFile.setCacheState();
         const data = [

@@ -47,6 +47,8 @@ import {
 import { reqPicRepeat, reqPicUp } from '../../api/pic';
 import rMenu from '../../js/plugins/rightMenu';
 import MdWorker from '../../js/utils/md.worker.js';
+import safeHtml from '../../js/utils/safeHtml.js';
+import { decodeHashId } from '../../js/utils/mdSlug.js';
 import _d from '../../js/common/config.js';
 import md5 from '../../js/utils/md5.js';
 import _path from '../../js/utils/path.js';
@@ -101,7 +103,7 @@ let newNoteCleared = false;
 // 快捷键
 const rendeDebounce = debounce(rende, 1000);
 editor.getSession().on('change', () => {
-  if (HASH === 'new' && !isLoadingNote && !newNoteCleared) {
+  if (NOTE_ID === 'new' && !isLoadingNote && !newNoteCleared) {
     newNoteCleared = true;
     cacheFile.setData('newNote', '').catch(() => {});
   }
@@ -248,8 +250,34 @@ editor.session.on(
     syncScrollFromEditor();
   }, 200),
 );
+// 让地址栏 hash 跟随预览区当前所在的标题
+function syncHashFromPreview() {
+  const content = $previewBox.find('.content')[0];
+  if (!content) return;
+  const headings = [...content.querySelectorAll('h1,h2,h3,h4,h5,h6')].filter(
+    (item) => item.getClientRects().length > 0,
+  );
+  if (headings.length === 0) return;
+  const contentTop = content.getBoundingClientRect().top + 80;
+  let current = null;
+  headings.forEach((item) => {
+    if (item.getBoundingClientRect().top <= contentTop) current = item;
+  });
+  if (current && current.id) {
+    if (decodeHashId(location.hash) !== current.id) {
+      try {
+        history.replaceState(null, '', `#${current.id}`);
+      } catch {}
+    }
+  } else if (location.hash) {
+    try {
+      history.replaceState(null, '', location.pathname + location.search);
+    } catch {}
+  }
+}
 // 预览区滚动同步到编辑器
 function syncScrollFromPreview() {
+  syncHashFromPreview();
   if (isSyncingEditorScroll) return;
   isSyncingPreviewScroll = true;
 
@@ -265,6 +293,13 @@ function syncScrollFromPreview() {
   initState();
 }
 $previewBox.find('.content').on('scroll', debounce(syncScrollFromPreview, 200));
+// 点击笔记内容里的锚点链接、浏览器前进后退时，滚动预览区到对应标题
+window.addEventListener('hashchange', () => {
+  const id = decodeHashId(location.hash);
+  if (!id) return;
+  const target = document.getElementById(id);
+  if (target) target.scrollIntoView({ block: 'start' });
+});
 // 标题
 const wInput = wrapInput($headBtns.find('.note_title input')[0], {
   update(val) {
@@ -294,16 +329,29 @@ function initValue(obj) {
   }
 }
 let urlObj = queryURLParams(myOpen()),
-  { HASH } = urlObj;
+  { HASH: URL_HASH } = urlObj;
+// 笔记 id 放到 query 里，hash 只用于标题锚点
+let NOTE_ID = urlObj.v;
+if (!NOTE_ID && URL_HASH) {
+  // 兼容旧链接 /edit#笔记id
+  NOTE_ID = URL_HASH;
+  try {
+    history.replaceState(null, '', `?v=${encodeURIComponent(NOTE_ID)}`);
+  } catch {}
+}
+if (!NOTE_ID) {
+  NOTE_ID = 'new';
+  try {
+    history.replaceState(null, '', '?v=new');
+  } catch {}
+}
+const ANCHOR = urlObj.v ? URL_HASH || '' : '';
+let anchorInited = false;
 // 对比记录
 let orginData = {
   title: '',
   content: '',
 };
-if (!HASH) {
-  HASH = 'new';
-  myOpen(`#new`);
-}
 function updateIframeTitle(title) {
   if (isIframe()) {
     try {
@@ -322,14 +370,14 @@ function restoreEditing(editing, content) {
       editor.gotoLine(1);
     } else if (type === 'cancel') {
       // 取消恢复：直接删除草稿
-      reqNoteClearEditing({ id: HASH }).catch(() => {});
+      reqNoteClearEditing({ id: NOTE_ID }).catch(() => {});
     }
   });
 }
-if (HASH === 'new') {
+if (NOTE_ID === 'new') {
   // 先拿到本地内容和服务器草稿，再一次性初始化，避免草稿晚到覆盖用户输入
   cacheFile.getData('newNote').then(async (text) => {
-    if (HASH !== 'new') return;
+    if (NOTE_ID !== 'new') return;
     let content = text;
     try {
       const res = await reqNoteGetEditing({ id: 'new' });
@@ -349,7 +397,7 @@ if (HASH === 'new') {
   if (!isLogin()) {
     toLogin();
   } else {
-    reqNoteRead({ v: HASH })
+    reqNoteRead({ v: NOTE_ID })
       .then(async (result) => {
         if (result.code === 1) {
           initValue(result.data);
@@ -374,7 +422,7 @@ async function rende(skipDraftSave) {
   // 实时保存编辑草稿到服务器，防止断电或关闭页面丢失
   // 第一次加载内容和恢复草稿不保存，其余任何修改都保存
   if (isLogin() && !skipDraftSave) {
-    reqNoteSaveEditing({ id: HASH, content: text }).catch(() => {});
+    reqNoteSaveEditing({ id: NOTE_ID, content: text }).catch(() => {});
   }
   if ($previewBox.is(':hidden')) return;
   if (text.trim() === '') {
@@ -388,8 +436,12 @@ async function rende(skipDraftSave) {
   mdWorker.postMessage(text);
 }
 mdWorker.addEventListener('message', (event) => {
-  $previewBox.find('.content').html(event.data);
-  previewLines = [...$previewBox[0].querySelectorAll(`[data-line]`)];
+  // markdown 中的原始 HTML 统一走白名单净化，data-line 等属性会被保留
+  $previewBox.find('.content').html(safeHtml(event.data));
+  // 折叠块里的内容没有布局尺寸，参与滚动同步会导致 offsetTop 为 0
+  previewLines = [...$previewBox[0].querySelectorAll(`[data-line]`)].filter(
+    (item) => item.getClientRects().length > 0,
+  );
   const imgs = [...$previewBox.find('.content')[0].querySelectorAll('img')].filter((item) => {
     const url = item.getAttribute('data-src');
     const cache = cacheFile.hasUrl(url, 'image');
@@ -409,6 +461,23 @@ mdWorker.addEventListener('message', (event) => {
       });
   });
   syncScrollFromEditor(1);
+  // 首次渲染后定位到 URL 里的标题锚点
+  if (!anchorInited) {
+    anchorInited = true;
+    if (ANCHOR) {
+      _setTimeout(() => {
+        const target = document.getElementById(ANCHOR);
+        if (target) {
+          target.scrollIntoView({ block: 'start' });
+          syncHashFromPreview();
+        } else if (location.hash) {
+          try {
+            history.replaceState(null, '', location.pathname + location.search);
+          } catch {}
+        }
+      });
+    }
+  }
 });
 const imgLazy = new LazyLoad();
 // 查看图片
@@ -453,7 +522,7 @@ $editBox
     const key = e.key.toLowerCase(),
       ctrl = e.ctrlKey || e.metaKey;
     if (ctrl && key === 's') {
-      if (HASH) {
+      if (NOTE_ID) {
         saveNote();
         e.preventDefault();
       }
@@ -746,7 +815,7 @@ $headBtns
       toLogin();
       return;
     }
-    _myOpen(`/file#${_d.noteHistoryDir}/${HASH}`, '文件管理', 'file');
+    _myOpen(`/file#${_d.noteHistoryDir}/${NOTE_ID}`, '文件管理', 'file');
   })
   .on('click', '.table_btn', () => insertBlock(editor, 'table'))
   .on('click', '.code_btn', () => insertBlock(editor, 'code'))
@@ -804,10 +873,10 @@ function saveNote() {
     return;
   }
   if (title === orginData.title && content === orginData.content) return;
-  const draftId = HASH;
+  const draftId = NOTE_ID;
   // 取消尚未执行的草稿保存，避免与正式保存相互覆盖
   rendeDebounce.cancel();
-  reqNoteEdit({ id: HASH, title, content })
+  reqNoteEdit({ id: NOTE_ID, title, content })
     .then(async (result) => {
       if (result.code === 1) {
         orginData.content = content;
@@ -820,8 +889,10 @@ function saveNote() {
             // 新笔记,则清除本地保存内容
             await cacheFile.setData('newNote', '');
           }
-          HASH = result.data.id;
-          myOpen(`#${encodeURIComponent(HASH)}`);
+          NOTE_ID = result.data.id;
+          try {
+            history.replaceState(null, '', `?v=${encodeURIComponent(NOTE_ID)}`);
+          } catch {}
           _msg.success(result.codeText);
           return;
         }

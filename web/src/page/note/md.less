@@ -1,12 +1,39 @@
 @import '../../assets/css/hljs.less';
 
-html {
-  --code-color: #d73a49;
-}
-html.dark {
-  --code-color: #ff7b72;
-}
+// GitHub 风格 Markdown 主题变量
 .view_md {
+  --md-text: var(--color2);
+  --md-heading: var(--color1);
+  --md-muted: var(--color4);
+  --md-link: #0969da;
+  --md-border: #d8dee4;
+  --md-border-strong: #d0d7de;
+  --md-surface: #f6f8fa;
+  --md-code-bg: #f6f8fa;
+  --md-stripe: #f6f8fa;
+  --md-inline-code-bg: #afb8c133;
+  --md-mark-bg: #fff8c5;
+  --md-quote-border: #d0d7de;
+}
+
+html.dark .view_md {
+  --md-link: #4493f8;
+  --md-border: #30363d;
+  --md-border-strong: #3d444d;
+  --md-surface: #161b22;
+  --md-code-bg: #161b22;
+  --md-stripe: #161b22;
+  --md-inline-code-bg: #6e768166;
+  --md-mark-bg: #bb800966;
+  --md-quote-border: #3b434b;
+}
+
+.view_md {
+  color: var(--md-text);
+  line-height: 1.75;
+  overflow-wrap: break-word;
+
+  // 标题
   h1,
   h2,
   h3,
@@ -14,13 +41,22 @@ html.dark {
   h5,
   h6 {
     position: relative;
-    font-weight: 400;
-    font-size: 1.1em;
-    color: var(--color1);
+    margin: 1.6em 0 0.6em;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--md-heading);
+    // 锚点跳转时给顶部固定按钮留出空间
+    scroll-margin-top: 6rem;
+  }
+
+  h1,
+  h2 {
+    padding-bottom: 0.3em;
+    border-bottom: 0.1rem solid var(--md-border);
   }
 
   h1 {
-    font-size: 1.7em;
+    font-size: 2em;
   }
 
   h2 {
@@ -28,18 +64,23 @@ html.dark {
   }
 
   h3 {
-    font-size: 1.3em;
+    font-size: 1.25em;
   }
 
-  ul,
-  ol {
-    margin: 0.5rem 0;
-    padding-left: 1.2em;
-  }
-  li:hover::marker {
-    color: var(--text-hover-color);
+  h4 {
+    font-size: 1em;
   }
 
+  h5 {
+    font-size: 0.875em;
+  }
+
+  h6 {
+    font-size: 0.85em;
+    color: var(--md-muted);
+  }
+
+  // hover 时出现的标题锚点提示
   h1::after,
   h2::after,
   h3::after,
@@ -47,12 +88,13 @@ html.dark {
   h5::after,
   h6::after {
     content: '#';
-    color: var(--text-hover-color);
     display: inline-block;
-    font-size: 1.2em;
-    font-weight: normal;
-    padding-left: 0.4rem;
+    padding-left: 0.4em;
+    font-size: 0.8em;
+    font-weight: 400;
+    color: var(--md-muted);
     opacity: 0;
+    transition: opacity 0.2s;
   }
 
   h1:hover::after,
@@ -61,38 +103,144 @@ html.dark {
   h4:hover::after,
   h5:hover::after,
   h6:hover::after {
+    opacity: 0.6;
+  }
+
+  // 正文
+  p {
+    margin: 0 0 1em;
+  }
+
+  p,
+  li,
+  blockquote,
+  dd,
+  dt,
+  summary {
+    line-height: 1.75;
+  }
+
+  a {
+    color: var(--md-link);
+    text-decoration: none;
+  }
+
+  // hover 样式沿用全局的波浪下划线
+
+  // 列表
+  ul,
+  ol {
+    margin: 0 0 1em;
+    padding-left: 2em;
+  }
+
+  li + li {
+    margin-top: 0.25em;
+  }
+
+  li > ul,
+  li > ol {
+    margin: 0.25em 0 0;
+  }
+
+  li:hover::marker {
+    color: var(--md-link);
+  }
+
+  // 任务列表
+  .task-list {
+    padding-left: 1.6em;
+  }
+
+  .task-list-item {
+    list-style: none;
+  }
+
+  .task-list-item > input[type='checkbox'] {
+    display: inline-block;
+    width: 0.95em;
+    height: 0.95em;
+    margin: 0 0.45em 0.15em -1.45em;
+    padding: 0;
+    vertical-align: middle;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: var(--md-surface);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 75%;
+    border: 0.1rem solid var(--md-border-strong);
+    border-radius: var(--border-radius0-5);
     opacity: 1;
   }
 
+  .task-list-item > input[type='checkbox']:checked {
+    background-color: var(--md-link);
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23fff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' d='M3 8.5l3.2 3.2L13 5'/%3E%3C/svg%3E");
+    border-color: var(--md-link);
+  }
+
+  // 引用
+  blockquote {
+    margin: 0 0 1em;
+    padding: 0 1em;
+    color: var(--md-muted);
+    border-left: 0.25em solid var(--md-quote-border);
+  }
+
+  blockquote > :first-child {
+    margin-top: 0;
+  }
+
+  blockquote > :last-child {
+    margin-bottom: 0;
+  }
+
+  // 分隔线
+  hr {
+    height: 0.25em;
+    margin: 1.5em 0;
+    padding: 0;
+    background-color: var(--md-border);
+    border: 0;
+  }
+
+  // 行内代码
+  code {
+    padding: 0.2em 0.4em;
+    margin: 0 0.1em;
+    font-family: var(--code-font-family);
+    font-size: 0.88em;
+    line-height: inherit;
+    color: var(--md-text);
+    background-color: var(--md-inline-code-bg);
+    border: 0;
+    border-radius: var(--border-radius1);
+  }
+
+  // 代码块
   pre {
     position: relative;
-    border: 0.1rem solid var(--color9);
+    margin: 0 0 1em;
+    padding: 1em 1.2em;
+    background-color: var(--md-code-bg);
+    border: 0.1rem solid var(--md-border);
     border-radius: var(--border-radius1-5);
+    line-height: 1.6;
   }
 
-  img {
-    border-radius: var(--border-radius1-5);
-  }
-
-  code {
-    padding: 0.2rem 1rem;
-    margin: 0 0.5rem;
-    border: 0.1rem solid var(--color9);
-    font-family: var(--code-font-family);
-    border-radius: var(--border-radius1);
-    line-height: 1.8;
-    color: var(--code-color);
-  }
   pre code {
     display: block;
     overflow-x: auto;
     overflow-y: hidden;
-    border: 1rem solid transparent;
     margin: 0;
     padding: 0;
-    line-height: 1.5;
-    padding: 1rem 0;
-    color: var(--color2);
+    font-size: 0.88em;
+    line-height: 1.6;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
   }
 
   pre code.hide {
@@ -102,12 +250,12 @@ html.dark {
   pre .codeCopy {
     display: none;
     position: absolute;
-    top: 0rem;
-    right: 0rem;
-    font-size: 2.2rem;
+    top: 0;
+    right: 0;
     width: 4rem;
-    text-align: center;
+    font-size: 2.2rem;
     line-height: 4rem;
+    text-align: center;
     color: var(--icon-color);
   }
 
@@ -115,14 +263,15 @@ html.dark {
     position: absolute;
     left: 50%;
     bottom: -1rem;
-    margin-left: -2rem;
     width: 4rem;
     height: 2rem;
+    margin-left: -2rem;
     line-height: 2rem;
     text-align: center;
-    border-radius: var(--border-radius1);
     background-color: var(--color10);
     border: 0.1rem solid var(--color9);
+    border-radius: var(--border-radius1);
+    color: var(--icon-color);
   }
 
   pre .shrink:hover,
@@ -136,45 +285,225 @@ html.dark {
     display: block;
   }
 
-  table,
-  td,
-  tr,
-  th {
-    border: 0.1rem solid var(--color9);
+  // 表格
+  table {
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    margin: 0 0 1em;
+    overflow: auto;
     border-collapse: collapse;
-    padding: 1rem;
-    margin: 1rem 0;
+    border-spacing: 0;
+  }
+
+  th,
+  td {
+    padding: 0.45em 0.9em;
+    line-height: 1.6;
+    border: 0.1rem solid var(--md-border);
   }
 
   th {
-    background-color: #88888812;
-    font-weight: bold;
+    font-weight: 600;
+    background-color: var(--md-surface);
   }
 
-  s {
-    text-decoration-color: #c62828;
-    color: var(--color5);
+  tr:nth-child(2n) {
+    background-color: var(--md-stripe);
   }
+
+  // 图片与媒体
+  img,
+  video,
+  audio {
+    max-width: 100%;
+    border-radius: var(--border-radius1-5);
+  }
+
+  img {
+    box-sizing: border-box;
+    height: auto;
+  }
+
+  // 高亮、删除、插入
   mark {
-    color: #c62828;
-    padding: 0.2rem;
+    padding: 0.1em 0.2em;
+    color: inherit;
+    background-color: var(--md-mark-bg);
   }
-  blockquote {
-    background-color: #8888880d;
-    border: 0.1rem solid #8888881c;
-    border-left-width: 0.8rem;
-    border-radius: 0 var(--border-radius1-5) var(--border-radius1-5) 0;
-    color: var(--color4);
-    margin: 2rem 0;
-    overflow: hidden;
-    padding: 0 1rem;
+
+  s,
+  del {
+    color: var(--md-muted);
   }
-  hr {
-    background-color: var(--color9);
-    height: 0.1rem;
-    border: none;
+
+  ins {
+    padding: 0.1em 0.2em;
+    text-decoration: none;
+    background-color: #2da44e1f;
+    border-bottom: 0.1rem solid #2da44e;
   }
-  p {
-    line-height: 1.8;
+
+  // 键盘按键
+  kbd {
+    display: inline-block;
+    padding: 0.15em 0.4em;
+    font-family: var(--code-font-family);
+    font-size: 0.85em;
+    line-height: 1;
+    color: var(--md-text);
+    background-color: var(--md-surface);
+    border: 0.1rem solid var(--md-border-strong);
+    border-bottom-width: 0.2rem;
+    border-radius: var(--border-radius0-5);
+  }
+
+  // 定义列表
+  dl {
+    margin: 0 0 1em;
+  }
+
+  dt {
+    margin-top: 0.6em;
+    font-weight: 600;
+  }
+
+  dd {
+    margin: 0.3em 0 0.6em 1.6em;
+  }
+
+  // 缩写
+  abbr[title] {
+    text-decoration: underline dotted;
+    cursor: help;
+  }
+
+  // 脚注
+  .footnotes {
+    margin-top: 2.5em;
+    padding-top: 1em;
+    color: var(--md-muted);
+    font-size: 0.92em;
+    border-top: 0.1rem solid var(--md-border);
+  }
+
+  .footnotes-sep {
+    display: none;
+  }
+
+  .footnotes ol {
+    padding-left: 1.4em;
+  }
+
+  .footnotes li {
+    margin: 0.4em 0;
+  }
+
+  .footnotes li p {
+    margin: 0.2em 0;
+  }
+
+  .footnote-ref a {
+    text-decoration: none;
+  }
+
+  .footnote-backref {
+    margin-left: 0.4em;
+    text-decoration: none;
+  }
+
+  // 自定义容器
+  .custom-block {
+    margin: 1.2em 0;
+    padding: 0.7em 1em;
+    background-color: var(--md-surface);
+    border: 0.1rem solid var(--md-border);
+    border-left: 0.35em solid var(--md-border-strong);
+    border-radius: var(--border-radius1-5);
+  }
+
+  .custom-block > :first-child {
+    margin-top: 0;
+  }
+
+  .custom-block > :last-child {
+    margin-bottom: 0;
+  }
+
+  .custom-block-title {
+    margin: 0 0 0.4em;
+    font-weight: 600;
+  }
+
+  .custom-block.tip {
+    border-left-color: #2da44e;
+    background-color: #2da44e14;
+  }
+
+  .custom-block.info {
+    border-left-color: #0969da;
+    background-color: #0969da12;
+  }
+
+  .custom-block.warning {
+    border-left-color: #9a6700;
+    background-color: #9a670014;
+  }
+
+  .custom-block.danger {
+    border-left-color: #cf222e;
+    background-color: #cf222e12;
+  }
+
+  .custom-block.details {
+    background-color: transparent;
+  }
+
+  .custom-block.details > summary {
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .custom-block.details[open] > summary {
+    margin-bottom: 0.6em;
+  }
+
+  // 原生 details
+  details {
+    margin: 1em 0;
+  }
+
+  summary {
+    cursor: pointer;
+  }
+
+  // 去掉首尾多余间距（兼容预览区多包一层 .content 的情况）
+  > :first-child,
+  .content > :first-child {
+    margin-top: 0;
+  }
+
+  > :last-child,
+  .content > :last-child {
+    margin-bottom: 0;
+  }
+}
+
+// 暗色模式下让提示容器更明显一点
+html.dark .view_md {
+  .custom-block.tip {
+    background-color: #2386361f;
+  }
+
+  .custom-block.info {
+    background-color: #1f6feb1f;
+  }
+
+  .custom-block.warning {
+    background-color: #9e6a031f;
+  }
+
+  .custom-block.danger {
+    background-color: #da36331f;
   }
 }

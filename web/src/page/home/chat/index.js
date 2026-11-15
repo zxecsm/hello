@@ -1364,7 +1364,7 @@ function chatMsgMenu(e, cobj) {
       } else if (id === '6') {
         close();
         await cacheFile.setData('newNote', z);
-        openInIframe('/edit#new', '新笔记', 'edit');
+        openInIframe('/edit?v=new', '新笔记', 'edit');
       }
     },
     cobj.content,

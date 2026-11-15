@@ -262,7 +262,7 @@ $editFile
       return;
     }
     await cacheFile.setData('newNote', text);
-    _myOpen('/edit#new', '新笔记', 'edit');
+    _myOpen('/edit?v=new', '新笔记', 'edit');
   })
   .on('click', '.close', hdClose)
   .on('click', '.save', hdSave)

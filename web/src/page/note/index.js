@@ -36,9 +36,10 @@ import HighlightWord from './highlightWord';
 import realtime from '../../js/plugins/realtime';
 import loadfailImg from '../../assets/images/loadfail.png';
 import { reqNoteCategory, reqNoteRead } from '../../api/note';
-import { createNoteDir, toggleNoteDir } from './noteDir';
+import { createNoteDir, toggleNoteDir, scrollToNoteAnchor } from './noteDir';
 import rMenu from '../../js/plugins/rightMenu';
 import MdWorker from '../../js/utils/md.worker.js';
+import safeHtml from '../../js/utils/safeHtml.js';
 import loadingPage from '../../js/plugins/loading/index.js';
 import { _tpl } from '../../js/utils/template.js';
 import imgPreview from '../../js/plugins/imgPreview/index.js';
@@ -86,7 +87,7 @@ function showSearchBox() {
 $setBtnsWrap
   .on('click', '.edit_note_btn', function (e) {
     e.stopPropagation();
-    _myOpen(`/edit#${encodeURIComponent(urlparmes.v)}`, titleName, 'edit');
+    _myOpen(`/edit?v=${encodeURIComponent(urlparmes.v)}`, titleName, 'edit');
   })
   .on('click', '.to_top_btn', function () {
     pageScrollTop(0);
@@ -286,8 +287,9 @@ function updateNoteInfo({ create_at, visit_count, update_at, category, account }
 }
 mdWorker.addEventListener('message', (event) => {
   mdWorker.terminate();
-  noteObj.html = event.data;
-  $noteBox.html(event.data);
+  // markdown 中的原始 HTML 统一走白名单净化，data-line 等属性会被保留
+  noteObj.html = safeHtml(event.data);
+  $noteBox.html(noteObj.html);
   updateNoteInfo(noteInfo, $noteBox.text());
   hdNoteDirPosition = createNoteDir($noteBox);
   if (!hdNoteDirPosition) {
@@ -298,10 +300,18 @@ mdWorker.addEventListener('message', (event) => {
   welcomeMsg();
   $setBtnsWrap.addClass('open');
   $contentWrap.addClass('open');
+  // hash 只用于标题锚点
   if (HASH) {
-    HASH = decodeURIComponent(HASH);
-    showSearchBox();
-    searchInp.setValue(HASH);
+    _setTimeout(() => {
+      if (document.getElementById(HASH)) {
+        scrollToNoteAnchor(HASH, false);
+      } else if (location.hash) {
+        // 清理旧链接里遗留的搜索 hash
+        try {
+          history.replaceState(null, '', location.pathname + location.search);
+        } catch {}
+      }
+    });
   }
   imgLazy.bind($noteBox[0].querySelectorAll('img'), (item) => {
     const url = item.getAttribute('data-src');
@@ -379,8 +389,6 @@ const searchInp = wrapInput($pageSearchWrap.find('.inp_box .search_inp')[0], {
     } else {
       $pageSearchWrap.find('.inp_box .clear').css('display', 'none');
     }
-    val = val.trim();
-    myOpen(`#${val ? encodeURIComponent(val) : ''}`);
     hdSearchWord();
   },
   keydown(e) {

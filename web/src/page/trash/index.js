@@ -672,7 +672,7 @@ $contentWrap
         } else if (flag === '1') {
           close();
           e.stopPropagation();
-          _myOpen(`/edit#${encodeURIComponent(id)}`, obj.title, 'edit');
+          _myOpen(`/edit?v=${encodeURIComponent(id)}`, obj.title, 'edit');
         } else if (flag === '4') {
           close();
           e.stopPropagation();

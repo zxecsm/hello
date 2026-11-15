@@ -1,10 +1,23 @@
 import $ from 'jquery';
-import { _mySlide, _position, debounce, pageScrollTop, getScreenSize } from '../../js/utils/utils';
+import { _mySlide, _position, debounce, getScreenSize } from '../../js/utils/utils';
+import { slugifyHeading, decodeHashId } from '../../js/utils/mdSlug.js';
 import _d from '../../js/common/config';
 import { _tpl } from '../../js/utils/template';
 import { contentWrapCenterState, getContentW } from '.';
 const $noteDirWrap = $('.note_dir_wrap'),
   $listBox = $noteDirWrap.find('.list_box');
+
+// 滚动到标题锚点。首次加载时页面内容是异步渲染的，
+// 浏览器自己按 hash 定位可能失败，需要内容生成后再调用一次。
+export function scrollToNoteAnchor(id, smooth = true) {
+  if (!id) return;
+  const target = document.getElementById(id);
+  if (!target) return;
+  target.scrollIntoView({
+    behavior: smooth ? 'smooth' : 'auto',
+    block: 'start',
+  });
+}
 
 // 标题生成树结构
 function toTree(box) {
@@ -45,14 +58,28 @@ function hideNoteDir() {
 export function createNoteDir($box) {
   const treeData = toTree($box[0]);
   const $allH = $box.find('h1,h2,h3,h4,h5,h6');
-  let num = 1;
   if ($allH.length < 1) return false;
+  // 优先使用 markdown-it-anchor 根据标题生成的 id；
+  // 原始 HTML 标题没有 id 时，用同样的规则补一个
+  const usedIds = new Set();
+  $allH.each((_, item) => {
+    if (item.id) usedIds.add(item.id);
+  });
   const fra = _tpl.createFrag();
   (function next(data, level, fra) {
     data.forEach((item) => {
       const text = item.node.textContent;
-      const id = `hello_${num++}`;
-      item.node.id = id;
+      let id = item.node.id;
+      if (!id) {
+        const base = slugifyHeading(text);
+        id = base;
+        let index = 1;
+        while (usedIds.has(id)) {
+          id = `${base}-${index++}`;
+        }
+        item.node.id = id;
+      }
+      usedIds.add(id);
       const oLi = _tpl.getDom(
         `
         <li :title="text" cursor="y" :h="level" :data-id="id">
@@ -82,20 +109,25 @@ export function createNoteDir($box) {
     const $this = $(this);
     $allLi.removeClass('active');
     $this.addClass('active');
-    const id = $this.attr('data-id'),
-      $curH = $box.find(`#${id}`),
-      _top = _position($curH[0], true).top + pageScrollTop();
-    pageScrollTop(_top - 60);
+    const id = $this.attr('data-id');
     const $ul = $this.next();
     const isShow = $ul.attr('data-show');
-    if (!isShow) return;
-    const $icon = $this.find('.icon');
-    if (isShow === 'y') {
-      $icon.attr('class', 'icon iconfont icon-you');
-      $ul.stop().slideUp(_d.speed).attr('data-show', 'n');
+    if (isShow) {
+      const $icon = $this.find('.icon');
+      if (isShow === 'y') {
+        $icon.attr('class', 'icon iconfont icon-you');
+        $ul.stop().slideUp(_d.speed).attr('data-show', 'n');
+      } else {
+        $icon.attr('class', 'icon iconfont icon-xiala');
+        $ul.stop().slideDown(_d.speed).attr('data-show', 'y');
+      }
+    }
+    // data-id 就是标题的 id，用 hash 锚点跳转
+    if (!id) return;
+    if (decodeHashId(location.hash) === id) {
+      scrollToNoteAnchor(id);
     } else {
-      $icon.attr('class', 'icon iconfont icon-xiala');
-      $ul.stop().slideDown(_d.speed).attr('data-show', 'y');
+      location.hash = id;
     }
   });
   // 手势关闭
@@ -105,14 +137,38 @@ export function createNoteDir($box) {
       hideNoteDir();
     },
   });
-  // 目录同步页面滚动
-  function hdNoteDirPosition() {
+  // 目录同步页面滚动，同时让 URL 上的 hash 跟随当前阅读位置
+  function hdNoteDirPosition(syncHash) {
+    // 最后一个滚动到视口顶部附近的标题，就是当前所在的章节
+    const $currentH = $allH.filter((_, item) => _position(item, true).top <= 80).last();
+
+    // 初始化时不改 hash，避免覆盖地址栏里已有的锚点
+    if (syncHash) {
+      if ($currentH.length > 0) {
+        const id = $currentH[0].id;
+        if (decodeHashId(location.hash) !== id) {
+          try {
+            // replaceState 不会触发跳转，也不会新增历史记录
+            history.replaceState(null, '', `#${id}`);
+          } catch {}
+        }
+      } else if (location.hash) {
+        // 还没滚动到第一个标题时，不保留旧的 hash
+        try {
+          history.replaceState(null, '', location.pathname + location.search);
+        } catch {}
+      }
+    }
+
     if (!$noteDirWrap.hasClass('open')) return;
     $allLi.removeClass('active');
-    let $positionTargetH = $allH.filter((_, item) => _position(item, true).top >= 0).eq(0);
-    $positionTargetH.length > 0 ? null : ($positionTargetH = $allH.last());
-    if ($positionTargetH.length > 0) {
-      const $targetLi = $listBox.find(`[data-id=${$positionTargetH[0].id}]`);
+    // 页面顶部还没有标题到达时，默认高亮第一个标题
+    const $activeH = $currentH.length > 0 ? $currentH : $allH.first();
+    if ($activeH.length > 0) {
+      const activeId = $activeH[0].id;
+      const $targetLi = $listBox
+        .find('li')
+        .filter((_, item) => item.getAttribute('data-id') === activeId);
       if ($targetLi.length > 0) {
         $targetLi.addClass('active');
         let flag = $targetLi;
@@ -134,7 +190,10 @@ export function createNoteDir($box) {
       }
     }
   }
-  window.addEventListener('scroll', debounce(hdNoteDirPosition, 100));
+  window.addEventListener(
+    'scroll',
+    debounce(() => hdNoteDirPosition(true), 100),
+  );
   if (getScreenSize().w > getContentW() + 400) {
     showNoteDir();
     hdNoteDirPosition();

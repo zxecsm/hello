@@ -676,7 +676,7 @@ $contentWrap
         } else if (id === '5') {
           close();
           e.stopPropagation();
-          _myOpen(`/edit#${encodeURIComponent(noteid)}`, title, 'edit');
+          _myOpen(`/edit?v=${encodeURIComponent(noteid)}`, title, 'edit');
         } else if (id === '6') {
           deleteNote([noteid], close, loading);
         } else if (id === '7') {
@@ -694,13 +694,8 @@ $contentWrap
   })
   .on('click', '.item_title', function (e) {
     e.stopPropagation();
-    const val = wInput.getValue().trim();
     const { title, id } = getNoteInfo($(this).parent().attr('data-id'));
-    _myOpen(
-      `/note?v=${encodeURIComponent(id)}${val ? '#' + encodeURIComponent(val) : ''}`,
-      title,
-      'note',
-    );
+    _myOpen(`/note?v=${encodeURIComponent(id)}`, title, 'note');
   })
   .on('click', 'img', function (e) {
     const imgs = $contentWrap.find('img');
@@ -918,7 +913,7 @@ $headWrap
     rMenu.selectMenu(e, data, ({ close, id }) => {
       close();
       if (id === 'add') {
-        _myOpen('/edit#new', '新笔记', 'edit');
+        _myOpen('/edit?v=new', '新笔记', 'edit');
       } else if (id === 'up') {
         upNote();
       }
