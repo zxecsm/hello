@@ -27,6 +27,8 @@ module.exports = merge(require('./webpack.base'), {
       directory: resolve(__dirname, '..', 'src'),
     },
     compress: true,
+    // 监听所有网卡（:: 双栈），局域网 / 手机可通过 IPv4 或 IPv6 访问开发页面
+    host: '::',
     port: 55556,
     open: true,
     hot: false,
@@ -34,7 +36,8 @@ module.exports = merge(require('./webpack.base'), {
     proxy: [
       {
         pathFilter: ['/api'],
-        target: 'http://127.0.0.1:55555',
+        // 与服务端 PORT 环境变量保持一致，默认 55555
+        target: `http://127.0.0.1:${process.env.PORT || 55555}`,
       },
     ],
   },

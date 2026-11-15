@@ -1168,12 +1168,18 @@ export function settingMenu(e, isMain) {
                   if (id) {
                     loading.start();
                     let size = 0;
-                    if (id === 'local') {
-                      size = localData.getSize();
-                    } else {
-                      size = await cacheFile.size(param.type);
+                    try {
+                      if (id === 'local') {
+                        size = localData.getSize();
+                      } else {
+                        size = await cacheFile.size(param.type);
+                      }
+                    } catch {
+                      _msg.error();
+                      return;
+                    } finally {
+                      loading.end();
                     }
-                    loading.end();
                     rMenu.pop(
                       {
                         e,
@@ -1500,22 +1506,46 @@ function createAuthToken(e) {
         },
       },
     },
-    function ({ close, inp, loading }) {
+    function ({ e, close, inp, loading }) {
       const days = Number(inp.days);
       loading.start();
       reqUserCreateToken({ days })
         .then((result) => {
           loading.end();
           if (result.code === 1) {
-            close();
-            copyText(result.data, { success: `token已复制，有效期 ${days} 天` });
+            // 不直接写剪切板：Safari 等浏览器在异步请求后可能丢失用户手势，
+            // 导致复制失败。改为弹窗展示 token，输入框会自动全选，手动复制即可。
+            rMenu.inpMenu(
+              e,
+              {
+                subText: '复制',
+                items: {
+                  token: {
+                    type: 'textarea',
+                    value: result.data,
+                    trimValue: false,
+                    placeholder: '认证token',
+                    verify(val) {
+                      return val ? '' : '内容为空';
+                    },
+                  },
+                },
+              },
+              ({ inp, close: closeToken }) => {
+                // 点击时才复制输入框里已有的 token，仍在用户手势内，Safari 也能正常复制
+                copyText(inp.token, { success: `token已复制，有效期 ${days} 天` });
+                closeToken();
+                close();
+              },
+              `认证token（有效期 ${days} 天，退出其他设备会失效）`,
+            );
           }
         })
         .catch(() => {
           loading.end();
         });
     },
-    '生成认证token（退出其他设备会失效）',
+    '生成认证token',
   );
 }
 // 注销账号

@@ -194,8 +194,8 @@ function sendClipboard(text, { loading, close }) {
   loading.start();
   reqUserSendClipboard({ text })
     .then((result) => {
+      loading.end();
       if (result.code === 1) {
-        loading.end();
         close(1);
         _msg.success(result.codeText);
       }
@@ -231,6 +231,31 @@ function clipboardInputMenu(e) {
     '无法读取剪切板或为空，手动发送',
   );
 }
+// 展示剪切板内容：异步请求后用户手势可能已失效，改为点击按钮时复制输入框里的内容
+function clipboardContentMenu(e, text) {
+  rMenu.inpMenu(
+    e,
+    {
+      subText: '复制',
+      items: {
+        text: {
+          type: 'textarea',
+          value: text,
+          trimValue: false,
+          placeholder: '剪切板内容',
+          verify(val) {
+            return val ? '' : '内容为空';
+          },
+        },
+      },
+    },
+    ({ inp, close }) => {
+      copyText(inp.text, { success: '复制剪切板成功' });
+      close(1);
+    },
+    '剪切板内容',
+  );
+}
 // 剪切板菜单
 function clipboardMenu(e) {
   // 菜单打开时预取，保证点击“复制剪切板”时仍处于用户手势内
@@ -264,10 +289,15 @@ function clipboardMenu(e) {
         }
         sendClipboard(text, { loading, close });
       } else if (id === '2') {
-        if (!clipboardLoaded) {
+        const loaded = clipboardLoaded;
+
+        if (!loaded) {
           loading.start();
-          await clipboardReady;
-          loading.end();
+          try {
+            await clipboardReady;
+          } finally {
+            loading.end();
+          }
         }
         if (!clipboardLoaded) {
           _msg.error('读取剪切板失败，请重试');
@@ -277,8 +307,14 @@ function clipboardMenu(e) {
           _msg.error('剪切板内容为空');
           return;
         }
-        close();
-        copyText(clipboardContent, { success: '复制剪切板成功' });
+
+        if (loaded) {
+          // 内容已预取完成，仍处于用户手势内，可以直接复制
+          copyText(clipboardContent, { success: '复制剪切板成功' });
+          close();
+        } else {
+          clipboardContentMenu(clickEvent, clipboardContent);
+        }
       }
     },
     '剪切板',

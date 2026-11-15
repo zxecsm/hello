@@ -471,15 +471,8 @@ app.use((_, res) => {
 
 initDatabase()
   .then((initPassword) => {
-    app.listen(appConfig.port, (err) => {
-      if (err) {
-        // eslint-disable-next-line no-console
-        console.error(err);
-        process.exit(1);
-      }
-      const arr = getLocalhost().map(
-        (item) => `http://${item}${appConfig.port === 80 ? '' : `:${appConfig.port}`}`,
-      );
+    listen(appConfig.port, appConfig.host, (host) => {
+      const urls = getAccessUrls(appConfig.port, host);
       // eslint-disable-next-line no-console
       console.log(`
  __   __  ______  __     __       __ 
@@ -495,7 +488,11 @@ initDatabase()
        `);
       }
       // eslint-disable-next-line no-console
-      console.log(`服务开启成功，访问地址为：\n${arr.join('\n')}`);
+      console.log(
+        `服务开启成功，监听 ${host.includes(':') ? `[${host}]` : host}:${appConfig.port}，可访问地址：`,
+      );
+      // eslint-disable-next-line no-console
+      console.log(urls.map((url) => `  ${url}`).join('\n'));
     });
   })
   .catch((err) => {
@@ -504,16 +501,73 @@ initDatabase()
     process.exit(1);
   });
 
-function getLocalhost() {
-  const obj = os.networkInterfaces();
-  let arr = [];
-  Object.keys(obj).forEach((item) => {
-    let value = obj[item];
-    if (Object.prototype.toString.call(value).slice(8, -1) === 'Array') {
-      arr = [...arr, ...value.filter((item) => item.family === 'IPv4').map((item) => item.address)];
-    }
-  });
-  return arr;
+// 监听端口：默认优先 ::（IPv4 / IPv6 双栈），系统不支持 IPv6 时回退到 0.0.0.0
+function listen(port, host, callback) {
+  const fallback = '0.0.0.0';
+  const hosts = host === '::' || host === '[::]' ? ['::', fallback] : [host];
+
+  const tryListen = (index) => {
+    const current = hosts[index];
+    const server = app.listen(port, current, () => callback(current));
+
+    server.on('error', (err) => {
+      const retryCodes = ['EAFNOSUPPORT', 'EADDRNOTAVAIL', 'EINVAL', 'EPROTONOSUPPORT'];
+
+      if (index + 1 < hosts.length && retryCodes.includes(err.code)) {
+        tryListen(index + 1);
+        return;
+      }
+
+      // eslint-disable-next-line no-console
+      console.error(err);
+      process.exit(1);
+    });
+  };
+
+  tryListen(0);
+}
+
+// 生成所有可访问地址（监听所有网卡时包含本机 + 全部 IPv4 / IPv6 局域网地址）
+function getAccessUrls(port, host) {
+  const suffix = port === 80 ? '' : `:${port}`;
+  const urls = [];
+  const add = (h) => {
+    const hostname = h.includes(':') ? `[${h}]` : h;
+    const url = `http://${hostname}${suffix}`;
+    if (!urls.includes(url)) urls.push(url);
+  };
+
+  if (!host || host === '0.0.0.0' || host === '::' || host === '[::]') {
+    add('localhost');
+
+    // 只有真正监听了 :: 才展示 IPv6；回退到 0.0.0.0 时 IPv6 不可访问
+    const supportIPv6 = !host || host === '::' || host === '[::]';
+    const ipv4 = [];
+    const ipv6 = [];
+
+    Object.values(os.networkInterfaces()).forEach((nets) => {
+      (nets || []).forEach((net) => {
+        if (net.internal) return;
+
+        // Node 18.4+ 的 family 是字符串，旧版本是数字 4 / 6
+        const isIPv4 = net.family === 'IPv4' || net.family === 4;
+        const isIPv6 = net.family === 'IPv6' || net.family === 6;
+
+        if (isIPv4) {
+          ipv4.push(net.address);
+        } else if (supportIPv6 && isIPv6 && !/^fe[89ab][0-9a-f]:/i.test(net.address)) {
+          // 过滤 fe80::/10 链路本地地址：浏览器访问需要带 %网卡名，不适合直接展示
+          ipv6.push(net.address);
+        }
+      });
+    });
+
+    [...ipv4, ...ipv6].forEach(add);
+  } else {
+    add(host.replace(/^\[|\]$/g, ''));
+  }
+
+  return urls;
 }
 
 // 格式化客户端信息

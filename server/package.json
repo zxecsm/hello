@@ -2,9 +2,11 @@
   "name": "hello",
   "version": "1.0.0",
   "main": "src/app.js",
+  "bin": "src/app.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon src/app.js",
-    "start": "node src/app.js"
+    "start": "node src/app.js",
+    "pkg": "pkg . --sea --target host --out-path ../dist"
   },
   "keywords": [],
   "author": "ecan",
@@ -33,7 +35,17 @@
     "unzipper": "^0.12.5"
   },
   "description": "This is a favorite",
+  "pkg": {
+    "assets": [
+      "public/**/*",
+      "src/config/default.json",
+      "src/config/defaults/**/*",
+      "node_modules/better-sqlite3/prebuilds/*.node",
+      "node_modules/@img/**/*"
+    ]
+  },
   "devDependencies": {
+    "@yao-pkg/pkg": "^6.25.0",
     "cross-env": "^10.1.0",
     "nodemon": "^3.1.14"
   },

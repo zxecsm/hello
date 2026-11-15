@@ -4,11 +4,13 @@
   "description": "This is a favorite",
   "main": "index.js",
   "scripts": {
+    "setup": "npm install && npm --prefix server install && npm --prefix web install",
     "server": "cd ./server && npm run dev",
     "web": "cd ./web && npm run dev",
     "build": "cd ./web && npm run build",
     "format": "prettier expand monkey server web --write",
-    "icon": "cd ./server && node scripts/gicon.js"
+    "icon": "cd ./server && node scripts/gicon.js",
+    "exe": "npm run build && cd ./server && npm run pkg"
   },
   "keywords": [],
   "author": "ecan",
