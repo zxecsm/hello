@@ -45,7 +45,7 @@ class SlideCaptcha {
     const sliderWrap = el('div', 'captcha-slider-wrap');
     const sliderMask = el('div', 'captcha-slider-mask');
     const slider = el('div', 'captcha-slider iconfont icon-shuangxianyoujiantou');
-    slider.setAttribute('cursor', 'y');
+    slider.setAttribute('data-cursor', 'move');
     const text = el('span', 'captcha-text');
     text.innerText = '右滑补全拼图';
 

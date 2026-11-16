@@ -223,15 +223,15 @@ async function renderUserList(pageNo, total, totalPage, top) {
   if (chatRoomWrapIsHide() || $userListWrap.is(':hidden')) return;
   const html = _tpl(
     `
-    <button v-if="hasNoRead" cursor="y" class="clear_msg btn btn_primary">标记为已读</button>
+    <button v-if="hasNoRead" data-cursor="pointer" class="clear_msg btn btn_primary">标记为已读</button>
     <ul v-for="{username, account, online, des = '', read, msg, draft = ''} in userList" :data-account="account" class="user_item">
       <i :x="read === 1 ? 'y' : 'n'" class="msg_alert"></i>
-      <li cursor="y" class="user_logo" style="{{online === 1 ? '' : 'filter: grayscale(1);'}}"></li>
-      <li cursor="y" class="user_name">
+      <li data-cursor="pointer" class="user_logo" style="{{online === 1 ? '' : 'filter: grayscale(1);'}}"></li>
+      <li data-cursor="pointer" class="user_name">
         <span class="name">{{des || username}}</span>
         <span v-if="hdMsg(msg,draft)" class="msg">{{hdMsg(msg,draft)}}</span>
       </li>
-      <li v-if="account !== notifyAccount" :cursor="online === 1 ? 'y' : ''" :style=getStyle(account,online) class="online iconfont icon-tuichudenglu1"></li>
+      <li v-if="account !== notifyAccount" :data-cursor="online === 1 ? 'pointer' : ''" :style=getStyle(account,online) class="online iconfont icon-tuichudenglu1"></li>
     </ul>
     <div v-if="totalPage > 1" v-html="getPaging()"></div>
       `,
@@ -602,18 +602,18 @@ function renderMsgList(list) {
           <div v-if="showTime === 'y'" class="chat_time">{{getDate(create_at)[0]}}</div>
         </div>
         <div class="msg_info_wrap">
-          <li v-if="isRight(_from)" cursor="y" class="chat_menu_btn iconfont icon-maohao"></li>
-          <li v-if="!isRight(_from) && _to === chatRoomAccount" cursor="y" class="c_left_logo">
+          <li v-if="isRight(_from)" data-cursor="pointer" class="chat_menu_btn iconfont icon-maohao"></li>
+          <li v-if="!isRight(_from) && _to === chatRoomAccount" data-cursor="pointer" class="c_left_logo">
             <div class="c_logo" style="float: left;"></div>
           </li>
           <li class="c_content_box">
             <span :title="getDate(create_at)[0]" class="c_user_name">
               {{getUsername(username,des,_to,_from)}} <span>{{getDate(create_at)[1]}}</span>
             </span>
-            <div v-if="type === 'image'" cursor="y" class="c_img_msg_box">
+            <div v-if="type === 'image'" data-cursor="pointer" class="c_img_msg_box">
               <div class="c_img"><span>{{formatBytes(size)}}</span></div>
             </div>
-            <div v-else-if="type === 'voice'" cursor="y" 
+            <div v-else-if="type === 'voice'" data-cursor="pointer" 
               class="c_voice_msg_box" 
               style="width: {{(size / 30) * 100}}%;">
               <span class="c_triangle"></span>
@@ -627,7 +627,7 @@ function renderMsgList(list) {
               </template>
             </div>
             <div v-else-if="type === 'file'" :title="content" class="c_file_msg_box">
-              <div cursor="y" class="c_file_info">
+              <div data-cursor="pointer" class="c_file_info">
                 <span class="file_name">{{content}}</span>
                 <span class="file_size">{{formatBytes(size)}}</span>
               </div>
@@ -639,7 +639,7 @@ function renderMsgList(list) {
               <span class="c_triangle"></span>
             </p>
           </li>
-          <li v-if="!isRight(_from)" cursor="y" class="chat_menu_btn iconfont icon-maohao"></li>
+          <li v-if="!isRight(_from)" data-cursor="pointer" class="chat_menu_btn iconfont icon-maohao"></li>
         </div>
       </ul>
     </template>

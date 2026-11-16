@@ -123,6 +123,7 @@ html.dark .view_md {
   a {
     color: var(--md-link);
     text-decoration: none;
+    cursor: var(--cursor-pointer);
   }
 
   // hover 样式沿用全局的波浪下划线
@@ -375,7 +376,7 @@ html.dark .view_md {
   // 缩写
   abbr[title] {
     text-decoration: underline dotted;
-    cursor: help;
+    cursor: var(--cursor-help);
   }
 
   // 脚注
@@ -461,7 +462,7 @@ html.dark .view_md {
 
   .custom-block.details > summary {
     font-weight: 600;
-    cursor: pointer;
+    cursor: var(--cursor-pointer);
   }
 
   .custom-block.details[open] > summary {
@@ -474,7 +475,7 @@ html.dark .view_md {
   }
 
   summary {
-    cursor: pointer;
+    cursor: var(--cursor-pointer);
   }
 
   // 去掉首尾多余间距（兼容预览区多包一层 .content 的情况）

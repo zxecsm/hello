@@ -215,7 +215,7 @@ function renderStat() {
     `
     <template v-if="arr.length > 0">
       <p v-for="{ip, total} in list">
-        <span cursor="y" class='ip'>{{ip}}</span><span>：{{total}}</span>
+        <span data-cursor="pointer" class='ip'>{{ip}}</span><span>：{{total}}</span>
       </p>
       <div v-html="getPaging()"></div>
     </template>

@@ -30,7 +30,7 @@ export function renderCategoryList(updateBmkList = false) {
           <div v-for="{id,title} in list" class="item" :data-id="id">
             <i class="logo iconfont icon-liebiao1"></i>
             <span class="title">{{title}}</span>
-            <i cursor="y" class="set_btn iconfont icon-maohao"></i>
+            <i data-cursor="pointer" class="set_btn iconfont icon-maohao"></i>
           </div>
           `,
           {

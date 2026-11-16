@@ -285,8 +285,8 @@ async function renderList(top) {
     `
     <template v-if="total > 0">
       <ul v-for="{type,fileType,name,size,time,id,mode,uid,gid,linkTarget,linkTargetTypeName} in paging.list" class="file_item" :data-id="id">
-        <li cursor="y" class="logo {{logoColor(type, fileType)}} iconfont {{getLogo(name,type,size) || 'is_img'}}"></li>
-        <li cursor="y" class="name">
+        <li data-cursor="pointer" class="logo {{logoColor(type, fileType)}} iconfont {{getLogo(name,type,size) || 'is_img'}}"></li>
+        <li data-cursor="pointer" class="name">
           <span class="text">{{getText(name,type).a}}
             <span class="suffix">{{getText(name,type).b}}</span>
             <span v-if="type === 'file' && fileType === 'symlink'" class="link_target">=> {{linkTarget}}({{linkTargetTypeName}})</span>

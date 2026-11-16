@@ -304,21 +304,21 @@ export function renderList(y) {
           <template v-else>
             <template v-for="{title,share,id,con,top,categoryArr,images} in data">
               <ul class="item_box" :data-id="id">
-                <div cursor="y" check="n" class="check_state"></div>
+                <div data-cursor="pointer" check="n" class="check_state"></div>
                 <li class="item_type iconfont icon-jilu"></li>
-                <li v-html="hdTitleHighlight(splitWord,title)" cursor="y" class="item_title"></li>
+                <li v-html="hdTitleHighlight(splitWord,title)" data-cursor="pointer" class="item_title"></li>
                 <li v-if="top != 0 && !word && category.length === 0" class="top_btn iconfont icon-zhiding"></li>
-                <li v-if="runState === 'own'" cursor="y" class="lock_state iconfont {{share === 0? 'icon-gl-unlock2 open': 'icon-gl-unlock4'}}"></li>
-                <li v-if="runState === 'own'" cursor="y" class="set_btn iconfont icon-maohao"></li>
+                <li v-if="runState === 'own'" data-cursor="pointer" class="lock_state iconfont {{share === 0? 'icon-gl-unlock2 open': 'icon-gl-unlock4'}}"></li>
+                <li v-if="runState === 'own'" data-cursor="pointer" class="set_btn iconfont icon-maohao"></li>
               </ul>
               <div v-if="categoryArr.length > 0 || (con && con.length > 0)" class="item_info">
                 <template v-if="categoryArr.length > 0">
-                  <span cursor="y" v-for="cgs in categoryArr" :data-id="cgs.id" class="category">
+                  <span data-cursor="pointer" v-for="cgs in categoryArr" :data-id="cgs.id" class="category">
                     <span style="color:var(--icon-color);margin-right:0.4rem;">#</span>{{cgs.title}}
                   </span>
                   <br/>
                 </template>
-                <img class="default_size" v-for="img in images" :src="loadingSvg" cursor="y" :data-src="img.src" :alt="img.alt" :title="img.alt" />
+                <img class="default_size" v-for="img in images" :src="loadingSvg" data-cursor="pointer" :data-src="img.src" :alt="img.alt" :title="img.alt" />
                 <span v-if="con && con.length > 0" v-html="hdHighlight(con)"></span>
               </div>
             </template>

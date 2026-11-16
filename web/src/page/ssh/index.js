@@ -417,11 +417,11 @@ function getCommandInfo(gid, id) {
 function renderQuickGroup() {
   const html = _tpl(
     `
-    <div cursor="y" v-for="{id,title} in curQuickGroupList" :data-id=id class="quick_item {{curQuickGroupId === id ? 'active' : ''}}">
+    <div data-cursor="pointer" v-for="{id,title} in curQuickGroupList" :data-id=id class="quick_item {{curQuickGroupId === id ? 'active' : ''}}">
       <span class="title">{{title}}</span>
       <span class="set iconfont icon-maohao"></span>
     </div>
-    <div class="add iconfont icon-tianjia" cursor="y"></div>
+    <div class="add iconfont icon-tianjia" data-cursor="pointer"></div>
     `,
     {
       curQuickGroupList,
@@ -433,12 +433,12 @@ function renderQuickGroup() {
 function renderCommand() {
   const html = _tpl(
     `
-    <div cursor="y" v-for="{id,title} in list" :data-id=id class="command_item">
+    <div data-cursor="pointer" v-for="{id,title} in list" :data-id=id class="command_item">
       <span class="icon iconfont icon-terminal"></span>
       <span class="title">{{title}}</span>
       <span class="close iconfont icon-shibai"></span>
     </div>
-    <div class="add iconfont icon-tianjia" cursor="y"></div>
+    <div class="add iconfont icon-tianjia" data-cursor="pointer"></div>
     `,
     {
       list: getCurQuickGroup(curQuickGroupId)?.commands || [],

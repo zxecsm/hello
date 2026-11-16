@@ -20,6 +20,12 @@
   --border-radius2: 2rem;
   --border-radius2-5: 2.5rem;
   --border-radius3: 3rem;
+  /* 没有配套 .cur 图片的指针样式，使用系统原生指针 */
+  --cursor-grab: grab;
+  --cursor-grabbing: grabbing;
+  --cursor-zoom-in: zoom-in;
+  --cursor-zoom-out: zoom-out;
+  --cursor-none: none;
 }
 
 html {
@@ -67,6 +73,16 @@ html {
   --cursor-nesw-resize: url('../../cursors/blue/nesw-resize.cur'), nesw-resize;
   --cursor-ns-resize: url('../../cursors/blue/ns-resize.cur'), ns-resize;
   --cursor-nwse-resize: url('../../cursors/blue/nwse-resize.cur'), nwse-resize;
+  --cursor-text: url('../../cursors/blue/text.cur'), text;
+  --cursor-move: url('../../cursors/blue/move.cur'), move;
+  --cursor-not-allowed: url('../../cursors/blue/not-allowed.cur'), not-allowed;
+  --cursor-crosshair: url('../../cursors/blue/crosshair.cur'), crosshair;
+  --cursor-help: url('../../cursors/blue/help.cur'), help;
+  --cursor-wait: url('../../cursors/blue/wait.cur'), wait;
+  --cursor-progress: url('../../cursors/blue/progress.cur'), progress;
+  /* 系统没有对应关键字，回退到普通箭头 */
+  --cursor-pen: url('../../cursors/blue/pen.cur'), default;
+  --cursor-up-arrow: url('../../cursors/blue/up-arrow.cur'), default;
   --message-success-color: #146c43;
   --message-success-bg: #d1e7dd;
   --message-success-border: #a3cfbb;
@@ -126,6 +142,16 @@ html.dark {
   --cursor-nesw-resize: url('../../cursors/orange/nesw-resize.cur'), nesw-resize;
   --cursor-ns-resize: url('../../cursors/orange/ns-resize.cur'), ns-resize;
   --cursor-nwse-resize: url('../../cursors/orange/nwse-resize.cur'), nwse-resize;
+  --cursor-text: url('../../cursors/orange/text.cur'), text;
+  --cursor-move: url('../../cursors/orange/move.cur'), move;
+  --cursor-not-allowed: url('../../cursors/orange/not-allowed.cur'), not-allowed;
+  --cursor-crosshair: url('../../cursors/orange/crosshair.cur'), crosshair;
+  --cursor-help: url('../../cursors/orange/help.cur'), help;
+  --cursor-wait: url('../../cursors/orange/wait.cur'), wait;
+  --cursor-progress: url('../../cursors/orange/progress.cur'), progress;
+  /* 系统没有对应关键字，回退到普通箭头 */
+  --cursor-pen: url('../../cursors/orange/pen.cur'), default;
+  --cursor-up-arrow: url('../../cursors/orange/up-arrow.cur'), default;
   --message-success-color: #75b798;
   --message-success-bg: #051b11;
   --message-success-border: #0f5132;
@@ -193,20 +219,83 @@ body .iconfont {
   font-size: 1.6rem;
   text-shadow: 0 0 var(--color5);
 }
-[cursor]:hover {
+/* 通过 data-cursor 属性指定鼠标指针样式；未设置（或值为空）时使用 body 的默认指针 */
+[data-cursor='default']:hover {
+  cursor: var(--cursor-default);
+}
+[data-cursor='pointer']:hover {
   cursor: var(--cursor-pointer);
 }
-.ew-resize {
+[data-cursor='text']:hover {
+  cursor: var(--cursor-text);
+}
+[data-cursor='grab']:hover {
+  cursor: var(--cursor-grab);
+}
+[data-cursor='grab']:active {
+  cursor: var(--cursor-grabbing);
+}
+[data-cursor='grabbing']:hover {
+  cursor: var(--cursor-grabbing);
+}
+[data-cursor='zoom']:hover,
+[data-cursor='zoom-in']:hover {
+  cursor: var(--cursor-zoom-in);
+}
+[data-cursor='zoom-out']:hover {
+  cursor: var(--cursor-zoom-out);
+}
+[data-cursor='move']:hover {
+  cursor: var(--cursor-move);
+}
+[data-cursor='not-allowed']:hover {
+  cursor: var(--cursor-not-allowed);
+}
+[data-cursor='help']:hover {
+  cursor: var(--cursor-help);
+}
+[data-cursor='wait']:hover {
+  cursor: var(--cursor-wait);
+}
+[data-cursor='progress']:hover {
+  cursor: var(--cursor-progress);
+}
+[data-cursor='crosshair']:hover {
+  cursor: var(--cursor-crosshair);
+}
+[data-cursor='pen']:hover {
+  cursor: var(--cursor-pen);
+}
+[data-cursor='up-arrow']:hover {
+  cursor: var(--cursor-up-arrow);
+}
+[data-cursor='none']:hover {
+  cursor: var(--cursor-none);
+}
+[data-cursor='ew-resize']:hover {
   cursor: var(--cursor-ew-resize);
 }
-.nesw-resize {
+[data-cursor='nesw-resize']:hover {
   cursor: var(--cursor-nesw-resize);
 }
-.ns-resize {
+[data-cursor='ns-resize']:hover {
   cursor: var(--cursor-ns-resize);
 }
-.nwse-resize {
+[data-cursor='nwse-resize']:hover {
   cursor: var(--cursor-nwse-resize);
+}
+/* 文本输入区域默认使用主题 I 型指针 */
+input[type='text'],
+input[type='search'],
+input[type='url'],
+input[type='email'],
+input[type='password'],
+input[type='number'],
+input[type='tel'],
+input:not([type]),
+textarea,
+[contenteditable='true'] {
+  cursor: var(--cursor-text);
 }
 input,
 select,

@@ -184,22 +184,22 @@ function renderTodoList(total, toTop) {
   const html = _tpl(
     `
     <div style="padding-bottom: 1rem;">
-      <button cursor="y" class="add_btn btn btn_primary">添加</button>
+      <button data-cursor="pointer" class="add_btn btn btn_primary">添加</button>
       <template v-if="todoList.length > 0">
-        <button cursor="y" class="clear_all_btn btn btn_primary">多选</button>
-        <button cursor="y" class="clear_btn btn btn_danger">清空</button>
+        <button data-cursor="pointer" class="clear_all_btn btn btn_primary">多选</button>
+        <button data-cursor="pointer" class="clear_btn btn btn_danger">清空</button>
       </template>
     </div>
     <p v-if="total === 0" style="padding: 2rem 0;pointer-events: none;text-align: center;">暂无待办事项</p>
     <template v-else>
       <ul v-for="{id, content, state, update_at} in todoList" :data-id="id">
-        <div cursor="y" check="n" class="check_level"></div>
-        <li cursor="y" class="todo_state iconfont {{state === 1 ? 'icon-xuanzeweixuanze' : 'icon-xuanzeyixuanze'}}"></li>
+        <div data-cursor="pointer" check="n" class="check_level"></div>
+        <li data-cursor="pointer" class="todo_state iconfont {{state === 1 ? 'icon-xuanzeweixuanze' : 'icon-xuanzeyixuanze'}}"></li>
         <li class="todo_text">
           <div v-html="hdTextMsg(content)" class="text {{state === 1 ? '' : 'del'}}"></div>
           <div class="time">更新：{{formatDate({template: '{0}-{1}-{2} {3}:{4}',timestamp: update_at})}}</div>
         </li>
-        <li cursor="y" class="set_btn iconfont icon-maohao"></li>
+        <li data-cursor="pointer" class="set_btn iconfont icon-maohao"></li>
       </ul>
       <div v-html="getPaging()" class="todo_paging_box"></div> 
     </template>

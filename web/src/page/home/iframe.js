@@ -98,13 +98,13 @@ class CreateIframe {
       `
       <div class="content_wrap">
         <div class="i_head_btns window_head">
-          <div cursor="y" class="i_close_btn iconfont icon-close-bold"></div>
-          <div cursor="y" class="i_to_max_btn iconfont icon-xuanzeweixuanze"></div>
-          <div cursor="y" class="i_hide_btn iconfont icon-minus-bold"></div>
-          <div cursor="y" class="i_top iconfont icon-zhiding"></div>
+          <div data-cursor="pointer" class="i_close_btn iconfont icon-close-bold"></div>
+          <div data-cursor="pointer" class="i_to_max_btn iconfont icon-xuanzeweixuanze"></div>
+          <div data-cursor="pointer" class="i_hide_btn iconfont icon-minus-bold"></div>
+          <div data-cursor="pointer" class="i_top iconfont icon-zhiding"></div>
           <div class="i_title_text"><p class="scroll_text"></p></div>
-          <div cursor="y" title="刷新" class="i_refresh_btn iconfont icon-suijibofang"></div>
-          <div cursor="y" title="新标签打开" class="i_new_page_open_btn iconfont icon-link1"></div>
+          <div data-cursor="pointer" title="刷新" class="i_refresh_btn iconfont icon-suijibofang"></div>
+          <div data-cursor="pointer" title="新标签打开" class="i_new_page_open_btn iconfont icon-link1"></div>
         </div>
         <div class="con">
         <div class="iframe_mask"></div>
@@ -315,8 +315,8 @@ function openInIframe(url, name, logo = '') {
 function addHideBox(iframeBox) {
   const box = document.createElement('div');
   box.className = 'iframe_tag';
-  box.setAttribute('cursor', '');
-  box.setAttribute('iframeId', iframeBox.id);
+  box.setAttribute('data-cursor', 'pointer');
+  box.setAttribute('data-iframeid', iframeBox.id);
 
   const close = document.createElement('span');
   close.className = 'close_btn iconfont icon-shibai';
@@ -346,7 +346,7 @@ function addHideBox(iframeBox) {
 // 切换显示/隐藏
 function switchIframeBox() {
   const _this = this.parentNode;
-  const ifram = openInIframe.iframes.get(_this.getAttribute('iframeId'));
+  const ifram = openInIframe.iframes.get(_this.getAttribute('data-iframeid'));
   const iframeBox = ifram.box;
   const obj = popWindow.getList().slice(-1)[0];
   if (iframeBox.style.visibility === 'hidden' || (obj && obj.id != ifram.id)) {
@@ -378,7 +378,7 @@ $minimizeBox
   })
   .on('click', '.close_btn', function () {
     const _this = this.parentNode;
-    const ifram = openInIframe.iframes.get(_this.getAttribute('iframeId'));
+    const ifram = openInIframe.iframes.get(_this.getAttribute('data-iframeid'));
     ifram.close();
   })
   .on('contextmenu', '.iframe_tag', function (e) {
@@ -389,7 +389,7 @@ $minimizeBox
   })
   .on('mouseenter', '.title', function () {
     const _this = this.parentNode;
-    const ifram = openInIframe.iframes.get(_this.getAttribute('iframeId'));
+    const ifram = openInIframe.iframes.get(_this.getAttribute('data-iframeid'));
     toolTip.setTip(`${ifram.name} - ${ifram.url}`).show();
   })
   .on('mouseleave', '.title', function () {
@@ -402,7 +402,7 @@ longPress($minimizeBox[0], '.iframe_tag', function (e) {
 });
 // 标签菜单
 function handleHideBox(e, _this) {
-  const ifram = openInIframe.iframes.get(_this.getAttribute('iframeId'));
+  const ifram = openInIframe.iframes.get(_this.getAttribute('data-iframeid'));
   const url = ifram.getUrl();
   const data = [
     {

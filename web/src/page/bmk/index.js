@@ -301,18 +301,18 @@ export function renderList(y) {
           <template v-else>
             <template v-for="{id,link,title,des,group_title,group_id} in data">
               <ul class="item_box" :data-id="id">
-                <div cursor="y" check="n" class="check_state"></div>
+                <div data-cursor="pointer" check="n" class="check_state"></div>
                 <li class="item_type iconfont icon-shuqian"></li>
-                <li v-html="hdTitleHighlight(splitWord, title)" cursor="y" class="item_title"></li>
-                <li cursor="y" class="set_btn iconfont icon-maohao"></li>
+                <li v-html="hdTitleHighlight(splitWord, title)" data-cursor="pointer" class="item_title"></li>
+                <li data-cursor="pointer" class="set_btn iconfont icon-maohao"></li>
               </ul>
               <div class="item_info">
-                <span cursor="y" :data-id="group_id" class="category">
+                <span data-cursor="pointer" :data-id="group_id" class="category">
                   <span style="color:var(--icon-color);margin-right:0.4rem;">#</span>{{group_title}}
                 </span>
                 <br/>
                 <div class="logo"></div>
-                <a cursor="y" v-html="hdTitleHighlight(splitWord, link)" href="{{link}}" target="_blank"></a>
+                <a data-cursor="pointer" v-html="hdTitleHighlight(splitWord, link)" href="{{link}}" target="_blank"></a>
                 <br/>
                 <span v-html="hdTitleHighlight(splitWord, des)"></span>
               </div>

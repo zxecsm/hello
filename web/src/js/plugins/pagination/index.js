@@ -118,12 +118,12 @@ class Pagination {
       return _tpl(
         `
         <div class="paginationBox no_select">
-        <button data-type="paging" cursor="y" data-flag="prev" class="iconfont icon-zuo"></button>
-        <button data-type="paging" cursor="y" data-flag="getvalue">{{pageNo}} / {{totalPage}}</button>
-        <button data-type="paging" cursor="y" data-flag="next" class="iconfont icon-you"></button>
-        <button v-if="select.length > 0" data-type="paging" cursor="y" data-flag="select">{{pageSize}}/页</button>
+        <button data-type="paging" data-cursor="pointer" data-flag="prev" class="iconfont icon-zuo"></button>
+        <button data-type="paging" data-cursor="pointer" data-flag="getvalue">{{pageNo}} / {{totalPage}}</button>
+        <button data-type="paging" data-cursor="pointer" data-flag="next" class="iconfont icon-you"></button>
+        <button v-if="select.length > 0" data-type="paging" data-cursor="pointer" data-flag="select">{{pageSize}}/页</button>
         <span v-if="showTotal">共 {{total}} 条</span>
-        <button v-if="toTop" data-type="paging" cursor="y" data-flag="top" class="iconfont icon-shang"></button>
+        <button v-if="toTop" data-type="paging" data-cursor="pointer" data-flag="top" class="iconfont icon-shang"></button>
         </div>
         `,
         {
@@ -150,24 +150,24 @@ class Pagination {
     return _tpl(
       `
       <div class="paginationBox no_select">
-        <button v-if="pageNo>1" data-type="paging" cursor="y" data-flag="prev" class="iconfont icon-zuo"></button>
+        <button v-if="pageNo>1" data-type="paging" data-cursor="pointer" data-flag="prev" class="iconfont icon-zuo"></button>
         <template v-if="totalPage > continuous">
-          <button v-if="startPage>1" data-type="paging" cursor="y" data-flag="1">1</button>
-          <button v-if="startPage==3" data-type="paging" cursor="y" data-flag="2">2</button>
-          <button v-if="startPage>3" data-type="paging" cursor="y" :data-flag="startPage - 1">...</button>
+          <button v-if="startPage>1" data-type="paging" data-cursor="pointer" data-flag="1">1</button>
+          <button v-if="startPage==3" data-type="paging" data-cursor="pointer" data-flag="2">2</button>
+          <button v-if="startPage>3" data-type="paging" data-cursor="pointer" :data-flag="startPage - 1">...</button>
         </template>
-        <button v-for="flag in continuousArr" data-type="paging" cursor="y" :data-flag="flag" :class="pageNo === flag ? 'active' : ''">{{flag}}</button>
+        <button v-for="flag in continuousArr" data-type="paging" data-cursor="pointer" :data-flag="flag" :class="pageNo === flag ? 'active' : ''">{{flag}}</button>
         <template v-if="totalPage > continuous">
-          <button v-if="endPage < totalPage - 2" data-type="paging" cursor="y" :data-flag="endPage + 1">...</button>
-          <button v-if="endPage === totalPage - 2" data-type="paging" cursor="y" :data-flag="totalPage - 1">{{totalPage - 1}}</button>
-          <button v-if="endPage < totalPage" data-type="paging" cursor="y" :data-flag="totalPage">{{totalPage}}</button>
+          <button v-if="endPage < totalPage - 2" data-type="paging" data-cursor="pointer" :data-flag="endPage + 1">...</button>
+          <button v-if="endPage === totalPage - 2" data-type="paging" data-cursor="pointer" :data-flag="totalPage - 1">{{totalPage - 1}}</button>
+          <button v-if="endPage < totalPage" data-type="paging" data-cursor="pointer" :data-flag="totalPage">{{totalPage}}</button>
         </template>
-        <button v-if="pageNo < totalPage" data-type="paging" cursor="y" data-flag="next" class="iconfont icon-you"></button>
-        <button v-if="select.length > 0" data-type="paging" cursor="y" data-flag="select">{{pageSize}}/页</button>
+        <button v-if="pageNo < totalPage" data-type="paging" data-cursor="pointer" data-flag="next" class="iconfont icon-you"></button>
+        <button v-if="select.length > 0" data-type="paging" data-cursor="pointer" data-flag="select">{{pageSize}}/页</button>
         <span v-if="showTotal">共 {{total}} 条,</span>
         <input name="pageNo" autocomplete="off" :value="pageNo" type="number"/>
-        <button data-type="paging" cursor="y" data-flag="go" class="iconfont icon-huaban"></button>
-        <button v-if="toTop" data-type="paging" cursor="y" data-flag="top" class="iconfont icon-shang"></button>
+        <button data-type="paging" data-cursor="pointer" data-flag="go" class="iconfont icon-huaban"></button>
+        <button v-if="toTop" data-type="paging" data-cursor="pointer" data-flag="top" class="iconfont icon-shang"></button>
       </div>
       `,
       { ...this.opt, startPage, continuousArr, endPage },

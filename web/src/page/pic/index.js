@@ -271,8 +271,8 @@ function renderImgList(y) {
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
             <div v-for="{id} in data" class="img_item" :data-id="id">
-              <div cursor="y" check="n" class="check_level"></div>
-              <i cursor="y" class="menu_btn iconfont icon-maohao"></i>
+              <div data-cursor="pointer" check="n" class="check_level"></div>
+              <i data-cursor="pointer" class="menu_btn iconfont icon-maohao"></i>
               <div class="img"></div>
             </div>
             <div v-html="getPaging()" class="pagingbox"></div>
@@ -556,7 +556,7 @@ const showLink = (function () {
     if (data.length === 0) return;
     const htmlH = _tpl(
       `
-      <span v-for="{type},idx in typeTemplateArr" :data-idx="idx" cursor="y" :class="idx === 0 ? 'active' : ''">{{type}}</span>
+      <span v-for="{type},idx in typeTemplateArr" :data-idx="idx" data-cursor="pointer" :class="idx === 0 ? 'active' : ''">{{type}}</span>
       `,
       {
         typeTemplateArr,
@@ -565,7 +565,7 @@ const showLink = (function () {
     const htmlC = _tpl(
       `
       <ul v-for="{type,template},idx in typeTemplateArr" :class="idx === 0 ? 'active' : ''">
-        <li v-for="obj in data" :data-text="getText(template,obj)">{{getText(template,obj)}}<i cursor="y" class="iconfont icon-fuzhi"></i></li>
+        <li v-for="obj in data" :data-text="getText(template,obj)">{{getText(template,obj)}}<i data-cursor="pointer" class="iconfont icon-fuzhi"></i></li>
       </ul>
       `,
       {

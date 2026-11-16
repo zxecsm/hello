@@ -198,9 +198,9 @@ const toolBox = (() => {
   toolBox.innerHTML = `
   <div class="head"></div>
   <div class="btns">
-    <div cursor="y" class="zoom_in iconfont icon-fangdasuoxiao_X"></div>
-    <div cursor="y" class="dark iconfont icon-xianshiqi"></div>
-    <div cursor="y" class="zoom_out iconfont icon-fangdasuoxiao_Y"></div>
+    <div data-cursor="pointer" class="zoom_in iconfont icon-fangdasuoxiao_X"></div>
+    <div data-cursor="pointer" class="dark iconfont icon-xianshiqi"></div>
+    <div data-cursor="pointer" class="zoom_out iconfont icon-fangdasuoxiao_Y"></div>
   </div>
   `;
   document.body.appendChild(toolBox);

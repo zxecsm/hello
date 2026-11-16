@@ -540,7 +540,7 @@ export function moveSongToList(e, pid, ar) {
   }
   const html = _tpl(
     `
-    <div v-for="v in list" cursor="y" class="item" :data-id="v.id">
+    <div v-for="v in list" data-cursor="pointer" class="item" :data-id="v.id">
       <img :style="imgStyle" :src="loadSvg" :data-src="v.pic"/>
       <span style="margin-left:1rem;">{{v.name}}</span>
     </div>
@@ -849,13 +849,13 @@ function renderSongList() {
   let arr = musicList;
   const html = _tpl(
     `
-    <li v-for="item in arr" class="song_list_item" :data-id="item.id" cursor="y">
+    <li v-for="item in arr" class="song_list_item" :data-id="item.id" data-cursor="pointer">
       <div class="list_logo">
         <div class="logo" :data-src="getPic(item.pic)"></div>
       </div>
       <span>{{item.name}}</sapn>
     </li>
-    <li cursor="y" class="add_song_list"><img :src="imgTianjia"/></li>
+    <li data-cursor="pointer" class="add_song_list"><img :src="imgTianjia"/></li>
     `,
     {
       arr,
@@ -1031,20 +1031,20 @@ async function renderSongs(gao) {
     </div>
     <div class="items_list_top_menu_fill"></div>
     <div class="items_list_top_menu">
-      <div v-if="listId !== 'all'" cursor="y" class="play_list_btn iconfont icon-zzanting"></div>
+      <div v-if="listId !== 'all'" data-cursor="pointer" class="play_list_btn iconfont icon-zzanting"></div>
       <div class="list_total_num">{{listId === 'all' ? '一共' : '播放全部'}}
         <span>({{songListInfo.len}})</span>
       </div>
-      <div v-if="ind > 0" cursor="y" class="show_mv_list_btn"><i class="iconfont icon-shipin2"></i></div>
-      <div v-if="listId === 'all'" cursor="y" class="random_song_list_btn"><i class="iconfont icon-suiji"></i></div>
-      <div v-if="ind > 2 || isRoot()" cursor="y" class="edit_song_list_btn"><i class="iconfont icon-bianji"></i></div>
-      <div v-if="ind === 2" cursor="y" class="upload_song_btn"><i class="iconfont icon-upload"></i></div>
-      <div v-else cursor="y" class="share_song_list_btn"><i class="iconfont icon-fenxiang_2"></i></div>
-      <div cursor="y" class="checked_song_btn"><i class="iconfont icon-duoxuan"></i></div>
-      <div v-if="ind > 0" cursor="y" class="sort_songs"><i class="iconfont icon-paixu"></i></div>
+      <div v-if="ind > 0" data-cursor="pointer" class="show_mv_list_btn"><i class="iconfont icon-shipin2"></i></div>
+      <div v-if="listId === 'all'" data-cursor="pointer" class="random_song_list_btn"><i class="iconfont icon-suiji"></i></div>
+      <div v-if="ind > 2 || isRoot()" data-cursor="pointer" class="edit_song_list_btn"><i class="iconfont icon-bianji"></i></div>
+      <div v-if="ind === 2" data-cursor="pointer" class="upload_song_btn"><i class="iconfont icon-upload"></i></div>
+      <div v-else data-cursor="pointer" class="share_song_list_btn"><i class="iconfont icon-fenxiang_2"></i></div>
+      <div data-cursor="pointer" class="checked_song_btn"><i class="iconfont icon-duoxuan"></i></div>
+      <div v-if="ind > 0" data-cursor="pointer" class="sort_songs"><i class="iconfont icon-paixu"></i></div>
     </div>
-    <div v-for="{title,artist,mv,id,isLoaded} in slist" class="song_item" :data-id="id" :data-issc="issc(id)" cursor="y">
-      <div cursor="y" check="n" class="check_state"></div>
+    <div v-for="{title,artist,mv,id,isLoaded} in slist" class="song_item" :data-id="id" :data-issc="issc(id)" data-cursor="pointer">
+      <div data-cursor="pointer" check="n" class="check_state"></div>
       <div v-if="isLoaded" class="downloaded iconfont icon-jiaobiao"></div>
       <div class="song_logo_box">
         <div class="logo" :data-src="getFilePath('/music/pic/'+id, { w: 256 })"></div>
@@ -1064,17 +1064,17 @@ async function renderSongs(gao) {
     </div>
     <div v-if="pageTotal > 1" v-html="getPaging()" style="padding:2rem 0;text-align:center;line-height: 2.6rem;" class="song_list_paging no_select"></div>
     <div class="check_all_menu_wrap">
-      <div cursor="y" x='1' class="check_all_song_btn">全选</div>
-      <div cursor="y" class="share_all_song_btn">分享</div>
-      <div v-if="ind != 1" cursor="y" class="collect_songs_btn">收藏</div>
-      <div cursor="y" class="add_song_btn">添加到</div>
-      <div v-if="ind > 2" cursor="y" class="move_song_btn">移动到</div>
-      <div cursor="y" class="download_song_btn">下载</div>
-      <div cursor="y" class="del_cache_file">清缓存</div>
-      <div v-if="ind != 2" cursor="y" class="remove_song_btn">移除</div>
-      <div v-if="ind < 2" cursor="y" class="clear_all_song_btn">清空</div>
-      <div v-if="isRoot()" cursor="y" class="del_songs_btn">删除</div>
-      <div cursor="y" class="cancel_btn">取消</div>
+      <div data-cursor="pointer" x='1' class="check_all_song_btn">全选</div>
+      <div data-cursor="pointer" class="share_all_song_btn">分享</div>
+      <div v-if="ind != 1" data-cursor="pointer" class="collect_songs_btn">收藏</div>
+      <div data-cursor="pointer" class="add_song_btn">添加到</div>
+      <div v-if="ind > 2" data-cursor="pointer" class="move_song_btn">移动到</div>
+      <div data-cursor="pointer" class="download_song_btn">下载</div>
+      <div data-cursor="pointer" class="del_cache_file">清缓存</div>
+      <div v-if="ind != 2" data-cursor="pointer" class="remove_song_btn">移除</div>
+      <div v-if="ind < 2" data-cursor="pointer" class="clear_all_song_btn">清空</div>
+      <div v-if="isRoot()" data-cursor="pointer" class="del_songs_btn">删除</div>
+      <div data-cursor="pointer" class="cancel_btn">取消</div>
     </div>
     `,
     {

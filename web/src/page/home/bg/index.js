@@ -416,9 +416,9 @@ function hdRender(result, showpage, type, y) {
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
             <div v-for="{id, isCollect} in data" class="bg_item" :data-id="id">
-              <div cursor="y" check="n" class="check_level"></div>
-              <i cursor="y" class="menu_btn iconfont icon-maohao"></i>
-              <i v-if="!isCollectState && !isHistoryState" cursor="y" class="collect_btn iconfont icon-{{isCollect ? 'hear-full active' : 'hear'}}"></i>
+              <div data-cursor="pointer" check="n" class="check_level"></div>
+              <i data-cursor="pointer" class="menu_btn iconfont icon-maohao"></i>
+              <i v-if="!isCollectState && !isHistoryState" data-cursor="pointer" class="collect_btn iconfont icon-{{isCollect ? 'hear-full active' : 'hear'}}"></i>
               <div class="bg_img"></div>
             </div>
             <div v-html="getPaging()" class="bg_paging_box"></div>

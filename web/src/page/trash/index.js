@@ -239,10 +239,10 @@ function renderList(y) {
           <template v-else>
             <template v-for="{title,id,link,content,con,des,group_title,categoryArr,images,port,username,host} in list">
               <ul class="item_box" :data-id="id" :data-type="HASH">
-                <div cursor="y" check="n" class="check_state"></div>
+                <div data-cursor="pointer" check="n" class="check_state"></div>
                 <li class="item_type iconfont {{slogo}}"></li>
-                <li v-html="getTitle(title,content)" :cursor="HASH !== 'bmk_group' ? 'y' : ''" class="item_title"></li>
-                <li cursor="y" class="set_btn iconfont icon-maohao"></li>
+                <li v-html="getTitle(title,content)" :data-cursor="HASH !== 'bmk_group' ? 'pointer' : ''" class="item_title"></li>
+                <li data-cursor="pointer" class="set_btn iconfont icon-maohao"></li>
               </ul>
               <div v-if="(categoryArr.length > 0 || (con && con.length > 0)) && HASH === 'note'" class="item_info">
                 <template v-if="categoryArr.length > 0">
@@ -251,7 +251,7 @@ function renderList(y) {
                   </span>
                   <br/>
                 </template>
-                <img class="default_size" v-for="img in images" :src="loadingSvg" cursor="y" :data-src="img.src" :alt="img.alt" :title="img.alt" />
+                <img class="default_size" v-for="img in images" :src="loadingSvg" data-cursor="pointer" :data-src="img.src" :alt="img.alt" :title="img.alt" />
                 <span v-if="con && con.length > 0" v-html="hdHighlight(con)"></span>
               </div>
               <div class="item_info" v-else-if="HASH === 'bmk'">
@@ -260,7 +260,7 @@ function renderList(y) {
                 </span>
                 <br/>
                 <div class="logo"></div>
-                <a cursor="y" v-html="hdTitleHighlight(splitWord, link)" href="{{link}}" target="_blank"></a>
+                <a data-cursor="pointer" v-html="hdTitleHighlight(splitWord, link)" href="{{link}}" target="_blank"></a>
                 <br/>
                 <span v-html="hdTitleHighlight(splitWord, des)"></span>
               </div>

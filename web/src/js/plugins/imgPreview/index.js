@@ -30,6 +30,7 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
   const image = document.createElement('img');
   image.className = 'img';
   image.setAttribute('draggable', 'false');
+  image.setAttribute('data-cursor', 'move');
 
   const image1 = document.createElement('img');
   image1.className = 'img1';
@@ -51,10 +52,10 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
   close.className = 'iconfont icon-close-bold close';
   pre.className = 'iconfont icon-zuo pre';
   next.className = 'iconfont icon-you next';
-  pre.setAttribute('cursor', '');
-  next.setAttribute('cursor', '');
-  close.setAttribute('cursor', '');
-  rotateBtn.setAttribute('cursor', '');
+  pre.setAttribute('data-cursor', 'pointer');
+  next.setAttribute('data-cursor', 'pointer');
+  close.setAttribute('data-cursor', 'pointer');
+  rotateBtn.setAttribute('data-cursor', 'pointer');
 
   box.appendChild(pre);
   box.appendChild(next);

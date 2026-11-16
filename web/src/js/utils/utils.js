@@ -360,10 +360,10 @@ export function hdTextMsg(str) {
   return _tpl(
     `
     <template v-for="{type,value} in s">
-      <a v-if="type === 'link'" cursor="y" target='_blank' :href='isSafeURL(value) ? value : "#"'>{{value}}</a>
-      <a v-else-if="type === 'tel'" cursor="y" href='tel:{{value}}'>{{value}}</a>
-      <a v-else-if="type === 'email'" cursor="y" href='mailto:{{value}}'>{{value}}</a>
-      <a v-else-if="type === 'ip'" cursor="y" target='_blank' href='http://{{value}}'>{{value}}</a>
+      <a v-if="type === 'link'" data-cursor="pointer" target='_blank' :href='isSafeURL(value) ? value : "#"'>{{value}}</a>
+      <a v-else-if="type === 'tel'" data-cursor="pointer" href='tel:{{value}}'>{{value}}</a>
+      <a v-else-if="type === 'email'" data-cursor="pointer" href='mailto:{{value}}'>{{value}}</a>
+      <a v-else-if="type === 'ip'" data-cursor="pointer" target='_blank' href='http://{{value}}'>{{value}}</a>
       <template v-else>{{value}}</template>
     </template>
     `,
@@ -1707,6 +1707,10 @@ export function myDrag(opt) {
   opt.target = opt.target || opt.trigger;
   const { trigger, target, create, down, move, up, border, dblclick } = opt;
   create && create({ trigger, target });
+  // 拖拽手柄统一使用 data-cursor，主题包提供了 SizeAll（move）指针
+  if (trigger && trigger.nodeType === 1 && !trigger.hasAttribute('data-cursor')) {
+    trigger.setAttribute('data-cursor', 'move');
+  }
   let ol, ot, x, y, pointerX, pointerY;
   function hdDown(e) {
     toggleUserSelect(false);
@@ -1976,7 +1980,7 @@ export function myResize(opt, minW = 200, minH = 200) {
   target.style.minWidth = minW + 'px';
   target.style.minHeight = minH + 'px';
   const trigger1 = document.createElement('div');
-  trigger1.className = 'nwse-resize';
+  trigger1.setAttribute('data-cursor', 'nwse-resize');
   trigger1.style.cssText = `
   position: absolute;
   top: 0px;
@@ -1987,7 +1991,7 @@ export function myResize(opt, minW = 200, minH = 200) {
   z-index: ${zIndex};
   `;
   const trigger2 = document.createElement('div');
-  trigger2.className = 'nesw-resize';
+  trigger2.setAttribute('data-cursor', 'nesw-resize');
   trigger2.style.cssText = `
   position: absolute;
   top: 0px;
@@ -1998,7 +2002,7 @@ export function myResize(opt, minW = 200, minH = 200) {
   z-index: ${zIndex};
   `;
   const trigger3 = document.createElement('div');
-  trigger3.className = 'nwse-resize';
+  trigger3.setAttribute('data-cursor', 'nwse-resize');
   trigger3.style.cssText = `
   position: absolute;
   right: 0px;
@@ -2009,7 +2013,7 @@ export function myResize(opt, minW = 200, minH = 200) {
   z-index: ${zIndex};
   `;
   const trigger4 = document.createElement('div');
-  trigger4.className = 'nesw-resize';
+  trigger4.setAttribute('data-cursor', 'nesw-resize');
   trigger4.style.cssText = `
   position: absolute;
   bottom: 0px;
@@ -2020,7 +2024,7 @@ export function myResize(opt, minW = 200, minH = 200) {
   z-index: ${zIndex};
   `;
   const trigger5 = document.createElement('div');
-  trigger5.className = 'ns-resize';
+  trigger5.setAttribute('data-cursor', 'ns-resize');
   trigger5.style.cssText = `
   position: absolute;
   top: 0px;
@@ -2030,7 +2034,7 @@ export function myResize(opt, minW = 200, minH = 200) {
   z-index: ${zIndex};
   `;
   const trigger6 = document.createElement('div');
-  trigger6.className = 'ew-resize';
+  trigger6.setAttribute('data-cursor', 'ew-resize');
   trigger6.style.cssText = `
   position: absolute;
   top: 0px;
@@ -2040,7 +2044,7 @@ export function myResize(opt, minW = 200, minH = 200) {
   z-index: ${zIndex};
   `;
   const trigger7 = document.createElement('div');
-  trigger7.className = 'ns-resize';
+  trigger7.setAttribute('data-cursor', 'ns-resize');
   trigger7.style.cssText = `
   position: absolute;
   bottom: 0px;
@@ -2050,7 +2054,7 @@ export function myResize(opt, minW = 200, minH = 200) {
   z-index: ${zIndex};
   `;
   const trigger8 = document.createElement('div');
-  trigger8.className = 'ew-resize';
+  trigger8.setAttribute('data-cursor', 'ew-resize');
   trigger8.style.cssText = `
   position: absolute;
   top: 0px;
@@ -2244,7 +2248,7 @@ export async function showQcode(e, text, title = '展示二维码') {
     const url = await QRCode.toDataURL(text, { width: 500, height: 500 });
     const html = _tpl(
       `<img style="width:25rem;height:25rem" data-src="{{url}}"/>
-        <div cursor="y" class="item" title="点击复制">{{text}}</div>`,
+        <div data-cursor="pointer" class="item" title="点击复制">{{text}}</div>`,
       {
         url,
         text,

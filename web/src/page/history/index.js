@@ -123,10 +123,10 @@ function renderList(y) {
           <p v-if="total === 0" style='text-align: center;'>{{_d.emptyList}}</p>
           <template v-else>
             <ul v-for="{id, content} in list" class="item_box" :data-id="id">
-              <div cursor="y" check="n" class="check_state"></div>
+              <div data-cursor="pointer" check="n" class="check_state"></div>
               <li class="item_type iconfont icon-history"></li>
-              <li cursor="y" v-html="hdTitleHighlight(splitWord,content)" class="item_title"></li>
-              <li cursor="y" class="del_item iconfont icon-shanchu"></li>
+              <li data-cursor="pointer" v-html="hdTitleHighlight(splitWord,content)" class="item_title"></li>
+              <li data-cursor="pointer" class="del_item iconfont icon-shanchu"></li>
             </ul>
             <div v-html="getPagin()" class="pagingbox"></div>
           </template>

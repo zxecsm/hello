@@ -232,12 +232,12 @@ function renderHomeBmList() {
   const html = _tpl(
     `
     <li v-for="{id,title} in list" class="home_bm_item" :data-id="id">
-      <div cursor="y" check="n" class="check_home_bm"></div>
-      <div class="home_bm_logo" cursor="y"></div>
-      <p cursor="y">{{title}}</p>
+      <div data-cursor="pointer" check="n" class="check_home_bm"></div>
+      <div class="home_bm_logo" data-cursor="pointer"></div>
+      <p data-cursor="pointer">{{title}}</p>
     </li>
     <li class="home_bm_item">
-      <div cursor="y" x="add" style="background-image:url({{imgTianjia}})" class="home_bm_logo">
+      <div data-cursor="pointer" x="add" style="background-image:url({{imgTianjia}})" class="home_bm_logo">
       </div>
       <p></p>
     </li>
@@ -748,16 +748,16 @@ function renderSearchList() {
       <li v-for="{ type, id, title, content, flag } in list" :data-type="type" :data-id="id" class="search_item">
         <template v-if="type === 'ss'">
           <span class="type_logo iconfont {{flag === 'ts' ? 'icon-tishi' : 'icon-history'}}"></span>
-          <span v-html="hdTitleHighlight(splitWord, content)" cursor="y" class="text"></span>
-          <span v-if="flag != 'ts'" cursor="y" class="dellss iconfont icon-shibai"></span>
+          <span v-html="hdTitleHighlight(splitWord, content)" data-cursor="pointer" class="text"></span>
+          <span v-if="flag != 'ts'" data-cursor="pointer" class="dellss iconfont icon-shibai"></span>
         </template>
         <template v-else-if="type === 'note'">
           <span class="type_logo iconfont icon-jilu"></span>
-          <span v-html="hdTitleHighlight(splitWord, title)" cursor="y" class="text"></span>
+          <span v-html="hdTitleHighlight(splitWord, title)" data-cursor="pointer" class="text"></span>
         </template>
         <template v-else-if="type === 'bmk'">
           <span class="type_logo iconfont icon-shuqian"></span>
-          <span v-html="hdTitleHighlight(splitWord, title)" cursor="y" class="text"></span>
+          <span v-html="hdTitleHighlight(splitWord, title)" data-cursor="pointer" class="text"></span>
         </template>
       </li>
       `,
@@ -966,14 +966,14 @@ $searchBoxMask.on('click', '.setting', searchSetting);
 function getSearchEngineList() {
   return _tpl(
     `
-    <div class="item setting" cursor="true"><i class="icon iconfont icon-shezhi"></i><span class="text">管理搜索引擎</span></div>
-    <div v-for="{id,title,logo,color,link},i in _d.searchEngineData" cursor="y" :data-id="id" class="item {{getSearchEngine().id === id ? 'active' : ''}}">
+    <div class="item setting" data-cursor="pointer"><i class="icon iconfont icon-shezhi"></i><span class="text">管理搜索引擎</span></div>
+    <div v-for="{id,title,logo,color,link},i in _d.searchEngineData" data-cursor="pointer" :data-id="id" class="item {{getSearchEngine().id === id ? 'active' : ''}}">
       <img v-if="i == 0" :src="logo" :style="imgStyle"/>
       <img v-else :style="imgStyle" :src="loadSvg" :data-src="getLogoPath(link,logo)"/>
       <span class="search_name" style="margin-left:1rem;flex:auto;">{{title}}</span>
       <i class="iconfont icon-color" style="color:{{color}}"></i>
     </div>
-    <div class="item add" cursor="true"><i class="icon iconfont icon-tianjia"></i><span class="text">添加搜索引擎</span></div>
+    <div class="item add" data-cursor="pointer"><i class="icon iconfont icon-tianjia"></i><span class="text">添加搜索引擎</span></div>
     `,
     {
       loadSvg,
@@ -1255,13 +1255,13 @@ function selectSearch(e) {
 function getTranslatorList() {
   return _tpl(
     `
-    <div class="item setting" cursor="true"><i class="icon iconfont icon-shezhi"></i><span class="text">管理翻译接口</span></div>
-    <div v-for="{id,title,logo,link},i in _d.translatorData" cursor="y" :data-id="id" class="item {{getTranslator().id === id ? 'active' : ''}}">
+    <div class="item setting" data-cursor="pointer"><i class="icon iconfont icon-shezhi"></i><span class="text">管理翻译接口</span></div>
+    <div v-for="{id,title,logo,link},i in _d.translatorData" data-cursor="pointer" :data-id="id" class="item {{getTranslator().id === id ? 'active' : ''}}">
       <img v-if="i == 0" :src="logo" :style="imgStyle"/>
       <img v-else :style="imgStyle" :src="loadSvg" :data-src="getLogoPath(link,logo)"/>
       <span class="translator_name" style="margin-left:1rem;flex:auto;">{{title}}</span>
     </div>
-    <div class="item add" cursor="true"><i class="icon iconfont icon-tianjia"></i><span class="text">添加翻译接口</span></div>
+    <div class="item add" data-cursor="pointer"><i class="icon iconfont icon-tianjia"></i><span class="text">添加翻译接口</span></div>
     `,
     {
       loadSvg,

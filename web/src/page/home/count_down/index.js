@@ -188,21 +188,21 @@ function renderCountList(total, toTop) {
   const html = _tpl(
     `
     <div style="padding-bottom: 1rem;">
-      <button cursor="y" class="add_btn btn btn_primary">添加</button>
+      <button data-cursor="pointer" class="add_btn btn btn_primary">添加</button>
       <template v-if="countList.length > 0">
-        <button cursor="y" class="clear_all_btn btn btn_primary">多选</button>
-        <button cursor="y" class="clear_btn btn btn_danger">清空</button>
+        <button data-cursor="pointer" class="clear_all_btn btn btn_primary">多选</button>
+        <button data-cursor="pointer" class="clear_btn btn btn_danger">清空</button>
       </template>
     </div>
     <p v-if="total <= 0" style="padding: 2rem 0;pointer-events: none;text-align: center;">暂无倒计时项</p>
     <template v-else>
       <div v-for="{id, title, total:tt, past, remain, link, state, top} in countList" :data-id="id" class="item_box {{state === 0 ? 'close' : ''}}">
-        <div cursor="y" check="n" class="check_level"></div>
+        <div data-cursor="pointer" check="n" class="check_level"></div>
         <div class="title">
-          <span :cursor="link?'y':''" class="iconfont {{link?'icon-link1':'icon-shalou'}} icon"></span>
+          <span :data-cursor="link?'pointer':''" class="iconfont {{link?'icon-link1':'icon-shalou'}} icon"></span>
           <span class="text">{{title}}</span>
           <span v-if="top != 0" class="top_btn iconfont icon-zhiding"></span>
-          <span cursor="y" class="set_btn iconfont icon-maohao"></span>
+          <span data-cursor="pointer" class="set_btn iconfont icon-maohao"></span>
         </div>
         <div class="info">{{readableTime(tt)}} - {{readableTime(past)}} = <span style="padding-left:0.4rem;" :style="remain<0?'color:var(--btn-danger-color);':''">{{readableTime(remain)}}</span></div>
         <div class="pro">

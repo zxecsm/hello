@@ -82,7 +82,7 @@ export function createNoteDir($box) {
       usedIds.add(id);
       const oLi = _tpl.getDom(
         `
-        <li :title="text" cursor="y" :h="level" :data-id="id">
+        <li :title="text" data-cursor="pointer" :h="level" :data-id="id">
           <span :style="item.children.length === 0 ? 'opacity:0;' : ''" class="icon iconfont icon-you"></span>
           <span class="text">{{text}}</span>
         </li>

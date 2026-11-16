@@ -290,16 +290,16 @@ async function renderList(top) {
     `
     <template v-if="total > 0">
       <ul v-for="{type, fileType, name, path, size, time, id, mode, gid, uid, favorite, linkTarget, linkTargetTypeName} in list" class="file_item" :data-id="id">
-        <li cursor="y" class="check_state" check="n"></li>
-        <li cursor="y" class="logo {{logoColor(type,fileType,name,path)}} iconfont {{hdLogo(name,type,size,favorite) || 'is_img'}}"></li>
-        <li cursor="y" class="name">
+        <li data-cursor="pointer" class="check_state" check="n"></li>
+        <li data-cursor="pointer" class="logo {{logoColor(type,fileType,name,path)}} iconfont {{hdLogo(name,type,size,favorite) || 'is_img'}}"></li>
+        <li data-cursor="pointer" class="name">
           <span class="text">{{getText(name,type).a}}
             <span class="suffix">{{getText(name,type).b}}</span>
             <span v-if="type === 'file' && fileType === 'symlink'" class="link_target">=> {{linkTarget}}({{linkTargetTypeName}})</span>
           </span>
         </li>
         <li v-if="mode" class='mode'>{{mode}} {{uid}}:{{gid}}</li>
-        <li :cursor="type === 'file' ? '' : 'cursor'" class="size">{{size ? formatBytes(size) : type === 'file' ? '--' : '计算'}}</li>
+        <li :data-cursor="type === 'file' ? '' : 'pointer'" class="size">{{size ? formatBytes(size) : type === 'file' ? '--' : '计算'}}</li>
         <li class="date">{{getDateDiff(time)}}</li>
       </ul>
       <i v-for="item in 10" class='fill'></i>
@@ -2197,22 +2197,22 @@ function renderFoot() {
   const len = checkData.length;
   const html = _tpl(
     `
-    <span cursor="y" :data-check="items.length > 0 && items.length === len ? 'y' : 'n'" class="iconfont {{items.length > 0 && items.length === len ? 'icon-xuanzeyixuanze' : 'icon-xuanzeweixuanze'}}"></span>
+    <span data-cursor="pointer" :data-check="items.length > 0 && items.length === len ? 'y' : 'n'" class="iconfont {{items.length > 0 && items.length === len ? 'icon-xuanzeyixuanze' : 'icon-xuanzeweixuanze'}}"></span>
     <template v-if="len > 0">
-      <button cursor="y" class="f_copy btn btn_primary">复制</button>
-      <button cursor="y" class="f_cut btn btn_primary">剪切</button>
+      <button data-cursor="pointer" class="f_copy btn btn_primary">复制</button>
+      <button data-cursor="pointer" class="f_cut btn btn_primary">剪切</button>
       <template v-if="len === 1">
-        <button v-if="canShare()" cursor="y" class="f_share btn btn_primary">分享</button>
-        <button cursor="y" class="f_rename btn btn_primary">重命名</button>
-        <button v-if="isZip()" cursor="y" class="f_decompress btn btn_primary">解压缩</button>
-        <button cursor="y" class="f_compress btn btn_primary">压缩</button>
+        <button v-if="canShare()" data-cursor="pointer" class="f_share btn btn_primary">分享</button>
+        <button data-cursor="pointer" class="f_rename btn btn_primary">重命名</button>
+        <button v-if="isZip()" data-cursor="pointer" class="f_decompress btn btn_primary">解压缩</button>
+        <button data-cursor="pointer" class="f_compress btn btn_primary">压缩</button>
       </template>
-      <button v-if="isRoot()" cursor="y" class="f_mode btn btn_primary">权限</button>
-      <button v-if="isRoot()" cursor="y" class="f_user btn btn_primary">用户组</button>
-      <button v-if="checkIsFile()" cursor="y" class="f_download btn btn_primary">下载</button>
-      <button cursor="y" class="f_delete btn btn_danger">删除</button>
+      <button v-if="isRoot()" data-cursor="pointer" class="f_mode btn btn_primary">权限</button>
+      <button v-if="isRoot()" data-cursor="pointer" class="f_user btn btn_primary">用户组</button>
+      <button v-if="checkIsFile()" data-cursor="pointer" class="f_download btn btn_primary">下载</button>
+      <button data-cursor="pointer" class="f_delete btn btn_danger">删除</button>
     </template>
-    <button cursor="y" class="f_close btn btn_info">取消</button>
+    <button data-cursor="pointer" class="f_close btn btn_info">取消</button>
     `,
     {
       items,
@@ -2423,9 +2423,9 @@ function showPaste() {
     .find('.paste_btn')
     .html(
       _tpl(
-        `<span cursor="y" class="type iconfont {{waitObj.type==='copy'?'icon-fuzhi':'icon-jiandao'}}"></span>
-        <span cursor="y" class="text">粘贴({{waitObj.data.length}})</span>
-        <span cursor="y" class="close iconfont icon-shibai"></span>`,
+        `<span data-cursor="pointer" class="type iconfont {{waitObj.type==='copy'?'icon-fuzhi':'icon-jiandao'}}"></span>
+        <span data-cursor="pointer" class="text">粘贴({{waitObj.data.length}})</span>
+        <span data-cursor="pointer" class="close iconfont icon-shibai"></span>`,
         { waitObj },
       ),
     )

@@ -799,7 +799,7 @@ function renderPlayList() {
   const arr = playingList.slice((playingPageNum - 1) * playingSize, playingPageNum * playingSize);
   const html = _tpl(
     `
-    <li v-for="{title,artist,mv,id} in arr" class="song_item" cursor="y" :data-id="id">
+    <li v-for="{title,artist,mv,id} in arr" class="song_item" data-cursor="pointer" :data-id="id">
       <div class="logo_wrap">
         <div class="logo" :data-src="getPath(id)">
           <div class="play_gif"></div>
@@ -810,7 +810,7 @@ function renderPlayList() {
         <span class="artist_name"><i class="artist_name_text">{{artist}}</i></span>
       </div>
       <div v-if="mv" class="play_mv iconfont icon-shipin2"></div>
-      <div cursor="y" class="del iconfont icon-shibai"></div>
+      <div data-cursor="pointer" class="del iconfont icon-shibai"></div>
     </li>
     <div v-if="totalPage > 1" v-html="getPaging()" style="padding:2rem 0;text-align:center;" class="playing_list_paging no_select"></div>
     `,

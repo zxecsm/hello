@@ -57,14 +57,14 @@ class Msg {
       this.oText.style.paddingLeft = 0;
     }
     if (this.callback) {
-      this.oText.setAttribute('cursor', '');
+      this.oText.setAttribute('data-cursor', 'pointer');
     }
     this.oText.textContent = this.opt.message;
     this.progress = document.createElement('div');
     this.progress.className = 'progress';
     this.oClose = document.createElement('i');
     this.oClose.className = 'close iconfont icon-shibai';
-    this.oClose.setAttribute('cursor', '');
+    this.oClose.setAttribute('data-cursor', 'pointer');
     if (this.opt.icon) {
       this.el.appendChild(this.oIcon);
     }

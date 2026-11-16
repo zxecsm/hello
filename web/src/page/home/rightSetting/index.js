@@ -702,13 +702,13 @@ export function renderUserinfo() {
   const { username, logo, account } = setUserInfo();
   const html = _tpl(
     `
-    <ul><li>用户</li><li>{{username}}</li><li cursor="y" class="edit_user_name">修改</li></ul>
+    <ul><li>用户</li><li>{{username}}</li><li data-cursor="pointer" class="edit_user_name">修改</li></ul>
     <ul><li>账号</li><li>{{account}}</li></ul>
-    <ul><li>邮箱</li><li>{{email || '未绑定邮箱'}}</li><li cursor="y" class="bind_email">{{email ? '解绑' : '绑定'}}</li></ul>
-    <ul><li>状态</li><li>开启隐身</li><li style="color: var(--icon-color);" class="hide iconfont {{hide && hide === 1 ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'}}" cursor="y"></li></ul>
-    <ul><li>登录</li><li>免密登录</li><li style="color: var(--icon-color);" class="remote_login iconfont {{remote_login && remote_login === 1 ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'}}" cursor="y"></li></ul>
-    <ul><li>转发</li><li>消息转发至外部应用</li><li cursor="y" class="forward_msg">编辑</li></ul>
-    <ul><li>壁纸</li><li>每日自动更换壁纸</li><li style="color: var(--icon-color);" class="dailybg iconfont {{daily_change_bg === 1 ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'}}" cursor="y"></li></ul>
+    <ul><li>邮箱</li><li>{{email || '未绑定邮箱'}}</li><li data-cursor="pointer" class="bind_email">{{email ? '解绑' : '绑定'}}</li></ul>
+    <ul><li>状态</li><li>开启隐身</li><li style="color: var(--icon-color);" class="hide iconfont {{hide && hide === 1 ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'}}" data-cursor="pointer"></li></ul>
+    <ul><li>登录</li><li>免密登录</li><li style="color: var(--icon-color);" class="remote_login iconfont {{remote_login && remote_login === 1 ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'}}" data-cursor="pointer"></li></ul>
+    <ul><li>转发</li><li>消息转发至外部应用</li><li data-cursor="pointer" class="forward_msg">编辑</li></ul>
+    <ul><li>壁纸</li><li>每日自动更换壁纸</li><li style="color: var(--icon-color);" class="dailybg iconfont {{daily_change_bg === 1 ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'}}" data-cursor="pointer"></li></ul>
     `,
     {
       ...setUserInfo(),
@@ -1724,8 +1724,8 @@ async function hdVerifyLogin(e, verify, account) {
     `
     <p style="line-height:1.5;">使用 “Authenticator、1Password” 等手机应用，扫描以下二维码，获取 6 位验证码</p>
     <img style="width:25rem;height:25rem" :data-src="url"/>
-    <div cursor="y" title="点击复制密钥" class="item"><i class="title">密钥：</i><span class='text'>{{verify}}</span></div>
-    <div style="text-align:left;"><button cursor="y" class="btn btn_primary">开启两步验证</button></div>
+    <div data-cursor="pointer" title="点击复制密钥" class="item"><i class="title">密钥：</i><span class='text'>{{verify}}</span></div>
+    <div style="text-align:left;"><button data-cursor="pointer" class="btn btn_primary">开启两步验证</button></div>
     `,
     {
       verify,

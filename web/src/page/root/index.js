@@ -106,16 +106,16 @@ function renderUserList(pageNo, total, top) {
   const html = _tpl(
     `
     <tr v-for="{account,username,update_at,email,state,online,hide} in userList" :data-acc="account">
-      <td cursor="y" check="n" class="check_state iconfont icon-xuanzeweixuanze"></td>
+      <td data-cursor="pointer" check="n" class="check_state iconfont icon-xuanzeweixuanze"></td>
       <td>{{formatDate({template: '{0}-{1}-{2} {3}:{4}',timestamp: update_at})}}</td>
-      <td class="online_status" :cursor="online === 1 ? 'y' : ''" style="color:{{online === 1 ? 'green' : 'var(--color6)'}};">{{online === 1 ? (hide === 1 ? '隐身' : '在线') : '离线'}}</td>
+      <td class="online_status" :data-cursor="online === 1 ? 'pointer' : ''" style="color:{{online === 1 ? 'green' : 'var(--color6)'}};">{{online === 1 ? (hide === 1 ? '隐身' : '在线') : '离线'}}</td>
       <td>{{username}}</td>
       <td>{{email || '--'}}</td>
       <td>{{account}}</td>
       <td style="color:{{state === 1 ? 'green' : 'var(--btn-danger-color)'}};">{{state === 1 ? '启用' : '停用'}}</td>
       <td :style="isRoot(account) ? 'opacity: 0;pointer-events: none;' : ''">
-        <button cursor="y" class="user_state btn btn_primary">{{state === 1 ? '停用' : '启用'}}</button>
-        <button cursor="y" class="del_account btn btn_danger">删除</button>
+        <button data-cursor="pointer" class="user_state btn btn_primary">{{state === 1 ? '停用' : '启用'}}</button>
+        <button data-cursor="pointer" class="del_account btn btn_danger">删除</button>
       </td>
     </tr>
     `,

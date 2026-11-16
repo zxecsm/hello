@@ -32,9 +32,9 @@ export class CreateTabs {
       `
         <div v-for="{id,title} in data" class="tab" :title="title" :data-id="id">
           <span class="text">{{title}}</span>
-          <i cursor="y" class="iconfont close icon-shibai"></i>
+          <i data-cursor="pointer" class="iconfont close icon-shibai"></i>
         </div>
-        <div cursor="y" class="add_tab iconfont icon-tianjia"></div>
+        <div data-cursor="pointer" class="add_tab iconfont icon-tianjia"></div>
       `,
       {
         ...this.opt,

@@ -49,14 +49,14 @@ function renderCrumb(HASH) {
   const hasForward = hashRouter.hasForward();
   const html = _tpl(
     `
-    <div cursor="y" class="back iconfont icon-zuo {{hasBack ? '' : 'deactive'}}"></div>
-    <div cursor="y" class="forward iconfont icon-you {{hasForward ? '' : 'deactive'}}"></div>
-    <div :cursor="pathArr.length > 0 ? 'y' : ''" class='home item'>主页</div>
+    <div data-cursor="pointer" class="back iconfont icon-zuo {{hasBack ? '' : 'deactive'}}"></div>
+    <div data-cursor="pointer" class="forward iconfont icon-you {{hasForward ? '' : 'deactive'}}"></div>
+    <div :data-cursor="pathArr.length > 0 ? 'pointer' : ''" class='home item'>主页</div>
     <template v-for="item,idx in pathArr">
       <div class='line iconfont icon-fenge'></div>
-      <div class='item' :title="item" :cursor="idx + 1 === pathArr.length ? '' : 'y'" :data-idx="idx + 1">{{item}}</div>
+      <div class='item' :title="item" :data-cursor="idx + 1 === pathArr.length ? '' : 'pointer'" :data-idx="idx + 1">{{item}}</div>
     </template>
-    <div cursor="y" class="refresh iconfont icon-suijibofang"></div>
+    <div data-cursor="pointer" class="refresh iconfont icon-suijibofang"></div>
     `,
     { pathArr: pathToArr(HASH), hasBack, hasForward },
   );

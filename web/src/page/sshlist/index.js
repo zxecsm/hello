@@ -260,15 +260,15 @@ export function renderList(y) {
           <template v-else>
             <template v-for="{id,title,port,host,username,categoryArr,top} in data">
               <ul class="item_box" :data-id="id">
-                <div cursor="y" check="n" class="check_state"></div>
+                <div data-cursor="pointer" check="n" class="check_state"></div>
                 <li class="item_type iconfont icon-terminal"></li>
-                <li v-html="hdTitleHighlight(splitWord,title)" cursor="y" class="item_title"></li>
+                <li v-html="hdTitleHighlight(splitWord,title)" data-cursor="pointer" class="item_title"></li>
                 <li v-if="top != 0 && !word && category.length === 0" class="top_btn iconfont icon-zhiding"></li>
-                <li cursor="y" class="set_btn iconfont icon-maohao"></li>
+                <li data-cursor="pointer" class="set_btn iconfont icon-maohao"></li>
               </ul>
               <div class="item_info">
                 <template v-if="categoryArr.length > 0">
-                  <span cursor="y" v-for="cgs in categoryArr" :data-id="cgs.id" class="category">
+                  <span data-cursor="pointer" v-for="cgs in categoryArr" :data-id="cgs.id" class="category">
                     <span style="color:var(--icon-color);margin-right:0.4rem;">#</span>{{cgs.title}}
                   </span>
                   <br/>

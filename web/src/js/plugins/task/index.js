@@ -7,7 +7,7 @@ import { reqTaskCancel, reqTaskInfo } from '../../../api/task';
 const taskBox = document.createElement('div');
 taskBox.className = 'task_box';
 taskBox.innerHTML = `
-  <div cursor="y" class="zoom_btn iconfont icon-xiala"></div>
+  <div data-cursor="pointer" class="zoom_btn iconfont icon-xiala"></div>
   <div class="list"></div>
 `;
 document.body.appendChild(taskBox);
@@ -72,7 +72,7 @@ class CreateTask {
     this.progress.textContent = '...';
     this.cancelBtn = document.createElement('div');
     this.cancelBtn.className = 'cancel_task iconfont icon-shibai';
-    this.cancelBtn.setAttribute('cursor', 'y');
+    this.cancelBtn.setAttribute('data-cursor', 'pointer');
     this.cancelBtn.dataset.key = this.key;
     this.task.appendChild(this.progress);
     this.task.appendChild(this.cancelBtn);

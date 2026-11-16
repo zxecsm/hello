@@ -88,7 +88,7 @@ const ALLOWED_TAGS = [
 ];
 
 // 属性白名单，data-* 与 aria-* 由 DOMPurify 单独放行。
-// cursor 是预览区用来标记可点击元素的业务属性。
+// data-cursor 是预览区用来标记可点击元素和鼠标指针样式的业务属性。
 const ALLOWED_ATTR = [
   'align',
   'alt',
@@ -98,7 +98,6 @@ const ALLOWED_ATTR = [
   'class',
   'colspan',
   'controls',
-  'cursor',
   'datetime',
   'dir',
   'disabled',

@@ -76,7 +76,7 @@ class RightM {
     if (!this.opt.hideCloseBtn) {
       this.hClose = document.createElement('div');
       this.hClose.className = `iconfont icon-close-bold close`;
-      this.hClose.setAttribute('cursor', '');
+      this.hClose.setAttribute('data-cursor', 'pointer');
       this.head.appendChild(this.hClose);
     }
     this.searchBtn = document.createElement('div');
@@ -91,7 +91,7 @@ class RightM {
     this.searchBox.appendChild(this.searchInp);
     this.clearSearchText = document.createElement('i');
     this.clearSearchText.className = 'clear iconfont icon-shibai';
-    this.clearSearchText.setAttribute('cursor', 'y');
+    this.clearSearchText.setAttribute('data-cursor', 'pointer');
     this.searchBox.appendChild(this.clearSearchText);
     this.head.appendChild(this.searchBox);
     this.title = document.createElement('div');
@@ -284,7 +284,7 @@ function shake(target) {
   closeShake(target);
 }
 function selectTabs(e, data, opt = {}, title = '') {
-  const html = `<div class="tabs_wrap"><i cursor="y" class="clean_btn iconfont icon-qingkong-1"></i></div><p class='err'></p><button cursor="y" class="mtcbtn">提交</button>`;
+  const html = `<div class="tabs_wrap"><i data-cursor="pointer" class="clean_btn iconfont icon-qingkong-1"></i></div><p class='err'></p><button data-cursor="pointer" class="mtcbtn">提交</button>`;
   let tabsObj = null;
   function isDiff() {
     return !deepEqual(
@@ -395,8 +395,8 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
           <div v-if="beforeText" class="title">{{beforeText}}</div>
           <div class="inp_box">
             <input class='inp' :name="key" :data-flag="key" :autocomplete="autocomplete" :placeholder="placeholder" :value="value" :type="inputType"/>
-            <i v-if="inputType === 'password'" v-show="value !== ''" cursor="y" class="show_pass_btn iconfont icon-kejian"></i>
-            <i cursor="y" class="clean_btn iconfont icon-shibai {{value === '' ? '' : 'show'}}"></i>
+            <i v-if="inputType === 'password'" v-show="value !== ''" data-cursor="pointer" class="show_pass_btn iconfont icon-kejian"></i>
+            <i data-cursor="pointer" class="clean_btn iconfont icon-shibai {{value === '' ? '' : 'show'}}"></i>
           </div>
           <p class='err'></p>
         </div>
@@ -404,17 +404,17 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
         <div v-if="beforeText" class="title">{{beforeText}}</div>
         <div class='texta_box'>
           <textarea title='Ctrl+Enter {{subText}}' class='texta' :name="key" :data-flag="key" :autocomplete="autocomplete" :placeholder="placeholder">{{value}}</textarea>
-          <i cursor="y" class="clean_btn iconfont icon-qingkong-1 {{value === '' ? '' : 'show'}}"></i>
+          <i data-cursor="pointer" class="clean_btn iconfont icon-qingkong-1 {{value === '' ? '' : 'show'}}"></i>
         </div>
         <p class='err'></p>
       </div>
       <div v-else-if="type === 'select'" class='select_item'>
         <div v-if="beforeText" class="title">{{beforeText}}</div>
-        <div cursor="y" class='select_box' :data-flag="key"><span>{{selectInitValue(selectItem,value)}}</span><i class="iconfont icon-xiala"></i></div>
+        <div data-cursor="pointer" class='select_box' :data-flag="key"><span>{{selectInitValue(selectItem,value)}}</span><i class="iconfont icon-xiala"></i></div>
         <p class='err'></p>
       </div>
     </template>
-    <button cursor="y" class="mtcbtn">{{subText}}</button>
+    <button data-cursor="pointer" class="mtcbtn">{{subText}}</button>
     `,
     {
       ...data,
@@ -642,7 +642,7 @@ function render(data) {
   return _tpl(
     `
     <div v-for="{id,text,afterIcon,afterText,beforeText,beforeIcon,active,pointer} in data" :data-id='id'
-     :cursor="pointer || ''" class="item {{active ? 'active' : ''}} {{pointer ? '' : 'stop'}}">
+     :data-cursor="pointer ? 'pointer' : ''" class="item {{active ? 'active' : ''}} {{pointer ? '' : 'stop'}}">
       <i v-if="beforeIcon" class="icon {{beforeIcon}}"></i>
       <i v-if="beforeText" class="title">{{beforeText}}</i>
       <span class='text'>{{text}}</span>
@@ -816,12 +816,12 @@ class Pop {
     this.btns.className = 'btns';
     this.cancelBtn = document.createElement('button');
     this.cancelBtn.className = `btn btn_${this.cancel.type}`;
-    this.cancelBtn.setAttribute('cursor', '');
+    this.cancelBtn.setAttribute('data-cursor', 'pointer');
     this.cancelBtn.textContent = this.cancel.text;
     this.confirmBtn = document.createElement('button');
     this.confirmBtn.style.cssText = `margin-left: 2rem;`;
     this.confirmBtn.className = `btn btn_${this.confirm.type}`;
-    this.confirmBtn.setAttribute('cursor', '');
+    this.confirmBtn.setAttribute('data-cursor', 'pointer');
     this.confirmBtn.textContent = this.confirm.text;
     this.box.title = `快捷键：\nEnter：${this.confirm.text}\nBack：${this.cancel.text}\nEsc：关闭`;
     this.btns.appendChild(this.cancelBtn);

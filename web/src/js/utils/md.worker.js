@@ -136,7 +136,7 @@ md.use(markdownItContainer, 'details', {
 });
 md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
   const href = tokens[idx].attrGet('href') || '';
-  tokens[idx].attrSet('cursor', 'y');
+  tokens[idx].attrSet('data-cursor', 'pointer');
   // 笔记内部的 #锚点 在当前页面跳转，外链才新窗口打开
   if (!href.startsWith('#')) {
     tokens[idx].attrSet('target', '_blank');
@@ -153,7 +153,7 @@ md.renderer.rules.image = (tokens, idx) => {
   const src = srcItem ? srcItem[1] : '';
   const alt = token.content;
   const escape = md.utils.escapeHtml;
-  return `<img${startLine === '' ? '' : ` data-line="${startLine}"`} cursor="y" data-src="${escape(
+  return `<img${startLine === '' ? '' : ` data-line="${startLine}"`} data-cursor="pointer" data-src="${escape(
     src,
   )}" src="${imgLoadImg}" alt="${escape(alt)}" title="${escape(alt)}" />`;
 };
@@ -176,9 +176,9 @@ md.renderer.rules.fence = function (tokens, idx) {
   } catch {}
   return `<pre data-line="${startLine}" class="hljs"><code class="${
     lineNum >= maxLine ? 'hide' : ''
-  }">${html}</code><div cursor="y" class="codeCopy iconfont icon-fuzhi"></div>${
+  }">${html}</code><div data-cursor="pointer" class="codeCopy iconfont icon-fuzhi"></div>${
     lineNum >= maxLine
-      ? `<div data-flag="y" cursor="y" class="shrink iconfont icon-xiala"></div>`
+      ? `<div data-flag="y" data-cursor="pointer" class="shrink iconfont icon-xiala"></div>`
       : ''
   }</pre>`;
 };

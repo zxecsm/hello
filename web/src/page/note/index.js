@@ -272,7 +272,7 @@ function updateNoteInfo({ create_at, visit_count, update_at, category, account }
             const html = _tpl(
               `
               <span class="iconfont icon-fenge"></span><span>分类：</span>
-              <span v-for="{id, title} in list" cursor="y" class="category" :data-id="id">{{title}}</span>
+              <span v-for="{id, title} in list" data-cursor="pointer" class="category" :data-id="id">{{title}}</span>
               `,
               {
                 list,

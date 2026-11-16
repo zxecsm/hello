@@ -6,7 +6,7 @@ import './index.less';
 const progressBox = _tpl.getDom(
   `
 <div id="progress_box" style="z-index: {{_d.levelObj.upProgressbox}};">
-  <div cursor="y" class="left_btn iconfont icon-you"></div>
+  <div data-cursor="pointer" class="left_btn iconfont icon-you"></div>
   <div class="list"></div>
 </div>
 `,
@@ -142,7 +142,7 @@ export class UpProgress {
     this.countBox.className = 'count_box';
     this.closeBtn = document.createElement('div');
     this.closeBtn.className = `close_btn iconfont icon-shibai`;
-    this.closeBtn.setAttribute('cursor', 'y');
+    this.closeBtn.setAttribute('data-cursor', 'pointer');
 
     this.item.appendChild(this.closeBtn);
     if (this.total > 1) {
