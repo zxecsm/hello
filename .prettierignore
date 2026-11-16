@@ -8,3 +8,7 @@
 
 /server/public
 /web/dist
+
+# 默认笔记里是给用户看的 markdown 示例，格式化会改掉 `*斜体*`、`__加粗__`
+# 这类写法，也会重排代码块内容，必须保持原样
+/server/src/config/defaults
