@@ -204,7 +204,6 @@ class CreateIframe {
       this.iframeWindow = this.iframe.contentWindow;
       this.iframeWindow.addEventListener('mousedown', this.hdDown);
       this.iframeWindow.addEventListener('touchstart', this.hdStart);
-      this.iframeWindow.iframeId = this.id;
     } catch {}
   }
   // 更新标题
@@ -477,19 +476,26 @@ function forwardToWindows(list) {
     postMsgs(win, msgs);
   }
 }
-// 窗口页面加载后主动上报自己的 temid / page
+// 窗口页面主动上报的消息（登记、更新标题等）
 window.addEventListener('message', function (e) {
   if (e.origin !== location.origin) return;
   const data = e.data;
-  if (!data || data.rt !== RT_KEY || data.act !== 'hello' || !data.temid) return;
+  if (!data || data.rt !== RT_KEY) return;
   const win = findWindowBySource(e.source);
   if (!win) return;
-  realtime.addTemid(data.temid, data.page, win.temid);
-  win.temid = data.temid;
-  // 确认登记，避免页面反复重试
-  try {
-    e.source.postMessage({ rt: RT_KEY, act: 'hello-ack' }, location.origin);
-  } catch {}
+  if (data.act === 'hello') {
+    if (!data.temid) return;
+    realtime.addTemid(data.temid, data.page, win.temid);
+    win.temid = data.temid;
+    // 确认登记，避免页面反复重试
+    try {
+      e.source.postMessage({ rt: RT_KEY, act: 'hello-ack' }, location.origin);
+    } catch {}
+    return;
+  }
+  if (data.act === 'title') {
+    win.updateTitle(String(data.title ?? '').slice(0, 100));
+  }
 });
 realtime.onForward(forwardToWindows);
 

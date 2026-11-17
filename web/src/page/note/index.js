@@ -177,12 +177,7 @@ if (urlparmes.v) {
         noteObj.md = content;
         titleName = title;
         _setTimeout(() => {
-          if (isIframe()) {
-            try {
-              // 更新标题
-              window.parent.openInIframe.iframes.get(window.iframeId).updateTitle(titleName);
-            } catch {}
-          }
+          realtime.setTitle(titleName);
         }, 1000);
         userInfoObj = {
           account,

@@ -353,12 +353,7 @@ let orginData = {
   content: '',
 };
 function updateIframeTitle(title) {
-  if (isIframe()) {
-    try {
-      // 更新标题
-      window.parent.openInIframe.iframes.get(window.iframeId).updateTitle(title);
-    } catch {}
-  }
+  realtime.setTitle(title);
 }
 // 提示恢复服务器上未保存的编辑草稿（支持多端恢复）
 // 确认恢复后继续编辑，取消恢复则删除草稿，保存笔记时也会清除

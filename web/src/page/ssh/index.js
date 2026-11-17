@@ -37,7 +37,6 @@ import {
   downloadFiles,
   getFiles,
   isDarkMode,
-  isIframe,
   isMobile,
   longPress,
   myOpen,
@@ -329,12 +328,7 @@ reqSSHConnect({ id: HASH, defaultPath: p })
       const { title, host, port, username } = res.data;
       const data = `${title}：${username}@${host}:${port}`;
       _setTimeout(() => {
-        if (isIframe()) {
-          try {
-            // 更新标题
-            window.parent.openInIframe.iframes.get(window.iframeId).updateTitle(data);
-          } catch {}
-        }
+        realtime.setTitle(data);
       }, 1000);
       document.title = data;
     }

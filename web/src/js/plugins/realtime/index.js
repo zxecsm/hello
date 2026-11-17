@@ -199,6 +199,16 @@ const realtime = {
       parent.postMessage({ ...msg, rt: RT_KEY }, location.origin);
     } catch {}
   },
+  // 更新窗口标题：iframe 内交给外壳改标签，独立打开时直接改自己的标题
+  setTitle(title) {
+    if (title === undefined || title === null) return;
+    const text = String(title);
+    if (isIframe()) {
+      this.post({ act: 'title', title: text });
+      return;
+    }
+    document.title = text;
+  },
 };
 
 export default realtime;
