@@ -195,7 +195,7 @@ if (urlparmes.v) {
                 const {
                   type,
                   data: { flag, id },
-                } = item;
+                } = item.data;
                 if (
                   type === 'updatedata' &&
                   ((flag === 'note' && urlparmes.v === id) ||

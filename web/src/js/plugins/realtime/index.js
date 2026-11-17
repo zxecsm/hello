@@ -109,14 +109,14 @@ const realtime = {
       });
   },
   // 分发：本地页面消费 + 交给窗口管理器转发
-  // 服务端统一下发 { from, to, data }，from 是发送方 temid，to 见 route.js
+  // 页面拿到的是 { from, to, data }，from 是发送方 temid，to 见 route.js
   dispatch(list) {
     const mine = [];
     const myTemid = _d.temid;
 
     list.forEach((item) => {
       if (isMessageForClient(item.from, item.to, myTemid)) {
-        mine.push(item.data);
+        mine.push(item);
       }
     });
     if (mine.length) this.emit(mine);

@@ -59,7 +59,6 @@ function send(account, temid, data, to = 'all') {
 
   const now = Date.now();
   const flag = nanoid();
-  data.fromID = temid;
   const message = { from: temid, flag, data, time: now, to };
 
   // 更新 flag 并存入消息

@@ -86,7 +86,7 @@ waitLogin(() => {
         const {
           type,
           data: { flag },
-        } = item;
+        } = item.data;
         if (type === 'updatedata' && flag === 'bookmark') {
           renderCategoryList(1);
         }

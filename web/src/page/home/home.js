@@ -153,14 +153,14 @@ export function shakeChat() {
   target.classList.add('shake');
   closeShake(target);
 }
-function isNotify(from, to, notify, fromID) {
+function isNotify(from, to, notify, senderTemid) {
   const acc = localData.get('account');
-  return (from !== acc || (from === to && fromID !== from + _d.temid)) && notify === 1;
+  return (from !== acc || (from === to && senderTemid !== _d.temid)) && notify === 1;
 }
 
 export function otherWindowMsg(msg) {
   if (isIframe()) return;
-  const { type, data, notify, fromID } = msg;
+  const { type, data, notify } = msg.data;
   if (type === 'online') {
     _msg.online(data.text, (type) => {
       if (type === 'click') {
@@ -173,7 +173,7 @@ export function otherWindowMsg(msg) {
     handleClipboardMsg(data);
   } else if (type === 'chat') {
     const { flag, from, to, msgData } = data;
-    if (!isNotify(from.account, to, notify, fromID)) return;
+    if (!isNotify(from.account, to, notify, msg.from)) return;
     let text = '';
     // 新消息处理
     if (flag === 'addmsg') {

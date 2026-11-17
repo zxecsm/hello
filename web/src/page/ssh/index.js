@@ -343,7 +343,7 @@ reqSSHConnect({ id: HASH, defaultPath: p })
 let sizeFlag = false;
 realtime.init().add((res) => {
   res.forEach((item) => {
-    const { type, data } = item;
+    const { type, data } = item.data;
     if (type === 'ssh') {
       if (!sizeFlag) {
         sizeFlag = true;

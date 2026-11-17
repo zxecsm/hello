@@ -677,19 +677,19 @@ function isCurChatRoom(chatAccount, from, to) {
     (from === userInfo.account && to === chatAccount)
   );
 }
-function isNotify(from, to, notify, fromID) {
-  return (from !== userInfo.account || (from === to && fromID !== from + _d.temid)) && notify === 1;
+function isNotify(from, to, notify, senderTemid) {
+  return (from !== userInfo.account || (from === to && senderTemid !== _d.temid)) && notify === 1;
 }
 function isAlert(from) {
   return from !== userInfo.account;
 }
 // 处理聊天数据
-function hdChatType(resData, notify, fromID) {
+function hdChatType(resData, notify, senderTemid) {
   const { flag, from, to, msgData } = resData;
   const chatAccount = setCurChatAccount(); //当前聊天框
   // 新消息处理
   if (flag === 'addmsg') {
-    if (isNotify(from.account, to, notify, fromID)) {
+    if (isNotify(from.account, to, notify, senderTemid)) {
       chatMessageNotification(
         from.des || from.username,
         msgData.content,
@@ -766,7 +766,7 @@ function hdChatType(resData, notify, fromID) {
     }
     // 撤回消息
   } else if (flag === 'del') {
-    if (isNotify(from.account, to, notify, fromID)) {
+    if (isNotify(from.account, to, notify, senderTemid)) {
       chatMessageNotification(from.des || from.username, '撤回消息', from.account, to, from.logo);
     }
     if (!chatRoomWrapIsHide()) {
@@ -783,7 +783,7 @@ function hdChatType(resData, notify, fromID) {
     }
     // 清空聊天框
   } else if (flag === 'clear') {
-    if (isNotify(from.account, to, notify, fromID)) {
+    if (isNotify(from.account, to, notify, senderTemid)) {
       chatMessageNotification(
         from.des || from.username,
         '清空聊天记录',
@@ -800,7 +800,7 @@ function hdChatType(resData, notify, fromID) {
       }
     }
   } else if (flag === 'shake') {
-    if (isNotify(from.account, to, notify, fromID) && to !== _d.chatRoomAccount) {
+    if (isNotify(from.account, to, notify, senderTemid) && to !== _d.chatRoomAccount) {
       chatMessageNotification(
         from.des || from.username,
         '抖了一下窗口',
@@ -898,10 +898,10 @@ function handleOnlineMsg(data) {
 //同步数据
 realtime.init('home').add((res) => {
   res.forEach((item) => {
-    const { type, data, notify, fromID } = item;
+    const { type, data, notify } = item.data;
     //处理聊天指令
     if (type === 'chat') {
-      hdChatType(data, notify, fromID);
+      hdChatType(data, notify, item.from);
     } else if (type === 'updatedata') {
       hdUpdatedataType(data);
     } else if (type === 'play') {

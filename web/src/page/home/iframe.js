@@ -465,12 +465,12 @@ function forwardToWindows(list) {
   // 同一个窗口的多条消息合并成一次 postMessage
   const buckets = new Map();
   list.forEach((item) => {
-    const { from, to, data } = item;
+    const { from, to } = item;
     openInIframe.iframes.data.forEach((win) => {
       if (!win.temid) return; // 外部链接（跨域）不参与
       if (!isMessageForClient(from, to, win.temid)) return;
       if (!buckets.has(win)) buckets.set(win, []);
-      buckets.get(win).push(data);
+      buckets.get(win).push(item);
     });
   });
   for (const [win, msgs] of buckets) {

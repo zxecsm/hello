@@ -186,11 +186,11 @@ realtime.init().add((res) => {
     const {
       type,
       data: { flag },
-    } = item;
+    } = item.data;
     if (type === 'updatedata' && flag === 'file') {
       updateCurPage();
     } else if (type === 'pastefiledata') {
-      waitObj = item.data;
+      waitObj = item.data.data;
       if (waitObj.type) {
         showPaste();
       } else {

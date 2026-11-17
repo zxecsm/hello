@@ -42,7 +42,7 @@ realtime.init().add((res) => {
     const {
       type,
       data: { flag },
-    } = item;
+    } = item.data;
     if (type === 'updatedata' && flag === 'sharelist') {
       getShareList();
     }
