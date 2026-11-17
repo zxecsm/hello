@@ -294,6 +294,11 @@ mdWorker.addEventListener('message', (event) => {
   timeMsg();
   welcomeMsg();
   $setBtnsWrap.addClass('open');
+  // 有锚点时跳过入场动画：translateY 的过渡会让 scrollIntoView 算偏，
+  // 出现"先滚一点、动画结束后标题被顶出视口"的问题
+  if (HASH) {
+    $contentWrap.addClass('skip_anim');
+  }
   $contentWrap.addClass('open');
   // hash 只用于标题锚点
   if (HASH) {

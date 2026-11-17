@@ -384,6 +384,7 @@ if (NOTE_ID === 'new') {
       title: formatDate({ template: '{0}-{1}-{2} {3}:{4}' }),
       content,
     });
+    if (ANCHOR) $editWrap.addClass('skip_anim');
     $headBtns.addClass('open');
     $editWrap.addClass('open');
   });
@@ -403,6 +404,7 @@ if (NOTE_ID === 'new') {
           _setTimeout(() => {
             updateIframeTitle(result.data.title);
           }, 1000);
+          if (ANCHOR) $editWrap.addClass('skip_anim');
           $headBtns.addClass('open');
           $editWrap.addClass('open');
           restoreEditing(result.data.editing, result.data.content);

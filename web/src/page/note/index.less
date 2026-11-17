@@ -124,6 +124,10 @@ body {
       transform: none;
       opacity: 1;
     }
+    // 带锚点直跳时跳过入场动画，避免 translateY 干扰 scrollIntoView
+    &.skip_anim {
+      transition: none;
+    }
 
     .fill_box {
       display: none;
