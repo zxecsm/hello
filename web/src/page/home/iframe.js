@@ -28,6 +28,8 @@ import rMenu from '../../js/plugins/rightMenu';
 import { _tpl } from '../../js/utils/template';
 import localData from '../../js/common/localData';
 import toolTip from '../../js/plugins/tooltip';
+import realtime, { RT_KEY } from '../../js/plugins/realtime';
+import { isMessageForClient } from '../../js/plugins/realtime/route';
 let iframeSize = localData.get('iframeSize');
 const $minimizeBox = $('.minimize_box');
 // 标签logo
@@ -88,6 +90,7 @@ class CreateIframe {
     this.name = name || url;
     this.logo = logo;
     this.id = nanoid() + '_iframe';
+    this.temid = '';
     this.isTop = false;
     this.init();
   }
@@ -232,6 +235,7 @@ class CreateIframe {
   }
   close() {
     openInIframe.iframes.remove(this.id);
+    realtime.removeTemid(this.temid);
     this.box.removeEventListener('click', this.hdClick);
     this.box.removeEventListener('mousedown', this.hdDown);
     this.box.removeEventListener('touchstart', this.hdStart);
@@ -441,6 +445,54 @@ function handleHideBox(e, _this) {
     _this.textContent,
   );
 }
+// ---------- 实时消息转发 ----------
+// iframe 里的页面不再各自长轮询，由 home 统一收消息后按 (from, to) 定向转发
+function findWindowBySource(source) {
+  let target = null;
+  openInIframe.iframes.data.forEach((win) => {
+    if (!target && win.iframe && win.iframe.contentWindow === source) {
+      target = win;
+    }
+  });
+  return target;
+}
+function postMsgs(win, msgs) {
+  try {
+    win.iframe.contentWindow.postMessage({ rt: RT_KEY, act: 'msgs', msgs }, location.origin);
+  } catch {}
+}
+function forwardToWindows(list) {
+  // 同一个窗口的多条消息合并成一次 postMessage
+  const buckets = new Map();
+  list.forEach((item) => {
+    const { from, to, data } = item;
+    openInIframe.iframes.data.forEach((win) => {
+      if (!win.temid) return; // 外部链接（跨域）不参与
+      if (!isMessageForClient(from, to, win.temid)) return;
+      if (!buckets.has(win)) buckets.set(win, []);
+      buckets.get(win).push(data);
+    });
+  });
+  for (const [win, msgs] of buckets) {
+    postMsgs(win, msgs);
+  }
+}
+// 窗口页面加载后主动上报自己的 temid / page
+window.addEventListener('message', function (e) {
+  if (e.origin !== location.origin) return;
+  const data = e.data;
+  if (!data || data.rt !== RT_KEY || data.act !== 'hello' || !data.temid) return;
+  const win = findWindowBySource(e.source);
+  if (!win) return;
+  realtime.addTemid(data.temid, data.page, win.temid);
+  win.temid = data.temid;
+  // 确认登记，避免页面反复重试
+  try {
+    e.source.postMessage({ rt: RT_KEY, act: 'hello-ack' }, location.origin);
+  } catch {}
+});
+realtime.onForward(forwardToWindows);
+
 export function closeAllIframe(ignoreIframe) {
   openInIframe.iframes.data.forEach((ifram) => {
     if (!ignoreIframe || ignoreIframe.id != ifram.id) {

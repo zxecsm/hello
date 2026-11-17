@@ -1323,10 +1323,23 @@ route.get(
     V.object({
       flag: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
       page: V.string().trim().default('').allowEmpty().max(30),
+      // 外壳代收：pages 为替哪些页面收（逗号分隔），temids 为替哪些客户端收
+      pages: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(500)
+        .pattern(/^[a-zA-Z0-9_,.-]*$/),
+      temids: V.string()
+        .trim()
+        .default('')
+        .allowEmpty()
+        .max(5000)
+        .pattern(/^[a-zA-Z0-9_,.-]*$/),
     }),
   ),
   asyncHandler(async (_, res) => {
-    const { account } = res.locals.hello.userinfo;
+    const { account, update_at } = res.locals.hello.userinfo;
 
     let { temid, ip, os } = res.locals.hello;
 
@@ -1336,16 +1349,27 @@ route.get(
       return resp.badRequest(res)(error, 1);
     }
 
-    let { flag, page } = res.locals.ctx; //标识和设备ID
+    let { flag, page, pages, temids } = res.locals.ctx; //标识和设备ID
 
-    if (page === 'home') {
-      db('user').where({ account, state: 1 }).update({ update_at: Date.now() });
-      touchUserInfoCache(account);
+    // 页面集合：外壳会带上所有已打开窗口的页面标识
+    const pageList = pages ? pages.split(',') : page ? [page] : [];
+    // 客户端集合：外壳代收子窗口的消息（多路复用）
+    // 页面只知道自己未加账号前缀的临时ID，服务端统一补上前缀
+    const temidList = (temids ? temids.split(',') : [])
+      .filter(Boolean)
+      .map((item) => (item.startsWith(account) ? item : account + item));
+
+    if (pageList.includes('home')) {
+      const now = Date.now();
+      if (now - update_at > 10 * 1000) {
+        db('user').where({ account, state: 1 }).update({ update_at: now });
+        touchUserInfoCache(account, now);
+      }
       // 主页才通知在线
       onlineMsg(res);
     }
 
-    const con = _connect.add(account, cb, { temid, page, ip, os });
+    const con = _connect.add(account, cb, { temid, page, pages: pageList, ip, os });
 
     // 初始化指令标识
     if (!flag) {
@@ -1355,7 +1379,7 @@ route.get(
     let msgs = [];
 
     function cb() {
-      msgs = _connect.getMessages(account, temid, flag);
+      msgs = _connect.getMessages(account, temid, flag, temidList);
       // 验证标识和是否有推送消息，没有则继续等待
       if (con.flag === flag || msgs.length === 0) return;
       stop(1);
@@ -1382,8 +1406,10 @@ route.get(
       }
     }
 
-    // 保活SSH连接
-    if (page === 'ssh') resetSSHExpireTime(temid);
+    // 保活SSH连接（外壳代收时子窗口的 SSH 会话也要续期）
+    if (pageList.includes('ssh')) {
+      (temidList.length ? temidList : [temid]).forEach((item) => resetSSHExpireTime(item));
+    }
   }),
 );
 
