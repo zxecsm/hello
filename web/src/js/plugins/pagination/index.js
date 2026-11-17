@@ -117,7 +117,7 @@ class Pagination {
     if (this.opt.small) {
       return _tpl(
         `
-        <div class="paginationBox no_select">
+        <div class="hello_pagination paginationBox no_select">
         <button data-type="paging" data-cursor="pointer" data-flag="prev" class="iconfont icon-zuo"></button>
         <button data-type="paging" data-cursor="pointer" data-flag="getvalue">{{pageNo}} / {{totalPage}}</button>
         <button data-type="paging" data-cursor="pointer" data-flag="next" class="iconfont icon-you"></button>
@@ -149,7 +149,7 @@ class Pagination {
     }
     return _tpl(
       `
-      <div class="paginationBox no_select">
+      <div class="hello_pagination paginationBox no_select">
         <button v-if="pageNo>1" data-type="paging" data-cursor="pointer" data-flag="prev" class="iconfont icon-zuo"></button>
         <template v-if="totalPage > continuous">
           <button v-if="startPage>1" data-type="paging" data-cursor="pointer" data-flag="1">1</button>

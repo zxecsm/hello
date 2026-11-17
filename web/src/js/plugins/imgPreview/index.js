@@ -24,7 +24,7 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
     isDragging = false;
 
   const box = document.createElement('div');
-  box.className = 'img_preview';
+  box.className = 'hello_img_preview img_preview';
   box.style.zIndex = _d.levelObj.imgPreview;
 
   const image = document.createElement('img');

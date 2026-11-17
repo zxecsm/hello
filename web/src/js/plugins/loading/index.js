@@ -5,6 +5,7 @@ class LoadingPage {
   start() {
     this.loadingBox = document.createElement('div');
     this.loadingBox.id = 'loading_box';
+    this.loadingBox.className = 'hello_loading';
     this.loadingBox.innerHTML = `
         <div class="left"></div>
         <div class="right"></div>

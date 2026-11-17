@@ -173,13 +173,16 @@ async function settingMenu(e) {
     { id: 'code', text: '语言', beforeIcon: 'iconfont icon-daimakuai' },
   ];
   if (isLogin()) {
-    data.push({
-      id: 'history',
-      text: '保存文件历史',
-      beforeIcon: 'iconfont icon-history',
-      afterIcon: 'iconfont ' + (fileHistoryState ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
-      param: { value: fileHistoryState },
-    });
+    data.push(
+      { divider: true },
+      {
+        id: 'history',
+        text: '保存文件历史',
+        beforeIcon: 'iconfont icon-history',
+        afterIcon: 'iconfont ' + (fileHistoryState ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+        param: { value: fileHistoryState },
+      },
+    );
   }
   rMenu.selectMenu(
     e,

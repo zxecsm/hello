@@ -4,7 +4,7 @@ import { _tpl } from '../../utils/template';
 import localData from '../../common/localData';
 
 const tipBox = document.createElement('pre');
-tipBox.className = 'tool_tip';
+tipBox.className = 'hello_tooltip tool_tip';
 document.body.appendChild(tipBox);
 const space = 20;
 function move(e) {

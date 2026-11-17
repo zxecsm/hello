@@ -33,16 +33,16 @@ class Msg {
     this.el = document.createElement('div');
     switch (this.opt.type) {
       case 'info':
-        this.el.className = 'message_box info';
+        this.el.className = 'hello_message message_box info';
         break;
       case 'success':
-        this.el.className = 'message_box success';
+        this.el.className = 'hello_message message_box success';
         break;
       case 'error':
-        this.el.className = 'message_box error';
+        this.el.className = 'hello_message message_box error';
         break;
       case 'warning':
-        this.el.className = 'message_box warning';
+        this.el.className = 'hello_message message_box warning';
       default:
         break;
     }

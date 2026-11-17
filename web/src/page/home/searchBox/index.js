@@ -1206,10 +1206,13 @@ function selectSearch(e) {
             text: '图标',
             beforeIcon: 'iconfont icon-tupian',
           },
+          { divider: true },
           {
             id: 'delete',
             text: '删除',
             beforeIcon: 'iconfont icon-shanchu',
+            beforeIconColor: 'var(--btn-danger-color)',
+            textColor: 'var(--btn-danger-color)',
           },
         ];
         rMenu.selectMenu(
@@ -1477,10 +1480,13 @@ function selectTranslator(e) {
             text: '图标',
             beforeIcon: 'iconfont icon-tupian',
           },
+          { divider: true },
           {
             id: 'delete',
             text: '删除',
             beforeIcon: 'iconfont icon-shanchu',
+            beforeIconColor: 'var(--btn-danger-color)',
+            textColor: 'var(--btn-danger-color)',
           },
         ];
         rMenu.selectMenu(

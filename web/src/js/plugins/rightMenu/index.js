@@ -65,7 +65,7 @@ class RightM {
   }
   init() {
     this.rightMask = document.createElement('div');
-    this.rightMask.className = 'right_mask';
+    this.rightMask.className = 'hello_right_menu right_mask';
     this.rightMask.style.zIndex = _d.levelObj.rightBox;
     this.rightBox = document.createElement('div');
     this.rightBox.className = 'right_box max';
@@ -617,6 +617,18 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
 }
 function render(data) {
   data = data.map((item) => {
+    // 分割线：只占位，不渲染图标/文字，也不可点击
+    if (item.divider) {
+      return {
+        ...item,
+        divider: true,
+        id: '',
+        text: '',
+        beforeIcon: '',
+        active: false,
+        pointer: false,
+      };
+    }
     const {
       id,
       text = '',
@@ -624,6 +636,8 @@ function render(data) {
       afterText = '',
       beforeText = '',
       beforeIcon = beforeText ? '' : 'icon iconfont icon-cat_full_foot',
+      beforeIconColor = '',
+      textColor = '',
       active = false,
       pointer = true,
     } = item;
@@ -635,17 +649,20 @@ function render(data) {
       afterText,
       beforeText,
       beforeIcon,
+      // 左边的图标和文字颜色走内联 style，颜色值可以直接用 CSS 变量
+      beforeIconStyle: beforeIconColor ? `color:${beforeIconColor}` : '',
+      textStyle: textColor ? `color:${textColor}` : '',
       active,
       pointer,
     };
   });
   return _tpl(
     `
-    <div v-for="{id,text,afterIcon,afterText,beforeText,beforeIcon,active,pointer} in data" :data-id='id'
-     :data-cursor="pointer ? 'pointer' : ''" class="item {{active ? 'active' : ''}} {{pointer ? '' : 'stop'}}">
-      <i v-if="beforeIcon" class="icon {{beforeIcon}}"></i>
+    <div v-for="{id,text,afterIcon,afterText,beforeText,beforeIcon,beforeIconStyle,textStyle,active,pointer,divider} in data" :data-id='id'
+     :data-cursor="pointer ? 'pointer' : ''" class="item {{active ? 'active' : ''}} {{pointer ? '' : 'stop'}} {{divider ? 'divider' : ''}}">
+      <i v-if="beforeIcon" class="icon {{beforeIcon}}" :style="beforeIconStyle"></i>
       <i v-if="beforeText" class="title">{{beforeText}}</i>
-      <span class='text'>{{text}}</span>
+      <span class='text' :style="textStyle">{{text}}</span>
       <i v-if="afterText" class="title">{{afterText}}</i>
       <i v-if="afterIcon" class="icon {{afterIcon}}"></i>
     </div>
@@ -660,7 +677,8 @@ function selectMenu(e, data, callback, title = '') {
     let arr = [];
     if (val) {
       val = val.toLowerCase();
-      arr = data.filter((item) => item.text.toLowerCase().includes(val));
+      // 分割线没有文字，搜索时自然被过滤掉
+      arr = data.filter((item) => (item.text || '').toLowerCase().includes(val));
     } else {
       arr = data;
     }
@@ -695,7 +713,8 @@ function selectMenu(e, data, callback, title = '') {
     },
     click({ e, close }) {
       const item = _getTarget(this.content, e, '.item');
-      if (item) {
+      // 分割线不响应点击
+      if (item && !item.classList.contains('divider')) {
         const id = item.dataset.id;
         const d = data.find((item) => item.id === id);
         callback &&
@@ -703,7 +722,8 @@ function selectMenu(e, data, callback, title = '') {
       }
     },
   };
-  if (data.length < 10) {
+  // 分割线不计入搜索阈值
+  if (data.filter((item) => !item.divider).length < 10) {
     delete rOpt.searchCallback;
   }
   const r = rightM(rOpt);
@@ -805,7 +825,7 @@ class Pop {
   init() {
     this.mask = document.createElement('div');
     this.mask.setAttribute('tabindex', '-1');
-    this.mask.className = 'pop_confirm_mask';
+    this.mask.className = 'hello_right_menu pop_confirm_mask';
     this.mask.style.zIndex = this.top ? 9999 : _d.levelObj.popConfirm;
     this.box = document.createElement('div');
     this.box.className = 'box';
@@ -923,7 +943,7 @@ function percentBar(e, percent, callback) {
   const box = document.createElement('div');
   rightBoxList.push(box);
   updateActiveWindows();
-  box.className = 'percent_bar';
+  box.className = 'hello_right_menu percent_bar';
   box.style.zIndex = _d.levelObj.percentBar;
   const proBox = document.createElement('div');
   proBox.className = 'pro_box';

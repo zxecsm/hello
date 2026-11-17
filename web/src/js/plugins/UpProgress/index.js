@@ -5,7 +5,7 @@ import './index.less';
 
 const progressBox = _tpl.getDom(
   `
-<div id="progress_box" style="z-index: {{_d.levelObj.upProgressbox}};">
+<div id="progress_box" class="hello_up_progress" style="z-index: {{_d.levelObj.upProgressbox}};">
   <div data-cursor="pointer" class="left_btn iconfont icon-you"></div>
   <div class="list"></div>
 </div>

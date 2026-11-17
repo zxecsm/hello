@@ -420,10 +420,13 @@ function picMenu(e, picId, el) {
   const data = [
     { id: '2', text: '选中', beforeIcon: 'iconfont icon-duoxuan' },
     { id: '1', text: '复制链接', beforeIcon: 'iconfont icon-fuzhi' },
+    { divider: true },
     {
       id: '3',
       text: '删除',
       beforeIcon: 'iconfont icon-shanchu',
+      beforeIconColor: 'var(--btn-danger-color)',
+      textColor: 'var(--btn-danger-color)',
     },
   ];
   rMenu.selectMenu(

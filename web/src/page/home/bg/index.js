@@ -269,18 +269,28 @@ function bgItemMenu(e, obj, el) {
     },
   ];
   if (isCollectState || isHistoryState) {
-    data.push({
-      id: '5',
-      text: '移除',
-      beforeIcon: 'iconfont icon-shibai',
-    });
+    data.push(
+      { divider: true },
+      {
+        id: '5',
+        text: '移除',
+        beforeIcon: 'iconfont icon-shibai',
+        beforeIconColor: 'var(--message-warning-color)',
+        textColor: 'var(--message-warning-color)',
+      },
+    );
   }
   if (isRoot()) {
-    data.push({
-      id: '4',
-      text: '删除',
-      beforeIcon: 'iconfont icon-shanchu',
-    });
+    data.push(
+      { divider: true },
+      {
+        id: '4',
+        text: '删除',
+        beforeIcon: 'iconfont icon-shanchu',
+        beforeIconColor: 'var(--btn-danger-color)',
+        textColor: 'var(--btn-danger-color)',
+      },
+    );
   }
   rMenu.selectMenu(
     e,

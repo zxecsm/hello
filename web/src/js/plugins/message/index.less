@@ -1,91 +1,93 @@
-.message_box {
-  display: flex;
-  align-items: center;
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90%;
-  max-width: 40rem;
-  opacity: 0;
-  border-radius: var(--border-radius1-5);
-  line-height: 1.5;
-  font-size: 1.6rem;
-  border: 0.1rem solid;
-  overflow: hidden;
-  .text {
-    word-break: break-all;
-    flex: auto;
-    padding: 1rem 0 1rem 1rem;
-  }
-  .progress {
-    position: absolute;
-    bottom: 0rem;
-    left: 0;
-    height: 0.2rem;
-    width: 100%;
+.hello_message {
+  &.message_box {
+    display: flex;
+    align-items: center;
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 40rem;
     opacity: 0;
-  }
-  .close,
-  .icon {
-    flex: none;
-    font-size: 2rem;
-    width: 4rem;
-    height: 3rem;
-    line-height: 3rem;
-    text-align: center;
-  }
-  &.success {
-    background-color: var(--message-success-bg);
-    border-color: var(--message-success-border);
-    .icon,
-    .close,
+    border-radius: var(--border-radius1-5);
+    line-height: 1.5;
+    font-size: 1.6rem;
+    border: 0.1rem solid;
+    overflow: hidden;
     .text {
-      color: var(--message-success-color);
+      word-break: break-all;
+      flex: auto;
+      padding: 1rem 0 1rem 1rem;
     }
     .progress {
-      background-color: var(--message-success-color);
+      position: absolute;
+      bottom: 0rem;
+      left: 0;
+      height: 0.2rem;
+      width: 100%;
+      opacity: 0;
     }
-  }
-  &.info {
-    background-color: var(--message-info-bg);
-    border-color: var(--message-info-border);
     .close,
-    .icon,
-    .text {
-      color: var(--message-info-color);
+    .icon {
+      flex: none;
+      font-size: 2rem;
+      width: 4rem;
+      height: 3rem;
+      line-height: 3rem;
+      text-align: center;
     }
-    .progress {
-      background-color: var(--message-info-color);
+    &.success {
+      background-color: var(--message-success-bg);
+      border-color: var(--message-success-border);
+      .icon,
+      .close,
+      .text {
+        color: var(--message-success-color);
+      }
+      .progress {
+        background-color: var(--message-success-color);
+      }
     }
-  }
-  &.warning {
-    background-color: var(--message-warning-bg);
-    border-color: var(--message-warning-border);
-    .close,
-    .icon,
-    .text {
-      color: var(--message-warning-color);
+    &.info {
+      background-color: var(--message-info-bg);
+      border-color: var(--message-info-border);
+      .close,
+      .icon,
+      .text {
+        color: var(--message-info-color);
+      }
+      .progress {
+        background-color: var(--message-info-color);
+      }
     }
-    .progress {
-      background-color: var(--message-warning-color);
+    &.warning {
+      background-color: var(--message-warning-bg);
+      border-color: var(--message-warning-border);
+      .close,
+      .icon,
+      .text {
+        color: var(--message-warning-color);
+      }
+      .progress {
+        background-color: var(--message-warning-color);
+      }
     }
-  }
-  &.error {
-    background-color: var(--message-error-bg);
-    border-color: var(--message-error-border);
-    .close,
-    .icon,
-    .text {
-      color: var(--message-error-color);
+    &.error {
+      background-color: var(--message-error-bg);
+      border-color: var(--message-error-border);
+      .close,
+      .icon,
+      .text {
+        color: var(--message-error-color);
+      }
+      .progress {
+        background-color: var(--message-error-color);
+      }
     }
-    .progress {
-      background-color: var(--message-error-color);
-    }
-  }
-  .close {
-    &:hover {
-      color: var(--btn-danger-color) !important;
-      transform: scale(1.1) !important;
+    .close {
+      &:hover {
+        color: var(--btn-danger-color) !important;
+        transform: scale(1.1) !important;
+      }
     }
   }
 }

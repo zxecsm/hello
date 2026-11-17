@@ -148,7 +148,14 @@ function hdCategory(e) {
   const obj = getCategoryInfo($this.data('id'));
   const data = [
     { id: 'edit', text: '编辑', beforeIcon: 'iconfont icon-bianji' },
-    { id: 'delete', text: '删除', beforeIcon: 'iconfont icon-shanchu' },
+    { divider: true },
+    {
+      id: 'delete',
+      text: '删除',
+      beforeIcon: 'iconfont icon-shanchu',
+      beforeIconColor: 'var(--btn-danger-color)',
+      textColor: 'var(--btn-danger-color)',
+    },
   ];
   rMenu.selectMenu(
     e,

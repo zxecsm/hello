@@ -426,6 +426,7 @@ function todoMenu(e) {
       text: '选中',
       beforeIcon: 'iconfont icon-duoxuan',
     },
+    { divider: true },
     {
       id: 'copy',
       text: '复制',
@@ -436,10 +437,13 @@ function todoMenu(e) {
       text: '编辑',
       beforeIcon: 'iconfont icon-bianji',
     },
+    { divider: true },
     {
       id: 'del',
       text: '删除',
       beforeIcon: 'iconfont icon-shanchu',
+      beforeIconColor: 'var(--btn-danger-color)',
+      textColor: 'var(--btn-danger-color)',
     },
   ];
   rMenu.selectMenu(

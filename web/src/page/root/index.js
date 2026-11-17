@@ -788,6 +788,7 @@ function handleTest(e) {
 }
 // 清理文件
 function handleClearFile(e) {
+  const warningColor = 'var(--message-warning-color)';
   const data = [
     {
       id: 'thumb',
@@ -799,25 +800,34 @@ function handleClearFile(e) {
       text: '管理LOGO图标',
       beforeIcon: 'iconfont icon-shezhi',
     },
+    { divider: true },
     {
       id: 'bg',
       text: '清理壁纸文件',
       beforeIcon: 'iconfont icon-tupian',
+      beforeIconColor: warningColor,
+      textColor: warningColor,
     },
     {
       id: 'pic',
       text: '清理图床文件',
       beforeIcon: 'iconfont icon-tupian',
+      beforeIconColor: warningColor,
+      textColor: warningColor,
     },
     {
       id: 'song',
       text: '清理歌曲文件',
       beforeIcon: 'iconfont icon-yinle1',
+      beforeIconColor: warningColor,
+      textColor: warningColor,
     },
     {
       id: 'chat',
       text: '清理聊天室文件',
       beforeIcon: 'iconfont icon-liaotian',
+      beforeIconColor: warningColor,
+      textColor: warningColor,
     },
   ];
   rMenu.selectMenu(

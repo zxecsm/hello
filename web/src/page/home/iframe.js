@@ -416,6 +416,7 @@ function handleHideBox(e, _this) {
   ];
   if (openInIframe.iframes.data.size > 1) {
     data.push(
+      { divider: true },
       {
         id: '2',
         text: '隐藏其他窗口',
@@ -425,6 +426,8 @@ function handleHideBox(e, _this) {
         id: '3',
         text: '关闭其他窗口',
         beforeIcon: 'iconfont icon-shibai',
+        beforeIconColor: 'var(--btn-danger-color)',
+        textColor: 'var(--btn-danger-color)',
       },
     );
   }

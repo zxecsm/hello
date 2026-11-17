@@ -636,11 +636,14 @@ $contentWrap
     }
     data = [
       ...data,
+      { divider: true },
       { id: '2', text: '恢复', beforeIcon: 'iconfont icon-Undo' },
       {
         id: '3',
         text: '删除',
         beforeIcon: 'iconfont icon-shanchu',
+        beforeIconColor: 'var(--btn-danger-color)',
+        textColor: 'var(--btn-danger-color)',
       },
     ];
     rMenu.selectMenu(

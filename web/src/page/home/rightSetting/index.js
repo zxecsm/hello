@@ -389,11 +389,16 @@ function hdUserLogo(e) {
       text: '查看',
       beforeIcon: 'iconfont icon-kejian',
     });
-    data.push({
-      id: '3',
-      text: '删除',
-      beforeIcon: 'iconfont icon-shanchu',
-    });
+    data.push(
+      { divider: true },
+      {
+        id: '3',
+        text: '删除',
+        beforeIcon: 'iconfont icon-shanchu',
+        beforeIconColor: 'var(--btn-danger-color)',
+        textColor: 'var(--btn-danger-color)',
+      },
+    );
   }
   rMenu.selectMenu(
     e,
@@ -830,6 +835,7 @@ export function settingMenu(e, isMain) {
   const dark = localData.get('dark');
   const headBtnToRight = localData.get('headBtnToRight');
   const icon = getDarkIcon(dark);
+  const divider = { divider: true };
   let data = [
     {
       id: '1',
@@ -841,6 +847,7 @@ export function settingMenu(e, isMain) {
       text: '君子锁',
       beforeIcon: 'iconfont icon-suo',
     },
+    divider,
     {
       id: '3',
       text: '个性化',
@@ -860,22 +867,9 @@ export function settingMenu(e, isMain) {
       param: { value: headBtnToRight },
     },
   ];
-  if (cacheFile.supported) {
-    data.push({
-      id: '6',
-      text: '缓存管理',
-      beforeIcon: `iconfont icon-yidongyingpan`,
-    });
-  } else {
-    data.push({
-      id: '10',
-      text: '清理本地配置缓存',
-      beforeIcon: `iconfont icon-qingkong-1`,
-    });
-  }
   if (isMain) {
-    data = [
-      ...data,
+    data.push(
+      divider,
       {
         id: '7',
         text: '新建笔记',
@@ -890,8 +884,24 @@ export function settingMenu(e, isMain) {
         id: '9',
         text: '关闭所有窗口',
         beforeIcon: 'iconfont icon-shibai',
+        beforeIconColor: 'var(--btn-danger-color)',
+        textColor: 'var(--btn-danger-color)',
       },
-    ];
+    );
+  }
+  data.push(divider);
+  if (cacheFile.supported) {
+    data.push({
+      id: '6',
+      text: '缓存管理',
+      beforeIcon: `iconfont icon-yidongyingpan`,
+    });
+  } else {
+    data.push({
+      id: '10',
+      text: '清理本地配置缓存',
+      beforeIcon: `iconfont icon-qingkong-1`,
+    });
   }
   rMenu.selectMenu(
     e,
@@ -924,6 +934,7 @@ export function settingMenu(e, isMain) {
             text: '更换字体',
             beforeIcon: 'iconfont icon-font-size',
           },
+          { divider: true },
           {
             id: '4',
             text: '点击爱心',
@@ -949,7 +960,7 @@ export function settingMenu(e, isMain) {
         ];
         if (!isMobile()) {
           data.push({
-            id: '7',
+            id: '8',
             text: '鼠标移入显示提示信息',
             beforeIcon: 'iconfont icon-tishi',
             afterIcon: 'iconfont ' + (tip ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
@@ -1018,7 +1029,7 @@ export function settingMenu(e, isMain) {
                 localData.set('pmsound', true);
               }
               resetMenu(data);
-            } else if (id === '7') {
+            } else if (id === '8') {
               // 提示工具
               if (param.value) {
                 curItem.afterIcon = 'iconfont icon-kaiguan-guan';

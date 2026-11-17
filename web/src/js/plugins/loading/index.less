@@ -1,99 +1,101 @@
-#loading_box {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  .right,
-  .left {
-    position: absolute;
+.hello_loading {
+  &#loading_box {
+    position: fixed;
     top: 0;
-    width: 50%;
-    height: 100%;
-    background-color: var(--color9);
-  }
-  &.open {
-    .left,
-    .right,
-    .center {
-      transition: 0.5s ease;
-    }
-    .left {
-      transform: translateX(-100%);
-    }
-    .right {
-      transform: translateX(100%);
-    }
-    .center {
-      opacity: 0;
-    }
-  }
-  .left {
     left: 0;
-  }
-  .right {
-    right: 0;
-  }
-  .center {
-    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
     display: flex;
-    flex-flow: column;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.3s ease-in-out;
-    .logo {
+    z-index: 9999;
+    .right,
+    .left {
+      position: absolute;
+      top: 0;
+      width: 50%;
+      height: 100%;
+      background-color: var(--color9);
+    }
+    &.open {
+      .left,
+      .right,
+      .center {
+        transition: 0.5s ease;
+      }
+      .left {
+        transform: translateX(-100%);
+      }
+      .right {
+        transform: translateX(100%);
+      }
+      .center {
+        opacity: 0;
+      }
+    }
+    .left {
+      left: 0;
+    }
+    .right {
+      right: 0;
+    }
+    .center {
       position: relative;
-      width: 15rem;
-      height: 15rem;
-      border-radius: 50%;
-      border: 0.3rem solid transparent;
-      border-top-color: #409eff;
-      animation: ring 1.6s linear infinite;
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0.5rem;
-        left: 0.5rem;
-        right: 0.5rem;
-        bottom: 0.5rem;
+      display: flex;
+      flex-flow: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.3s ease-in-out;
+      .logo {
+        position: relative;
+        width: 15rem;
+        height: 15rem;
         border-radius: 50%;
         border: 0.3rem solid transparent;
-        border-top-color: #1389a7;
-        animation: ring-reseve 0.8s linear infinite;
+        border-top-color: #409eff;
+        animation: ring 1.6s linear infinite;
+        &::before {
+          content: '';
+          position: absolute;
+          top: 0.5rem;
+          left: 0.5rem;
+          right: 0.5rem;
+          bottom: 0.5rem;
+          border-radius: 50%;
+          border: 0.3rem solid transparent;
+          border-top-color: #1389a7;
+          animation: ring-reseve 0.8s linear infinite;
+        }
+        &::after {
+          content: '';
+          position: absolute;
+          top: 1.5rem;
+          left: 1.5rem;
+          right: 1.5rem;
+          bottom: 1.5rem;
+          border-radius: 50%;
+          border: 0.3rem solid transparent;
+          border-top-color: #49a923;
+          animation: ring 0.6s linear infinite;
+        }
       }
-      &::after {
-        content: '';
-        position: absolute;
-        top: 1.5rem;
-        left: 1.5rem;
-        right: 1.5rem;
-        bottom: 1.5rem;
-        border-radius: 50%;
-        border: 0.3rem solid transparent;
-        border-top-color: #49a923;
-        animation: ring 0.6s linear infinite;
+      @keyframes ring {
+        0% {
+          transform: rotate(0);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
       }
-    }
-    @keyframes ring {
-      0% {
-        transform: rotate(0);
-      }
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-    @keyframes ring-reseve {
-      0% {
-        transform: rotate(0);
-      }
+      @keyframes ring-reseve {
+        0% {
+          transform: rotate(0);
+        }
 
-      100% {
-        transform: rotate(-360deg);
+        100% {
+          transform: rotate(-360deg);
+        }
       }
     }
   }

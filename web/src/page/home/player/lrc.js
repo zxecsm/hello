@@ -836,6 +836,7 @@ $lrcMenuWrap
         text: '靠右',
         beforeIcon: 'iconfont icon-kaoyou1',
       },
+      { divider: true },
       {
         id: '5',
         text: '编辑歌词',
@@ -868,11 +869,16 @@ $lrcMenuWrap
       },
     ];
     if (isRoot()) {
-      data.push({
-        id: '11',
-        text: '删除',
-        beforeIcon: 'iconfont icon-shanchu',
-      });
+      data.push(
+        { divider: true },
+        {
+          id: '11',
+          text: '删除',
+          beforeIcon: 'iconfont icon-shanchu',
+          beforeIconColor: 'var(--btn-danger-color)',
+          textColor: 'var(--btn-danger-color)',
+        },
+      );
     }
     rMenu.selectMenu(
       e,

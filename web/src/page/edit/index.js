@@ -731,13 +731,16 @@ async function settingEdit(e) {
     },
   ];
   if (isLogin()) {
-    data.push({
-      id: 'history',
-      text: '保存笔记历史',
-      beforeIcon: 'iconfont icon-history',
-      afterIcon: 'iconfont ' + (noteHistoryState ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
-      param: { value: noteHistoryState },
-    });
+    data.push(
+      { divider: true },
+      {
+        id: 'history',
+        text: '保存笔记历史',
+        beforeIcon: 'iconfont icon-history',
+        afterIcon: 'iconfont ' + (noteHistoryState ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+        param: { value: noteHistoryState },
+      },
+    );
   }
   rMenu.selectMenu(
     e,

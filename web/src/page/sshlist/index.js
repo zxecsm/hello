@@ -565,9 +565,17 @@ $contentWrap
     const data = [
       { id: 'check', text: '选中', beforeIcon: 'iconfont icon-duoxuan' },
       { id: '1', text: '置顶', beforeIcon: 'iconfont icon-zhiding' },
+      { divider: true },
       { id: '2', text: '分类', beforeIcon: 'iconfont icon-liebiao1' },
       { id: '4', text: '编辑', beforeIcon: 'iconfont icon-bianji' },
-      { id: '6', text: '删除', beforeIcon: 'iconfont icon-shanchu' },
+      { divider: true },
+      {
+        id: '6',
+        text: '删除',
+        beforeIcon: 'iconfont icon-shanchu',
+        beforeIconColor: 'var(--btn-danger-color)',
+        textColor: 'var(--btn-danger-color)',
+      },
     ];
     rMenu.selectMenu(
       e,

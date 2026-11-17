@@ -553,20 +553,27 @@ function countMenu(e) {
       beforeIcon: 'iconfont icon-duoxuan',
     },
     { id: 'top', text: '置顶', beforeIcon: 'iconfont icon-zhiding' },
+    { divider: true },
     {
       id: 'state',
       text: count.state === 1 ? '关闭' : '开启',
       beforeIcon: `iconfont ${count.state === 1 ? 'icon-shibai' : 'icon-chenggong'}`,
+      // 关闭提醒属于警告操作
+      beforeIconColor: count.state === 1 ? 'var(--message-warning-color)' : '',
+      textColor: count.state === 1 ? 'var(--message-warning-color)' : '',
     },
     {
       id: 'edit',
       text: '编辑',
       beforeIcon: 'iconfont icon-bianji',
     },
+    { divider: true },
     {
       id: 'del',
       text: '删除',
       beforeIcon: 'iconfont icon-shanchu',
+      beforeIconColor: 'var(--btn-danger-color)',
+      textColor: 'var(--btn-danger-color)',
     },
   ];
   rMenu.selectMenu(

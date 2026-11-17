@@ -5,7 +5,7 @@ import { _mySlide, _setTimeout } from '../../utils/utils';
 import { reqTaskCancel, reqTaskInfo } from '../../../api/task';
 
 const taskBox = document.createElement('div');
-taskBox.className = 'task_box';
+taskBox.className = 'hello_task task_box';
 taskBox.innerHTML = `
   <div data-cursor="pointer" class="zoom_btn iconfont icon-xiala"></div>
   <div class="list"></div>

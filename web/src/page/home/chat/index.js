@@ -1284,16 +1284,21 @@ function chatMsgMenu(e, cobj) {
       },
     ];
   }
-  data.push({
-    id: '5',
-    text: '转发',
-    beforeIcon: 'iconfont icon-fenxiang_2',
-  });
+  data.push(
+    { divider: true },
+    {
+      id: '5',
+      text: '转发',
+      beforeIcon: 'iconfont icon-fenxiang_2',
+    },
+  );
   if (_from === setUserInfo().account) {
     data.push({
       id: '4',
       text: '撤回',
       beforeIcon: 'iconfont icon-Undo',
+      beforeIconColor: 'var(--message-warning-color)',
+      textColor: 'var(--message-warning-color)',
     });
   }
   rMenu.selectMenu(

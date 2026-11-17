@@ -187,6 +187,7 @@ function searchListSongSetting(e, sobj) {
     },
   ];
   if (isRoot()) {
+    data.push({ divider: true });
     data.push({
       id: '11',
       text: '上传封面',
@@ -202,17 +203,22 @@ function searchListSongSetting(e, sobj) {
       text: '编辑歌曲信息',
       beforeIcon: 'iconfont icon-bianji',
     });
+    data.push({ divider: true });
     if (sobj.mv) {
       data.push({
         id: '10',
         text: '删除 MV',
         beforeIcon: 'iconfont icon-shanchu',
+        beforeIconColor: 'var(--btn-danger-color)',
+        textColor: 'var(--btn-danger-color)',
       });
     }
     data.push({
       id: '9',
       text: '删除',
       beforeIcon: 'iconfont icon-shanchu',
+      beforeIconColor: 'var(--btn-danger-color)',
+      textColor: 'var(--btn-danger-color)',
     });
   }
   rMenu.selectMenu(

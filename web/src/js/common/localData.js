@@ -260,8 +260,10 @@ const localData = {
 };
 
 window.addEventListener('storage', ({ key, newValue }) => {
+  // 只处理本应用的键；key 为 null 表示 localStorage.clear()
+  if (key !== null && !key.startsWith('hello_')) return;
   try {
-    if (!key) {
+    if (key === null) {
       localData.localCache.clear();
     } else if (newValue !== null) {
       localData.localCache.set(key, decode(newValue));
@@ -269,6 +271,7 @@ window.addEventListener('storage', ({ key, newValue }) => {
       localData.localCache.delete(key);
     }
 
+    // 让其它标签页 / iframe 的 localData.onChange 与本页保持一致
     localData.trigger({ key, newValue });
   } catch {}
 });

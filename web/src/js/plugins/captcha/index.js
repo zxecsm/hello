@@ -29,7 +29,7 @@ class SlideCaptcha {
   /* ================= DOM ================= */
 
   initDOM() {
-    const mask = el('div', 'captcha-mask');
+    const mask = el('div', 'hello_captcha captcha-mask');
     mask.style.zIndex = _d.levelObj.captcha;
     const box = el('div', 'captcha-box');
     const content = el('div', 'captcha-content');

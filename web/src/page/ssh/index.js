@@ -466,6 +466,7 @@ $quickGroup
 function hdGroupMenu(e, obj) {
   const data = [
     { id: 'edit', text: '编辑', beforeIcon: 'iconfont icon-bianji' },
+    { divider: true },
     {
       id: 'add',
       text: '添加命令',
@@ -478,11 +479,16 @@ function hdGroupMenu(e, obj) {
     },
   ];
   if (obj.id !== 'default') {
-    data.push({
-      id: 'delete',
-      text: '删除',
-      beforeIcon: 'iconfont icon-shanchu',
-    });
+    data.push(
+      { divider: true },
+      {
+        id: 'delete',
+        text: '删除',
+        beforeIcon: 'iconfont icon-shanchu',
+        beforeIconColor: 'var(--btn-danger-color)',
+        textColor: 'var(--btn-danger-color)',
+      },
+    );
   }
   rMenu.selectMenu(
     e,

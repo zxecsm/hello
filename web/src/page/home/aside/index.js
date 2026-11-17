@@ -1042,15 +1042,19 @@ function asideListMenu(e, obj, el) {
       text: '添加书签',
       beforeIcon: 'iconfont icon-icon-test',
     },
+    { divider: true },
     {
       id: 'toshare',
       text: '分享',
       beforeIcon: 'iconfont icon-fenxiang_2',
     },
+    { divider: true },
     {
       id: 'del',
       text: '删除',
       beforeIcon: 'iconfont icon-shanchu',
+      beforeIconColor: 'var(--btn-danger-color)',
+      textColor: 'var(--btn-danger-color)',
     },
   ];
   rMenu.selectMenu(
@@ -1271,6 +1275,7 @@ export function bookMarkSetting(e, obj, isHome, el) {
   ];
   data = [
     ...data,
+    { divider: true },
     {
       id: '4',
       text: '编辑书签',
@@ -1281,10 +1286,13 @@ export function bookMarkSetting(e, obj, isHome, el) {
       text: '移动到',
       beforeIcon: 'iconfont icon-moveto',
     },
+    { divider: true },
     {
       id: '6',
       text: '删除',
       beforeIcon: 'iconfont icon-shanchu',
+      beforeIconColor: 'var(--btn-danger-color)',
+      textColor: 'var(--btn-danger-color)',
     },
   ];
   rMenu.selectMenu(

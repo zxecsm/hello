@@ -809,11 +809,14 @@ function rightList(e, obj, el) {
     }
   }
   if (!isSymlinkType(obj)) {
-    data.push({
-      id: 'share',
-      text: '分享',
-      beforeIcon: 'iconfont icon-fenxiang_2',
-    });
+    data.push(
+      { divider: true },
+      {
+        id: 'share',
+        text: '分享',
+        beforeIcon: 'iconfont icon-fenxiang_2',
+      },
+    );
   }
   if (isFileType(obj)) {
     data.push({
@@ -823,6 +826,7 @@ function rightList(e, obj, el) {
     });
   }
   data.push(
+    { divider: true },
     {
       id: 'rename',
       text: '重命名',
@@ -851,12 +855,16 @@ function rightList(e, obj, el) {
     text: '压缩',
     beforeIcon: 'iconfont icon-yasuobao1',
   });
-  data.push({
-    id: 'info',
-    text: '属性',
-    beforeIcon: 'iconfont icon-about',
-  });
+  data.push(
+    { divider: true },
+    {
+      id: 'info',
+      text: '属性',
+      beforeIcon: 'iconfont icon-about',
+    },
+  );
   if (isRoot()) {
+    data.push({ divider: true });
     if (obj.type === 'dir') {
       data.push({
         id: 'addto',
@@ -877,10 +885,13 @@ function rightList(e, obj, el) {
       },
     );
   }
+  data.push({ divider: true });
   data.push({
     id: 'del',
     text: '删除',
     beforeIcon: 'iconfont icon-shanchu',
+    beforeIconColor: 'var(--btn-danger-color)',
+    textColor: 'var(--btn-danger-color)',
   });
   rMenu.selectMenu(
     e,

@@ -649,16 +649,21 @@ $contentWrap
     const { id: noteid, title, top } = obj;
     const data = [
       { id: 'check', text: '选中', beforeIcon: 'iconfont icon-duoxuan' },
+      { divider: true },
       { id: '1', text: '置顶', beforeIcon: 'iconfont icon-zhiding' },
       { id: '2', text: '分类', beforeIcon: 'iconfont icon-liebiao1' },
+      { divider: true },
       { id: '3', text: '二维码', beforeIcon: 'iconfont icon-erweima' },
       { id: '4', text: '笔记信息', beforeIcon: 'iconfont icon-bianji' },
       { id: '7', text: '历史版本', beforeIcon: 'iconfont icon-history' },
       { id: '5', text: '笔记内容', beforeIcon: 'iconfont icon-bianji' },
+      { divider: true },
       {
         id: '6',
         text: '删除',
         beforeIcon: 'iconfont icon-shanchu',
+        beforeIconColor: 'var(--btn-danger-color)',
+        textColor: 'var(--btn-danger-color)',
       },
     ];
     rMenu.selectMenu(
