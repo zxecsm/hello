@@ -91,7 +91,11 @@ const $document = $(document),
   $searchUserBtn = $chatHeadBtns.find('.search_user_btn'),
   $onlineStatus = $chatHeadBtns.find('.online_status'),
   $chatListBox = $chatRoomWrap.find('.chat_list_box'),
+  $chatFootWrap = $chatRoomWrap.find('.chat_foot_wrap'),
   $chatFootBox = $chatRoomWrap.find('.chat_foot_box'),
+  $chatMsgSelectBar = $chatFootWrap.find('.chat_msg_select_bar'),
+  $msgRecallBtn = $chatMsgSelectBar.find('.msg_recall_btn'),
+  $msgForwardBtn = $chatMsgSelectBar.find('.msg_forward_btn'),
   $showChatRoomBtn = $('.show_chat_room_btn'),
   $chatAudio = $('.chat_ausio');
 let curChatAccount = _d.chatRoomAccount,
@@ -192,6 +196,10 @@ let userPageNo = 1,
   userPageSize = localData.get('userListPageSize'),
   isForward = false, // 转发状态
   forwardData = null;
+// 消息多选
+const MAX_SELECT_MSG = 200;
+let msgSelecting = false,
+  selectedMsgIds = [];
 // 获取用户信息
 function getUserItem(account) {
   return userList.find((item) => item.account === account) || {};
@@ -375,10 +383,11 @@ function clearMsg(e) {
     },
     (type) => {
       if (type === 'confirm') {
-        reqChatDeleteMsg({ to: acc })
+        reqChatDeleteMsg({ ids: [], to: acc })
           .then((result) => {
             if (result.code === 1) {
               _msg.success(result.codeText);
+              stopMsgSelect();
             }
           })
           .catch(() => {});
@@ -395,7 +404,8 @@ function hdforwardMsg(e, acc) {
   }
   rMenu.pop({ e, text, cancel: { text: '取消转发' } }, (type) => {
     if (type === 'confirm') {
-      reqChatforward({ to: acc, id: forwardData.id })
+      const data = { to: acc, ids: forwardData.ids };
+      reqChatforward(data)
         .then((res) => {
           if (res.code === 1) {
             hideUserList();
@@ -408,6 +418,48 @@ function hdforwardMsg(e, acc) {
     }
   });
 }
+// 批量操作
+$chatMsgSelectBar
+  .on('click', '.msg_cancel_select_btn', stopMsgSelect)
+  .on('click', '.msg_recall_btn', function (e) {
+    const ids = [...selectedMsgIds];
+    if (ids.length === 0) return;
+    const chatAcc = curChatAccount;
+    rMenu.pop(
+      {
+        e,
+        text: `确认撤回：选中的 ${ids.length} 条消息？`,
+        confirm: { type: 'warning', text: '撤回' },
+      },
+      (type) => {
+        if (type !== 'confirm') return;
+        reqChatDeleteMsg({ ids, to: chatAcc })
+          .then((res) => {
+            if (res.code === 1) {
+              _msg.success(res.codeText);
+              stopMsgSelect();
+            }
+          })
+          .catch(() => {});
+      },
+    );
+  })
+  .on('click', '.msg_forward_btn', function () {
+    const ids = [...selectedMsgIds];
+    if (ids.length === 0) return;
+    isForward = true;
+    forwardData = { ids };
+    userPageNo = 1;
+    showUserList();
+    getUserList(true);
+  });
+$chatFootWrap.on('click', '.scroll_to_bot_btn', function () {
+  if (canToBottom()) {
+    $chatListBox.scrollTop($chatListBox[0].scrollHeight);
+  } else {
+    renderChatMsg.toBottom();
+  }
+});
 $chatHeadBtns
   .on('click', '.c_close_btn', closeChatRoom)
   .on('click', '.clear_msg_btn', clearMsg)
@@ -463,6 +515,68 @@ $chatHeadBtns
 // 获取消息数据
 function getChatItem(id) {
   return chatMsgData.get(id);
+}
+// 消息多选
+function isMsgChecked(id) {
+  return selectedMsgIds.includes(id);
+}
+function updateMsgSelectState() {
+  const msgs = selectedMsgIds.map((id) => chatMsgData.get(id)).filter(Boolean);
+  const allMine =
+    msgs.length > 0 &&
+    msgs.length === selectedMsgIds.length &&
+    msgs.every((item) => item._from === setUserInfo().account);
+  const hasSelected = selectedMsgIds.length > 0;
+  $msgRecallBtn.css('display', allMine ? '' : 'none');
+  $msgForwardBtn.css('display', hasSelected ? '' : 'none');
+  _msg.botMsg(`选中：${selectedMsgIds.length}条`);
+}
+function startMsgSelect(id) {
+  if (!msgSelecting) {
+    msgSelecting = true;
+    $chatListBox.find('.chat_list').addClass('selecting');
+    $chatFootWrap.addClass('msg_selecting');
+  }
+  if (id && !isMsgChecked(id)) {
+    if (selectedMsgIds.length >= MAX_SELECT_MSG) {
+      _msg.warning(`最多选中 ${MAX_SELECT_MSG} 条消息`);
+      return;
+    }
+    selectedMsgIds.push(id);
+    $chatListBox
+      .find(`.chat_item[data-id="${id}"] .check_level`)
+      .attr('check', 'y')
+      .css('background-color', _d.checkColor);
+  }
+  updateMsgSelectState();
+}
+function stopMsgSelect() {
+  if (!msgSelecting) return;
+  msgSelecting = false;
+  selectedMsgIds = [];
+  $chatListBox.find('.chat_list').removeClass('selecting');
+  $chatListBox.find('.check_level').attr('check', 'n').css('background-color', 'transparent');
+  $chatFootWrap.removeClass('msg_selecting');
+  $msgRecallBtn.css('display', 'none');
+  $msgForwardBtn.css('display', 'none');
+  switchScrollToBottom();
+}
+function toggleMsgSelect($check) {
+  if (!msgSelecting) return;
+  const id = $check.closest('.chat_item').attr('data-id');
+  if (!id) return;
+  if (isMsgChecked(id)) {
+    selectedMsgIds = selectedMsgIds.filter((item) => item !== id);
+    $check.attr('check', 'n').css('background-color', 'transparent');
+  } else {
+    if (selectedMsgIds.length >= MAX_SELECT_MSG) {
+      _msg.warning(`最多选中 ${MAX_SELECT_MSG} 条消息`);
+      return;
+    }
+    selectedMsgIds.push(id);
+    $check.attr('check', 'y').css('background-color', _d.checkColor);
+  }
+  updateMsgSelectState();
 }
 function sliceChatList(isPush, $item) {
   const $chatItems = $chatListBox.find('.chat_item');
@@ -640,6 +754,12 @@ function renderMsgList(list) {
             </p>
           </li>
           <li v-if="!isRight(_from)" data-cursor="pointer" class="chat_menu_btn iconfont icon-maohao"></li>
+          <div
+            data-cursor="pointer"
+            :check="isMsgChecked(id) ? 'y' : 'n'"
+            :style="isMsgChecked(id) ? 'background-color:' + checkColor : ''"
+            class="check_level"
+          ></div>
         </div>
       </ul>
     </template>
@@ -647,6 +767,8 @@ function renderMsgList(list) {
     {
       chatRoomAccount: _d.chatRoomAccount,
       list,
+      checkColor: _d.checkColor,
+      isMsgChecked,
       getDate(create_at) {
         return formatDate({
           template: '{0}-{1}-{2} {3}:{4}',
@@ -1110,6 +1232,11 @@ function scrollBottomMsg() {
   }
 }
 $chatListBox
+  .on('click', '.check_level', function (e) {
+    if (!msgSelecting) return;
+    e.stopPropagation();
+    toggleMsgSelect($(this));
+  })
   .on('click', '.c_logo', function (e) {
     const $this = $(this).parent().parent().parent();
     const obj = getChatItem($this.data('id'));
@@ -1160,9 +1287,9 @@ export function switchScrollToBottom() {
       $chatListBox.outerHeight() >
     200
   ) {
-    $chatFootBox.find('.scroll_to_bot_btn').css('display', 'block');
+    $chatFootWrap.find('.scroll_to_bot_btn').css('display', 'block');
   } else {
-    $chatFootBox.find('.scroll_to_bot_btn').css('display', 'none');
+    $chatFootWrap.find('.scroll_to_bot_btn').css('display', 'none');
   }
 }
 let searchDateLimit = {};
@@ -1291,6 +1418,11 @@ function chatMsgMenu(e, cobj) {
       text: '转发',
       beforeIcon: 'iconfont icon-fenxiang_2',
     },
+    {
+      id: '7',
+      text: '选中',
+      beforeIcon: 'iconfont icon-duoxuan',
+    },
   );
   if (_from === setUserInfo().account) {
     data.push({
@@ -1314,7 +1446,7 @@ function chatMsgMenu(e, cobj) {
           (type) => {
             if (type === 'confirm') {
               loading.start();
-              reqChatDeleteMsg({ id: tt, to: chatAcc })
+              reqChatDeleteMsg({ ids: [tt], to: chatAcc })
                 .then((result) => {
                   loading.end();
                   if (result.code === 1) {
@@ -1361,7 +1493,7 @@ function chatMsgMenu(e, cobj) {
           });
       } else if (id === '5') {
         isForward = true;
-        forwardData = cobj;
+        forwardData = { ids: [cobj.id] };
         close();
         userPageNo = 1;
         showUserList();
@@ -1370,6 +1502,9 @@ function chatMsgMenu(e, cobj) {
         close();
         await cacheFile.setData('newNote', z);
         openInIframe('/edit?v=new', '新笔记', 'edit');
+      } else if (id === '7') {
+        close();
+        startMsgSelect(tt);
       }
     },
     cobj.content,
@@ -1530,13 +1665,6 @@ $chatFootBox
     if (ctrl && key === 'enter') {
       sendTextMsg();
       e.preventDefault();
-    }
-  })
-  .on('click', '.scroll_to_bot_btn', function () {
-    if (canToBottom()) {
-      $chatListBox.scrollTop($chatListBox[0].scrollHeight);
-    } else {
-      renderChatMsg.toBottom();
     }
   })
   .find('.c_text_content')[0]
@@ -1894,6 +2022,9 @@ function setChatTitle(acc) {
 }
 // 打开消息
 async function openFriend(acc, noHideUserList, cb) {
+  if (msgSelecting && acc !== curChatAccount) {
+    stopMsgSelect();
+  }
   if (curChatAccount !== acc) {
     chatSearchInput.setValue('').focus();
     searchDateLimit = {};

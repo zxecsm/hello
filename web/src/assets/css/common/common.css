@@ -67,6 +67,12 @@ html {
   --btn-danger-hover-color: #fff;
   --btn-danger-hover-bg-color: #f56c6c;
   --btn-danger-hover-border-color: #f56c6c;
+  --btn-warning-color: var(--message-warning-color);
+  --btn-warning-bg-color: #fff8e1;
+  --btn-warning-border-color: #e6cf7a;
+  --btn-warning-hover-color: #fff;
+  --btn-warning-hover-bg-color: var(--message-warning-color);
+  --btn-warning-hover-border-color: var(--message-warning-color);
   --cursor-default: url('../../cursors/blue/default.cur'), default;
   --cursor-pointer: url('../../cursors/blue/pointer.cur'), pointer;
   --cursor-ew-resize: url('../../cursors/blue/ew-resize.cur'), ew-resize;
@@ -136,6 +142,12 @@ html.dark {
   --btn-danger-hover-color: #fff;
   --btn-danger-hover-bg-color: #f56c6c;
   --btn-danger-hover-border-color: #f56c6c;
+  --btn-warning-color: var(--message-warning-color);
+  --btn-warning-bg-color: #2b2618;
+  --btn-warning-border-color: #7d6a2c;
+  --btn-warning-hover-color: #222;
+  --btn-warning-hover-bg-color: var(--message-warning-color);
+  --btn-warning-hover-border-color: var(--message-warning-color);
   --cursor-default: url('../../cursors/orange/default.cur'), default;
   --cursor-pointer: url('../../cursors/orange/pointer.cur'), pointer;
   --cursor-ew-resize: url('../../cursors/orange/ew-resize.cur'), ew-resize;
@@ -398,6 +410,19 @@ textarea:-ms-input-placeholder {
   background-color: var(--btn-danger-hover-bg-color);
   border-color: var(--btn-danger-hover-border-color);
 }
+
+.btn_warning {
+  color: var(--btn-warning-color);
+  background-color: var(--btn-warning-bg-color);
+  border-color: var(--btn-warning-border-color);
+}
+
+.btn_warning:hover {
+  transition: 0.2s ease-in-out;
+  color: var(--btn-warning-hover-color);
+  background-color: var(--btn-warning-hover-bg-color);
+  border-color: var(--btn-warning-hover-border-color);
+}
 /* 关闭选中 */
 .no_select {
   -webkit-user-select: none;
@@ -439,6 +464,11 @@ a:hover {
 }
 .inactive-window .window_head {
   opacity: 0.5 !important;
+}
+/* 顶部栏跟随窗口圆角，避免 overflow 裁剪在合成层下失效时露出直角 */
+.window_head {
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
 }
 .drag_opacity {
   opacity: 0.8 !important;

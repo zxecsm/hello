@@ -426,11 +426,15 @@ route.post(
     'body',
     V.object({
       to: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
-      id: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
+      ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
+        .min(1)
+        .max(fieldLength.maxPagesize),
     }),
   ),
   asyncHandler(async (req, res) => {
-    const { to, id } = res.locals.ctx;
+    const { to, ids } = res.locals.ctx;
+
+    const forwardIds = [...new Set(ids)];
 
     if (to !== appConfig.chatRoomAccount && to !== appConfig.notifyAccount) {
       const user = await getUserInfo(to, 'account,username');
@@ -440,38 +444,52 @@ route.post(
       }
     }
 
-    const chat = db('chat').select('type,flag,content,size,hash').where({ id }).findOne();
+    const chats = db('chat')
+      .select('id,type,flag,content,size,hash')
+      .where({ id: { in: forwardIds } })
+      .find();
 
-    if (!chat) {
+    if (chats.length !== forwardIds.length) {
       return resp.forbidden(res, '转发的信息不存在')();
     }
 
     const { account } = res.locals.hello.userinfo;
 
-    const { flag, hash } = chat;
-
     // 只能转发群和发送给自己的或自己发送的消息
-    if (flag !== appConfig.chatRoomAccount && !flag.includes(account)) {
-      return resp.forbidden(res, '无权转发')();
+    for (const chat of chats) {
+      if (chat.flag !== appConfig.chatRoomAccount && !chat.flag.includes(account)) {
+        return resp.forbidden(res, '无权转发')();
+      }
     }
 
-    // 更换发送目标
-    chat._to = to;
+    const chatMap = new Map(chats.map((item) => [item.id, item]));
+
+    const orderedChats = forwardIds.map((item) => chatMap.get(item));
 
     // 文件消息，更新时间，避免被清理
-    if (hash) {
-      db('upload').where({ id: hash }).update({ update_at: Date.now() });
+    const hashes = orderedChats.map((item) => item.hash).filter(Boolean);
+
+    if (hashes.length > 0) {
+      db('upload')
+        .where({ id: { in: hashes } })
+        .update({ update_at: Date.now() });
     }
 
-    const msg = await saveChatMsgAndNotify(res, account, chat);
+    for (const chat of orderedChats) {
+      // 重新生成 id，更换发送目标
+      delete chat.id;
+      chat._to = to;
 
-    if (to === appConfig.notifyAccount) {
-      await hdHelloMsg(req, res, chat.content, chat.type);
+      const msg = await saveChatMsgAndNotify(res, account, chat);
+
+      if (to === appConfig.notifyAccount) {
+        await hdHelloMsg(req, res, chat.content, chat.type);
+      }
+
+      sendNotificationsToCustomAddresses(res, msg).catch((err) => {
+        writelog(res, `发送通知到自定义地址失败(${err})`, 403);
+      });
     }
-
-    sendNotificationsToCustomAddresses(res, msg).catch((err) => {
-      writelog(res, `发送通知到自定义地址失败(${err})`, 403);
-    });
 
     resp.success(res, '信息转发成功')();
   }),
@@ -521,12 +539,14 @@ route.post(
   validate(
     'body',
     V.object({
-      id: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
+      ids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
+        .min(0)
+        .max(fieldLength.maxPagesize),
       to: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
   ),
   asyncHandler(async (_, res) => {
-    const { id, to } = res.locals.ctx;
+    const { ids, to } = res.locals.ctx;
 
     const { account } = res.locals.hello.userinfo;
 
@@ -538,9 +558,21 @@ route.post(
       }
     }
 
-    if (id) {
-      db('chat').where({ id, _from: account }).delete();
-      await sendNotifyMsg(res, to, 'del', { msgId: id });
+    if (ids.length > 0) {
+      // 只撤回自己发送的消息
+      const list = db('chat')
+        .select('id')
+        .where({ id: { in: ids }, _from: account })
+        .find();
+
+      const realIds = list.map((item) => item.id);
+
+      if (realIds.length > 0) {
+        db('chat')
+          .where({ id: { in: realIds }, _from: account })
+          .delete();
+        await sendNotifyMsg(res, to, 'del', { msgIds: realIds });
+      }
 
       resp.success(res, '撤回消息成功')();
     } else {

@@ -211,7 +211,7 @@ body {
       position: absolute;
       top: 1rem;
       left: 2rem;
-      z-index: 2;
+      z-index: 3;
 
       &:hover {
         color: var(--text-hover-color);
@@ -930,7 +930,7 @@ body {
         position: absolute;
         top: 5rem;
         right: 1rem;
-        z-index: 2;
+        z-index: 3;
         opacity: 0.9;
         display: flex;
         align-items: center;
@@ -1342,6 +1342,7 @@ body {
               display: flex;
               flex-flow: row;
               overflow: hidden;
+              position: relative;
               &:hover {
                 .chat_menu_btn {
                   opacity: 1;
@@ -1360,6 +1361,17 @@ body {
                   color: var(--text-hover-color);
                   transform: scale(1.1);
                 }
+              }
+              .check_level {
+                display: none;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 2;
+                border-radius: var(--border-radius1);
+                cursor: pointer;
               }
               @media (min-width: 801px) {
                 .chat_menu_btn {
@@ -1574,11 +1586,62 @@ body {
             }
           }
         }
+        .chat_list.selecting .chat_item .msg_info_wrap .check_level {
+          display: block;
+        }
       }
       .chat_foot_wrap {
         width: 100%;
         flex: none;
         border-top: 0.1rem solid var(--color8);
+        position: relative;
+
+        // 回到底部
+        .scroll_to_bot_btn {
+          display: none;
+          position: absolute;
+          width: 3rem;
+          height: 3rem;
+          line-height: 3rem;
+          text-align: center;
+          top: -4rem;
+          left: 50%;
+          margin-left: -1.5rem;
+          z-index: 2;
+          background-color: var(--color9);
+          border-radius: 50%;
+          font-size: 1.6rem;
+          box-shadow: 0 0 0.5rem var(--color5);
+          opacity: 0.9;
+          &:hover {
+            opacity: 1;
+            color: var(--text-hover-color);
+            transform: scale(1.1);
+          }
+        }
+
+        &.msg_selecting {
+          .chat_foot_box {
+            display: none;
+          }
+          .chat_msg_select_bar {
+            display: flex;
+          }
+        }
+
+        .chat_msg_select_bar {
+          display: none;
+          margin: 0 auto;
+          max-width: var(--max-width);
+          padding: 0.5rem;
+          align-items: center;
+          background-color: var(--color9);
+          overflow-x: auto;
+          button {
+            flex: none;
+            margin-right: 0.5rem;
+          }
+        }
 
         .chat_foot_box {
           position: relative;
@@ -1589,29 +1652,6 @@ body {
           align-items: flex-end;
           background-color: var(--color9);
           z-index: 1;
-          // 回到底部
-          .scroll_to_bot_btn {
-            display: none;
-            position: absolute;
-            width: 3rem;
-            height: 3rem;
-            line-height: 3rem;
-            text-align: center;
-            top: -4rem;
-            left: 50%;
-            margin-left: -1.5rem;
-            z-index: 2;
-            background-color: var(--color9);
-            border-radius: 50%;
-            font-size: 1.6rem;
-            box-shadow: 0 0 0.5rem var(--color5);
-            opacity: 0.9;
-            &:hover {
-              opacity: 1;
-              color: var(--text-hover-color);
-              transform: scale(1.1);
-            }
-          }
           .c_text_msg_box {
             flex: auto;
             position: relative;

@@ -771,14 +771,17 @@ function hdChatType(resData, notify, senderTemid) {
     }
     if (!chatRoomWrapIsHide()) {
       if (isCurChatRoom(chatAccount, from.account, to)) {
-        chatMsgData.delete(msgData.msgId);
-        const $chatItem = $chatListBox.find(`[data-id=${msgData.msgId}]`);
-        if ($chatItem.length > 0) {
-          $chatItem.stop().slideUp(_d.speed, () => {
-            $chatItem.remove();
-            switchScrollToBottom();
-          });
-        }
+        const delIds = msgData.msgIds || (msgData.msgId ? [msgData.msgId] : []);
+        delIds.forEach((msgId) => {
+          chatMsgData.delete(msgId);
+          const $chatItem = $chatListBox.find(`[data-id=${msgId}]`);
+          if ($chatItem.length > 0) {
+            $chatItem.stop().slideUp(_d.speed, () => {
+              $chatItem.remove();
+              switchScrollToBottom();
+            });
+          }
+        });
       }
     }
     // 清空聊天框
