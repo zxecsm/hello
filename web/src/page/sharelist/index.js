@@ -389,6 +389,29 @@ $headBtns
   })
   .on('click', '.h_go_home', function () {
     myOpen('/');
+  })
+  .on('click', '.clear_all', function (e) {
+    if (sList.length === 0) return;
+    rMenu.pop(
+      {
+        e,
+        text: '确认清空：所有分享？',
+        confirm: { type: 'danger', text: '清空' },
+      },
+      (type) => {
+        if (type === 'confirm') {
+          reqUserDeleteShare({ ids: [] })
+            .then((res) => {
+              if (res.code === 1) {
+                _msg.success(res.codeText);
+                pageNo = 1;
+                getShareList(1);
+              }
+            })
+            .catch(() => {});
+        }
+      },
+    );
   });
 // 获取选中项
 function getCheckItems() {

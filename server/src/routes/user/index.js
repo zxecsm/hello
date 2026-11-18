@@ -1724,8 +1724,9 @@ route.post(
   validate(
     'body',
     V.object({
+      // 传空数组表示清空当前账号的全部分享
       ids: V.array(V.string().min(1).max(fieldLength.id).alphanumeric())
-        .min(1)
+        .min(0)
         .max(fieldLength.maxPagesize),
     }),
   ),
@@ -1734,13 +1735,17 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
-    db('share')
-      .where({ id: { in: ids }, account })
-      .delete();
+    if (ids.length > 0) {
+      db('share')
+        .where({ id: { in: ids }, account })
+        .delete();
+    } else {
+      db('share').where({ account }).batchDelete();
+    }
 
     syncUpdateData(res, 'sharelist');
 
-    resp.success(res, '删除分享成功')();
+    resp.success(res, `${ids.length > 0 ? '删除' : '清空'}分享成功`)();
   }),
 );
 
