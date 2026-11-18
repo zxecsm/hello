@@ -46,8 +46,8 @@
 | `POST` | `/api/user/daily-change-bg` | 每日更换壁纸 |
 | `POST` | `/api/user/hide-state` | 隐身状态 |
 | `POST` | `/api/user/remote-login-state` | 免密登录状态 |
-| `GET` | `/api/user/real-time` | 获取推送消息 |
-| `POST` | `/api/user/real-time` | 接收指令 |
+| `POST` | `/api/user/real-time` | 获取推送消息（长轮询） |
+| `POST` | `/api/user/real-time/send` | 发送推送指令 |
 | `POST` | `/api/user/delete-share` | 删除分享 |
 | `POST` | `/api/user/share-state` | 修改分享状态 |
 | `GET` | `/api/user/share-list` | 获取分享列表 |

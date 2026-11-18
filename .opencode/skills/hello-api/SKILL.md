@@ -228,5 +228,5 @@ node .opencode\skills\hello-api\scripts\hello.mjs clipboard send --file .\snippe
 ## 已知限制
 
 - 不封装 multipart 上传（`/api/file/up`、`/api/player/up`、`/api/bg/up`、`/api/pic/up`），需要分片合并协议；如需上传，改用浏览器或参考 [routes.md](./references/routes.md) 自行调用。
-- 不处理 SSH 终端与长轮询 `/api/user/real-time`（CLI 请求模型不适合）。
+- 不处理 SSH 终端与长轮询 `POST /api/user/real-time`（body 需带 `page` / `pages` / `temids`，CLI 请求模型不适合）。
 - 直接操作 SQLite 不在本技能范围；所有读写都走服务端 API，保证缓存、回收站、多端同步逻辑一致。

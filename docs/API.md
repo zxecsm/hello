@@ -92,8 +92,10 @@ curl 'http://localhost:55555/api/f/file/文档/示例.txt?token=<Token>'
 客户端启动时生成一个设备 ID，之后请求带上：
 
 ```bash
-curl -b cookie.txt -H 'X-Tem-ID: device001' \
-  'http://localhost:55555/api/user/real-time?page=home'
+curl -b cookie.txt -H 'X-Tem-ID: device001' -X POST \
+  'http://localhost:55555/api/user/real-time' \
+  -H 'Content-Type: application/json' \
+  -d '{"page":"home","pages":[],"temids":[]}'
 ```
 
 该接口是长轮询：有消息立即返回，20 秒无消息返回 `code=3`。
@@ -202,7 +204,7 @@ app.use('/api/user', userRoute);
 
 - `server/src/routes/user/index.js` 中 `route.use(验证登录态)` 之前的接口公开，之后的接口需要登录（未登录返回 HTTP 401、`code=2`）。
 - 登录态来自 Cookie `token`（服务端加密 JWT，`HttpOnly`、`SameSite=Lax`，有效期 2 天）。修改密码、退出其他设备会把 `exp_token_time` 提前，使旧 Token 全部失效。
-- 多端推送、长轮询、SSH 相关接口需要请求头 `X-Tem-ID`：客户端生成的设备 ID，仅字母、数字、下划线，≤50 字符（缺省为空字符串，但 `GET /api/user/real-time` 要求非空）。
+- 多端推送、长轮询、SSH 相关接口需要请求头 `X-Tem-ID`：客户端生成的设备 ID，仅字母、数字、下划线，≤50 字符（缺省为空字符串，但 `POST /api/user/real-time` 要求非空）。
 - 下文只描述各接口返回的 `data`，外层统一为 `{ code, codeText, data }`。
 - `server/src/routes/user/user.js` 只有工具函数、没有路由，不属于 HTTP 接口，被其它模块复用：
   - `getFontList()`：字体目录不存在时从内置资源复制，返回文件名数组（供 `GET /api/user/font-list` 使用）。
@@ -1106,7 +1108,7 @@ null
 
 ---
 
-## GET /api/user/real-time
+## POST /api/user/real-time
 
 长轮询接收推送指令（多端同步、聊天通知、远程播放、SSH 输出等）。
 
@@ -1118,12 +1120,31 @@ null
 | --- | --- | --- |
 | X-Tem-ID | 是 | 当前设备 ID，非空，字母/数字/下划线，≤50 字符；缺失时返回 400 |
 
-**Query**
+**Body**
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | flag | string | 否 | 上一次响应返回的指令标识，默认空串，≤50 字符；为空时取当前连接标识（首轮） |
-| page | string | 否 | 页面标识，默认空串，≤30 字符；`home` 会刷新用户 `update_at`、标记在线；`ssh` 会续期该设备的 SSH 会话 |
+| page | string | 否 | 自己的页面标识，默认空串，≤30 字符；`home` 会刷新用户 `update_at`、标记在线；`ssh` 会续期自己的 SSH 会话 |
+| pages | string[] | 否 | 需要代收的其他页面标识，默认 `[]`，最多 100 项，每项 ≤30 字符；不要包含自己的 `page` |
+| temids | string[] | 否 | 需要代收的其他客户端 ID，默认 `[]`，最多 100 项，每项 1–50 字符、字母/数字/下划线；不要包含自己的 `X-Tem-ID`，服务端会补上账号前缀 |
+
+**请求示例**
+
+```json
+{
+  "flag": "HYYYYYYYYYYYY",
+  "page": "home",
+  "pages": ["ssh", "file"],
+  "temids": ["HXXXXXXXXXXXX", "HZZZZZZZZZZZZ"]
+}
+```
+
+没有需要代收的窗口时，`pages` 和 `temids` 传空数组（不要把自己的 `page`、`temid` 放进去）：
+
+```json
+{ "flag": "", "page": "home", "pages": [], "temids": [] }
+```
 
 **响应 data**
 
@@ -1133,7 +1154,11 @@ null
 {
   "flag": "HYYYYYYYYYYYY",
   "msgs": [
-    { "type": "updatedata", "data": { "flag": "note", "id": "" }, "fromID": "HXXXXXXXXXXXX" }
+    {
+      "from": "HXXXXXXXXXXXX",
+      "to": "all",
+      "data": { "type": "updatedata", "data": { "flag": "note", "id": "" } }
+    }
   ]
 }
 ```
@@ -1147,20 +1172,23 @@ null
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | flag | string | 最新指令标识，下次请求原样带回 |
-| msgs | array | 上次 `flag` 之后、且发往本设备的推送数据；每个元素含 `type`、`data`、`fromID` |
-| fromID | string | 发送方设备 ID（`_connect.send` 自动附加） |
+| msgs | array | 上次 `flag` 之后、且发往本设备的推送数据；每个元素含 `from`、`to`、`data` |
+| from | string | 发送方设备 ID（已去掉账号前缀） |
+| to | string | 投递目标：`all` / `other` / `self` / 目标设备 ID（已去掉账号前缀） |
+| data | object | 推送内容，结构同发送指令的 `{ type, data }` |
 
 **说明**
 
 - 每个账号的连接状态存在内存缓存中（60 秒无人访问即回收，每次请求续期），消息本身只保留 30 秒。
 - 服务端最多挂起 20 秒：有匹配消息立即返回 `code=1`；超时返回 `code=3`，客户端应立即重新发起长轮询。
 - 消息按接收目标过滤：`all` 全部设备、`temid` 指定设备、`self` 仅发送设备、`other` 除发送设备外的其他设备。
-- `page=home` 时还会通知好友“已上线”（受隐身和朋友勿扰设置影响）。
-- `page=ssh` 用于保活 SSH 终端会话，避免长时间无输出被回收。
+- 代收：`pages` 与 `temids` 让一个连接替多个窗口收消息（外壳统一收、再转发给 iframe）。服务端把 `page + pages` 合并去重后判断 `home` / `ssh`，把 `temids` 补上账号前缀后与自己的 `X-Tem-ID` 一起作为收件范围。
+- `page=home`（或 `pages` 含 `home`）时还会通知好友“已上线”（受隐身和朋友勿扰设置影响）。
+- `page=ssh`（或 `pages` 含 `ssh`）用于保活 SSH 终端会话，避免长时间无输出被回收；`temids` 里代收的终端会话也会一起续期。
 
 ---
 
-## POST /api/user/real-time
+## POST /api/user/real-time/send
 
 发送推送指令到本账号的其他设备（或指定设备）。
 
@@ -1565,7 +1593,7 @@ null
 **说明**
 
 - 数据来自内存中的连接缓存，只保留 30 秒内有长轮询、且 `page=home` 的设备；没有在线设备时返回空数组。
-- 用于多端控制时选择目标设备（即 `POST /api/user/real-time` 的 `targetID`）。
+- 用于多端控制时选择目标设备（即 `POST /api/user/real-time/send` 的 `targetID`）。
 
 ---
 
@@ -5104,7 +5132,7 @@ null
 
 聊天模块挂载于 `/api/chat`，路由文件 `server/src/routes/chat/index.js`。整个路由在入口处统一校验登录态，因此**全部接口都需要登录**。
 
-实时消息不通过接口返回，而是经长轮询通道下发：请求头 `x-tem-id`（字母数字，≤50）标识当前设备，`GET /api/user/real-time` 拉取推送，`POST /api/user/real-time` 上报指令。`x-tem-id` 在登录后会被服务端改写为「account + temid」，用于只把推送投递给本人。
+实时消息不通过接口返回，而是经长轮询通道下发：请求头 `x-tem-id`（字母数字，≤50）标识当前设备，`POST /api/user/real-time` 拉取推送（body 里用 `page` / `pages` / `temids` 声明自己与代收范围），`POST /api/user/real-time/send` 上报指令。`x-tem-id` 在登录后会被服务端改写为「account + temid」，用于只把推送投递给本人。
 
 消息文件保存在上传目录，由定时清理任务按 `cacheExp.uploadSaveDay` 天回收；转发消息、复用已存在文件时会刷新 `update_at`，从而延长文件寿命。
 
@@ -5596,7 +5624,7 @@ null
 
 SSH 模块挂载于 `/api/ssh`，路由文件 `server/src/routes/ssh/index.js`，**全部接口都需要登录**。
 
-会话模型：`POST /api/ssh/connect` 依据请求头 `x-tem-id`（字母数字，≤50，必填）异步建立 ssh2 连接，服务端按 temid 缓存「一个终端 + 一个 SFTP」；会话空闲 60 秒过期。终端输出通过长轮询 `GET /api/user/real-time?page=ssh` 以 `{ type: 'ssh', data }` 下发（40ms 合并、单次积压 64KB 立即发送），键盘输入通过 `POST /api/user/real-time` 上报 `{ type: 'ssh', data: { type: 'cmd' | 'size', text, cols, rows } }`；`page=ssh` 的轮询会同时给 SSH 会话续期。除 `sftp-down` 外，SFTP 接口都用 `x-tem-id` 找会话。
+会话模型：`POST /api/ssh/connect` 依据请求头 `x-tem-id`（字母数字，≤50，必填）异步建立 ssh2 连接，服务端按 temid 缓存「一个终端 + 一个 SFTP」；会话空闲 60 秒过期。终端输出通过长轮询 `POST /api/user/real-time`（body 带 `"page":"ssh"`）以 `{ type: 'ssh', data }` 下发（40ms 合并、单次积压 64KB 立即发送），键盘输入通过 `POST /api/user/real-time/send` 上报 `{ type: 'ssh', data: { type: 'cmd' | 'size', text, cols, rows } }`；`page=ssh`（或 `pages` 含 `ssh`）的轮询会同时给 SSH 会话续期。除 `sftp-down` 外，SFTP 接口都用 `x-tem-id` 找会话。
 
 ---
 
@@ -6391,8 +6419,8 @@ null
 | POST | `/api/user/daily-change-bg` | 切换“每日更换壁纸”开关 |
 | POST | `/api/user/hide-state` | 切换隐身状态 |
 | POST | `/api/user/remote-login-state` | 切换免密登录开关 |
-| GET | `/api/user/real-time` | 长轮询接收推送指令（多端同步、聊天通知、远程播放、SSH 输出等） |
-| POST | `/api/user/real-time` | 发送推送指令到本账号的其他设备（或指定设备） |
+| POST | `/api/user/real-time` | 长轮询接收推送指令（多端同步、聊天通知、远程播放、SSH 输出等） |
+| POST | `/api/user/real-time/send` | 发送推送指令到本账号的其他设备（或指定设备） |
 | POST | `/api/user/delete-share` | 删除分享记录 |
 | POST | `/api/user/share-state` | 启用 / 停用分享 |
 | GET | `/api/user/share-list` | 分页获取我的分享列表 |

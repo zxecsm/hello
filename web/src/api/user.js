@@ -57,7 +57,7 @@ export function reqUserUpLogo(data, file, cb, signal) {
 }
 // 同步
 export function reqUserGetRealTime(data) {
-  return _getAjax('/user/real-time', data, {
+  return _postAjax('/user/real-time', data, {
     load: false,
     timeout: 30 * 1000,
     stopErrorMsg: 1,
@@ -65,7 +65,7 @@ export function reqUserGetRealTime(data) {
 }
 // 发送指令
 export function reqUserRealTime(data) {
-  return _postAjax('/user/real-time', data, { load: false, parallel: true });
+  return _postAjax('/user/real-time/send', data, { load: false, parallel: true });
 }
 // 免密登录
 export function reqUserCodeLogin(data) {

@@ -1316,26 +1316,19 @@ route.post(
 );
 
 // 获取推送消息
-route.get(
+route.post(
   '/real-time',
   validate(
-    'query',
+    'body',
     V.object({
       flag: V.string().trim().default('').allowEmpty().max(fieldLength.id).alphanumeric(),
       page: V.string().trim().default('').allowEmpty().max(30),
-      // 外壳代收：pages 为替哪些页面收（逗号分隔），temids 为替哪些客户端收
-      pages: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(500)
-        .pattern(/^[a-zA-Z0-9_,.-]*$/),
-      temids: V.string()
-        .trim()
-        .default('')
-        .allowEmpty()
-        .max(5000)
-        .pattern(/^[a-zA-Z0-9_,.-]*$/),
+      // 外壳代收：pages 为替哪些页面收，temids 为替哪些客户端收
+      // 均不包含自己的 page/temid，没有需要代收的传空数组
+      pages: V.array(V.string().trim().min(1).max(30)).default([]).max(100),
+      temids: V.array(V.string().trim().min(1).max(fieldLength.id).alphanumeric())
+        .default([])
+        .max(100),
     }),
   ),
   asyncHandler(async (_, res) => {
@@ -1351,13 +1344,15 @@ route.get(
 
     let { flag, page, pages, temids } = res.locals.ctx; //标识和设备ID
 
-    // 页面集合：外壳会带上所有已打开窗口的页面标识
-    const pageList = pages ? pages.split(',') : page ? [page] : [];
+    // 页面集合：外壳会带上所有已打开窗口的页面标识（含自己的 page）
+    const pageList = [...new Set([page, ...pages].filter(Boolean))];
     // 客户端集合：外壳代收子窗口的消息（多路复用）
     // 页面只知道自己未加账号前缀的临时ID，服务端统一补上前缀
-    const temidList = (temids ? temids.split(',') : [])
-      .filter(Boolean)
-      .map((item) => (item.startsWith(account) ? item : account + item));
+    const temidList = [
+      ...new Set(
+        temids.filter(Boolean).map((item) => (item.startsWith(account) ? item : account + item)),
+      ),
+    ];
 
     if (pageList.includes('home')) {
       const now = Date.now();
@@ -1415,7 +1410,7 @@ route.get(
 
 // 接收指令
 route.post(
-  '/real-time',
+  '/real-time/send',
   validate(
     'body',
     V.object({

@@ -55,8 +55,8 @@ const realtime = {
   beOwner() {
     if (this.mode === 'owner') return;
     this.mode = 'owner';
-    this.temids = [_d.temid];
-    this.pages = new Map([[_d.temid, this.pageName()]]);
+    this.temids = [];
+    this.pages = new Map();
     this.start();
   },
   pageName() {
@@ -84,11 +84,15 @@ const realtime = {
   },
   loop(gen) {
     if (gen !== this.gen) return;
+    // 自己的 page/temid 不放进代收数组，没有需要代收的就是空数组
+    const ownPage = this.pageName();
+    const temids = this.temids.filter(Boolean);
+    const pages = [...new Set(temids.map((item) => this.pages.get(item)).filter(Boolean))];
     reqUserGetRealTime({
       flag: this.flag,
-      page: this.pageName(),
-      pages: [...new Set(this.pages.values())].join(','),
-      temids: this.temids.join(','),
+      page: ownPage,
+      pages,
+      temids,
     })
       .then((res) => {
         // 已被新一轮请求取代，丢弃本次结果（不更新 flag，下轮会重新取到）
