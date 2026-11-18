@@ -24,7 +24,7 @@ import { reqUserCustomCode, reqUserError } from '../../api/user';
 import localData from './localData';
 import wave from '../plugins/wave';
 import { timeMsg, welcomeMsg } from '../../page/home/home';
-import bear from '../plugins/bear';
+import cat from '../plugins/cat';
 import ScreenWakeLock from './screenWakeLock';
 import _path from '../utils/path';
 import rMenu from '../plugins/rightMenu';
@@ -349,7 +349,7 @@ changeHeadBtnSort(localData.get('headBtnToRight'));
 if (!isIframe()) {
   ScreenWakeLock.enable();
   if (window._pageName !== 'videoplay') {
-    bear(999);
+    cat(999);
     if (window._pageName === 'home') {
       wave(1);
     } else {
