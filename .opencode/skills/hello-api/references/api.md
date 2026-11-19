@@ -67,7 +67,10 @@ HELLO_COOKIE=token=...
 | POST | `/api/user/create-token` | `days`：`1`-`3650` 的整数 | 生成指定有效期的认证 token，可直接作为 Cookie 使用：`token=<返回值>` |
 | POST | `/api/user/logout` | `other`：`0` 退出当前，`1` 退出其他设备 | |
 | GET | `/api/user/userinfo` | - | 当前用户：`account`、`username`、`logo`、`bg`、`bgxs`、`email`、`verify` 等 |
-| GET | `/api/user/share-list` | `pageNo`(1), `pageSize`(20, ≤200) | 我创建的分享 |
+| GET | `/api/user/share-list` | `pageNo`(1), `pageSize`(20, ≤200) | 我创建的分享 `{total,totalPage,pageNo,data[]}` |
+| POST | `/api/user/delete-share` | `ids: string[]`（0–200，`[]` = 清空全部） | 删除分享；链接立即失效 |
+| POST | `/api/user/share-state` | `ids: string[]`, `state`: 0 停用 / 1 启用 | 启停分享 |
+| POST | `/api/user/edit-share` | `id`, `title`, `expireTime`（天，0 永久）, `pass?` | 编辑分享；旧访问 token 失效 |
 | GET | `/api/user/trash-list` | `type`: `bmk`\|`bmk_group`\|`note`\|`history`\|`ssh`，`word?`，`pageNo`，`pageSize` | 回收站列表 |
 | POST | `/api/user/recover-trash` | `type`, `ids: string[]`（`ids: []` 表示全部） | 恢复 |
 | POST | `/api/user/delete-trash` | `type`, `ids: string[]`（`[]` 表示清空） | 永久删除 |
@@ -90,14 +93,19 @@ HELLO_COOKIE=token=...
 | GET | `/api/bmk/list` | `id?`（分组 ID，`home` 为主页），`account?` | 不带 `id` 只返回分组列表；带 `id` 返回该分组书签 |
 | POST | `/api/bmk/search` | `word`, `pageNo`, `pageSize`, `category: string[]`, `account?` | 按标题/链接/备注搜索 |
 | POST | `/api/bmk/add-bmk` | `groupId`（`home` 或分组 ID）, `bms: [{title, link, des}]` | `link` 必须是 http/https；单组上限 300 |
-| POST | `/api/bmk/edit-bmk` | `groupId`, `id`, `title`, `link`, `des`, `toId?` | `toId` 用于同时移动分组 |
+| POST | `/api/bmk/edit-bmk` | `groupId`, `id`, `title`, `link`, `des`, `toId?` | `toId` 用于同时移动分组；必须带完整字段 |
 | POST | `/api/bmk/delete-bmk` | `ids: string[]`（`[]` = 清空全部） | 软删除，进回收站 |
 | POST | `/api/bmk/bmk-to-group` | `groupId`, `ids: string[]` | 批量移动书签 |
-| POST | `/api/bmk/add-group` | `title` | 新建分组 |
+| POST | `/api/bmk/add-group` | `title` | 新建分组；不返回 id，需重新 `list` |
 | POST | `/api/bmk/edit-group` | `id`, `title`, `toId?` | 改名/排序 |
 | POST | `/api/bmk/delete-group` | `ids: string[]` | 软删除分组 |
 | POST | `/api/bmk/move-group` | `fromId`, `toId` | 调整分组顺序 |
 | POST | `/api/bmk/move-bmk` | `groupId`, `fromId`, `toId` | 调整书签顺序 |
+| POST | `/api/bmk/share` | `id`（分组）, `title`, `expireTime`（天，0 永久）, `pass?` | 分享分组，返回 `{id}`；空分组 403 |
+| POST | `/api/bmk/save-share` | `title`, `token` | 保存他人分享为自己的分组 |
+| POST | `/api/bmk/group-share-state` | `ids: string[]`, `share`: 0/1 | 分组公开/私密 |
+| GET | `/api/bmk/export` | - | 导出书签树 |
+| POST | `/api/bmk/import` | 见源码 | 导入书签 |
 
 `GET /api/bmk/list` 返回：
 
@@ -105,7 +113,15 @@ HELLO_COOKIE=token=...
 { "list": [{ "id": "abc", "title": "分组名", "share": 0, "item": [{ "id": "...", "title": "...", "link": "...", "des": "", "logo": "", "group_id": "abc", "num": 0 }] }], "home": [] }
 ```
 
-注意：`item` 只在请求了具体分组 `id` 且有权访问时出现。
+注意：`item` 只在请求了具体分组 `id` 且有权访问时出现；`home` 只有 `id=home` 时才带书签项。
+`home` 是固定分组，不在 `list` 里。
+
+添加书签前可先用 CLI 自动取标题/描述：
+
+```powershell
+node .opencode\skills\hello-api\scripts\hello.mjs meta --link https://example.com
+node .opencode\skills\hello-api\scripts\hello.mjs bmk add --link https://example.com --group <分组id> --auto
+```
 
 ---
 
@@ -117,9 +133,9 @@ HELLO_COOKIE=token=...
 | --- | --- | --- | --- |
 | POST | `/api/note/search` | `word?`, `pageNo`, `pageSize`, `category: string[]`, `account?` | 列笔记/搜索；返回预览 `con`，不含正文 |
 | GET | `/api/note/read` | `v`（笔记 ID）, `download`：`0`/`1` | 读正文；`data: {title, content, ...}` |
-| POST | `/api/note/edit` | `id`, `title`, `content` | **id 不存在则新建**；新建时客户端自行生成 ID |
+| POST | `/api/note/edit` | `id`, `title`, `content` | **id 不存在则新建**；新建时可用 `new`，返回 `{id}` |
 | GET | `/api/note/editing` | `id` | 读取编辑草稿（无草稿时 `editing: null`）；新笔记用 `id=new` |
-| POST | `/api/note/editing` | `id`, `content`, `clear?` | 实时保存编辑草稿（静默请求）；`clear=1` 删除草稿；保存笔记正文时服务端自动清除；新笔记用 `id=new` |
+| POST | `/api/note/editing` | `id`, `content`, `clear?` | 实时保存编辑草稿；`clear=1` 删除草稿；保存正文时服务端自动清除 |
 | POST | `/api/note/edit-info` | `id`, `title`, `create_at`, `update_at`（`YYYY-MM-DD`）, `visit_count` | 改元信息 |
 | POST | `/api/note/delete` | `ids: string[]`（`[]` = 清空，`about`/`tips` 不可删） | 进回收站 |
 | POST | `/api/note/state` | `share`: `0`/`1`, `ids: string[]` | 公开/私密 |
@@ -131,6 +147,7 @@ HELLO_COOKIE=token=...
 | POST | `/api/note/delete-category` | `id` | 删除分类 |
 
 新建笔记的 ID 约束：`alphanumeric`，1–50 字符。CLI 用 32 位十六进制随机 ID。
+`POST /api/note/up-note` 也能新建（`title`, `content`），但不返回 id；更推荐 `note/edit`。
 
 ---
 
@@ -161,16 +178,22 @@ HELLO_COOKIE=token=...
 | POST | `/api/file/read-dir` | `path`, `pageNo`(1), `pageSize`(20), `sortType`: `name`\|`time`\|`size`\|`type`, `isDesc`: 0/1, `subDir`: 0/1, `word`, `update`: 0/1, `hidden`: 0/1 | 列目录/搜索；可能返回 `{key}` 走任务轮询 |
 | POST | `/api/file/read-file` | `path` | 文本文件返回 `{type:'text', data:'...', editing:'...'}`；`editing` 为本人未保存的编辑草稿（无草稿时为 `null`）；二进制返回 `{type:'other'}` |
 | POST | `/api/file/save-file` | `path`, `text` | 写文本，上限 10 MB；成功后清除该路径的编辑草稿 |
-| POST | `/api/file/editing` | `path`, `text`, `clear?` | 实时保存编辑草稿（静默请求；存于 `.h_config/file_editing/<path 的 md5>`）；`clear=1` 删除草稿 |
+| POST | `/api/file/editing` | `path`, `text`, `clear?` | 实时保存编辑草稿；`clear=1` 删除草稿 |
 | POST | `/api/file/create-file` | `path`（父目录）, `name` | 新建空文件 |
 | POST | `/api/file/create-dir` | `path`（父目录）, `name` | 新建目录 |
+| POST | `/api/file/create-link` | 见源码 | 创建快捷方式 |
 | POST | `/api/file/rename` | `name`（新名）, `data: {name, path, type}` | 重命名 |
 | POST | `/api/file/delete` | `force`: 0/1, `data: [{name, path, type}]` | `force=0` 进回收站，`1` 永久删除；可能返回 `{key}` |
 | POST | `/api/file/move` | `path`（目标目录）, `rename`: 0/1（重名时是否自动改名）, `data: [{name, path, type}]` | 移动，可能返回 `{key}` |
-| POST | `/api/file/zip` / `/unzip` | 见源码 | 压缩/解压 |
+| POST | `/api/file/copy` | 同 `move` | 复制，可能返回 `{key}` |
+| POST | `/api/file/same-name` | `path`, `data: [{name, path, type}]` | 检查目标目录同名项 `{hasSameName}` |
+| POST | `/api/file/clear-trash` | - | 清空文件回收站（高风险） |
+| POST | `/api/file/zip` / `/unzip` | 见源码 | 压缩/解压，可能返回 `{key}` |
 | POST | `/api/file/share` | `title`, `expireTime`（天，0 永久）, `pass`, `data: {name, path, type, size}` | 创建文件分享 |
 | GET | `/api/file/cd-history` | - | 最近访问目录 |
 | GET | `/api/file/favorites` | - | 收藏目录 |
+| POST | `/api/file/favorites` | 见源码 | 收藏/取消收藏目录 |
+| POST | `/api/file/mode` / `/chown` | 见源码 | 权限/属主（root） |
 
 读取目录返回项包含：`name`、`type`（`file`/`dir`）、`size`、`time`、`path`、`fileType` 等。
 
@@ -187,8 +210,10 @@ HELLO_COOKIE=token=...
 | POST | `/api/bg/collect` | body 为 `string[]`（壁纸 ID 数组） | 收藏 |
 | POST | `/api/bg/delete` | `ids: string[]`, `collect`：`0` 删除壁纸库（仅管理员）/ `1` 取消收藏 | 删除壁纸 |
 | GET | `/api/bg/r/:type` | - | 随机壁纸图片（`/api/bg/r/d` 桌面、`/api/bg/r/m` 移动） |
+| GET | `/api/bg/random` | `type?` | 随机壁纸元信息 |
 | GET | `/api/pic/list` | `pageNo`, `pageSize` | 图床列表 `[{id}]` |
 | POST | `/api/pic/delete` | body 为 `string[]`（图片 ID 数组） | 删除图片 |
+| POST | `/api/pic/repeat` | 见源码 | 重命名/重复上传处理 |
 
 图片地址：`/api/f/pic/<id>`（由 `server/routes/getfile` 统一处理）。
 
@@ -201,8 +226,20 @@ HELLO_COOKIE=token=...
 | 方法 | 路径 | 参数 | 说明 |
 | --- | --- | --- | --- |
 | GET | `/api/player/list` | `id?`（歌单 ID，`all` 为全部歌曲）, `pageNo`, `pageSize`(≤200), `sort`, `onlyMv` | 歌单与歌曲 |
+| GET | `/api/player/playlist` | - | 歌单列表 |
+| POST | `/api/player/playlist` | 见源码 | 新建歌单 |
 | GET | `/api/player/search` | `word`, `pageNo` | 搜索歌曲（固定每页 100） |
 | GET | `/api/music` | - | 随机播放一首，返回音频二进制 |
+| POST | `/api/player/collect-song` | `id` | 收藏歌曲 |
+| POST | `/api/player/close-collect-song` | `id` | 取消收藏 |
+| POST | `/api/player/song-to-list` | `ids: string[]`, `listId` | 加入歌单 |
+| POST | `/api/player/delete-song` | `ids: string[]` | 删除歌曲 |
+| POST | `/api/player/edit-list` | `id`, `title` | 歌单改名 |
+| POST | `/api/player/delete-list` | `ids: string[]` | 删除歌单 |
+| POST | `/api/player/move-song` | 见源码 | 调整歌曲顺序 |
+| POST | `/api/player/share` | `id`, `title`, `expireTime`, `pass?` | 分享歌单 |
+| GET | `/api/player/export` | - | 导出歌单 |
+| POST | `/api/player/import` | 见源码 | 导入歌单 |
 
 歌曲对象字段：`id`、`title`、`artist`、`album`、`duration`、`pic`/`lrc`/`url`/`mv`（布尔）、`collect_count`、`play_count`。
 
@@ -212,16 +249,23 @@ HELLO_COOKIE=token=...
 
 | 方法 | 路径 | 参数 | 说明 |
 | --- | --- | --- | --- |
-| GET | `/api/chat/user-list` | `pageNo`, `pageSize`, `word?` | 成员列表（含在线状态、备注） |
+| GET | `/api/chat/user-list` | `pageNo`, `pageSize`, `word?` | 成员列表（含在线状态、备注、最后一条消息） |
 | POST | `/api/chat/send-msg` | `to`（对方 account）, `content` | 发文字消息 |
-| GET | `/api/chat/read-msg` | `account`（对方）, `type`: 0/1/2, `flag?`, `word?`, `start?`, `end?` | 读取会话（每次 50 条） |
-| GET | `/api/chat/news` | - | 未读消息 |
-| POST | `/api/chat/delete-msg` | 见源码 | 撤回消息 |
-| POST | `/api/chat/setdes` | `account`, `des` | 设置好友备注 |
+| GET | `/api/chat/read-msg` | `account`（对方）, `type`: 0/1/2, `flag?`, `word?`, `start?`, `end?` | 读取会话（每次 50 条），**会标记已读** |
+| GET | `/api/chat/news` | `clear?`（1=全部标已读） | 未读消息统计 `{group, friend}` |
+| POST | `/api/chat/forward` | `to`, `ids: string[]`（1–200） | 转发一条或多条消息 |
+| POST | `/api/chat/delete-msg` | `to`, `ids: string[]`（0–200，`[]` = 清空会话） | 只撤回自己发送的消息 |
+| POST | `/api/chat/setdes` | `account`, `des`（≤20 字） | 设置好友备注 |
+| GET | `/api/chat/getdes` | `account` | 好友备注、在线状态、登录设备、免打扰 |
 | GET | `/api/chat/draft` | `account`（对方） | 读取聊天草稿 `{draft}` |
-| POST | `/api/chat/draft` | `account`（对方）, `draft`（≤3000 字） | 保存聊天草稿到 `friends.draft`（静默请求） |
+| POST | `/api/chat/draft` | `account`, `draft`（≤3000 字） | 保存聊天草稿 |
+| POST | `/api/chat/dnd-mode` | `account`, `notify`: 0/1 | 免打扰 |
+| POST | `/api/chat/shake-msg` | `to` | 抖动窗口（仅在线） |
 
+`read-msg` 的 `type`：`0` 打开会话/取最新，`1` 向上取更早（游标 `flag`），`2` 向下取更新。
+按关键词/日期搜索时同时传 `start`/`end`（`YYYY-MM-DD`，结束日不含当天 00:00）。
 群聊/助手账号是固定值（`chang` / `hello`），普通用户直接发消息基本用不到。
+撤回、转发、清空都必须先让用户确认；清空会话为 `ids: []`，聊天室清空仅管理员可执行。
 
 ---
 
