@@ -4,7 +4,6 @@ import '../../assets/css/common/common.css';
 import '../../assets/fonts/iconfont.css';
 import '../notes/index.less';
 import './index.less';
-import loadingSvg from '../../assets/images/loading.svg';
 import defaultIcon from '../../assets/images/default-icon.png';
 
 import {
@@ -323,7 +322,6 @@ export function renderList(y) {
           {
             total,
             data,
-            loadingSvg,
             hdTitleHighlight,
             splitWord,
             _d,

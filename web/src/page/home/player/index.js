@@ -849,9 +849,9 @@ function renderSongList() {
   let arr = musicList;
   const html = _tpl(
     `
-    <li v-for="item in arr" class="song_list_item" :data-id="item.id" data-cursor="pointer">
+    <li v-for="item,idx in arr" class="song_list_item" :data-id="item.id" data-cursor="pointer">
       <div class="list_logo">
-        <div class="logo" :data-src="getPic(item.pic)"></div>
+        <div :data-cursor="idx > 2 ? 'move' : ''" class="logo" :data-src="getPic(item.pic)"></div>
       </div>
       <span>{{item.name}}</sapn>
     </li>
@@ -971,6 +971,9 @@ async function renderSongs(gao) {
   if (!listId) return;
   const ind = musicList.findIndex((item) => item.id === listId);
   if (ind < 0) return;
+  // 只有默认排序、未开启只看MV、且为收藏或自建歌单时才能拖动歌曲排序
+  const songMoveCursor =
+    (ind === 1 || ind > 2) && curSongListSort === 'default' && onlyShowMv === 0;
   const songListInfo = deepClone(musicList[ind]);
   if (listId !== 'all' && ind > 0) {
     if (onlyShowMv) {
@@ -1046,7 +1049,7 @@ async function renderSongs(gao) {
     <div v-for="{title,artist,mv,id,isLoaded} in slist" class="song_item" :data-id="id" :data-issc="issc(id)" data-cursor="pointer">
       <div data-cursor="pointer" check="n" class="check_state"></div>
       <div v-if="isLoaded" class="downloaded iconfont icon-jiaobiao"></div>
-      <div class="song_logo_box">
+      <div class="song_logo_box" :data-cursor="songMoveCursor ? 'move' : ''">
         <div class="logo" :data-src="getFilePath('/music/pic/'+id, { w: 256 })"></div>
         <div class="play_gif"></div>
       </div>
@@ -1093,6 +1096,7 @@ async function renderSongs(gao) {
         });
       },
       slist,
+      songMoveCursor,
       issc(id) {
         return scObj.hasOwnProperty(id);
       },

@@ -34,6 +34,7 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
 
   const image1 = document.createElement('img');
   image1.className = 'img1';
+  image1.dataset.cursor = 'progress';
   image1.setAttribute('draggable', 'false');
 
   box.appendChild(image);

@@ -84,6 +84,7 @@ export class MaskLoading {
   }
   render() {
     this.el = document.createElement('div');
+    this.el.dataset.cursor = 'progress';
     this.el.style.cssText = `
     display: none;
     position: absolute;

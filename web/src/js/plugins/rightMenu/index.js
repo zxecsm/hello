@@ -102,6 +102,7 @@ class RightM {
     this.content.className = 'content';
     this.loading = document.createElement('div');
     this.loading.className = 'loading';
+    this.loading.dataset.cursor = 'progress';
     this.contentWrap.appendChild(this.head);
     this.contentWrap.appendChild(this.loading);
     this.contentWrap.appendChild(this.content);
