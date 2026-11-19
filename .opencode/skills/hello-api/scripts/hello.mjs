@@ -126,6 +126,7 @@ const opts = {
   sort: 'time',
   sub: 0,
   collect: 0,
+  auto: false,
 };
 
 const POSITIONAL = [];
@@ -255,6 +256,9 @@ for (let i = 0; i < argv.length; i++) {
       break;
     case 'collect':
       opts.collect = 1;
+      break;
+    case 'auto':
+      opts.auto = true;
       break;
     case 'help':
     case 'h':
@@ -498,6 +502,133 @@ function setDeep(target, key, rawValue) {
   cur[parts[parts.length - 1]] = value;
 }
 
+/* ------------------------------ 网页元信息 ------------------------------ */
+
+function normalizeUrl(raw) {
+  const text = String(raw || '').trim();
+  if (!text) return '';
+  return /^https?:\/\//i.test(text) ? text : `https://${text}`;
+}
+
+function decodeHtml(text) {
+  const named = {
+    amp: '&',
+    lt: '<',
+    gt: '>',
+    quot: '"',
+    apos: "'",
+    nbsp: ' ',
+  };
+  return String(text || '')
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => {
+      const code = Number.parseInt(hex, 16);
+      return Number.isFinite(code) && code >= 0 && code <= 0x10ffff
+        ? String.fromCodePoint(code)
+        : '';
+    })
+    .replace(/&#(\d+);/g, (_, dec) => {
+      const code = Number(dec);
+      return Number.isFinite(code) && code >= 0 && code <= 0x10ffff
+        ? String.fromCodePoint(code)
+        : '';
+    })
+    .replace(/&([a-z]+);/gi, (match, name) => named[name.toLowerCase()] ?? match);
+}
+
+function cleanText(value) {
+  return decodeHtml(String(value || '').replace(/<[^>]*>/g, ' '))
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// 从 HTML 里提取标题和描述，优先级：description / og:description / twitter:description
+function extractSiteMeta(html) {
+  const result = { title: '', des: '' };
+
+  const titleTag = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  if (titleTag) result.title = cleanText(titleTag[1]);
+
+  const metas = {};
+  for (const tag of html.matchAll(/<meta\b[^>]*>/gi)) {
+    const text = tag[0];
+    const name = text.match(/\b(?:name|property|itemprop)\s*=\s*["']([^"']+)["']/i);
+    const content = text.match(/\bcontent\s*=\s*["']([^"']*)["']/i);
+    if (!name || !content) continue;
+    const key = name[1].trim().toLowerCase();
+    const value = cleanText(content[1]);
+    if (value && !metas[key]) metas[key] = value;
+  }
+
+  result.title = metas['og:title'] || metas['twitter:title'] || result.title;
+  result.des =
+    metas.description ||
+    metas['og:description'] ||
+    metas['twitter:description'] ||
+    '';
+
+  return result;
+}
+
+// 本地抓取失败时，退回 hello 服务端的 /api/site-info
+async function fetchSiteInfoByApi(link) {
+  try {
+    const url = new URL(baseUrl() + '/api/site-info');
+    url.searchParams.set('u', link);
+    const headers = { Accept: 'application/json' };
+    const session = loadSession();
+    if (session.cookie) headers.Cookie = session.cookie;
+    const res = await fetch(url, { headers, signal: AbortSignal.timeout(15000) });
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (json.code !== 1 || !json.data) return null;
+    return {
+      title: cleanText(json.data.title),
+      des: cleanText(json.data.des),
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchSiteMeta(rawLink) {
+  const link = normalizeUrl(rawLink);
+  if (!link) return { link: '', title: '', des: '', source: '' };
+
+  try {
+    const res = await fetch(link, {
+      headers: {
+        Accept: 'text/html,application/xhtml+xml',
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+      },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(12000),
+    });
+    const type = res.headers.get('content-type') || '';
+    if (res.ok && type.includes('text/html')) {
+      const buffer = Buffer.from(await res.arrayBuffer()).subarray(0, 1_000_000);
+      const charset = (type.match(/charset=([^;]+)/i)?.[1] || 'utf-8').trim().toLowerCase();
+      let html;
+      try {
+        html = new TextDecoder(charset).decode(buffer);
+      } catch {
+        html = buffer.toString('utf8');
+      }
+      const meta = extractSiteMeta(html);
+      if (meta.title || meta.des) return { link, ...meta, source: '网页 HTML' };
+    }
+  } catch {
+    /* 本地抓取失败，继续尝试服务端接口 */
+  }
+
+  const fallback = await fetchSiteInfoByApi(link);
+  if (fallback && (fallback.title || fallback.des)) {
+    return { link, ...fallback, source: 'hello /api/site-info' };
+  }
+
+  return { link, title: '', des: '', source: '' };
+}
+
 function buildBody() {
   if (opts.set.length > 0) {
     const body = {};
@@ -613,6 +744,17 @@ const commands = {
     printResult(await request('GET', '/api/user/userinfo'));
   },
 
+  // 抓取网页标题/描述，用于添加书签前自动补全
+  async meta() {
+    if (!opts.link) fail('用法：meta --link https://example.com');
+    const meta = await fetchSiteMeta(opts.link);
+    console.log(JSON.stringify(meta, null, 2));
+    if (!meta.title && !meta.des) {
+      console.error('⚠ 未取到标题和描述，请让用户手动输入。');
+      process.exitCode = 1;
+    }
+  },
+
   async api() {
     const [method, apiPath] = POSITIONAL.slice(1);
     if (!method || !apiPath) fail('用法：hello.mjs api GET /api/bmk/list [--query k=v] [--data JSON|@file] [--set k=v]');
@@ -647,12 +789,22 @@ const commands = {
     },
     async add() {
       requireLogin();
-      if (!opts.title || !opts.link) fail('用法：bmk add --title 标题 --link https://... [--des 备注] [--group home]');
+      if (!opts.link) fail('用法：bmk add --link https://... [--title 标题] [--des 备注] [--group home] [--auto]');
+      const link = normalizeUrl(opts.link);
+      if (opts.auto && (!opts.title || !opts.des)) {
+        const meta = await fetchSiteMeta(link);
+        if (!opts.title) opts.title = meta.title;
+        if (!opts.des) opts.des = meta.des;
+        if (meta.title || meta.des) {
+          console.error(`已自动补全：${meta.title || '(无标题)'}｜来源：${meta.source}`);
+        }
+      }
+      if (!opts.title) fail('缺少 --title；可加 --auto 自动抓取网页标题，或让用户手动输入');
       printResult(
         await request('POST', '/api/bmk/add-bmk', {
           body: {
             groupId: opts.group || 'home',
-            bms: [{ title: opts.title, link: opts.link, des: opts.des }],
+            bms: [{ title: opts.title, link, des: opts.des }],
           },
         }),
       );
@@ -1073,11 +1225,12 @@ function help() {
                          --out 文件   保存二进制响应
   --json / --full        输出完整响应信封
   --yes                  确认删除类操作（智能体须先征得用户同意）
+  meta --link <URL>      抓取网页标题和描述（添加书签前自动补全用）
 
 书签:
   bmk groups | bmk list [--group home|<id>]
   bmk search --word <词> [--group <id>] [--page 1] [--size 20]
-  bmk add --title <标题> --link <URL> [--des <备注>] [--group home|<id>]
+  bmk add --link <URL> [--title <标题>] [--des <备注>] [--group home|<id>] [--auto]
   bmk rm --id <id> [--id ...]
   bmk add-group --title <名称> | bmk rm-group --id <id>
 
