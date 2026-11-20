@@ -7,6 +7,7 @@ import '../../assets/fonts/iconfont.css';
 import './index.less';
 import {
   queryURLParams,
+  clearURLParams,
   myOpen,
   throttle,
   debounce,
@@ -297,6 +298,8 @@ const onceInit = hdOnce(function () {
     $rightBox.find('.admin').remove();
   }
   const urlParmes = queryURLParams(myOpen());
+  // 地址栏上的参数已读取，立即去掉，避免刷新时重复打开
+  clearURLParams();
   // 立即打开指定聊天页
   if (urlParmes.c) {
     if (urlParmes.c === userInfo.account) {

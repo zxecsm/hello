@@ -87,7 +87,7 @@ export async function batchGetMusics(ids) {
 
     const list = db('songs')
       .select(
-        'id,pic,lrc,url,mv,title,artist,duration,album,year,collect_count,play_count,create_at',
+        'id,pic,lrc,url,mv,title,artist,title_pinyin,artist_pinyin,duration,album,year,collect_count,play_count,create_at',
       )
       .where({ id: { in: arr } })
       .find();

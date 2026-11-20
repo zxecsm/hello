@@ -29,6 +29,11 @@ export function queryURLParams(url = location.href) {
 
   return obj;
 }
+// 去掉url上的查询参数（保留hash），避免刷新时重复触发
+export function clearURLParams() {
+  if (!location.search) return;
+  history.replaceState(null, '', location.pathname + location.hash);
+}
 export function delay(time) {
   return new Promise((resolve) => {
     let timer = setTimeout(() => {
@@ -397,14 +402,18 @@ export function isMobile() {
   return false;
 }
 // 数组按属性中英文排序
-export function arrSortMinToMax(arr, property) {
+export function arrSortMinToMax(arr, property, fallbackProperty) {
   arr.sort((a, b) => {
-    return mixedSort(a[property], b[property]);
+    const av = a[property] || (fallbackProperty ? a[fallbackProperty] : '');
+    const bv = b[property] || (fallbackProperty ? b[fallbackProperty] : '');
+    return mixedSort(av, bv);
   });
   return arr;
 }
 // 混合排序
 export function mixedSort(a, b) {
+  a = `${a ?? ''}`;
+  b = `${b ?? ''}`;
   if (/^\d+/.test(a) && /^\d+/.test(b)) {
     return /^\d+/.exec(a) - /^\d+/.exec(b);
   } else if (isChinese(a) && isChinese(b)) {

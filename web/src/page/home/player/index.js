@@ -984,9 +984,9 @@ async function renderSongs(gao) {
     }
     // 排序
     if (curSongListSort === 'artist') {
-      songListInfo.item = arrSortMinToMax(songListInfo.item, 'artist_pinyin');
+      songListInfo.item = arrSortMinToMax(songListInfo.item, 'artist_pinyin', 'artist');
     } else if (curSongListSort === 'title') {
-      songListInfo.item = arrSortMinToMax(songListInfo.item, 'title_pinyin');
+      songListInfo.item = arrSortMinToMax(songListInfo.item, 'title_pinyin', 'title');
     } else if (curSongListSort === 'playCount') {
       songListInfo.item.sort((a, b) => {
         return b.play_count - a.play_count;
