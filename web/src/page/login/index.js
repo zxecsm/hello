@@ -10,7 +10,6 @@ import {
   _setTimeout,
   debounce,
   throttle,
-  isBigScreen,
   isLogin,
   getDarkIcon,
 } from '../../js/utils/utils';
@@ -31,8 +30,7 @@ import md5 from '../../js/utils/md5.js';
 import localData from '../../js/common/localData.js';
 import { maskLoading } from '../../js/plugins/loadingBar/index.js';
 import captcha from '../../js/plugins/captcha/index.js';
-const $bg = $('.bg'),
-  $box = $('.box'),
+const $box = $('.box'),
   $title = $box.find('.title'),
   $register = $box.find('.register'),
   $darkState = $box.find('.dark_state'),
@@ -310,17 +308,9 @@ function closeRatify() {
   $ratify.css('display', 'none').find('.code_box').css('display', 'none');
   code = '';
 }
-window.addEventListener('load', async function () {
+// 登录页固定使用 css 中的背景（bg.svg），不请求随机壁纸
+window.addEventListener('load', function () {
   $box.addClass('open');
-
-  try {
-    const url = `/api/bg/r/${isBigScreen() ? 'd' : 'm'}`;
-    const imgBlob = await (await fetch(url)).blob();
-    $bg.css({
-      backgroundImage: `url(${URL.createObjectURL(imgBlob)})`,
-      opacity: 0.8,
-    });
-  } catch {}
 });
 accInp.setValue(localData.get('username'));
 let showpd = localData.get('showpd');
