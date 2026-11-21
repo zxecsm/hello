@@ -84,6 +84,7 @@ const fieldLength = {
   maxMvSize: 200, // 最大视频大小MB
   maxLogoSize: 5, // 最大logo大小MB
   textFileSize: 10 * 1024 * 1024, // 文本文件编辑大小
+  sftpEditSize: 2 * 1024 * 1024, // SFTP 在线编辑的文本大小上限
   noteSize: 100 * 1024, // 笔记大小
   lrcSize: 20 * 1024, // 歌词大小
   chatPageSize: 50, // 消息分页

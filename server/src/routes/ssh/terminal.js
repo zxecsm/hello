@@ -3,6 +3,7 @@ import { StringDecoder } from 'node:string_decoder';
 import { CacheByExpire } from '../../utils/common/cache.js';
 import { writelog } from '../../utils/common/utils.js';
 import _connect from '../../utils/net/connect.js';
+import _path from '../../utils/common/path.js';
 
 // 清理 SSH 资源（修复竞态与未捕获的错误）
 function closeSSH(sshObj) {
@@ -223,6 +224,7 @@ export async function readSftpDir(sftp, dirPath) {
       path: dirPath,
       name,
       longname,
+      size: attrs?.size || 0,
       mtime: attrs?.mtime || 0,
     };
   });
@@ -230,4 +232,104 @@ export async function readSftpDir(sftp, dirPath) {
   result.sort((a, b) => b.mtime - a.mtime);
 
   return result;
+}
+
+// 读取远端文件状态
+export function sftpStat(sftp, path) {
+  return new Promise((resolve, reject) => {
+    sftp.stat(path, (err, stat) => {
+      err ? reject(err) : resolve(stat);
+    });
+  });
+}
+
+// 读取远端文件内容
+export function sftpReadFile(sftp, path) {
+  return new Promise((resolve, reject) => {
+    sftp.readFile(path, (err, data) => {
+      err ? reject(err) : resolve(data);
+    });
+  });
+}
+
+// 写入远端文件内容
+export function sftpWriteFile(sftp, path, data) {
+  return new Promise((resolve, reject) => {
+    sftp.writeFile(path, data, 'utf8', (err) => {
+      err ? reject(err) : resolve();
+    });
+  });
+}
+
+// 新建远端目录
+export function sftpMkdir(sftp, path) {
+  return new Promise((resolve, reject) => {
+    sftp.mkdir(path, (err) => {
+      err ? reject(err) : resolve();
+    });
+  });
+}
+
+// 读取远端文件状态（不跟随符号链接）
+export function sftpLstat(sftp, path) {
+  return new Promise((resolve, reject) => {
+    sftp.lstat(path, (err, stat) => {
+      err ? reject(err) : resolve(stat);
+    });
+  });
+}
+
+// 读取远端目录
+export function sftpReaddir(sftp, path) {
+  return new Promise((resolve, reject) => {
+    sftp.readdir(path, (err, list) => {
+      err ? reject(err) : resolve(list || []);
+    });
+  });
+}
+
+// 远端路径是否存在
+export async function sftpExists(sftp, path) {
+  try {
+    await sftpLstat(sftp, path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// 重命名/移动远端路径
+export function sftpRename(sftp, from, to) {
+  return new Promise((resolve, reject) => {
+    sftp.rename(from, to, (err) => {
+      err ? reject(err) : resolve();
+    });
+  });
+}
+
+// 递归删除远端文件或目录
+export async function removeSftpPath(sftp, path) {
+  const stat = await sftpLstat(sftp, path);
+
+  if (!stat.isDirectory()) {
+    await new Promise((resolve, reject) => {
+      sftp.unlink(path, (err) => {
+        err ? reject(err) : resolve();
+      });
+    });
+    return;
+  }
+
+  const list = await sftpReaddir(sftp, path).catch(() => []);
+
+  for (const item of list) {
+    if (item.filename === '.' || item.filename === '..') continue;
+    await removeSftpPath(sftp, _path.normalizeNoSlash(path, item.filename));
+  }
+
+  await new Promise((resolve, reject) => {
+    sftp.rmdir(path, (err) => {
+      err ? reject(err) : resolve();
+    });
+  });
 }

@@ -52,4 +52,5 @@ export const fieldLength = {
   backupDataLength: 200, // 备份数据条数
   logLength: 200, // 日志保存文件个数
   logFileSize: 9 * 1024 * 1024, // 日志文件大小
+  sftpEditSize: 2 * 1024 * 1024, // SFTP 在线编辑的文本大小上限
 };

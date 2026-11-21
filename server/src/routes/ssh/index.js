@@ -3,7 +3,18 @@ import Busboy from 'busboy';
 import { createPagingMeta, getSplitWord, syncUpdateData } from '../../utils/common/utils.js';
 import { fieldLength } from '../config.js';
 import V from '../../utils/web/validRules.js';
-import { createTerminal, getSSH, readSftpDir } from './terminal.js';
+import {
+  createTerminal,
+  getSSH,
+  readSftpDir,
+  removeSftpPath,
+  sftpExists,
+  sftpMkdir,
+  sftpReadFile,
+  sftpRename,
+  sftpStat,
+  sftpWriteFile,
+} from './terminal.js';
 import { db } from '../../utils/db/sqlite.js';
 import _f from '../../utils/fs/f.js';
 import nanoid from '../../utils/common/nanoid.js';
@@ -749,6 +760,242 @@ route.get(
     const list = await readSftpDir(ssh.sftp, p);
 
     resp.success(res, 'ok', list)();
+  }),
+);
+
+// 新建sftp目录
+route.post(
+  '/sftp-mkdir',
+  validate(
+    'body',
+    V.object({
+      path: V.string().notEmpty().min(1).max(fieldLength.url),
+      name: V.string().trim().min(1).max(fieldLength.filename),
+    }),
+  ),
+  asyncHandler(async (_, res) => {
+    let temid = res.locals.hello.temid;
+    const { path, name } = res.locals.ctx;
+
+    if (!_path.isFilename(name)) {
+      return resp.forbidden(res, '名称包含了不允许的特殊字符')();
+    }
+
+    try {
+      temid = await V.parse(temid, V.string().trim().min(1), 'temid');
+    } catch (error) {
+      return resp.badRequest(res)(error, 1);
+    }
+
+    const ssh = getSSH(temid);
+    if (!ssh || !ssh.sftp) return resp.forbidden(res, '已断开SSH连接')();
+
+    const p = _path.normalizeNoSlash('/', path, name);
+
+    await sftpMkdir(ssh.sftp, p);
+
+    resp.success(res, '新建目录成功')();
+  }),
+);
+
+// 新建sftp文本文件
+route.post(
+  '/sftp-create',
+  validate(
+    'body',
+    V.object({
+      path: V.string().notEmpty().min(1).max(fieldLength.url),
+      name: V.string().trim().min(1).max(fieldLength.filename),
+    }),
+  ),
+  asyncHandler(async (_, res) => {
+    let temid = res.locals.hello.temid;
+    const { path, name } = res.locals.ctx;
+
+    if (!_path.isFilename(name)) {
+      return resp.forbidden(res, '名称包含了不允许的特殊字符')();
+    }
+
+    try {
+      temid = await V.parse(temid, V.string().trim().min(1), 'temid');
+    } catch (error) {
+      return resp.badRequest(res)(error, 1);
+    }
+
+    const ssh = getSSH(temid);
+    if (!ssh || !ssh.sftp) return resp.forbidden(res, '已断开SSH连接')();
+
+    const p = _path.normalizeNoSlash('/', path, name);
+
+    try {
+      await sftpStat(ssh.sftp, p);
+      return resp.forbidden(res, '同名文件已存在')();
+    } catch {}
+
+    await sftpWriteFile(ssh.sftp, p, '');
+
+    resp.success(res, '新建文件成功')();
+  }),
+);
+
+// 读取sftp文件内容
+route.get(
+  '/sftp-read',
+  validate(
+    'query',
+    V.object({
+      path: V.string().min(1).notEmpty().max(fieldLength.url),
+    }),
+  ),
+  asyncHandler(async (_, res) => {
+    let temid = res.locals.hello.temid;
+    try {
+      temid = await V.parse(temid, V.string().trim().min(1), 'temid');
+    } catch (error) {
+      return resp.badRequest(res)(error, 1);
+    }
+
+    const ssh = getSSH(temid);
+    if (!ssh || !ssh.sftp) return resp.forbidden(res, '已断开SSH连接')();
+
+    const { path } = res.locals.ctx;
+    const p = _path.normalizeNoSlash('/', path);
+
+    let stat;
+    try {
+      stat = await sftpStat(ssh.sftp, p);
+    } catch {
+      return resp.forbidden(res, '文件不存在')();
+    }
+
+    if (stat.isDirectory() || stat.size > fieldLength.sftpEditSize) {
+      return resp.success(res, 'ok', { type: 'other' })();
+    }
+
+    const data = await sftpReadFile(ssh.sftp, p);
+
+    if (!(await _f.isTextFile(data))) {
+      return resp.success(res, 'ok', { type: 'other' })();
+    }
+
+    resp.success(res, 'ok', { type: 'text', data: data.toString('utf8') })();
+  }),
+);
+
+// 保存sftp文件内容
+route.post(
+  '/sftp-write',
+  validate(
+    'body',
+    V.object({
+      path: V.string().min(1).notEmpty().max(fieldLength.url),
+      content: V.string()
+        .default('')
+        .allowEmpty()
+        .custom(
+          (v) => _f.getTextSize(v) <= fieldLength.sftpEditSize,
+          `编辑文本文件不能超过: ${fieldLength.sftpEditSize} 字节`,
+        ),
+    }),
+  ),
+  asyncHandler(async (_, res) => {
+    let temid = res.locals.hello.temid;
+    try {
+      temid = await V.parse(temid, V.string().trim().min(1), 'temid');
+    } catch (error) {
+      return resp.badRequest(res)(error, 1);
+    }
+
+    const ssh = getSSH(temid);
+    if (!ssh || !ssh.sftp) return resp.forbidden(res, '已断开SSH连接')();
+
+    const { path, content } = res.locals.ctx;
+    const p = _path.normalizeNoSlash('/', path);
+
+    try {
+      const stat = await sftpStat(ssh.sftp, p);
+      if (stat.isDirectory()) return resp.forbidden(res, '目录不能作为文件保存')();
+    } catch {
+      return resp.forbidden(res, '文件不存在')();
+    }
+
+    await sftpWriteFile(ssh.sftp, p, content);
+
+    resp.success(res, '保存成功')();
+  }),
+);
+
+// 重命名sftp文件或目录
+route.post(
+  '/sftp-rename',
+  validate(
+    'body',
+    V.object({
+      path: V.string().min(1).notEmpty().max(fieldLength.url),
+      name: V.string().trim().min(1).max(fieldLength.filename),
+    }),
+  ),
+  asyncHandler(async (_, res) => {
+    let temid = res.locals.hello.temid;
+    const { path, name } = res.locals.ctx;
+
+    if (!_path.isFilename(name)) {
+      return resp.forbidden(res, '名称包含了不允许的特殊字符')();
+    }
+
+    try {
+      temid = await V.parse(temid, V.string().trim().min(1), 'temid');
+    } catch (error) {
+      return resp.badRequest(res)(error, 1);
+    }
+
+    const ssh = getSSH(temid);
+    if (!ssh || !ssh.sftp) return resp.forbidden(res, '已断开SSH连接')();
+
+    const p = _path.normalizeNoSlash('/', path);
+
+    if (p === '/') return resp.forbidden(res, '不能重命名根目录')();
+
+    const to = _path.normalizeNoSlash(_path.dirname(p), name);
+
+    if (to === p) return resp.success(res, '重命名成功')();
+
+    if (await sftpExists(ssh.sftp, to)) return resp.forbidden(res, '同名文件或目录已存在')();
+
+    await sftpRename(ssh.sftp, p, to);
+
+    resp.success(res, '重命名成功')();
+  }),
+);
+
+// 删除sftp文件或目录
+route.post(
+  '/sftp-delete',
+  validate(
+    'body',
+    V.object({
+      path: V.string().min(1).notEmpty().max(fieldLength.url),
+    }),
+  ),
+  asyncHandler(async (_, res) => {
+    let temid = res.locals.hello.temid;
+    try {
+      temid = await V.parse(temid, V.string().trim().min(1), 'temid');
+    } catch (error) {
+      return resp.badRequest(res)(error, 1);
+    }
+
+    const ssh = getSSH(temid);
+    if (!ssh || !ssh.sftp) return resp.forbidden(res, '已断开SSH连接')();
+
+    const { path } = res.locals.ctx;
+    const p = _path.normalizeNoSlash('/', path);
+
+    if (p === '/') return resp.forbidden(res, '不能删除根目录')();
+
+    await removeSftpPath(ssh.sftp, p);
+
+    resp.success(res, '删除成功')();
   }),
 );
 

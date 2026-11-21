@@ -24,18 +24,13 @@ import {
   reqSSHMoveQuickGroup,
   reqSSHMoveToGroup,
   reqSSHQuickList,
-  reqSSHSftpList,
-  reqSSHSftpUp,
 } from '../../api/ssh.js';
 import {
   _getTarget,
   _myOpen,
   _setTimeout,
-  concurrencyTasks,
   copyText,
   debounce,
-  downloadFiles,
-  getFiles,
   isDarkMode,
   isMobile,
   longPress,
@@ -52,8 +47,7 @@ import _d from '../../js/common/config.js';
 import _msg from '../../js/plugins/message/index.js';
 import { MouseElementTracker } from '../../js/utils/boxSelector.js';
 import toolTip from '../../js/plugins/tooltip/index.js';
-import _path from '../../js/utils/path.js';
-import { UpProgress } from '../../js/plugins/UpProgress/index.js';
+import { openSftpFileManager } from './fileManager.js';
 const $app = $('#app'),
   $sshBox = $app.find('.ssh_box'),
   $logText = $sshBox.find('.log_text'),
@@ -1069,94 +1063,7 @@ function updateFullWidthState(state) {
     fullWidth.className = 'btn btn_info iconfont icon-kuandukuoda full_width';
   }
 }
-async function hdUp(files, path) {
-  const controller = new AbortController();
-  const signal = controller.signal;
-
-  const upPro = new UpProgress(() => {
-    controller.abort();
-  }, files.length);
-  await concurrencyTasks(files, 3, async (file) => {
-    if (signal.aborted) return;
-    const { name } = file;
-    const pro = upPro.add(name);
-
-    try {
-      const result = await reqSSHSftpUp(
-        { path, name },
-        file,
-        (percent) => {
-          pro.update(percent);
-        },
-        signal,
-      );
-      if (result.code === 1) {
-        pro.close();
-      } else {
-        pro.fail();
-        _msg.error(`上传失败：${name}`, null, { reside: true });
-      }
-    } catch {
-      pro.fail();
-      _msg.error(`上传失败：${name}`, null, { reside: true });
-    }
-  });
-}
 updateFullWidthState(sshInfo.isFullWidth);
-function selectDir(e, path = '/', loading) {
-  loading && loading.start();
-  reqSSHSftpList({ path })
-    .then((res) => {
-      loading && loading.end();
-      if (res.code === 1) {
-        const list = res.data;
-        if (list.length === 0) return _msg.error(`${path} 为空目录`);
-        rMenu.selectMenu(
-          e,
-          list.map((item, i) => {
-            const { type, name } = item;
-            return {
-              id: `${i + 1}`,
-              text: name,
-              beforeIcon: type === 'dir' ? 'iconfont icon-gl-folder' : 'iconfont icon-gl-fileText',
-              afterIcon: type === 'dir' ? 'iconfont icon-upload' : '',
-              param: { value: item },
-            };
-          }),
-          ({ e, id, box, close, loading, param }) => {
-            if (!box || !id) return;
-            const icon = _getTarget(box, e, '.item .icon-upload');
-            const { name } = param.value;
-            const tPath = _path.normalizeNoSlash(path, name);
-            if (icon) {
-              getFiles({ multiple: true })
-                .then((files) => {
-                  if (files.length === 0) return;
-                  close(1);
-                  hdUp(files, tPath);
-                })
-                .catch(() => {});
-            } else {
-              if (param.value.type === 'dir') {
-                selectDir(e, tPath, loading);
-              } else {
-                downloadFiles([
-                  {
-                    fileUrl: `${_d.apiPath}/ssh/sftp-down?path=${decodeURIComponent(tPath)}&id=${_d.temid}`,
-                    filename: name,
-                  },
-                ]);
-              }
-            }
-          },
-          path,
-        );
-      }
-    })
-    .catch(() => {
-      loading && loading.end();
-    });
-}
 $sshBox
   .on('click', '.t_menu .full_height', function () {
     sshInfo.isFullHeight = !sshInfo.isFullHeight;
@@ -1170,7 +1077,9 @@ $sshBox
     updateFullWidthState(sshInfo.isFullWidth);
     updateTermSize();
   })
-  .on('click', '.t_menu .file_transfer_btn', selectDir)
+  .on('click', '.t_menu .file_transfer_btn', function () {
+    openSftpFileManager();
+  })
   .on('click', '.t_menu .send_btn', function () {
     const command = wInput.getValue();
     saveCommandHistory(command);

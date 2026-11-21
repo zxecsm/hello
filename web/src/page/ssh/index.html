@@ -14,7 +14,7 @@
           </div>
           <button data-cursor="pointer" class="btn btn_info iconfont icon-history history_btn"></button>
           <button data-cursor="pointer" class="btn btn_info iconfont icon-fuzhi log_btn"></button>
-          <button data-cursor="pointer" class="btn btn_info iconfont icon-IDP-wenjianchuanshu file_transfer_btn"></button>
+          <button data-cursor="pointer" class="btn btn_info iconfont icon-gl-folder file_transfer_btn"></button>
           <button data-cursor="pointer" class="btn btn_info iconfont icon-kuandukuoda full_width"></button>
           <button data-cursor="pointer" class="btn btn_info iconfont icon-xiala full_height"></button>
         </div>
@@ -33,6 +33,44 @@
         </div>
         <div class="quick_group"></div>
         <div class="quick_commands"></div>
+      </div>
+      <div class="fm_modal">
+        <div class="fm_mask"></div>
+        <div class="fm_panel">
+          <div class="fm_head">
+            <div class="fm_close iconfont icon-close-bold" data-cursor="pointer"></div>
+            <div class="fm_back iconfont icon-shang" data-cursor="pointer"></div>
+            <div class="fm_crumb"></div>
+            <div class="fm_tools">
+              <div class="fm_tool upload iconfont icon-upload" data-cursor="pointer"></div>
+              <div class="fm_tool add iconfont icon-tianjia" data-cursor="pointer"></div>
+              <div class="fm_tool refresh iconfont icon-suijibofang" data-cursor="pointer"></div>
+            </div>
+          </div>
+          <div class="fm_list_wrap">
+            <div class="fm_list"></div>
+          </div>
+          <div class="fm_status">
+            <div class="path" data-cursor="pointer" title="点击复制路径">
+              <span class="scroll_text"></span>
+            </div>
+            <span class="count"></span>
+          </div>
+          <div class="fm_editor">
+            <div class="fm_editor_head no_select">
+              <button class="btn btn_info fm_editor_close" data-cursor="pointer">关闭</button>
+              <button class="btn btn_primary fm_save" data-cursor="pointer">保存</button>
+              <div class="fm_editor_path" data-cursor="pointer" title="点击复制路径">
+                <span class="scroll_text"></span>
+              </div>
+              <div class="fm_undo iconfont icon-Undo deactive" data-cursor="pointer" title="撤回"></div>
+              <div class="fm_redo iconfont icon-Redo deactive" data-cursor="pointer" title="前进"></div>
+              <button class="btn btn_info fm_to_note" data-cursor="pointer">保存到笔记</button>
+              <button class="btn btn_info fm_setting" data-cursor="pointer">设置</button>
+            </div>
+            <div class="fm_editor_body"></div>
+          </div>
+        </div>
       </div>
     </div>
   </body>

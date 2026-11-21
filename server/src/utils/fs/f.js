@@ -239,7 +239,17 @@ async function del(path, { signal, progress } = {}) {
 }
 
 // 是否文本文件
-async function isTextFile(path, length = 1000) {
+async function isTextFile(source, length = 1000) {
+  // 兼容直接传入 Buffer（例如远端 SFTP 读取到的内容）
+  if (Buffer.isBuffer(source)) {
+    const buffer = source.subarray(0, length);
+    for (let i = 0; i < buffer.length; i++) {
+      if (buffer[i] === 0) return false;
+    }
+    return true;
+  }
+
+  const path = source;
   let fileHandle;
   try {
     // 使用 fs.open 异步打开指定文件，以只读模式 ('r') 打开文件。

@@ -104,3 +104,27 @@ export function reqSSHHistoryCommands(data) {
 export function reqSSHSftpUp(data, file, cb, signal) {
   return _upFile(`/ssh/sftp-up`, data, file, cb, signal);
 }
+// sftp新建目录
+export function reqSSHSftpMkdir(data) {
+  return _postAjax('/ssh/sftp-mkdir', data);
+}
+// sftp新建文件
+export function reqSSHSftpCreate(data) {
+  return _postAjax('/ssh/sftp-create', data);
+}
+// sftp读取文件
+export function reqSSHSftpRead(data) {
+  return _getAjax('/ssh/sftp-read', data);
+}
+// sftp保存文件
+export function reqSSHSftpWrite(data) {
+  return _postAjax('/ssh/sftp-write', data);
+}
+// sftp删除文件或目录
+export function reqSSHSftpDelete(data) {
+  return _postAjax('/ssh/sftp-delete', data);
+}
+// sftp重命名文件或目录
+export function reqSSHSftpRename(data) {
+  return _postAjax('/ssh/sftp-rename', data);
+}
