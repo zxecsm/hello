@@ -26,6 +26,9 @@ import {
   getFilePath,
   _myOpen,
   isBlobUrl,
+  getFiles,
+  isImgFile,
+  getImgInfo,
 } from '../../js/utils/utils';
 
 import _d from '../../js/common/config';
@@ -37,12 +40,16 @@ import realtime from '../../js/plugins/realtime';
 import {
   reqBmkAddBmk,
   reqBmkDeleteBmk,
+  reqBmkDeleteLogo,
   reqBmkEditBmk,
   reqBmkList,
   reqBmkSiteInfo,
   reqBmkSearch,
   reqBmkToGroup,
 } from '../../api/bmk';
+import { reqUserUpLogo } from '../../api/user';
+import { UpProgress } from '../../js/plugins/UpProgress';
+import md5 from '../../js/utils/md5';
 
 import { showBmkInfo } from '../../js/utils/showinfo';
 import rMenu from '../../js/plugins/rightMenu';
@@ -461,6 +468,109 @@ function movebmk(e, arr, loading = { start() {}, end() {} }) {
     });
 }
 
+// 设置书签图标
+function setBmLogo(e, obj) {
+  const data = [
+    {
+      id: '1',
+      text: '自定义图标',
+    },
+  ];
+  if (obj.logo) {
+    data.push({
+      id: '2',
+      text: '使用自动获取图标',
+    });
+  }
+  rMenu.selectMenu(
+    e,
+    data,
+    ({ e, close, id, loading }) => {
+      if (id === '1') {
+        close(1);
+        upBmLogo(obj);
+      } else if (id === '2') {
+        rMenu.pop(
+          {
+            e,
+            text: '确认清除：自定义图标，使用自动获取图标？',
+          },
+          (type) => {
+            if (type !== 'confirm') return;
+            loading.start();
+            reqBmkDeleteLogo({ id: obj.id })
+              .then((res) => {
+                loading.end();
+                if (res.code === 1) {
+                  close(1);
+                  _msg.success(res.codeText);
+                  renderList();
+                }
+              })
+              .catch(() => {
+                loading.end();
+              });
+          },
+        );
+      }
+    },
+    '图标设置',
+  );
+}
+
+// 上传书签图标
+async function upBmLogo(obj) {
+  let files = [];
+  try {
+    files = await getFiles({ accept: 'image/*' });
+  } catch {
+    return;
+  }
+  if (files.length === 0) return;
+
+  const file = files[0];
+
+  if (!isImgFile(file.name)) {
+    _msg.error('不支持的图片格式');
+    return;
+  }
+
+  if (file.size <= 0 || file.size >= _d.fieldLength.maxLogoSize * 1024 * 1024) {
+    _msg.error(`图片限制0-${_d.fieldLength.maxLogoSize}MB`);
+    return;
+  }
+
+  try {
+    await getImgInfo(file);
+  } catch {
+    _msg.error('图片格式错误');
+    return;
+  }
+
+  const HASH = await md5.sampleHash(file);
+  const controller = new AbortController();
+  const upPro = new UpProgress(() => controller.abort());
+  const pro = upPro.add(file.name);
+
+  try {
+    const res = await reqUserUpLogo(
+      { HASH, name: file.name, type: 'bookmark', id: obj.id },
+      file,
+      (percent) => pro.update(percent),
+      controller.signal,
+    );
+    if (res.code === 1) {
+      pro.close();
+      _msg.success(res.codeText);
+      renderList();
+    } else {
+      pro.fail();
+    }
+  } catch {
+    pro.fail();
+  }
+}
+
 // 书签菜单
 function bmMenu(e) {
   const $this = $(this);
@@ -476,6 +586,11 @@ function bmMenu(e) {
   if (runState === 'own') {
     data.push(
       { divider: true },
+      {
+        id: '4',
+        text: '书签图标',
+        beforeIcon: 'iconfont icon-tupian',
+      },
       {
         id: '1',
         text: '编辑书签',
@@ -504,10 +619,11 @@ function bmMenu(e) {
     e,
     data,
     ({ e, close, id, loading }) => {
-      if (id === '1') {
+      if (id === '4') {
+        setBmLogo(e, obj);
+      } else if (id === '1') {
         if (runState !== 'own') return;
-        rMenu.inpMenu(
-          e,
+        rMenu.inpMenu(          e,
           {
             subText: '提交',
             items: {
