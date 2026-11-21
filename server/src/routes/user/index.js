@@ -39,7 +39,7 @@ import {
   parseForwardMsgLink,
 } from '../chat/chat.js';
 
-import { getUserInfo, deleteUser, getFontList } from './user.js';
+import { getUserInfo, deleteUser, getFontList, deleteLogoFile } from './user.js';
 
 import { clearUserInfoCache, touchUserInfoCache } from '../../utils/db/userCache.js';
 
@@ -1122,9 +1122,11 @@ route.get(
 route.post(
   '/delete-logo',
   asyncHandler(async (_, res) => {
-    const { account } = res.locals.hello.userinfo;
+    const { account, logo } = res.locals.hello.userinfo;
 
     db('user').where({ account, state: 1 }).update({ logo: '' });
+
+    await deleteLogoFile(account, logo);
 
     clearUserInfoCache(account);
 
@@ -1181,15 +1183,29 @@ route.post(
     const logo = _path.normalizeNoSlash(timePath, `${HASH}.${_path.extname(name)[2]}`);
 
     if (type === 'bookmark') {
-      db('bmk')
+      const oldLogo = db('bmk')
+        .select('logo')
         .where({ account, id, state: 1 })
-        .update({ logo: _path.normalizeNoSlash('/logo', account, logo) });
+        .findOne()?.logo;
+      const newLogo = _path.normalizeNoSlash('/logo', account, logo);
+
+      db('bmk').where({ account, id, state: 1 }).update({ logo: newLogo });
+
+      if (oldLogo && oldLogo !== newLogo) {
+        await deleteLogoFile(account, oldLogo);
+      }
 
       syncUpdateData(res, 'bookmark');
 
       resp.success(res, '更新书签LOGO成功')();
     } else if (type === 'userlogo') {
+      const oldLogo = res.locals.hello.userinfo.logo;
+
       db('user').where({ account, state: 1 }).update({ logo });
+
+      if (oldLogo && oldLogo !== logo) {
+        await deleteLogoFile(account, oldLogo);
+      }
 
       clearUserInfoCache(account);
 
@@ -1202,12 +1218,18 @@ route.post(
       if (Array.isArray(config.searchEngineData)) {
         const idx = config.searchEngineData.findIndex((s) => s.id === id);
         if (idx >= 0) {
+          const oldLogo = config.searchEngineData[idx].logo;
+
           config.searchEngineData[idx] = {
             ...config.searchEngineData[idx],
             logo,
           };
           await writeSearchConfig(account, config);
           syncUpdateData(res, 'searchConfig');
+
+          if (oldLogo && oldLogo !== logo) {
+            await deleteLogoFile(account, oldLogo);
+          }
         }
       }
       resp.success(res, '更新搜索引擎LOGO成功')();
@@ -1217,12 +1239,18 @@ route.post(
       if (Array.isArray(config.translatorData)) {
         const idx = config.translatorData.findIndex((t) => t.id === id);
         if (idx >= 0) {
+          const oldLogo = config.translatorData[idx].logo;
+
           config.translatorData[idx] = {
             ...config.translatorData[idx],
             logo,
           };
           await writeSearchConfig(account, config);
           syncUpdateData(res, 'searchConfig');
+
+          if (oldLogo && oldLogo !== logo) {
+            await deleteLogoFile(account, oldLogo);
+          }
         }
       }
       resp.success(res, '更新翻译接口LOGO成功')();

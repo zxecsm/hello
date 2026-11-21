@@ -5,13 +5,14 @@ import { resolve } from 'path';
 import { db, transaction } from '../../utils/db/sqlite.js';
 
 import _f from '../../utils/fs/f.js';
-import { _delDir } from '../file/file.js';
+import { _delDir, getUniqueFilename } from '../file/file.js';
 
 import shareVerify from '../../utils/security/shareVerify.js';
 import { isValidShare, getDirname } from '../../utils/common/utils.js';
 import jwt from '../../utils/security/jwt.js';
 import captcha from '../../utils/security/captcha.js';
 import { getUserInfoCached, clearUserInfoCache } from '../../utils/db/userCache.js';
+import _path from '../../utils/common/path.js';
 
 const __dirname = getDirname(import.meta);
 
@@ -22,6 +23,38 @@ export async function getFontList() {
     await _f.cp(resolve(__dirname, `../../resources/fonts`), p);
   }
   return _f.readdir(p);
+}
+
+// 删除用户自定义 logo 文件，并清理空目录
+export async function deleteLogoFile(account, logo) {
+  if (!logo) return;
+
+  const base = appConfig.logoDir(account);
+  const prefix = `/logo/${account}/`;
+  let rel = String(logo);
+
+  if (rel.startsWith(prefix)) {
+    rel = rel.slice(prefix.length);
+  } else {
+    rel = rel.replace(/^\/+/, '');
+  }
+
+  const p = _path.normalizeNoSlash(base, rel);
+
+  if (p === base || !_path.isPathWithin(base, p)) return;
+
+  try {
+    // 放入当前用户的回收站，而不是直接删除
+    const trashDir = appConfig.trashDir(account);
+    let target = _path.normalizeNoSlash(trashDir, _path.basename(p)[0]);
+
+    if (await _f.exists(target)) {
+      target = await getUniqueFilename(target);
+    }
+
+    await _f.rename(p, target);
+    await _f.removeEmptyDirs(base);
+  } catch {}
 }
 
 // 获取用户信息

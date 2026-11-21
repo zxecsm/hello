@@ -2,7 +2,7 @@ import express from 'express';
 
 import { db, transaction } from '../../utils/db/sqlite.js';
 
-import { syncUpdateData, createPagingMeta, getSplitWord } from '../../utils/common/utils.js';
+import { syncUpdateData, createPagingMeta, getSplitWord, concurrencyTasks } from '../../utils/common/utils.js';
 
 import timedTask from '../../utils/system/timedTask.js';
 
@@ -16,7 +16,11 @@ import {
 } from './bmk.js';
 
 import { fieldLength } from '../config.js';
-import { validShareAddUserState, validShareState } from '../user/user.js';
+import {
+  deleteLogoFile,
+  validShareAddUserState,
+  validShareState,
+} from '../user/user.js';
 import { getFriendInfo } from '../chat/chat.js';
 import jwt from '../../utils/security/jwt.js';
 import nanoid from '../../utils/common/nanoid.js';
@@ -428,7 +432,13 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
+    const oldLogo = db('bmk').select('logo').where({ account, id, state: 1 }).findOne()?.logo;
+
     db('bmk').where({ account, id, state: 1 }).update({ logo: '' });
+
+    if (oldLogo) {
+      await deleteLogoFile(account, oldLogo);
+    }
 
     syncUpdateData(res, 'bookmark');
 
@@ -634,13 +644,27 @@ route.post(
 
     const { account } = res.locals.hello.userinfo;
 
+    let logos = [];
+
     if (ids.length > 0) {
+      logos = db('bmk')
+        .select('logo')
+        .where({ id: { in: ids }, state: 1, account })
+        .find()
+        .map((item) => item.logo);
       db('bmk')
         .where({ id: { in: ids }, state: 1, account })
         .update({ state: 0 });
     } else {
+      logos = db('bmk')
+        .select('logo')
+        .where({ state: 1, account })
+        .find()
+        .map((item) => item.logo);
       db('bmk').where({ state: 1, account }).batchUpdate({ state: 0 });
     }
+
+    await concurrencyTasks(logos, 5, (logo) => deleteLogoFile(account, logo));
 
     syncUpdateData(res, 'bookmark');
     syncUpdateData(res, 'trash');

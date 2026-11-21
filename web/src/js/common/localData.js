@@ -33,6 +33,7 @@ const defaultData = {
   showpd: false, // 显示密码
   dark: 's', // 黑暗模式 s：随系统 y：开启 n：关闭
   headBtnToRight: true, // 窗口头部按钮排序
+  openWindowNewTab: false, // 窗口在新标签页打开
   clickLove: true, // 点击♥
   windowMoveOpacity: true, // 窗口移动时透明
   pmsound: true, // 提示音

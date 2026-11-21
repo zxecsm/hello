@@ -12,6 +12,7 @@ import {
 
 import { fieldLength } from '../config.js';
 import { readSearchConfig, writeSearchConfig } from './search.js';
+import { deleteLogoFile } from '../user/user.js';
 import nanoid from '../../utils/common/nanoid.js';
 import V from '../../utils/web/validRules.js';
 import resp from '../../utils/web/response.js';
@@ -137,9 +138,13 @@ route.post(
     const config = await readSearchConfig(account);
 
     if (Array.isArray(config.searchEngineData)) {
+      const oldLogo = config.searchEngineData.find((s) => s.id === id)?.logo;
+
       config.searchEngineData = config.searchEngineData.filter((s) => s.id !== id);
       await writeSearchConfig(account, config);
       syncUpdateData(res, 'searchConfig');
+
+      if (oldLogo) await deleteLogoFile(account, oldLogo);
     }
 
     resp.success(res, '删除搜索引擎成功')();
@@ -209,12 +214,16 @@ route.post(
     if (Array.isArray(config.searchEngineData)) {
       const idx = config.searchEngineData.findIndex((s) => s.id === id);
       if (idx >= 0) {
+        const oldLogo = config.searchEngineData[idx].logo;
+
         config.searchEngineData[idx] = {
           ...config.searchEngineData[idx],
           logo: '',
         };
         await writeSearchConfig(account, config);
         syncUpdateData(res, 'searchConfig');
+
+        if (oldLogo) await deleteLogoFile(account, oldLogo);
       }
     }
 
@@ -320,11 +329,15 @@ route.post(
     const config = await readSearchConfig(account);
 
     if (Array.isArray(config.translatorData)) {
+      const oldLogo = config.translatorData.find((t) => t.id === id)?.logo;
+
       config.translatorData = config.translatorData.filter((t) => {
         return t.id !== id;
       });
       await writeSearchConfig(account, config);
       syncUpdateData(res, 'searchConfig');
+
+      if (oldLogo) await deleteLogoFile(account, oldLogo);
     }
 
     resp.success(res, '删除翻译接口成功')();
@@ -372,12 +385,16 @@ route.post(
     if (Array.isArray(config.translatorData)) {
       const idx = config.translatorData.findIndex((t) => t.id === id);
       if (idx >= 0) {
+        const oldLogo = config.translatorData[idx].logo;
+
         config.translatorData[idx] = {
           ...config.translatorData[idx],
           logo: '',
         };
         await writeSearchConfig(account, config);
         syncUpdateData(res, 'searchConfig');
+
+        if (oldLogo) await deleteLogoFile(account, oldLogo);
       }
     }
 

@@ -918,6 +918,7 @@ export function settingMenu(e, isMain) {
         const windowMoveOpacity = localData.get('windowMoveOpacity');
         const pmsound = localData.get('pmsound');
         const tip = localData.get('toolTip');
+        const openWindowNewTab = localData.get('openWindowNewTab');
         const data = [
           {
             id: '1',
@@ -956,6 +957,14 @@ export function settingMenu(e, isMain) {
             beforeIcon: 'iconfont icon-tongzhi',
             afterIcon: 'iconfont ' + (pmsound ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
             param: { value: pmsound },
+          },
+          {
+            id: '9',
+            text: '新标签页打开窗口',
+            beforeIcon: 'iconfont icon-link1',
+            afterIcon:
+              'iconfont ' + (openWindowNewTab ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+            param: { value: openWindowNewTab },
           },
         ];
         if (!isMobile()) {
@@ -1041,6 +1050,20 @@ export function settingMenu(e, isMain) {
                 curItem.param.value = true;
                 _msg.success('开启成功');
                 localData.set('toolTip', true);
+              }
+              resetMenu(data);
+            } else if (id === '9') {
+              // 新标签页打开窗口
+              if (param.value) {
+                curItem.afterIcon = 'iconfont icon-kaiguan-guan';
+                curItem.param.value = false;
+                _msg.success('关闭成功');
+                localData.set('openWindowNewTab', false);
+              } else {
+                curItem.afterIcon = 'iconfont icon-kaiguan-kai1';
+                curItem.param.value = true;
+                _msg.success('开启成功');
+                localData.set('openWindowNewTab', true);
               }
               resetMenu(data);
             }
@@ -1908,14 +1931,13 @@ function userLogout(e) {
       reqUserLogout({ other })
         .then((result) => {
           if (result.code === 1) {
-            _msg.success(result.codeText, (type) => {
-              if (type === 'close') {
-                if (other === 0) {
-                  toLogin();
-                }
-              }
-            });
-            return;
+            // 退出当前登录：直接跳转登录页
+            if (other === 0) {
+              toLogin();
+              return;
+            }
+            // 只退出其他设备：保留当前会话，仅提示结果
+            _msg.success(result.codeText);
           }
         })
         .catch(() => {});

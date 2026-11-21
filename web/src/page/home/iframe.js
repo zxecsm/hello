@@ -310,6 +310,11 @@ class CreateIframe {
   }
 }
 function openInIframe(url, name, logo = '') {
+  // 开启“新标签页打开窗口”后，所有窗口都直接用浏览器新标签页打开
+  if (localData.get('openWindowNewTab')) {
+    myOpen(url, '_blank');
+    return null;
+  }
   const ifra = new CreateIframe(url, name, logo);
   openInIframe.iframes.add(ifra.id, ifra);
   return ifra;
