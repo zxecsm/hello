@@ -409,6 +409,34 @@ route.post(
     resp.success(res, 'ok', { key: taskKey })();
 
     try {
+      // 收集所有笔记中引用到的图床图片 ID
+      const referencedPicIds = new Set();
+      let lastNoteSerial = 0;
+
+      while (true) {
+        if (signal.aborted) throw new Error('Operation aborted');
+
+        const notes = db('note')
+          .select('serial,content')
+          .where({ serial: { '>': lastNoteSerial } })
+          .limit(200)
+          .orderBy('serial', 'ASC')
+          .find();
+
+        if (!notes.length) break;
+
+        lastNoteSerial = notes[notes.length - 1].serial;
+
+        for (const note of notes) {
+          const matches = String(note.content || '').matchAll(/\/pic\/([a-zA-Z0-9_-]+)/g);
+          for (const match of matches) {
+            referencedPicIds.add(match[1]);
+          }
+        }
+
+        taskState.update(taskKey, `清理图床: 比对笔记引用(${referencedPicIds.size})...`);
+      }
+
       const dbSet = new Set();
       let dataCount = 0;
       let fileCount = 0;
@@ -419,7 +447,7 @@ route.post(
         if (signal.aborted) throw new Error('Operation aborted');
 
         const pics = db('pic')
-          .select('url,serial')
+          .select('id,url,serial')
           .where({ serial: { '>': lastId } })
           .limit(500)
           .orderBy('serial', 'ASC')
@@ -432,8 +460,16 @@ route.post(
         const delDatas = [];
         for (const pic of pics) {
           const filePath = _path.normalizeNoSlash(picDir, pic.url);
-          if ((await _f.getType(filePath)) !== 'file') {
+          const hasFile = (await _f.getType(filePath)) === 'file';
+
+          // 文件不存在，或笔记中已不再引用，则清理该图床数据
+          if (!hasFile || !referencedPicIds.has(pic.id)) {
             delDatas.push(pic.serial);
+
+            if (hasFile) {
+              await _delDir(filePath);
+              fileCount++;
+            }
           } else {
             dbSet.add(filePath);
           }
