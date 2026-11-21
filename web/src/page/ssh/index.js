@@ -47,7 +47,7 @@ import _d from '../../js/common/config.js';
 import _msg from '../../js/plugins/message/index.js';
 import { MouseElementTracker } from '../../js/utils/boxSelector.js';
 import toolTip from '../../js/plugins/tooltip/index.js';
-import { openSftpFileManager } from './fileManager.js';
+import { openSftpFileManager, changeEditorTheme } from './fileManager.js';
 const $app = $('#app'),
   $sshBox = $app.find('.ssh_box'),
   $logText = $sshBox.find('.log_text'),
@@ -381,6 +381,7 @@ function changeTheme(dark) {
       term.options.theme = lightTheme;
     }
   }
+  changeEditorTheme(dark);
 }
 window.changeTheme = changeTheme;
 changeTheme(localData.get('dark'));

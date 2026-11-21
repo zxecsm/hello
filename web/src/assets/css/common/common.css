@@ -101,6 +101,15 @@ html {
   --message-error-color: #b02a37;
   --message-error-bg: #f8d7da;
   --message-error-border: #f1aeb5;
+  --window-shadow-inactive:
+    0 1.2rem 3.2rem rgb(15 23 42 / 12%),
+    0 0.3rem 0.8rem rgb(15 23 42 / 6%),
+    0 0 0 0.1rem rgb(15 23 42 / 5%);
+  --window-shadow-active:
+    0 2.4rem 5.6rem rgb(15 23 42 / 20%),
+    0 0.8rem 1.8rem rgb(15 23 42 / 10%),
+    0 0 0 0.1rem rgb(64 158 255 / 35%),
+    0 0 1.8rem rgb(64 158 255 / 24%);
 }
 
 html.dark {
@@ -176,6 +185,15 @@ html.dark {
   --message-error-color: #ea868f;
   --message-error-bg: #2c0b0e;
   --message-error-border: #842029;
+  --window-shadow-inactive:
+    0 1.4rem 3.6rem rgb(0 0 0 / 55%),
+    0 0.4rem 1rem rgb(0 0 0 / 32%),
+    0 0 0 0.1rem rgb(255 255 255 / 6%);
+  --window-shadow-active:
+    0 2.8rem 6.4rem rgb(0 0 0 / 70%),
+    0 1rem 2.2rem rgb(0 0 0 / 45%),
+    0 0 0 0.1rem rgb(64 158 255 / 50%),
+    0 0 2.2rem rgb(64 158 255 / 32%);
 }
 ::-webkit-scrollbar {
   background-color: transparent; /* 滚动条轨道颜色 */
@@ -459,7 +477,13 @@ a:hover {
   text-decoration: underline wavy !important;
   color: var(--text-hover-color) !important;
 }
-.active-window {
+.inactive-window:not(.iframe_tag) {
+  box-shadow: var(--window-shadow-inactive) !important;
+}
+.active-window:not(.iframe_tag) {
+  box-shadow: var(--window-shadow-active) !important;
+}
+.iframe_tag.active-window {
   box-shadow: 0 0 1rem var(--text-hover-color) !important;
 }
 .inactive-window .window_head {

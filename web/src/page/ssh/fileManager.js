@@ -67,7 +67,7 @@ let editor = null;
 let editingPath = '';
 let editingOrigin = '';
 let saving = false;
-let fileFontSize = localData.get('fileFontSize');
+let fileFontSize = localData.get('fileFontSize') || 0.22;
 
 const pathScroll = new ContentScroll($status.find('.path .scroll_text')[0]);
 const editorPathScroll = new ContentScroll($editorPathText[0]);
@@ -111,13 +111,12 @@ function getName(item) {
 }
 
 // 跟随主题切换编辑器
-function changeEditorTheme(flag) {
+export function changeEditorTheme(flag) {
   if (!editor) return;
 
   const dark = flag === 'y' ? true : flag === 'n' ? false : isDark();
   editor.setTheme(dark ? 'ace/theme/github_dark' : 'ace/theme/github_light_default');
 }
-window.changeTheme = changeEditorTheme;
 
 // 应用编辑器字体大小
 function applyEditorFontSize() {
@@ -135,7 +134,7 @@ function updateUndoRedoState() {
 function getEditor() {
   if (!editor) {
     editor = aceEditor.createEditor($editorBody[0]);
-    changeEditorTheme();
+    changeEditorTheme(localData.get('dark'));
     applyEditorFontSize();
     editor.getSession().on('change', () => {
       updateUndoRedoState();
@@ -718,7 +717,7 @@ $modal.find('.fm_tool.add').on('click', function (e) {
   createMenu(e);
 });
 $modal.find('.fm_tool.refresh').on('click', () => loadDir(curPath, { keepPage: true }));
-$modal.find('.fm_close, .fm_mask').on('click', closeManager);
+$modal.find('.fm_close').on('click', closeManager);
 
 const $panel = $modal.find('.fm_panel');
 

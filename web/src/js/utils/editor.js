@@ -65,6 +65,13 @@ function createEditor(el) {
     border-right: none;
     box-sizing: border-box;
   }
+  /* 行号栏统一样式 */
+  .ace_editor .ace_gutter {
+    background-color: var(--color9);
+  }
+  .ace_editor .ace_gutter-cell {
+    background-color: transparent;
+  }
   /* 编辑区使用自定义文本指针 */
   .ace_editor .ace_scroller,
   .ace_editor .ace_content {
