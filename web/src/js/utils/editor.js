@@ -72,44 +72,7 @@ function createEditor(el) {
   .ace_editor .ace_gutter-cell {
     background-color: transparent;
   }
-  /* 编辑区使用自定义文本指针 */
-  .ace_editor .ace_scroller,
-  .ace_editor .ace_content {
-    cursor: var(--cursor-text);
-  }
-  /* 行号栏使用自定义默认指针 */
-  .ace_editor .ace_gutter,
-  .ace_editor .ace_gutter-cell,
-  .ace_editor .ace_gutter-active-line {
-    cursor: var(--cursor-default);
-  }
-  /* 行号里可点击的折叠按钮（ace_fold-widget）使用自定义手型指针 */
-  .ace_editor .ace_folding-enabled .ace_fold-widget,
-  .ace_editor .ace_fold-widget.ace_start,
-  .ace_editor .ace_fold-widget.ace_open,
-  .ace_editor .ace_fold-widget.ace_closed,
-  .ace_editor .ace_fold-widget.ace_end,
-  .ace_editor .ace_fold {
-    cursor: var(--cursor-pointer);
-  }
-  /* 搜索面板使用自定义默认指针 */
-  .ace_editor .ace_search {
-    cursor: var(--cursor-default);
-  }
-  /* 搜索/替换输入框使用自定义文本指针 */
-  .ace_editor .ace_search_field {
-    cursor: var(--cursor-text);
-  }
-  /* 搜索面板按钮使用自定义手型指针 */
-  .ace_editor .ace_searchbtn,
-  .ace_editor .ace_searchbtn_close,
-  .ace_editor .ace_button {
-    cursor: var(--cursor-pointer);
-  }
-  /* 禁用状态的搜索按钮 */
-  .ace_editor .ace_searchbtn:disabled {
-    cursor: var(--cursor-not-allowed);
-  }`;
+  `;
   document.head.appendChild(style);
   // editor.setTheme('ace/theme/github_light_default');
   // editor.setTheme('ace/theme/github_dark');
