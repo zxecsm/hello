@@ -1983,7 +1983,7 @@ export function pxToRem(px, baseFontSize) {
 export function myResize(opt, minW = 200, minH = 200) {
   let flag;
   const borderWidth = pxToRem(5),
-    jWidth = pxToRem(8),
+    jWidth = pxToRem(16),
     zIndex = 999;
   const { target, down, move, up } = opt;
   target.style.minWidth = minW + 'px';
@@ -1996,7 +1996,6 @@ export function myResize(opt, minW = 200, minH = 200) {
   left: 0px;
   width: ${jWidth};
   height: ${jWidth};
-  border-radius: 0 0 ${jWidth} ;
   z-index: ${zIndex};
   `;
   const trigger2 = document.createElement('div');
@@ -2007,7 +2006,6 @@ export function myResize(opt, minW = 200, minH = 200) {
   right: 0px;
   width: ${jWidth};
   height: ${jWidth};
-  border-radius: 0 0 0 ${jWidth};
   z-index: ${zIndex};
   `;
   const trigger3 = document.createElement('div');
@@ -2018,7 +2016,6 @@ export function myResize(opt, minW = 200, minH = 200) {
   bottom: 0px;
   width: ${jWidth};
   height: ${jWidth};
-  border-radius: ${jWidth} 0 0;
   z-index: ${zIndex};
   `;
   const trigger4 = document.createElement('div');
@@ -2029,7 +2026,6 @@ export function myResize(opt, minW = 200, minH = 200) {
   left: 0px;
   width: ${jWidth};
   height: ${jWidth};
-  border-radius: 0 ${jWidth} 0 0;
   z-index: ${zIndex};
   `;
   const trigger5 = document.createElement('div');

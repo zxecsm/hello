@@ -51,14 +51,6 @@ module.exports = {
         },
       },
       {
-        test: /\.(cur|ani)$/i,
-        include: resolve(__dirname, '..', 'src'),
-        type: 'asset/resource',
-        generator: {
-          filename: 'assets/cursors/[name].[hash:8][ext]',
-        },
-      },
-      {
         test: /\.html$/i,
         include: resolve(__dirname, '..', 'src'),
         loader: 'html-loader',

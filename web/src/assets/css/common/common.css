@@ -20,7 +20,22 @@
   --border-radius2: 2rem;
   --border-radius2-5: 2.5rem;
   --border-radius3: 3rem;
-  /* 没有配套 .cur 图片的指针样式，使用系统原生指针 */
+  /* 鼠标指针统一使用系统原生样式 */
+  --cursor-default: default;
+  --cursor-pointer: pointer;
+  --cursor-ew-resize: ew-resize;
+  --cursor-nesw-resize: nesw-resize;
+  --cursor-ns-resize: ns-resize;
+  --cursor-nwse-resize: nwse-resize;
+  --cursor-text: text;
+  --cursor-move: move;
+  --cursor-not-allowed: not-allowed;
+  --cursor-crosshair: crosshair;
+  --cursor-help: help;
+  --cursor-wait: wait;
+  --cursor-progress: progress;
+  --cursor-pen: default;
+  --cursor-up-arrow: default;
   --cursor-grab: grab;
   --cursor-grabbing: grabbing;
   --cursor-zoom-in: zoom-in;
@@ -73,22 +88,6 @@ html {
   --btn-warning-hover-color: #fff;
   --btn-warning-hover-bg-color: var(--message-warning-color);
   --btn-warning-hover-border-color: var(--message-warning-color);
-  --cursor-default: url('../../cursors/blue/default.cur'), default;
-  --cursor-pointer: url('../../cursors/blue/pointer.cur'), pointer;
-  --cursor-ew-resize: url('../../cursors/blue/ew-resize.cur'), ew-resize;
-  --cursor-nesw-resize: url('../../cursors/blue/nesw-resize.cur'), nesw-resize;
-  --cursor-ns-resize: url('../../cursors/blue/ns-resize.cur'), ns-resize;
-  --cursor-nwse-resize: url('../../cursors/blue/nwse-resize.cur'), nwse-resize;
-  --cursor-text: url('../../cursors/blue/text.cur'), text;
-  --cursor-move: url('../../cursors/blue/move.cur'), move;
-  --cursor-not-allowed: url('../../cursors/blue/not-allowed.cur'), not-allowed;
-  --cursor-crosshair: url('../../cursors/blue/crosshair.cur'), crosshair;
-  --cursor-help: url('../../cursors/blue/help.cur'), help;
-  --cursor-wait: url('../../cursors/blue/wait.cur'), wait;
-  --cursor-progress: url('../../cursors/blue/progress.cur'), progress;
-  /* 系统没有对应关键字，回退到普通箭头 */
-  --cursor-pen: url('../../cursors/blue/pen.cur'), default;
-  --cursor-up-arrow: url('../../cursors/blue/up-arrow.cur'), default;
   --message-success-color: #146c43;
   --message-success-bg: #d1e7dd;
   --message-success-border: #a3cfbb;
@@ -157,22 +156,6 @@ html.dark {
   --btn-warning-hover-color: #222;
   --btn-warning-hover-bg-color: var(--message-warning-color);
   --btn-warning-hover-border-color: var(--message-warning-color);
-  --cursor-default: url('../../cursors/orange/default.cur'), default;
-  --cursor-pointer: url('../../cursors/orange/pointer.cur'), pointer;
-  --cursor-ew-resize: url('../../cursors/orange/ew-resize.cur'), ew-resize;
-  --cursor-nesw-resize: url('../../cursors/orange/nesw-resize.cur'), nesw-resize;
-  --cursor-ns-resize: url('../../cursors/orange/ns-resize.cur'), ns-resize;
-  --cursor-nwse-resize: url('../../cursors/orange/nwse-resize.cur'), nwse-resize;
-  --cursor-text: url('../../cursors/orange/text.cur'), text;
-  --cursor-move: url('../../cursors/orange/move.cur'), move;
-  --cursor-not-allowed: url('../../cursors/orange/not-allowed.cur'), not-allowed;
-  --cursor-crosshair: url('../../cursors/orange/crosshair.cur'), crosshair;
-  --cursor-help: url('../../cursors/orange/help.cur'), help;
-  --cursor-wait: url('../../cursors/orange/wait.cur'), wait;
-  --cursor-progress: url('../../cursors/orange/progress.cur'), progress;
-  /* 系统没有对应关键字，回退到普通箭头 */
-  --cursor-pen: url('../../cursors/orange/pen.cur'), default;
-  --cursor-up-arrow: url('../../cursors/orange/up-arrow.cur'), default;
   --message-success-color: #75b798;
   --message-success-bg: #051b11;
   --message-success-border: #0f5132;
