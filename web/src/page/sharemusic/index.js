@@ -212,7 +212,7 @@ enterPassCode(({ close, val, loading, submit }) => {
     .finally(() => {
       loading.end();
     });
-}, passCode)();
+}, passCode).submit();
 $lrcHead.on('click', '.user_logo', (e) => {
   const { account, username } = userInfo;
   userLogoMenu(e, account, username);

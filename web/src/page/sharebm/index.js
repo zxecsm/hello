@@ -224,7 +224,7 @@ enterPassCode(({ close, val, loading, submit }) => {
     .finally(() => {
       loading.end();
     });
-}, passCode)();
+}, passCode).submit();
 
 // 保存书签
 function saveBm(e) {

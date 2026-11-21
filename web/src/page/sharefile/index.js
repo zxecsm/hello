@@ -188,7 +188,7 @@ enterPassCode(({ close, val, loading, submit }) => {
     .finally(() => {
       loading.end();
     });
-}, passCode)();
+}, passCode).submit();
 // 更改显示隐藏文件模式
 function changeHiddenFileModel() {
   $header
