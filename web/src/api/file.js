@@ -4,10 +4,6 @@ import { _getAjax, _postAjax, _upFile } from '../js/utils/utils';
 export function reqFileReadDir(data) {
   return _postAjax('/file/read-dir', data);
 }
-// 读取目录全部文件（不分页、不转任务）
-export function reqFileReadDirAll(data) {
-  return _postAjax('/file/read-dir-all', data, { load: false });
-}
 // 读取文件
 export function reqFileReadFile(data) {
   return _postAjax('/file/read-file', data);
@@ -66,10 +62,6 @@ export function reqFileMerge(data) {
 // 创建文件
 export function reqFileCreateFile(data) {
   return _postAjax('/file/create-file', data);
-}
-// 创建符号链接
-export function reqFileCreateLink(data) {
-  return _postAjax('/file/create-link', data);
 }
 // 创建目录
 export function reqFileCreateDir(data) {

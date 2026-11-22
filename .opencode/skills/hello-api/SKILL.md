@@ -259,7 +259,7 @@ node .opencode\skills\hello-api\scripts\hello.mjs bmk add `
 
 ### 文件
 
-1. **先 `file ls --path <目录>`**，不要猜路径；需要完整列表时用 `file all --path <目录>`（不分页、不转任务）；
+1. **先 `file ls --path <目录>`**，不要猜路径；目录较大时调大 `--size` 或用 `--page` 翻页；
 2. 读：`file cat --path /a.md`；二进制给下载地址 `/api/f/<path>`；
 3. 写：先查同名，问「覆盖 / 改名 / 取消」，再 `file write`；
 4. 重命名：`file mv`；移动/复制：`api /api/file/move|copy`，先 `same-name` 查冲突；

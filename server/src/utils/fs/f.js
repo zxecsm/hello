@@ -12,24 +12,15 @@ async function mkdir(path) {
   } catch {}
 }
 
-// 创建硬链接
-async function link(target, path) {
-  await mkdir(_path.dirname(path));
-  await fsp.link(target, path);
-}
-
-// 创建符号链接
-async function symlink(target, path) {
-  await mkdir(_path.dirname(path));
-  await fsp.symlink(target, path);
-}
-
 // 复制
 async function cp(from, to, { signal, progress, renameMode = false } = {}) {
   if (!(await getType(from))) return;
   if (from === to) return;
 
   if (!signal && !progress) {
+    // 目标位置是软链接时先删除，避免写入穿透到链接指向的位置
+    if ((await getType(to)) === 'symlink') await del(to);
+
     await fsp.cp(from, to, {
       recursive: true,
       force: true,
@@ -43,6 +34,10 @@ async function cp(from, to, { signal, progress, renameMode = false } = {}) {
     from,
     async ({ type, path: f }) => {
       const t = f === from ? to : _path.normalizeNoSlash(to, f.replace(from, ''));
+
+      // 目标位置是软链接时先删除（包括悬空链接），避免写入或建目录穿透到链接指向的位置
+      if ((await getType(t)) === 'symlink') await del(t);
+
       if (type === 'dir') {
         await mkdir(t);
       } else if (type === 'symlink') {
@@ -467,8 +462,6 @@ const _f = {
   lstat,
   stat,
   getFileTypeName,
-  symlink,
-  link,
   readFile,
   writeFile,
   appendFile,

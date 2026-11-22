@@ -1,6 +1,6 @@
 # API 路由总表（源码自动提取）
 
-> 由 `server/routes/*/index.js` 中的 `route.<method>(...)` 与 `server/app.js` 汇总，共 248 条。
+> 由 `server/routes/*/index.js` 中的 `route.<method>(...)` 与 `server/app.js` 汇总，共 246 条。
 > 所有以 `/api` 开头的路径都需要拼上实例地址，例如 `http://localhost:55555/api/bmk/list`。
 
 ## app.js 中的顶层接口
@@ -209,7 +209,6 @@
 | --- | --- | --- |
 | `POST` | `/api/file/get-share` | 分享文件 |
 | `POST` | `/api/file/read-dir` |  |
-| `POST` | `/api/file/read-dir-all` | 读取目录全部文件（需登录，不分页、不转任务） |
 | `POST` | `/api/file/read-file` | 读取文件 |
 | `POST` | `/api/file/history-state` | 文件编辑历史记录 |
 | `GET` | `/api/file/history-state` |  |
@@ -218,7 +217,6 @@
 | `POST` | `/api/file/favorites` | 收藏目录 |
 | `GET` | `/api/file/read-dir-size` | 读取目录大小 |
 | `POST` | `/api/file/create-file` | 新建文件 |
-| `POST` | `/api/file/create-link` | 创建符号链接 |
 | `POST` | `/api/file/share` | 分享 |
 | `POST` | `/api/file/save-file` | 保存文件 |
 | `POST` | `/api/file/editing` | 保存文件编辑草稿 |

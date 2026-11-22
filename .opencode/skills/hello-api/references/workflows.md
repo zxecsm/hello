@@ -404,11 +404,10 @@ node .opencode\skills\hello-api\scripts\hello.mjs count add `
 
 ```powershell
 node .opencode\skills\hello-api\scripts\hello.mjs file ls --path /
-node .opencode\skills\hello-api\scripts\hello.mjs file all --path /
 node .opencode\skills\hello-api\scripts\hello.mjs file cat --path /notes/a.md
 ```
 
-- 需要一次拿到完整目录列表时用 `file all`（`/api/file/read-dir-all`）：需登录，不分页、不转任务，再自行排序/分页。
+- 目录较大时可以调大 `--size`，或用 `--page` 翻页。
 - 文本文件返回 `type: text`，展示前几行即可，不要整篇倾倒。
 - 二进制返回 `type: other`，可给下载地址：`/api/f/<path>`。
 

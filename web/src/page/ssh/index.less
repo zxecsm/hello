@@ -439,6 +439,10 @@ body {
     &.is_dir {
       color: #00cbff;
     }
+
+    &.is_hidden {
+      color: var(--color7);
+    }
   }
 
   .fm_item_name {
@@ -451,6 +455,11 @@ body {
 
     .fm_suffix {
       color: green;
+    }
+
+    .fm_link_target {
+      color: var(--color5);
+      padding-left: 0.6rem;
     }
   }
 
@@ -503,7 +512,6 @@ body {
 
   .fm_pagination {
     padding: 1rem 0;
-    border-top: 0.1rem solid var(--color9);
   }
 
   .fm_status {

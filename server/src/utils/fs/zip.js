@@ -96,6 +96,11 @@ async function unzip(from, to, { signal, progress, ignoreLink } = {}) {
         return;
       }
 
+      // 目标位置是软链接时先删除（包括悬空链接），避免写入或建目录穿透到链接指向的位置
+      if ((await _f.getType(outputPath)) === 'symlink') {
+        await _f.del(outputPath);
+      }
+
       if (file.type === 'Directory') {
         await _f.mkdir(outputPath);
       } else {

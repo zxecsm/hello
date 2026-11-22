@@ -477,11 +477,16 @@ function hdHomeBgBtn(e, bgId) {
     },
   ];
   if (isRoot()) {
-    data.push({
-      id: '1',
-      text: '删除壁纸',
-      beforeIcon: 'iconfont icon-shanchu',
-    });
+    data.push(
+      { divider: true },
+      {
+        id: '1',
+        text: '删除壁纸',
+        beforeIcon: 'iconfont icon-shanchu',
+        beforeIconColor: 'var(--btn-danger-color)',
+        textColor: 'var(--btn-danger-color)',
+      },
+    );
   }
   rMenu.selectMenu(
     e,

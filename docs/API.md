@@ -2074,9 +2074,13 @@ null
 **全局约定**
 
 - 除 `/api/f` 成功响应外，所有接口统一返回 `{ code, codeText, data }`：`code=1` 成功、`0` 失败、`2` 未登录（HTTP 401）、`3` 处理中或无新数据（HTTP 200）。下文只写 `data`。
-- 鉴权使用 Cookie `token`（加密 JWT）。`/api/file` 中 `get-share`、`read-dir`、`read-file` 注册在登录中间件之前，属于公开接口（`read-dir`/`read-file` 需登录态或有效分享 token）；`read-dir-all` 注册在登录中间件之后，和其余接口一样一律需要登录。
+- 鉴权使用 Cookie `token`（加密 JWT）。`/api/file` 中 `get-share`、`read-dir`、`read-file` 注册在登录中间件之前，属于公开接口（`read-dir`/`read-file` 需登录态或有效分享 token）；其余接口注册在登录中间件之后，一律需要登录。
 - 路径参数 `path` 均为**相对当前用户根目录**的 Unix 风格路径，以 `/` 开头（如 `/docs/a.txt`）。管理员 `root` 的根目录是 `server/app_data`，普通用户是 `server/app_data/appFiles/userFiles/<account>`。
-- 所有涉及真实文件系统的操作都会经过 `isPathSafe(base, target, allowEqual)`：对目标路径逐级向上做 `realpath`，解析结果必须位于用户根目录内，用于阻断 `../` 穿越与符号链接逃逸。越界返回 403。
+- 所有涉及真实文件系统的操作都会经过 `isPathSafe(base, target, allowEqual)`：对目标路径逐级向上做 `realpath`（根目录本身也先归一化），解析结果必须位于用户根目录内，用于阻断 `../` 穿越与符号链接逃逸。越界返回 403。
+- 应用内不提供创建软链接/硬链接的能力：非管理员解压时忽略压缩包内的符号链接；已存在的软链接/硬链接正常显示和使用。
+- 访问边界只有两点：读取目录时校验目录（解析软链接后的真实路径）位于自己的根目录内；获取文件时校验文件（解析软链接后的真实路径）位于自己可访问的根目录内。分享模式下“自己的根目录”即**分享的那个目录/文件本身**。越界一律拒绝。
+- 写入时不会跟随目标位置上的软链接：复制/解压遇到已存在的链接会先删除再写入。
+- 保存文本文件时若目标是软链接（仅管理员）：能正常解析则写入链接指向的文件，链接已失效（目标不存在）返回 403。
 - 保留目录：`.h_trash`（回收站）、`.h_config`（用户配置，禁止移动/删除/重命名，解压时非管理员忽略链接）、`.h_history`（文本编辑历史版本）。
 - 异步任务：接口立即返回 `{ "key": "<account>_<nanoid>" }`，之后用 `POST /api/task/info` 轮询进度；`key` 前缀固定为任务归属账号。
 - 请求头 `X-Tem-ID`（客户端临时 ID，字母数字，≤50 字符）：`POST /api/file/read-dir`、`POST /api/task/info`、`POST /api/task/cancel` 强制要求非空，缺失返回 400。
@@ -2194,15 +2198,17 @@ null
 | name | string | 名称 |
 | type | string | `dir` 或 `file` |
 | time | number | 变更时间（毫秒时间戳） |
-| size | number | 文件大小；目录返回缓存大小（未读取过为 0） |
+| size | number | 文件大小；目录返回缓存大小（未读取过为 0）；软链接返回目标文件的真实大小，目标为目录或无法解析时为 0 |
 | mode | string | 权限字符串，如 `drwxr-xr-x 755`；非管理员不返回 |
 | uid / gid | number | 属主/属组；非管理员不返回 |
 | favorite | number | 目录是否已收藏，`0/1`，仅在登录且非分享模式、仅目录项返回 |
 | fileType | string | 文件实际类型：`file` / `symlink` / `fifo` / `socket` 等 |
 | fileTypeName | string | 文件类型中文名 |
+| hardLink | number | `1` 表示该文件存在多个硬链接（硬链接），否则为 `0` |
 | linkTarget | string | 符号链接目标（已裁剪到用户根目录内的相对路径） |
 | linkTargetType | string | 链接目标类型 |
 | linkTargetTypeName | string | 链接目标类型中文名 |
+| linkMapped | number | `1` 表示该链接指向宿主绝对路径，已映射到挂载根目录下；此时 `linkTarget` 为映射后的真实路径，前端应直接访问它 |
 
 读取超时（超过 1 秒）时立即返回任务 key，结果稍后通过任务接口或重新请求获取：
 
@@ -2215,67 +2221,9 @@ null
 - 读取列表时会顺带记录 `cd-history`（最多 100 条）并返回收藏标记。
 - 目录列表按 `account + 目录 + word` 缓存 10 分钟，命中缓存时不续期；`update=1` 可强制重读。
 - 路径越界不报错，返回空的 `data`；`subDir=1` 且带 `word` 时递归遍历子目录并按关键词过滤。
-- 分享 token 模式下 `path` 相对分享目标的父目录，且不会写访问历史。
-
-## POST /api/file/read-dir-all
-
-一次性读取目录下的全部文件，不分页、不创建异步任务，由前端自行排序和分页。
-
-**鉴权**：需要登录（注册在文件路由的登录中间件之后，不支持分享 token）
-
-**Body**
-
-| 字段 | 类型 | 必填 | 说明 |
-| --- | --- | --- | --- |
-| path | string | 是 | 目录路径，1~2000 字符 |
-| hidden | number | 否 | `1` 过滤以 `.` 开头的隐藏项，默认 `0` |
-
-**响应 data**
-
-```json
-{
-  "list": [
-    {
-      "path": "/",
-      "type": "dir",
-      "name": "docs",
-      "time": 1763000000000,
-      "size": 0,
-      "mode": "drwxr-xr-x 755",
-      "uid": 1000,
-      "gid": 1000
-    },
-    {
-      "path": "/docs",
-      "type": "file",
-      "name": "a.txt",
-      "time": 1763000000000,
-      "size": 12,
-      "mode": "-rw-r--r-- 644",
-      "uid": 1000,
-      "gid": 1000,
-      "fileType": "file",
-      "fileTypeName": "文件"
-    }
-  ]
-}
-```
-
-`list` 元素字段与 `read-dir` 的 `data` 元素一致，但有下面几点区别：
-
-- 不返回 `favorite`
-- 目录 `size` 固定为 `0`，不会读取目录大小缓存
-- 非管理员不返回 `mode` / `uid` / `gid`
-
-**说明**
-
-- 不会返回 `{ "key": "..." }`，目录较大时请求会等待读取完成
-- 不使用目录缓存，不写 `cd-history`，不生成任务 key
-- 路径越界或目标不是目录时返回空数组：
-  ```json
-  { "list": [] }
-  ```
-- 前端可根据 `time` 等字段自行排序，并按固定条数切片分页
+- 分享 token 模式下 `path` 相对分享目标（目录）本身，且不会写访问历史。
+- 读取目录前会做边界校验：路径（含软链接解析后的真实路径）必须位于当前用户根目录内；分享模式下边界是**分享的那个目录本身**，链接不能跳出该范围，越界返回空列表。
+- 软链接目标在容器内无法解析时，会依次去掉链接目标开头的路径段，用用户根目录（宿主挂载根）拼接后逐个校验；命中第一个存在且真实路径仍在根目录内的路径时返回 `linkMapped=1` 和映射后的 `linkTarget`，全部不存在时 `linkTargetType` 为 `unknown`，前端按文件处理。
 
 ## POST /api/file/read-file
 
@@ -2308,6 +2256,7 @@ null
 
 - 文件不存在、是目录或路径越界返回 403 `文件不存在`。
 - 只有本人登录查看（非分享模式）时才返回 `editing` 草稿；草稿由 `POST /api/file/editing` 写入。
+- 读取文件前会做边界校验：文件（含软链接解析后的真实路径）必须位于当前用户根目录内；分享模式下边界是分享的那个目录/文件本身。
 
 ## POST /api/file/history-state
 
@@ -2442,30 +2391,6 @@ null
 - 名称含 `<>:"/\|?*`、控制字符或以空格/点结尾会被拒绝（403 `名称包含了不允许的特殊字符`）。
 - 父目录必须存在且已存在同名项时报 403；不会覆盖已有文件。
 
-## POST /api/file/create-link
-
-创建符号链接或硬链接（仅管理员）。
-
-**鉴权**：需要登录（且为管理员 `root`）
-
-**Body**
-
-| 字段 | 类型 | 必填 | 说明 |
-| --- | --- | --- | --- |
-| path | string | 是 | 链接所在目录，1~2000 字符 |
-| name | string | 是 | 链接名称，1~255 字符 |
-| targetPath | string | 是 | 链接目标路径，1~2000 字符，必须存在 |
-| isSymlink | number | 否 | `1` 符号链接（默认）、`0` 硬链接 |
-
-**响应 data**
-
-`null`。
-
-**说明**
-
-- 非管理员返回 403 `无权操作`。
-- 目标不存在、同目录重名、或对目录建硬链接都会被拒绝。
-
 ## POST /api/file/share
 
 创建文件/文件夹分享。
@@ -2513,6 +2438,7 @@ null
 **说明**
 
 - 目标不能是目录、回收站本身，路径必须存在且未越界。
+- 目标若是软链接：能正常解析时写入链接指向的文件；链接已失效（目标不存在）返回 403 `不支持写入已失效的软链接`。
 - 已开启 `history-state` 且原文件非空时，先备份旧版本到 `.h_history`，备份失败只记日志不阻断保存。
 - 保存成功会清除该文件的编辑草稿；若保存的是搜索引擎配置或快捷命令配置，会额外推送对应模块的更新事件。
 
@@ -2670,7 +2596,7 @@ null
 **说明**
 
 - 解压到同目录下与 zip 同名的文件夹（`a.zip` → `a/`），已存在则加随机后缀。
-- 非管理员解压时忽略压缩包内的符号链接，防止越权。
+- 非管理员解压时忽略压缩包内的符号链接；解压只写入文件内容，不会在磁盘上创建软链接；目标位置已有链接时会先删除再写入。
 
 ## POST /api/file/delete
 
@@ -6236,6 +6162,18 @@ null
 ]
 ```
 
+链接相关字段：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| fileType | string | `file` 或 `symlink` |
+| hardLink | number | `1` 表示该文件有多个硬链接（SFTP 无链接数字段，尽力从 `longname` 判断，判断失败为 `0`） |
+| linkTarget | string | 符号链接解析后的绝对路径；取不到时退回链接内容 |
+| linkTargetType | string | 链接目标的真实类型：`dir` / `file` / `unknown`（取不到时按文件处理） |
+| linkTargetTypeName | string | 链接目标类型中文名 |
+
+说明：链接本身的 `type` 始终为 `file`，由 `linkTargetType` 决定前端是否按目录处理；符号链接的 `size` 为目标的真实大小（目录或无法解析时为 0）。
+
 ---
 
 ## POST /api/ssh/sftp-up
@@ -6517,7 +6455,6 @@ null
 | GET | `/api/root/sys-status` | 获取服务器实时资源占用 |
 | POST | `/api/file/get-share` | 校验分享链接并换取分享访问 token。打开他人分享的文件/文件夹时调用 |
 | POST | `/api/file/read-dir` | 读取目录列表（支持搜索、排序、分页、按分享 token 浏览） |
-| POST | `/api/file/read-dir-all` | 一次性读取目录全部文件（需登录，不分页、不转任务） |
 | POST | `/api/file/read-file` | 读取文本文件内容（用于在线编辑） |
 | POST | `/api/file/history-state` | 开启/关闭文本文件保存历史版本 |
 | GET | `/api/file/history-state` | 查询是否开启文件历史版本 |
@@ -6526,7 +6463,6 @@ null
 | POST | `/api/file/favorites` | 添加或移除收藏目录 |
 | GET | `/api/file/read-dir-size` | 统计目录总大小（异步任务） |
 | POST | `/api/file/create-file` | 新建空文件 |
-| POST | `/api/file/create-link` | 创建符号链接或硬链接（仅管理员） |
 | POST | `/api/file/share` | 创建文件/文件夹分享 |
 | POST | `/api/file/save-file` | 保存文本文件内容 |
 | POST | `/api/file/editing` | 保存或清除文本编辑草稿（自动保存） |

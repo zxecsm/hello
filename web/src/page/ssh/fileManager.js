@@ -110,6 +110,11 @@ function getName(item) {
   return { a, b: b ? '.' + b : '' };
 }
 
+// 是否按目录处理：真实目录，或指向目录的符号链接
+function isDirItem(item) {
+  return item.type === 'dir' || (item.fileType === 'symlink' && item.linkTargetType === 'dir');
+}
+
 // 跟随主题切换编辑器
 export function changeEditorTheme(flag) {
   if (!editor) return;
@@ -216,14 +221,15 @@ function renderList() {
   const html = _tpl(
     `
     <div v-for="item in list" class="fm_item" :data-name="item.name" :data-type="item.type" data-cursor="pointer">
-      <div class="fm_item_logo iconfont {{getLogo(item)}}"></div>
+      <div class="fm_item_logo iconfont {{getLogo(item)}} {{item.name.startsWith('.') ? 'is_hidden' : ''}}"></div>
       <div class="fm_item_name">
         <span>{{getName(item).a}}</span><span class="fm_suffix">{{getName(item).b}}</span>
+        <span v-if="item.fileType === 'symlink' && item.linkTarget" class="fm_link_target">=> {{item.linkTarget}}({{item.linkTargetTypeName}})</span>
       </div>
-      <div class="fm_item_size">{{item.type === 'dir' ? '--' : formatBytes(item.size || 0)}}</div>
+      <div class="fm_item_size">{{item.type === 'dir' || !item.size ? '--' : formatBytes(item.size)}}</div>
       <div class="fm_item_date">{{item.mtime ? getDateDiff(item.mtime * 1000) : '--'}}</div>
       <div class="fm_item_actions">
-        <div v-if="item.type === 'file'" class="fm_action iconfont icon-download" data-action="download" data-cursor="pointer"></div>
+        <div v-if="!isDirItem(item)" class="fm_action iconfont icon-download" data-action="download" data-cursor="pointer"></div>
         <div v-else class="fm_action fm_action_placeholder"></div>
         <div class="fm_action iconfont icon-gl-rename" data-action="rename" data-cursor="pointer"></div>
         <div class="fm_action iconfont icon-shanchu danger" data-action="delete" data-cursor="pointer"></div>
@@ -234,10 +240,11 @@ function renderList() {
     {
       list: fileList,
       _d,
+      isDirItem,
       getLogo(item) {
-        return item.type === 'dir'
-          ? 'icon-gl-folder is_dir'
-          : fileLogoType(item.name, item.size || 0);
+        if (item.type === 'dir') return 'icon-gl-folder is_dir';
+        // 按大小选择图标（大小为 0 时是空文件图标）
+        return fileLogoType(item.name, item.size || 0);
       },
       getName,
       formatBytes,
@@ -440,8 +447,17 @@ function getItemInfoText(item) {
       })
     : '--';
 
-  return `名称：${item.name}\n类型：${item.type === 'dir' ? '文件夹' : '文件'}\n路径：${curPath}\n大小：${
-    item.type === 'dir' ? '--' : formatBytes(item.size || 0)
+  let type = item.type === 'dir' ? '文件夹' : '文件';
+  if (item.fileType === 'symlink') type += '（符号链接）';
+  else if (item.hardLink) type += '（硬链接）';
+
+  const link =
+    item.fileType === 'symlink' && item.linkTarget
+      ? `\n目标：${item.linkTarget}（${item.linkTargetTypeName || '未知'}）`
+      : '';
+
+  return `名称：${item.name}\n类型：${type}\n路径：${curPath}${link}\n大小：${
+    item.type === 'dir' || item.fileType === 'symlink' ? '--' : formatBytes(item.size || 0)
   }\n更新时间：${time}`;
 }
 
@@ -450,7 +466,8 @@ function showRemoteFileInfo(e, item) {
   showFileInfo(e, {
     ...item,
     path: curPath,
-    fileType: 'file',
+    fileType: item.fileType || 'file',
+    fileTypeName: item.fileType === 'symlink' ? '符号链接' : '文件',
     time: item.mtime * 1000,
   });
 }
@@ -587,7 +604,6 @@ function renameItem(e, item) {
         const res = await reqSSHSftpRename({ path, name: inp.name });
         loading.end();
         if (res.code === 1) {
-          _msg.success(res.codeText);
           close();
           loadDir(curPath, { keepPage: true, silent: true });
         }
@@ -617,7 +633,6 @@ function deleteItem(e, item) {
       try {
         const res = await reqSSHSftpDelete({ path });
         if (res.code === 1) {
-          _msg.success(res.codeText);
           loadDir(curPath, { keepPage: true, silent: true });
         }
       } catch {}
@@ -626,13 +641,16 @@ function deleteItem(e, item) {
 }
 
 // 上传文件
-async function uploadFiles() {
-  let files = [];
-  try {
-    files = await getFiles({ multiple: true });
-  } catch {
-    return;
+async function uploadFiles(files) {
+  if (!files) {
+    try {
+      files = await getFiles({ multiple: true });
+    } catch {
+      return;
+    }
   }
+
+  files = [...files];
   if (files.length === 0) return;
 
   const controller = new AbortController();
@@ -712,12 +730,26 @@ $status.find('.path').on('click', () => {
   copyText(curPath);
 });
 
-$modal.find('.fm_tool.upload').on('click', uploadFiles);
+$modal.find('.fm_tool.upload').on('click', () => uploadFiles());
 $modal.find('.fm_tool.add').on('click', function (e) {
   createMenu(e);
 });
 $modal.find('.fm_tool.refresh').on('click', () => loadDir(curPath, { keepPage: true }));
 $modal.find('.fm_close').on('click', closeManager);
+
+// 拖拽文件上传
+$listWrap[0].addEventListener('dragenter', (e) => {
+  e.preventDefault();
+});
+$listWrap[0].addEventListener('dragover', (e) => {
+  e.preventDefault();
+});
+$listWrap[0].addEventListener('drop', (e) => {
+  e.preventDefault();
+  const files = [...(e.dataTransfer?.files || [])];
+  if (files.length === 0) return;
+  uploadFiles(files);
+});
 
 const $panel = $modal.find('.fm_panel');
 
@@ -750,7 +782,7 @@ $list.on('click', '.fm_item', function (e) {
   const item = getItem(this.dataset.name);
   if (!item) return;
 
-  if (item.type === 'dir') {
+  if (isDirItem(item)) {
     loadDir(normalizePath(curPath, item.name));
   } else {
     openTextFile(item);

@@ -29,7 +29,6 @@ import { CreateTabs } from '../../../page/notes/tabs';
 import { _tpl, deepClone } from '../../utils/template';
 import cacheFile from '../../utils/cacheFile';
 import _path from '../../utils/path';
-import filePicker from '../filePicker';
 // 右键菜单
 let rightBoxList = [];
 const updateActiveWindows = debounce(function () {
@@ -365,7 +364,6 @@ function selectTabs(e, data, opt = {}, title = '') {
 function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
   const { subText = '提交', items } = data;
   const wrapInputList = [];
-  const inputWrapMap = {};
   let inputs = [];
   Object.keys(items).forEach((item) => {
     let {
@@ -377,8 +375,6 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       inputType = 'text',
       beforeText = '',
       trimValue = true,
-      // selectPath: true | 'file' | 'dir' | 'all' | { type, path, title }，为输入框显示路径选择按钮
-      selectPath: pathPicker = false,
     } = items[item];
     value += '';
     items[item] = {
@@ -391,18 +387,16 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
       inputType,
       beforeText,
       trimValue,
-      pathPicker,
     };
   });
   const html = _tpl(
     `
-    <template v-for="{type,placeholder,value,selectItem,inputType,beforeText,autocomplete,pathPicker},key in items">
+    <template v-for="{type,placeholder,value,selectItem,inputType,beforeText,autocomplete},key in items">
       <div v-if="type === 'input'" class="inp_item">
           <div v-if="beforeText" class="title">{{beforeText}}</div>
           <div class="inp_box">
             <input class='inp' :name="key" :data-flag="key" :autocomplete="autocomplete" :placeholder="placeholder" :value="value" :type="inputType"/>
             <i v-if="inputType === 'password'" v-show="value !== ''" data-cursor="pointer" class="show_pass_btn iconfont icon-kejian"></i>
-            <i v-if="pathPicker" data-cursor="pointer" title="选择路径" class="select_path_btn iconfont icon-gl-folder"></i>
             <i data-cursor="pointer" class="clean_btn iconfont icon-shibai {{value === '' ? '' : 'show'}}"></i>
           </div>
           <p class='err'></p>
@@ -499,7 +493,6 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
           },
         });
         wrapInputList.push(wInput);
-        inputWrapMap[key] = wInput;
       });
       if (inputs.length > 0) {
         inputs[0].select();
@@ -524,7 +517,6 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
     click({ e, close }) {
       const cleanBtn = _getTarget(this.content, e, '.clean_btn');
       const showPassBtn = _getTarget(this.content, e, '.show_pass_btn');
-      const selectPathBtn = _getTarget(this.content, e, '.select_path_btn');
       const mtcBtn = _getTarget(this.content, e, '.mtcbtn');
       const sBox = _getTarget(this.content, e, '.select_box');
       if (mtcBtn) {
@@ -555,26 +547,6 @@ function inpMenu(e, data, callback, title = '', hideCloseBtn, isMask) {
           });
           callback && callback({ e, inp, close, items, loading, isDiff, submit });
         }
-      } else if (selectPathBtn) {
-        const key = selectPathBtn.parentNode.querySelector('input').dataset.flag;
-        const cfg = items[key].pathPicker;
-        const picker = cfg === true ? {} : typeof cfg === 'string' ? { type: cfg } : cfg || {};
-        const value = items[key].value.trim();
-        const initPath = value || picker.path || '/';
-        filePicker({
-          type: picker.type,
-          title: picker.title || '选择路径',
-          path: initPath,
-        }).then((path) => {
-          if (!path) return;
-          const wInput = inputWrapMap[key];
-          if (wInput) {
-            wInput.setValue(path).focus();
-            const err = selectPathBtn.parentNode.parentNode.querySelector('.err');
-            const verify = items[key].verify;
-            if (err) err.textContent = verify ? verify(items[key].value, items) || '' : '';
-          }
-        });
       } else if (cleanBtn) {
         const inp = cleanBtn.parentNode.firstElementChild;
         inp.value = '';

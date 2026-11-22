@@ -285,7 +285,7 @@ async function renderList(top) {
     `
     <template v-if="total > 0">
       <ul v-for="{type,fileType,name,size,time,id,mode,uid,gid,linkTarget,linkTargetTypeName} in paging.list" class="file_item" :data-id="id">
-        <li data-cursor="pointer" class="logo {{logoColor(type, fileType)}} iconfont {{getLogo(name,type,size) || 'is_img'}}"></li>
+        <li data-cursor="pointer" class="logo {{logoColor(type, fileType)}} iconfont {{getLogo(name,type,size,fileType) || 'is_img'}}"></li>
         <li data-cursor="pointer" class="name">
           <span class="text">{{getText(name,type).a}}
             <span class="suffix">{{getText(name,type).b}}</span>
@@ -311,16 +311,10 @@ async function renderList(top) {
         if (type === 'file' && (fileType === 'symlink' || fileType === 'file')) return '';
         return 'other';
       },
-      getLogo(name, type, size) {
-        let logo = '';
-        if (!isImgFile(name)) {
-          if (type === 'file') {
-            logo = fileLogoType(name, size);
-          } else {
-            logo = 'icon-gl-folder';
-          }
-        }
-        return logo;
+      getLogo(name, type, size, fileType) {
+        if (type === 'dir') return 'icon-gl-folder';
+        // 软链接不使用缩略图，按大小选择图标（大小为 0 时是空文件图标）
+        if (fileType === 'symlink' || !isImgFile(name)) return fileLogoType(name, size);
       },
       getText(name, type) {
         let [a, , b] = _path.extname(name);
@@ -453,6 +447,9 @@ function getFileItem(id) {
 async function readFileAndDir(obj, e) {
   const { type, name, path } = obj;
   const p = `${path}/${name}`;
+  // 映射的软链接（宿主绝对路径）直接用映射后的真实路径访问
+  const target =
+    obj.fileType === 'symlink' && obj.linkMapped && obj.linkTarget ? obj.linkTarget : p;
   if (
     type === 'dir' ||
     (type === 'file' &&
@@ -461,24 +458,25 @@ async function readFileAndDir(obj, e) {
       obj.linkTarget)
   ) {
     updatePageInfo();
-    curmb.toGo(p, { pageNo: 1, top: 0 });
+    curmb.toGo(target, { pageNo: 1, top: 0 });
   } else if (type === 'file') {
     try {
       const res = await reqFileReadFile({
-        path: p,
+        path: target,
         token: shareToken,
       });
       if (res.code === 1) {
         if (res.data.type === 'text') {
-          openFile(res.data.data, p);
+          openFile(res.data.data, target);
         } else if (res.data.type === 'other') {
-          const fPath = getFilePath(`/sharefile/${p}`, { token: shareToken });
-          if (isImgFile(p)) {
+          const fPath = getFilePath(`/sharefile/${target}`, { token: shareToken });
+          if (isImgFile(target)) {
             const list = fileListData.data.filter(
               (item) => item.type === 'file' && isImgFile(item.name),
             );
             const arr = list.map((item) => {
-              const p = `${item.path}/${item.name}`;
+              const p =
+                item.linkMapped && item.linkTarget ? item.linkTarget : `${item.path}/${item.name}`;
               return {
                 u1: getFilePath(`/sharefile/${p}`, { token: shareToken }),
                 u2: getFilePath(`/sharefile/${p}`, {
@@ -493,9 +491,9 @@ async function readFileAndDir(obj, e) {
               list.findIndex((item) => item.id === obj.id),
               { x: e.clientX, y: e.clientY },
             );
-          } else if (isVideoFile(p)) {
+          } else if (isVideoFile(target)) {
             _myOpen(`/videoplay#${encodeURIComponent(fPath)}`, obj.name, 'video');
-          } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(p)) {
+          } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(target)) {
             _myOpen(fPath, obj.name, 'music');
           } else {
             downloadFiles([{ fileUrl: fPath, filename: name }]);
@@ -582,6 +580,7 @@ $contentWrap
     const {
       name,
       fileType,
+      hardLink,
       linkTarget,
       type,
       path,
@@ -593,9 +592,15 @@ $contentWrap
       fileTypeName,
       linkTargetTypeName,
     } = getFileItem($(this).parent().attr('data-id'));
-    const str = `名称：${name}\n类型：${type === 'dir' ? '文件夹' : '文件'}${
-      type === 'file' && fileType !== 'file' ? `(${fileTypeName})` : ''
-    }\n路径：${path}${
+
+    let typeText = type === 'dir' ? '文件夹' : '文件';
+    if (type === 'file') {
+      if (fileType === 'symlink') typeText += `（${fileTypeName || '符号链接'}）`;
+      else if (hardLink) typeText += '（硬链接）';
+      else if (fileType !== 'file') typeText += `（${fileTypeName}）`;
+    }
+
+    const str = `名称：${name}\n类型：${typeText}\n路径：${path}${
       type === 'file' && fileType === 'symlink' ? ` => ${linkTarget}(${linkTargetTypeName})` : ''
     }${
       mode ? `\n权限：${mode}\n用户ID：${uid}\n用户组ID：${gid}` : ''

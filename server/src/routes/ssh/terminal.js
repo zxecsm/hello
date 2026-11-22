@@ -1,7 +1,7 @@
 import { Client } from 'ssh2';
 import { StringDecoder } from 'node:string_decoder';
 import { CacheByExpire } from '../../utils/common/cache.js';
-import { writelog } from '../../utils/common/utils.js';
+import { writelog, concurrencyTasks } from '../../utils/common/utils.js';
 import _connect from '../../utils/net/connect.js';
 import _path from '../../utils/common/path.js';
 
@@ -215,18 +215,57 @@ export async function readSftpDir(sftp, dirPath) {
     });
   });
 
-  // readdir 已经返回 attrs，无需再对每个目录项单独 stat
+  // readdir 已经返回 attrs，普通目录项无需额外请求
   const result = list.map((item) => {
     const { filename: name, longname, attrs } = item;
 
-    return {
-      type: attrs?.isDirectory?.() ? 'dir' : 'file',
+    const isDir = !!attrs?.isDirectory?.();
+    const isSymlink = !!attrs?.isSymbolicLink?.();
+
+    const info = {
+      // 链接本身仍按文件处理
+      type: isDir ? 'dir' : 'file',
+      fileType: isSymlink ? 'symlink' : 'file',
       path: dirPath,
       name,
       longname,
-      size: attrs?.size || 0,
+      // 符号链接的 size 是链接内容长度，先置 0，解析目标后再取目标文件的真实大小
+      size: isSymlink ? 0 : attrs?.size || 0,
       mtime: attrs?.mtime || 0,
     };
+
+    if (!isSymlink && !isDir) {
+      // SFTP 的 attrs 没有链接数，用 longname 的第二个字段尽力判断硬链接
+      const nlink = Number((longname || '').trim().split(/\s+/)[1]);
+      info.hardLink = Number.isInteger(nlink) && nlink > 1 ? 1 : 0;
+    }
+
+    return info;
+  });
+
+  // 只有符号链接需要额外读取目标和目标真实类型，限制并发避免请求风暴
+  const links = result.filter((info) => info.fileType === 'symlink');
+
+  await concurrencyTasks(links, 5, async (info) => {
+    const p = _path.normalizeNoSlash(dirPath, info.name);
+
+    // 优先取解析后的绝对路径，失败则退回链接内容
+    info.linkTarget =
+      (await sftpRealpath(sftp, p).catch(() => '')) ||
+      (await sftpReadlink(sftp, p).catch(() => ''));
+
+    // 目标真实类型：取不到时按文件处理
+    const target = await sftpStat(sftp, p).catch(() => null);
+    if (target) {
+      const isTargetDir = target.isDirectory();
+      info.linkTargetType = isTargetDir ? 'dir' : 'file';
+      info.linkTargetTypeName = isTargetDir ? '文件夹' : '文件';
+      // 显示目标文件的真实大小，目录为 0
+      info.size = isTargetDir ? 0 : target.size || 0;
+    } else {
+      info.linkTargetType = 'unknown';
+      info.linkTargetTypeName = '未知';
+    }
   });
 
   result.sort((a, b) => b.mtime - a.mtime);
@@ -275,6 +314,24 @@ export function sftpLstat(sftp, path) {
   return new Promise((resolve, reject) => {
     sftp.lstat(path, (err, stat) => {
       err ? reject(err) : resolve(stat);
+    });
+  });
+}
+
+// 读取符号链接内容（不跟随）
+export function sftpReadlink(sftp, path) {
+  return new Promise((resolve, reject) => {
+    sftp.readlink(path, (err, target) => {
+      err ? reject(err) : resolve(target);
+    });
+  });
+}
+
+// 获取符号链接解析后的绝对路径
+export function sftpRealpath(sftp, path) {
+  return new Promise((resolve, reject) => {
+    sftp.realpath(path, (err, resolved) => {
+      err ? reject(err) : resolve(resolved);
     });
   });
 }

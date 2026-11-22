@@ -185,9 +185,8 @@ route.post(
 
       const { data, account, id: shareID } = share.data;
 
-      // 用户根目录
-      baseP = appConfig.userRootDir(account);
-      rootP = appConfig.userRootDir(account, data.path, data.name);
+      // 分享访问的边界就是分享的这个目录（软链接解析后也不能跳出）
+      baseP = rootP = appConfig.userRootDir(account, data.path, data.name);
 
       p = appConfig.userRootDir(account, data.path, data.name, path);
       accFlag = shareID + account || temid;
@@ -217,7 +216,9 @@ route.post(
       }
     }
 
-    if (!(await isPathSafe(baseP, p, true))) {
+    const pathSafe = await isPathSafe(baseP, p, true);
+
+    if (!pathSafe) {
       return resp.success(
         res,
         'ok',
@@ -269,7 +270,7 @@ route.post(
 
         while (stack.length > 0 && !signal.aborted) {
           const currentPath = stack.pop();
-          const list = await readMenu(currentPath);
+          const list = await readMenu(currentPath, baseP);
 
           for (const item of list) {
             if (signal.aborted) break;
@@ -294,8 +295,13 @@ route.post(
             if (obj.type === 'file' && obj.fileType === 'symlink') {
               if (_path.isPathWithin(rootP, obj.linkTarget, 1)) {
                 obj.linkTarget = _path.normalizeNoSlash('/' + item.linkTarget.slice(rootP.length));
-              } else if (_path.isPathWithin(appDir, obj.linkTarget, 1)) {
-                obj.linkTarget = _path.normalizeNoSlash('/' + item.linkTarget.slice(appDir.length));
+              } else {
+                // 映射路径不在当前根目录内，前端无法按根相对路径访问
+                delete obj.linkMapped;
+
+                if (_path.isPathWithin(appDir, obj.linkTarget, 1)) {
+                  obj.linkTarget = _path.normalizeNoSlash('/' + item.linkTarget.slice(appDir.length));
+                }
               }
             }
 
@@ -388,7 +394,8 @@ route.post(
 
       const { name, type } = data;
 
-      baseP = appConfig.userRootDir(account);
+      // 分享访问的边界就是分享的这个目录/文件
+      baseP = appConfig.userRootDir(account, data.path, name);
 
       if (type === 'file') {
         p = appConfig.userRootDir(account, data.path, name);
@@ -400,7 +407,8 @@ route.post(
       p = appConfig.userRootDir(account, path);
     }
 
-    if (!(await isPathSafe(baseP, p))) {
+    // 分享自己就是那个文件时允许相等
+    if (!(await isPathSafe(baseP, p, !!token))) {
       return resp.forbidden(res, '文件不存在')();
     }
 
@@ -438,66 +446,6 @@ route.use(
       next();
     } else {
       resp.unauthorized(res)();
-    }
-  }),
-);
-
-// 读取目录全部文件（不分页、不转任务，前端自行分页）
-route.post(
-  '/read-dir-all',
-  validate(
-    'body',
-    V.object({
-      path: V.string().min(1).notEmpty().max(fieldLength.url),
-      hidden: V.number().default(0).toInt().enum([0, 1]),
-    }),
-  ),
-  asyncHandler(async (_, res) => {
-    const { path, hidden } = res.locals.ctx;
-
-    const { account } = res.locals.hello.userinfo;
-
-    const rootP = appConfig.userRootDir(account);
-    const p = appConfig.userRootDir(account, path);
-
-    if (!(await isPathSafe(rootP, p, true)) || (await _f.getType(p, true)) !== 'dir') {
-      return resp.success(res, 'ok', { list: [] })();
-    }
-
-    try {
-      const list = await readMenu(p);
-      const appDir = appConfig.userRootDir(appConfig.adminAccount);
-
-      const result = list.reduce((pre, item) => {
-        if (hidden === 1 && item.name.startsWith('.')) return pre;
-
-        const obj = {
-          ...item,
-          path: _path.normalizeNoSlash('/' + item.path.slice(rootP.length)),
-        };
-
-        if (obj.type === 'file' && obj.fileType === 'symlink') {
-          if (_path.isPathWithin(rootP, obj.linkTarget, 1)) {
-            obj.linkTarget = _path.normalizeNoSlash('/' + item.linkTarget.slice(rootP.length));
-          } else if (_path.isPathWithin(appDir, obj.linkTarget, 1)) {
-            obj.linkTarget = _path.normalizeNoSlash('/' + item.linkTarget.slice(appDir.length));
-          }
-        }
-
-        if (!res.locals.hello.isRoot) {
-          delete obj.mode;
-          delete obj.gid;
-          delete obj.uid;
-        }
-
-        pre.push(obj);
-
-        return pre;
-      }, []);
-
-      return resp.success(res, 'ok', { list: result })();
-    } catch (error) {
-      return resp.forbidden(res, '读取文件列表失败')(error, 1);
     }
   }),
 );
@@ -686,72 +634,6 @@ route.post(
   }),
 );
 
-// 创建符号链接
-route.post(
-  '/create-link',
-  validate(
-    'body',
-    V.object({
-      path: V.string().notEmpty().min(1).max(fieldLength.url),
-      name: V.string().trim().min(1).max(fieldLength.filename),
-      targetPath: V.string().notEmpty().min(1).max(fieldLength.url),
-      isSymlink: V.number().toInt().default(1).enum([0, 1]),
-    }),
-  ),
-  asyncHandler(async (_, res) => {
-    if (!res.locals.hello.isRoot) {
-      return resp.forbidden(res, '无权操作')();
-    }
-
-    const { path, name, targetPath, isSymlink } = res.locals.ctx;
-
-    if (!_path.isFilename(name)) {
-      return resp.forbidden(res, '名称包含了不允许的特殊字符')();
-    }
-
-    const { account } = res.locals.hello.userinfo;
-
-    const baseP = appConfig.userRootDir(account);
-
-    if (!(await isPathSafe(baseP, appConfig.userRootDir(account, path), true))) {
-      return resp.forbidden(res, '当前文件夹不存在')();
-    }
-
-    const tPath = appConfig.userRootDir(account, targetPath);
-
-    if (!(await isPathSafe(baseP, tPath, true))) {
-      return resp.forbidden(res, '目标路径不存在')();
-    }
-
-    const tType = await _f.getType(tPath);
-
-    if (!tType) {
-      return resp.forbidden(res, '目标路径不存在')();
-    }
-
-    // 过滤回收站
-    const curPath = appConfig.userRootDir(account, path, name);
-    if ((await _f.exists(curPath)) || appConfig.trashDir(account) === curPath) {
-      return resp.forbidden(res, '已存在重名文件')();
-    }
-
-    if (isSymlink) {
-      await _f.symlink(tPath, curPath);
-    } else {
-      if (tType === 'dir') {
-        return resp.forbidden(res, '不能创建目录的硬链接')();
-      }
-      await _f.link(tPath, curPath);
-    }
-
-    syncUpdateData(res, 'file');
-
-    fileList.clear(account);
-
-    resp.success(res, '新建符号链接成功')();
-  }),
-);
-
 // 分享
 route.post(
   '/share',
@@ -823,6 +705,11 @@ route.post(
 
     if (!type || type === 'dir' || appConfig.trashDir(account) === fpath) {
       return resp.forbidden(res, '文件不存在')();
+    }
+
+    // 悬空软链接：isPathSafe 因目标不存在只能退回父目录判断，直接写入会写到链接指向的位置
+    if (type === 'symlink' && !(await _f.realpath(fpath))) {
+      return resp.forbidden(res, '不支持写入已失效的软链接')();
     }
 
     if (type === 'file') {
@@ -967,6 +854,9 @@ route.post(
 
         const f = appConfig.userRootDir(account, `${path}/${name}`);
 
+        // 源路径必须在自己的根目录内（软链接解析后也不允许越界）
+        if (!(await isPathSafe(appConfig.userRootDir(account), f))) return;
+
         let to = _path.normalizeNoSlash(p, name);
 
         if (_path.isPathWithin(f, to) || !name) return;
@@ -1090,6 +980,9 @@ route.post(
         const f = appConfig.userRootDir(account, `${path}/${name}`);
 
         if (f === appConfig.configDir(account)) return;
+
+        // 源路径必须在自己的根目录内（软链接解析后也不允许越界）
+        if (!(await isPathSafe(appConfig.userRootDir(account), f))) return;
 
         let t = _path.normalizeNoSlash(p, name);
 
@@ -1796,6 +1689,11 @@ route.post(
     const p = appConfig.userRootDir(account, path);
     const name = _path.basename(p)[0];
     const dir = _path.dirname(p);
+
+    // 目录读取边界：不能通过链接读到根目录之外的目录
+    if (!(await isPathSafe(appConfig.userRootDir(account), dir))) {
+      return resp.success(res, 'ok', normalizePath)();
+    }
 
     const dirList = await _f.readdir(dir);
     if (!dirList || dirList.length === 0) {

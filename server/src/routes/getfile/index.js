@@ -45,8 +45,11 @@ export default async function getFile(req, res, originalPath, verifyLogin = true
 
   const jwtData = token ? await jwt.get(token) : '';
 
+  // 临时访问令牌：以文件所有者的身份访问指定文件
+  const delegated = jwtData?.data?.type === 'temAccessFile';
+
   // 以指定的用户身份访问指定的文件
-  if (jwtData?.data?.type === 'temAccessFile') {
+  if (delegated) {
     account = jwtData.data.data.account;
     p = jwtData.data.data.p;
   }
@@ -203,12 +206,20 @@ async function getShareFilePath(res, token, pArr) {
 
     const { name, type, path } = obj;
     const pathArr = `${path}/${name}`.split('/').filter(Boolean);
+
+    // 分享边界：分享的这个目录/文件
+    const shareRoot = appConfig.userRootDir(share.data.account, path, name);
+
+    let p = '';
     if (type === 'file') {
-      return await getFilePath(share.data.account, pathArr);
+      p = await getFilePath(share.data.account, pathArr, shareRoot);
     } else if (type === 'dir') {
-      return await getFilePath(share.data.account, [...pathArr, ...pArr]);
+      p = await getFilePath(share.data.account, [...pathArr, ...pArr], shareRoot);
     }
-    return '';
+
+    if (!p) return '';
+
+    return p;
   }
   return '';
 }
@@ -235,9 +246,10 @@ async function getShareMusicPath(res, token, pArr, account) {
   }
 }
 
-async function getFilePath(account, pArr) {
+async function getFilePath(account, pArr, base = '') {
   const p = appConfig.userRootDir(account, pArr.join('/'));
-  if (await isPathSafe(appConfig.userRootDir(account), p)) return p;
+  const root = base || appConfig.userRootDir(account);
+  if (await isPathSafe(root, p, true)) return p;
   return '';
 }
 

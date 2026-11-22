@@ -50,11 +50,9 @@ import {
   reqFileCdHistory,
   reqFileChown,
   reqFileClearTrash,
-  reqFileComplete,
   reqFileCopy,
   reqFileCreateDir,
   reqFileCreateFile,
-  reqFileCreateLink,
   reqFileDelete,
   reqFileDownload,
   reqFileFavorites,
@@ -291,7 +289,7 @@ async function renderList(top) {
     <template v-if="total > 0">
       <ul v-for="{type, fileType, name, path, size, time, id, mode, gid, uid, favorite, linkTarget, linkTargetTypeName} in list" class="file_item" :data-id="id">
         <li data-cursor="pointer" class="check_state" check="n"></li>
-        <li data-cursor="pointer" class="logo {{logoColor(type,fileType,name,path)}} iconfont {{hdLogo(name,type,size,favorite) || 'is_img'}}"></li>
+        <li data-cursor="pointer" class="logo {{logoColor(type,fileType,name,path)}} iconfont {{hdLogo(name,type,size,favorite,fileType) || 'is_img'}}"></li>
         <li data-cursor="pointer" class="name">
           <span class="text">{{getText(name,type).a}}
             <span class="suffix">{{getText(name,type).b}}</span>
@@ -322,16 +320,10 @@ async function renderList(top) {
         if (type === 'file' && (fileType === 'symlink' || fileType === 'file')) return '';
         return 'other';
       },
-      hdLogo(name, type, size, favorite) {
-        let logo = '';
-        if (!isImgFile(name)) {
-          if (type === 'file') {
-            logo = fileLogoType(name, size);
-          } else {
-            logo = favorite ? 'icon-folderStar' : 'icon-gl-folder';
-          }
-          return logo;
-        }
+      hdLogo(name, type, size, favorite, fileType) {
+        if (type === 'dir') return favorite ? 'icon-folderStar' : 'icon-gl-folder';
+        // 软链接不使用缩略图，按大小选择图标（大小为 0 时是空文件图标）
+        if (fileType === 'symlink' || !isImgFile(name)) return fileLogoType(name, size);
       },
       formatBytes,
       getText(name, type) {
@@ -520,6 +512,9 @@ reqTaskList()
 async function readFileAndDir(obj, e) {
   const { type, name, path, size } = obj;
   const p = `${path}/${name}`;
+  // 映射的软链接（宿主绝对路径）直接用映射后的真实路径访问
+  const target =
+    obj.fileType === 'symlink' && obj.linkMapped && obj.linkTarget ? obj.linkTarget : p;
   if (
     type === 'dir' ||
     (type === 'file' &&
@@ -528,23 +523,24 @@ async function readFileAndDir(obj, e) {
       obj.linkTarget)
   ) {
     updatePageInfo();
-    curmb.toGo(p, { pageNo: 1, top: 0 });
+    curmb.toGo(target, { pageNo: 1, top: 0 });
   } else if (type === 'file') {
     try {
-      const res = await reqFileReadFile({ path: p });
+      const res = await reqFileReadFile({ path: target });
       if (res.code === 1) {
         if (res.data.type === 'text') {
           // 文本
-          openFile(res.data.data, p, res.data.editing);
+          openFile(res.data.data, target, res.data.editing);
         } else if (res.data.type === 'other') {
-          const fPath = getFilePath(`/file/${p}`);
+          const fPath = getFilePath(`/file/${target}`);
           // 图片
-          if (isImgFile(p)) {
+          if (isImgFile(target)) {
             const list = fileListData.data.filter(
               (item) => item.type === 'file' && isImgFile(item.name),
             );
             const arr = list.map((item) => {
-              const p = `${item.path}/${item.name}`;
+              const p =
+                item.linkMapped && item.linkTarget ? item.linkTarget : `${item.path}/${item.name}`;
               return {
                 u1: getFilePath(`/file/${p}`) + `#${item.size}`,
                 u2: getFilePath(`/file/${p}`, { w: 256 }) + `#${item.size}`,
@@ -556,10 +552,10 @@ async function readFileAndDir(obj, e) {
               list.findIndex((item) => item.id === obj.id),
               { x: e.clientX, y: e.clientY },
             );
-          } else if (isVideoFile(p)) {
+          } else if (isVideoFile(target)) {
             // 视频
             _myOpen(`/videoplay#${encodeURIComponent(fPath)}`, obj.name, 'video');
-          } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(p)) {
+          } else if (/(\.mp3|\.aac|\.wav|\.ogg)$/gi.test(target)) {
             // 音频
             _myOpen(fPath, obj.name, 'music');
           } else {
@@ -630,12 +626,19 @@ $contentWrap
       favorite,
       fileType,
       fileTypeName,
+      hardLink,
       linkTarget,
       linkTargetTypeName,
     } = getFileItem($(this).parent().attr('data-id'));
-    const str = `名称：${name}\n类型：${type === 'dir' ? '文件夹' : '文件'}${
-      type === 'file' && fileType !== 'file' ? `(${fileTypeName})` : ''
-    }\n路径：${path}${
+
+    let typeText = type === 'dir' ? '文件夹' : '文件';
+    if (type === 'file') {
+      if (fileType === 'symlink') typeText += `（${fileTypeName || '符号链接'}）`;
+      else if (hardLink) typeText += '（硬链接）';
+      else if (fileType !== 'file') typeText += `（${fileTypeName}）`;
+    }
+
+    const str = `名称：${name}\n类型：${typeText}\n路径：${path}${
       type === 'file' && fileType === 'symlink' ? ` => ${linkTarget}(${linkTargetTypeName})` : ''
     }${mode ? `\n权限：${mode}\n用户ID：${uid}\n用户组ID：${gid}` : ''}${
       type === 'dir' && favorite !== undefined
@@ -1816,13 +1819,6 @@ function createFileAndDir(e) {
       beforeIcon: 'iconfont icon-folderPlus',
     },
   ];
-  if (isRoot()) {
-    data.push({
-      id: '3',
-      text: '新建符号链接',
-      beforeIcon: 'iconfont icon-link1',
-    });
-  }
   rMenu.selectMenu(
     e,
     data,
@@ -1831,79 +1827,9 @@ function createFileAndDir(e) {
         createFile(e);
       } else if (id === '2') {
         createDir(e);
-      } else if (id === '3') {
-        createSymlink(e);
       }
     },
     '新建选项',
-  );
-}
-function createSymlink(e) {
-  rMenu.inpMenu(
-    e,
-    {
-      subText: '提交',
-      items: {
-        name: {
-          beforeText: '文件名：',
-          verify(val) {
-            return rMenu.validString(val, 1, _d.fieldLength.filename) || rMenu.validFilename(val);
-          },
-        },
-        targetPath: {
-          beforeText: '目标路径：点击右侧图标选择，或按Tab键自动补全',
-          placeholder: '硬链接不支持文件夹',
-          selectPath: { type: 'all', path: curFileDirPath, title: '选择目标路径' },
-          verify(val) {
-            return rMenu.validString(val, 1, _d.fieldLength.url);
-          },
-          keyDown({ e, value, items, input }) {
-            if (e.key.toLowerCase() === 'tab') {
-              if (value.trim() === '') return;
-              e.preventDefault();
-              const type = items.isSymlink.value === 'y' ? 'all' : 'file';
-              reqFileComplete({ path: value, type: type })
-                .then((res) => {
-                  if (res.code === 1) {
-                    input.setValue(res.data);
-                  }
-                })
-                .catch(() => {});
-            }
-          },
-        },
-        isSymlink: {
-          beforeText: '链接类型：',
-          type: 'select',
-          value: 'y',
-          selectItem: [
-            { value: 'y', text: '软链接' },
-            { value: 'n', text: '硬链接' },
-          ],
-        },
-      },
-    },
-    async function ({ close, inp, loading }) {
-      try {
-        const { name, targetPath, isSymlink } = inp;
-        loading.start();
-        const res = await reqFileCreateLink({
-          path: curFileDirPath,
-          name,
-          targetPath,
-          isSymlink: isSymlink === 'y' ? 1 : 0,
-        });
-        loading.end();
-        if (res.code === 1) {
-          _msg.success(res.codeText);
-          updateCurPage();
-          close(1);
-        }
-      } catch {
-        loading.end();
-      }
-    },
-    '新建符号链接',
   );
 }
 // 处理粘贴

@@ -79,8 +79,51 @@ export function sortFileList(list, type, isDesc) {
   return list;
 }
 
+// 软链接目标在容器内不存在时，尝试用挂载根目录（用户根目录）拼接后查找。
+// 例：宿主机根挂载到 /app/app_data，链接指向 /volume1/a/b，依次尝试：
+//   /app/app_data/volume1/a/b  （挂载根 = 宿主根）
+//   /app/app_data/a/b          （挂载根 = 宿主一级目录）
+//   /app/app_data/b            （挂载根 = /volume1/a）
+// 逐个校验，命中第一个就返回；全部不存在则返回 null（前端按未知处理）。
+async function mapLinkTarget(base, target) {
+  if (!base || !target) return null;
+
+  const t = _path.toUnixPath(target);
+
+  // 只处理绝对路径链接
+  if (!t.startsWith('/')) return null;
+
+  const segs = t.split('/').filter(Boolean);
+  if (segs.length === 0) return null;
+
+  const baseReal = (await _f.realpath(base)) || _path.normalize(base);
+
+  for (let i = 0; i < segs.length; i++) {
+    // 去掉开头 i 段，拼到挂载根目录下
+    const p = _path.normalizeNoSlash(base, '/' + segs.slice(i).join('/'));
+
+    // 拼接结果必须仍在根目录内
+    if (!_path.isPathWithin(base, p, true)) continue;
+
+    const realp = await _f.realpath(p);
+    if (!realp) continue;
+
+    // 解析后的真实路径也必须仍在根目录内
+    if (!_path.isPathWithin(baseReal, realp, true)) continue;
+
+    const type = await _f.getType(realp);
+    if (!type) continue;
+
+    const size = type === 'file' ? (await _f.stat(realp))?.size || 0 : 0;
+
+    return { path: realp, type, size };
+  }
+
+  return null;
+}
+
 // 读取目录文件
-export async function readMenu(path) {
+export async function readMenu(path, base) {
   try {
     const dirents = await _f.fsp.readdir(path, { withFileTypes: true });
 
@@ -109,15 +152,31 @@ export async function readMenu(path) {
         if (info.type === 'file') {
           info.fileType = type;
           info.fileTypeName = _f.getFileTypeName(type);
+          // 普通文件且有多个硬链接，视为硬链接
+          info.hardLink = type === 'file' && s.nlink > 1 ? 1 : 0;
           if (type === 'symlink') {
             try {
               info.linkTarget = await _f.fsp.realpath(f);
+              const targetStat = await _f.stat(info.linkTarget);
               info.linkTargetType = await _f.getType(info.linkTarget);
               info.linkTargetTypeName = _f.getFileTypeName(info.linkTargetType);
+              // 链接显示目标文件的真实大小，目录/未知为 0
+              info.size = targetStat && targetStat.isFile() ? targetStat.size : 0;
             } catch {
               info.linkTarget = await _f.fsp.readlink(f);
-              info.linkTargetType = 'unknown';
-              info.linkTargetTypeName = '未知';
+
+              // 宿主机绝对路径链接在容器内解析失败时，尝试映射到挂载根目录下
+              const mapped = await mapLinkTarget(base, info.linkTarget);
+              if (mapped) {
+                info.linkTarget = mapped.path;
+                info.linkTargetType = mapped.type;
+                info.linkTargetTypeName = _f.getFileTypeName(mapped.type);
+                info.size = mapped.size;
+                info.linkMapped = 1;
+              } else {
+                info.linkTargetType = 'unknown';
+                info.linkTargetTypeName = '未知';
+              }
             }
           } else {
             info.size = s.size;
@@ -294,7 +353,13 @@ export async function clearFileEditing(account, path) {
 }
 
 // 路径安全
+// 对目标路径逐级向上做 realpath，解析结果必须位于根目录内，
+// 用于阻断 ../ 穿越与软链接逃逸，越界返回 false。
+// 根目录本身也先做一次 realpath 归一化，避免根目录经由软链接、
+// Windows 短路径或大小写差异时被误判为越界。
 export async function isPathSafe(base, target, allowEqual = false) {
+  const baseReal = (await _f.realpath(base)) || _path.normalize(base);
+
   let current = target;
   let realp = null;
 
@@ -310,5 +375,5 @@ export async function isPathSafe(base, target, allowEqual = false) {
     current = parent;
   }
 
-  return realp && _path.isPathWithin(base, realp, allowEqual);
+  return realp && _path.isPathWithin(baseReal, realp, allowEqual);
 }

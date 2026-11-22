@@ -132,8 +132,13 @@ export function showFileInfo(e, obj) {
       text:
         obj.type === 'dir'
           ? '文件夹'
-          : '文件' +
-            `${obj.type === 'file' && obj.fileType !== 'file' ? `(${obj.fileTypeName})` : ''}`,
+          : `文件${
+              obj.fileType === 'symlink'
+                ? `（${obj.fileTypeName || '符号链接'}）`
+                : obj.hardLink
+                  ? '（硬链接）'
+                  : ''
+            }`,
       beforeText: '类型：',
     },
     {
