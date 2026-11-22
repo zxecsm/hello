@@ -1851,8 +1851,9 @@ function createSymlink(e) {
           },
         },
         targetPath: {
-          beforeText: '目标路径：按Tab键自动补全路径',
+          beforeText: '目标路径：点击右侧图标选择，或按Tab键自动补全',
           placeholder: '硬链接不支持文件夹',
+          selectPath: { type: 'all', path: curFileDirPath, title: '选择目标路径' },
           verify(val) {
             return rMenu.validString(val, 1, _d.fieldLength.url);
           },

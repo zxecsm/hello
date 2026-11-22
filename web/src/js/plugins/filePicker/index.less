@@ -1,0 +1,290 @@
+.hello_file_picker {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+
+  .fp_mask {
+    position: absolute;
+    inset: 0;
+  }
+
+  .fp_panel {
+    position: relative;
+    display: flex;
+    flex-flow: column;
+    width: 96%;
+    max-width: 64rem;
+    height: 90%;
+    max-height: 50rem;
+    overflow: hidden;
+    background-color: var(--color10);
+    border: 0.1rem solid var(--color9);
+    border-radius: var(--border-radius2);
+    box-shadow: var(--window-shadow-active);
+  }
+
+  .fp_head {
+    flex: none;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.8rem;
+    border-bottom: 0.1rem solid var(--color9);
+  }
+
+  .fp_close,
+  .fp_refresh,
+  .fp_back {
+    flex: none;
+    width: 4rem;
+    height: 4rem;
+    line-height: 4rem;
+    text-align: center;
+    font-size: 2.2rem;
+    color: var(--icon-color);
+    border: 0.1rem solid var(--color9);
+    border-radius: var(--border-radius1);
+
+    &:hover {
+      color: var(--text-hover-color);
+      background-color: var(--color9);
+    }
+  }
+
+  .fp_close {
+    font-size: 1.8rem;
+
+    &:hover {
+      color: var(--btn-danger-color);
+    }
+  }
+
+  .fp_title {
+    flex: auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 1.6rem;
+    font-weight: bold;
+  }
+
+  .fp_path {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0.8rem;
+    border-bottom: 0.1rem solid var(--color9);
+  }
+
+  .fp_back {
+    &.disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+  }
+
+  .fp_crumb {
+    flex: auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+  }
+
+  .fp_crumb_item {
+    flex: none;
+    padding: 0.3rem 0.5rem;
+    border-radius: 0.4rem;
+
+    &:hover {
+      color: var(--text-hover-color);
+      background-color: var(--color9);
+    }
+
+    &.current {
+      pointer-events: none;
+      color: var(--text-hover-color);
+    }
+  }
+
+  .fp_crumb_sep {
+    color: var(--color5);
+  }
+
+  .fp_crumb_part {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .fp_list_wrap {
+    flex: auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    padding: 0.4rem;
+  }
+
+  .fp_tip {
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--color5);
+  }
+
+  .fp_item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 0.5rem;
+
+    &:hover,
+    &.active {
+      background-color: var(--color9);
+    }
+
+    &.active {
+      color: var(--text-hover-color);
+    }
+  }
+
+  .fp_item_logo {
+    flex: none;
+    width: 3.2rem;
+    text-align: center;
+    font-size: 2.2rem;
+    color: var(--icon-color);
+
+    &.is_dir {
+      color: #00cbff;
+    }
+  }
+
+  .fp_item_name {
+    flex: auto;
+    min-width: 0;
+    line-height: 1.5;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+
+    .fp_suffix {
+      color: green;
+    }
+
+    .fp_link {
+      margin-left: 0.6rem;
+      font-size: 0.85em;
+      color: var(--color5);
+    }
+  }
+
+  .fp_item_size {
+    flex: none;
+    width: 8rem;
+    text-align: center;
+    font-size: 0.85em;
+    color: var(--icon-color);
+  }
+
+  .fp_item_date {
+    flex: none;
+    width: 8rem;
+    text-align: center;
+    font-size: 0.85em;
+    color: var(--color5);
+  }
+
+  .fp_item_actions {
+    flex: none;
+    display: flex;
+    align-items: center;
+  }
+
+  .fp_choose_dir {
+    flex: none;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8em;
+    color: var(--color3);
+    background-color: transparent;
+    border: 0.1rem solid var(--btn-primary-border-color);
+    border-radius: 0.4rem;
+
+    &:hover {
+      color: var(--text-hover-color);
+      background-color: var(--color9);
+      border-color: var(--btn-primary-color);
+    }
+  }
+
+  .fp_more {
+    display: block;
+    margin: 0.8rem auto;
+  }
+
+  .fp_footer {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem;
+    border-top: 0.1rem solid var(--color9);
+  }
+
+  .fp_selected {
+    flex: auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 0.9em;
+    color: var(--color5);
+
+    .scroll_text {
+      display: inline-block;
+      white-space: nowrap;
+      padding-right: 0.5rem;
+    }
+  }
+
+  .fp_actions {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+
+    .btn {
+      margin: 0;
+    }
+
+    .btn[disabled] {
+      opacity: 0.45;
+      pointer-events: none;
+    }
+  }
+
+  @media (max-width: 800px) {
+    padding: 1rem;
+
+    .fp_panel {
+      width: 100%;
+      max-width: none;
+    }
+
+    .fp_item_size,
+    .fp_item_date {
+      display: none;
+    }
+  }
+}
+
+// 跟随窗口头部按钮的左右排列设置
+html.head_btn_to_right .hello_file_picker .fp_head {
+  flex-flow: row-reverse;
+}

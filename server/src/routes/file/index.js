@@ -442,6 +442,66 @@ route.use(
   }),
 );
 
+// 读取目录全部文件（不分页、不转任务，前端自行分页）
+route.post(
+  '/read-dir-all',
+  validate(
+    'body',
+    V.object({
+      path: V.string().min(1).notEmpty().max(fieldLength.url),
+      hidden: V.number().default(0).toInt().enum([0, 1]),
+    }),
+  ),
+  asyncHandler(async (_, res) => {
+    const { path, hidden } = res.locals.ctx;
+
+    const { account } = res.locals.hello.userinfo;
+
+    const rootP = appConfig.userRootDir(account);
+    const p = appConfig.userRootDir(account, path);
+
+    if (!(await isPathSafe(rootP, p, true)) || (await _f.getType(p, true)) !== 'dir') {
+      return resp.success(res, 'ok', { list: [] })();
+    }
+
+    try {
+      const list = await readMenu(p);
+      const appDir = appConfig.userRootDir(appConfig.adminAccount);
+
+      const result = list.reduce((pre, item) => {
+        if (hidden === 1 && item.name.startsWith('.')) return pre;
+
+        const obj = {
+          ...item,
+          path: _path.normalizeNoSlash('/' + item.path.slice(rootP.length)),
+        };
+
+        if (obj.type === 'file' && obj.fileType === 'symlink') {
+          if (_path.isPathWithin(rootP, obj.linkTarget, 1)) {
+            obj.linkTarget = _path.normalizeNoSlash('/' + item.linkTarget.slice(rootP.length));
+          } else if (_path.isPathWithin(appDir, obj.linkTarget, 1)) {
+            obj.linkTarget = _path.normalizeNoSlash('/' + item.linkTarget.slice(appDir.length));
+          }
+        }
+
+        if (!res.locals.hello.isRoot) {
+          delete obj.mode;
+          delete obj.gid;
+          delete obj.uid;
+        }
+
+        pre.push(obj);
+
+        return pre;
+      }, []);
+
+      return resp.success(res, 'ok', { list: result })();
+    } catch (error) {
+      return resp.forbidden(res, '读取文件列表失败')(error, 1);
+    }
+  }),
+);
+
 // 文件编辑历史记录
 route.post(
   '/history-state',

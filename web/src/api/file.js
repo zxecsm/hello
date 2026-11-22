@@ -4,6 +4,10 @@ import { _getAjax, _postAjax, _upFile } from '../js/utils/utils';
 export function reqFileReadDir(data) {
   return _postAjax('/file/read-dir', data);
 }
+// 读取目录全部文件（不分页、不转任务）
+export function reqFileReadDirAll(data) {
+  return _postAjax('/file/read-dir-all', data, { load: false });
+}
 // 读取文件
 export function reqFileReadFile(data) {
   return _postAjax('/file/read-file', data);
