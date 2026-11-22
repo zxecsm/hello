@@ -3,9 +3,6 @@ import { resolve } from 'path';
 // Cookie
 import cookieParser from 'cookie-parser';
 
-// gzip / brotli 压缩
-import compression from 'compression';
-
 import express from 'express';
 
 import * as cheerio from 'cheerio';
@@ -80,19 +77,6 @@ app.disable('x-powered-by');
 app.set('trust proxy', getTrustProxy());
 
 app.use(openCors);
-
-// 文本资源压缩（js/css/html/json 等），首屏体积可降低 60%~80%
-app.use(
-  compression({
-    threshold: 1024, // 小于 1KB 不压缩，避免负收益
-    filter: (req, res) => {
-      if (req.headers['x-no-compression']) return false;
-      // 文件下载/音乐流：边收边发，压缩会占用 CPU 并增加首字节延迟
-      if (/^\/api\/(f|music)\b/.test(req.path)) return false;
-      return compression.filter(req, res);
-    },
-  }),
-);
 
 //  Cookie 解析
 app.use(cookieParser());

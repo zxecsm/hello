@@ -176,6 +176,7 @@ node .opencode\skills\hello-api\scripts\hello.mjs bmk add --link https://example
 | 方法 | 路径 | 参数 | 说明 |
 | --- | --- | --- | --- |
 | POST | `/api/file/read-dir` | `path`, `pageNo`(1), `pageSize`(20), `sortType`: `name`\|`time`\|`size`\|`type`, `isDesc`: 0/1, `subDir`: 0/1, `word`, `update`: 0/1, `hidden`: 0/1 | 列目录/搜索；可能返回 `{key}` 走任务轮询 |
+| POST | `/api/file/read-dir-all` | `path`, `hidden`: 0/1 | 一次返回目录全部文件 `{list:[...]}`；需登录，不分页、不转任务 |
 | POST | `/api/file/read-file` | `path` | 文本文件返回 `{type:'text', data:'...', editing:'...'}`；`editing` 为本人未保存的编辑草稿（无草稿时为 `null`）；二进制返回 `{type:'other'}` |
 | POST | `/api/file/save-file` | `path`, `text` | 写文本，上限 10 MB；成功后清除该路径的编辑草稿 |
 | POST | `/api/file/editing` | `path`, `text`, `clear?` | 实时保存编辑草稿；`clear=1` 删除草稿 |
@@ -196,6 +197,8 @@ node .opencode\skills\hello-api\scripts\hello.mjs bmk add --link https://example
 | POST | `/api/file/mode` / `/chown` | 见源码 | 权限/属主（root） |
 
 读取目录返回项包含：`name`、`type`（`file`/`dir`）、`size`、`time`、`path`、`fileType` 等。
+
+`read-dir-all` 一次返回全部条目，不返回 `{key}`，适合需要在前端自行排序、分页的场景；它只支持登录访问，不支持分享 token。
 
 下载文件：`GET /api/f/<path>`，例如 `/api/f/notes/a.pdf`；也可 `GET /api/f/?p=/notes/a.pdf`。
 

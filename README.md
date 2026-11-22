@@ -64,7 +64,7 @@ services:
 | --- | --- | --- |
 | `TZ` | 系统时区 | 时区，例如 `Asia/Shanghai` |
 | `HOST` | `::` | 监听地址。`::` 同时监听 IPv4 / IPv6；`0.0.0.0` 仅 IPv4；`127.0.0.1` / `::1` 仅本机 |
-| `PORT` | `55555` | 服务端口，修改后 Docker `ports`、Nginx 反代、前端开发代理需同步修改 |
+| `PORT` | `55555` | 服务端口，修改后 Docker `ports`、Nginx / Caddy 反代、前端开发代理需同步修改 |
 | `UV_THREADPOOL_SIZE` | `4` | libuv 线程池大小，文件、图片处理并发高时可调大 |
 | `COOKIE_SECURE` | 生产环境开启 | 仅通过 HTTPS 发送 Cookie。反向代理是 HTTP 时需设为 `false` |
 | `TRUST_PROXY` | `off` | 反向代理下解析真实客户端 IP，详见下方说明 |
@@ -76,12 +76,12 @@ services:
 | 值 | 说明 |
 | --- | --- |
 | 不设置 / `off` | 不信任任何代理头，适合直接访问、无反向代理 |
-| `1` / `proxy` | 信任直连的一层代理，应用端口只对 Nginx 开放 |
+| `1` / `proxy` | 信任直连的一层代理，应用端口只对 Nginx / Caddy 开放 |
 | `2`、`3` … | 信任 N 层代理 |
 | `192.168.1.20`、`172.17.0.0/16` | 只信任指定代理，多个用逗号分隔 |
 
 兼容写法：`true` / `all` / `on` / `yes` 等同 `1`，`loopback` 等同 `127.0.0.1,::1`。
-Nginx 需设置 `X-Forwarded-For $proxy_add_x_forwarded_for`。
+Nginx 需设置 `X-Forwarded-For $proxy_add_x_forwarded_for`；Caddy 会自动透传。
 
 </details>
 
@@ -202,6 +202,29 @@ server {
 
 - `proxy_request_buffering off` 必须配合 `proxy_http_version 1.1`；前面还有 CDN / 多层代理时，那一层也要关闭缓冲
 - 反向代理时按需设置 `TRUST_PROXY`（见 [环境变量](#环境变量)）
+
+## Caddy 反向代理
+
+Caddy 会自动申请和续期 HTTPS 证书，并默认透传 `X-Forwarded-For`。SFTP 上传是流式转发，需要关闭响应缓冲：
+
+```caddyfile
+hello.example.com {
+    # 不需要压缩时删掉 @compressible 和 encode 两段
+    @compressible {
+        not path /api/f* /api/music*
+    }
+    encode @compressible zstd gzip
+
+    reverse_proxy 127.0.0.1:55555 {
+        # 不缓冲响应，下载/流式接口立即开始
+        flush_interval -1
+    }
+}
+```
+
+- Caddy 默认不缓冲请求体，大文件上传可以直接流式转发
+- 如需限制上传大小，可在 `reverse_proxy` 前加 `request_body { max_size 10GB }`
+- 反向代理时按需设置 `TRUST_PROXY=1`（见 [环境变量](#环境变量)）
 
 ## 接口
 

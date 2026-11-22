@@ -33,12 +33,12 @@
 
 | 项 | 说明 |
 | --- | --- |
-| 传输协议 | HTTP / HTTPS（建议通过 Nginx 反向代理并开启 HTTPS） |
+| 传输协议 | HTTP / HTTPS（建议通过 Nginx / Caddy 反向代理并开启 HTTPS） |
 | 默认端口 | `55555` |
 | 数据格式 | JSON（`Content-Type: application/json`），上传接口使用 `multipart/form-data` |
 | 字符编码 | UTF-8 |
 | 跨域 | 已开启：`Access-Control-Allow-Origin: *`，允许 `GET,POST,PUT,DELETE,OPTIONS` |
-| 压缩 | 文本资源支持 gzip / brotli；请求头带 `x-no-compression` 可关闭 |
+| 压缩 | 服务端不启用 HTTP 压缩；如需压缩可在 Caddy 等反向代理层开启 |
 | 请求体上限 | JSON / 表单 10 MB；大文件请使用分片上传接口 |
 
 ## 鉴权方式
@@ -144,7 +144,6 @@ HTTP 状态码与 `code` 的常见组合：
 | `X-Tem-ID` | 推送 / SSH / 多端同步相关接口必填 | 客户端设备 ID，字母、数字、下划线，≤50 字符 |
 | `Content-Type` | POST JSON 必填 | `application/json`；上传用 `multipart/form-data` |
 | `X-Debug` | 否 | 仅 `/api/echo`：值为 `true` 时附带原始请求体 |
-| `X-No-Compression` | 否 | 值为任意非空时跳过响应压缩 |
 
 > `X-Source-Service` 为服务内部标记，普通客户端携带会被直接拒绝（403）。
 
@@ -2075,7 +2074,7 @@ null
 **全局约定**
 
 - 除 `/api/f` 成功响应外，所有接口统一返回 `{ code, codeText, data }`：`code=1` 成功、`0` 失败、`2` 未登录（HTTP 401）、`3` 处理中或无新数据（HTTP 200）。下文只写 `data`。
-- 鉴权使用 Cookie `token`（加密 JWT）。`/api/file` 中 `get-share`、`read-dir`、`read-file` 注册在登录中间件之前，属于公开接口（`read-dir`/`read-file` 需登录态或有效分享 token），其余接口一律需要登录。
+- 鉴权使用 Cookie `token`（加密 JWT）。`/api/file` 中 `get-share`、`read-dir`、`read-file` 注册在登录中间件之前，属于公开接口（`read-dir`/`read-file` 需登录态或有效分享 token）；`read-dir-all` 注册在登录中间件之后，和其余接口一样一律需要登录。
 - 路径参数 `path` 均为**相对当前用户根目录**的 Unix 风格路径，以 `/` 开头（如 `/docs/a.txt`）。管理员 `root` 的根目录是 `server/app_data`，普通用户是 `server/app_data/appFiles/userFiles/<account>`。
 - 所有涉及真实文件系统的操作都会经过 `isPathSafe(base, target, allowEqual)`：对目标路径逐级向上做 `realpath`，解析结果必须位于用户根目录内，用于阻断 `../` 穿越与符号链接逃逸。越界返回 403。
 - 保留目录：`.h_trash`（回收站）、`.h_config`（用户配置，禁止移动/删除/重命名，解压时非管理员忽略链接）、`.h_history`（文本编辑历史版本）。
@@ -2217,6 +2216,66 @@ null
 - 目录列表按 `account + 目录 + word` 缓存 10 分钟，命中缓存时不续期；`update=1` 可强制重读。
 - 路径越界不报错，返回空的 `data`；`subDir=1` 且带 `word` 时递归遍历子目录并按关键词过滤。
 - 分享 token 模式下 `path` 相对分享目标的父目录，且不会写访问历史。
+
+## POST /api/file/read-dir-all
+
+一次性读取目录下的全部文件，不分页、不创建异步任务，由前端自行排序和分页。
+
+**鉴权**：需要登录（注册在文件路由的登录中间件之后，不支持分享 token）
+
+**Body**
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| path | string | 是 | 目录路径，1~2000 字符 |
+| hidden | number | 否 | `1` 过滤以 `.` 开头的隐藏项，默认 `0` |
+
+**响应 data**
+
+```json
+{
+  "list": [
+    {
+      "path": "/",
+      "type": "dir",
+      "name": "docs",
+      "time": 1763000000000,
+      "size": 0,
+      "mode": "drwxr-xr-x 755",
+      "uid": 1000,
+      "gid": 1000
+    },
+    {
+      "path": "/docs",
+      "type": "file",
+      "name": "a.txt",
+      "time": 1763000000000,
+      "size": 12,
+      "mode": "-rw-r--r-- 644",
+      "uid": 1000,
+      "gid": 1000,
+      "fileType": "file",
+      "fileTypeName": "文件"
+    }
+  ]
+}
+```
+
+`list` 元素字段与 `read-dir` 的 `data` 元素一致，但有下面几点区别：
+
+- 不返回 `favorite`
+- 目录 `size` 固定为 `0`，不会读取目录大小缓存
+- 非管理员不返回 `mode` / `uid` / `gid`
+
+**说明**
+
+- 不会返回 `{ "key": "..." }`，目录较大时请求会等待读取完成
+- 不使用目录缓存，不写 `cd-history`，不生成任务 key
+- 路径越界或目标不是目录时返回空数组：
+  ```json
+  { "list": [] }
+  ```
+- 前端可根据 `time` 等字段自行排序，并按固定条数切片分页
 
 ## POST /api/file/read-file
 
@@ -2981,7 +3040,7 @@ null
 - `token` 为 `temAccessFile` 类型 JWT 时，会以 token 内的 `account` 和 `p` 覆盖当前身份与路径，用于给未登录用户签发单文件临时访问权限（由 `GET /api/user/file-token` 签发，有效期 10 小时）。
 - 缩略图仅对 `pic`、`music`、`bg`、`upload`、`file`、`sharefile`、`sharemusic` 下的图片生效，原图 >20MB 直接 403 `获取缩略图失败(图片过大)`；缩略图为 webp，缓存于缩略图目录，同名并发请求加锁只生成一次。
 - 所有映射路径都经过 `isPathSafe` 校验（如 `file/` 需在用户根目录内、`logo/` 需在本人 logo 目录内），`id` 类参数要求字母数字且 ≤50 字符。
-- 反代/压缩中间件对 `/api/f` 关闭 gzip，避免大文件传输产生额外 CPU 与首字节延迟。
+- 服务端不启用 HTTP 压缩；如反向代理开启 gzip，建议对 `/api/f` 关闭，避免大文件传输产生额外 CPU 与首字节延迟。
 
 # 异步任务 /api/task
 
@@ -6458,6 +6517,7 @@ null
 | GET | `/api/root/sys-status` | 获取服务器实时资源占用 |
 | POST | `/api/file/get-share` | 校验分享链接并换取分享访问 token。打开他人分享的文件/文件夹时调用 |
 | POST | `/api/file/read-dir` | 读取目录列表（支持搜索、排序、分页、按分享 token 浏览） |
+| POST | `/api/file/read-dir-all` | 一次性读取目录全部文件（需登录，不分页、不转任务） |
 | POST | `/api/file/read-file` | 读取文本文件内容（用于在线编辑） |
 | POST | `/api/file/history-state` | 开启/关闭文本文件保存历史版本 |
 | GET | `/api/file/history-state` | 查询是否开启文件历史版本 |

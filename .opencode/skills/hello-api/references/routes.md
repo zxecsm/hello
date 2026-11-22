@@ -209,6 +209,7 @@
 | --- | --- | --- |
 | `POST` | `/api/file/get-share` | 分享文件 |
 | `POST` | `/api/file/read-dir` |  |
+| `POST` | `/api/file/read-dir-all` | 读取目录全部文件（需登录，不分页、不转任务） |
 | `POST` | `/api/file/read-file` | 读取文件 |
 | `POST` | `/api/file/history-state` | 文件编辑历史记录 |
 | `GET` | `/api/file/history-state` |  |

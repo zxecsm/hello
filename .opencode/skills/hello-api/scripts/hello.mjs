@@ -125,6 +125,7 @@ const opts = {
   force: 0,
   sort: 'time',
   sub: 0,
+  hidden: 0,
   collect: 0,
   auto: false,
 };
@@ -195,6 +196,9 @@ for (let i = 0; i < argv.length; i++) {
       break;
     case 'path':
       opts.path = String(take());
+      break;
+    case 'hidden':
+      opts.hidden = Number(take()) ? 1 : 0;
       break;
     case 'name':
       opts.name = String(take());
@@ -947,6 +951,14 @@ const commands = {
         }),
       );
     },
+    async all() {
+      requireLogin();
+      printResult(
+        await request('POST', '/api/file/read-dir-all', {
+          body: { path: opts.path, hidden: opts.hidden },
+        }),
+      );
+    },
     async cat() {
       requireLogin();
       if (!opts.path || opts.path === '/') fail('用法：file cat --path /notes/a.md');
@@ -1249,6 +1261,7 @@ function help() {
 
 文件（路径相对当前用户根目录，以 / 开头）:
   file ls [--path /] [--word <词>] [--sort name|time|size|type] [--page 1] [--size 50]
+  file all [--path /] [--hidden]                 # 一次返回目录全部文件（不分页、不转任务）
   file cat --path /a.txt
   file write --path /a.txt [--text <内容> | --file <本地文件>]
   file mkdir --path /父目录 --name <目录名>
