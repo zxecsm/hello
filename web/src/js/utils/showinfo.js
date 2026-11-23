@@ -1,6 +1,7 @@
 import { reqPlayerSongInfo } from '../../api/player';
 import rMenu from '../plugins/rightMenu';
 import { formatBytes, formartSongTime, formatDate, formatNum } from './utils';
+import _path from './path';
 // 显示歌曲信息
 export function showSongInfo(e, sobj, token, loading = { start() {}, end() {} }) {
   loading.start();
@@ -142,13 +143,11 @@ export function showFileInfo(e, obj) {
       beforeText: '类型：',
     },
     {
-      text:
-        obj.path +
-        `${
-          obj.type === 'file' && obj.fileType === 'symlink'
-            ? ` => ${obj.linkTarget}(${obj.linkTargetTypeName})`
-            : ''
-        }`,
+      text: `${_path.normalizeNoSlash(obj.path || '/', obj.name || '')}${
+        obj.fileType === 'symlink' && obj.linkTarget
+          ? ` => ${obj.linkTarget}(${obj.linkTargetTypeName || '未知'})`
+          : ''
+      }`,
       beforeText: '路径：',
     },
   ];

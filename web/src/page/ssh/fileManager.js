@@ -6,6 +6,7 @@ import { UpProgress } from '../../js/plugins/UpProgress/index.js';
 import {
   ContentScroll,
   _myOpen,
+  _mySlide,
   concurrencyTasks,
   copyText,
   debounce,
@@ -21,6 +22,7 @@ import {
   percentToValue,
 } from '../../js/utils/utils.js';
 import _path from '../../js/utils/path.js';
+import { isKeyDown } from '../../js/utils/boxSelector.js';
 import _d from '../../js/common/config.js';
 import localData from '../../js/common/localData.js';
 import cacheFile from '../../js/utils/cacheFile.js';
@@ -46,7 +48,14 @@ const $modal = $('.fm_modal'),
   $crumb = $modal.find('.fm_crumb'),
   $list = $modal.find('.fm_list'),
   $listWrap = $modal.find('.fm_list_wrap'),
+  $panel = $modal.find('.fm_panel'),
   $status = $modal.find('.fm_status'),
+  $selectBar = $modal.find('.fm_select_bar'),
+  $selectAll = $selectBar.find('.fm_select_all'),
+  $selectCount = $selectBar.find('.fm_select_count'),
+  $deleteSelected = $selectBar.find('.fm_delete_selected'),
+  $cancelSelect = $selectBar.find('.fm_cancel_select'),
+  $checkBtn = $modal.find('.fm_tool.check'),
   $editorBox = $modal.find('.fm_editor'),
   $editorPath = $editorBox.find('.fm_editor_path'),
   $editorPathText = $editorBox.find('.fm_editor_path .scroll_text'),
@@ -67,6 +76,7 @@ let editor = null;
 let editingPath = '';
 let editingOrigin = '';
 let saving = false;
+let selecting = false;
 let fileFontSize = localData.get('fileFontSize') || 0.22;
 
 const pathScroll = new ContentScroll($status.find('.path .scroll_text')[0]);
@@ -208,6 +218,8 @@ function renderPage() {
 
 // 渲染文件列表
 function renderList() {
+  closeCheck();
+
   if (loading) {
     $list[0].replaceChildren(_tpl('<div class="fm_tip">{{text}}</div>', { text: '加载中...' }));
     return;
@@ -220,9 +232,10 @@ function renderList() {
 
   const html = _tpl(
     `
-    <div v-for="item in list" class="fm_item" :data-name="item.name" :data-type="item.type" data-cursor="pointer">
-      <div class="fm_item_logo iconfont {{getLogo(item)}} {{item.name.startsWith('.') ? 'is_hidden' : ''}}"></div>
-      <div class="fm_item_name">
+    <div v-for="item in list" class="fm_item" :data-name="item.name" :data-type="item.type">
+      <div class="check_state" check="n" data-cursor="pointer"></div>
+      <div class="fm_item_logo iconfont {{getLogo(item)}} {{item.name.startsWith('.') ? 'is_hidden' : ''}}" data-cursor="pointer"></div>
+      <div class="fm_item_name" data-cursor="pointer">
         <span>{{getName(item).a}}</span><span class="fm_suffix">{{getName(item).b}}</span>
         <span v-if="item.fileType === 'symlink' && item.linkTarget" class="fm_link_target">=> {{item.linkTarget}}({{item.linkTargetTypeName}})</span>
       </div>
@@ -451,13 +464,15 @@ function getItemInfoText(item) {
   if (item.fileType === 'symlink') type += '（符号链接）';
   else if (item.hardLink) type += '（硬链接）';
 
+  // 路径显示条目自身完整路径，符号链接用箭头指向目标与类型
+  const fullPath = normalizePath(curPath, item.name);
   const link =
     item.fileType === 'symlink' && item.linkTarget
-      ? `\n目标：${item.linkTarget}（${item.linkTargetTypeName || '未知'}）`
+      ? ` => ${item.linkTarget}(${item.linkTargetTypeName || '未知'})`
       : '';
 
-  return `名称：${item.name}\n类型：${type}\n路径：${curPath}${link}\n大小：${
-    item.type === 'dir' || item.fileType === 'symlink' ? '--' : formatBytes(item.size || 0)
+  return `名称：${item.name}\n类型：${type}\n路径：${fullPath}${link}\n大小：${
+    item.type === 'dir' || !item.size ? '--' : formatBytes(item.size)
   }\n更新时间：${time}`;
 }
 
@@ -631,11 +646,144 @@ function deleteItem(e, item) {
     async (type) => {
       if (type !== 'confirm') return;
       try {
-        const res = await reqSSHSftpDelete({ path });
+        const res = await reqSSHSftpDelete({ paths: [path] });
         if (res.code === 1) {
           loadDir(curPath, { keepPage: true, silent: true });
         }
       } catch {}
+    },
+  );
+}
+
+// 是否处于多选模式
+function isSelecting() {
+  return selecting;
+}
+
+// 获取已选中的行
+function getCheckItem() {
+  return $list.find('.fm_item').filter((_, el) => $(el).find('.check_state').attr('check') === 'y');
+}
+
+// 获取已选中的数据
+function getCheckDatas() {
+  const arr = [];
+  getCheckItem().each((_, el) => {
+    const item = getItem(el.dataset.name);
+    if (item) arr.push(item);
+  });
+  return arr;
+}
+
+// 更新底部多选栏
+function renderSelectBar() {
+  const len = getCheckDatas().length;
+  const all = fileList.length > 0 && len === fileList.length;
+  $selectAll
+    .attr('data-check', all ? 'y' : 'n')
+    .toggleClass('icon-xuanzeyixuanze', all)
+    .toggleClass('icon-xuanzeweixuanze', !all);
+  $selectCount.text(`已选 ${len} 项`);
+  $deleteSelected.toggle(len > 0);
+}
+
+// 开启多选
+function startCheck() {
+  selecting = true;
+  $checkBtn.addClass('active');
+  $panel.addClass('fm_selecting');
+  $list
+    .find('.check_state')
+    .css({ display: 'block', 'background-color': 'transparent' })
+    .attr('check', 'n');
+  renderSelectBar();
+  $selectBar.addClass('open');
+}
+
+// 关闭多选
+function closeCheck() {
+  if (!selecting) return;
+  selecting = false;
+  $checkBtn.removeClass('active');
+  $panel.removeClass('fm_selecting');
+  $list
+    .find('.check_state')
+    .css({ display: 'none', 'background-color': 'transparent' })
+    .attr('check', 'n');
+  $selectBar.removeClass('open');
+}
+
+// 选中/取消选中一项
+function hdCheckItem(el, updateSelect = true) {
+  const $el = $(el);
+  if ($el.attr('check') === 'y') {
+    $el.css('background-color', 'transparent').attr('check', 'n');
+  } else {
+    $el.css('background-color', _d.checkColor).attr('check', 'y');
+  }
+  if (updateSelect) renderSelectBar();
+}
+
+// Shift 连续选中
+function shiftCheck(el) {
+  const list = [...$list[0].querySelectorAll('.fm_item .check_state')];
+  const sidx = list.findIndex((item) => item === el);
+  const cidx = list.findIndex((item) => item.getAttribute('check') === 'y');
+  if (sidx === cidx) hdCheckItem(el);
+  list.forEach((item, idx) => {
+    if (
+      ((cidx > sidx && idx >= sidx && idx <= cidx) ||
+        (cidx < sidx && idx >= cidx && idx <= sidx)) &&
+      item.getAttribute('check') === 'n'
+    ) {
+      hdCheckItem(item, false);
+    }
+  });
+  renderSelectBar();
+}
+
+// 全选/取消全选当前页
+function switchCheckAll() {
+  const $items = $list.find('.fm_item');
+  if ($selectAll.attr('data-check') === 'y') {
+    $items.find('.check_state').css('background-color', 'transparent').attr('check', 'n');
+  } else {
+    $items.find('.check_state').css('background-color', _d.checkColor).attr('check', 'y');
+  }
+  renderSelectBar();
+}
+
+// 批量删除
+function deleteSelected(e) {
+  const items = getCheckDatas();
+  if (items.length === 0) return;
+
+  let text = `确定删除选中的 ${items.length} 项？`;
+  if (items.length === 1) {
+    const item = items[0];
+    text =
+      item.type === 'dir'
+        ? `确定删除目录「${item.name}」及其全部内容？`
+        : `确定删除文件「${item.name}」？`;
+  }
+
+  rMenu.pop(
+    {
+      e,
+      text,
+      confirm: { type: 'danger', text: '删除' },
+    },
+    async (type) => {
+      if (type !== 'confirm') return;
+
+      const paths = items.map((item) => normalizePath(curPath, item.name));
+
+      try {
+        await reqSSHSftpDelete({ paths });
+      } catch {}
+
+      closeCheck();
+      loadDir(curPath, { keepPage: true, silent: true });
     },
   );
 }
@@ -691,6 +839,7 @@ function closeManager(e) {
       if (type !== 'confirm') return;
       hideEditor();
       pathScroll.close();
+      closeCheck();
       $modal.removeClass('open');
       $app.removeClass('fm_open');
     });
@@ -699,6 +848,7 @@ function closeManager(e) {
 
   hideEditor();
   pathScroll.close();
+  closeCheck();
   $modal.removeClass('open');
   $app.removeClass('fm_open');
 }
@@ -720,6 +870,15 @@ $back.on('click', () => {
   loadDir(_path.dirname(curPath));
 });
 
+// 手势右划返回上级目录（与 File 页文件管理器一致）
+_mySlide({
+  el: $listWrap[0],
+  right() {
+    if (curPath === '/') return;
+    loadDir(_path.dirname(curPath));
+  },
+});
+
 $crumb.on('click', '.fm_crumb_item', function () {
   const path = this.dataset.path;
   if (!path) return;
@@ -729,6 +888,19 @@ $crumb.on('click', '.fm_crumb_item', function () {
 $status.find('.path').on('click', () => {
   copyText(curPath);
 });
+
+$checkBtn.on('click', () => {
+  if (isSelecting()) {
+    closeCheck();
+  } else {
+    startCheck();
+  }
+});
+$selectAll.on('click', () => switchCheckAll());
+$deleteSelected.on('click', function (e) {
+  deleteSelected(e);
+});
+$cancelSelect.on('click', () => closeCheck());
 
 $modal.find('.fm_tool.upload').on('click', () => uploadFiles());
 $modal.find('.fm_tool.add').on('click', function (e) {
@@ -751,23 +923,23 @@ $listWrap[0].addEventListener('drop', (e) => {
   uploadFiles(files);
 });
 
-const $panel = $modal.find('.fm_panel');
-
 function isBlankTarget(target) {
   return !$(target).closest(
-    '.fm_item, .fm_editor, .fm_tool, .fm_close, .fm_back, .fm_crumb_item, .fm_pagination, button',
+    '.fm_item, .fm_editor, .fm_tool, .fm_close, .fm_back, .fm_crumb_item, .fm_pagination, .fm_select_bar, button',
   ).length;
 }
 
 // 空白区域右键新建
 $panel.on('contextmenu', function (e) {
   e.preventDefault();
+  if (isSelecting()) return;
   if (!isBlankTarget(e.target)) return;
   showCreateMenu(e);
 });
 
 // 空白区域长按新建
 longPress($panel[0], function (e) {
+  if (isSelecting()) return;
   if (!isBlankTarget(e.target)) return;
 
   const touch = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]);
@@ -777,7 +949,10 @@ longPress($panel[0], function (e) {
 });
 
 $list.on('click', '.fm_item', function (e) {
-  if ($(e.target).closest('.fm_action, .fm_item_size, .fm_item_date').length) return;
+  if (isSelecting()) return;
+
+  // 只有点击图标或名称才打开，避免点大小、日期时点到行内空白处误触
+  if (!$(e.target).closest('.fm_item_logo, .fm_item_name').length) return;
 
   const item = getItem(this.dataset.name);
   if (!item) return;
@@ -805,8 +980,18 @@ $list
     toolTip.hide();
   });
 
+$list.on('click', '.check_state', function (e) {
+  e.stopPropagation();
+  if ((isKeyDown('control') || isKeyDown('shift')) && getCheckDatas().length > 0) {
+    shiftCheck(this);
+  } else {
+    hdCheckItem(this);
+  }
+});
+
 $list.on('click', '.fm_action', function (e) {
   e.stopPropagation();
+  if (isSelecting()) return;
 
   const item = getItem($(this).closest('.fm_item').attr('data-name'));
   if (!item) return;
@@ -844,4 +1029,24 @@ $(document).on('keydown', (e) => {
   if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 's') return;
   e.preventDefault();
   saveFile();
+});
+
+// 多选快捷键
+$(document).on('keydown', (e) => {
+  if (!$modal.hasClass('open')) return;
+  if ($editorBox.hasClass('open')) return;
+  const key = e.key.toLowerCase();
+  const ctrl = e.ctrlKey || e.metaKey;
+  const isFocus = $('input').is(':focus') || $('textarea').is(':focus');
+  if (isFocus) return;
+
+  if (ctrl && key === 'a') {
+    e.preventDefault();
+    if (!isSelecting()) startCheck();
+    switchCheckAll();
+  } else if (key === 'escape' && isSelecting()) {
+    closeCheck();
+  } else if (key === 'delete' && isSelecting()) {
+    deleteSelected(null);
+  }
 });

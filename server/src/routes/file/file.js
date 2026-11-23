@@ -85,7 +85,8 @@ export function sortFileList(list, type, isDesc) {
 //   /app/app_data/a/b          （挂载根 = 宿主一级目录）
 //   /app/app_data/b            （挂载根 = /volume1/a）
 // 逐个校验，命中第一个就返回；全部不存在则返回 null（前端按未知处理）。
-async function mapLinkTarget(base, target) {
+// 目标本身仍是软链接（例如指向另一个宿主绝对路径）时继续递归映射。
+async function mapLinkTarget(base, target, seen = new Set()) {
   if (!base || !target) return null;
 
   const t = _path.toUnixPath(target);
@@ -105,21 +106,49 @@ async function mapLinkTarget(base, target) {
     // 拼接结果必须仍在根目录内
     if (!_path.isPathWithin(base, p, true)) continue;
 
-    const realp = await _f.realpath(p);
-    if (!realp) continue;
+    const info = await getMappedLinkInfo(p, base, baseReal, seen);
+    if (info) return info;
+  }
 
+  return null;
+}
+
+// 解析容器内的候选路径：能直接解析时返回真实路径与类型；
+// 目标仍是无法解析的软链接时，读取链接内容继续映射（防止循环引用）。
+async function getMappedLinkInfo(p, base, baseReal, seen) {
+  if (seen.has(p)) return null;
+  seen.add(p);
+
+  const realp = await _f.realpath(p);
+
+  if (realp) {
     // 解析后的真实路径也必须仍在根目录内
-    if (!_path.isPathWithin(baseReal, realp, true)) continue;
+    if (!_path.isPathWithin(baseReal, realp, true)) return null;
 
     const type = await _f.getType(realp);
-    if (!type) continue;
+    if (!type) return null;
 
     const size = type === 'file' ? (await _f.stat(realp))?.size || 0 : 0;
 
     return { path: realp, type, size };
   }
 
-  return null;
+  // 链接目标无法在容器内直接解析（常见于宿主绝对路径），读取链接内容继续映射
+  const stat = await _f.lstat(p);
+  if (!stat?.isSymbolicLink()) return null;
+
+  const raw = await _f.fsp.readlink(p).catch(() => '');
+  if (!raw) return null;
+
+  const rawPath = _path.toUnixPath(raw);
+
+  // 相对目标相对链接所在目录解析；绝对目标继续按挂载根映射
+  if (rawPath.startsWith('/')) return mapLinkTarget(base, rawPath, seen);
+
+  const next = _path.normalizeNoSlash(_path.dirname(p), rawPath);
+  if (!_path.isPathWithin(base, next, true)) return null;
+
+  return getMappedLinkInfo(next, base, baseReal, seen);
 }
 
 // 读取目录文件
@@ -163,19 +192,42 @@ export async function readMenu(path, base) {
               // 链接显示目标文件的真实大小，目录/未知为 0
               info.size = targetStat && targetStat.isFile() ? targetStat.size : 0;
             } catch {
-              info.linkTarget = await _f.fsp.readlink(f);
+              const rawLink = await _f.fsp.readlink(f).catch(() => '');
+              const rawPath = _path.toUnixPath(rawLink);
 
-              // 宿主机绝对路径链接在容器内解析失败时，尝试映射到挂载根目录下
-              const mapped = await mapLinkTarget(base, info.linkTarget);
-              if (mapped) {
-                info.linkTarget = mapped.path;
-                info.linkTargetType = mapped.type;
-                info.linkTargetTypeName = _f.getFileTypeName(mapped.type);
-                info.size = mapped.size;
-                info.linkMapped = 1;
-              } else {
+              if (!rawPath) {
                 info.linkTargetType = 'unknown';
                 info.linkTargetTypeName = '未知';
+              } else {
+                const isAbs = rawPath.startsWith('/');
+
+                // 相对目标先补全成容器内绝对路径，便于继续解析
+                const absPath = isAbs ? rawPath : _path.normalizeNoSlash(_path.dirname(f), rawPath);
+
+                info.linkTarget = absPath;
+
+                // 先按容器内路径解析（可能仍是链式软链接），失败再按宿主绝对路径映射
+                const baseReal = (await _f.realpath(base)) || _path.normalize(base);
+                let mapped = null;
+
+                if (_path.isPathWithin(base, absPath, true)) {
+                  mapped = await getMappedLinkInfo(absPath, base, baseReal, new Set());
+                }
+
+                if (!mapped && isAbs) {
+                  mapped = await mapLinkTarget(base, absPath);
+                }
+
+                if (mapped) {
+                  info.linkTarget = mapped.path;
+                  info.linkTargetType = mapped.type;
+                  info.linkTargetTypeName = _f.getFileTypeName(mapped.type);
+                  info.size = mapped.size;
+                  info.linkMapped = 1;
+                } else {
+                  info.linkTargetType = 'unknown';
+                  info.linkTargetTypeName = '未知';
+                }
               }
             }
           } else {

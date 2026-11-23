@@ -229,8 +229,9 @@ export async function readSftpDir(sftp, dirPath) {
       path: dirPath,
       name,
       longname,
-      // 符号链接的 size 是链接内容长度，先置 0，解析目标后再取目标文件的真实大小
-      size: isSymlink ? 0 : attrs?.size || 0,
+      // 目录的 size 是文件系统元数据（常见 4KB），不是目录内容大小，统一置 0；
+      // 符号链接的 size 是链接内容长度，也先置 0，解析目标后再取目标文件的真实大小
+      size: isDir || isSymlink ? 0 : attrs?.size || 0,
       mtime: attrs?.mtime || 0,
     };
 
@@ -389,4 +390,9 @@ export async function removeSftpPath(sftp, path) {
       err ? reject(err) : resolve();
     });
   });
+}
+
+// 批量删除远端文件或目录
+export async function removeSftpPaths(sftp, paths, concurrency = 5) {
+  await concurrencyTasks(paths, concurrency, (path) => removeSftpPath(sftp, path));
 }

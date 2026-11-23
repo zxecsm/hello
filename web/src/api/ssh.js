@@ -120,7 +120,7 @@ export function reqSSHSftpRead(data) {
 export function reqSSHSftpWrite(data) {
   return _postAjax('/ssh/sftp-write', data);
 }
-// sftp删除文件或目录
+// sftp批量删除文件或目录
 export function reqSSHSftpDelete(data) {
   return _postAjax('/ssh/sftp-delete', data);
 }

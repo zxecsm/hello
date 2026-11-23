@@ -7,7 +7,7 @@ import {
   createTerminal,
   getSSH,
   readSftpDir,
-  removeSftpPath,
+  removeSftpPaths,
   sftpExists,
   sftpMkdir,
   sftpReadFile,
@@ -968,13 +968,15 @@ route.post(
   }),
 );
 
-// 删除sftp文件或目录
+// 删除sftp文件或目录（支持批量）
 route.post(
   '/sftp-delete',
   validate(
     'body',
     V.object({
-      path: V.string().min(1).notEmpty().max(fieldLength.url),
+      paths: V.array(V.string().min(1).notEmpty().max(fieldLength.url))
+        .min(1)
+        .max(fieldLength.maxPagesize),
     }),
   ),
   asyncHandler(async (_, res) => {
@@ -988,12 +990,12 @@ route.post(
     const ssh = getSSH(temid);
     if (!ssh || !ssh.sftp) return resp.forbidden(res, '已断开SSH连接')();
 
-    const { path } = res.locals.ctx;
-    const p = _path.normalizeNoSlash('/', path);
+    const { paths } = res.locals.ctx;
+    const list = [...new Set(paths.map((path) => _path.normalizeNoSlash('/', path)))];
 
-    if (p === '/') return resp.forbidden(res, '不能删除根目录')();
+    if (list.includes('/')) return resp.forbidden(res, '不能删除根目录')();
 
-    await removeSftpPath(ssh.sftp, p);
+    await removeSftpPaths(ssh.sftp, list);
 
     resp.success(res, '删除成功')();
   }),

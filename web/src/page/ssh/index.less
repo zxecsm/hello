@@ -453,6 +453,10 @@ body {
     word-break: break-all;
     overflow-wrap: anywhere;
 
+    &:hover {
+      color: var(--text-hover-color);
+    }
+
     .fm_suffix {
       color: green;
     }
@@ -512,6 +516,65 @@ body {
 
   .fm_pagination {
     padding: 1rem 0;
+  }
+
+  .check_state {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    border-radius: 0.5rem;
+
+    &[check='y']:hover {
+      cursor: var(--cursor-move);
+    }
+  }
+
+  .fm_select_bar {
+    display: none;
+    flex: none;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.5rem 0.8rem;
+    border-top: 0.1rem solid var(--color9);
+
+    &.open {
+      display: flex;
+    }
+
+    .fm_select_all {
+      flex: none;
+      width: 3rem;
+      height: 3rem;
+      line-height: 3rem;
+      text-align: center;
+      font-size: 2rem;
+      color: var(--icon-color);
+
+      &:hover {
+        color: var(--text-hover-color);
+      }
+    }
+
+    .fm_select_count {
+      flex: auto;
+      font-size: 0.9em;
+      color: var(--color5);
+    }
+
+    .btn {
+      flex: none;
+      margin: 0;
+      padding: 0.7rem 1.2rem;
+      font-size: 0.9em;
+    }
+  }
+
+  .fm_panel.fm_selecting .fm_pagination {
+    margin-bottom: 4rem;
   }
 
   .fm_status {

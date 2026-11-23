@@ -638,8 +638,10 @@ $contentWrap
       else if (fileType !== 'file') typeText += `（${fileTypeName}）`;
     }
 
-    const str = `名称：${name}\n类型：${typeText}\n路径：${path}${
-      type === 'file' && fileType === 'symlink' ? ` => ${linkTarget}(${linkTargetTypeName})` : ''
+    const str = `名称：${name}\n类型：${typeText}\n路径：${_path.normalizeNoSlash(path, name)}${
+      fileType === 'symlink' && linkTarget
+        ? ` => ${linkTarget}(${linkTargetTypeName || '未知'})`
+        : ''
     }${mode ? `\n权限：${mode}\n用户ID：${uid}\n用户组ID：${gid}` : ''}${
       type === 'dir' && favorite !== undefined
         ? `\n收藏状态：${favorite ? '已收藏' : '未收藏'}`
