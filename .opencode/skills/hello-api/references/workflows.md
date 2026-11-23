@@ -695,6 +695,51 @@ node .opencode\skills\hello-api\scripts\hello.mjs pub icon --link example.com --
 
 ---
 
+## 12. SSH `/api/ssh`
+
+SSH 模块需要先连接才能使用 SFTP 功能。
+
+### 12.1 连接 SSH
+
+1. 先列出 SSH 配置：`ssh list`（或 `api GET /api/ssh/search`）
+2. 让用户选择要连接的配置
+3. 调用 `api POST /api/ssh/connect --set id=<配置id> --set defaultPath=<默认路径>`
+4. 连接结果通过长轮询推送，CLI 会自动处理
+
+### 12.2 SFTP 文件操作
+
+**列目录：**
+```powershell
+node .opencode\skills\hello-api\scripts\hello.mjs api GET /api/ssh/sftp-list --query path=/远端/路径
+```
+
+**上传文件：**
+```powershell
+# 需要 multipart，CLI 不直接支持，改用浏览器或 curl
+curl -X POST "http://localhost:55555/api/ssh/sftp-up?path=/远端/目录&name=文件名" \
+  -H "Cookie: token=..." \
+  -H "x-tem-id: <会话id>" \
+  --form "file=@本地文件"
+```
+
+**下载文件：**
+```powershell
+node .opencode\skills\hello-api\scripts\hello.mjs api GET /api/ssh/sftp-down --query path=/远端/文件 --query id=<会话id> --out 保存路径
+```
+
+**重命名/删除：**
+```powershell
+node .opencode\skills\hello-api\scripts\hello.mjs api POST /api/ssh/sftp-rename --set path=/远端/旧路径 --set name=新名称
+node .opencode\skills\hello-api\scripts\hello.mjs api POST /api/ssh/sftp-delete --set paths='[""/远端/文件1"," /远端/文件2"]'
+```
+
+注意：
+- SFTP 接口需要 `x-tem-id` 请求头（连接时返回的会话 ID）
+- `sftp-list` 返回的 `mtime` 是毫秒时间戳
+- 批量删除使用 `paths` 数组，单次最多 200 项
+
+---
+
 ## 11. 通用 `api` 调用
 
 没有封装成子命令的接口：
@@ -727,7 +772,7 @@ node .opencode\skills\hello-api\scripts\hello.mjs task info --key "<key>"
 
 ---
 
-## 12. 自然语言映射
+## 13. 自然语言映射
 
 | 用户说 | 先做什么 | 再做什么 |
 | --- | --- | --- |
@@ -741,6 +786,8 @@ node .opencode\skills\hello-api\scripts\hello.mjs task info --key "<key>"
 | 建个倒计时 | 问标题/日期 | 算日期 → 预览 → `count add` |
 | 看看文件 / 写个文件 | `file ls --path` | 选路径 → 读/预览 → `file cat/write` |
 | 删文件 / 清空回收站 | `file ls` / `trash list` | 确认 → `file rm --yes` / `trash rm --yes` |
+| 看 SSH 远端文件 | `ssh list` + `ssh sftp-list --path` | 选 SSH 配置 → 选目录 → 列文件 |
+| SSH 上传/下载文件 | `ssh sftp-list --path` | 选文件 → 确认 → `ssh sftp-up` / `ssh sftp-down` |
 | 清空分享 | `share list` | 二次确认 → `delete-share ids=[]` |
 | 同步剪切板 | `clipboard get` | 展示旧内容 → 确认覆盖 → `clipboard send` |
 | 换个壁纸 | `bg list --type` | 选壁纸 → 确认 → `bg set` |
@@ -750,13 +797,13 @@ node .opencode\skills\hello-api\scripts\hello.mjs task info --key "<key>"
 
 ---
 
-## 13. 异常处理
+## 14. 异常处理
 
 | 现象 | 处理 |
 | --- | --- |
 | `code: 2` 未登录/过期 | 让用户重新生成 token 或更新 `.env` 的 `HELLO_COOKIE`；不要改用 `login` 硬试 |
 | `code: 0` + `data: 1` | 参数校验失败，按 `codeText` 修正字段，不要原样重试 |
-| 403「已达上限」 | 书签单组 300、笔记 100 KB、聊天单次 200 条等；换分组/拆分/清理后再试 |
+| 403「已达上限」 | 书签单组 300、笔记 100 KB、聊天单次 200 条、SFTP 编辑文件 2 MB 等；换分组/拆分/清理后再试 |
 | 403「无权操作」 | 不是自己的数据，或用了普通账号访问管理员接口 |
 | 404「不存在」 | ID 过期或选错；重新列列表确认 |
 | 返回 `{ key }` | 异步任务，轮询 `task info`，不要当失败 |

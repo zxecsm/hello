@@ -6151,14 +6151,14 @@ null
 | --- | --- | --- | --- |
 | path | string | 是 | 远端目录，1–2000，不能为空（会规范化为绝对路径） |
 
-说明：会话不存在或 SFTP 未就绪时返回 403「已断开SSH连接」；读取失败按空数组返回。默认按 `mtime` 降序。
+说明：会话不存在或 SFTP 未就绪时返回 403「已断开SSH连接」；读取失败按空数组返回。`mtime` 为毫秒时间戳（SFTP 协议仅提供秒级，服务端统一转换为毫秒以与本地文件时间字段保持一致）。默认按 `mtime` 降序。
 
 **响应 data**
 
 ```json
 [
-  { "type": "dir", "path": "/root", "name": "logs", "longname": "drwxr-xr-x ...", "mtime": 1730000000 },
-  { "type": "file", "path": "/root", "name": "a.txt", "longname": "-rw-r--r-- ...", "mtime": 1729999999 }
+  { "type": "dir", "path": "/root", "name": "logs", "longname": "drwxr-xr-x ...", "mtime": 1730000000000 },
+  { "type": "file", "path": "/root", "name": "a.txt", "longname": "-rw-r--r-- ...", "mtime": 1729999999000 }
 ]
 ```
 

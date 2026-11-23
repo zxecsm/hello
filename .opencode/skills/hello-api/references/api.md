@@ -299,6 +299,45 @@ node .opencode\skills\hello-api\scripts\hello.mjs bmk add --link https://example
 
 ---
 
+## 13. SSH `/api/ssh`
+
+SSH 模块全部接口都需要登录，且大部分接口需要先通过 `/api/ssh/connect` 建立会话（返回 `x-tem-id`）。
+
+| 方法 | 路径 | 参数 | 说明 |
+| --- | --- | --- | --- |
+| POST | `/api/ssh/search` | `word?`, `pageNo`, `pageSize`, `category: string[]` | 搜索/分页列出当前账号的 SSH 配置 |
+| GET | `/api/ssh/category` | - | 获取 SSH 分类列表 |
+| POST | `/api/ssh/delete` | `ids: string[]` | 软删除 SSH 配置 |
+| POST | `/api/ssh/add` | `title`, `host`, `port`, `username`, `password?`, `private_key?`, `passphrase?`, `auth_type` | 新增 SSH 配置；`auth_type`: `password` / `key` |
+| POST | `/api/ssh/edit` | `id`, `title`, `host`, `port`, `username`, `password?`, `private_key?`, `passphrase?`, `auth_type` | 编辑 SSH 配置；`id=local` 时用于维护「本机」配置 |
+| GET | `/api/ssh/info` | `id` | 获取单条 SSH 配置详情（含凭据，用于编辑回填） |
+| POST | `/api/ssh/top` | `id`, `top` | 置顶权重 |
+| POST | `/api/ssh/set-category` | `id`, `category: string[]` | 设置分类 |
+| POST | `/api/ssh/edit-category` | `id`, `title` | 重命名分类 |
+| POST | `/api/ssh/add-category` | `title` | 新增分类 |
+| POST | `/api/ssh/delete-category` | `id` | 删除分类 |
+| POST | `/api/ssh/connect` | `id`, `defaultPath` | 发起 SSH 连接（异步建立终端与 SFTP）；需要 `x-tem-id` 非空 |
+| GET | `/api/ssh/quick-list` | - | 获取快捷命令（按分组） |
+| POST | `/api/ssh/add-quick` | `groupId`, `title`, `command` | 添加快捷命令 |
+| POST | `/api/ssh/edit-quick` | `id`, `title`, `command` | 编辑快捷命令 |
+| POST | `/api/ssh/delete-quick` | `ids: string[]` | 删除快捷命令 |
+| POST | `/api/ssh/move-quick` | `fromId`, `toId` | 调整同组内快捷命令顺序 |
+| POST | `/api/ssh/move-to-group` | `ids: string[]`, `groupId` | 移动快捷命令到分组 |
+| POST | `/api/ssh/add-quick-group` | `title` | 新增快捷命令分组 |
+| POST | `/api/ssh/edit-quick-group` | `id`, `title` | 重命名快捷命令分组 |
+| POST | `/api/ssh/move-quick-group` | `fromId`, `toId` | 调整分组顺序 |
+| POST | `/api/ssh/delete-quick-group` | `id` | 删除快捷命令分组 |
+| GET | `/api/ssh/sftp-list` | `path` | 列出远端目录（SFTP）；`mtime` 为毫秒时间戳 |
+| POST | `/api/ssh/sftp-up` | Query: `path`, `name`；Body: `multipart/form-data` | 上传文件到远端目录 |
+| GET | `/api/ssh/sftp-down` | `path`, `id` | 从远端下载文件（流式响应，非 JSON 信封） |
+| GET | `/api/ssh/history-commands` | - | 读取历史命令 |
+| POST | `/api/ssh/history-commands` | `command` | 保存历史命令 |
+
+`/api/ssh/connect` 返回 `{title, username, host, port}`，连接结果通过长轮询 `POST /api/user/real-time`（body 带 `"page":"ssh"`）推送。
+`/api/ssh/sftp-list` 返回数组，每项包含：`type`（`dir`/`file`）、`path`、`name`、`longname`、`size`、`mtime`（毫秒）、`fileType`（`file`/`symlink`）、`linkTarget`、`linkTargetType` 等。
+
+---
+
 ## 12. 数据模型速查（SQLite）
 
 数据库文件路径由 `server/utils/sqlite.js` 的 `appConfig.databaseDir('hello.db')` 决定，通常是
@@ -318,5 +357,7 @@ node .opencode\skills\hello-api\scripts\hello.mjs bmk add --link https://example
 | `share` | `id`, `account`, `type`, `title`, `pass`, `exp_time`, `data` | 分享记录 |
 | `chat` | `id`, `_from`, `_to`, `flag`, `type`, `content` | 聊天消息 |
 | `ssh` | `id`, `account`, `host`, `port`, `username`, `password`, `private_key`, `auth_type` | SSH 配置 |
+| `ssh_quick` | `id`, `account`, `group_id`, `title`, `command` | SSH 快捷命令 |
+| `ssh_quick_group` | `id`, `account`, `title`, `serial` | SSH 快捷命令分组 |
 
-时间字段都是毫秒时间戳（`create_at`、`update_at`、`exp_time`）。
+时间字段都是毫秒时间戳（`create_at`、`update_at`、`exp_time`）。SFTP 文件列表中的 `mtime` 也是毫秒时间戳（服务端从 SFTP 协议的秒级时间转换而来）。

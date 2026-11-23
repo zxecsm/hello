@@ -113,18 +113,19 @@ question({
 
 | 需求 | 先查 | 常用命令 | 详细流程 |
 | --- | --- | --- | --- |
-| 书签增删改查/分组/分享 | `bmk groups`、`bmk list` | `bmk add/rm`、`meta`、`api /api/bmk/*` | [书签](./references/workflows.md#1-书签-apibmk) |
-| 笔记增删改查/分类/公开 | `note list`、`note categories` | `note add/get/set/rm`、`api /api/note/*` | [笔记](./references/workflows.md#2-笔记-apinote) |
-| 待办增删改/完成 | `todo list` | `todo add/done/undo/rm` | [待办](./references/workflows.md#3-待办-apitodo) |
-| 倒计时增删改/启停 | `count list` | `count add/rm`、`api /api/count/*` | [倒计时](./references/workflows.md#4-倒计时-apicount) |
+| 书签增删改查/分组/分享 | `bmk groups`、`bmk list` | `bmk add/rm`、`meta`、`api /api/bmk/*` | [书签](./references/workflows.md#2-书签-apibmk) |
+| 笔记增删改查/分类/公开 | `note list`、`note categories` | `note add/get/set/rm`、`api /api/note/*` | [笔记](./references/workflows.md#3-笔记-apinote) |
+| 待办增删改/完成 | `todo list` | `todo add/done/undo/rm` | [待办](./references/workflows.md#4-待办-apitodo) |
+| 倒计时增删改/启停 | `count list` | `count add/rm`、`api /api/count/*` | [倒计时](./references/workflows.md#5-倒计时-apicount) |
 | 文件浏览/读写/移动/删除/分享 | `file ls` | `file cat/write/mkdir/mv/rm`、`api /api/file/*` | [文件](./references/workflows.md#5-文件-apifile) |
-| 分享列表/删除/清空/停用/编辑 | `share list` | `share rm`、`api /api/user/*share*` | [分享](./references/workflows.md#6-分享-apiuser) |
+| SSH 文件管理 | `ssh sftp-list --path <目录>` | `ssh sftp-up/sftp-down`、`api /api/ssh/sftp-*` | [SSH](./references/workflows.md#13-ssh-apissh) |
+| 分享列表/删除/清空/停用/编辑 | `share list` | `share rm`、`api /api/user/*share*` | [分享](./references/workflows.md#7-分享-apiuser) |
 | 剪切板读写 | `clipboard get` | `clipboard send` | [剪切板](./references/workflows.md#7-剪切板) |
 | 壁纸/图床/音乐 | `bg list`、`music list` | `bg set/collect`、`music search/random` | [壁纸/音乐](./references/workflows.md#8-壁纸--图床--音乐) |
-| 聊天发消息/读记录/撤回/转发 | `chat users`、`read-msg` | `chat send`、`api /api/chat/*` | [聊天](./references/workflows.md#9-聊天-apichat) |
-| 回收站恢复/彻底删除 | `trash list` | `trash recover/rm` | [回收站](./references/workflows.md#10-回收站--管理员--公开接口) |
+| 聊天发消息/读记录/撤回/转发 | `chat users`、`read-msg` | `chat send`、`api /api/chat/*` | [聊天](./references/workflows.md#10-聊天-apichat) |
+| 回收站恢复/彻底删除 | `trash list` | `trash recover/rm` | [回收站](./references/workflows.md#11-回收站--管理员--公开接口) |
 | 管理员只读状态 | — | `admin users/status/logs` | 同上 |
-| 未封装接口 | — | `api <METHOD> <PATH>` | [通用 api](./references/workflows.md#11-通用-api-调用) |
+| 未封装接口 | — | `api <METHOD> <PATH>` | [通用 api](./references/workflows.md#12-通用-api-调用) |
 
 ---
 
@@ -401,6 +402,6 @@ Remove-Item $body -Force
 
 ## 8. 已知限制
 
-- 不封装 multipart 上传（`/api/file/up`、`/api/player/up`、`/api/bg/up`、`/api/pic/up`），需要分片合并协议；如需上传，改用浏览器或参考 [routes.md](./references/routes.md)。
+- 不封装 multipart 上传（`/api/file/up`、`/api/player/up`、`/api/bg/up`、`/api/pic/up`、`/api/ssh/sftp-up`），需要分片合并协议；如需上传，改用浏览器或参考 [routes.md](./references/routes.md)。
 - 不处理 SSH 终端与长轮询 `POST /api/user/real-time`（body 需带 `page` / `pages` / `temids`）。
 - 直接操作 SQLite 不在本技能范围；所有读写都走服务端 API，保证缓存、回收站、多端同步逻辑一致。

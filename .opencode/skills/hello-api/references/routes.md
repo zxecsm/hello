@@ -267,32 +267,32 @@
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| `POST` | `/api/ssh/search` | 搜索ssh |
-| `GET` | `/api/ssh/category` | 获取分类 |
-| `POST` | `/api/ssh/delete` | 删除 |
-| `POST` | `/api/ssh/add` | 添加ssh |
-| `POST` | `/api/ssh/edit` | 编辑ssh |
-| `GET` | `/api/ssh/info` | 获取ssh配置 |
+| `POST` | `/api/ssh/search` | 搜索 SSH 配置 |
+| `GET` | `/api/ssh/category` | 获取 SSH 分类列表 |
+| `POST` | `/api/ssh/delete` | 软删除 SSH 配置 |
+| `POST` | `/api/ssh/add` | 新增 SSH 配置 |
+| `POST` | `/api/ssh/edit` | 编辑 SSH 配置 |
+| `GET` | `/api/ssh/info` | 获取单条 SSH 配置详情（含凭据） |
 | `POST` | `/api/ssh/top` | 置顶权重 |
-| `POST` | `/api/ssh/set-category` | 编辑分类 |
-| `POST` | `/api/ssh/edit-category` | 编辑分类 |
-| `POST` | `/api/ssh/add-category` | 添加分类 |
-| `POST` | `/api/ssh/delete-category` | 删除分类 |
-| `POST` | `/api/ssh/connect` | 连接ssh |
-| `GET` | `/api/ssh/quick-list` | 获取快捷命令 |
+| `POST` | `/api/ssh/set-category` | 设置 SSH 配置所属分类 |
+| `POST` | `/api/ssh/edit-category` | 重命名 SSH 分类 |
+| `POST` | `/api/ssh/add-category` | 新增 SSH 分类 |
+| `POST` | `/api/ssh/delete-category` | 删除 SSH 分类 |
+| `POST` | `/api/ssh/connect` | 发起 SSH 连接（异步建立终端与 SFTP） |
+| `GET` | `/api/ssh/quick-list` | 获取快捷命令（按分组） |
 | `POST` | `/api/ssh/add-quick` | 添加快捷命令 |
 | `POST` | `/api/ssh/edit-quick` | 编辑快捷命令 |
 | `POST` | `/api/ssh/delete-quick` | 删除快捷命令 |
-| `POST` | `/api/ssh/move-quick` | 移动快捷命令位置 |
-| `POST` | `/api/ssh/move-to-group` | 移动快捷命令到分组 |
-| `POST` | `/api/ssh/add-quick-group` | 添加快捷命令分组 |
-| `POST` | `/api/ssh/edit-quick-group` | 编辑快捷命令分组 |
-| `POST` | `/api/ssh/move-quick-group` | 移动快捷命令分组位置 |
+| `POST` | `/api/ssh/move-quick` | 调整同组内快捷命令顺序 |
+| `POST` | `/api/ssh/move-to-group` | 把快捷命令移动到另一个分组 |
+| `POST` | `/api/ssh/add-quick-group` | 新增快捷命令分组 |
+| `POST` | `/api/ssh/edit-quick-group` | 重命名快捷命令分组 |
+| `POST` | `/api/ssh/move-quick-group` | 调整分组顺序 |
 | `POST` | `/api/ssh/delete-quick-group` | 删除快捷命令分组 |
-| `GET` | `/api/ssh/sftp-list` | 获取sftp列表 |
-| `POST` | `/api/ssh/sftp-up` | 上传sftp |
-| `GET` | `/api/ssh/sftp-down` | 下载sftp |
-| `GET` | `/api/ssh/history-commands` | 获取历史命令 |
+| `GET` | `/api/ssh/sftp-list` | 列出远端目录（SFTP） |
+| `POST` | `/api/ssh/sftp-up` | 上传文件到远端目录（multipart，流式直传） |
+| `GET` | `/api/ssh/sftp-down` | 从远端下载文件（流式响应，非 JSON 信封） |
+| `GET` | `/api/ssh/history-commands` | 读取历史命令 |
 | `POST` | `/api/ssh/history-commands` | 保存历史命令 |
 
 ## task（3）
