@@ -159,7 +159,6 @@ body {
       flex: none;
       display: flex;
       flex-flow: row nowrap;
-      overflow-x: auto;
       align-items: center;
       overflow-x: auto;
       overflow-y: hidden;
@@ -341,8 +340,6 @@ body {
     overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
-    scrollbar-width: thin;
-    scrollbar-color: var(--color8) transparent;
 
     &::-webkit-scrollbar {
       height: 0.6rem;
@@ -419,7 +416,7 @@ body {
     position: relative;
     display: flex;
     align-items: center;
-    margin: 0;
+    margin: 0.2rem 0;
     padding: 0.4rem 0.6rem;
     list-style: none;
     border-radius: 0.5rem;
@@ -540,6 +537,8 @@ body {
     gap: 0.8rem;
     padding: 0.5rem 0.8rem;
     border-top: 0.1rem solid var(--color9);
+    overflow-x: auto;
+    overflow-y: hidden;
 
     &.open {
       display: flex;
@@ -552,17 +551,11 @@ body {
       line-height: 3rem;
       text-align: center;
       font-size: 2rem;
-      color: var(--icon-color);
 
       &:hover {
         color: var(--text-hover-color);
+        transform: scale(1.1);
       }
-    }
-
-    .fm_select_count {
-      flex: auto;
-      font-size: 0.9em;
-      color: var(--color5);
     }
 
     .btn {

@@ -47,6 +47,7 @@ const defaultData = {
   bmPageSize: 20, // 书签每页显示
   filesPageSize: 20, // 文件列表每页显示
   fileSort: { type: 'time', isDes: true }, // 文件排序
+  sshFileSort: { type: 'time', isDes: true }, // SSH文件管理排序
   fileFontSize: 0.22, // 文件编辑文本大小
   fileShowGrid: false, // 文件列表块状显示
   fileHistory: [], // 文件访问历史

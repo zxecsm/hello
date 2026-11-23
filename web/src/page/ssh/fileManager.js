@@ -19,6 +19,7 @@ import {
   getTextSize,
   isDark,
   longPress,
+  mixedSort,
   percentToValue,
 } from '../../js/utils/utils.js';
 import _path from '../../js/utils/path.js';
@@ -52,7 +53,6 @@ const $modal = $('.fm_modal'),
   $status = $modal.find('.fm_status'),
   $selectBar = $modal.find('.fm_select_bar'),
   $selectAll = $selectBar.find('.fm_select_all'),
-  $selectCount = $selectBar.find('.fm_select_count'),
   $deleteSelected = $selectBar.find('.fm_delete_selected'),
   $cancelSelect = $selectBar.find('.fm_cancel_select'),
   $checkBtn = $modal.find('.fm_tool.check'),
@@ -78,6 +78,7 @@ let editingOrigin = '';
 let saving = false;
 let selecting = false;
 let fileFontSize = localData.get('fileFontSize') || 0.22;
+let fileSort = localData.get('sshFileSort') || { type: 'time', isDes: true };
 
 const pathScroll = new ContentScroll($status.find('.path .scroll_text')[0]);
 const editorPathScroll = new ContentScroll($editorPathText[0]);
@@ -240,7 +241,7 @@ function renderList() {
         <span v-if="item.fileType === 'symlink' && item.linkTarget" class="fm_link_target">=> {{item.linkTarget}}({{item.linkTargetTypeName}})</span>
       </div>
       <div class="fm_item_size">{{item.type === 'dir' || !item.size ? '--' : formatBytes(item.size)}}</div>
-      <div class="fm_item_date">{{item.mtime ? getDateDiff(item.mtime * 1000) : '--'}}</div>
+      <div class="fm_item_date">{{item.mtime ? getDateDiff(item.mtime) : '--'}}</div>
       <div class="fm_item_actions">
         <div v-if="!isDirItem(item)" class="fm_action iconfont icon-download" data-action="download" data-cursor="pointer"></div>
         <div v-else class="fm_action fm_action_placeholder"></div>
@@ -276,6 +277,97 @@ function renderList() {
   $list[0].replaceChildren(html);
 }
 
+// 排序（与 File 页文件管理器一致）
+function sortFiles() {
+  const { type, isDes } = fileSort;
+
+  allFiles.sort((a, b) => {
+    if (type === 'name') {
+      return isDes ? mixedSort(b.name, a.name) : mixedSort(a.name, b.name);
+    }
+
+    if (type === 'size') {
+      return isDes ? (b.size || 0) - (a.size || 0) : (a.size || 0) - (b.size || 0);
+    }
+
+    // 时间排序；类别排序同样先按时间排，再按类型分组
+    if (isDes || type === 'type') return (b.mtime || 0) - (a.mtime || 0);
+    return (a.mtime || 0) - (b.mtime || 0);
+  });
+
+  if (type === 'type') {
+    const files = allFiles.filter((item) => item.type === 'file');
+    const dirs = allFiles.filter((item) => item.type === 'dir');
+    allFiles = isDes ? [...files, ...dirs] : [...dirs, ...files];
+  }
+}
+
+// 选择排序方式
+function hdFileSort(e) {
+  const { type, isDes } = fileSort;
+  const data = [
+    {
+      id: '1',
+      text: '名称排序',
+      param: { value: 'name' },
+    },
+    {
+      id: '2',
+      text: '时间排序',
+      param: { value: 'time' },
+    },
+    {
+      id: '3',
+      text: '大小排序',
+      param: { value: 'size' },
+    },
+    {
+      id: '4',
+      text: '类别排序',
+      param: { value: 'type' },
+    },
+    {
+      id: '5',
+      text: '升序',
+      param: { value: false },
+      beforeIcon: 'iconfont icon-jiantou_qiehuanxiangshang',
+    },
+    {
+      id: '6',
+      text: '降序',
+      param: { value: true },
+      beforeIcon: 'iconfont icon-jiantou_qiehuanxiangxia',
+    },
+  ];
+  data.forEach((item) => {
+    if (item.param.value === isDes || item.param.value === type) {
+      item.active = true;
+    } else {
+      item.active = false;
+    }
+  });
+  rMenu.selectMenu(
+    e,
+    data,
+    ({ close, id, param }) => {
+      if (id) {
+        if (+id > 0 && +id <= 4) {
+          fileSort.type = param.value;
+        } else {
+          fileSort.isDes = param.value;
+        }
+        close();
+        localData.set('sshFileSort', fileSort);
+        sortFiles();
+        pageNo = 1;
+        renderPage();
+        $listWrap.scrollTop(0);
+      }
+    },
+    '选择列表排序方式',
+  );
+}
+
 // 加载目录
 async function loadDir(path = curPath, { keepPage = false, silent = false } = {}) {
   const seq = ++loadSeq;
@@ -291,12 +383,7 @@ async function loadDir(path = curPath, { keepPage = false, silent = false } = {}
     if (res.code === 1) {
       curPath = normalizePath(path);
       allFiles = (res.data || []).filter((item) => item.name !== '.' && item.name !== '..');
-      allFiles.sort((a, b) => {
-        const diff = (b.mtime || 0) - (a.mtime || 0);
-        if (diff) return diff;
-        if (a.type !== b.type) return a.type === 'dir' ? -1 : 1;
-        return a.name.localeCompare(b.name, 'zh-CN');
-      });
+      sortFiles();
       if (!keepPage) pageNo = 1;
     }
   } catch {
@@ -456,7 +543,7 @@ function getItemInfoText(item) {
   const time = item.mtime
     ? formatDate({
         template: '{0}-{1}-{2} {3}:{4}',
-        timestamp: item.mtime * 1000,
+        timestamp: item.mtime,
       })
     : '--';
 
@@ -483,7 +570,7 @@ function showRemoteFileInfo(e, item) {
     path: curPath,
     fileType: item.fileType || 'file',
     fileTypeName: item.fileType === 'symlink' ? '符号链接' : '文件',
-    time: item.mtime * 1000,
+    time: item.mtime,
   });
 }
 
@@ -620,6 +707,7 @@ function renameItem(e, item) {
         loading.end();
         if (res.code === 1) {
           close();
+          _msg.success(res.codeText);
           loadDir(curPath, { keepPage: true, silent: true });
         }
       } catch {
@@ -683,7 +771,7 @@ function renderSelectBar() {
     .attr('data-check', all ? 'y' : 'n')
     .toggleClass('icon-xuanzeyixuanze', all)
     .toggleClass('icon-xuanzeweixuanze', !all);
-  $selectCount.text(`已选 ${len} 项`);
+  _msg.botMsg(`选中：${len}项`);
   $deleteSelected.toggle(len > 0);
 }
 
@@ -905,6 +993,9 @@ $cancelSelect.on('click', () => closeCheck());
 $modal.find('.fm_tool.upload').on('click', () => uploadFiles());
 $modal.find('.fm_tool.add').on('click', function (e) {
   createMenu(e);
+});
+$modal.find('.fm_tool.sort').on('click', function (e) {
+  hdFileSort(e);
 });
 $modal.find('.fm_tool.refresh').on('click', () => loadDir(curPath, { keepPage: true }));
 $modal.find('.fm_close').on('click', closeManager);
