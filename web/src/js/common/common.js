@@ -111,8 +111,13 @@ window.addEventListener('load', function () {
 });
 //鼠标点击效果
 ~(function () {
-  // 点击爱心按 蓝 → 青 → 绿 循环
-  const loveColors = ['var(--brand-blue)', 'var(--brand-cyan)', 'var(--brand-green)'];
+  // 点击爱心按 蓝 → 青 → 绿 → 黄 循环
+  const loveColors = [
+    'var(--brand-blue)',
+    'var(--brand-cyan)',
+    'var(--brand-green)',
+    'var(--brand-yellow)',
+  ];
   let loveColorIndex = 0;
   function handle(e) {
     if (!localData.get('clickLove')) return;

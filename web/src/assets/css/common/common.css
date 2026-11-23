@@ -68,6 +68,7 @@ html {
   --brand-cyan-deep: #155e75;
   --brand-blue: #1d4ed8;
   --brand-green: #15803d;
+  --brand-yellow: #facc15;
   --brand-gradient: linear-gradient(
     90deg,
     var(--brand-cyan),
@@ -192,6 +193,7 @@ html.dark {
   --brand-cyan-deep: #0e7490;
   --brand-blue: #93c5fd;
   --brand-green: #4ade80;
+  --brand-yellow: #fde047;
   --brand-gradient: linear-gradient(
     90deg,
     var(--brand-cyan),
