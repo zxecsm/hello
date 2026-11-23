@@ -95,7 +95,7 @@ body {
       width: 0.2rem;
       height: 5rem;
       margin-left: -0.1rem;
-      background-color: #383838;
+      background-color: var(--color2);
       z-index: -1;
     }
 
@@ -427,12 +427,12 @@ body {
     left: 20px;
     width: 200px;
     height: 200px;
-    border: 4px solid #0fddd22e;
+    border: 4px solid var(--clock-ring);
     font-size: 16px;
     border-radius: 50%;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-    background-color: rgb(0 0 0 / 6%);
+    background-color: var(--media-overlay-soft);
     ol,
     li,
     ul {
@@ -451,7 +451,7 @@ body {
       }
     }
     &:hover {
-      background-color: rgba(0, 0, 0, 0.548);
+      background-color: var(--media-overlay-deep);
       & .time_container {
         z-index: 1;
         color: var(--text-hover-color);
@@ -472,13 +472,13 @@ body {
     .line-hour li {
       width: 10px;
       height: 2px;
-      background-color: #fff;
+      background-color: var(--on-media);
     }
 
     .line-min li {
       width: 5px;
       height: 2px;
-      background-color: #1389a7;
+      background-color: var(--brand-cyan);
     }
 
     /* 数字 */
@@ -490,7 +490,7 @@ body {
       top: 50%;
       transform: translate(-50%, -50%);
       font-size: 17px;
-      color: #ffffff;
+      color: var(--on-media);
 
       li {
         position: absolute;
@@ -521,19 +521,19 @@ body {
       li.hour {
         width: 50px;
         height: 2px;
-        background-color: #0f6ce6;
+        background-color: var(--brand-blue);
       }
 
       li.min {
         width: 70px;
         height: 2px;
-        background-color: #d114b2;
+        background-color: var(--brand-cyan-bright);
       }
 
       li.sec {
         width: 85px;
         height: 1px;
-        background-color: #f50;
+        background-color: var(--brand-green);
       }
 
       li.circle {
@@ -543,9 +543,9 @@ body {
         transform: translate(-50%, -50%);
         width: 6px;
         height: 6px;
-        background-color: #f50;
+        background-color: var(--brand-green);
         border-radius: 50%;
-        border: 0.1rem solid #ccc;
+        border: 0.1rem solid var(--color7);
       }
     }
     .time_container {
@@ -556,7 +556,7 @@ body {
       margin-left: 50%;
       font-size: 1.2em;
       transform: translateX(-50%);
-      color: #ffffff;
+      color: var(--on-media);
       bottom: 40px;
       .time_section {
         position: relative;
@@ -891,7 +891,7 @@ body {
     bottom: 2rem;
     right: 2.5rem;
     font-size: 4rem;
-    color: #49a923;
+    color: var(--brand-green);
     animation: shakeY 20s infinite;
     opacity: 0.6;
 
@@ -1235,7 +1235,7 @@ body {
             color: var(--color6);
 
             &.active {
-              color: #49a923;
+              color: var(--brand-green);
             }
             &:hover {
               transform: scale(1.1);
@@ -1261,7 +1261,7 @@ body {
           flex: none;
           width: 3rem;
           height: 4rem;
-          color: rgb(73 169 35);
+          color: var(--brand-green);
           line-height: 4rem;
           text-align: center;
           font-size: 2.7rem;
@@ -1331,6 +1331,7 @@ body {
             list-style: none;
           }
           .chat_item {
+            margin: 0.2rem 0;
             .head {
               .chat_time {
                 text-align: center;
@@ -1489,7 +1490,7 @@ body {
                       position: absolute;
                       bottom: 1rem;
                       right: 1rem;
-                      color: rgb(209 133 20);
+                      color: var(--message-warning-color);
                     }
                   }
                 }
@@ -1571,12 +1572,12 @@ body {
                 }
                 .c_voice_msg_box,
                 .c_text_msg_box {
-                  background-color: #91e5b8;
-                  color: rgb(44, 61, 73);
+                  background-color: var(--chat-own-bg);
+                  color: var(--chat-own-text);
                 }
                 .c_triangle {
                   right: -0.5rem;
-                  border-top-color: #91e5b8;
+                  border-top-color: var(--chat-own-bg);
                 }
                 .c_file_msg_box {
                   .c_triangle {
@@ -1724,8 +1725,8 @@ body {
               line-height: 4rem;
 
               &.gren {
-                background-color: rgb(37, 201, 124);
-                color: var(--color2);
+                background-color: var(--brand-green);
+                color: var(--on-brand);
                 font-size: 2rem;
               }
             }
@@ -2516,7 +2517,7 @@ body {
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: #00000080;
+      background-color: var(--media-overlay-strong);
       opacity: 0;
       pointer-events: none;
       border-radius: var(--border-radius1-5);
@@ -2533,7 +2534,7 @@ body {
         .prev_btn,
         .to_max {
           display: block;
-          text-shadow: 0 0 0.5rem #000;
+          text-shadow: 0 0 0.5rem var(--media-shadow);
         }
       }
 
@@ -2549,7 +2550,7 @@ body {
         line-height: 4rem;
         margin: auto;
         text-align: center;
-        color: #fff;
+        color: var(--on-media);
 
         &:hover {
           transform: scale(1.1);
@@ -2558,11 +2559,11 @@ body {
 
         @keyframes fontcolor {
           0% {
-            color: #000000;
+            color: var(--media-shadow);
           }
 
           100% {
-            color: #fff;
+            color: var(--on-media);
           }
         }
       }
@@ -2572,7 +2573,7 @@ body {
         left: 0;
         top: 0;
         font-size: 2.2rem;
-        color: #fff;
+        color: var(--on-media);
 
         &:hover {
           transform: scale(1.1);
@@ -2585,7 +2586,7 @@ body {
         right: 0;
         top: 0;
         font-size: 2.5rem;
-        color: #fff;
+        color: var(--on-media);
 
         &:hover {
           transform: scale(1.1);
@@ -2599,7 +2600,7 @@ body {
         right: 0;
         bottom: 0;
         font-size: 2.4rem;
-        color: #fff;
+        color: var(--on-media);
 
         &:hover {
           transform: scale(1.1);
@@ -2614,7 +2615,7 @@ body {
         height: 4rem;
         line-height: 4rem;
         text-align: center;
-        color: #fff;
+        color: var(--on-media);
         font-size: 3rem;
 
         &:hover {
@@ -2651,7 +2652,7 @@ body {
     display: none;
     width: 70rem;
     font-size: 3rem;
-    color: #a1a3a4;
+    color: var(--on-media-muted);
     position: fixed;
     top: 10rem;
     left: 5rem;
@@ -2659,7 +2660,7 @@ body {
     border-radius: var(--border-radius1);
 
     &:hover {
-      border: 0.1rem dotted #646464;
+      border: 0.1rem dotted var(--on-media-muted);
       backdrop-filter: blur(4px);
       background-color: var(--bg-color-o1);
       -webkit-backdrop-filter: blur(4px);
@@ -2681,11 +2682,11 @@ body {
       line-height: 1.5;
 
       &.open {
-        color: rgb(25, 216, 222);
+        color: var(--brand-cyan-bright);
         letter-spacing: 0.1rem;
       }
       .fy {
-        color: #a1a3a4;
+        color: var(--on-media-muted);
         letter-spacing: normal;
       }
     }
@@ -3346,7 +3347,7 @@ body {
                   background-repeat: no-repeat;
                   background-position: bottom 0.6rem left 0.6rem;
                   background-size: 1.4rem;
-                  background-color: #00000060;
+                  background-color: var(--media-overlay);
                   pointer-events: none;
                   top: 0;
                   display: none;
@@ -3385,7 +3386,7 @@ body {
                   color: var(--color4);
 
                   .viptu {
-                    color: rgb(167, 164, 37);
+                    color: var(--message-warning-color);
                     font-size: 1.3rem;
                     margin-right: 0.4rem;
                   }
@@ -3506,27 +3507,27 @@ body {
 
         @keyframes fcolor {
           0% {
-            color: #000;
+            color: var(--brand-cyan);
           }
 
           20% {
-            color: #55aaff;
+            color: var(--brand-blue);
           }
 
           40% {
-            color: #ff55ff;
+            color: var(--brand-cyan-bright);
           }
 
           60% {
-            color: #55ff00;
+            color: var(--brand-green);
           }
 
           80% {
-            color: #aa00ff;
+            color: var(--brand-blue);
           }
 
           100% {
-            color: #ff007f;
+            color: var(--brand-cyan);
           }
         }
 
@@ -3552,11 +3553,11 @@ body {
           }
           @keyframes fontcolor {
             0% {
-              color: #000000;
+              color: var(--media-shadow);
             }
 
             100% {
-              color: #fff;
+              color: var(--on-media);
             }
           }
 
@@ -3714,21 +3715,21 @@ body {
             overflow: hidden;
             -webkit-mask: linear-gradient(
               180deg,
-              hsla(0, 0%, 100%, 0),
-              hsla(0, 0%, 100%, 0.6) 15%,
-              #fff 25%,
-              #fff 75%,
-              hsla(0, 0%, 100%, 0.6) 85%,
-              hsla(0, 0%, 100%, 0)
+              var(--mask-color-0),
+              var(--mask-color-60) 15%,
+              var(--mask-color) 25%,
+              var(--mask-color) 75%,
+              var(--mask-color-60) 85%,
+              var(--mask-color-0)
             );
             mask: linear-gradient(
               180deg,
-              hsla(0, 0%, 100%, 0),
-              hsla(0, 0%, 100%, 0.6) 15%,
-              #fff 25%,
-              #fff 75%,
-              hsla(0, 0%, 100%, 0.6) 85%,
-              hsla(0, 0%, 100%, 0)
+              var(--mask-color-0),
+              var(--mask-color-60) 15%,
+              var(--mask-color) 25%,
+              var(--mask-color) 75%,
+              var(--mask-color-60) 85%,
+              var(--mask-color-0)
             );
 
             .lrc_items {
@@ -3863,7 +3864,7 @@ body {
                     left: 0;
                     width: 0;
                     height: 100%;
-                    background-image: linear-gradient(to right, orange, red);
+                    background-image: var(--brand-gradient);
 
                     .dolt {
                       display: none;
@@ -3882,11 +3883,11 @@ body {
 
                       @keyframes bgcolor {
                         0% {
-                          background-color: #000000;
+                          background-color: var(--media-shadow);
                         }
 
                         100% {
-                          background-color: #fff;
+                          background-color: var(--on-media);
                         }
                       }
                     }
@@ -3929,11 +3930,11 @@ body {
 
               @keyframes fontcolor {
                 0% {
-                  color: #000000;
+                  color: var(--media-shadow);
                 }
 
                 100% {
-                  color: #fff;
+                  color: var(--on-media);
                 }
               }
             }
@@ -4260,7 +4261,7 @@ body {
                       background-repeat: no-repeat;
                       background-position: center;
                       background-size: 1.4rem;
-                      background-color: #00000060;
+                      background-color: var(--media-overlay);
                       pointer-events: none;
                       top: 0;
                       display: none;

@@ -183,7 +183,7 @@ function renderShareList(total, pageNo, top) {
       <li v-for="{id,type,title,pass,exp_time,state} in sList" :data-id="id" :data-url="getUrlAndLogo(type,id,pass).url">
         <div data-cursor="pointer" check="n" class="check_state"></div>
         <div data-cursor="pointer" class="item_type_logo iconfont {{getUrlAndLogo(type,id,pass).logo}}"></div>
-        <div title="点击复制分享链接" class="title">名称：<span>{{title}}</span> ； 提取码：<span>{{pass || '无'}}</span> ； 有效期：<span :style="getExpState(exp_time) < 0 ? 'color:red;' : ''">{{getState(exp_time)}}</span> ； </div>
+        <div title="点击复制分享链接" class="title">名称：<span>{{title}}</span> ； 提取码：<span>{{pass || '无'}}</span> ； 有效期：<span :style="getExpState(exp_time) < 0 ? 'color:var(--message-error-color);' : ''">{{getState(exp_time)}}</span> ； </div>
         <div data-cursor="pointer" class="state iconfont {{state === 1 ? 'icon-kaiguan-kai1 active' : 'icon-kaiguan-guan'}}"></div>
         <div data-cursor="pointer" class="copy_link iconfont icon-erweima"></div>
         <div data-cursor="pointer" class="edit iconfont icon-bianji"></div>

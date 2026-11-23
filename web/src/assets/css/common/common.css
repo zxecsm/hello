@@ -6,8 +6,6 @@
 }
 
 :root {
-  --text-hover-color: #409eff;
-  --icon-color: #1389a7;
   --hear-color: #fd4747;
   --text-hover-decoration: underline wavy;
   --speed-duration: 0.3s;
@@ -44,7 +42,7 @@
 }
 
 html {
-  --lrc-active-color: #690460;
+  --lrc-active-color: var(--brand-cyan);
   --color: #0f0f0f;
   --color1: #222222;
   --color2: #333333;
@@ -62,14 +60,70 @@ html {
   --bg-color-o4: rgb(255 255 255/80%);
   --bg-color-o5: rgb(255 255 255/90%);
 
-  --a-color: #2a64f6;
+  --a-color: var(--brand-cyan);
 
-  --btn-primary-color: #409eff;
-  --btn-primary-bg-color: #ecf5ff;
-  --btn-primary-border-color: #a0cfff;
-  --btn-primary-hover-color: #fff;
-  --btn-primary-hover-bg-color: #409eff;
-  --btn-primary-hover-border-color: #409eff;
+  /* 白天主色调：以青为主，蓝作交互强调，绿作成功/辅助 */
+  --brand-cyan: #0e7490;
+  --brand-cyan-bright: #0891b2;
+  --brand-cyan-deep: #155e75;
+  --brand-blue: #1d4ed8;
+  --brand-green: #15803d;
+  --brand-gradient: linear-gradient(
+    90deg,
+    var(--brand-cyan),
+    var(--brand-blue),
+    var(--brand-green)
+  );
+
+  /* 默认图标用主青，悬停用更深的蓝，保持层级 */
+  --icon-color: var(--brand-cyan);
+  --text-hover-color: var(--brand-blue);
+
+  /* 媒体、遮罩、选中、高亮等通用色（两种模式共用或近似） */
+  --on-brand: #ffffff;
+  --on-media: #ffffff;
+  --on-media-muted: #a1a3a4;
+  --media-shadow: #000000;
+  --mask-color: #ffffff;
+  --mask-color-60: rgb(255 255 255 / 60%);
+  --mask-color-0: rgb(255 255 255 / 0%);
+  --media-overlay-soft: rgb(0 0 0 / 6%);
+  --media-overlay: rgb(0 0 0 / 38%);
+  --media-overlay-strong: rgb(0 0 0 / 50%);
+  --media-overlay-deep: rgb(0 0 0 / 55%);
+  --media-overlay-heavy: rgb(0 0 0 / 80%);
+  --media-control-bg: rgb(0 0 0 / 40%);
+  --skeleton-bg: rgb(255 255 255 / 33%);
+  --selection-color: rgb(14 116 144 / 40%);
+  --breathe-color: rgb(21 128 61 / 64%);
+  --clock-ring: rgb(8 145 178 / 18%);
+  --decor-warm: #fd6e72;
+  --highlight-bg: #fef08a;
+  --highlight-active-bg: #fbbf24;
+  --highlight-text: #0f0f0f;
+  --chat-own-bg: #d1fae5;
+  --chat-own-text: #065f46;
+
+  /* 终端 ANSI（白天） */
+  --term-bg: #ffffff;
+  --term-fg: #24292e;
+  --term-cursor: #0e7490;
+  --term-selection: rgba(14, 116, 144, 0.25);
+  --term-black: #24292e;
+  --term-red: #cf222e;
+  --term-green: #1a7f37;
+  --term-yellow: #9a6700;
+  --term-blue: #1d4ed8;
+  --term-magenta: #8250df;
+  --term-cyan: #0e7490;
+  --term-white: #6e7781;
+
+  --btn-primary-color: var(--brand-cyan);
+  --btn-primary-bg-color: #ecfeff;
+  --btn-primary-border-color: #a5f3fc;
+  --btn-primary-hover-color: var(--on-brand);
+  --btn-primary-hover-bg-color: var(--brand-cyan);
+  --btn-primary-hover-border-color: var(--brand-cyan);
   --btn-info-color: #909399;
   --btn-info-bg-color: #f4f4f5;
   --btn-info-border-color: #c8c9cc;
@@ -107,12 +161,12 @@ html {
   --window-shadow-active:
     0 2.4rem 5.6rem rgb(15 23 42 / 20%),
     0 0.8rem 1.8rem rgb(15 23 42 / 10%),
-    0 0 0 0.1rem rgb(64 158 255 / 35%),
-    0 0 1.8rem rgb(64 158 255 / 24%);
+    0 0 0 0.1rem rgb(14 116 144 / 35%),
+    0 0 1.8rem rgb(14 116 144 / 24%);
 }
 
 html.dark {
-  --lrc-active-color: #05f3c9;
+  --lrc-active-color: var(--brand-cyan-bright);
   --color10: #0f0f0f;
   --color9: #222222;
   --color8: #333333;
@@ -130,14 +184,65 @@ html.dark {
   --bg-color-o4: rgb(0 0 0 / 80%);
   --bg-color-o5: rgb(0 0 0 / 90%);
 
-  --a-color: #7c7ccf;
+  --a-color: var(--brand-cyan);
 
-  --btn-primary-color: #409eff;
-  --btn-primary-bg-color: #18222c;
-  --btn-primary-border-color: #2a598a;
-  --btn-primary-hover-color: #fff;
-  --btn-primary-hover-bg-color: #409eff;
-  --btn-primary-hover-border-color: #409eff;
+  /* 夜间主色调：以青为主，蓝/绿整体提亮 */
+  --brand-cyan: #22d3ee;
+  --brand-cyan-bright: #67e8f9;
+  --brand-cyan-deep: #0e7490;
+  --brand-blue: #93c5fd;
+  --brand-green: #4ade80;
+  --brand-gradient: linear-gradient(
+    90deg,
+    var(--brand-cyan),
+    var(--brand-blue),
+    var(--brand-green)
+  );
+
+  /* 夜间图标略暗于正文青，悬停用更亮的蓝，保持层级 */
+  --icon-color: #06b6d4;
+  --text-hover-color: var(--brand-blue);
+
+  /* 媒体/遮罩类的夜间取值 */
+  --on-brand: #06141a;
+  --on-media: #ffffff;
+  --on-media-muted: #a1a3a4;
+  --media-overlay: rgb(0 0 0 / 45%);
+  --media-overlay-strong: rgb(0 0 0 / 60%);
+  --media-overlay-deep: rgb(0 0 0 / 65%);
+  --media-overlay-heavy: rgb(0 0 0 / 85%);
+  --media-control-bg: rgb(0 0 0 / 55%);
+  --skeleton-bg: rgb(255 255 255 / 12%);
+  --selection-color: rgb(34 211 238 / 35%);
+  --breathe-color: rgb(74 222 128 / 64%);
+  --clock-ring: rgb(34 211 238 / 22%);
+  --decor-warm: #fda4af;
+  --highlight-bg: #713f12;
+  --highlight-active-bg: #a16207;
+  --highlight-text: #fffbeb;
+  --chat-own-bg: #064e3b;
+  --chat-own-text: #d1fae5;
+
+  /* 终端 ANSI（夜间） */
+  --term-bg: #0f0f0f;
+  --term-fg: #d4d4d4;
+  --term-cursor: #22d3ee;
+  --term-selection: rgba(34, 211, 238, 0.3);
+  --term-black: #161b22;
+  --term-red: #f85149;
+  --term-green: #3fb950;
+  --term-yellow: #d29922;
+  --term-blue: #58a6ff;
+  --term-magenta: #bc8cff;
+  --term-cyan: #22d3ee;
+  --term-white: #d4d4d4;
+
+  --btn-primary-color: var(--brand-cyan);
+  --btn-primary-bg-color: #083344;
+  --btn-primary-border-color: #155e75;
+  --btn-primary-hover-color: var(--on-brand);
+  --btn-primary-hover-bg-color: var(--brand-cyan);
+  --btn-primary-hover-border-color: var(--brand-cyan);
   --btn-info-color: #909399;
   --btn-info-bg-color: #202121;
   --btn-info-border-color: #525457;
@@ -175,8 +280,8 @@ html.dark {
   --window-shadow-active:
     0 2.8rem 6.4rem rgb(0 0 0 / 70%),
     0 1rem 2.2rem rgb(0 0 0 / 45%),
-    0 0 0 0.1rem rgb(64 158 255 / 50%),
-    0 0 2.2rem rgb(64 158 255 / 32%);
+    0 0 0 0.1rem rgb(34 211 238 / 50%),
+    0 0 2.2rem rgb(34 211 238 / 32%);
 }
 ::-webkit-scrollbar {
   background-color: transparent; /* 滚动条轨道颜色 */
@@ -467,7 +572,7 @@ a:hover {
   box-shadow: var(--window-shadow-active) !important;
 }
 .iframe_tag.active-window {
-  box-shadow: 0 0 1rem var(--text-hover-color) !important;
+  box-shadow: 0 0 1rem var(--brand-cyan) !important;
 }
 .inactive-window .window_head {
   opacity: 0.5 !important;

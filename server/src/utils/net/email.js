@@ -65,7 +65,7 @@ async function sendMail(to, title, html) {
 }
 
 async function sendCode(to, code) {
-  const html = `验证码 <span style="font-size:40px;color:#409eff;">${code}</span> 十分钟内有效，请勿泄露与转发。如非本人操作，请忽略此邮件。`;
+  const html = `验证码 <span style="font-size:40px;color:#0e7490;">${code}</span> 十分钟内有效，请勿泄露与转发。如非本人操作，请忽略此邮件。`;
   const key = normalizeEmail(to);
   const previous = cache.get(key);
 

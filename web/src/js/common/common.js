@@ -2,7 +2,6 @@ import './index.less';
 import {
   _setTimeout,
   debounce,
-  randomColor,
   darkMode,
   isIframe,
   addCustomCode,
@@ -112,9 +111,13 @@ window.addEventListener('load', function () {
 });
 //鼠标点击效果
 ~(function () {
+  // 点击爱心按 蓝 → 青 → 绿 循环
+  const loveColors = ['var(--brand-blue)', 'var(--brand-cyan)', 'var(--brand-green)'];
+  let loveColorIndex = 0;
   function handle(e) {
-    const randomc = randomColor();
     if (!localData.get('clickLove')) return;
+    const loveColor = loveColors[loveColorIndex];
+    loveColorIndex = (loveColorIndex + 1) % loveColors.length;
     // 心形状
     const box1 = document.createElement('div');
     const box2 = document.createElement('div');
@@ -147,9 +150,9 @@ window.addEventListener('load', function () {
     document.body.appendChild(box1);
     box1.style.left = e.clientX + 'px';
     box1.style.top = e.clientY + 'px';
-    box1.style.backgroundColor = randomc;
-    box2.style.backgroundColor = randomc;
-    box3.style.backgroundColor = randomc;
+    box1.style.backgroundColor = loveColor;
+    box2.style.backgroundColor = loveColor;
+    box3.style.backgroundColor = loveColor;
     box1.clientHeight;
     box1.style.transition = '1s ease-in-out';
     box1.style.opacity = 0;

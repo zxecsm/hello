@@ -9,7 +9,7 @@ class LoadingBar {
   }
   init(options) {
     let defaultobj = {
-      color: 'red',
+      color: 'var(--brand-blue)',
       size: '3',
       setStart: null,
       setEnd: null,
@@ -31,7 +31,7 @@ class LoadingBar {
     border-radio:2rem;
     pointer-events: none;
     z-index: ${zIndex};
-    background-image: linear-gradient(to right,Orange 90%, red);`;
+    background-image: var(--brand-gradient);`;
     this.spinner = document.createElement('div');
     this.spinner.style.cssText = `
     display: none;
@@ -70,7 +70,7 @@ class LoadingBar {
 }
 
 export const _loadingBar = new LoadingBar({
-  color: 'red', //进度条颜色
+  color: 'var(--brand-blue)', //进度条颜色
   // size: '4', //进度条粗细（px）
   zIndex: _d.levelObj.loading,
   setStart() {},

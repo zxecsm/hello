@@ -5,7 +5,7 @@
   --md-text: var(--color2);
   --md-heading: var(--color1);
   --md-muted: var(--color4);
-  --md-link: #0969da;
+  --md-link: var(--brand-cyan);
   --md-border: #d8dee4;
   --md-border-strong: #d0d7de;
   --md-surface: #f6f8fa;
@@ -13,11 +13,18 @@
   --md-stripe: #f6f8fa;
   --md-inline-code-bg: #afb8c133;
   --md-mark-bg: #fff8c5;
+  --md-success: var(--brand-green);
+  --md-success-soft: #15803d1f;
+  --md-info: var(--brand-blue);
+  --md-info-soft: #1d4ed81f;
+  --md-warning: #9a6700;
+  --md-warning-soft: #9a670014;
+  --md-error: #cf222e;
+  --md-error-soft: #cf222e12;
   --md-quote-border: #d0d7de;
 }
 
 html.dark .view_md {
-  --md-link: #4493f8;
   --md-border: #30363d;
   --md-border-strong: #3d444d;
   --md-surface: #161b22;
@@ -25,6 +32,12 @@ html.dark .view_md {
   --md-stripe: #161b22;
   --md-inline-code-bg: #6e768166;
   --md-mark-bg: #bb800966;
+  --md-success-soft: #4ade801f;
+  --md-info-soft: #93c5fd1f;
+  --md-warning: #d29922;
+  --md-warning-soft: #d299221f;
+  --md-error: #f87171;
+  --md-error-soft: #f871711f;
   --md-quote-border: #3b434b;
 }
 
@@ -341,8 +354,8 @@ html.dark .view_md {
   ins {
     padding: 0.1em 0.2em;
     text-decoration: none;
-    background-color: #2da44e1f;
-    border-bottom: 0.1rem solid #2da44e;
+    background-color: var(--md-success-soft);
+    border-bottom: 0.1rem solid var(--md-success);
   }
 
   // 键盘按键
@@ -437,23 +450,23 @@ html.dark .view_md {
   }
 
   .custom-block.tip {
-    border-left-color: #2da44e;
-    background-color: #2da44e14;
+    border-left-color: var(--md-success);
+    background-color: var(--md-success-soft);
   }
 
   .custom-block.info {
-    border-left-color: #0969da;
-    background-color: #0969da12;
+    border-left-color: var(--md-info);
+    background-color: var(--md-info-soft);
   }
 
   .custom-block.warning {
-    border-left-color: #9a6700;
-    background-color: #9a670014;
+    border-left-color: var(--md-warning);
+    background-color: var(--md-warning-soft);
   }
 
   .custom-block.danger {
-    border-left-color: #cf222e;
-    background-color: #cf222e12;
+    border-left-color: var(--md-error);
+    background-color: var(--md-error-soft);
   }
 
   .custom-block.details {
@@ -493,18 +506,18 @@ html.dark .view_md {
 // 暗色模式下让提示容器更明显一点
 html.dark .view_md {
   .custom-block.tip {
-    background-color: #2386361f;
+    background-color: var(--md-success-soft);
   }
 
   .custom-block.info {
-    background-color: #1f6feb1f;
+    background-color: var(--md-info-soft);
   }
 
   .custom-block.warning {
-    background-color: #9e6a031f;
+    background-color: var(--md-warning-soft);
   }
 
   .custom-block.danger {
-    background-color: #da36331f;
+    background-color: var(--md-error-soft);
   }
 }

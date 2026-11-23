@@ -30,7 +30,7 @@ const defaultSearchEngineData = {
   title: 'Bing',
   logo: bingLogo,
   link: 'https://bing.com/search?q={{}}',
-  color: '#1B8473',
+  color: '#0e7490', // 默认主题色（用户可改，需保持 hex）
 };
 const defaultTranslatorData = {
   id: 'bing',
@@ -133,7 +133,7 @@ const _d = {
   defaultSearchEngineData,
   searchEngineData: [defaultSearchEngineData], // 搜索引擎
   searchWord, // 搜索提示服务
-  checkColor: 'rgb(26 147 207 / 40%)', // 选中颜色
+  checkColor: 'var(--selection-color)', // 选中颜色
   title: 'Hello', // 标题
   emptyList: 'List is empty', // 空列表显示
   isHome: false, // 是否在主页

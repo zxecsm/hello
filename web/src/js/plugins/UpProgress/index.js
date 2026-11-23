@@ -73,7 +73,7 @@ class Progress {
   close(title) {
     this.title.textContent = this.name;
     this.box2.style.width = 100 + '%';
-    this.box2.style.backgroundColor = 'green';
+    this.box2.style.backgroundColor = 'var(--brand-green)';
     this.box2.style.opacity = '0.8';
     this.box2.style.zIndex = '2';
     this.box2.textContent = title || '上传成功';
@@ -91,7 +91,7 @@ class Progress {
   fail(title) {
     this.title.textContent = this.name;
     this.box2.style.width = 100 + '%';
-    this.box2.style.backgroundColor = 'red';
+    this.box2.style.backgroundColor = 'var(--message-error-color)';
     this.box2.style.opacity = '0.8';
     this.box2.style.zIndex = '2';
     this.box2.textContent = title || '上传失败';

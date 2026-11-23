@@ -285,7 +285,13 @@ export function welcomeMsg() {
   fireworks(10);
 }
 export function fireworks(count = 6) {
-  const colors = ['#ff4d4f', '#40a9ff', '#73d13d', '#faad14', '#9254de'];
+  const colors = [
+    'var(--brand-cyan)',
+    'var(--brand-blue)',
+    'var(--brand-green)',
+    'var(--brand-cyan-bright)',
+    'var(--brand-cyan-deep)',
+  ];
 
   function explode(x, y) {
     for (let i = 0; i < 80; i++) {

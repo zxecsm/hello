@@ -160,21 +160,21 @@ html {
         overflow: hidden;
         -webkit-mask: linear-gradient(
           180deg,
-          hsla(0, 0%, 100%, 0),
-          hsla(0, 0%, 100%, 0.6) 15%,
-          #fff 25%,
-          #fff 75%,
-          hsla(0, 0%, 100%, 0.6) 85%,
-          hsla(0, 0%, 100%, 0)
+          var(--mask-color-0),
+          var(--mask-color-60) 15%,
+          var(--mask-color) 25%,
+          var(--mask-color) 75%,
+          var(--mask-color-60) 85%,
+          var(--mask-color-0)
         );
         mask: linear-gradient(
           180deg,
-          hsla(0, 0%, 100%, 0),
-          hsla(0, 0%, 100%, 0.6) 15%,
-          #fff 25%,
-          #fff 75%,
-          hsla(0, 0%, 100%, 0.6) 85%,
-          hsla(0, 0%, 100%, 0)
+          var(--mask-color-0),
+          var(--mask-color-60) 15%,
+          var(--mask-color) 25%,
+          var(--mask-color) 75%,
+          var(--mask-color-60) 85%,
+          var(--mask-color-0)
         );
         .lrc_items {
           width: 100%;
@@ -296,7 +296,7 @@ html {
                 left: 0;
                 width: 0;
                 height: 100%;
-                background-image: linear-gradient(to right, orange, red);
+                background-image: var(--brand-gradient);
 
                 .dolt {
                   display: none;
@@ -315,11 +315,11 @@ html {
 
                   @keyframes bgcolor {
                     0% {
-                      background-color: #000000;
+                      background-color: var(--media-shadow);
                     }
 
                     100% {
-                      background-color: #fff;
+                      background-color: var(--on-media);
                     }
                   }
                 }
@@ -362,11 +362,11 @@ html {
 
           @keyframes fontcolor {
             0% {
-              color: #000000;
+              color: var(--media-shadow);
             }
 
             100% {
-              color: #fff;
+              color: var(--on-media);
             }
           }
         }
@@ -503,7 +503,7 @@ html {
                     background-repeat: no-repeat;
                     background-position: center;
                     background-size: 1.4rem;
-                    background-color: #00000060;
+                    background-color: var(--media-overlay);
                     pointer-events: none;
                     top: 0;
                     display: none;

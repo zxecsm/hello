@@ -1,8 +1,8 @@
 export class CircularProgressBar {
   constructor(container, options = {}) {
     this.container = container;
-    this.color = options.color || '#198754';
-    this.bgColor = options.bgColor || '#888888';
+    this.color = options.color || 'var(--brand-green)';
+    this.bgColor = options.bgColor || 'var(--color9)';
     this.strokeWidth = options.strokeWidth || 10;
     this.max = options.max || 100;
     this.value = options.value || 0;
@@ -27,14 +27,14 @@ export class CircularProgressBar {
   <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" style="width:100%; height:100%; display:block; transform:rotate(-90deg);">
     <circle
       cx="50" cy="50" r="${circleRadius}"
-      stroke="${this.bgColor}"
+      style="stroke:${this.bgColor}"
       stroke-width="${this.strokeWidth}"
       fill="none"
     />
     <circle
       class="progress-ring"
       cx="50" cy="50" r="${circleRadius}"
-      stroke="${this.color}"
+      style="stroke:${this.color}"
       stroke-width="${this.strokeWidth}"
       fill="none"
       stroke-linecap="round"

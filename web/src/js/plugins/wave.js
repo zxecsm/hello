@@ -12,6 +12,8 @@ export default function wave(idx = 1) {
         z-index: ${idx};
       }
       .vh-bolang-main>use{
+        fill: var(--brand-cyan);
+        opacity: 0.1;
         animation:vh-bolang-item-move 12s linear infinite
       }
       .vh-bolang-main>use:nth-child(1){
@@ -34,15 +36,14 @@ export default function wave(idx = 1) {
         }
       }`),
     document['querySelector']('head')['appendChild'](_0x1f03ad));
-  const fillColor = 'rgb(153 205 239 / 10%)';
   const _0x29074d = `<svg class="vh-bolang" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none">
         <defs>
           <path id="vh-bolang-item" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"></path>
         </defs>
         <g class="vh-bolang-main">
-          <use xlink:href="#vh-bolang-item" x="50" y="0" fill="${fillColor}"></use>
-          <use xlink:href="#vh-bolang-item" x="50" y="3" fill="${fillColor}"></use>
-          <use xlink:href="#vh-bolang-item" x="50" y="6" fill="${fillColor}"></use>
+          <use xlink:href="#vh-bolang-item" x="50" y="0"></use>
+          <use xlink:href="#vh-bolang-item" x="50" y="3"></use>
+          <use xlink:href="#vh-bolang-item" x="50" y="6"></use>
         </g>
       </svg>`,
     _0x319530 = new DOMParser(),

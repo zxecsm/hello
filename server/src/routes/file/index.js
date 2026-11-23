@@ -1691,7 +1691,8 @@ route.post(
     const dir = _path.dirname(p);
 
     // 目录读取边界：不能通过链接读到根目录之外的目录
-    if (!(await isPathSafe(appConfig.userRootDir(account), dir))) {
+    // 允许 dir 等于根目录本身，否则根目录下的第一级补全会全部失效
+    if (!(await isPathSafe(appConfig.userRootDir(account), dir, true))) {
       return resp.success(res, 'ok', normalizePath)();
     }
 

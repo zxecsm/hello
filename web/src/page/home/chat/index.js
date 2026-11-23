@@ -255,15 +255,15 @@ async function renderUserList(pageNo, total, totalPage, top) {
         let color = 'var(--color6)';
         if (setUserInfo().account === account) {
           if (setUserInfo().hide === 1) {
-            color = '#e9d00c';
+            color = 'var(--message-warning-color)';
           } else {
             if (online === 1) {
-              color = 'green';
+              color = 'var(--brand-green)';
             }
           }
         } else {
           if (online === 1) {
-            color = 'green';
+            color = 'var(--brand-green)';
           }
         }
         return { color };

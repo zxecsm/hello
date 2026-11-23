@@ -166,7 +166,7 @@ export function getHomeBmList() {
 // 加载
 function bmsLoading() {
   let str = '';
-  let color = '#ffffff54';
+  let color = 'var(--skeleton-bg)';
   new Array(14).fill(null).forEach(() => {
     str += `<li style="pointer-events: none;" class="home_bm_item">
               <div style="background-color:${color};background-image:none;" class="home_bm_logo"></div>

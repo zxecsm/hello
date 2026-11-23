@@ -508,7 +508,7 @@ const pagepro = (function () {
     left: 0;
     border-radio:2rem;
     pointer-events: none;
-    background-image: linear-gradient(to right, green, orange);
+    background-image: var(--brand-gradient);
     z-index: 20;
   `;
   document.body.appendChild(div);

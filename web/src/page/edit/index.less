@@ -28,6 +28,7 @@ body {
       display: flex;
       flex-flow: row wrap;
       align-items: center;
+      padding-left: 1rem;
       transform: translateY(-10rem);
       opacity: 0;
       &.open {
@@ -85,7 +86,24 @@ body {
       .h_go_home,
       .img_btn,
       .preview_state,
-      .to_max_btn,
+      .to_max_btn {
+        flex: none;
+        margin: 0.5rem 1rem 0.5rem 0;
+        height: 4rem;
+        width: 4rem;
+        text-align: center;
+        line-height: 4rem;
+        font-size: 2.2rem;
+        border-radius: var(--border-radius1);
+        border: 0.1rem solid var(--color9);
+        color: var(--icon-color);
+
+        &:hover {
+          color: var(--text-hover-color);
+          background-color: var(--color9);
+        }
+      }
+      // 撤销、重做、保存保持原来的裸图标样式
       .undo_btn,
       .redo_btn,
       .save_btn {

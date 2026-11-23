@@ -162,7 +162,7 @@ export function showRightMenu() {
         `
       <template>
       待办事项
-      <em v-if="num>0" style="display: inline-block;background-color: var(--color9);width: 2rem;line-height: 2rem;text-align: center;border-radius: var(--border-radius0-5);color: #f56c6c;margin-left: 1rem;
+      <em v-if="num>0" style="display: inline-block;background-color: var(--color9);width: 2rem;line-height: 2rem;text-align: center;border-radius: var(--border-radius0-5);color: var(--btn-danger-color);margin-left: 1rem;
     ">{{num}}</em>
       </template>
       `,
@@ -174,7 +174,7 @@ export function showRightMenu() {
       `
     <template>
     倒计时
-    <em v-if="expireCount>0" style="display: inline-block;background-color: var(--color9);width: 2rem;line-height: 2rem;text-align: center;border-radius: var(--border-radius0-5);color: #f56c6c;margin-left: 1rem;
+    <em v-if="expireCount>0" style="display: inline-block;background-color: var(--color9);width: 2rem;line-height: 2rem;text-align: center;border-radius: var(--border-radius0-5);color: var(--btn-danger-color);margin-left: 1rem;
   ">{{expireCount}}</em>
     </template>
     `,
@@ -962,8 +962,7 @@ export function settingMenu(e, isMain) {
             id: '9',
             text: '新标签页打开窗口',
             beforeIcon: 'iconfont icon-link1',
-            afterIcon:
-              'iconfont ' + (openWindowNewTab ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
+            afterIcon: 'iconfont ' + (openWindowNewTab ? 'icon-kaiguan-kai1' : 'icon-kaiguan-guan'),
             param: { value: openWindowNewTab },
           },
         ];
@@ -1947,8 +1946,8 @@ function userLogout(e) {
 // 设置tips
 function setTipsFlag(e) {
   const data = [
-    { id: 'close', text: '关闭提示' },
-    { id: 'update', text: '更新提示' },
+    { id: 'close', text: '关闭提示', beforeIcon: 'iconfont icon-shibai' },
+    { id: 'update', text: '更新提示', beforeIcon: 'iconfont icon-suijibofang' },
   ];
   rMenu.selectMenu(
     e,
@@ -2021,7 +2020,7 @@ const sysStatus = (() => {
   }
   const options = {
     color: 'var(--message-success-color)',
-    bgColor: '#88888880',
+    bgColor: 'var(--color9)',
     strokeWidth: 8,
   };
   const sys = [{ type: 'cpu' }, { type: 'mem' }, { type: 'swap' }, { type: 'disk' }].map(

@@ -10,10 +10,10 @@ body {
   width: 100%;
 }
 html {
-  --stat-color: #d38909;
+  --stat-color: var(--brand-cyan);
 }
 html.dark {
-  --stat-color: #ffffff;
+  --stat-color: var(--brand-cyan-bright);
 }
 .container {
   margin: auto;
@@ -87,14 +87,14 @@ p {
   margin-top: 3rem;
   padding: 1.5rem 3rem;
   background-color: var(--color10);
-  color: #ff5e62;
+  color: var(--brand-cyan);
   border: none;
   border-radius: var(--border-radius1);
   font-size: 1.8rem;
   font-weight: bold;
 }
 .button:hover {
-  background-color: #ff9966;
+  background-color: var(--brand-cyan);
   transition: all 0.3s ease;
-  color: var(--color);
+  color: var(--on-brand);
 }

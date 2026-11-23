@@ -2542,9 +2542,12 @@ export function getTextImg(name, size = 400) {
   const cvs = document.createElement('canvas');
   cvs.width = cvs.height = size;
   const ctx = cvs.getContext('2d');
-  ctx.fillStyle = '#5D4037';
+  const rootStyle = getComputedStyle(document.documentElement);
+  const bgColor = rootStyle.getPropertyValue('--brand-cyan').trim() || '#0e7490';
+  const textColor = rootStyle.getPropertyValue('--on-brand').trim() || '#ffffff';
+  ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, size, size);
-  ctx.fillStyle = 'rgb(255,255,255)';
+  ctx.fillStyle = textColor;
   ctx.font = size * 0.5 + 'px Arial';
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'center';

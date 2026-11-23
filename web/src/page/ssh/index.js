@@ -31,7 +31,6 @@ import {
   _setTimeout,
   copyText,
   debounce,
-  isDarkMode,
   isMobile,
   longPress,
   myOpen,
@@ -63,38 +62,25 @@ if (!HASH) {
   pageErr();
 }
 let historyCommands = [];
-// xterm.js
-// 现代深色主题 (类似 VS Code Default Dark+)
-const darkTheme = {
-  background: '#0f0f0f',
-  foreground: '#d4d4d4',
-  cursor: '#ffffff',
-  selectionBackground: '#3a3d41',
-  black: '#000000',
-  red: '#cd3131',
-  green: '#0dbc79',
-  yellow: '#e5e510',
-  blue: '#2472c8',
-  magenta: '#bc3fbc',
-  cyan: '#11a8cd',
-  white: '#e5e5e5',
-};
-
-// 现代浅色主题 (类似 GitHub Light)
-const lightTheme = {
-  background: '#ffffff',
-  foreground: '#24292e',
-  cursor: '#888888',
-  selectionBackground: '#c8e1ff',
-  black: '#24292e',
-  red: '#d73a49',
-  green: '#28a745',
-  yellow: '#dbab09',
-  blue: '#0366d6',
-  magenta: '#5a32a3',
-  cyan: '#0598bc',
-  white: '#6a737d',
-};
+// xterm.js 主题：统一从 CSS 变量读取，跟随白天/夜间
+function getTermTheme() {
+  const style = getComputedStyle(document.documentElement);
+  const v = (name, fallback) => style.getPropertyValue(name).trim() || fallback;
+  return {
+    background: v('--term-bg', '#0f0f0f'),
+    foreground: v('--term-fg', '#d4d4d4'),
+    cursor: v('--term-cursor', '#22d3ee'),
+    selectionBackground: v('--term-selection', 'rgba(34, 211, 238, 0.3)'),
+    black: v('--term-black', '#161b22'),
+    red: v('--term-red', '#f85149'),
+    green: v('--term-green', '#3fb950'),
+    yellow: v('--term-yellow', '#d29922'),
+    blue: v('--term-blue', '#58a6ff'),
+    magenta: v('--term-magenta', '#bc8cff'),
+    cyan: v('--term-cyan', '#22d3ee'),
+    white: v('--term-white', '#d4d4d4'),
+  };
+}
 
 const term = new Terminal({
   fontFamily: _d.codeFontFamily,
@@ -105,6 +91,7 @@ const term = new Terminal({
   cursorStyle: 'block', // block | bar | underline 光标样式
   scrollOnUserInput: true, // 输入时是否自动滚动到底部
   scrollback: 5000, // 回滚行数
+  theme: getTermTheme(),
 });
 // 加载插件
 const fitAddon = new FitAddon();
@@ -370,17 +357,7 @@ function sendSSH(text, enter = false) {
 }
 // 黑暗模式
 function changeTheme(dark) {
-  if (dark === 'y') {
-    term.options.theme = darkTheme;
-  } else if (dark === 'n') {
-    term.options.theme = lightTheme;
-  } else if (dark === 's') {
-    if (isDarkMode()) {
-      term.options.theme = darkTheme;
-    } else {
-      term.options.theme = lightTheme;
-    }
-  }
+  term.options.theme = getTermTheme();
   changeEditorTheme(dark);
 }
 window.changeTheme = changeTheme;
