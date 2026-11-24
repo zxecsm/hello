@@ -84,6 +84,7 @@ body {
       .code_btn,
       .link_btn,
       .h_go_home,
+      .save_btn,
       .img_btn,
       .preview_state,
       .to_max_btn {
@@ -103,10 +104,9 @@ body {
           background-color: var(--color9);
         }
       }
-      // 撤销、重做、保存保持原来的裸图标样式
+      // 撤销、重做保持原来的裸图标样式
       .undo_btn,
-      .redo_btn,
-      .save_btn {
+      .redo_btn {
         flex: none;
         height: 3rem;
         width: 3rem;
@@ -124,7 +124,7 @@ body {
         color: var(--color9);
       }
       .save_btn.active {
-        color: var(--icon-color);
+        color: var(--text-hover-color);
       }
     }
 

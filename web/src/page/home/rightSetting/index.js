@@ -2020,7 +2020,7 @@ const sysStatus = (() => {
   }
   const options = {
     color: 'var(--message-success-color)',
-    bgColor: 'var(--color9)',
+    bgColor: 'var(--bg-color-o2)',
     strokeWidth: 8,
   };
   const sys = [{ type: 'cpu' }, { type: 'mem' }, { type: 'swap' }, { type: 'disk' }].map(

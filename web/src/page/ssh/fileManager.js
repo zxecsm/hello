@@ -434,7 +434,7 @@ function hideEditor() {
 
 function closeEditor(e) {
   if ($editorBox.hasClass('open') && editor && editor.getValue() !== editingOrigin) {
-    rMenu.pop({ e, text: '内容尚未保存，确定关闭编辑器？' }, (type) => {
+    rMenu.pop({ e, text: '确认关闭：编辑器（内容未保存）？' }, (type) => {
       if (type === 'confirm') hideEditor();
     });
     return;
@@ -725,10 +725,7 @@ function deleteItem(e, item) {
   rMenu.pop(
     {
       e,
-      text:
-        item.type === 'dir'
-          ? `确定删除目录「${item.name}」及其全部内容？`
-          : `确定删除文件「${item.name}」？`,
+      text: `确认删除：${item.name}？`,
       confirm: { type: 'danger', text: '删除' },
     },
     async (type) => {
@@ -846,13 +843,9 @@ function deleteSelected(e) {
   const items = getCheckDatas();
   if (items.length === 0) return;
 
-  let text = `确定删除选中的 ${items.length} 项？`;
+  let text = `确认删除：选中的 ${items.length} 项？`;
   if (items.length === 1) {
-    const item = items[0];
-    text =
-      item.type === 'dir'
-        ? `确定删除目录「${item.name}」及其全部内容？`
-        : `确定删除文件「${item.name}」？`;
+    text = `确认删除：${items[0].name}？`;
   }
 
   rMenu.pop(
@@ -923,7 +916,7 @@ async function uploadFiles(files) {
 
 function closeManager(e) {
   if ($editorBox.hasClass('open') && editor && editor.getValue() !== editingOrigin) {
-    rMenu.pop({ e, text: '内容尚未保存，确定关闭文件管理？' }, (type) => {
+    rMenu.pop({ e, text: '确认关闭：文件管理（内容未保存）？' }, (type) => {
       if (type !== 'confirm') return;
       hideEditor();
       pathScroll.close();
