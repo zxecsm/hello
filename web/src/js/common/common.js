@@ -364,15 +364,34 @@ if (!isIframe()) {
       wave(999);
     }
   }
+  // 原来由横竖撇组成的 hello，每个字母一种颜色：青、红、黄、蓝、绿
+  const helloArt = [
+    ' __   __  ______  __     __       __ ',
+    '|  | |  ||  ____||  |   |  |    / __ \\',
+    '|  |_|  || |____ |  |   |  |   | |  | |',
+    '|   _   ||  ____||  |   |  |   | |  | |',
+    '|  | |  || |____ |  |__ |  |__ | |__| |',
+    '|__| |__||______||_____||_____| \\ __ / ',
+  ];
+  const helloColors = ['#22d3ee', '#f87171', '#fde047', '#60a5fa', '#4ade80'];
+  const helloSegments = [
+    [0, 9],
+    [9, 17],
+    [17, 24],
+    [24, 31],
+    [31, 39],
+  ];
+  const helloStyle = (color) =>
+    `color:${color};font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;font-weight:600;line-height:1.15;`;
+  const helloFormat = helloArt
+    .map((line) => helloSegments.map(([start, end]) => `%c${line.slice(start, end)}`).join(''))
+    .join('\n');
   // eslint-disable-next-line no-console
-  console.log(`
- __   __  ______  __     __       __ 
-|  | |  ||  ____||  |   |  |    / __ \\
-|  |_|  || |____ |  |   |  |   | |  | |
-|   _   ||  ____||  |   |  |   | |  | |
-|  | |  || |____ |  |__ |  |__ | |__| |
-|__| |__||______||_____||_____| \\ __ / 
-   `);
+  console.log(`\n${helloFormat}`, ...helloArt.flatMap(() => helloColors.map(helloStyle)));
   // eslint-disable-next-line no-console
-  console.log(`https://github.com/zxecsm/hello`);
+  console.log(
+    '%chello%c  ·  self-hosted personal portal  ·  https://github.com/zxecsm/hello',
+    'color:#22d3ee;font-weight:700;font-size:12px;',
+    'color:#94a3b8;font-size:12px;',
+  );
 }

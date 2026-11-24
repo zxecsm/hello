@@ -453,19 +453,51 @@ app.use((_, res) => {
   res.status(404).redirect('/404');
 });
 
+// 终端启动横幅：原来由横竖撇组成的 hello，每个字母一种颜色（青、红、黄、蓝、绿），
+// 输出被重定向或设置了 NO_COLOR 时自动降级为纯文本
+function buildHelloBanner() {
+  const art = [
+    ' __   __  ______  __     __       __ ',
+    '|  | |  ||  ____||  |   |  |    / __ \\',
+    '|  |_|  || |____ |  |   |  |   | |  | |',
+    '|   _   ||  ____||  |   |  |   | |  | |',
+    '|  | |  || |____ |  |__ |  |__ | |__| |',
+    '|__| |__||______||_____||_____| \\ __ / ',
+  ];
+  const colors = [
+    [34, 211, 238],
+    [248, 113, 113],
+    [253, 224, 71],
+    [96, 165, 250],
+    [74, 222, 128],
+  ];
+  const segments = [
+    [0, 9],
+    [9, 17],
+    [17, 24],
+    [24, 31],
+    [31, 39],
+  ];
+  const plain =
+    !process.stdout.isTTY || process.env.NO_COLOR !== undefined || process.env.TERM === 'dumb';
+  const reset = plain ? '' : '\x1b[0m';
+  const lines = art.map((line) => {
+    if (plain) return line;
+    return `${segments
+      .map(([start, end], i) => `\x1b[38;2;${colors[i].join(';')}m${line.slice(start, end)}`)
+      .join('')}${reset}`;
+  });
+  const dim = plain ? '' : '\x1b[2m';
+
+  return `\n${lines.join('\n')}\n${dim}  hello · self-hosted personal portal · https://github.com/zxecsm/hello${reset}\n`;
+}
+
 initDatabase()
   .then((initPassword) => {
     listen(appConfig.port, appConfig.host, (host) => {
       const urls = getAccessUrls(appConfig.port, host);
       // eslint-disable-next-line no-console
-      console.log(`
- __   __  ______  __     __       __ 
-|  | |  ||  ____||  |   |  |    / __ \\
-|  |_|  || |____ |  |   |  |   | |  | |
-|   _   ||  ____||  |   |  |   | |  | |
-|  | |  || |____ |  |__ |  |__ | |__| |
-|__| |__||______||_____||_____| \\ __ / 
-   `);
+      console.log(buildHelloBanner());
       if (initPassword) {
         // eslint-disable-next-line no-console
         console.log(`\nusername: ${appConfig.adminUsername}\npassword: ${initPassword}
