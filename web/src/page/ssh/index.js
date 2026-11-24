@@ -70,7 +70,9 @@ function getTermTheme() {
     background: v('--term-bg', '#0f0f0f'),
     foreground: v('--term-fg', '#d4d4d4'),
     cursor: v('--term-cursor', '#22d3ee'),
-    selectionBackground: v('--term-selection', 'rgba(34, 211, 238, 0.3)'),
+    // 终端选中态继承项目全局的选中配色
+    selectionBackground: v('--selection-bg', 'rgba(34, 211, 238, 0.3)'),
+    selectionForeground: v('--selection-fg', '#d4d4d4'),
     black: v('--term-black', '#161b22'),
     red: v('--term-red', '#f85149'),
     green: v('--term-green', '#3fb950'),

@@ -95,6 +95,9 @@ html {
   --media-overlay-heavy: rgb(0 0 0 / 80%);
   --media-control-bg: rgb(0 0 0 / 40%);
   --skeleton-bg: rgb(255 255 255 / 33%);
+  /* 文本选中：主色青，终端等子界面统一继承这两个变量 */
+  --selection-bg: rgba(14, 116, 144, 0.25);
+  --selection-fg: #24292e;
   --selection-color: rgb(14 116 144 / 40%);
   --breathe-color: rgb(21 128 61 / 64%);
   --clock-ring: rgb(8 145 178 / 18%);
@@ -109,7 +112,6 @@ html {
   --term-bg: #ffffff;
   --term-fg: #24292e;
   --term-cursor: #0e7490;
-  --term-selection: rgba(14, 116, 144, 0.25);
   --term-black: #24292e;
   --term-red: #cf222e;
   --term-green: #1a7f37;
@@ -215,6 +217,9 @@ html.dark {
   --media-overlay-heavy: rgb(0 0 0 / 85%);
   --media-control-bg: rgb(0 0 0 / 55%);
   --skeleton-bg: rgb(255 255 255 / 12%);
+  /* 文本选中：主色青，终端等子界面统一继承这两个变量 */
+  --selection-bg: rgba(34, 211, 238, 0.3);
+  --selection-fg: #d4d4d4;
   --selection-color: rgb(34 211 238 / 35%);
   --breathe-color: rgb(74 222 128 / 64%);
   --clock-ring: rgb(34 211 238 / 22%);
@@ -229,7 +234,6 @@ html.dark {
   --term-bg: #0f0f0f;
   --term-fg: #d4d4d4;
   --term-cursor: #22d3ee;
-  --term-selection: rgba(34, 211, 238, 0.3);
   --term-black: #161b22;
   --term-red: #f85149;
   --term-green: #3fb950;
@@ -431,20 +435,20 @@ input[type='number']::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-/* 选中背景和字体颜色 */
+/* 选中背景和字体颜色：主项目统一使用，终端等子界面继承这套变量 */
 ::selection {
-  background: var(--color3);
-  color: var(--color10);
+  background: var(--selection-bg);
+  color: var(--selection-fg);
 }
 
 ::-moz-selection {
-  background: var(--color3);
-  color: var(--color10);
+  background: var(--selection-bg);
+  color: var(--selection-fg);
 }
 
 ::-webkit-selection {
-  background: var(--color3);
-  color: var(--color10);
+  background: var(--selection-bg);
+  color: var(--selection-fg);
 }
 
 input::-webkit-input-placeholder,
