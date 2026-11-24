@@ -11,6 +11,7 @@ import {
   debounce,
   throttle,
   isLogin,
+  isDark,
   getDarkIcon,
 } from '../../js/utils/utils';
 import _d from '../../js/common/config';
@@ -30,6 +31,7 @@ import md5 from '../../js/utils/md5.js';
 import localData from '../../js/common/localData.js';
 import { maskLoading } from '../../js/plugins/loadingBar/index.js';
 import captcha from '../../js/plugins/captcha/index.js';
+import codeRain from '../../js/plugins/codeRain/index.js';
 const $box = $('.box'),
   $title = $box.find('.title'),
   $register = $box.find('.register'),
@@ -45,6 +47,8 @@ const $box = $('.box'),
   $ratify = $('#ratify'),
   $about = $box.find('.about');
 const originurl = localData.session.get('originurl') || '/';
+// 代码雨背景
+const codeRainBg = codeRain(document.getElementById('code_rain'));
 $about.on('click', function () {
   myOpen('/note?v=about');
 });
@@ -118,24 +122,41 @@ const rePdInp = wrapInput($repassword[0], {
   keyup: hdKeyUp,
 });
 let code = '';
-// 免密登录
-function hdNopdLogin() {
-  if (code) {
-    reqUserCodeLogin({ code, username: accInp.getValue().trim() })
-      .then((res) => {
-        if (res.code === 1) {
-          const { username, account } = res.data;
-          localData.set('username', username);
-          localData.set('account', account);
-          myOpen(originurl);
-          return;
-        } else if (res.code === 3) {
-          _setTimeout(hdNopdLogin, 1000);
-        }
-      })
-      .catch(() => {
-        closeRatify();
-      });
+let nopdUsername = '';
+let nopdPollTimer = null;
+let captchaId = '';
+let isCaptcha = false;
+// 免密登录轮询：只在登录请求确认送达后才开始
+function hdNopdLogin(reqCode) {
+  // 登录码已被刷新或弹窗已关闭，丢弃这次轮询
+  if (!reqCode || reqCode !== code) return;
+  reqUserCodeLogin({ code: reqCode, username: nopdUsername })
+    .then((res) => {
+      // 等待期间刷新过登录码或关闭了弹窗，忽略旧结果
+      if (reqCode !== code) return;
+      if (res.code === 1) {
+        const { username, account } = res.data;
+        localData.set('username', username);
+        localData.set('account', account);
+        myOpen(originurl);
+        return;
+      } else if (res.code === 3) {
+        nopdPollTimer = _setTimeout(() => hdNopdLogin(reqCode), 1000);
+      }
+    })
+    .catch((err) => {
+      if (reqCode !== code) return;
+      closeRatify();
+      // 轮询接口默认不弹错误提示，这里补上失败原因，避免静默结束
+      const codeText = err?.responseJSON?.codeText;
+      if (codeText) _msg.error(codeText);
+    });
+}
+// 停止轮询（刷新登录码、取消、重新发起时都要停）
+function stopNopdLogin() {
+  if (nopdPollTimer) {
+    clearTimeout(nopdPollTimer);
+    nopdPollTimer = null;
   }
 }
 // 6 位登录码（CSPRNG，避免 Math.random 可预测）
@@ -169,11 +190,18 @@ $nopd
       shake();
       return;
     }
-    changeCode();
-    sendLoginRequest();
-    hdNopdLogin();
+    startNopdLogin();
   })
   .on('click', '.resetpd', resetPassword);
+// 发起（或重新发起）一次免密登录
+function startNopdLogin() {
+  stopNopdLogin();
+  // 新的一次尝试不复用上一次的验证码
+  captchaId = '';
+  nopdUsername = accInp.getValue().trim();
+  changeCode();
+  sendLoginRequest();
+}
 // 重置密码
 function resetPassword() {
   if (!checkUserName()) {
@@ -271,44 +299,52 @@ function resetPassword() {
 }
 $ratify.on('click', '.close', closeRatify).on('click', '.resend', () => {
   if (isCaptcha) return;
-  changeCode();
-  sendLoginRequest();
+  startNopdLogin();
 });
 // 发送登录请求
 function sendLoginRequest() {
-  const username = accInp.getValue().trim();
-  if (code && username) {
-    reqUserAllowLoginReq({ code, username, captchaId })
-      .then((res) => {
-        if (res.code !== 1) return;
-        const { needCaptcha } = res.data || {};
-        if (needCaptcha) {
-          isCaptcha = true;
-          captcha(username, {
-            success({ id }) {
-              captchaId = id;
-              isCaptcha = false;
-              sendLoginRequest();
-            },
-            close() {
-              isCaptcha = false;
-              closeRatify();
-            },
-          });
-          return;
-        }
-        _msg.success(res.codeText);
-      })
-      .catch(() => {
-        closeRatify();
-      });
-  }
+  const reqCode = code;
+  if (!reqCode || !nopdUsername) return;
+  reqUserAllowLoginReq({ code: reqCode, username: nopdUsername, captchaId })
+    .then((res) => {
+      // 弹窗已关闭或登录码已刷新，丢弃旧结果
+      if (reqCode !== code) return;
+      if (res.code !== 1) return;
+      const { needCaptcha } = res.data || {};
+      if (needCaptcha) {
+        isCaptcha = true;
+        captcha(nopdUsername, {
+          success({ id }) {
+            isCaptcha = false;
+            if (reqCode !== code) return;
+            captchaId = id;
+            sendLoginRequest();
+          },
+          close() {
+            isCaptcha = false;
+            closeRatify();
+          },
+        });
+        return;
+      }
+      // 验证码已被服务端消费，后续不能再带这个 id
+      captchaId = '';
+      _msg.success(res.codeText);
+      // 请求已送达目标设备，开始轮询批准结果
+      hdNopdLogin(reqCode);
+    })
+    .catch(() => {
+      if (reqCode !== code) return;
+      closeRatify();
+    });
 }
 function closeRatify() {
+  stopNopdLogin();
   $ratify.css('display', 'none').find('.code_box').css('display', 'none');
   code = '';
+  captchaId = '';
 }
-// 登录页固定使用 css 中的背景（bg.svg），不请求随机壁纸
+// 登录页使用代码雨画布作背景，不请求随机壁纸
 window.addEventListener('load', function () {
   $box.addClass('open');
 });
@@ -381,6 +417,7 @@ $darkState.on('click', function () {
 });
 function changeTheme(dark) {
   $darkState.attr('class', `dark_state iconfont ${getDarkIcon(dark)}`);
+  codeRainBg.setTheme(isDark());
 }
 window.changeTheme = changeTheme;
 changeTheme(localData.get('dark'));
@@ -394,8 +431,6 @@ $repassword.next().on('click', function () {
 $password.next().on('click', function () {
   pdInp.setValue('').focus();
 });
-let captchaId = '';
-let isCaptcha = false;
 // 登录
 function hdLogin(obj) {
   if (isCaptcha) return;

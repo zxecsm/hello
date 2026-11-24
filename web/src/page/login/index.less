@@ -11,26 +11,21 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  .bg {
+  .code_rain {
     position: fixed;
     top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    background-size: cover;
-    background-image: url('../../assets/images/bg.svg');
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    background-position: center;
     pointer-events: none;
     z-index: -1;
-    opacity: 0.6;
-    transition: background-image 0.5s ease-in-out;
   }
 
   .box {
     position: relative;
     background-color: var(--bg-color-o2);
-    background-image: url('../../assets/images/left_open.png'), url('../../assets/images/right_open.png');
+    background-image:
+      url('../../assets/images/left_open.png'), url('../../assets/images/right_open.png');
     background-repeat: no-repeat;
     background-size: 14%;
     background-position:
