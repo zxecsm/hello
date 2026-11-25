@@ -526,7 +526,10 @@ body {
     border-radius: 0.5rem;
 
     &[check='y']:hover {
-      cursor: var(--cursor-move);
+      cursor: var(--cursor-grab);
+    }
+    &[check='y']:active {
+      cursor: var(--cursor-grabbing);
     }
   }
 

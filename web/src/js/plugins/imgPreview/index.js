@@ -1,7 +1,7 @@
 import _d from '../../common/config';
 import './index.less';
 import cacheFile from '../../utils/cacheFile';
-import { _animate, getCenterPointDistance, imgjz } from '../../utils/utils';
+import { _animate, getCenterPointDistance, imgjz, setDraggingCursor } from '../../utils/utils';
 import { _loadingBar } from '../loadingBar';
 import _msg from '../message';
 
@@ -30,7 +30,7 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
   const image = document.createElement('img');
   image.className = 'img';
   image.setAttribute('draggable', 'false');
-  image.setAttribute('data-cursor', 'move');
+  image.setAttribute('data-cursor', 'grab');
 
   const image1 = document.createElement('img');
   image1.className = 'img1';
@@ -215,6 +215,7 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
   function hdUp(e) {
     if (e.type === 'mouseup') {
       isDragging = false;
+      setDraggingCursor(false);
       // 移除 document 上的事件
       document.removeEventListener('mousemove', hdMove);
       document.removeEventListener('mouseup', hdUp);
@@ -316,6 +317,7 @@ export default function imgPreview(arr, idx = 0, triggerEl) {
 
     if (e.type === 'mousedown') {
       isDragging = true;
+      setDraggingCursor(true);
       point1 = { x: e.clientX, y: e.clientY };
       lastMove = { x: e.clientX, y: e.clientY };
 

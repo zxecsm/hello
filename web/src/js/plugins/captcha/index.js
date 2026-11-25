@@ -1,6 +1,6 @@
 import { reqUserCaptcha, reqUserGetCaptcha } from '../../../api/user';
 import _d from '../../common/config';
-import { delay, isDark } from '../../utils/utils';
+import { delay, isDark, setDraggingCursor } from '../../utils/utils';
 import { MaskLoading } from '../loadingBar';
 import _msg from '../message';
 import './index.less';
@@ -45,7 +45,7 @@ class SlideCaptcha {
     const sliderWrap = el('div', 'captcha-slider-wrap');
     const sliderMask = el('div', 'captcha-slider-mask');
     const slider = el('div', 'captcha-slider iconfont icon-shuangxianyoujiantou');
-    slider.setAttribute('data-cursor', 'move');
+    slider.setAttribute('data-cursor', 'grab');
     const text = el('span', 'captcha-text');
     text.innerText = '右滑补全拼图';
 
@@ -165,6 +165,7 @@ class SlideCaptcha {
 
   onDown(e) {
     e.preventDefault();
+    setDraggingCursor(true);
     const point = e.touches ? e.touches[0] : e;
     this.originX = point.clientX;
 
@@ -214,6 +215,7 @@ class SlideCaptcha {
   }
 
   removeDragEvents() {
+    setDraggingCursor(false);
     document.removeEventListener('mousemove', this.onMove);
     document.removeEventListener('mouseup', this.onUp);
     this.slider.removeEventListener('touchmove', this.onMove);

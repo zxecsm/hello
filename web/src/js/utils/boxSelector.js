@@ -1,4 +1,4 @@
-import { toggleUserSelect } from './utils';
+import { setDraggingCursor, toggleUserSelect } from './utils';
 
 const pressedKeys = new Set();
 
@@ -411,6 +411,7 @@ export class MouseElementTracker {
     document.removeEventListener('mouseup', this.onEnd);
     document.removeEventListener('touchmove', this.onMove);
     document.removeEventListener('touchend', this.onEnd);
+    setDraggingCursor(false);
     this.clear();
   }
 
@@ -453,6 +454,7 @@ export class MouseElementTracker {
 
       if (isStop) return;
 
+      setDraggingCursor(true);
       toggleUserSelect(false);
 
       this.infoBox = this.createInfoBox();
@@ -497,6 +499,7 @@ export class MouseElementTracker {
   }
   onEnd(e) {
     this.clear();
+    setDraggingCursor(false);
     if (!this.infoBox) return;
 
     toggleUserSelect();

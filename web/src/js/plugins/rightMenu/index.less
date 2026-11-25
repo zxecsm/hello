@@ -475,7 +475,10 @@ html.head_btn_to_right {
             transform: translateX(50%);
             height: 4rem;
             width: 4rem;
-            cursor: move;
+            cursor: var(--cursor-grab);
+            &:active {
+              cursor: var(--cursor-grabbing);
+            }
             background-color: var(--color6);
           }
         }

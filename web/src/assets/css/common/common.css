@@ -26,7 +26,6 @@
   --cursor-ns-resize: ns-resize;
   --cursor-nwse-resize: nwse-resize;
   --cursor-text: text;
-  --cursor-move: move;
   --cursor-not-allowed: not-allowed;
   --cursor-crosshair: crosshair;
   --cursor-help: help;
@@ -342,12 +341,6 @@ html body:before {
 [data-cursor='text']:hover {
   cursor: var(--cursor-text);
 }
-[data-cursor='grab']:hover {
-  cursor: var(--cursor-grab);
-}
-[data-cursor='grab']:active {
-  cursor: var(--cursor-grabbing);
-}
 [data-cursor='grabbing']:hover {
   cursor: var(--cursor-grabbing);
 }
@@ -358,8 +351,19 @@ html body:before {
 [data-cursor='zoom-out']:hover {
   cursor: var(--cursor-zoom-out);
 }
-[data-cursor='move']:hover {
-  cursor: var(--cursor-move);
+/* 拖拽手柄：悬停张开手掌，按住拖动时握紧，松开后恢复 */
+[data-cursor='move']:hover,
+[data-cursor='grab']:hover {
+  cursor: var(--cursor-grab);
+}
+[data-cursor='move']:active,
+[data-cursor='grab']:active {
+  cursor: var(--cursor-grabbing);
+}
+/* 拖动期间由 JS 在根元素加标记，确保指针移出拖拽元素后仍保持握紧 */
+html.is-dragging,
+html.is-dragging * {
+  cursor: var(--cursor-grabbing) !important;
 }
 [data-cursor='not-allowed']:hover {
   cursor: var(--cursor-not-allowed);

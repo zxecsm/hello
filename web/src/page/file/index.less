@@ -191,7 +191,10 @@ body {
           height: 100%;
           z-index: 2;
           &[check='y']:hover {
-            cursor: var(--cursor-move);
+            cursor: var(--cursor-grab);
+          }
+          &[check='y']:active {
+            cursor: var(--cursor-grabbing);
           }
         }
         .name {

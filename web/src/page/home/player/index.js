@@ -851,7 +851,7 @@ function renderSongList() {
     `
     <li v-for="item,idx in arr" class="song_list_item" :data-id="item.id" data-cursor="pointer">
       <div class="list_logo">
-        <div :data-cursor="idx > 2 ? 'move' : ''" class="logo" :data-src="getPic(item.pic)"></div>
+        <div :data-cursor="idx > 2 ? 'grab' : ''" class="logo" :data-src="getPic(item.pic)"></div>
       </div>
       <span>{{item.name}}</sapn>
     </li>
@@ -1049,7 +1049,7 @@ async function renderSongs(gao) {
     <div v-for="{title,artist,mv,id,isLoaded} in slist" class="song_item" :data-id="id" :data-issc="issc(id)" data-cursor="pointer">
       <div data-cursor="pointer" check="n" class="check_state"></div>
       <div v-if="isLoaded" class="downloaded iconfont icon-jiaobiao"></div>
-      <div class="song_logo_box" :data-cursor="songMoveCursor ? 'move' : ''">
+      <div class="song_logo_box" :data-cursor="songMoveCursor ? 'grab' : ''">
         <div class="logo" :data-src="getFilePath('/music/pic/'+id, { w: 256 })"></div>
         <div class="play_gif"></div>
       </div>

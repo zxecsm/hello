@@ -20,6 +20,7 @@ import {
   myResize,
   myToRest,
   savePopLocationInfo,
+  setDraggingCursor,
   toCenter,
   wrapInput,
 } from '../../utils/utils';
@@ -1015,12 +1016,14 @@ function percentBar(e, percent, callback) {
   // 桌面端
   pro1Box.onmousedown = function (e) {
     pro1BoxL = pro1Box.getBoundingClientRect().left;
+    setDraggingCursor(true);
     tmove(e);
     function tmove(e) {
       e.preventDefault();
       move(e);
     }
     function up() {
+      setDraggingCursor(false);
       callback && callback(percent, 'up');
       document.removeEventListener('mousemove', tmove);
       document.removeEventListener('mouseup', up);
@@ -1031,6 +1034,7 @@ function percentBar(e, percent, callback) {
   // 移动端
   pro1Box.ontouchstart = function (e) {
     pro1BoxL = pro1Box.getBoundingClientRect().left;
+    setDraggingCursor(true);
     tmove(e);
     function tmove(e) {
       e.preventDefault();
@@ -1038,6 +1042,7 @@ function percentBar(e, percent, callback) {
       move(ev);
     }
     function up() {
+      setDraggingCursor(false);
       callback && callback(percent, 'up');
       pro1Box.removeEventListener('touchmove', tmove);
       pro1Box.removeEventListener('touchend', up);

@@ -274,14 +274,14 @@ function renderAsideList(p, delayScroll = 0) {
     <template v-for="item in _nav">
       <div class="list_title no_select" :data-id="item.id" :flag="item.id==id?'on':'off'">
         <div data-cursor="pointer" check="n" class="check_bmlist"></div>
-        <i data-cursor="move" class="iconfont {{item.share === 1 ? 'icon-gl-unlock4' : 'icon-gl-unlock2 active'}}"></i>
+        <i data-cursor="grab" class="iconfont {{item.share === 1 ? 'icon-gl-unlock4' : 'icon-gl-unlock2 active'}}"></i>
         <em data-cursor="pointer">{{item.title}}</em>
       </div>
       <ul v-show="item.id==id">
         <template v-if="item.id==id">
           <li v-for="y in getBmList(item)" class="bm_item no_select" :data-id="y.id" data-cursor="pointer">
             <div data-cursor="pointer" check="n" class="check_bm"></div>
-            <div data-cursor="move" class="bm_logo"></div>
+            <div data-cursor="grab" class="bm_logo"></div>
             <div class="bm_name">{{y.title}}</div>
             <p>{{y.des || '描述'}}</p>
           </li>

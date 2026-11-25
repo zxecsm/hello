@@ -93,7 +93,7 @@
     toolbox.style.flexFlow = 'row wrap';
     toolbox.style.justifyContent = 'space-evenly';
     toolbox.style.alignItems = 'center';
-    toolbox.style.cursor = 'move';
+    toolbox.style.cursor = 'grab';
 
     applyTheme();
     myDrag({ target: toolbox, trigger: toolbox });
@@ -326,6 +326,20 @@
     window.SelectionToolbox = { addButton };
   }
 
+  let dragCursorStyle = null;
+  // 拖动期间全局显示握紧指针，松开后恢复
+  function setDraggingCursor(active) {
+    if (active) {
+      if (dragCursorStyle) return;
+      dragCursorStyle = document.createElement('style');
+      dragCursorStyle.textContent = 'html, body, body * { cursor: grabbing !important; }';
+      document.head.appendChild(dragCursorStyle);
+    } else if (dragCursorStyle) {
+      dragCursorStyle.remove();
+      dragCursorStyle = null;
+    }
+  }
+
   function myDrag(opt) {
     opt.target = opt.target || opt.trigger;
     const { trigger, target, create, down, move, up, border, dblclick } = opt;
@@ -333,6 +347,7 @@
     let ol, ot, x, y, pointerX, pointerY;
     function hdDown(e) {
       if (e.target !== toolbox) return;
+      setDraggingCursor(true);
       x = target.offsetLeft;
       y = target.offsetTop;
       const l = target.offsetLeft,
@@ -376,6 +391,7 @@
       move && move({ e, trigger, target, x, y, pointerX, pointerY });
     }
     function hdUp(e) {
+      setDraggingCursor(false);
       target.removeEventListener('touchmove', hdMove);
       target.removeEventListener('touchend', hdUp);
       document.removeEventListener('mousemove', hdMove);

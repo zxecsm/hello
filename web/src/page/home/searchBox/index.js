@@ -233,7 +233,7 @@ function renderHomeBmList() {
     `
     <li v-for="{id,title} in list" class="home_bm_item" :data-id="id">
       <div data-cursor="pointer" check="n" class="check_home_bm"></div>
-      <div class="home_bm_logo" data-cursor="move"></div>
+      <div class="home_bm_logo" data-cursor="grab"></div>
       <p data-cursor="pointer">{{title}}</p>
     </li>
     <li class="home_bm_item">

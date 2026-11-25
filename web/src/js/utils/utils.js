@@ -1711,17 +1711,37 @@ export function formatNum(count, isEn) {
     return parseInt(count);
   }
 }
+// 拖拽期间统一显示握紧指针：在根元素加标记，指针移出拖拽元素也不会变回普通箭头
+export function setDraggingCursor(active) {
+  document.documentElement.classList.toggle('is-dragging', active);
+}
+// 拖拽容器里的按钮、链接、输入框等交互区域不触发拖拽，避免点击时出现抓手/握拳或误移动
+function isDragControlTarget(origin, trigger) {
+  if (!origin || origin.nodeType !== 1 || origin === trigger) return false;
+  const control = origin.closest(
+    'button, a, input, select, textarea, label, [contenteditable="true"], [data-no-drag]',
+  );
+  if (control && trigger.contains(control)) return true;
+  const cursorEl = origin.closest('[data-cursor]');
+  if (cursorEl && cursorEl !== trigger) {
+    const cursor = cursorEl.getAttribute('data-cursor');
+    if (cursor && !['grab', 'grabbing', 'move'].includes(cursor)) return true;
+  }
+  return false;
+}
 // 拖动
 export function myDrag(opt) {
   opt.target = opt.target || opt.trigger;
   const { trigger, target, create, down, move, up, border, dblclick } = opt;
   create && create({ trigger, target });
-  // 拖拽手柄统一使用 data-cursor，主题包提供了 SizeAll（move）指针
+  // 拖拽手柄统一使用 data-cursor，悬停时显示张手，按住拖动时显示握拳
   if (trigger && trigger.nodeType === 1 && !trigger.hasAttribute('data-cursor')) {
-    trigger.setAttribute('data-cursor', 'move');
+    trigger.setAttribute('data-cursor', 'grab');
   }
   let ol, ot, x, y, pointerX, pointerY;
   function hdDown(e) {
+    if (isDragControlTarget(e.target, trigger)) return;
+    setDraggingCursor(true);
     toggleUserSelect(false);
     x = target.offsetLeft;
     y = target.offsetTop;
@@ -1768,6 +1788,7 @@ export function myDrag(opt) {
     move && move({ e, trigger, target, x, y, pointerX, pointerY });
   }
   function hdUp(e) {
+    setDraggingCursor(false);
     if (localData.get('windowMoveOpacity')) {
       target.classList.remove('drag_opacity');
     }
@@ -1779,6 +1800,7 @@ export function myDrag(opt) {
     up && up({ e, trigger, target, x, y, pointerX, pointerY });
   }
   function hdDblclick(e) {
+    if (isDragControlTarget(e.target, trigger)) return;
     dblclick && dblclick({ e, trigger, target, x, y, pointerX, pointerY });
   }
   trigger.addEventListener('dblclick', hdDblclick);
