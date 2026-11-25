@@ -1795,7 +1795,7 @@ async function sendfile(files, chatAcc) {
   });
 }
 // 语音发送
-function upVoice(blob, duration) {
+function upVoice(blob, duration, ext = 'mp3') {
   if (!blob) {
     _msg.error('发送失败');
     return;
@@ -1825,7 +1825,7 @@ function upVoice(blob, duration) {
       reqChatUpVoice(
         {
           HASH,
-          name: `${HASH}.wav`,
+          name: `${HASH}.${ext}`,
           to: chatAcc,
         },
         blob,
@@ -1857,35 +1857,35 @@ function upVoice(blob, duration) {
       y = e.changedTouches[0].clientY;
       record.start();
     })
-    .on('touchend', function (e) {
+    .on('touchend', async function (e) {
       e.preventDefault();
       if (!isMobile()) return;
       $chatFootBox.find('.c_get_voice_btn').removeClass('gren');
       const xx = e.changedTouches[0].clientX,
         yy = e.changedTouches[0].clientY;
       if (Math.abs(x - xx) > 60 || Math.abs(y - yy) > 60) {
-        record.stop();
+        record.cancel();
         _msg.botMsg('已取消', 1);
         return;
       }
-      const { blob, duration } = record.stop();
-      upVoice(blob, duration);
+      const { blob, duration, ext } = await record.stop();
+      upVoice(blob, duration, ext);
     })
     .on('mousedown', function () {
       if (isMobile()) return;
       $chatFootBox.find('.c_get_voice_btn').addClass('gren');
       record.start();
     });
-  $document.on('mouseup', function (e) {
+  $document.on('mouseup', async function (e) {
     if (isMobile()) return;
     const $vBtn = $chatFootBox.find('.c_get_voice_btn');
     if (!$vBtn.hasClass('gren')) return;
     $vBtn.removeClass('gren');
     if (_getTarget(this, e, '.chat_foot_box .c_get_voice_btn')) {
-      const { blob, duration } = record.stop();
-      upVoice(blob, duration);
+      const { blob, duration, ext } = await record.stop();
+      upVoice(blob, duration, ext);
     } else {
-      record.stop();
+      record.cancel();
       _msg.botMsg('已取消', 1);
     }
   });

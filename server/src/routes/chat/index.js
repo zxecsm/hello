@@ -750,7 +750,7 @@ route.post(
         .trim()
         .min(1)
         .max(fieldLength.filename)
-        .pattern(/\.wav$/, '必须.wav结尾'),
+        .pattern(/\.(wav|mp3)$/, '必须.wav或.mp3结尾'),
       HASH: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
       to: V.string().trim().min(1).max(fieldLength.id).alphanumeric(),
     }),
