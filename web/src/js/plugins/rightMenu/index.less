@@ -415,9 +415,14 @@ html.head_btn_to_right {
       user-select: none;
       .text_box {
         flex: auto;
+        width: 100%;
+        min-width: 0;
         font-size: 1.6rem;
         line-height: 2.4rem;
         word-break: break-all;
+        overflow-wrap: anywhere;
+        // 随容器宽度自动换行，同时保留文本中的 \n 换行
+        white-space: pre-wrap;
       }
       .btns {
         flex: none;
