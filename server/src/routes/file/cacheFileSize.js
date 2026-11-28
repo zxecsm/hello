@@ -3,7 +3,7 @@ import { CacheByExpire } from '../../utils/common/cache.js';
 // 缓存文件夹大小
 const fileSize = {
   // 目录大小可随时重新获取，TTL 不宜过长；2 分钟足够减少重复计算
-  cache: new CacheByExpire(2 * 60 * 1000, 2 * 60 * 1000),
+  cache: new CacheByExpire(2 * 60 * 1000, 2 * 60 * 1000, { name: 'fileSize' }),
 
   // 添加缓存
   add(key, size) {

@@ -3,11 +3,42 @@
 const MIN_AUTO_CLEANUP_INTERVAL = 1000;
 const MAX_AUTO_CLEANUP_INTERVAL = 60 * 1000;
 
+// 已创建的缓存实例（弱引用），供健康检查等运维接口汇总运行状态。
+// 用 WeakRef 避免注册表本身阻止缓存实例被回收；实例被 GC 时由 FinalizationRegistry 自动摘除。
+const registry = new Set();
+const registryFinalizer = new FinalizationRegistry((ref) => registry.delete(ref));
+
+// 注册表超过该阈值时先清理一次失效引用，作为 finalizer 尚未执行时的兜底
+const REGISTRY_PRUNE_THRESHOLD = 64;
+
+function pruneRegistry() {
+  for (const ref of registry) {
+    if (!ref.deref()) registry.delete(ref);
+  }
+}
+
+// 获取全部缓存实例的运行状态
+export function getCacheStats() {
+  const stats = [];
+
+  for (const ref of registry) {
+    const cache = ref.deref();
+
+    if (cache) {
+      stats.push(cache.stats());
+    } else {
+      registry.delete(ref);
+    }
+  }
+
+  return stats;
+}
+
 export class CacheByExpire {
   constructor(
     ttl,
     cleanupInterval = 0,
-    { beforeDelete, afterDelete, beforeReplace, afterReplace, maxSize = 0 } = {},
+    { beforeDelete, afterDelete, beforeReplace, afterReplace, maxSize = 0, name = '' } = {},
   ) {
     if (!Number.isFinite(ttl) || ttl <= 0) {
       throw new Error('TTL must be a positive finite number');
@@ -24,6 +55,14 @@ export class CacheByExpire {
     this.ttl = ttl; // 存储缓存过期时间
     this.cache = new Map();
     this.maxSize = maxSize; // 最大条目数，0 表示不限制
+    this.name = name || 'anonymous'; // 缓存名称，用于运维统计
+
+    // 运行计数：命中 / 未命中 / 写入 / 淘汰 / 过期删除
+    this.hits = 0;
+    this.misses = 0;
+    this.sets = 0;
+    this.evictions = 0;
+    this.expired = 0;
 
     this.beforeDelete = beforeDelete;
     this.afterDelete = afterDelete;
@@ -32,6 +71,13 @@ export class CacheByExpire {
 
     this.cleanupInterval = cleanupInterval; // 清理间隔
     this.isDestroyed = false; // 标记缓存是否被销毁
+
+    // 弱引用注册：不阻止实例被 GC，destroy 时主动移除
+    if (registry.size >= REGISTRY_PRUNE_THRESHOLD) pruneRegistry();
+    const registryRef = new WeakRef(this);
+    this._registryRef = registryRef;
+    registry.add(registryRef);
+    registryFinalizer.register(this, registryRef, registryRef);
 
     // 无定时清理时，set 触发的惰性清理间隔（摊销成本，避免 O(n^2)）
     this._autoCleanupEvery = Math.min(
@@ -69,6 +115,7 @@ export class CacheByExpire {
     let count = 0;
     for (const [key, entry] of this.cache) {
       this._deleteEntry(key, entry);
+      this.evictions++;
       if (++count >= overflow) break;
     }
   }
@@ -98,6 +145,7 @@ export class CacheByExpire {
     }
 
     this.cache.set(key, { value, expireTime: now + ttl });
+    this.sets++;
 
     if (oldEntry) {
       this.afterReplace?.(key, oldEntry.value, value);
@@ -120,12 +168,18 @@ export class CacheByExpire {
     if (this.isDestroyed) return null;
 
     const entry = this.cache.get(key);
-    if (!entry) return null;
+    if (!entry) {
+      this.misses++;
+      return null;
+    }
 
     if (Date.now() < entry.expireTime) {
+      this.hits++;
       return entry.value;
     }
 
+    this.expired++;
+    this.misses++;
     this._deleteEntry(key, entry);
     return null;
   }
@@ -194,6 +248,7 @@ export class CacheByExpire {
 
     for (const [key, entry] of this.cache) {
       if (entry.expireTime <= now) {
+        this.expired++;
         this._deleteEntry(key, entry);
       }
     }
@@ -269,9 +324,43 @@ export class CacheByExpire {
     return true;
   }
 
+  // 获取缓存运行状态（供运维接口使用，不触发清理）
+  stats() {
+    const now = Date.now();
+    let active = 0;
+
+    for (const entry of this.cache.values()) {
+      if (entry.expireTime > now) active++;
+    }
+
+    const lookups = this.hits + this.misses;
+
+    return {
+      name: this.name,
+      destroyed: this.isDestroyed,
+      size: this.isDestroyed ? 0 : active, // 有效条目数
+      stale: this.isDestroyed ? 0 : this.cache.size - active, // 已过期但尚未清理
+      maxSize: this.maxSize,
+      ttl: this.ttl,
+      cleanupInterval: this.cleanupInterval,
+      hits: this.hits,
+      misses: this.misses,
+      hitRate: lookups ? Number((this.hits / lookups).toFixed(4)) : 0,
+      sets: this.sets,
+      evictions: this.evictions,
+      expired: this.expired,
+    };
+  }
+
   // 销毁缓存
   destroy() {
     if (this.isDestroyed) return;
+
+    if (this._registryRef) {
+      registryFinalizer.unregister(this._registryRef);
+      registry.delete(this._registryRef);
+      this._registryRef = undefined;
+    }
 
     if (this.cleanupIntervalId) {
       clearInterval(this.cleanupIntervalId);

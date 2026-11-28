@@ -1,7 +1,7 @@
 import { CacheByExpire } from '../common/cache.js';
 import nanoid from '../common/nanoid.js';
 
-const cache = new CacheByExpire(60 * 1000, 60 * 1000);
+const cache = new CacheByExpire(60 * 1000, 60 * 1000, { name: 'longPoll' });
 
 // 消息保留时间
 const MSG_TTL = 30 * 1000;

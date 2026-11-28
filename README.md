@@ -1,4 +1,4 @@
-![hello](https://raw.githubusercontent.com/zxecsm/hello/main/hello.png)
+![hello](./hello.png)
 
 <h1 align="center">hello</h1>
 

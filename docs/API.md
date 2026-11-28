@@ -27,6 +27,7 @@
 - [聊天 `/api/chat`](#聊天-apichat)
 - [SSH `/api/ssh`](#ssh-apissh)
 - [全局与公开接口](#全局与公开接口)
+- [管理员健康检查 `/healthz`](#管理员健康检查-healthz)
 - [附录：接口速查表](#附录接口速查表)
 
 ## 基础信息
@@ -6381,9 +6382,59 @@ null
 
 ---
 
+# 管理员健康检查 `/healthz`
+
+运维用的聚合状态接口，收集服务进程、系统资源、数据库、内存缓存、后台任务和关键配置，一次性返回。
+
+**鉴权**：管理员（需登录且账号为 `root`），否则返回 403「无权访问」
+
+**请求**：`GET /healthz`，无参数。响应头带 `Cache-Control: no-store`。
+
+**响应 data**
+
+| 字段 | 说明 |
+| --- | --- |
+| status | 固定 `ok`；采集过程异常时返回 HTTP 500 |
+| time | 服务器当前时间（ISO 8601） |
+| runtime | Node 版本、平台、架构、PID、运行环境、程序版本、启动时间、进程 / 系统运行时长 |
+| system | 主机名、内核版本、负载、CPU 使用率、物理内存、Swap、数据目录所在磁盘、网卡实时收发速率 |
+| process | 进程内存（RSS / Heap / external / arrayBuffers，含可读文本）与 CPU 累计时间 |
+| config | 端口、监听地址、数据目录、真实 IP 信任策略、Cookie Secure、注册 / 回收站开关、公开接口开关、文件缓存过期配置、邮件功能状态（不含密码、`tokenKey` 等敏感信息） |
+| database | SQLite 主库 / WAL / SHM 文件大小、页数与页大小、空闲页、日志模式、各业务表行数 |
+| caches | 所有 `CacheByExpire` 实例：名称、有效条目数、待清理过期条目、TTL、容量上限、清理间隔、命中 / 未命中 / 命中率、写入、淘汰、过期删除次数 |
+| tasks | 已注册定时任务数、后台任务总数、运行中的后台任务数 |
+
+所有字节字段同时提供 `xxxText` 可读值，超过 1024 自动进位（`B` → `KB` → `MB` → `GB` → `TB`），例如 `rssText: "185.06MB"`、`walSizeText: "3.96MB"`；速率字段为 `rxText` / `txText`（如 `"1.25MB/s"`）；时长字段为 `xxxText`（如 `uptimeText: "2d 2h 14m"`、`ttlText: "5m"`）；百分比统一保留两位小数，缓存另提供 `hitRateText`（如 `"93.75%"`）。
+
+```json
+{
+  "status": "ok",
+  "time": "2026-11-28T12:00:00.000Z",
+  "runtime": { "node": "v24.22.0", "version": "1.0.0", "uptime": 3600 },
+  "system": { "cpu": { "percent": 12.5, "cores": 8 }, "mem": { "percent": 41.2 } },
+  "process": { "memory": { "rss": 194052096, "rssText": "185.06MB" } },
+  "config": { "port": 55555, "host": "::", "trustProxy": false },
+  "database": { "sizeText": "992.00KB", "walSizeText": "3.96MB", "journalMode": "wal" },
+  "caches": [
+    {
+      "name": "userInfo",
+      "size": 1,
+      "ttl": 300000,
+      "maxSize": 10000,
+      "hits": 120,
+      "misses": 8,
+      "hitRate": 0.9375
+    }
+  ],
+  "tasks": { "timedTasks": 6, "backgroundTasks": 0, "runningTasks": 0 }
+}
+```
+
+---
+
 # 附录：接口速查表
 
-共 257 个接口，按文档出现顺序排列，可配合编辑器的搜索快速定位。
+共 258 个接口，按文档出现顺序排列，可配合编辑器的搜索快速定位。
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
@@ -6453,6 +6504,7 @@ null
 | POST | `/api/root/test-tfa` | 校验两步验证验证码 |
 | POST | `/api/root/create-account` | 由管理员创建新账号 |
 | GET | `/api/root/sys-status` | 获取服务器实时资源占用 |
+| GET | `/healthz` | 管理员健康检查：进程、系统、数据库、缓存、任务与配置概况 |
 | POST | `/api/file/get-share` | 校验分享链接并换取分享访问 token。打开他人分享的文件/文件夹时调用 |
 | POST | `/api/file/read-dir` | 读取目录列表（支持搜索、排序、分页、按分享 token 浏览） |
 | POST | `/api/file/read-file` | 读取文本文件内容（用于在线编辑） |

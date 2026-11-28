@@ -668,6 +668,12 @@ function pageBody(extra = {}) {
 
 /* ------------------------------ 命令实现 ------------------------------ */
 
+// 管理员健康检查：返回进程、系统、数据库、缓存、任务与配置概况
+async function fetchHealth() {
+  requireLogin();
+  printResult(await request('GET', '/healthz'));
+}
+
 const commands = {
   async login() {
     if (!config.username) fail('缺少用户名：设置 HELLO_USERNAME，或在 hello.config.json 写 username');
@@ -746,6 +752,11 @@ const commands = {
   async whoami() {
     requireLogin();
     printResult(await request('GET', '/api/user/userinfo'));
+  },
+
+  // 管理员健康检查（/healthz）
+  async health() {
+    await fetchHealth();
   },
 
   // 抓取网页标题/描述，用于添加书签前自动补全
@@ -1164,6 +1175,9 @@ const commands = {
       requireLogin();
       printResult(await request('GET', '/api/root/sys-status'));
     },
+    async health() {
+      await fetchHealth();
+    },
     async logs() {
       requireLogin();
       printResult(await request('GET', '/api/root/log-list'));
@@ -1277,6 +1291,8 @@ function help() {
 聊天 / 管理员 / 公开接口:
   chat users [--word <词>] | chat send --to <账号> --content <内容>
   admin users [--word <词>] | admin status | admin logs
+  health                  管理员健康检查（/healthz）：进程/系统/数据库/缓存/任务
+  admin health            同 health（放在 admin 下便于查找）
   pub echo [--data '{"k":"v"}'] | pub icon --link <域名> [--out icon.png]
   pub site-info --link <URL>
 `);

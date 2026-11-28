@@ -12,6 +12,7 @@ class VerifyLimit {
     this.updateTimestamp = updateTimestamp; // true: 间隔 10*60 秒 3 次  false: 10*60 秒内 3 次
     this.cache = new CacheByExpire(this.opt.space * 1000, 0, {
       maxSize: this.opt.maxSize,
+      name: this.opt.name || 'verifyLimit',
     });
   }
 

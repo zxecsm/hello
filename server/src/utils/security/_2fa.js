@@ -1,7 +1,7 @@
 import speakeasy from 'speakeasy';
 import { CacheByExpire } from '../common/cache.js';
 
-const cache = new CacheByExpire(10 * 60 * 1000, 10 * 60 * 1000);
+const cache = new CacheByExpire(10 * 60 * 1000, 10 * 60 * 1000, { name: 'twoFactorSecret' });
 
 function create(acc) {
   return cache.getOrSet(acc, () => speakeasy.generateSecret().base32, {

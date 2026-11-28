@@ -297,6 +297,26 @@ node .opencode\skills\hello-api\scripts\hello.mjs bmk add --link https://example
 
 管理员接口权限大、参数多，**非必要不要让智能体调用写接口**。
 
+### 健康检查 `/healthz`
+
+`GET /healthz` 是独立的管理员只读接口，路径不在 `/api` 前缀下。CLI 已封装为 `health`（也可用 `admin health`），普通账号返回 403。
+
+返回 `data` 的主要字段：
+
+| 字段 | 说明 |
+| --- | --- |
+| `status` | 固定 `ok`；采集异常时为 HTTP 500 |
+| `runtime` | Node 版本、程序版本、启动时间、`uptimeText` / `osUptimeText` |
+| `system` | CPU、内存、Swap、磁盘、网卡速率；字节字段带 `xxxText`（自动 B→KB→MB→GB） |
+| `process` | `memory`（RSS / Heap / external，含文本）、`cpu` 累计时间 |
+| `config` | 端口、监听地址、数据目录、`trustProxy`、`cookieSecure`、公开接口开关等（不含敏感信息） |
+| `database` | SQLite 主库 / WAL / SHM 大小、页数、日志模式、各表行数 |
+| `caches` | 各缓存实例的 `size`、`stale`、`ttlText`、`maxSizeText`、`hitRateText`、`evictions`、`expired` |
+| `tasks` | 定时任务数、后台任务数、运行中任务数 |
+
+需要看完整示例和健康分析流程时，读
+[workflows.md 第 15 节](./workflows.md#15-健康检查-healthz)。
+
 ---
 
 ## 13. SSH `/api/ssh`

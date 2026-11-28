@@ -1,6 +1,6 @@
 ---
 name: hello-api
-description: 智能操作 hello 自托管主页的数据：书签、笔记、待办、倒计时、文件、分享、壁纸、音乐、聊天、剪切板、回收站、管理员只读状态。当用户说「加书签 / 收藏网址 / 记笔记 / 加待办 / 建倒计时 / 看文件 / 清理分享 / 发消息 / 同步剪切板 / 查一下 hello」等，先查现状、让用户选择、自动补全网页标题描述、写前预览确认，再通过零依赖 CLI 调用 /api。支持远程实例：地址与 Cookie 放在本地 .env，智能体不接触明文。
+description: 智能操作 hello 自托管主页的数据：书签、笔记、待办、倒计时、文件、分享、壁纸、音乐、聊天、剪切板、回收站、管理员只读状态、服务器健康检查与性能分析。当用户说「加书签 / 收藏网址 / 记笔记 / 加待办 / 建倒计时 / 看文件 / 清理分享 / 发消息 / 同步剪切板 / 查一下 hello / 看看服务器健康状态」等，先查现状、让用户选择、自动补全网页标题描述、写前预览确认，再通过零依赖 CLI 调用 /api。支持远程实例：地址与 Cookie 放在本地 .env，智能体不接触明文。
 ---
 
 # hello 数据接口操作（智能工作流）
@@ -125,6 +125,7 @@ question({
 | 聊天发消息/读记录/撤回/转发 | `chat users`、`read-msg` | `chat send`、`api /api/chat/*` | [聊天](./references/workflows.md#10-聊天-apichat) |
 | 回收站恢复/彻底删除 | `trash list` | `trash recover/rm` | [回收站](./references/workflows.md#11-回收站--管理员--公开接口) |
 | 管理员只读状态 | — | `admin users/status/logs` | 同上 |
+| 服务器健康 / 性能分析 | `health` | `health`、`api GET /healthz` | [健康检查](./references/workflows.md#15-健康检查-healthz) |
 | 未封装接口 | — | `api <METHOD> <PATH>` | [通用 api](./references/workflows.md#12-通用-api-调用) |
 
 ---
@@ -297,6 +298,17 @@ node .opencode\skills\hello-api\scripts\hello.mjs bmk add `
 5. 转发：`api POST /api/chat/forward`，body `{ to, ids: [...] }`；
 6. 清空会话是 `ids: []`，必须用户明确要求并二次确认。
 
+### 服务器健康检查
+
+1. `health` 拉取 `/healthz`（需要管理员 Cookie；普通账号返回 403）；
+2. 先看总体：`status`、`runtime.uptimeText`、`system.mem.percent`、`system.disk.percent`；
+3. 再看异常：`caches` 的命中率 / 淘汰次数、`database.walSizeText`、`tasks.runningTasks`；
+4. 汇报时使用 `xxxText` 可读字段（如 `"usedText": "6.99GB"`），先给结论再列异常项，不要倾倒完整 JSON；
+5. 这是只读接口，不要顺手改配置；需要完整数据时加 `--json`。
+
+详细指标含义、阈值和分析顺序见
+[健康检查](./references/workflows.md#15-健康检查-healthz)。
+
 ---
 
 ## 5. 命令与配置
@@ -339,6 +351,7 @@ node .opencode\skills\hello-api\scripts\hello.mjs clipboard get
 node .opencode\skills\hello-api\scripts\hello.mjs bg list --type bg
 node .opencode\skills\hello-api\scripts\hello.mjs music list --group all
 node .opencode\skills\hello-api\scripts\hello.mjs chat users --word 小明
+node .opencode\skills\hello-api\scripts\hello.mjs health
 ```
 
 完整命令用 `--help` 查看。
@@ -391,7 +404,7 @@ Remove-Item $body -Force
 
 1. **写操作前先向用户确认**：新增/修改/删除书签、笔记、待办、文件、分享、壁纸、聊天消息等。
 2. **删除必须显式 `--yes`**：CLI 对 `rm` / `trash rm` 会以退出码 `2` 拒绝；看到提示先问用户，不要自行补 `--yes`。
-3. **不要调用管理员写接口**（`/api/root/*` 的增删改、清库、改 token、改配置）。只读的 `admin users`、`admin status`、`admin logs` 可以用。
+3. **不要调用管理员写接口**（`/api/root/*` 的增删改、清库、改 token、改配置）。只读的 `admin users`、`admin status`、`admin logs`、`health` 可以用。
 4. **不要操作 `about`、`tips` 笔记**，不要清空回收站、不要 `force` 永久删除，除非用户明确要求。
 5. **不要读取、`cat`、`type`、`Get-Content`** `.env`、`.hello-session.json`、`hello.config.json`、`cookie.txt`。
 6. **不要回显 Cookie**；需要确认状态时用 `config`（默认隐藏地址、不显示 Cookie 值）。

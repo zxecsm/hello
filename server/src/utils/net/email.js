@@ -2,7 +2,10 @@ import nodemailer from 'nodemailer';
 import { _d } from '../../config/store.js';
 import { CacheByExpire } from '../common/cache.js';
 
-const cache = new CacheByExpire(10 * 60 * 1000, 10 * 60 * 1000, { maxSize: 5000 });
+const cache = new CacheByExpire(10 * 60 * 1000, 10 * 60 * 1000, {
+  maxSize: 5000,
+  name: 'emailCode',
+});
 
 // 邮箱统一转小写作为缓存 key，避免大小写造成验证码匹配失败或重复发送
 const normalizeEmail = (email) =>

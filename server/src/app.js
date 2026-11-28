@@ -48,6 +48,7 @@ import userRoute from './routes/user/index.js';
 import taskRoute from './routes/task/index.js';
 import echoRoute from './routes/echo/index.js';
 import sshRoute from './routes/ssh/index.js';
+import healthzRoute from './routes/healthz/index.js';
 import { fieldLength } from './routes/config.js';
 import getClientIp, { getTrustProxy } from './utils/web/getClientIp.js';
 import getFile from './routes/getfile/index.js';
@@ -124,7 +125,7 @@ const fontStaticOptions = {
 app.use(express.static(resolve(__dirname, '../public'), webStaticOptions));
 
 // 同一ip在10秒内最多允许500个请求
-const reqLimit = verifyLimit({ space: 10, count: 500 }, false);
+const reqLimit = verifyLimit({ space: 10, count: 500, name: 'requestRate' }, false);
 
 const informReqLimit = debounce(
   async (res) => {
@@ -271,6 +272,9 @@ app.use('/api/task', taskRoute);
 app.use('/api/icon', getfaviconRoute);
 app.use('/api/echo', echoRoute);
 app.use('/api/ssh', sshRoute);
+
+// 管理员健康检查
+app.use('/healthz', healthzRoute);
 
 // 收信接口
 app.all(

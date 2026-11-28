@@ -47,6 +47,7 @@ const sshCache = new CacheByExpire(60 * 1000, 60 * 1000, {
   beforeReplace(_, ssh) {
     closeSSH(ssh);
   },
+  name: 'sshSession',
 });
 
 export function getSSH(temid) {

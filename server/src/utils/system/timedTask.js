@@ -23,6 +23,11 @@ function remove(cb) {
   cbs.delete(cb);
 }
 
+// 已注册的定时任务数量
+function count() {
+  return cbs.size;
+}
+
 function stop() {
   clearInterval(timer);
   timer = null;
@@ -31,6 +36,7 @@ function stop() {
 const timedTask = {
   add,
   remove,
+  count,
   stop,
 };
 

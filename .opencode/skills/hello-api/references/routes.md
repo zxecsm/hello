@@ -1,7 +1,8 @@
 # API 路由总表（源码自动提取）
 
-> 由 `server/routes/*/index.js` 中的 `route.<method>(...)` 与 `server/app.js` 汇总，共 246 条。
+> 由 `server/routes/*/index.js` 中的 `route.<method>(...)` 与 `server/app.js` 汇总，共 247 条。
 > 所有以 `/api` 开头的路径都需要拼上实例地址，例如 `http://localhost:55555/api/bmk/list`。
+> `/healthz` 是例外，不在 `/api` 前缀下。
 
 ## app.js 中的顶层接口
 
@@ -11,6 +12,7 @@
 | `GET` | `/api/music` | 随机音乐（公开开关） |
 | `GET` | `/api/f/<path>` | 按路径读取用户文件/下载 |
 | `ALL` | `/api/s/:chat_id` | 收信接口（GET ?text= / POST {text}） |
+| `GET` | `/healthz` | 管理员健康检查：进程 / 系统 / 数据库 / 缓存 / 任务 |
 
 ## user（42）
 

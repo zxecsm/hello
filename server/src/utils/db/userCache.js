@@ -2,7 +2,10 @@ import { db } from './sqlite.js';
 import { CacheByExpire } from '../common/cache.js';
 
 // 用户信息缓存：key = account，TTL 仅作兜底，信息变更时主动失效
-const userInfoCache = new CacheByExpire(5 * 60 * 1000, 60 * 1000, { maxSize: 10000 });
+const userInfoCache = new CacheByExpire(5 * 60 * 1000, 60 * 1000, {
+  maxSize: 10000,
+  name: 'userInfo',
+});
 
 // 失效代际：防止「查询进行中发生修改」时把旧数据重新写回缓存
 let generation = 0;

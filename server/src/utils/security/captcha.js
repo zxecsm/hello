@@ -5,7 +5,7 @@ import nanoid from '../common/nanoid.js';
 
 // 60 秒：比 verifyTrack 允许的 30 秒最大耗时多留一倍余量，避免边界时刻提前过期
 // maxSize 兜底：单条约 20KB，限制条目数避免极端情况下内存无限增长
-const cache = new CacheByExpire(60 * 1000, 60 * 1000, { maxSize: 3000 });
+const cache = new CacheByExpire(60 * 1000, 60 * 1000, { maxSize: 3000, name: 'captcha' });
 
 const THEMES = {
   light: {

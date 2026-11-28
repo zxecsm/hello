@@ -794,6 +794,7 @@ node .opencode\skills\hello-api\scripts\hello.mjs task info --key "<key>"
 | 给小明发消息 | `chat users --word` | 选账号 → 预览内容 → `chat send` |
 | 撤回刚才的消息 | 读会话 | 选自己的消息 → 确认 → `delete-msg` |
 | 把消息转发给…… | 读源会话 + `chat users` | 多选消息 → 选目标 → `forward` |
+| 服务器状态怎么样 / 帮我分析健康状态 | `health` | 按第 15 节的顺序分析指标 → 给结论和建议 |
 
 ---
 
@@ -810,3 +811,45 @@ node .opencode\skills\hello-api\scripts\hello.mjs task info --key "<key>"
 | `fetch failed` | 检查 `.env` 的 `HELLO_BASE_URL`；用 `config` 确认地址来源 |
 | `meta` 取不到标题 | 让用户手动输入，不要编造；可再试 `pub site-info --link` |
 | PowerShell JSON 报错 | 改用 `--set` 或 `--data @body.json`，不要和引号硬碰 |
+
+---
+
+## 15. 健康检查 `/healthz`
+
+管理员只读接口，一次返回运行环境、系统资源、进程、数据库、缓存、任务和关键配置。注意路径不在 `/api` 前缀下。
+
+```powershell
+node .opencode\skills\hello-api\scripts\hello.mjs health
+node .opencode\skills\hello-api\scripts\hello.mjs admin health
+node .opencode\skills\hello-api\scripts\hello.mjs health --json        # 完整信封
+node .opencode\skills\hello-api\scripts\hello.mjs api GET /healthz     # 通用 api 调用
+```
+
+普通账号会返回 403「无权访问」；未登录返回 401 / 403，按 `codeText` 处理。
+
+### 15.1 分析和汇报顺序
+
+1. **可用性**：`status` 是否为 `ok`；`runtime.uptimeText` 与服务启动时间。
+2. **资源水位**：
+   - `system.mem.percent` > 90% 需要关注；`system.swap.percent` 持续增长说明内存压力大；
+   - `system.disk.percent` > 85% 提醒清理，同时看 `system.disk.availableText`；
+   - `system.cpu.percent` 偶发高正常，持续 > 80% 才需要排查；
+   - `process.memory.heapUsedText` / `rssText` 结合运行时长判断是否持续上涨。
+3. **数据库**：
+   - `database.sizeText`、`walSizeText`、`shmSizeText`；
+   - WAL 明显大于主库（例如数倍）说明写入频繁或长时间未 checkpoint；
+   - `freelistCount` 偏大说明有较多空闲页；`tables` 可看各表数据量是否异常增长。
+4. **缓存**：
+   - `caches[].hitRateText` 判断命中率；
+   - `stale` 是已过期但尚未清理的条目；
+   - `evictions` 持续增长说明 `maxSize` 太小；
+   - `size` 接近 `maxSize`、或 `expired` 增长很快时提示容量/TTL 可能需要调整。
+5. **任务**：`tasks.timedTasks` 是否与预期一致；`runningTasks` 持续偏高说明后台任务堆积。
+6. **配置**：核对 `config.trustProxy`、`config.cookieSecure`、`config.pubApi` 是否符合当前部署（反向代理、HTTPS、公开接口开关）。
+
+### 15.2 汇报格式
+
+- 先给一句总体结论：**正常 / 需要关注 / 有风险**。
+- 只列异常项和关键指标，优先使用 `xxxText` 可读字段，不倾倒完整 JSON。
+- 给出可执行建议（清理磁盘、调大缓存上限、检查反向代理、重启服务等），但不要自行修改配置。
+- 用户要求深入分析时，再用 `--json` 或 `api GET /healthz` 获取完整数据。

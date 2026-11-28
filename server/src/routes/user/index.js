@@ -328,9 +328,9 @@ route.post(
 );
 
 // 获取验证码
-const captchaVerifyLimit = verifyLimit({ count: 10 });
+const captchaVerifyLimit = verifyLimit({ count: 10, name: 'captchaVerify' });
 // 单个 IP 每分钟取图总量（不含 flag，防止用不同 flag 无限取图）
-const captchaGetLimit = verifyLimit({ space: 60, count: 20 }, false);
+const captchaGetLimit = verifyLimit({ space: 60, count: 20, name: 'captchaGet' }, false);
 route.get(
   '/captcha',
   validate(
@@ -398,7 +398,7 @@ route.post(
 );
 
 // 登录
-const loginVerifyLimit = verifyLimit({ space: 60 * 30 });
+const loginVerifyLimit = verifyLimit({ space: 60 * 30, name: 'loginVerify' });
 route.post(
   '/login',
   validate(
@@ -469,7 +469,7 @@ route.post(
 );
 
 // 两步验证
-const towfaVerify = verifyLimit({ space: 60 * 30 });
+const towfaVerify = verifyLimit({ space: 60 * 30, name: 'twoFactorVerify' });
 route.post(
   '/verify-login',
   validate(
@@ -584,7 +584,7 @@ route.get(
 );
 
 // 重置密码
-const emailVerify = verifyLimit({ space: 60 * 30 });
+const emailVerify = verifyLimit({ space: 60 * 30, name: 'emailVerify' });
 route.post(
   '/reset-pass',
   validate(
@@ -697,7 +697,7 @@ route.get(
 );
 
 // 发送邮件验证码（按账号限制发送频率，避免用不同邮箱刷信）
-const bindMailLimit = verifyLimit({ space: 60 * 10, count: 5 }, false);
+const bindMailLimit = verifyLimit({ space: 60 * 10, count: 5, name: 'bindMail' }, false);
 route.post(
   '/bind-mail-code',
   validate(
@@ -745,7 +745,7 @@ route.post(
 );
 
 // 绑定邮箱（限制验证码错误次数，防止暴力尝试 6 位验证码）
-const bindEmailVerifyLimit = verifyLimit({ space: 60 * 10, count: 5 });
+const bindEmailVerifyLimit = verifyLimit({ space: 60 * 10, count: 5, name: 'bindEmailVerify' });
 route.post(
   '/bind-email',
   validate(
